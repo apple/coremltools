@@ -3,52 +3,41 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.experimental.passes import (
-    generic_conv_batchnorm_fusion, generic_conv_bias_fusion,
-    generic_conv_scale_fusion, generic_layernorm_instancenorm_pattern_fusion,
-    generic_linear_bias_fusion)
-
-from . import (
-    add_conv_transpose_output_shape,
-    cast_optimization,
-    concat_to_pixel_shuffle,
-    const_elimination,
-    conv_batchnorm_fusion,
-    conv_bias_fusion,
-    conv_scale_fusion,
-    dead_code_elimination,
-    dedup_op_and_var_names,
-    detect_concat_interleave,
-    divide_to_multiply,
-    elementwise_batchnorm_fusion,
-    gelu_exact_fusion,
-    gelu_tanh_approximation_fusion,
-    graph_pass,
-    helper,
-    image_input_preprocessing,
-    layernorm_instancenorm_pattern_fusion,
-    leaky_relu_fusion,
-    linear_bias_fusion,
-    loop_invariant_elimination,
+# Import all frontend/backend passes to make sure they got registered.
+from coremltools.converters.mil.backend.mil.passes import (
+    adjust_io_to_supported_types,
+    fuse_activation_silu,
+    insert_image_preprocessing_op,
+    sanitize_name_strings,
+)
+from coremltools.converters.mil.backend.nn.passes import (
+    alert_return_type_cast,
+    commingle_loop_vars,
+    conv1d_decomposition,
+    handle_return_inputs_as_outputs,
+    handle_return_unused_inputs,
+    handle_unused_inputs,
+    mlmodel_passes,
+)
+from coremltools.converters.mil.frontend.tensorflow2.ssa_passes import remove_vacuous_cond
+from coremltools.converters.mil.frontend.tensorflow.ssa_passes import (
+    backfill_make_list_elem_type,
+    expand_tf_lstm,
+    tf_lstm_to_core_lstm,
+)
+from coremltools.converters.mil.frontend.torch.ssa_passes import (
+    torch_tensor_assign_to_core,
+    torch_upsample_to_core_upsample,
+)
+from coremltools.converters.mil.mil.passes.defs import (
+    cleanup,
     lower_complex_dialect_ops,
-    matmul_weight_bias_fusion,
-    merge_consecutive_paddings,
-    merge_consecutive_relus,
-    name_sanitization_utils,
-    noop_elimination,
-    onehot_matmul_to_gather,
-    pad_conv_connect,
-    prelu_fusion,
-    prelu_to_lrelu,
-    quantization_passes,
-    rank0_expand_dims_swap,
-    reduce_mean_fusion,
-    reduce_transposes,
-    remove_redundant_ops,
-    remove_symbolic_reshape,
-    replace_stack_reshape,
-    sanitize_input_output_names,
-    topological_reorder,
-    update_output_dtypes,
-    use_reflection_padding,
+    optimize_activation,
+    optimize_conv,
+    optimize_elementwise_binary,
+    optimize_linear,
+    optimize_normalization,
+    optimize_repeat_ops,
+    optimize_tensor_operation,
+    preprocess,
 )

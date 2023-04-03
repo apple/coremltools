@@ -166,7 +166,7 @@ class Const(Operation):
         elif isinstance(value, (int, np.int64)):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
-            value = np.array(value)
+            value = np.array(value) if isinstance(value, (tuple, list)) else value
 
             # For the int type, we use int32 by default
             if value.dtype in [np.uint16, np.int16, np.uint64, np.int64]:

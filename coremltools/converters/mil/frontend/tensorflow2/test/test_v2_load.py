@@ -16,19 +16,15 @@ from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
     get_tf_keras_io_names
 from coremltools.converters.mil.input_types import TensorType
 
+
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
+
 
 class TestTf2ModelFormats:
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_path_h5 = tempfile.mkstemp(
             suffix=".h5", prefix=self.saved_model_dir
-        )
-        _, self.model_path_hdf5 = tempfile.mkstemp(
-            suffix=".hdf5", prefix=self.saved_model_dir
-        )
-        _, self.model_path_pb = tempfile.mkstemp(
-            suffix=".pb", prefix=self.saved_model_dir
         )
 
     def teardown(self):
@@ -80,7 +76,7 @@ class TestTf2ModelFormats:
             [tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)]
         )
         input_names, output_names = get_tf_keras_io_names(keras_model)
-        keras_model.save(self.model_path_h5, save_format="hdf5")
+        keras_model.save(self.model_path_h5, save_format="h5")
         mlmodel = converter.convert(
             self.model_path_h5,
             inputs=[TensorType(input_names[0], (3, 4, 5))],

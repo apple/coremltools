@@ -275,7 +275,7 @@ class constexpr_lut_to_dense(Operation):
 
         pad_required = bitarray.size % nbits != 0
         if pad_required:
-            bitarray = np.concatenate([bitarray, np.zeros(bitarray.size % nbits)])
+            bitarray = np.concatenate([bitarray, np.zeros(nbits - bitarray.size % nbits)]).astype(bitarray.dtype)
 
         assert bitarray.size % nbits == 0
 

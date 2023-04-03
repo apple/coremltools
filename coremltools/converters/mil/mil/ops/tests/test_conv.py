@@ -229,11 +229,11 @@ class TestConv:
             rank = len(tensor.shape)
             new_tensor = np.copy(np.flip(tensor, axis=tuple(range(rank))))
             return np.expand_dims(new_tensor, axis=(0, 1))
-            
+
         if conv_dim == "conv3d" and padding_mode == "same_lower":
             if backend[0] == "neuralnetwork":
                 pytest.skip("same_lower mode not supported for conv3d in neuralnetwork backend")
-                
+
         if padding_mode == "same_lower" and backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
             pytest.skip("same_lower pad_type not supported in macOS12 or older.")
 
@@ -245,7 +245,7 @@ class TestConv:
         input_shape = (batch, in_channels, 4, 5, 6) # batch, channel, height, width
         kernel_size = (2, 4, 3)
         torch_padding_mode = padding_mode if padding_mode != "same_lower" else "same"
-        
+
         # Get the right shape for each conv_dim
         if conv_dim == "conv1d":
             input_shape = input_shape[:3]
@@ -253,7 +253,7 @@ class TestConv:
         elif conv_dim == "conv2d":
             input_shape = input_shape[:4]
             kernel_size = kernel_size[:2]
-        
+
         # Get the ground truth answer from torch
         if conv_dim == "conv1d":
             m = torch.nn.Conv1d(
@@ -282,15 +282,15 @@ class TestConv:
                 padding=torch_padding_mode,
                 bias=False,
             )
-        
+
         # Original weight / inputs for the torch model
         weight = torch.clone(m.state_dict()["weight"])
         input = torch.randn(*input_shape, dtype=torch.float32)
-        
+
         # Coreml weights / inputs values
         coreml_weight = weight.detach().numpy()
         coreml_input = input.detach().numpy()
-        
+
         if padding_mode == "same_lower":
             # For the same_lower padding mode, we get the ground truth output by doing the following steps
             # (1) Rotate the input value
@@ -303,7 +303,7 @@ class TestConv:
             output = rotation_tensor(output)
         else:
             output = m(input).detach().numpy()
-            
+
         output_shape = list(output.shape)
         expected_output_types = tuple(output_shape[:]) + (types.fp32,)
         expected_outputs = [output]
@@ -584,7 +584,7 @@ class TestConv:
 
         if backend[0] == "neuralnetwork" and groups > 1:
             pytest.skip("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
-            
+
         if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398343 (test_builder_to_backend_stress_weights_input is failing on mlprogram + GPU)")
 
@@ -716,3 +716,225 @@ class TestConv:
             compute_unit=compute_unit,
             backend=backend,
         )
+
+
+class TestInvalidConvConfig:
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, conv_dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 2, 3),
+        ),
+    )
+    def test_invalid_weight(self, compute_unit, backend, conv_dim):
+        N, C_in, C_out = tuple(np.random.randint(low=16, high=32, size=3))
+        D = tuple(np.random.randint(low=8, high=16, size=conv_dim))
+        K = tuple(np.random.randint(low=1, high=4, size=conv_dim))
+
+        input_shape = (N, C_in) + D
+        x = np.random.rand(*input_shape)
+
+        groups = np.random.randint(low=1, high=C_in + 1)
+        while C_in % groups != 0:
+            groups = np.random.randint(low=1, high=C_in + 1)
+
+        weight = np.random.rand(C_out, C_in // groups + + np.random.randint(low=1, high=8), *K) * 2.0 - 1.0
+
+        def build(x):
+            return mb.conv(x=x, weight=weight, groups=groups)
+
+        with pytest.raises(
+            ValueError,
+            match=r"C_in / groups = [0-9]+/[0-9]+ != weight\[1\] \([0-9]+\)"
+        ):
+            run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=input_shape)},
+                {"x": x},
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, conv_dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 2, 3),
+        ),
+    )
+    def test_invalid_bias(self, compute_unit, backend, conv_dim):
+        N, C_in, C_out = tuple(np.random.randint(low=1, high=10, size=3))
+        D = tuple(np.random.randint(low=8, high=16, size=conv_dim))
+        K = tuple(np.random.randint(low=1, high=4, size=conv_dim))
+
+        input_shape = (N, C_in) + D
+        x = np.random.rand(*input_shape)
+
+        weight = np.random.rand(C_out, C_in, *K) * 2.0 - 1.0
+
+        wrong_bias_size = C_out + np.random.randint(low=1, high=8)
+        bias = np.random.rand(wrong_bias_size) * 2.0 - 1.0
+
+        def build(x):
+            return mb.conv(x=x, weight=weight, bias=bias)
+
+        with pytest.raises(
+            ValueError,
+            match=r"# of bias values [0-9]+ not equal to # output channels [0-9]+"
+        ):
+            run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=input_shape)},
+                {"x": x},
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, conv_dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 2, 3),
+        ),
+    )
+    def test_invalid_kernel(self, compute_unit, backend, conv_dim):
+        N, C_in, C_out = tuple(np.random.randint(low=1, high=10, size=3))
+        D = tuple(np.random.randint(low=8, high=16, size=conv_dim))
+        K = tuple(np.random.randint(low=16, high=32, size=conv_dim))
+
+        input_shape = (N, C_in) + D
+        x = np.random.rand(*input_shape)
+
+        weight = np.random.rand(C_out, C_in, *K) * 2.0 - 1.0
+
+        def build(x):
+            return mb.conv(x=x, weight=weight)
+
+        with pytest.raises(
+            ValueError,
+            match=r"spatial dimension [0-9]+ has invalid output size -?[0-9]+"
+        ):
+            run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=input_shape)},
+                {"x": x},
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, conv_dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 2, 3),
+        ),
+    )
+    def test_invalid_dilation(self, compute_unit, backend, conv_dim):
+        N, C_in, C_out = tuple(np.random.randint(low=1, high=10, size=3))
+        D = tuple(np.random.randint(low=8, high=16, size=conv_dim))
+        K = tuple(np.random.randint(low=2, high=4, size=conv_dim))
+        dilations = tuple(np.random.randint(low=16, high=32, size=conv_dim))
+
+        input_shape = (N, C_in) + D
+        x = np.random.rand(*input_shape)
+
+        weight = np.random.rand(C_out, C_in, *K) * 2.0 - 1.0
+
+        def build(x):
+            return mb.conv(x=x, weight=weight, dilations=dilations)
+
+        with pytest.raises(
+            ValueError,
+            match=r"spatial dimension [0-9]+ has invalid output size -?[0-9]+"
+        ):
+            run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=input_shape)},
+                {"x": x},
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, conv_dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 2, 3),
+        ),
+    )
+    def test_invalid_groups(self, compute_unit, backend, conv_dim):
+        N, C_in, C_out = tuple(np.random.randint(low=16, high=32, size=3))
+        D = tuple(np.random.randint(low=8, high=16, size=conv_dim))
+        K = tuple(np.random.randint(low=1, high=4, size=conv_dim))
+
+        input_shape = (N, C_in) + D
+        x = np.random.rand(*input_shape)
+
+        groups = np.random.randint(low=1, high=C_in)
+        while C_in % groups == 0:
+            groups = np.random.randint(low=1, high=C_in)
+
+        weight = np.random.rand(C_out, C_in // groups, *K) * 2.0 - 1.0
+
+        def build(x):
+            return mb.conv(x=x, weight=weight, groups=groups)
+
+        with pytest.raises(
+            ValueError,
+            match=r"# of input channels [0-9]+ not divisible by groups [0-9]+"
+        ):
+            run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=input_shape)},
+                {"x": x},
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, conv_dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 2, 3),
+        ),
+    )
+    def test_invalid_rank(self, compute_unit, backend, conv_dim):
+        N, C_in, C_out = tuple(np.random.randint(low=16, high=32, size=3))
+        D = tuple(np.random.randint(low=8, high=16, size=conv_dim))
+
+        input_shape = (N, C_in) + D
+        x = np.random.rand(*input_shape)
+
+        wrong_K = tuple(np.random.randint(low=1, high=4, size=conv_dim - 1))
+
+        weight = np.random.rand(C_out, C_in, *wrong_K) * 2.0 - 1.0
+        strides = tuple(np.random.randint(low=1, high=4, size=conv_dim + 1))
+        dilations = tuple(np.random.randint(low=1, high=4, size=conv_dim + 2))
+        pad = tuple(np.random.randint(low=1, high=4, size=2 * conv_dim + 3))
+
+        def build(x):
+            return mb.conv(x=x, weight=weight, strides=strides, dilations=dilations, pad_type="custom", pad=pad)
+
+        with pytest.raises(
+            ValueError,
+            match=r"input_shape \(length [0-9]+\), "
+                  r"kernel_shape \(length [0-9]+\), "
+                  r"strides \(length [0-9]+\), "
+                  r"dilations \(length [0-9]+\), "
+                  r"and custom_pad \(length [0-9]+\) divided by two "
+                  r"must all be the same length",
+        ):
+            run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=input_shape)},
+                {"x": x},
+                compute_unit=compute_unit,
+                backend=backend,
+            )

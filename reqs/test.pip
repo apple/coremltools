@@ -1,9 +1,11 @@
 boto3==1.14.8
 configparser
-h5py==2.10.0; platform_machine != "arm64" and python_version < "3.9"
+h5py==2.10.0; platform_machine != "arm64" and python_version < "3.8"
+h5py==3.8.0; platform_machine != "arm64" and python_version >= "3.8"
 future
-numpy>1.18.4
-libsvm; python_version >= "3.6"
+numpy>1.18.4; platform_machine != "arm64"
+numpy==1.24.2; platform_machine == "arm64"
+libsvm
 olefile==0.44
 pandas
 parameterized==0.8.1
@@ -18,19 +20,24 @@ scipy==1.8.1; python_version >= '3.8'
 six
 sympy > 1.6
 gast==0.4.0
-torch==1.13.1
-torchvision==0.14.1
+torch==2.0.0
+torchvision==0.15.1
 xgboost==1.4.2; platform_machine != "arm64"
 mock
 wrapt
 tqdm
 pytest-timeout
 
-# tensorflow related package
-tensorflow==2.10.0; platform_machine != "arm64"
-tensorflow-macos==2.10.0; platform_machine == "arm64"
-tensorflow-estimator==2.10.0
-keras==2.10.0
-tensorflow-addons==0.18.0
+# TensorFlow (x86) related package
+tensorflow==2.12.0; platform_machine != "arm64"
+tensorflow-estimator==2.12.0; platform_machine != "arm64"
+keras==2.12.0; platform_machine != "arm64"
+
+# TensorFlow (arm64) related package
+tensorflow-macos==2.11.0; platform_machine == "arm64"
+tensorflow-estimator==2.11.0; platform_machine == "arm64"
+keras==2.11.0; platform_machine == "arm64"
+
+tensorflow-addons==0.19.0
 tensorflow-hub==0.12.0
-transformers==4.17.0; python_version > '3.6'
+transformers==4.26.0

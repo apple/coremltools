@@ -53,7 +53,13 @@ def load(model_spec, inputs, specification_version,
                          "If possible you should use a traced model for conversion.")
 
     inputs = _convert_to_torch_inputtype(inputs)
-    converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols, specification_version)
+    converter = TorchConverter(
+        torchscript,
+        inputs,
+        outputs,
+        cut_at_symbols,
+        specification_version,
+    )
     return _perform_torch_convert(converter, debug)
 
 

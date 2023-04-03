@@ -2,27 +2,26 @@
 # source: DataStructures.proto
 
 import sys
-
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
 from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pb2
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
+from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
 from . import FeatureTypes_pb2 as FeatureTypes__pb2
+
 from .FeatureTypes_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='DataStructures.proto',
   package='CoreML.Specification',
   syntax='proto3',
-  serialized_pb=_b('\n\x14\x44\x61taStructures.proto\x12\x14\x43oreML.Specification\x1a\x12\x46\x65\x61tureTypes.proto\"|\n\x10StringToInt64Map\x12<\n\x03map\x18\x01 \x03(\x0b\x32/.CoreML.Specification.StringToInt64Map.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x03:\x02\x38\x01\"|\n\x10Int64ToStringMap\x12<\n\x03map\x18\x01 \x03(\x0b\x32/.CoreML.Specification.Int64ToStringMap.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"~\n\x11StringToDoubleMap\x12=\n\x03map\x18\x01 \x03(\x0b\x32\x30.CoreML.Specification.StringToDoubleMap.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x01:\x02\x38\x01\"|\n\x10Int64ToDoubleMap\x12<\n\x03map\x18\x01 \x03(\x0b\x32/.CoreML.Specification.Int64ToDoubleMap.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\x01:\x02\x38\x01\"\x1e\n\x0cStringVector\x12\x0e\n\x06vector\x18\x01 \x03(\t\"\x1d\n\x0bInt64Vector\x12\x0e\n\x06vector\x18\x01 \x03(\x03\"\x1d\n\x0b\x46loatVector\x12\x0e\n\x06vector\x18\x01 \x03(\x02\"\x1e\n\x0c\x44oubleVector\x12\x0e\n\x06vector\x18\x01 \x03(\x01\"0\n\nInt64Range\x12\x10\n\x08minValue\x18\x01 \x01(\x03\x12\x10\n\x08maxValue\x18\x02 \x01(\x03\"\x1a\n\x08Int64Set\x12\x0e\n\x06values\x18\x01 \x03(\x03\"1\n\x0b\x44oubleRange\x12\x10\n\x08minValue\x18\x01 \x01(\x01\x12\x10\n\x08maxValue\x18\x02 \x01(\x01\x42\x02H\x03P\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x14\x44\x61taStructures.proto\x12\x14\x43oreML.Specification\x1a\x12\x46\x65\x61tureTypes.proto\"|\n\x10StringToInt64Map\x12<\n\x03map\x18\x01 \x03(\x0b\x32/.CoreML.Specification.StringToInt64Map.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x03:\x02\x38\x01\"|\n\x10Int64ToStringMap\x12<\n\x03map\x18\x01 \x03(\x0b\x32/.CoreML.Specification.Int64ToStringMap.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"~\n\x11StringToDoubleMap\x12=\n\x03map\x18\x01 \x03(\x0b\x32\x30.CoreML.Specification.StringToDoubleMap.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\x01:\x02\x38\x01\"|\n\x10Int64ToDoubleMap\x12<\n\x03map\x18\x01 \x03(\x0b\x32/.CoreML.Specification.Int64ToDoubleMap.MapEntry\x1a*\n\x08MapEntry\x12\x0b\n\x03key\x18\x01 \x01(\x03\x12\r\n\x05value\x18\x02 \x01(\x01:\x02\x38\x01\"\x1e\n\x0cStringVector\x12\x0e\n\x06vector\x18\x01 \x03(\t\"\x1d\n\x0bInt64Vector\x12\x0e\n\x06vector\x18\x01 \x03(\x03\"\x1d\n\x0b\x46loatVector\x12\x0e\n\x06vector\x18\x01 \x03(\x02\"\x1e\n\x0c\x44oubleVector\x12\x0e\n\x06vector\x18\x01 \x03(\x01\"0\n\nInt64Range\x12\x10\n\x08minValue\x18\x01 \x01(\x03\x12\x10\n\x08maxValue\x18\x02 \x01(\x03\"\x1a\n\x08Int64Set\x12\x0e\n\x06values\x18\x01 \x03(\x03\"1\n\x0b\x44oubleRange\x12\x10\n\x08minValue\x18\x01 \x01(\x01\x12\x10\n\x08maxValue\x18\x02 \x01(\x01\"\x9c\x02\n\x14PrecisionRecallCurve\x12:\n\x0fprecisionValues\x18\x01 \x01(\x0b\x32!.CoreML.Specification.FloatVector\x12H\n\x1dprecisionConfidenceThresholds\x18\x02 \x01(\x0b\x32!.CoreML.Specification.FloatVector\x12\x37\n\x0crecallValues\x18\x03 \x01(\x0b\x32!.CoreML.Specification.FloatVector\x12\x45\n\x1arecallConfidenceThresholds\x18\x04 \x01(\x0b\x32!.CoreML.Specification.FloatVectorB\x02H\x03P\x00\x62\x06proto3')
   ,
   dependencies=[FeatureTypes__pb2.DESCRIPTOR,],
   public_dependencies=[FeatureTypes__pb2.DESCRIPTOR,])
@@ -532,6 +531,58 @@ _DOUBLERANGE = _descriptor.Descriptor(
   serialized_end=825,
 )
 
+
+_PRECISIONRECALLCURVE = _descriptor.Descriptor(
+  name='PrecisionRecallCurve',
+  full_name='CoreML.Specification.PrecisionRecallCurve',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='precisionValues', full_name='CoreML.Specification.PrecisionRecallCurve.precisionValues', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='precisionConfidenceThresholds', full_name='CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds', index=1,
+      number=2, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='recallValues', full_name='CoreML.Specification.PrecisionRecallCurve.recallValues', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='recallConfidenceThresholds', full_name='CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds', index=3,
+      number=4, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=828,
+  serialized_end=1112,
+)
+
 _STRINGTOINT64MAP_MAPENTRY.containing_type = _STRINGTOINT64MAP
 _STRINGTOINT64MAP.fields_by_name['map'].message_type = _STRINGTOINT64MAP_MAPENTRY
 _INT64TOSTRINGMAP_MAPENTRY.containing_type = _INT64TOSTRINGMAP
@@ -540,6 +591,10 @@ _STRINGTODOUBLEMAP_MAPENTRY.containing_type = _STRINGTODOUBLEMAP
 _STRINGTODOUBLEMAP.fields_by_name['map'].message_type = _STRINGTODOUBLEMAP_MAPENTRY
 _INT64TODOUBLEMAP_MAPENTRY.containing_type = _INT64TODOUBLEMAP
 _INT64TODOUBLEMAP.fields_by_name['map'].message_type = _INT64TODOUBLEMAP_MAPENTRY
+_PRECISIONRECALLCURVE.fields_by_name['precisionValues'].message_type = _FLOATVECTOR
+_PRECISIONRECALLCURVE.fields_by_name['precisionConfidenceThresholds'].message_type = _FLOATVECTOR
+_PRECISIONRECALLCURVE.fields_by_name['recallValues'].message_type = _FLOATVECTOR
+_PRECISIONRECALLCURVE.fields_by_name['recallConfidenceThresholds'].message_type = _FLOATVECTOR
 DESCRIPTOR.message_types_by_name['StringToInt64Map'] = _STRINGTOINT64MAP
 DESCRIPTOR.message_types_by_name['Int64ToStringMap'] = _INT64TOSTRINGMAP
 DESCRIPTOR.message_types_by_name['StringToDoubleMap'] = _STRINGTODOUBLEMAP
@@ -551,6 +606,7 @@ DESCRIPTOR.message_types_by_name['DoubleVector'] = _DOUBLEVECTOR
 DESCRIPTOR.message_types_by_name['Int64Range'] = _INT64RANGE
 DESCRIPTOR.message_types_by_name['Int64Set'] = _INT64SET
 DESCRIPTOR.message_types_by_name['DoubleRange'] = _DOUBLERANGE
+DESCRIPTOR.message_types_by_name['PrecisionRecallCurve'] = _PRECISIONRECALLCURVE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 StringToInt64Map = _reflection.GeneratedProtocolMessageType('StringToInt64Map', (_message.Message,), dict(
@@ -661,6 +717,13 @@ DoubleRange = _reflection.GeneratedProtocolMessageType('DoubleRange', (_message.
   # @@protoc_insertion_point(class_scope:CoreML.Specification.DoubleRange)
   ))
 _sym_db.RegisterMessage(DoubleRange)
+
+PrecisionRecallCurve = _reflection.GeneratedProtocolMessageType('PrecisionRecallCurve', (_message.Message,), dict(
+  DESCRIPTOR = _PRECISIONRECALLCURVE,
+  __module__ = 'DataStructures_pb2'
+  # @@protoc_insertion_point(class_scope:CoreML.Specification.PrecisionRecallCurve)
+  ))
+_sym_db.RegisterMessage(PrecisionRecallCurve)
 
 
 DESCRIPTOR.has_options = True

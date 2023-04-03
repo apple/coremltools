@@ -313,11 +313,6 @@ class Operation:
                         )
                     else:
                         new_var = Var(name, sym_type, sym_val, op=self, op_output_idx=i)
-                    if new_var.rank >= 6:
-                        raise ValueError(
-                            f'Core ML only supports tensors with rank <= 5. Layer "{self.name}", '
-                            f'with type "{self.op_type}", outputs a rank {new_var.rank} tensor. '
-                        )
                 self._output_vars.append(new_var)
         else:
             # Check new inference result against existing self._output_vars.

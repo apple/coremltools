@@ -102,7 +102,7 @@ _HAS_TF_2 = False
 _TF_1_MIN_VERSION = "1.12.0"
 _TF_1_MAX_VERSION = "1.15.4"
 _TF_2_MIN_VERSION = "2.1.0"
-_TF_2_MAX_VERSION = "2.10.0"
+_TF_2_MAX_VERSION = "2.12.0"
 
 try:
     import tensorflow
@@ -147,7 +147,7 @@ MSG_TF2_NOT_FOUND = "TensorFlow 2.x not found."
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "1.13.1"
+_TORCH_MAX_VERSION = "2.0.0"
 try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)

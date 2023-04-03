@@ -5,25 +5,27 @@
 
 import numpy as np
 import pytest
-import torch
 
 import coremltools as ct
 from coremltools import ComputeUnit
-from coremltools._deps import _HAS_TF_2
+from coremltools._deps import _HAS_TF_2, _HAS_TORCH
 from coremltools.converters._converters_entry import _get_metadata_from_mlmodel
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.frontend.milproto.load import \
     load as milproto_to_pymil
 from coremltools.converters.mil.frontend.tensorflow.test.test_ops import \
-    TestTensorArray as _TestTensorArray
+    TestTensorArray
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
     run_compare_tf
-from coremltools.converters.mil.frontend.torch.test.test_torch_ops import \
-    TestScriptedModels as _TestScriptedModels
 from coremltools.converters.mil.mil.ops.tests.testing_utils import \
     compare_backend
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+
+if _HAS_TORCH:
+    import torch
+    from coremltools.converters.mil.frontend.torch.test.test_torch_ops import \
+        TestScriptedModels
 
 
 def get_pymil_prog_from_mlmodel(mlmodel):
@@ -115,6 +117,7 @@ class TestLoadAPIUsage:
 
 @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
 class TestE2ENumericalCorrectness:
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_elu(self):
         inputs = [ct.TensorType(name="data", shape=(2, 3, 1))]
         input_data = [torch.rand(*i.shape.to_list()) for i in inputs]
@@ -127,6 +130,7 @@ class TestE2ENumericalCorrectness:
         }
         roundtrip_and_compare_mlmodel(mlmodel, input_values)
 
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_linear(self):
         inputs = [ct.TensorType(name="data", shape=(10, 2))]
         input_data = [torch.rand(*i.shape.to_list()) for i in inputs]
@@ -141,6 +145,7 @@ class TestE2ENumericalCorrectness:
         }
         roundtrip_and_compare_mlmodel(mlmodel, input_values)
 
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_conv(self):
         inputs = [ct.TensorType(name="data", shape=(5, 10, 4, 4))]
         input_data = [torch.rand(*i.shape.to_list()) for i in inputs]
@@ -155,8 +160,9 @@ class TestE2ENumericalCorrectness:
         }
         roundtrip_and_compare_mlmodel(mlmodel, input_values)
 
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_while_loop(self):
-        model = _TestScriptedModels.get_while_loop_model()
+        model = TestScriptedModels.get_while_loop_model()
         model_spec = torch.jit.script(model)
         mlmodel = ct.convert(model_spec,
                              inputs=[ct.TensorType(name="data", shape=model.input_size, dtype=np.float32)],
@@ -166,8 +172,9 @@ class TestE2ENumericalCorrectness:
         input_values = {"data": np.array([10.])}
         roundtrip_and_compare_mlmodel(mlmodel, input_values)
 
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_cond(self):
-        model = _TestScriptedModels.get_cond_model()
+        model = TestScriptedModels.get_cond_model()
         model_spec = torch.jit.script(model)
         mlmodel = ct.convert(model_spec,
                              inputs=[ct.TensorType(name="data", shape=(1,), dtype=np.float32)],
@@ -179,7 +186,7 @@ class TestE2ENumericalCorrectness:
 
     @pytest.mark.skipif(_HAS_TF_2, reason="Fix and re-enable this test: rdar://76293949 (TF2 unit test InvalidArgumentError)")
     def test_list(self):
-        model, inputs, outputs = _TestTensorArray.get_dynamic_elem_shape_model()
+        model, inputs, outputs = TestTensorArray.get_dynamic_elem_shape_model()
         input_values = [np.random.rand(2, 3)]
         input_dict = dict(zip(inputs, input_values))
         _, mlmodel, _, _ = run_compare_tf(

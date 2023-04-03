@@ -28,7 +28,6 @@ from coremltools.converters.mil.mil.ops.defs._utils import (
 from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
-    is_compatible_symbolic_vector,
     is_symbolic,
 )
 from coremltools.converters.mil.mil.var import ListVar, Var
@@ -39,8 +38,9 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
 
+
 # Max int64 value. Used as a default value in many PyTorch functions.
-PYTORCH_DEFAULT_VALUE = 2 ** 63 - 1
+PYTORCH_DEFAULT_VALUE = 2**63 - 1
 
 VALUE_CLOSE_TO_INFINITY = 1e+38
 
@@ -341,7 +341,7 @@ def grid_sampler(context, node):
         context.add(x)
 
 
-@register_torch_op()
+@register_torch_op
 def silu(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = mb.silu(x=inputs[0], name=node.name)
@@ -645,6 +645,7 @@ def ne(context, node):
         x = mb.cast(x=x, dtype='int32')
     if is_bool(y.dtype):
         y = mb.cast(x=y, dtype='int32')
+    x, y = promote_input_dtypes([x, y])
     equal_to = mb.not_equal(x=x, y=y, name=node.name)
     context.add(equal_to)
 
@@ -829,6 +830,8 @@ def _convolution(context, node):
     weight = inputs[1]
     bias = inputs[2]
     strides = inputs[3]
+
+    x, weight = promote_input_dtypes([x, weight])
 
     # Expand padding. Torch accepts either an int (for all dimensions) or an n-tuple of ints (one per dimension), but
     # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
@@ -1032,7 +1035,7 @@ def softsign(context, node):
     context.add(res)
 
 
-@register_torch_op()
+@register_torch_op
 def relu(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -1141,7 +1144,7 @@ def elu(context, node):
     context.add(res)
 
 
-@register_torch_op()
+@register_torch_op
 def leaky_relu(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
@@ -1149,7 +1152,7 @@ def leaky_relu(context, node):
     context.add(res)
 
 
-@register_torch_op()
+@register_torch_op
 def rrelu(context, node):
     inputs = _get_inputs(context, node, expected=5)
 
@@ -1371,6 +1374,7 @@ def div(context, node):
 @register_torch_op(torch_alias=["floordiv"])
 def floor_divide(context, node):
     inputs = _get_inputs(context, node, expected=2)
+    inputs = promote_input_dtypes(inputs)
     div_res = mb.floor_div(x=inputs[0], y=inputs[1])
     # Pytorch's floor_divide always returns fp32, even if the inputs are int
     res = mb.cast(x=div_res, dtype='fp32', name=node.name)
@@ -1392,7 +1396,7 @@ def mul(context, node):
     context.add(res)
 
 
-@register_torch_op()
+@register_torch_op
 def pow(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
@@ -1832,7 +1836,7 @@ def embedding(context, node):
     context.add(gather)
 
 
-@register_torch_op()
+@register_torch_op
 def hardtanh(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
@@ -2959,16 +2963,18 @@ def upsample_nearest2d(context, node):
 def tupleunpack(context, node):
     inputs = _get_inputs(context, node, expected=1)
     values = inputs[0]
+
     # Node input could have been turned into constant array in @tupleconstruct
-    if not isinstance(values, tuple) and not isinstance(values, list):
-        values = values.val
+    if not isinstance(values, (tuple, list)):
+        if values.val is not None:
+            values = values.val
+        else:
+            # The `values` could be a single Var with symbolic val.
+            values = [values]
+
     if len(values) != len(node.outputs):
-        raise ValueError(
-            "unpack node expected {} outputs, got {}".format(
-                len(node.outputs), len(values)
-            )
-        )
-    assert len(values) == len(node.outputs)
+        raise ValueError(f"unpack node expected {len(node.outputs)} outputs, got {len(values)}")
+
     # @value is either a numpy primitive or a Var object
     for value, output in zip(values, node.outputs):
         if not isinstance(value, Var):
@@ -3239,32 +3245,41 @@ def _get_slice_params(context, data, inputs):
     end_mask = [False] * rank
     squeeze_mask = [False] * rank
 
-    num_of_slice_set = len(inputs) // 2
+    num_of_slice_set = len(inputs) // 3
 
     for i in range(num_of_slice_set):
-        if inputs[2 * i + 1] is None:
+        if inputs[3 * i + 1] is None:
             # This is pure index select
-            idx = context[inputs[2 * i]].val
+            idx = context[inputs[3 * i]].val
             begin[i] = idx
             squeeze_mask[i] = True
         else:
             # This is a slice
-            begin_var = context[inputs[2 * i]]
-            end_var = context[inputs[2 * i + 1]]
+            begin_var = context[inputs[3 * i]]
+            end_var = context[inputs[3 * i + 1]]
+            stride_var = context[inputs[3 * i + 2]]
 
             if begin_var is None:
                 begin_mask[i] = True
             else:
-                begin[i] = begin_var.val
+                begin[i] = begin_var
 
             if end_var is None:
                 end_mask[i] = True
             else:
-                end[i] = end_var.val
+                end[i] = end_var
+
+            if stride_var is None:
+                stride[i] = 1
+            else:
+                stride[i] = stride_var.val
 
     for i in range(num_of_slice_set, rank):
         begin_mask[i] = True
         end_mask[i] = True
+
+    begin = mb.concat(values=begin, axis=0)
+    end = mb.concat(values=end, axis=0)
 
     return begin, end, stride, begin_mask, end_mask, squeeze_mask
 
@@ -3300,8 +3315,11 @@ def _internal_op_tensor_inplace_fill(context, node):
     begin, end, stride, begin_mask, end_mask, squeeze_mask = _get_slice_params(
         context, data, node.inputs[2:]
     )
+    if begin.val is None or end.val is None:
+        raise ValueError("_internal_op_tensor_inplace_fill does not support dynamic index")
+
     fill_shape = solve_slice_by_index_shape(
-        data.shape, begin, end, stride, begin_mask, end_mask, squeeze_mask
+        data.shape, begin.val, end.val, stride, begin_mask, end_mask, squeeze_mask
     )
     update_values = _np.full(fill_shape, fill_scalar.val)
 
@@ -3365,44 +3383,43 @@ def index(context, node):
     rank = x.rank
 
     """
-    we support two kinds of torch tensor indexing now
-    """
-    """
-    Case 1: indices are bool tensor indicating index selection
+    Case 1: A single boolean index selection
     Ex:
-        a = torch.randn(1,2,3,4)
-        b = a[a > 0.1]
+        a = torch.rand(2, 3, 4)
+        b = torch.rand(3, 4)
+        index = b > 0.1
+        c = a[:, b]
 
-    For this case, indices is a list with length 1, containing a single bool tensor with the same shape
-    as the input tensor.
-
-    The true value indicates whether the element should be selected.
-    The output b is a 1-D vector with shape (N), where N is the number of elements satisfying condition > 0.1
+    For this case, the only non-None tensor is with dtype bool
+    The true value indicates whether the element should be selected among the masked axes
+    The output c is a tensor with shape (2, N), where N is the number of elements of b satisfying condition > 0.1
     """
-    if (
-        len(indices) == 1
-        and indices[0] is not None
-        and indices[0].sym_type.get_primitive() == types.bool
-        and indices[0].shape == x.shape
-    ):
-        indices = indices[0]
-        x_reshape = mb.reshape(x=x, shape=[-1])
-        indices = mb.cast(x=indices, dtype="int32")
-        indices_reshape = mb.reshape(x=indices, shape=[-1])
+    boolean_indices_axis = []
+    for i, index in enumerate(indices):
+        if index is not None and types.is_bool(index.dtype):
+            boolean_indices_axis.append(i)
+    if len(boolean_indices_axis) == 1:
+        # get the True element indices
+        axis = boolean_indices_axis[0]
+        axes = list(range(axis, axis + index.rank))
+        index = indices[axis]
+        index = mb.non_zero(x=index)
 
-        # the resulting non_zeros_indices has shape [N, 1],
-        # where N is the number of non-zero element
-        non_zeros_indices = mb.non_zero(x=indices_reshape)
-        non_zeros_indices = mb.squeeze(x=non_zeros_indices, axes=[1])  # [N]
+        # tranpose the masked axes to the beginning
+        perm = axes + [i for i in range(rank) if i not in axes]
+        x = mb.transpose(x=x, perm=perm)
+        x = mb.gather_nd(x=x, indices=index)
 
-        # gather the element from the flatten vector
-        select_x = mb.gather(x=x_reshape, indices=non_zeros_indices, axis=0, name=node.name)
-        context.add(select_x)
+        # transpose the tensor back
+        perm_back = list(range(1, x.rank))
+        perm_back.insert(axis, 0)
+        res = mb.transpose(x=x, perm=perm_back, name=node.name)
+        context.add(res)
         return
 
     """
     Case 2: Pure index selection
-    Ex # 1:
+    Ex # 1 [Single dimension selection]:
         a = torch.rand(1,2,3,4)
         index = torch.tensor([0, 1])
         b = a[:,:,:,index]
@@ -3412,16 +3429,17 @@ def index(context, node):
 
         b has shape (1,2,3,2).
 
-    Ex # 2:
+    Ex # 2 [Multiple disconnected dimensions selection]:
         a = torch.rand(1,2,3,4)
         index = torch.tensor([0, 1])
         b = a[:,index,:,index]
 
         In this case, indices is a list [None, [0,1], None, [0,1]]
 
-        b has shape (2,1,3)
+        b has shape (2,1,3),
+        where b[0,:,:] = a[:,0,:,0] and b[1,:,:] = a[:,1,:,1]
 
-    Ex # 3:
+    Ex # 3 [Multiple connected dimensions selection]:
         a = torch.rand(1,2,3,4)
         index_1 = torch.tensor([0, 1])
         index_2 = torch.tensor([0, 1])
@@ -3429,9 +3447,10 @@ def index(context, node):
 
         indices is a list [None, [0, 1], [0, 1], None]
 
-        b has shape (1,2,4)
+        b has shape (1,2,4),
+        where b[:,0,:] = a[:,0,0,:] and b[:,1,:] = a[:,1,1,:]
 
-    EX # 4:
+    Ex # 4 [Selection with boolean masks]:
         a = torch.rand(4,5)
         index_1 = [True, True, False, False]
         index_2 = [False, True, True, False, False]
@@ -3439,9 +3458,26 @@ def index(context, node):
 
         indices is a list [[True, True, False, False], [False, True, True, False, False]]
 
-        b has shape (2, )
+        In this case, index_1 and index_2 are interpreted as mask by indices of True,
+        index_1 -> [0, 1]
+        index_2 -> [1, 2]
 
-    Note that the indices are broadcastable in PyTorch, but NOT supported here for dynamic shape.
+        b has shape (2,),
+        where b[0] = a[0, 1] and b[1] = a[1, 2]
+
+    Ex # 5 [Broadcast selection]:
+        a = torch.rand(1,2,3,4)
+        index_1 = torch.tensor([0, 1])
+        index_2 = torch.tensor([0])
+        b = a[:,index_1,index_2,:]
+
+        indices is a list [None, [0, 1], [0], None]
+
+        In this case, index_2 is going to be broadcasted to [0, 0]
+
+        b has shape (1,2,4),
+        where b[:,0,:] = a[:,0,0,:] and b[:,1,:] = a[:,1,0,:]
+
     """
 
     # get the index axes
@@ -3482,9 +3518,7 @@ def index(context, node):
                 valid_indices[i] = mb.const(
                     val=new_val, name=index.name + "_broadcasted"
                 )
-    for index in valid_indices:
-        if not is_compatible_symbolic_vector(index.shape, valid_indices[0].shape):
-            raise NotImplementedError("Broadcasable tensor index not supported.")
+    valid_indices = [mb.cast(x=index, dtype="int32") for index in valid_indices]
 
     # First stack the index together
     indices_rank = valid_indices[0].rank
@@ -3756,7 +3790,7 @@ def sigmoid(context, node):
     context.add(res)
 
 
-@register_torch_op()
+@register_torch_op
 def hardsigmoid(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -4073,7 +4107,7 @@ def arange(context, node):
     context.add(res)
 
 
-@register_torch_op()
+@register_torch_op
 def masked_fill(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]
@@ -4310,12 +4344,12 @@ def _add_amax_amin(context, node, reduce_op):
      # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
      # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
     assert len(node.outputs) == 1
-    
+
     all_inputs = _get_inputs(context, node, expected=[2, 3])
     _input = all_inputs[0]
     dim = [all_inputs[1].val] if type(all_inputs[1].val) == int else [x for x in all_inputs[1].val]
     keepdim = all_inputs[2] if len(all_inputs) == 3 else False
-    
+
     context.add(reduce_op(x=_input, axes=dim, keep_dims=keepdim), torch_name=node.outputs[0])
 
 @register_torch_op
@@ -4531,6 +4565,11 @@ def clamp(context, node):
     min_val = inputs[1] if inputs[1] else _np.finfo(_np.float32).min
     max_val = inputs[2] if inputs[2] else _np.finfo(_np.float32).max
 
+    if isinstance(min_val, Var) and isinstance(max_val, Var) and min_val.val >= max_val.val:
+        # When min >= max, PyTorch sets all values to max.
+        context.add(mb.fill(shape=mb.shape(x=x), value=max_val.val, name=node.name))
+        return
+
     is_input_int = types.is_int(x.dtype)
     if not types.is_float(x.dtype):
         # The `mb.clip` op requires parameters from type domain ['fp16', 'fp32'].
@@ -4714,7 +4753,7 @@ def is_floating_point(context, node):
     context.add(mb.const(val=is_float, name=node.name))
 
 
-@register_torch_op()
+@register_torch_op
 def logical_and(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs
@@ -4722,8 +4761,7 @@ def logical_and(context, node):
     y = mb.cast(x=y, dtype="bool")
     context.add(mb.logical_and(x=x, y=y, name=node.name))
 
-
-@register_torch_op()
+@register_torch_op
 def logical_or(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs
@@ -4732,7 +4770,7 @@ def logical_or(context, node):
     context.add(mb.logical_or(x=x, y=y, name=node.name))
 
 
-@register_torch_op()
+@register_torch_op
 def logical_xor(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs
@@ -5378,6 +5416,34 @@ def hann_window(context, node):
     context.add(sin_sq)
 
 @register_torch_op
+def mse_loss(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    y = inputs[1]
+    reduction = inputs[2].val
+
+    diff = mb.sub(x=x, y=y)
+
+    if reduction == 0:
+        # reduction is "none"
+        res = mb.mul(x=diff, y=diff, name=node.name)
+        context.add(res)
+        return
+
+    square = mb.mul(x=diff, y=diff)
+    if reduction == 1:
+        # reduction is "mean"
+        res = mb.reduce_mean(x=square, axes=None, name=node.name)
+
+    elif reduction == 2:
+        # reduction is "sum"
+        res = mb.reduce_sum(x=square, axes=None, name=node.name)
+    else:
+        raise ValueError("Reduction is not supported")
+
+    context.add(res)
+
+@register_torch_op
 def trace(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
@@ -5395,20 +5461,32 @@ def trace(context, node):
 def roll(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]
-    shift = inputs[1]
-    if inputs[2].val:
-        raise NotImplementedError('"dims" parameter of "roll" op is not supported.')
-    shape = mb.shape(x=x)
-    flatten = mb.reshape(x=x, shape=[-1])
+    shift = inputs[1].val
+    dims = inputs[2].val
+    origin_shape = mb.shape(x=x)
 
-    dim_prod = mb.reduce_prod(x=shape)
-    start_idx = mb.sub(x=dim_prod, y=shift)
-    indices0 = mb.range_1d(end=dim_prod, start=start_idx, step=1)
-    indices1 = mb.range_1d(end=start_idx, start=0, step=1)
-    indices = mb.concat(values=[indices0, indices1], axis=0)
-    x = mb.gather(x=flatten, indices=indices, name=node.name)
-    x = mb.reshape(x=x, shape=shape, name=node.name)
-    context.add(x)
+    need_flatten = len(dims) == 0
+
+    if need_flatten:
+        # The tensor is flattened before rolling
+        x = mb.reshape(x=x, shape=[-1])
+        dims = [0]
+
+    shape = mb.shape(x=x)
+
+    for s, i in zip(shift, dims):
+        dim = value_at(shape, i)
+        s = mb.mod(x=s, y=dim)
+        start_idx = mb.sub(x=dim, y=s)
+        indices0 = mb.range_1d(end=dim, start=start_idx, step=1)
+        indices1 = mb.range_1d(end=start_idx, start=0, step=1)
+        indices = mb.concat(values=[indices0, indices1], axis=0)
+        x = mb.gather(x=x, indices=indices, axis=i)
+
+    if need_flatten:
+        x = mb.reshape(x=x, shape=origin_shape)
+
+    context.add(x, node.name)
 
 
 @register_torch_op
@@ -5602,8 +5680,7 @@ def fft_irfftn(context, node):
 @register_torch_op(torch_alias=["torchvision::nms"])
 def torchvision_nms(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    boxes = inputs[0]
-    scores = inputs[1]
+    boxes, scores = promote_input_dtypes([inputs[0], inputs[1]])
     iou_threshold = inputs[2].val
     # Use float min to avoid boxes being pruned by scores in MIL NMS op.
     score_threshold = (
@@ -5611,15 +5688,13 @@ def torchvision_nms(context, node):
         if boxes.dtype._width == 16
         else _np.finfo(_np.float32).min
     )
-    # Use a large number to avoid valid boxes got pruned. We don't use _np.iinfo(_np.int32).max here
-    # because it triggers the MIL NMS op segment fault.
-    MAX_BOXES = 10000
 
     box_num = boxes.shape[0]
-    if not is_symbolic(box_num) and box_num > MAX_BOXES:
-        raise ValueError(
-            f"Only support at most {MAX_BOXES} boxes, but got {box_num} boxes."
-        )
+    if is_symbolic(box_num):
+        # When the number of boxes is unknown at compile time, use a large number to avoid valid
+        # boxes got pruned. We don't use _np.iinfo(_np.int32).max here because it triggers the MIL
+        # NMS op segment fault.
+        box_num = 10000
 
     # The boxes' coordinates from PyTorch input is (x1, y1, x2, y2) format with 0 <= x1 < x2 and
     # 0 <= y1 < y2. However, the MIL NMS op expects CENTER_SIZE_WIDTH_FIRST format, which is
@@ -5639,7 +5714,7 @@ def torchvision_nms(context, node):
     _, _, indices, valid_outputs = mb.non_maximum_suppression(
         boxes=boxes,
         scores=scores,
-        max_boxes=MAX_BOXES,
+        max_boxes=box_num,
         iou_threshold=iou_threshold,
         score_threshold=score_threshold,
     )

@@ -102,9 +102,8 @@ def effective_kernel(kernel_shape, dilations):
     """
     if len(kernel_shape) != len(dilations):
         raise ValueError(
-            "kernel_shape ({}) and dilations ({}) must be the same length".format(
-                len(kernel_shape), len(dilations)
-            )
+            f"kernel_shape ({len(kernel_shape)}) and dilations ({len(dilations)}) "
+            f"must be the same length"
         )
     return [(k - 1) * d + 1 for k, d in zip(kernel_shape, dilations)]
 
@@ -145,9 +144,8 @@ def aggregated_pad(
         dilations = [1] * num_spatial_dims
     elif len(dilations) != num_spatial_dims:
         raise ValueError(
-            "dilations must have same length as kernel_shape ({}, but got {})".format(
-                num_spatial_dims, len(dilations)
-            )
+            f"dilations must have same length as kernel_shape "
+            f"({num_spatial_dims}, but got {len(dilations)})"
         )
     if pad_type in ["same", "same_lower"]:
         if input_shape is None or len(input_shape) != num_spatial_dims:
@@ -229,16 +227,12 @@ def spatial_dimensions_out_shape(
         == len(custom_pad) / 2
     ):
         raise ValueError(
-            "input_shape (length {}), kernel_shape (length {}), "
-            "strides (length {}), dilations (length {}), and "
-            "custom_pad (length {}) divided by two must all be "
-            "the same length".format(
-                len(input_shape),
-                len(kernel_shape),
-                len(strides),
-                len(dilations),
-                len(custom_pad),
-            )
+            f"input_shape (length {len(input_shape)}), "
+            f"kernel_shape (length {len(kernel_shape)}), "
+            f"strides (length {len(strides)}), "
+            f"dilations (length {len(dilations)}), "
+            f"and custom_pad (length {len(custom_pad)}) divided by two "
+            "must all be the same length"
         )
 
     pad = aggregated_pad(
@@ -252,16 +246,24 @@ def spatial_dimensions_out_shape(
     effective_ks = effective_kernel(kernel_shape, dilations)
     out_shape = []
     for r in range(num_spatial_dims):
+        # only check if `input_shape` (spatial part of the input image) is symbolic, because:
+        # * `input_shape` can be symbolic
+        # * `pad` (aggregated from `input_shape` + ...) is symbolic only if `input_shape` is symbolic
+        # * `effective_ks` (effective kernel size, determined from kernel size + dilations) cannot be symbolic
+        # * strides cannot be symbolic
         if is_symbolic(input_shape[r]):
             out_shape.append(get_new_symbol())
         else:
+            out_dim = 0
             if not ceil_mode:
-                out_shape.append(math.floor((input_shape[r] + pad[r] - effective_ks[r]) / strides[r] + 1))
+                out_dim = math.floor((input_shape[r] + pad[r] - effective_ks[r]) / strides[r] + 1)
             else:
                 out_dim = math.floor((input_shape[r] + pad[r] - effective_ks[r] + strides[r] - 1) / strides[r] + 1)
                 if (out_dim - 1) * strides[r] >= input_shape[r] + pad[r]/2 and pad[r] > 0:
                     out_dim = out_dim - 1
-                out_shape.append(out_dim)
+            if out_dim <= 0:
+                raise ValueError(f"spatial dimension {r} has invalid output size {out_dim}")
+            out_shape.append(out_dim)
     return out_shape
 
 
@@ -396,6 +398,19 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
     if end is None or len(end) == 0:
         end = [None] * len(x_shape)
 
+    if len(begin) != len(x_shape):
+        raise TypeError(
+            "slice_by_index op: size of 'begin', {}, is not equal to the rank of input, which is {}".format(
+                len(begin), len(x_shape)
+            )
+        )
+    if len(end) != len(x_shape):
+        raise TypeError(
+            "slice_by_index op: size of 'end', {}, is not equal to the rank of input, which is {}".format(
+                len(end), len(x_shape)
+            )
+        )
+
     # solve for shape inference
     for idx in range(len(x_shape)):
         # skip if we want to squeeze the dimension
@@ -416,6 +431,78 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
                 ret_shape.append(num)
             continue
 
+        """
+        We first deal with those cases, where the output size is a deterministic number, even if the input dimension
+        is unknown (i.e. symbolic)
+        """
+        if (
+            not begin_mask[idx]
+            and not end_mask[idx]
+            and begin[idx] is not None
+            and end[idx] is not None
+        ):
+            # in this case the slice is from "begin" to "end", where both these boundary points are known
+            # we can find the size of the slice in this case, unless one of them is positive and other is negative
+            # as in that case, we would need to know the size of the full input dimension
+            if begin[idx] >= 0 and end[idx] >= 0 and stride[idx] > 0:
+                if end[idx] < begin[idx]:
+                    raise ValueError(
+                        "slice_by_index op: unsupported values in for dimension {}, "
+                        "(begin, end, stride) : ({}, {}, {})".format(
+                            idx, begin[idx], end[idx], stride[idx]
+                        )
+                    )
+                ret_shape.append(
+                    np.arange(end[idx] - begin[idx])[
+                        slice(0, end[idx] - begin[idx], stride[idx])
+                    ].size
+                )
+                continue
+            if begin[idx] < 0 and end[idx] < 0 and stride[idx] < 0:
+                if begin[idx] < end[idx]:
+                    raise ValueError(
+                        "slice_by_index op: unsupported values in for dimension {}, "
+                        "(begin, end, stride) : ({}, {}, {})".format(
+                            idx, begin[idx], end[idx], stride[idx]
+                        )
+                    )
+                ret_shape.append(
+                    np.arange(begin[idx] - end[idx])[
+                        slice(-1, end[idx] - begin[idx] - 1, stride[idx])
+                    ].size
+                )
+                continue
+
+        if begin_mask[idx] and not end_mask[idx] and end[idx] is not None:
+            # in this case we know that the slice is [0, end] or [-1, end], depending on the sign of stride,
+            #  and the value of end is known
+            if end[idx] > 0 and stride[idx] > 0:
+                ret_shape.append(
+                    np.arange(end[idx])[slice(None, end[idx], stride[idx])].size
+                )
+                continue
+            if end[idx] < 0 and stride[idx] < 0:
+                ret_shape.append(
+                    np.arange(abs(end[idx]))[slice(None, end[idx], stride[idx])].size
+                )
+                continue
+
+        if not begin_mask[idx] and end_mask[idx] and begin[idx] is not None:
+            # in this case we know the value of begin, and since end_mask is True, we know that the slice
+            # is till the right most edge
+            if begin[idx] > 0 and stride[idx] < 0:
+                ret_shape.append(
+                    np.arange(begin[idx] + 1)[slice(begin[idx], None, stride[idx])].size
+                )
+                continue
+            if begin[idx] < 0 and stride[idx] > 0:
+                ret_shape.append(
+                    np.arange(abs(begin[idx]))[
+                        slice(begin[idx], None, stride[idx])
+                    ].size
+                )
+                continue
+
         # for symbolic case
         if is_symbolic(x_shape[idx]):
             ret_shape.append(get_new_symbol())
@@ -434,7 +521,7 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
             ret_shape.append(get_new_symbol())
             continue
 
-        # parse negative dimention
+        # parse negative dimension
         if begin[idx] is not None and begin[idx] < 0:
             begin[idx] = max(0, begin[idx] + x_shape[idx])
         if end[idx] is not None and end[idx] < 0:

@@ -3,9 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.mil.passes.name_sanitization_utils import (
-    NameSanitizer, sanitize_block)
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -20,4 +19,4 @@ class sanitize_name_strings(AbstractGraphPass):
         for f in prog.functions.values():
             sanitizer_vars = NameSanitizer(prefix="var_")
             sanitizer_ops = NameSanitizer(prefix="op_")
-            sanitize_block(f, sanitizer_vars, sanitizer_ops, prog.main_input_types)
+            NameSanitizer.sanitize_block(f, sanitizer_vars, sanitizer_ops, prog.main_input_types)

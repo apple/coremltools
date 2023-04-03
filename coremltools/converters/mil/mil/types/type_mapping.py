@@ -189,9 +189,12 @@ def promote_dtypes(dtypes):
             builtin('fp16')
 
     """
-
     if not isinstance(dtypes, (list, tuple)) or len(dtypes) < 1:
-        raise ValueError("dtypes needs to be a list/tuple of atleast 1 element")
+        raise ValueError("dtypes needs to be a list/tuple of at least 1 element")
+
+    # Deduplicate inputs to avoid redundant calculations.
+    # Without dedup, too large input will cause maximum recursion depth exceeded error.
+    dtypes = list(set(dtypes))
 
     if len(dtypes) == 1:
         return dtypes[0]

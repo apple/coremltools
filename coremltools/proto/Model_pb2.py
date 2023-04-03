@@ -2,23 +2,20 @@
 # source: Model.proto
 
 import sys
-
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
 from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pb2
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
+from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
+from . import VisionFeaturePrint_pb2 as VisionFeaturePrint__pb2
 from . import AudioFeaturePrint_pb2 as AudioFeaturePrint__pb2
 from . import TextClassifier_pb2 as TextClassifier__pb2
-from . import VisionFeaturePrint_pb2 as VisionFeaturePrint__pb2
-
 try:
   DataStructures__pb2 = TextClassifier__pb2.DataStructures__pb2
 except AttributeError:
@@ -28,7 +25,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = TextClassifier__pb2.FeatureTypes_pb2
 from . import WordTagger_pb2 as WordTagger__pb2
-
 try:
   DataStructures__pb2 = WordTagger__pb2.DataStructures__pb2
 except AttributeError:
@@ -38,7 +34,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = WordTagger__pb2.FeatureTypes_pb2
 from . import Gazetteer_pb2 as Gazetteer__pb2
-
 try:
   DataStructures__pb2 = Gazetteer__pb2.DataStructures__pb2
 except AttributeError:
@@ -48,7 +43,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = Gazetteer__pb2.FeatureTypes_pb2
 from . import WordEmbedding_pb2 as WordEmbedding__pb2
-
 try:
   DataStructures__pb2 = WordEmbedding__pb2.DataStructures__pb2
 except AttributeError:
@@ -60,7 +54,6 @@ except AttributeError:
 from . import ArrayFeatureExtractor_pb2 as ArrayFeatureExtractor__pb2
 from . import BayesianProbitRegressor_pb2 as BayesianProbitRegressor__pb2
 from . import CategoricalMapping_pb2 as CategoricalMapping__pb2
-
 try:
   DataStructures__pb2 = CategoricalMapping__pb2.DataStructures__pb2
 except AttributeError:
@@ -71,7 +64,6 @@ except AttributeError:
   FeatureTypes__pb2 = CategoricalMapping__pb2.FeatureTypes_pb2
 from . import CustomModel_pb2 as CustomModel__pb2
 from . import DictVectorizer_pb2 as DictVectorizer__pb2
-
 try:
   DataStructures__pb2 = DictVectorizer__pb2.DataStructures__pb2
 except AttributeError:
@@ -82,9 +74,8 @@ except AttributeError:
   FeatureTypes__pb2 = DictVectorizer__pb2.FeatureTypes_pb2
 from . import FeatureTypes_pb2 as FeatureTypes__pb2
 from . import FeatureVectorizer_pb2 as FeatureVectorizer__pb2
-from . import GLMClassifier_pb2 as GLMClassifier__pb2
 from . import GLMRegressor_pb2 as GLMRegressor__pb2
-
+from . import GLMClassifier_pb2 as GLMClassifier__pb2
 try:
   DataStructures__pb2 = GLMClassifier__pb2.DataStructures__pb2
 except AttributeError:
@@ -94,7 +85,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = GLMClassifier__pb2.FeatureTypes_pb2
 from . import NearestNeighbors_pb2 as NearestNeighbors__pb2
-
 try:
   DataStructures__pb2 = NearestNeighbors__pb2.DataStructures__pb2
 except AttributeError:
@@ -117,7 +107,6 @@ except AttributeError:
   FeatureTypes__pb2 = NearestNeighbors__pb2.FeatureTypes_pb2
 from . import Identity_pb2 as Identity__pb2
 from . import Imputer_pb2 as Imputer__pb2
-
 try:
   DataStructures__pb2 = Imputer__pb2.DataStructures__pb2
 except AttributeError:
@@ -128,7 +117,6 @@ except AttributeError:
   FeatureTypes__pb2 = Imputer__pb2.FeatureTypes_pb2
 from . import MIL_pb2 as MIL__pb2
 from . import NeuralNetwork_pb2 as NeuralNetwork__pb2
-
 try:
   DataStructures__pb2 = NeuralNetwork__pb2.DataStructures__pb2
 except AttributeError:
@@ -151,7 +139,6 @@ except AttributeError:
   FeatureTypes__pb2 = NeuralNetwork__pb2.FeatureTypes_pb2
 from . import Normalizer_pb2 as Normalizer__pb2
 from . import OneHotEncoder_pb2 as OneHotEncoder__pb2
-
 try:
   DataStructures__pb2 = OneHotEncoder__pb2.DataStructures__pb2
 except AttributeError:
@@ -160,9 +147,8 @@ try:
   FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes_pb2
-from . import NonMaximumSuppression_pb2 as NonMaximumSuppression__pb2
 from . import Scaler_pb2 as Scaler__pb2
-
+from . import NonMaximumSuppression_pb2 as NonMaximumSuppression__pb2
 try:
   DataStructures__pb2 = NonMaximumSuppression__pb2.DataStructures__pb2
 except AttributeError:
@@ -172,7 +158,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = NonMaximumSuppression__pb2.FeatureTypes_pb2
 from . import SVM_pb2 as SVM__pb2
-
 try:
   DataStructures__pb2 = SVM__pb2.DataStructures__pb2
 except AttributeError:
@@ -182,7 +167,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = SVM__pb2.FeatureTypes_pb2
 from . import TreeEnsemble_pb2 as TreeEnsemble__pb2
-
 try:
   DataStructures__pb2 = TreeEnsemble__pb2.DataStructures__pb2
 except AttributeError:
@@ -192,7 +176,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = TreeEnsemble__pb2.FeatureTypes_pb2
 from . import Parameters_pb2 as Parameters__pb2
-
 try:
   DataStructures__pb2 = Parameters__pb2.DataStructures__pb2
 except AttributeError:
@@ -202,7 +185,6 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = Parameters__pb2.FeatureTypes_pb2
 from . import ItemSimilarityRecommender_pb2 as ItemSimilarityRecommender__pb2
-
 try:
   DataStructures__pb2 = ItemSimilarityRecommender__pb2.DataStructures__pb2
 except AttributeError:
@@ -211,9 +193,8 @@ try:
   FeatureTypes__pb2 = ItemSimilarityRecommender__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = ItemSimilarityRecommender__pb2.FeatureTypes_pb2
-from . import LinkedModel_pb2 as LinkedModel__pb2
 from . import SoundAnalysisPreprocessing_pb2 as SoundAnalysisPreprocessing__pb2
-
+from . import LinkedModel_pb2 as LinkedModel__pb2
 try:
   Parameters__pb2 = LinkedModel__pb2.Parameters__pb2
 except AttributeError:
@@ -226,46 +207,56 @@ try:
   FeatureTypes__pb2 = LinkedModel__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = LinkedModel__pb2.FeatureTypes_pb2
+from . import ClassConfidenceThresholding_pb2 as ClassConfidenceThresholding__pb2
+try:
+  DataStructures__pb2 = ClassConfidenceThresholding__pb2.DataStructures__pb2
+except AttributeError:
+  DataStructures__pb2 = ClassConfidenceThresholding__pb2.DataStructures_pb2
+try:
+  FeatureTypes__pb2 = ClassConfidenceThresholding__pb2.FeatureTypes__pb2
+except AttributeError:
+  FeatureTypes__pb2 = ClassConfidenceThresholding__pb2.FeatureTypes_pb2
 
-from .ArrayFeatureExtractor_pb2 import *
+from .VisionFeaturePrint_pb2 import *
 from .AudioFeaturePrint_pb2 import *
+from .TextClassifier_pb2 import *
+from .WordTagger_pb2 import *
+from .Gazetteer_pb2 import *
+from .WordEmbedding_pb2 import *
+from .ArrayFeatureExtractor_pb2 import *
 from .BayesianProbitRegressor_pb2 import *
 from .CategoricalMapping_pb2 import *
 from .CustomModel_pb2 import *
 from .DictVectorizer_pb2 import *
 from .FeatureTypes_pb2 import *
 from .FeatureVectorizer_pb2 import *
-from .Gazetteer_pb2 import *
-from .GLMClassifier_pb2 import *
 from .GLMRegressor_pb2 import *
+from .GLMClassifier_pb2 import *
+from .NearestNeighbors_pb2 import *
 from .Identity_pb2 import *
 from .Imputer_pb2 import *
-from .ItemSimilarityRecommender_pb2 import *
-from .LinkedModel_pb2 import *
 from .MIL_pb2 import *
-from .NearestNeighbors_pb2 import *
 from .NeuralNetwork_pb2 import *
-from .NonMaximumSuppression_pb2 import *
 from .Normalizer_pb2 import *
 from .OneHotEncoder_pb2 import *
-from .Parameters_pb2 import *
 from .Scaler_pb2 import *
-from .SoundAnalysisPreprocessing_pb2 import *
+from .NonMaximumSuppression_pb2 import *
 from .SVM_pb2 import *
-from .TextClassifier_pb2 import *
 from .TreeEnsemble_pb2 import *
-from .VisionFeaturePrint_pb2 import *
-from .WordEmbedding_pb2 import *
-from .WordTagger_pb2 import *
+from .Parameters_pb2 import *
+from .ItemSimilarityRecommender_pb2 import *
+from .SoundAnalysisPreprocessing_pb2 import *
+from .LinkedModel_pb2 import *
+from .ClassConfidenceThresholding_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Model.proto',
   package='CoreML.Specification',
   syntax='proto3',
-  serialized_pb=_b('\n\x0bModel.proto\x12\x14\x43oreML.Specification\x1a\x18VisionFeaturePrint.proto\x1a\x17\x41udioFeaturePrint.proto\x1a\x14TextClassifier.proto\x1a\x10WordTagger.proto\x1a\x0fGazetteer.proto\x1a\x13WordEmbedding.proto\x1a\x1b\x41rrayFeatureExtractor.proto\x1a\x1d\x42\x61yesianProbitRegressor.proto\x1a\x18\x43\x61tegoricalMapping.proto\x1a\x11\x43ustomModel.proto\x1a\x14\x44ictVectorizer.proto\x1a\x12\x46\x65\x61tureTypes.proto\x1a\x17\x46\x65\x61tureVectorizer.proto\x1a\x12GLMRegressor.proto\x1a\x13GLMClassifier.proto\x1a\x16NearestNeighbors.proto\x1a\x0eIdentity.proto\x1a\rImputer.proto\x1a\tMIL.proto\x1a\x13NeuralNetwork.proto\x1a\x10Normalizer.proto\x1a\x13OneHotEncoder.proto\x1a\x0cScaler.proto\x1a\x1bNonMaximumSuppression.proto\x1a\tSVM.proto\x1a\x12TreeEnsemble.proto\x1a\x10Parameters.proto\x1a\x1fItemSimilarityRecommender.proto\x1a SoundAnalysisPreprocessing.proto\x1a\x11LinkedModel.proto\"F\n\x08Pipeline\x12+\n\x06models\x18\x01 \x03(\x0b\x32\x1b.CoreML.Specification.Model\x12\r\n\x05names\x18\x02 \x03(\t\"F\n\x12PipelineClassifier\x12\x30\n\x08pipeline\x18\x01 \x01(\x0b\x32\x1e.CoreML.Specification.Pipeline\"E\n\x11PipelineRegressor\x12\x30\n\x08pipeline\x18\x01 \x01(\x0b\x32\x1e.CoreML.Specification.Pipeline\"m\n\x12\x46\x65\x61tureDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x18\n\x10shortDescription\x18\x02 \x01(\t\x12/\n\x04type\x18\x03 \x01(\x0b\x32!.CoreML.Specification.FeatureType\"\xd6\x01\n\x08Metadata\x12\x18\n\x10shortDescription\x18\x01 \x01(\t\x12\x15\n\rversionString\x18\x02 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x03 \x01(\t\x12\x0f\n\x07license\x18\x04 \x01(\t\x12\x44\n\x0buserDefined\x18\x64 \x03(\x0b\x32/.CoreML.Specification.Metadata.UserDefinedEntry\x1a\x32\n\x10UserDefinedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xba\x02\n\x10ModelDescription\x12\x37\n\x05input\x18\x01 \x03(\x0b\x32(.CoreML.Specification.FeatureDescription\x12\x38\n\x06output\x18\n \x03(\x0b\x32(.CoreML.Specification.FeatureDescription\x12\x1c\n\x14predictedFeatureName\x18\x0b \x01(\t\x12\"\n\x1apredictedProbabilitiesName\x18\x0c \x01(\t\x12?\n\rtrainingInput\x18\x32 \x03(\x0b\x32(.CoreML.Specification.FeatureDescription\x12\x30\n\x08metadata\x18\x64 \x01(\x0b\x32\x1e.CoreML.Specification.Metadata\"4\n\x0fSerializedModel\x12\x12\n\nidentifier\x18\x01 \x01(\t\x12\r\n\x05model\x18\x02 \x01(\x0c\"\x96\x15\n\x05Model\x12\x1c\n\x14specificationVersion\x18\x01 \x01(\x05\x12;\n\x0b\x64\x65scription\x18\x02 \x01(\x0b\x32&.CoreML.Specification.ModelDescription\x12\x13\n\x0bisUpdatable\x18\n \x01(\x08\x12G\n\x12pipelineClassifier\x18\xc8\x01 \x01(\x0b\x32(.CoreML.Specification.PipelineClassifierH\x00\x12\x45\n\x11pipelineRegressor\x18\xc9\x01 \x01(\x0b\x32\'.CoreML.Specification.PipelineRegressorH\x00\x12\x33\n\x08pipeline\x18\xca\x01 \x01(\x0b\x32\x1e.CoreML.Specification.PipelineH\x00\x12;\n\x0cglmRegressor\x18\xac\x02 \x01(\x0b\x32\".CoreML.Specification.GLMRegressorH\x00\x12O\n\x16supportVectorRegressor\x18\xad\x02 \x01(\x0b\x32,.CoreML.Specification.SupportVectorRegressorH\x00\x12M\n\x15treeEnsembleRegressor\x18\xae\x02 \x01(\x0b\x32+.CoreML.Specification.TreeEnsembleRegressorH\x00\x12O\n\x16neuralNetworkRegressor\x18\xaf\x02 \x01(\x0b\x32,.CoreML.Specification.NeuralNetworkRegressorH\x00\x12Q\n\x17\x62\x61yesianProbitRegressor\x18\xb0\x02 \x01(\x0b\x32-.CoreML.Specification.BayesianProbitRegressorH\x00\x12=\n\rglmClassifier\x18\x90\x03 \x01(\x0b\x32#.CoreML.Specification.GLMClassifierH\x00\x12Q\n\x17supportVectorClassifier\x18\x91\x03 \x01(\x0b\x32-.CoreML.Specification.SupportVectorClassifierH\x00\x12O\n\x16treeEnsembleClassifier\x18\x92\x03 \x01(\x0b\x32,.CoreML.Specification.TreeEnsembleClassifierH\x00\x12Q\n\x17neuralNetworkClassifier\x18\x93\x03 \x01(\x0b\x32-.CoreML.Specification.NeuralNetworkClassifierH\x00\x12Y\n\x1bkNearestNeighborsClassifier\x18\x94\x03 \x01(\x0b\x32\x31.CoreML.Specification.KNearestNeighborsClassifierH\x00\x12=\n\rneuralNetwork\x18\xf4\x03 \x01(\x0b\x32#.CoreML.Specification.NeuralNetworkH\x00\x12U\n\x19itemSimilarityRecommender\x18\xf5\x03 \x01(\x0b\x32/.CoreML.Specification.ItemSimilarityRecommenderH\x00\x12;\n\tmlProgram\x18\xf6\x03 \x01(\x0b\x32%.CoreML.Specification.MILSpec.ProgramH\x00\x12\x39\n\x0b\x63ustomModel\x18\xab\x04 \x01(\x0b\x32!.CoreML.Specification.CustomModelH\x00\x12\x39\n\x0blinkedModel\x18\xac\x04 \x01(\x0b\x32!.CoreML.Specification.LinkedModelH\x00\x12=\n\roneHotEncoder\x18\xd8\x04 \x01(\x0b\x32#.CoreML.Specification.OneHotEncoderH\x00\x12\x31\n\x07imputer\x18\xd9\x04 \x01(\x0b\x32\x1d.CoreML.Specification.ImputerH\x00\x12\x45\n\x11\x66\x65\x61tureVectorizer\x18\xda\x04 \x01(\x0b\x32\'.CoreML.Specification.FeatureVectorizerH\x00\x12?\n\x0e\x64ictVectorizer\x18\xdb\x04 \x01(\x0b\x32$.CoreML.Specification.DictVectorizerH\x00\x12/\n\x06scaler\x18\xdc\x04 \x01(\x0b\x32\x1c.CoreML.Specification.ScalerH\x00\x12G\n\x12\x63\x61tegoricalMapping\x18\xde\x04 \x01(\x0b\x32(.CoreML.Specification.CategoricalMappingH\x00\x12\x37\n\nnormalizer\x18\xdf\x04 \x01(\x0b\x32 .CoreML.Specification.NormalizerH\x00\x12M\n\x15\x61rrayFeatureExtractor\x18\xe1\x04 \x01(\x0b\x32+.CoreML.Specification.ArrayFeatureExtractorH\x00\x12M\n\x15nonMaximumSuppression\x18\xe2\x04 \x01(\x0b\x32+.CoreML.Specification.NonMaximumSuppressionH\x00\x12\x33\n\x08identity\x18\x84\x07 \x01(\x0b\x32\x1e.CoreML.Specification.IdentityH\x00\x12L\n\x0etextClassifier\x18\xd0\x0f \x01(\x0b\x32\x31.CoreML.Specification.CoreMLModels.TextClassifierH\x00\x12\x44\n\nwordTagger\x18\xd1\x0f \x01(\x0b\x32-.CoreML.Specification.CoreMLModels.WordTaggerH\x00\x12T\n\x12visionFeaturePrint\x18\xd2\x0f \x01(\x0b\x32\x35.CoreML.Specification.CoreMLModels.VisionFeaturePrintH\x00\x12\x64\n\x1asoundAnalysisPreprocessing\x18\xd3\x0f \x01(\x0b\x32=.CoreML.Specification.CoreMLModels.SoundAnalysisPreprocessingH\x00\x12\x42\n\tgazetteer\x18\xd4\x0f \x01(\x0b\x32,.CoreML.Specification.CoreMLModels.GazetteerH\x00\x12J\n\rwordEmbedding\x18\xd5\x0f \x01(\x0b\x32\x30.CoreML.Specification.CoreMLModels.WordEmbeddingH\x00\x12R\n\x11\x61udioFeaturePrint\x18\xd6\x0f \x01(\x0b\x32\x34.CoreML.Specification.CoreMLModels.AudioFeaturePrintH\x00\x12\x41\n\x0fserializedModel\x18\xb8\x17 \x01(\x0b\x32%.CoreML.Specification.SerializedModelH\x00\x42\x06\n\x04TypeB\x02H\x03P\x00P\x01P\x02P\x03P\x04P\x05P\x06P\x07P\x08P\tP\nP\x0bP\x0cP\rP\x0eP\x0fP\x10P\x11P\x12P\x13P\x14P\x15P\x16P\x17P\x18P\x19P\x1aP\x1bP\x1cP\x1d\x62\x06proto3')
+  serialized_pb=_b('\n\x0bModel.proto\x12\x14\x43oreML.Specification\x1a\x18VisionFeaturePrint.proto\x1a\x17\x41udioFeaturePrint.proto\x1a\x14TextClassifier.proto\x1a\x10WordTagger.proto\x1a\x0fGazetteer.proto\x1a\x13WordEmbedding.proto\x1a\x1b\x41rrayFeatureExtractor.proto\x1a\x1d\x42\x61yesianProbitRegressor.proto\x1a\x18\x43\x61tegoricalMapping.proto\x1a\x11\x43ustomModel.proto\x1a\x14\x44ictVectorizer.proto\x1a\x12\x46\x65\x61tureTypes.proto\x1a\x17\x46\x65\x61tureVectorizer.proto\x1a\x12GLMRegressor.proto\x1a\x13GLMClassifier.proto\x1a\x16NearestNeighbors.proto\x1a\x0eIdentity.proto\x1a\rImputer.proto\x1a\tMIL.proto\x1a\x13NeuralNetwork.proto\x1a\x10Normalizer.proto\x1a\x13OneHotEncoder.proto\x1a\x0cScaler.proto\x1a\x1bNonMaximumSuppression.proto\x1a\tSVM.proto\x1a\x12TreeEnsemble.proto\x1a\x10Parameters.proto\x1a\x1fItemSimilarityRecommender.proto\x1a SoundAnalysisPreprocessing.proto\x1a\x11LinkedModel.proto\x1a!ClassConfidenceThresholding.proto\"F\n\x08Pipeline\x12+\n\x06models\x18\x01 \x03(\x0b\x32\x1b.CoreML.Specification.Model\x12\r\n\x05names\x18\x02 \x03(\t\"F\n\x12PipelineClassifier\x12\x30\n\x08pipeline\x18\x01 \x01(\x0b\x32\x1e.CoreML.Specification.Pipeline\"E\n\x11PipelineRegressor\x12\x30\n\x08pipeline\x18\x01 \x01(\x0b\x32\x1e.CoreML.Specification.Pipeline\"m\n\x12\x46\x65\x61tureDescription\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x18\n\x10shortDescription\x18\x02 \x01(\t\x12/\n\x04type\x18\x03 \x01(\x0b\x32!.CoreML.Specification.FeatureType\"\xd6\x01\n\x08Metadata\x12\x18\n\x10shortDescription\x18\x01 \x01(\t\x12\x15\n\rversionString\x18\x02 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x03 \x01(\t\x12\x0f\n\x07license\x18\x04 \x01(\t\x12\x44\n\x0buserDefined\x18\x64 \x03(\x0b\x32/.CoreML.Specification.Metadata.UserDefinedEntry\x1a\x32\n\x10UserDefinedEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xba\x02\n\x10ModelDescription\x12\x37\n\x05input\x18\x01 \x03(\x0b\x32(.CoreML.Specification.FeatureDescription\x12\x38\n\x06output\x18\n \x03(\x0b\x32(.CoreML.Specification.FeatureDescription\x12\x1c\n\x14predictedFeatureName\x18\x0b \x01(\t\x12\"\n\x1apredictedProbabilitiesName\x18\x0c \x01(\t\x12?\n\rtrainingInput\x18\x32 \x03(\x0b\x32(.CoreML.Specification.FeatureDescription\x12\x30\n\x08metadata\x18\x64 \x01(\x0b\x32\x1e.CoreML.Specification.Metadata\"4\n\x0fSerializedModel\x12\x12\n\nidentifier\x18\x01 \x01(\t\x12\r\n\x05model\x18\x02 \x01(\x0c\"\xf1\x15\n\x05Model\x12\x1c\n\x14specificationVersion\x18\x01 \x01(\x05\x12;\n\x0b\x64\x65scription\x18\x02 \x01(\x0b\x32&.CoreML.Specification.ModelDescription\x12\x13\n\x0bisUpdatable\x18\n \x01(\x08\x12G\n\x12pipelineClassifier\x18\xc8\x01 \x01(\x0b\x32(.CoreML.Specification.PipelineClassifierH\x00\x12\x45\n\x11pipelineRegressor\x18\xc9\x01 \x01(\x0b\x32\'.CoreML.Specification.PipelineRegressorH\x00\x12\x33\n\x08pipeline\x18\xca\x01 \x01(\x0b\x32\x1e.CoreML.Specification.PipelineH\x00\x12;\n\x0cglmRegressor\x18\xac\x02 \x01(\x0b\x32\".CoreML.Specification.GLMRegressorH\x00\x12O\n\x16supportVectorRegressor\x18\xad\x02 \x01(\x0b\x32,.CoreML.Specification.SupportVectorRegressorH\x00\x12M\n\x15treeEnsembleRegressor\x18\xae\x02 \x01(\x0b\x32+.CoreML.Specification.TreeEnsembleRegressorH\x00\x12O\n\x16neuralNetworkRegressor\x18\xaf\x02 \x01(\x0b\x32,.CoreML.Specification.NeuralNetworkRegressorH\x00\x12Q\n\x17\x62\x61yesianProbitRegressor\x18\xb0\x02 \x01(\x0b\x32-.CoreML.Specification.BayesianProbitRegressorH\x00\x12=\n\rglmClassifier\x18\x90\x03 \x01(\x0b\x32#.CoreML.Specification.GLMClassifierH\x00\x12Q\n\x17supportVectorClassifier\x18\x91\x03 \x01(\x0b\x32-.CoreML.Specification.SupportVectorClassifierH\x00\x12O\n\x16treeEnsembleClassifier\x18\x92\x03 \x01(\x0b\x32,.CoreML.Specification.TreeEnsembleClassifierH\x00\x12Q\n\x17neuralNetworkClassifier\x18\x93\x03 \x01(\x0b\x32-.CoreML.Specification.NeuralNetworkClassifierH\x00\x12Y\n\x1bkNearestNeighborsClassifier\x18\x94\x03 \x01(\x0b\x32\x31.CoreML.Specification.KNearestNeighborsClassifierH\x00\x12=\n\rneuralNetwork\x18\xf4\x03 \x01(\x0b\x32#.CoreML.Specification.NeuralNetworkH\x00\x12U\n\x19itemSimilarityRecommender\x18\xf5\x03 \x01(\x0b\x32/.CoreML.Specification.ItemSimilarityRecommenderH\x00\x12;\n\tmlProgram\x18\xf6\x03 \x01(\x0b\x32%.CoreML.Specification.MILSpec.ProgramH\x00\x12\x39\n\x0b\x63ustomModel\x18\xab\x04 \x01(\x0b\x32!.CoreML.Specification.CustomModelH\x00\x12\x39\n\x0blinkedModel\x18\xac\x04 \x01(\x0b\x32!.CoreML.Specification.LinkedModelH\x00\x12Y\n\x1b\x63lassConfidenceThresholding\x18\xb0\x04 \x01(\x0b\x32\x31.CoreML.Specification.ClassConfidenceThresholdingH\x00\x12=\n\roneHotEncoder\x18\xd8\x04 \x01(\x0b\x32#.CoreML.Specification.OneHotEncoderH\x00\x12\x31\n\x07imputer\x18\xd9\x04 \x01(\x0b\x32\x1d.CoreML.Specification.ImputerH\x00\x12\x45\n\x11\x66\x65\x61tureVectorizer\x18\xda\x04 \x01(\x0b\x32\'.CoreML.Specification.FeatureVectorizerH\x00\x12?\n\x0e\x64ictVectorizer\x18\xdb\x04 \x01(\x0b\x32$.CoreML.Specification.DictVectorizerH\x00\x12/\n\x06scaler\x18\xdc\x04 \x01(\x0b\x32\x1c.CoreML.Specification.ScalerH\x00\x12G\n\x12\x63\x61tegoricalMapping\x18\xde\x04 \x01(\x0b\x32(.CoreML.Specification.CategoricalMappingH\x00\x12\x37\n\nnormalizer\x18\xdf\x04 \x01(\x0b\x32 .CoreML.Specification.NormalizerH\x00\x12M\n\x15\x61rrayFeatureExtractor\x18\xe1\x04 \x01(\x0b\x32+.CoreML.Specification.ArrayFeatureExtractorH\x00\x12M\n\x15nonMaximumSuppression\x18\xe2\x04 \x01(\x0b\x32+.CoreML.Specification.NonMaximumSuppressionH\x00\x12\x33\n\x08identity\x18\x84\x07 \x01(\x0b\x32\x1e.CoreML.Specification.IdentityH\x00\x12L\n\x0etextClassifier\x18\xd0\x0f \x01(\x0b\x32\x31.CoreML.Specification.CoreMLModels.TextClassifierH\x00\x12\x44\n\nwordTagger\x18\xd1\x0f \x01(\x0b\x32-.CoreML.Specification.CoreMLModels.WordTaggerH\x00\x12T\n\x12visionFeaturePrint\x18\xd2\x0f \x01(\x0b\x32\x35.CoreML.Specification.CoreMLModels.VisionFeaturePrintH\x00\x12\x64\n\x1asoundAnalysisPreprocessing\x18\xd3\x0f \x01(\x0b\x32=.CoreML.Specification.CoreMLModels.SoundAnalysisPreprocessingH\x00\x12\x42\n\tgazetteer\x18\xd4\x0f \x01(\x0b\x32,.CoreML.Specification.CoreMLModels.GazetteerH\x00\x12J\n\rwordEmbedding\x18\xd5\x0f \x01(\x0b\x32\x30.CoreML.Specification.CoreMLModels.WordEmbeddingH\x00\x12R\n\x11\x61udioFeaturePrint\x18\xd6\x0f \x01(\x0b\x32\x34.CoreML.Specification.CoreMLModels.AudioFeaturePrintH\x00\x12\x41\n\x0fserializedModel\x18\xb8\x17 \x01(\x0b\x32%.CoreML.Specification.SerializedModelH\x00\x42\x06\n\x04TypeB\x02H\x03P\x00P\x01P\x02P\x03P\x04P\x05P\x06P\x07P\x08P\tP\nP\x0bP\x0cP\rP\x0eP\x0fP\x10P\x11P\x12P\x13P\x14P\x15P\x16P\x17P\x18P\x19P\x1aP\x1bP\x1cP\x1dP\x1e\x62\x06proto3')
   ,
-  dependencies=[VisionFeaturePrint__pb2.DESCRIPTOR,AudioFeaturePrint__pb2.DESCRIPTOR,TextClassifier__pb2.DESCRIPTOR,WordTagger__pb2.DESCRIPTOR,Gazetteer__pb2.DESCRIPTOR,WordEmbedding__pb2.DESCRIPTOR,ArrayFeatureExtractor__pb2.DESCRIPTOR,BayesianProbitRegressor__pb2.DESCRIPTOR,CategoricalMapping__pb2.DESCRIPTOR,CustomModel__pb2.DESCRIPTOR,DictVectorizer__pb2.DESCRIPTOR,FeatureTypes__pb2.DESCRIPTOR,FeatureVectorizer__pb2.DESCRIPTOR,GLMRegressor__pb2.DESCRIPTOR,GLMClassifier__pb2.DESCRIPTOR,NearestNeighbors__pb2.DESCRIPTOR,Identity__pb2.DESCRIPTOR,Imputer__pb2.DESCRIPTOR,MIL__pb2.DESCRIPTOR,NeuralNetwork__pb2.DESCRIPTOR,Normalizer__pb2.DESCRIPTOR,OneHotEncoder__pb2.DESCRIPTOR,Scaler__pb2.DESCRIPTOR,NonMaximumSuppression__pb2.DESCRIPTOR,SVM__pb2.DESCRIPTOR,TreeEnsemble__pb2.DESCRIPTOR,Parameters__pb2.DESCRIPTOR,ItemSimilarityRecommender__pb2.DESCRIPTOR,SoundAnalysisPreprocessing__pb2.DESCRIPTOR,LinkedModel__pb2.DESCRIPTOR,],
-  public_dependencies=[VisionFeaturePrint__pb2.DESCRIPTOR,AudioFeaturePrint__pb2.DESCRIPTOR,TextClassifier__pb2.DESCRIPTOR,WordTagger__pb2.DESCRIPTOR,Gazetteer__pb2.DESCRIPTOR,WordEmbedding__pb2.DESCRIPTOR,ArrayFeatureExtractor__pb2.DESCRIPTOR,BayesianProbitRegressor__pb2.DESCRIPTOR,CategoricalMapping__pb2.DESCRIPTOR,CustomModel__pb2.DESCRIPTOR,DictVectorizer__pb2.DESCRIPTOR,FeatureTypes__pb2.DESCRIPTOR,FeatureVectorizer__pb2.DESCRIPTOR,GLMRegressor__pb2.DESCRIPTOR,GLMClassifier__pb2.DESCRIPTOR,NearestNeighbors__pb2.DESCRIPTOR,Identity__pb2.DESCRIPTOR,Imputer__pb2.DESCRIPTOR,MIL__pb2.DESCRIPTOR,NeuralNetwork__pb2.DESCRIPTOR,Normalizer__pb2.DESCRIPTOR,OneHotEncoder__pb2.DESCRIPTOR,Scaler__pb2.DESCRIPTOR,NonMaximumSuppression__pb2.DESCRIPTOR,SVM__pb2.DESCRIPTOR,TreeEnsemble__pb2.DESCRIPTOR,Parameters__pb2.DESCRIPTOR,ItemSimilarityRecommender__pb2.DESCRIPTOR,SoundAnalysisPreprocessing__pb2.DESCRIPTOR,LinkedModel__pb2.DESCRIPTOR,])
+  dependencies=[VisionFeaturePrint__pb2.DESCRIPTOR,AudioFeaturePrint__pb2.DESCRIPTOR,TextClassifier__pb2.DESCRIPTOR,WordTagger__pb2.DESCRIPTOR,Gazetteer__pb2.DESCRIPTOR,WordEmbedding__pb2.DESCRIPTOR,ArrayFeatureExtractor__pb2.DESCRIPTOR,BayesianProbitRegressor__pb2.DESCRIPTOR,CategoricalMapping__pb2.DESCRIPTOR,CustomModel__pb2.DESCRIPTOR,DictVectorizer__pb2.DESCRIPTOR,FeatureTypes__pb2.DESCRIPTOR,FeatureVectorizer__pb2.DESCRIPTOR,GLMRegressor__pb2.DESCRIPTOR,GLMClassifier__pb2.DESCRIPTOR,NearestNeighbors__pb2.DESCRIPTOR,Identity__pb2.DESCRIPTOR,Imputer__pb2.DESCRIPTOR,MIL__pb2.DESCRIPTOR,NeuralNetwork__pb2.DESCRIPTOR,Normalizer__pb2.DESCRIPTOR,OneHotEncoder__pb2.DESCRIPTOR,Scaler__pb2.DESCRIPTOR,NonMaximumSuppression__pb2.DESCRIPTOR,SVM__pb2.DESCRIPTOR,TreeEnsemble__pb2.DESCRIPTOR,Parameters__pb2.DESCRIPTOR,ItemSimilarityRecommender__pb2.DESCRIPTOR,SoundAnalysisPreprocessing__pb2.DESCRIPTOR,LinkedModel__pb2.DESCRIPTOR,ClassConfidenceThresholding__pb2.DESCRIPTOR,],
+  public_dependencies=[VisionFeaturePrint__pb2.DESCRIPTOR,AudioFeaturePrint__pb2.DESCRIPTOR,TextClassifier__pb2.DESCRIPTOR,WordTagger__pb2.DESCRIPTOR,Gazetteer__pb2.DESCRIPTOR,WordEmbedding__pb2.DESCRIPTOR,ArrayFeatureExtractor__pb2.DESCRIPTOR,BayesianProbitRegressor__pb2.DESCRIPTOR,CategoricalMapping__pb2.DESCRIPTOR,CustomModel__pb2.DESCRIPTOR,DictVectorizer__pb2.DESCRIPTOR,FeatureTypes__pb2.DESCRIPTOR,FeatureVectorizer__pb2.DESCRIPTOR,GLMRegressor__pb2.DESCRIPTOR,GLMClassifier__pb2.DESCRIPTOR,NearestNeighbors__pb2.DESCRIPTOR,Identity__pb2.DESCRIPTOR,Imputer__pb2.DESCRIPTOR,MIL__pb2.DESCRIPTOR,NeuralNetwork__pb2.DESCRIPTOR,Normalizer__pb2.DESCRIPTOR,OneHotEncoder__pb2.DESCRIPTOR,Scaler__pb2.DESCRIPTOR,NonMaximumSuppression__pb2.DESCRIPTOR,SVM__pb2.DESCRIPTOR,TreeEnsemble__pb2.DESCRIPTOR,Parameters__pb2.DESCRIPTOR,ItemSimilarityRecommender__pb2.DESCRIPTOR,SoundAnalysisPreprocessing__pb2.DESCRIPTOR,LinkedModel__pb2.DESCRIPTOR,ClassConfidenceThresholding__pb2.DESCRIPTOR,])
 
 
 
@@ -303,8 +294,8 @@ _PIPELINE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=683,
-  serialized_end=753,
+  serialized_start=718,
+  serialized_end=788,
 )
 
 
@@ -334,8 +325,8 @@ _PIPELINECLASSIFIER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=755,
-  serialized_end=825,
+  serialized_start=790,
+  serialized_end=860,
 )
 
 
@@ -365,8 +356,8 @@ _PIPELINEREGRESSOR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=827,
-  serialized_end=896,
+  serialized_start=862,
+  serialized_end=931,
 )
 
 
@@ -410,8 +401,8 @@ _FEATUREDESCRIPTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=898,
-  serialized_end=1007,
+  serialized_start=933,
+  serialized_end=1042,
 )
 
 
@@ -448,8 +439,8 @@ _METADATA_USERDEFINEDENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1174,
-  serialized_end=1224,
+  serialized_start=1209,
+  serialized_end=1259,
 )
 
 _METADATA = _descriptor.Descriptor(
@@ -506,8 +497,8 @@ _METADATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1010,
-  serialized_end=1224,
+  serialized_start=1045,
+  serialized_end=1259,
 )
 
 
@@ -572,8 +563,8 @@ _MODELDESCRIPTION = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1227,
-  serialized_end=1541,
+  serialized_start=1262,
+  serialized_end=1576,
 )
 
 
@@ -610,8 +601,8 @@ _SERIALIZEDMODEL = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1543,
-  serialized_end=1595,
+  serialized_start=1578,
+  serialized_end=1630,
 )
 
 
@@ -770,126 +761,133 @@ _MODEL = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='oneHotEncoder', full_name='CoreML.Specification.Model.oneHotEncoder', index=21,
+      name='classConfidenceThresholding', full_name='CoreML.Specification.Model.classConfidenceThresholding', index=21,
+      number=560, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='oneHotEncoder', full_name='CoreML.Specification.Model.oneHotEncoder', index=22,
       number=600, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='imputer', full_name='CoreML.Specification.Model.imputer', index=22,
+      name='imputer', full_name='CoreML.Specification.Model.imputer', index=23,
       number=601, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='featureVectorizer', full_name='CoreML.Specification.Model.featureVectorizer', index=23,
+      name='featureVectorizer', full_name='CoreML.Specification.Model.featureVectorizer', index=24,
       number=602, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='dictVectorizer', full_name='CoreML.Specification.Model.dictVectorizer', index=24,
+      name='dictVectorizer', full_name='CoreML.Specification.Model.dictVectorizer', index=25,
       number=603, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='scaler', full_name='CoreML.Specification.Model.scaler', index=25,
+      name='scaler', full_name='CoreML.Specification.Model.scaler', index=26,
       number=604, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='categoricalMapping', full_name='CoreML.Specification.Model.categoricalMapping', index=26,
+      name='categoricalMapping', full_name='CoreML.Specification.Model.categoricalMapping', index=27,
       number=606, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='normalizer', full_name='CoreML.Specification.Model.normalizer', index=27,
+      name='normalizer', full_name='CoreML.Specification.Model.normalizer', index=28,
       number=607, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='arrayFeatureExtractor', full_name='CoreML.Specification.Model.arrayFeatureExtractor', index=28,
+      name='arrayFeatureExtractor', full_name='CoreML.Specification.Model.arrayFeatureExtractor', index=29,
       number=609, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='nonMaximumSuppression', full_name='CoreML.Specification.Model.nonMaximumSuppression', index=29,
+      name='nonMaximumSuppression', full_name='CoreML.Specification.Model.nonMaximumSuppression', index=30,
       number=610, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='identity', full_name='CoreML.Specification.Model.identity', index=30,
+      name='identity', full_name='CoreML.Specification.Model.identity', index=31,
       number=900, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='textClassifier', full_name='CoreML.Specification.Model.textClassifier', index=31,
+      name='textClassifier', full_name='CoreML.Specification.Model.textClassifier', index=32,
       number=2000, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='wordTagger', full_name='CoreML.Specification.Model.wordTagger', index=32,
+      name='wordTagger', full_name='CoreML.Specification.Model.wordTagger', index=33,
       number=2001, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='visionFeaturePrint', full_name='CoreML.Specification.Model.visionFeaturePrint', index=33,
+      name='visionFeaturePrint', full_name='CoreML.Specification.Model.visionFeaturePrint', index=34,
       number=2002, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='soundAnalysisPreprocessing', full_name='CoreML.Specification.Model.soundAnalysisPreprocessing', index=34,
+      name='soundAnalysisPreprocessing', full_name='CoreML.Specification.Model.soundAnalysisPreprocessing', index=35,
       number=2003, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='gazetteer', full_name='CoreML.Specification.Model.gazetteer', index=35,
+      name='gazetteer', full_name='CoreML.Specification.Model.gazetteer', index=36,
       number=2004, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='wordEmbedding', full_name='CoreML.Specification.Model.wordEmbedding', index=36,
+      name='wordEmbedding', full_name='CoreML.Specification.Model.wordEmbedding', index=37,
       number=2005, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='audioFeaturePrint', full_name='CoreML.Specification.Model.audioFeaturePrint', index=37,
+      name='audioFeaturePrint', full_name='CoreML.Specification.Model.audioFeaturePrint', index=38,
       number=2006, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None),
     _descriptor.FieldDescriptor(
-      name='serializedModel', full_name='CoreML.Specification.Model.serializedModel', index=38,
+      name='serializedModel', full_name='CoreML.Specification.Model.serializedModel', index=39,
       number=3000, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -910,8 +908,8 @@ _MODEL = _descriptor.Descriptor(
       name='Type', full_name='CoreML.Specification.Model.Type',
       index=0, containing_type=None, fields=[]),
   ],
-  serialized_start=1598,
-  serialized_end=4308,
+  serialized_start=1633,
+  serialized_end=4434,
 )
 
 _PIPELINE.fields_by_name['models'].message_type = _MODEL
@@ -943,6 +941,7 @@ _MODEL.fields_by_name['itemSimilarityRecommender'].message_type = ItemSimilarity
 _MODEL.fields_by_name['mlProgram'].message_type = MIL__pb2._PROGRAM
 _MODEL.fields_by_name['customModel'].message_type = CustomModel__pb2._CUSTOMMODEL
 _MODEL.fields_by_name['linkedModel'].message_type = LinkedModel__pb2._LINKEDMODEL
+_MODEL.fields_by_name['classConfidenceThresholding'].message_type = ClassConfidenceThresholding__pb2._CLASSCONFIDENCETHRESHOLDING
 _MODEL.fields_by_name['oneHotEncoder'].message_type = OneHotEncoder__pb2._ONEHOTENCODER
 _MODEL.fields_by_name['imputer'].message_type = Imputer__pb2._IMPUTER
 _MODEL.fields_by_name['featureVectorizer'].message_type = FeatureVectorizer__pb2._FEATUREVECTORIZER
@@ -1015,6 +1014,9 @@ _MODEL.fields_by_name['customModel'].containing_oneof = _MODEL.oneofs_by_name['T
 _MODEL.oneofs_by_name['Type'].fields.append(
   _MODEL.fields_by_name['linkedModel'])
 _MODEL.fields_by_name['linkedModel'].containing_oneof = _MODEL.oneofs_by_name['Type']
+_MODEL.oneofs_by_name['Type'].fields.append(
+  _MODEL.fields_by_name['classConfidenceThresholding'])
+_MODEL.fields_by_name['classConfidenceThresholding'].containing_oneof = _MODEL.oneofs_by_name['Type']
 _MODEL.oneofs_by_name['Type'].fields.append(
   _MODEL.fields_by_name['oneHotEncoder'])
 _MODEL.fields_by_name['oneHotEncoder'].containing_oneof = _MODEL.oneofs_by_name['Type']

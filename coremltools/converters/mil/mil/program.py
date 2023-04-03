@@ -10,6 +10,7 @@ from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import \
     AvailableTarget as _target
 from coremltools.converters.mil.input_types import InputType
+from coremltools.converters.mil.mil.var import ListVar
 from coremltools.converters.mil.mil.ops.helper import _get_version_of_op
 
 from . import types
@@ -79,6 +80,23 @@ class Program:
         max_opset_version, _ = self._get_max_opset_version_and_op()
         self._check_ops_version_compatibility(max_opset_version)
         self._check_or_set_functions_opset_version(max_opset_version)
+        
+    def _check_invalid_tensor_rank(self):
+        '''
+        Early error out for tensor with rank >= 6
+        '''
+        def _check_invalid_tensor_rank_block(block):
+            for op in block.operations:
+                for b in op.blocks:
+                    _check_invalid_tensor_rank_block(b)
+                for o in op.outputs:
+                    if not isinstance(o, ListVar) and (o.rank < 0 or o.rank >= 6):
+                        raise ValueError(
+                            f'Core ML only supports tensors with rank <= 5. Layer "{op.name}", '
+                            f'with type "{op.op_type}", outputs a rank {o.rank} tensor. '
+                        )
+        for f in self.functions.values():
+            _check_invalid_tensor_rank_block(f)
 
     def add_function(self, name, ssa_func):
         if not isinstance(ssa_func, Function):

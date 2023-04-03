@@ -1,0 +1,380 @@
+#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
+from __future__ import annotations
+
+from typing import Dict, List, Optional, Set, Text, Union
+
+from tqdm import tqdm
+
+from coremltools import _logger as logger
+from coremltools.converters._profile_utils import _profile
+from coremltools.converters.mil import Program
+from coremltools.converters.mil.mil.passes.graph_pass import PassOption
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+
+_COMMON_PASSES: List[Text] = [
+    "common::lower_complex_dialect_ops",
+    "common::update_output_dtypes",
+    "common::cast_optimization",
+    "common::const_elimination",
+    "common::sanitize_input_output_names",
+    "common::divide_to_multiply",
+    "common::add_conv_transpose_output_shape",
+    "common::const_elimination",
+    "common::loop_invariant_elimination",
+    "common::remove_symbolic_reshape",
+    "common::noop_elimination",
+    "common::fuse_matmul_weight_bias",
+    "common::fuse_linear_bias",
+    "common::fuse_gelu_tanh_approximation",
+    "common::fuse_gelu_exact",
+    "common::fuse_leaky_relu",
+    "common::rank0_expand_dims_swap",
+    "common::compose_conv1d",  # compose conv1d before any other conv passes
+    "common::use_reflection_padding",
+    "common::merge_consecutive_paddings",
+    # Should come after use_reflection_padding, which will introduce new padding layers
+    "common::fuse_pad_conv",  # Should come after merge_consecutive_paddings
+    "common::image_input_preprocess",
+    "common::replace_stack_reshape",
+    # should come before detect_concat_interleave since it may add concat
+    "common::reduce_transposes",
+    "common::fuse_conv_scale",
+    "common::fuse_conv_bias",
+    "common::fuse_onehot_matmul_to_gather",
+    "common::fuse_layernorm_or_instancenorm",
+    # should come after reduce_transposes, to detect instance_norm
+    "common::fuse_elementwise_to_batchnorm",  # should come after fuse_layernorm_or_instancenorm
+    "common::fuse_reduce_mean",  # should come after fuse_layernorm_or_instancenorm
+    "common::fuse_conv_batchnorm",  # should come after fuse_elementwise_to_batchnorm
+    "common::fuse_conv_scale",
+    # Re-run the fuse conv scale pass after the conv and batch_norm are fused
+    "common::fuse_conv_bias",
+    # Re-run the fuse conv bias pass after the conv and batch_norm are fused
+    "common::fuse_conv_batchnorm",
+    # In some cases, we need to run conv / batch_norm fusion again after the fuse_conv_scale and fuse_conv_bias passes
+    "common::detect_concat_interleave",
+    "common::concat_to_pixel_shuffle",
+    # should come after detect_concat_interleave and after replace_stack_reshape
+    "common::fuse_prelu",
+    # reduce_transpose pass should run before and after this pass (the one after will be run during the cleanup passes stage)
+    "common::prelu_to_lrelu",
+    "common::merge_consecutive_relus",
+    "common::merge_consecutive_reshapes",
+    "common::merge_consecutive_transposes",
+    # "expand_high_rank_reshape_and_transpose" must come after "common::merge_consecutive_transposes"
+    "common::expand_high_rank_reshape_and_transpose",
+    "common::reduce_transposes",
+    # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
+    # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
+    # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
+    # which detects patterns that involve redundant ops ("sub") etc.
+    "common::remove_redundant_ops",
+    "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
+    "common::dead_code_elimination",  # always end with dce
+]
+
+_CLEANUP_PASSES: List[Text] = [
+    "common::dead_code_elimination",
+    "common::const_elimination",
+    "common::cast_optimization",
+    "common::const_elimination",
+    "common::loop_invariant_elimination",
+    "common::noop_elimination",
+    "common::dedup_op_and_var_names",
+    "common::reduce_transposes",  # fuse_layernorm_or_instancenorm can potentially add transposes
+    "common::remove_redundant_ops",
+    "common::topological_reorder",
+    "common::dead_code_elimination",  # always end with dce
+]
+
+_FRONTEND_TORCH_PASSES = [
+    "common::dead_code_elimination",
+    "common::loop_invariant_elimination",
+    "common::dead_code_elimination",
+    "torch::torch_upsample_to_core_upsample",
+    "torch::torch_tensor_assign_to_core",
+]
+
+_FRONTEND_TF1_PASSES = [
+    "common::dead_code_elimination",
+    "common::loop_invariant_elimination",
+    "tensorflow::backfill_make_list_elem_type",
+    # DCE to reduce tf_lstm_block outputs and allow lstm_rewrite to
+    # ssa lstm
+    "common::dead_code_elimination",
+    # tensorflow::tf_lstm_to_core_lstm must come before
+    # tensorflow::expand_tf_lstm
+    "tensorflow::tf_lstm_to_core_lstm",
+    "tensorflow::expand_tf_lstm",
+]
+
+_FRONTEND_TF2_PASSES = [
+    "common::dead_code_elimination",
+    "common::loop_invariant_elimination",
+    # tensorflow2::remove_vacuous_cond should come before
+    # tensorflow::backfill_make_list_elem_type.
+    "tensorflow2::remove_vacuous_cond",
+    "tensorflow::backfill_make_list_elem_type",
+    # DCE to reduce tf_lstm_block outputs and allow lstm_rewrite to
+    # ssa lstm
+    "common::dead_code_elimination",
+    # tensorflow::tf_lstm_to_core_lstm must come before
+    # tensorflow::expand_tf_lstm
+    "tensorflow::tf_lstm_to_core_lstm",
+    "tensorflow::expand_tf_lstm",
+]
+
+_BACKEND_MIL_PASSES = [
+    "common::const_elimination",
+    "mil_backend::adjust_io_to_supported_types",
+    "mil_backend::insert_image_preprocessing_ops",
+    "mil_backend::fuse_activation_silu",
+    "common::const_elimination",  # rank0_expand_dims_swap might introduce some new const tensor
+    "common::cast_optimization",
+    "common::dead_code_elimination",
+    "mil_backend::sanitize_name_strings",
+    "common::dedup_op_and_var_names",
+    "nn_backend::handle_unused_inputs",  # must come after dce.
+]
+
+_BACKEND_NN_PASSES = [
+    "nn_backend::decompose_conv1d",  # at the beginning of nn pass
+    "nn_backend::commingle_loop_vars",
+    "nn_backend::handle_return_inputs_as_outputs",
+    "common::const_elimination",
+    # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
+    # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
+    # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
+    # which detects patterns that involve redundant ops ("sub") etc.
+    "common::remove_redundant_ops",
+    "common::dead_code_elimination",
+    "nn_backend::handle_unused_inputs",  # must come after dce.
+    "nn_backend::alert_return_type_cast",  # must be at the end.
+]
+
+
+class PassPipeline:
+    """
+    A pipeline that contains graph passes.
+
+    Create a default pipeline (with all default graph passes that will operate on the program):
+
+    .. sourcecode:: python
+
+        pipeline = PassPipeline()
+
+    Create an empty pipeline (this will result in no graph passes being applied to the model):
+
+    .. sourcecode:: python
+
+        pipeline = PassPipeline.get_empty_pipeline()
+
+    Add passes to pipeline:
+
+    .. sourcecode:: python
+
+        pipeline=ct.PassPipeline()
+        pipeline.append_pass("common::reduce_transposes")
+        pipeline.insert_pass(index=0, pass_name="common::reduce_transposes")
+        # Can also specify all passes by setting the passes of the pipeline.
+        pipeline.passes = ["common::reduce_transposes", "common::add_fp16_cast"]
+
+    Remove passes:
+
+    .. sourcecode:: python
+
+        # Remove a pass at a specific index.
+        pipeline.remove_pass(index=10)
+        # Remove passes by names.
+        pipeline.remove_passes({"common::add_fp16_cast", "common::reduce_transposes"})
+
+    Inspect passes in the pipeline:
+
+    .. sourcecode:: python
+
+        # Get all passes.
+        pass_names = pipeline.passes
+        # Find indexes of a specific pass.
+        pass_indexes = [idx for idx, pass_name in enumerate(pass_names) if pass_names[idx] == "common::reduce_transposes"]
+
+    Set options for a specific pass:
+
+    .. sourcecode:: python
+
+        pipeline=ct.PassPipeline()
+        pipeline.set_options(pass_name="common::const_elimination", options={"skip_const_by_size":
+            "100000"}, override=False)
+    """
+
+    _PIPELINE_NAME_TO_PASSES = {
+        "default": _COMMON_PASSES + _CLEANUP_PASSES,
+        "empty": [],
+        # Frontend pipelines.
+        "frontend_milinternal": [],
+        "frontend_pytorch": _FRONTEND_TORCH_PASSES,
+        "frontend_tensorflow": _FRONTEND_TF1_PASSES,
+        "frontend_tensorflow2": _FRONTEND_TF2_PASSES,
+        # Backend pipelines.
+        "backend_mlprogram": _BACKEND_MIL_PASSES,
+        "backend_neuralnetwork": _BACKEND_NN_PASSES,
+        "backend_milinternal": [],
+    }
+
+    def __init__(self, pass_names=None, pipeline_name="default"):
+        if pass_names is None:
+            pass_names = _COMMON_PASSES + _CLEANUP_PASSES
+        self._pass_names: List[Text] = pass_names
+        self._pass_options: Dict[Text, List[PassOption]] = dict()
+        self._pipeline_name = pipeline_name
+
+    def __str__(self):
+        return self._pipeline_name
+
+    @property
+    def passes(self):
+        return self._pass_names
+
+    @passes.setter
+    def passes(self, passes: List[Text]):
+        for pass_name in passes:
+            if pass_name not in PASS_REGISTRY:
+                raise ValueError(f"The pass {pass_name} is not registered.")
+        self._pass_names = list(passes)
+
+    @property
+    def pipeline_name(self):
+        return self._pipeline_name
+
+    @pipeline_name.setter
+    def pipeline_name(self, pipeline_name: Text):
+        self._pipeline_name = pipeline_name
+
+    def append_pass(self, pass_name: Text):
+        """Append a pass at the end of the current passes in the pipeline."""
+        if pass_name not in PASS_REGISTRY:
+            raise ValueError(f"The pass {pass_name} is not registered.")
+        self._pass_names.append(pass_name)
+
+    def insert_pass(self, index: int, pass_name: Text) -> None:
+        """Adds a pass at a specific index"""
+        if pass_name not in PASS_REGISTRY:
+            raise ValueError(f"The pass {pass_name} is not registered.")
+        self._pass_names.insert(index, pass_name)
+
+    def remove_pass(self, index: int) -> None:
+        """Removes a pass at a specific index."""
+        del self._pass_names[index]
+
+    def remove_passes(self, passes_names: Union[Set[Text], List[Text]]) -> None:
+        """Removes all passes with specific name."""
+        self._pass_names = [
+            pass_name for pass_name in self._pass_names if pass_name not in passes_names
+        ]
+
+    def get_options(self, pass_name: Text) -> Optional[List[PassOption]]:
+        """
+        Gets options of a pass that has been set by the user. Return None if the pass doesn't have
+        any associated option set by the user.
+        """
+        return self._pass_options.get(pass_name, None)
+
+    def get_all_options(self) -> Dict[Text, List[PassOption]]:
+        """Gets all options in the pipeline."""
+        return self._pass_options
+
+    def set_options(self, pass_name: Text, options: Dict[Text, Text], override: bool = False):
+        """Sets options for a specific pass."""
+        if self._pass_options.get(pass_name, None) and not override:
+            raise ValueError(f"The pass {pass_name} already has associated options.")
+        pass_options: List[PassOption] = []
+        for option_name, option_val in options.items():
+            if not (isinstance(option_name, str) and isinstance(option_val, str)):
+                raise ValueError(
+                    f"The options must be specified by Dict[Text, Text], but got "
+                    f"Dict[{type(option_name)}, {type(option_val)}]"
+                )
+            pass_option = PassOption(option_name=option_name, option_val=option_val)
+            pass_options.append(pass_option)
+        self._pass_options[pass_name] = pass_options
+
+    def set_options_by_another_pipeline(self, other_pipeline: PassPipeline):
+        """
+        Convenience method for setting options from another pipeline's options.
+        For each option in other_pipeline, set it if it's also applicable to this pipeline.
+        """
+        for pass_name, options in other_pipeline.get_all_options().items():
+            if pass_name in self.passes:
+                self._pass_options[pass_name] = options
+
+    def validate(self):
+        """Validates the pipeline (including options)."""
+        pass_names_set = set(self._pass_names)
+        for pass_name in self._pass_options.keys():
+            if pass_name not in pass_names_set:
+                raise ValueError(
+                    f"This pass pipeline is not valid. The pass {pass_name} has "
+                    f"associated options but it's not in the passes. Passes in this "
+                    f"pipeline: {self._pass_names}"
+                )
+
+    @staticmethod
+    def get_empty_pipeline() -> PassPipeline:
+        """Creates an empty pipeline without any pass."""
+        return PassPipeline(pass_names=[])
+
+    @staticmethod
+    def get_pipeline(pipeline_name: Text) -> PassPipeline:
+        """
+        Gets a pipeline based on the name. Raises an error if no pipeline is found.
+        Available Pipelines:
+        - "default": _COMMON_PASSES + _CLEANUP_PASSES
+        - "empty": empty
+        - "frontend_pytorch": _FRONTEND_TORCH_PASSES
+        - "frontend_tensorflow": _FRONTEND_TF1_PASSES
+        - "frontend_tensorflow2": _FRONTEND_TF2_PASSES
+        - "frontend_milinternal": empty
+        - "backend_mlprogram": _BACKEND_MIL_PASSES
+        - "backend_neuralnetwork": _BACKEND_NN_PASSES
+        - "backend_milinternal": empty
+        """
+        if pipeline_name not in PassPipeline._PIPELINE_NAME_TO_PASSES:
+            raise ValueError(
+                f"There is no pipeline for `{pipeline_name}`. "
+                f"Available pipelines: {PassPipeline._PIPELINE_NAME_TO_PASSES.keys()}"
+            )
+        return PassPipeline(PassPipeline._PIPELINE_NAME_TO_PASSES[pipeline_name], pipeline_name)
+
+
+class PipelineManager:
+    @staticmethod
+    @_profile
+    def apply_pipeline(prog: Program, pass_pipeline: PassPipeline):
+        """Apply a pass pipeline to a program, which modifies the program in-place."""
+        if pass_pipeline is None:
+            raise ValueError("The pass_pipeline cannot be None.")
+
+        pass_pipeline.validate()
+        prog.validate()
+
+        logger.debug(f"Program before {pass_pipeline} pipeline:\n{prog}")
+        for pass_name in tqdm(
+            pass_pipeline.passes,
+            desc=f"Running MIL {pass_pipeline} pipeline",
+            unit=" passes",
+        ):
+            logger.info(f'Performing pass: "{pass_name}"')
+            pass_options = pass_pipeline.get_options(pass_name)
+            if pass_options is not None:
+                logger.debug(
+                    f"The graph pass options for {pass_name} is set to {pass_options}. "
+                    f"It will change the pass behavior. Make sure the option is intended."
+                )
+            graph_pass = PASS_REGISTRY[pass_name]
+            graph_pass.set_options(pass_options)
+            graph_pass(prog)
+            prog.validate()
+        logger.debug(f"Program after {pass_pipeline} pipeline:\n{prog}")

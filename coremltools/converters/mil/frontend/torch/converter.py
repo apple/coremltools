@@ -10,8 +10,7 @@ import torch as torch
 
 from coremltools import _logger as logger
 from coremltools._deps import version_lt
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as _target
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import ImageType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
@@ -19,7 +18,6 @@ from coremltools.converters.mil.mil import Function, Program, types
 from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 from .ops import convert_nodes
-from .ssa_passes.torch_passes import torch_passes
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchir_passes import (
     flatten_graph_input_values,
@@ -142,7 +140,12 @@ class TorchConverter:
     """
 
     def __init__(
-        self, torchscript, inputs, outputs=None, cut_at_symbols=None, opset_version=None
+        self,
+        torchscript,
+        inputs,
+        outputs=None,
+        cut_at_symbols=None,
+        opset_version=None,
     ):
         """
         Arguments:
@@ -152,7 +155,7 @@ class TorchConverter:
             cut_at_symbols: A list of internal symbol name strings. Graph conversion will
                 terminate once these symbols have been generated. For debugging use
                 only. See kwarg in load.py.
-            opset_version: An int represents the Core ML opset version
+            opset_version: An int represents the Core ML opset version.
         """
         assert isinstance(torchscript, torch.jit.ScriptModule)
 
@@ -172,6 +175,7 @@ class TorchConverter:
             raw_graph, params_dict, self.inputs, cut_at_symbols
         )
 
+        # TODO (rdar://106161395): Register Torch IR passes and unify them into the pass pipeline.
         # Apply Torch IR passes
         passes = [
             transform_inplace_ops,
@@ -184,7 +188,6 @@ class TorchConverter:
             p(self.graph)
 
         self.inputs = list(self.graph.inputs.values())
-        self.torch_passes = torch_passes
         self._prog = Program()
 
     @staticmethod
@@ -308,7 +311,6 @@ class TorchConverter:
             prog.add_function("main", ssa_func)
             if self.outputs is not None:
                 prog.set_main_output_types(self.outputs)
-        self.torch_passes(prog)
         return prog
 
     def _jit_pass_lower_graph(graph, torchscript):
@@ -422,7 +424,9 @@ class TorchConverter:
 
                 if is_tensor or is_quantized_tensor:
                     if is_tensor and prefix in state_dict:
-                        assert torch.equal(module, state_dict[prefix]), "tensor value not consistent between torch ir and state_dict"
+                        assert torch.equal(
+                            module, state_dict[prefix]
+                        ), "tensor value not consistent between torch ir and state_dict"
                     if prefix in params_dict:
                         assert torch.equal(module, params_dict[prefix])
                         replace_input[_output] = first_node_with_prefix[prefix]
@@ -456,7 +460,7 @@ class TorchConverter:
         # From PyTorch code: checks well-formedness and invariants of graph.
         torch._C._jit_pass_lint(graph)
         # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
-        if version_lt(torch, '1.6.0'):
+        if version_lt(torch, "1.6.0"):
             torch._C._jit_pass_canonicalize_ops(graph)
             torch._C._jit_pass_lint(graph)
 
@@ -475,7 +479,7 @@ class TorchConverter:
         # equivalent graphs have same numbers.
         graph = torch._C._jit_pass_canonicalize(graph)
         torch._C._jit_pass_lint(graph)
-        if version_lt(torch, '1.6.0'):
+        if version_lt(torch, "1.6.0"):
             # v1.6.0 JIT changes disallows pulling list values out of
             # prim::Constant. We can only pull scalar values. constant
             # propagation removes `listConstruct` and results in list values.

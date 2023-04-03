@@ -3331,7 +3331,11 @@ def ClipByValue(context, node):
     x = context[node.inputs[0]]
     min_value = context[node.inputs[1]]
     max_value = context[node.inputs[2]]
-    x = mb.clip(x=x, alpha=min_value, beta=max_value, name=node.name)
+    if min_value.val < max_value.val:
+        x = mb.clip(x=x, alpha=min_value, beta=max_value, name=node.name)
+    else:
+        # When min >= max, TensorFlow sets all values to min.
+        x = mb.fill(shape=mb.shape(x=x), value=min_value, name=node.name)
     context.add(node.name, x)
 
 @register_tf_op

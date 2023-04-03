@@ -232,7 +232,7 @@ class TF1Loader(TFLoader):
             tfssa=self._tf_ssa,
             inputs=self.kwargs["inputs"],
             outputs=self.kwargs["outputs"],
-            opset_version=self.kwargs["specification_version"]
+            opset_version=self.kwargs["specification_version"],
         )
         return converter.convert()
 
