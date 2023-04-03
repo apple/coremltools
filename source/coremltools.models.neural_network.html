@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>neural_network.builder &mdash; coremltools API Reference  documentation</title>
@@ -32,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -49,6 +53,7 @@
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.model">MLModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#compression-utils">compression_utils</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.converters.mil.debugging_utils">extract_submodel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="coremltools.models.html#neural-network">neural_network</a><ul class="current">
@@ -97,6 +102,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -118,7 +124,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="coremltools.models.html">Models</a></li>
       <li class="breadcrumb-item active">neural_network.builder</li>
       <li class="wy-breadcrumbs-aside">
@@ -175,7 +181,7 @@ for more details.</p>
 model interface, or a NeuralNetwork protobuf message, either from scratch or using an
 existing specification.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>input_features: [(str, datatypes.Array)] or None</strong></dt><dd><p>List of input feature of the network.
 Each feature is a <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">array)</span></code> tuple, where <code class="docutils literal notranslate"><span class="pre">name</span></code> is the
@@ -247,7 +253,7 @@ of double.</p>
 for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AcosLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -273,7 +279,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AcosLa
 hyperbolic cosine for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AcoshLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -298,7 +304,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AcoshL
 <dd><p>Add an activation layer to the model.
 Refer to the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -390,7 +396,7 @@ the number of input channels or 1. When <code class="docutils literal notranslat
 addition operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AddBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -410,7 +416,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AddBro
 value along a specified axis in the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ArgMaxLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -440,7 +446,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">ArgMax
 value along a specified axis in the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ArgMinLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -469,7 +475,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">ArgMin
 <dd><p>Add an argsort layer to the model.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ArgsortLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -499,7 +505,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Argsor
 the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AsinLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -525,7 +531,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AsinLa
 hyperbolic sine for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AsinhLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -551,7 +557,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AsinhL
 for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AtanLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -577,7 +583,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AtanLa
 hyperbolic tangent for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">AtanhLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -603,7 +609,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">AtanhL
 Refer to the <code class="docutils literal notranslate"><span class="pre">BatchedMatMulLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -673,7 +679,7 @@ defined as:</p>
 <p>Refer to the <code class="docutils literal notranslate"><span class="pre">BatchnormLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -717,7 +723,7 @@ from the single input instance.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">BiasLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -747,7 +753,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">BiasLa
 <dd><p>Add a Bi-directional LSTM layer to the model.
 Refer to the <code class="docutils literal notranslate"><span class="pre">BiDirectionalLSTMLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -856,7 +862,7 @@ Defaults to 50.0.</p>
 branching or an <code class="docutils literal notranslate"><span class="pre">if-else</span></code> block.
 Refer to the <code class="docutils literal notranslate"><span class="pre">BranchLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -885,7 +891,7 @@ to a compatible shape.
 Refer to the <code class="docutils literal notranslate"><span class="pre">BroadcastToDynamicLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -912,7 +918,7 @@ to a compatible shape.
 Refer to the <code class="docutils literal notranslate"><span class="pre">BroadcastToLikeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -939,7 +945,7 @@ to a compatible shape.
 Refer to the <code class="docutils literal notranslate"><span class="pre">BroadcastToStaticLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -968,7 +974,7 @@ tensor with random values from categorical distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CategoricalDistributionLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1000,7 +1006,7 @@ on the input tensor that rounds the value to the smallest integer not
 less than x.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CeilLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1026,7 +1032,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">CeilLa
 Clamped relu formula is f(x) = min((x &gt;= 0 ? x : alpha * x), beta)
 Refer to the <code class="docutils literal notranslate"><span class="pre">ClampedReluLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1056,7 +1062,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Clampe
 Clip the values in the input tensor to the range [min_value, max_value].
 Refer to the <code class="docutils literal notranslate"><span class="pre">ClipLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1086,7 +1092,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">ClipLa
 given axis.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ConcatNDLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1110,7 +1116,7 @@ If true, concatenate by interleaving the inputs</p>
 <dd><p>Add a constant pad layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ConstantPaddingLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1143,7 +1149,7 @@ Not required if second input is present.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">ConvolutionLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1274,7 +1280,7 @@ Must be of length 2^n bits.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">Convolution3DLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1364,7 +1370,7 @@ be used. Must all be positive integers. All default to 0.</p>
 tensor. Input tensor and output tensor must have distinct names.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CopyLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1384,7 +1390,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">CopyLa
 input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CosLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1410,7 +1416,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">CosLay
 cosine for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CoshLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1445,7 +1451,7 @@ on the dimension of the second blob with an offset.</p></li>
 <p>Refer to the <code class="docutils literal notranslate"><span class="pre">CropLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1488,7 +1494,7 @@ from the input and resizes them to a pre-specified size using bilinear interpola
 Note that RoI Align layer can be implemented with this layer followed by a pooling layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CropResizeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1575,7 +1581,7 @@ which uses unnormalized RoI coordinates along with a spatial scale less than or 
 Refer to the <code class="docutils literal notranslate"><span class="pre">CumSumLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1600,7 +1606,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">CumSum
 <dd><p>Add a custom layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CustomLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1622,7 +1628,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Custom
 division operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">DivideBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1641,7 +1647,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Divide
 <dd><p>Add an element-wise operation layer to the model.
 Refer to the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1689,7 +1695,7 @@ In this mode, the length of <code class="docutils literal notranslate"><span cla
 Refer to the <code class="docutils literal notranslate"><span class="pre">EmbeddingLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1749,7 +1755,7 @@ optionally adds a bias.
 Refer to the <code class="docutils literal notranslate"><span class="pre">EmbeddingNDLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1798,7 +1804,7 @@ related arguments must be provided as well (see below).</p>
 (=) operation. Broadcasting is supported.
 Refer to the <code class="docutils literal notranslate"><span class="pre">EqualLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1825,7 +1831,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">EqualL
 <dd><p>Add an erf function (gaussian error function) layer to the model.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ErfLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1844,7 +1850,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">ErfLay
 <dd><p>Add an exp2 layer to the model that performs element-wise experiential operation.
 Refer to the <code class="docutils literal notranslate"><span class="pre">Exp2LayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1865,7 +1871,7 @@ input tensor by adding unit dimensions.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ExpandDimsLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1894,7 +1900,7 @@ with a scalar value.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FillDynamicLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1923,7 +1929,7 @@ scalar value.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FillLikeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1952,7 +1958,7 @@ with a scalar value given shape as parameter.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FillStaticLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -1981,7 +1987,7 @@ Leaves the sequence axis as is.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FlattenLayerParams</span></code> message in the
 specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2013,7 +2019,7 @@ into a 2-dimensional matrix.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FlattenTo2DLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2042,7 +2048,7 @@ on the input tensor that rounds the value to the largest integer not
 greater than x.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FloorLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2068,7 +2074,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">FloorL
 division operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">FloorDivBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2095,7 +2101,7 @@ data and store to a tensor whose shape is defined by indices from the
 input.
 Refer to the <code class="docutils literal notranslate"><span class="pre">GatherLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2124,7 +2130,7 @@ from data and store to a tensor whose shape is defined by indices from the
 input along the given axis into the output tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">GatherAlongAxisLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2153,7 +2159,7 @@ data and store to a tensor whose shape is defined by indices from the
 input. This is the reverse operation of the scatter operation.
 Refer to the <code class="docutils literal notranslate"><span class="pre">GatherNDLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2179,7 +2185,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Gather
 <code class="docutils literal notranslate"><span class="pre">0.5</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">erf(x</span> <span class="pre">/</span> <span class="pre">sqrt(2)))</span></code>.
 Refer to the <code class="docutils literal notranslate"><span class="pre">GeluLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2201,7 +2207,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">GeluLa
 Refer to the <code class="docutils literal notranslate"><span class="pre">GetShapeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2229,7 +2235,7 @@ the Kernel is the size of the input and there is no padding.</p>
 <p>Refer to the <code class="docutils literal notranslate"><span class="pre">GlobalPooling3DLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2259,7 +2265,7 @@ Broadcasting is supported.
 Refer to the <code class="docutils literal notranslate"><span class="pre">GreaterThanLayerParams</span></code>, <code class="docutils literal notranslate"><span class="pre">GreaterEqualLayerParams</span></code> messages
 in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2289,7 +2295,7 @@ in the specification (NeuralNetwork.proto) for more details.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">GRULayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2357,7 +2363,7 @@ See add_activation for more detailed description.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">InnerProductLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2424,7 +2430,7 @@ Must be of length 2^n bits.</p>
 the square root of the sum of squares of all elements of the input along C, H and W dimensions.
 Refer to the <code class="docutils literal notranslate"><span class="pre">L2NormalizeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2453,7 +2459,7 @@ normalization over the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LayerNormalizationLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2483,7 +2489,7 @@ Broadcasting is supported.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LessThanL_ayerParams</span></code>, <code class="docutils literal notranslate"><span class="pre">LessEqualLayerParams</span></code> messages in
 specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2512,7 +2518,7 @@ specification (NeuralNetwork.proto) for more details.</p>
 <dd><p>Add a load constant layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LoadConstantLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2541,7 +2547,7 @@ as an output.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LoadConstantNDLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2571,7 +2577,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Logica
 <code class="docutils literal notranslate"><span class="pre">LogicalNotLayerParams</span></code>, and <code class="docutils literal notranslate"><span class="pre">LogicalAndLayerParam</span></code> messages in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2593,7 +2599,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Logica
 loop, or a <code class="docutils literal notranslate"><span class="pre">while</span></code> loop.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LoopLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2625,7 +2631,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">LoopLa
 contains this layer. Must reside in the <code class="docutils literal notranslate"><span class="pre">bodyNetwork</span></code> of the loop layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LoopBreakLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2648,7 +2654,7 @@ iteration and continue on the next iteration. Must reside in the
 <code class="docutils literal notranslate"><span class="pre">bodyNetwork</span></code> of the loop layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LoopContinueLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2671,7 +2677,7 @@ everything outside lower triangular to zero.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LowerTriangularLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2699,7 +2705,7 @@ k &lt; 0 is lower it and k &gt; 0 is upper.</p>
 <dd><p>Add a LRN (local response normalization) layer. Supports “across” channels normalization.
 Refer to the <code class="docutils literal notranslate"><span class="pre">LRNLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2734,7 +2740,7 @@ everything outside a central band in each inner-most matrix to zero.
 Refer to the <code class="docutils literal notranslate"><span class="pre">MatrixBandPartLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2766,7 +2772,7 @@ Default: -1 (keep entire upper triangle).</p>
 maximum operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">MaxBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2786,7 +2792,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">MaxBro
 minimum operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">MinBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2806,7 +2812,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">MinBro
 modular operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ModBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2826,7 +2832,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">ModBro
 multiplication operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">MultiplyBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2845,7 +2851,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Multip
 <dd><p>Add an MVN (mean variance normalization) layer. Computes mean, variance and normalizes the input.
 Refer to the <code class="docutils literal notranslate"><span class="pre">MeanVarianceNormalizeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2877,7 +2883,7 @@ If True, mean/variance is computed across all C, H and W dimensions</p>
 <dd><p>Add a non maximum suppression layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">NonMaximumSuppressionLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2911,7 +2917,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">NonMax
 equal (!=) operation. Broadcasting is supported.
 Refer to the <code class="docutils literal notranslate"><span class="pre">NotEqualLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2939,7 +2945,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">NotEqu
 Refer to the <code class="docutils literal notranslate"><span class="pre">OneHotLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -2965,7 +2971,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">OneHot
 <span class="sig-name descname"><span class="pre">add_optionals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">optionals_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optionals_out</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.add_optionals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_optionals" title="Permalink to this definition"></a></dt>
 <dd><p>Add optional inputs and outputs to the model spec.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>optionals_in: list of str</strong></dt><dd><p>List of inputs that are optionals.</p>
 </dd>
@@ -2989,7 +2995,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">OneHot
 <p>Refer to the <code class="docutils literal notranslate"><span class="pre">PaddingLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3026,7 +3032,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">OneHot
 <dd><p>Add a permute layer. Assumes that the input has dimensions in the order [Seq, C, H, W]
 Refer to the <code class="docutils literal notranslate"><span class="pre">PermuteLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3068,7 +3074,7 @@ the output is the same as the input.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">PoolingLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3128,7 +3134,7 @@ Can be either <code class="docutils literal notranslate"><span class="pre">'BOTT
 Refer to the <code class="docutils literal notranslate"><span class="pre">Pooling3DLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3186,7 +3192,7 @@ Can only be true for <code class="docutils literal notranslate"><span class="pre
 power operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">PowBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3207,7 +3213,7 @@ tensor with random values from Bernoulli distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomBernoulliDynamicLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3238,7 +3244,7 @@ tensor with random values from Bernoulli distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomBernoulliLikeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3269,7 +3275,7 @@ tensor with random values from Bernoulli distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomBernoulliStaticLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3300,7 +3306,7 @@ tensor with random values from normal distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomNormalDynamicLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3333,7 +3339,7 @@ tensor with random values from normal distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomNormalLikeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3366,7 +3372,7 @@ tensor with random values from normal distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomNormaStaticLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3399,7 +3405,7 @@ tensors with random values from uniform distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomUniformDynamicLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3432,7 +3438,7 @@ tensors with random values from uniform distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomUniformLikeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3465,7 +3471,7 @@ tensors with random values from uniform distribution.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RandomUniformStaticLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3497,7 +3503,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Random
 This layer has up to three inputs or no input and three parameters.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RangeDynamicLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3530,7 +3536,7 @@ If input size == 3: start, end, step are all inputs, none of the parameters are 
 This layer has no input and three parameters.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RangeStaticLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3563,7 +3569,7 @@ tensor without altering the rank of the tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RankPreservingReshapeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3593,7 +3599,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">RankPr
 along dimension(s) specified by the parameter axis.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3630,7 +3636,7 @@ using <code class="docutils literal notranslate"><span class="pre">l1_normalizat
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceL1LayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3665,7 +3671,7 @@ using <code class="docutils literal notranslate"><span class="pre">l2_normalizat
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceL2LayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3700,7 +3706,7 @@ using log(sum(elements across given dimensions)).
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceLogSumLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3735,7 +3741,7 @@ and reduces along the given axis.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceLogSumExpLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3770,7 +3776,7 @@ using <code class="docutils literal notranslate"><span class="pre">max(elements<
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceMaxLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3805,7 +3811,7 @@ using <code class="docutils literal notranslate"><span class="pre">mean(elements
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceMeanLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3840,7 +3846,7 @@ using <code class="docutils literal notranslate"><span class="pre">min(elements<
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceMinLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3875,7 +3881,7 @@ using <code class="docutils literal notranslate"><span class="pre">prod(elements
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceProdLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3912,7 +3918,7 @@ using <code class="docutils literal notranslate"><span class="pre">sum(elements<
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceSumLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3948,7 +3954,7 @@ using <code class="docutils literal notranslate"><span class="pre">sum(square(el
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReduceSumSquareLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -3981,7 +3987,7 @@ Each should be in range [-rank(input), rank(input)), default: <code class="docut
 <dd><p>Add a data reorganization layer of type “SPACE_TO_DEPTH” or “DEPTH_TO_SPACE”.
 Refer to the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4022,7 +4028,7 @@ must divide C when mode is ‘DEPTH_TO_SPACE’ or ‘PIXEL_SHUFFLE’.</p>
 <dd><p>Add a reshape layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReshapeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4057,7 +4063,7 @@ Can be either length 3 (C,H,W) or length 4 (Seq,C,H,W).</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReshapeDynamicLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4083,7 +4089,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Reshap
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReshapeLikeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4109,7 +4115,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Reshap
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReshapeStaticLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4136,7 +4142,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Reshap
 <dd><p>Add a resize bilinear layer to the model. A layer that resize the input to a given spatial size using bilinear interpolation.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ResizeBilinearLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4169,7 +4175,7 @@ This parameter determines the sampling grid used for bilinear interpolation.</p>
 the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReverseLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4196,7 +4202,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Revers
 <dd><p>Add a reverse sequence layer to the model that reverses variable length slices.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ReverseSeqLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4226,7 +4232,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Revers
 on the input tensor that rounds the value to the nearest integer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">RoundLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4246,7 +4252,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">RoundL
 Refer to the <code class="docutils literal notranslate"><span class="pre">ScaleLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4284,7 +4290,7 @@ Can be <code class="docutils literal notranslate"><span class="pre">[1]</span></
 according to indices from the input.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ScatterLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4315,7 +4321,7 @@ tensor according to indices from the input along the given axis into the
 output tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ScatterAlongAxisLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4346,7 +4352,7 @@ according to indices from input. This is the reverse operation of the
 gather operation.
 Refer to the <code class="docutils literal notranslate"><span class="pre">ScatterNDLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4374,7 +4380,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Scatte
 Refer to the <code class="docutils literal notranslate"><span class="pre">SequenceRepeatLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4402,7 +4408,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Sequen
 (+1 for positive values, -1 for negative values, 0 for zeroes).
 Refer to the <code class="docutils literal notranslate"><span class="pre">SignLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4422,7 +4428,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">SignLa
 Refer to the <code class="docutils literal notranslate"><span class="pre">SimpleRecurrentLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4477,7 +4483,7 @@ See add_activation for more detailed description.</p>
 input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SinLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4502,7 +4508,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">SinLay
 <dd><p>Add a sinh layer to the model that computes element-wise hyperbolic sine for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SinhLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4528,7 +4534,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">SinhLa
 start_index is included, while end_index is exclusive.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SliceLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4565,7 +4571,7 @@ Input is list of str which is [input_tensor, begin_id].</p>
 This would produce input_tensor[:, begin_id:begin_id+2, :]</p>
 <p>Refer to the <code class="docutils literal notranslate"><span class="pre">SliceBySizeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4595,7 +4601,7 @@ This would produce input_tensor[:, begin_id:begin_id+2, :]</p>
 <code class="docutils literal notranslate"><span class="pre">(end</span> <span class="pre">-</span> <span class="pre">begin)</span> <span class="pre">/</span> <span class="pre">stride</span></code> from the given input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SliceDynamicLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4631,7 +4637,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">SliceD
 <code class="docutils literal notranslate"><span class="pre">(end</span> <span class="pre">-</span> <span class="pre">begin)</span> <span class="pre">/</span> <span class="pre">stride</span></code> from the given input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SliceStaticLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4669,7 +4675,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">SliceS
 all windows of size <code class="docutils literal notranslate"><span class="pre">window_size</span></code> * separated by <code class="docutils literal notranslate"><span class="pre">step</span></code> along the dimension <code class="docutils literal notranslate"><span class="pre">axis</span></code>.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SlidingWindowsLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4701,7 +4707,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Slidin
 Refer to the <code class="docutils literal notranslate"><span class="pre">SoftmaxLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4727,7 +4733,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Softma
 the given axis.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SoftmaxNDLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4749,7 +4755,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Softma
 to produce multiple outputs.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SplitLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4776,7 +4782,7 @@ output tensors. Either uniformly split the input tensor into <code class="docuti
 tensors, or split into given size list <code class="docutils literal notranslate"><span class="pre">split_sizes</span></code> output tensors.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SplitNDLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4803,7 +4809,7 @@ tensor by removing unit dimensions.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SqueezeLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4833,7 +4839,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Squeez
 tensors into one rank+1 tensor on the given axis.
 Refer to the <code class="docutils literal notranslate"><span class="pre">StackLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4855,7 +4861,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">StackL
 subtraction operation with broadcast support.
 Refer to the <code class="docutils literal notranslate"><span class="pre">SubtractBroadcastableLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4875,7 +4881,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Subtra
 input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">TanLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4901,7 +4907,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">TanLay
 tangent for the input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">TanhLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4927,7 +4933,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">TanhLa
 input tensor multiple number of times.
 Refer to the <code class="docutils literal notranslate"><span class="pre">TileLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4958,7 +4964,7 @@ reps and this parameter is ignored.</p>
 the corresponding indices of the input tensor along a given axis.
 Refer to the <code class="docutils literal notranslate"><span class="pre">TopKLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -4987,7 +4993,7 @@ negative indexing is supported, default: 0</p>
 <dd><p>Add a N-D transpose layer with axes as a parameter.
 Refer to the <code class="docutils literal notranslate"><span class="pre">TransposeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5016,7 +5022,7 @@ Prior to the application of the function the input can be scaled and shifted by 
 ‘shift’ parameters.
 Refer to the <code class="docutils literal notranslate"><span class="pre">UnaryFunctionLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5051,7 +5057,7 @@ Allowed values: ‘sqrt’, ‘rsqrt’, ‘inverse’, ‘power’, ‘exp’, 
 Refer to the <code class="docutils literal notranslate"><span class="pre">UniDirectionalLSTMLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5126,7 +5132,7 @@ everything outside upper triangular to zero.
 Refer to the <code class="docutils literal notranslate"><span class="pre">UpperTriangularLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5155,7 +5161,7 @@ k &lt; 0 is lower it and k &gt; 0 is upper.</p>
 Refer to the <code class="docutils literal notranslate"><span class="pre">UpsampleLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5218,7 +5224,7 @@ condition tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">WhereBroadcastableLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5245,7 +5251,7 @@ the indices of all non-zero elements of input tensor.
 Refer to the <code class="docutils literal notranslate"><span class="pre">WhereNonZeroLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
@@ -5287,7 +5293,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">WhereN
 <span class="sig-name descname"><span class="pre">inspect_layers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">last</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.inspect_layers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.inspect_layers" title="Permalink to this definition"></a></dt>
 <dd><p>Prints the summary for last “last” number of layers.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>last: int</strong></dt><dd><p>The numbers of layers to inspect, starting from the last one.</p>
 </dd>
@@ -5327,7 +5333,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">WhereN
 <span class="sig-name descname"><span class="pre">make_updatable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trainables</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.make_updatable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.make_updatable" title="Permalink to this definition"></a></dt>
 <dd><p>Make the builder’s NeuralNetwork spec updatable.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>trainables: list of str</strong></dt><dd><p>List of layer names to be set trainable.</p>
 </dd>
@@ -5342,7 +5348,7 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">WhereN
 <dd><p>Categorical Cross Entropy is used for single label categorization
 (only one category is applicable for each data point).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>name: The name of the loss layer</strong></dt><dd></dd>
 <dt><strong>input: The name of the input</strong></dt><dd><p>The <code class="docutils literal notranslate"><span class="pre">input</span></code> should be a vector of length N representing the
@@ -5361,7 +5367,7 @@ distribution over N categories. This must be the output of a softmax.</p>
 <span class="sig-name descname"><span class="pre">set_class_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_blob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.set_class_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_class_labels" title="Permalink to this definition"></a></dt>
 <dd><p>Set class labels to the model spec to make it a neural network classifier.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>class_labels: list of int or list of str</strong></dt><dd><p>A list of integers or strings that map the index of the output of a
 neural network to labels in a classifier.</p>
@@ -5390,7 +5396,7 @@ assumed.</p>
 <span class="sig-name descname"><span class="pre">set_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_dims</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.set_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input" title="Permalink to this definition"></a></dt>
 <dd><p>Set the inputs of the network spec.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>input_names: list of str</strong></dt><dd><p>The input names of the network.</p>
 </dd>
@@ -5437,7 +5443,7 @@ Both the name and the array’s shape must be provided in the tuple.</p>
 <dd><p>Marks given input as optional input.
 Optionally, sets default value for optional input if value is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>input_idx: int</strong></dt><dd><p>Index of input to be marked and fill with default value.</p>
 </dd>
@@ -5456,7 +5462,7 @@ Must be one of <code class="docutils literal notranslate"><span class="pre">'flo
 <span class="sig-name descname"><span class="pre">set_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dims</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.set_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output" title="Permalink to this definition"></a></dt>
 <dd><p>Set the outputs of the network spec.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>output_names: list of str</strong></dt><dd><p>The output names of the network.</p>
 </dd>
@@ -5485,7 +5491,7 @@ as <code class="docutils literal notranslate"><span class="pre">output_names</sp
 <span class="sig-name descname"><span class="pre">set_pre_processing_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_bgr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">red_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blue_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gray_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'NCHW'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.set_pre_processing_parameters"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters" title="Permalink to this definition"></a></dt>
 <dd><p>Add a pre-processing parameters layer to the neural network object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>image_input_names: list of str</strong></dt><dd><p>Name of input blobs that are images</p>
 </dd>
@@ -5521,7 +5527,7 @@ provide a dictionary with input names as keys.</p>
 <span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_training_input" title="Permalink to this definition"></a></dt>
 <dd><p>Set the training inputs of the network spec.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>training_input: [tuple]</strong></dt><dd><p>The training input names and type of the network.</p>
 </dd>
@@ -5587,7 +5593,7 @@ value in an upper bound represents an unbounded range.</p>
 <dd><p>Annotate an input or output image feature in a Neural Network spec to
 to accommodate a list of enumerated image sizes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spec</strong> – MLModel
 The MLModel spec containing the feature</p></li>
@@ -5611,7 +5617,7 @@ size information for a image feature</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. The spec object is updated</p>
 </dd>
 </dl>
@@ -5623,7 +5629,7 @@ size information for a image feature</p></li>
 <dd><p>Annotate an input or output multiArray feature in a Neural Network spec to
 to accommodate a list of enumerated array shapes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spec</strong> – MLModel
 The MLModel spec containing the feature</p></li>
@@ -5651,7 +5657,7 @@ size information for a image feature</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. The spec object is updated</p>
 </dd>
 </dl>
@@ -5666,7 +5672,7 @@ Add provided enumerated shapes to the list of shapes already present.
 This method is different from “add_enumerated_multiarray_shapes”, which is applicable
 for rank 5 mapping, SBCHW, arrays.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spec</strong> – MLModel
 The MLModel spec containing the feature</p></li>
@@ -5688,7 +5694,7 @@ list of shapes, where each shape is specified as a tuple of integers.</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. The spec is updated</p>
 </dd>
 </dl>
@@ -5702,7 +5708,7 @@ to accommodate a range of shapes.
 This is different from “update_multiarray_shape_range”, which works with rank 5
 SBCHW mapping.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spec</strong> – MLModel
 The MLModel spec containing the feature</p></li>
@@ -5729,7 +5735,7 @@ Length must be same as the rank (length of shape) of the feature_name.</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. The spec is updated</p>
 </dd>
 </dl>
@@ -5741,7 +5747,7 @@ Length must be same as the rank (length of shape) of the feature_name.</p></li>
 <dd><p>Annotate an input or output Image feature in a Neural Network spec to
 to accommodate a range of image sizes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spec</strong> – MLModel
 The MLModel spec containing the feature</p></li>
@@ -5766,7 +5772,7 @@ range information.</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. The spec object is updated</p>
 </dd>
 </dl>
@@ -5778,7 +5784,7 @@ range information.</p></li>
 <dd><p>Annotate an input or output MLMultiArray feature in a Neural Network spec
 to accommodate a range of shapes</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>spec</strong> – MLModel
 The MLModel spec containing the feature</p></li>
@@ -5806,7 +5812,7 @@ the object is invalid then an exception is thrown</p></li>
 </pre></div>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. The spec is updated</p>
 </dd>
 </dl>
@@ -5929,7 +5935,7 @@ provided.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None. Performance metrics are printed out</p>
 </dd>
 </dl>
@@ -5994,7 +6000,7 @@ custom quantization selection.</p>
 </dd>
 </dl>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>model: MLModel</dt><dd><p>The quantized MLModel instance if running on macOS 10.14 or later,
 otherwise the quantized model specification is returned</p>
@@ -6020,7 +6026,7 @@ otherwise the quantized model specification is returned</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.neural_network.update_optimizer_utils.</span></span><span class="sig-name descname"><span class="pre">AdamParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/update_optimizer_utils.html#AdamParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.update_optimizer_utils.AdamParams" title="Permalink to this definition"></a></dt>
 <dd><p>Adam - A Method for Stochastic Optimization.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>lr: float</strong></dt><dd><p>The learning rate that controls learning step size. Adjustable in progress, default: 0.01.</p>
 </dd>
@@ -6037,10 +6043,6 @@ otherwise the quantized model specification is returned</p>
 </dl>
 <p class="rubric">Methods</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 53%" />
-<col style="width: 47%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>set_lr(value, min, max)</strong></p></td>
 <td><p>Set value for learning rate.</p></td>
@@ -6066,7 +6068,7 @@ otherwise the quantized model specification is returned</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.neural_network.update_optimizer_utils.</span></span><span class="sig-name descname"><span class="pre">Batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/update_optimizer_utils.html#Batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.update_optimizer_utils.Batch" title="Permalink to this definition"></a></dt>
 <dd><p>Batch optimizer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>value: float</strong></dt><dd></dd>
 <dt><strong>allowed_set: float</strong></dt><dd></dd>
@@ -6080,7 +6082,7 @@ otherwise the quantized model specification is returned</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.neural_network.update_optimizer_utils.</span></span><span class="sig-name descname"><span class="pre">RangeParam</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/update_optimizer_utils.html#RangeParam"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.update_optimizer_utils.RangeParam" title="Permalink to this definition"></a></dt>
 <dd><p>Range Parameter optimizer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>value: float</strong></dt><dd></dd>
 <dt><strong>min: float</strong></dt><dd></dd>
@@ -6095,7 +6097,7 @@ otherwise the quantized model specification is returned</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.neural_network.update_optimizer_utils.</span></span><span class="sig-name descname"><span class="pre">SgdParams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/update_optimizer_utils.html#SgdParams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.update_optimizer_utils.SgdParams" title="Permalink to this definition"></a></dt>
 <dd><p>SGD - Stochastic Gradient Descent optimizer.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>lr: float</strong></dt><dd><p>The learning rate that controls learning step size. Adjustable in progress, default: 0.01.</p>
 </dd>
@@ -6108,10 +6110,6 @@ otherwise the quantized model specification is returned</p>
 </dl>
 <p class="rubric">Methods</p>
 <table class="docutils align-default">
-<colgroup>
-<col style="width: 54%" />
-<col style="width: 46%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>set_lr(value, min, max)</strong></p></td>
 <td><p>Set value for learning rate.</p></td>

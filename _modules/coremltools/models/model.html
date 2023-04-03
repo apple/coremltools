@@ -28,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -45,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -66,7 +71,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
       <li class="breadcrumb-item active">coremltools.models.model</li>
       <li class="wy-breadcrumbs-aside">
@@ -102,15 +107,15 @@
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
                     <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span> <span class="n">_create_mlpackage</span><span class="p">,</span>
-                    <span class="n">_has_custom_layer</span><span class="p">,</span> <span class="n">_is_macos</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
+                    <span class="n">_has_custom_layer</span><span class="p">,</span> <span class="n">_is_macos</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">,</span>
+                    <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span><span class="p">,</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span><span class="p">,</span>
+                    <span class="p">)</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">torch</span>
+    <span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
 
 <span class="k">if</span> <span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">_tf</span>
 
 
 <span class="k">try</span><span class="p">:</span>
@@ -338,7 +343,7 @@
 <span class="sd">            i.e. a spec object.</span>
 
 <span class="sd">        is_temp_package: bool</span>
-<span class="sd">            Set to true if the input model package dir is temporary and can be deleted upon interpreter termination.</span>
+<span class="sd">            Set to True if the input model package dir is temporary and can be deleted upon interpreter termination.</span>
 
 <span class="sd">        mil_program: coremltools.converters.mil.Program</span>
 <span class="sd">            Set to the MIL program object, if available.</span>
@@ -363,6 +368,8 @@
 <span class="sd">                - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,</span>
 <span class="sd">                  but not the neural engine.</span>
+<span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
+<span class="sd">                  not the GPU. Available only for macOS &gt;= 13.0.</span>
 
 <span class="sd">        weights_dir: str</span>
 <span class="sd">            Path to the weight directory, required when loading an MLModel of type mlprogram,</span>
@@ -406,9 +413,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weights_dir</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">mil_program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mil_program</span><span class="p">,</span> <span class="n">_Program</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;mil_program must be of type &#39;coremltools.converters.mil.Program&#39;&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mil_program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mil_program</span><span class="p">,</span> <span class="n">_Program</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;&quot;mil_program&quot; must be of type &quot;coremltools.converters.mil.Program&quot;&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span> <span class="o">=</span> <span class="n">mil_program</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
@@ -422,8 +428,9 @@
                 <span class="n">model</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;mlProgram&quot;</span><span class="p">,</span> <span class="s1">&#39;pipelineClassifier&#39;</span><span class="p">,</span> <span class="s1">&#39;pipelineRegressor&#39;</span><span class="p">,</span> <span class="s1">&#39;pipeline&#39;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span> <span class="ow">and</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;MLModel of type mlProgram cannot be loaded just from the model spec object. &#39;</span>
                                     <span class="s1">&#39;It also needs the path to the weights file. Please provide that as well, &#39;</span>
                                     <span class="s1">&#39;using the </span><span class="se">\&#39;</span><span class="s1">weights_dir</span><span class="se">\&#39;</span><span class="s1"> argument.&#39;</span><span class="p">)</span>
@@ -523,6 +530,7 @@
 <span class="sd">        loaded_model = MLModel(&#39;my_model_file.mlmodel&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">save_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
         <span class="c1"># Clean up existing file or directory.</span>
         <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
@@ -569,7 +577,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        out: dict[str, value]</span>
+<span class="sd">        dict[str, value]</span>
 <span class="sd">            Predictions as a dictionary where each key is the output feature</span>
 <span class="sd">            name.</span>
 
@@ -728,10 +736,10 @@
         <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">_numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
                 <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span>
-            <span class="k">elif</span> <span class="n">_HAS_TORCH</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+            <span class="k">elif</span> <span class="n">_HAS_TORCH</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
                 <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="p">(</span><span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
-                <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">Session</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">_tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">_tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">Session</span><span class="p">())</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">_numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">given_input</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">sanitized_input</span>
