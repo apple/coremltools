@@ -18,18 +18,21 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 @register_pass(namespace="common")
 class fuse_reduce_mean(AbstractGraphPass):
     """
-    Detect the "``reduce_sum``--->``mul/real_div``" pattern than can be mapped to ``reduce_mean``.
+    Detect the ``reduce_sum`` ---> ``mul/real_div`` pattern than can be mapped to ``reduce_mean``.
     That is, the operation ``reduce_sum/count == reduce_mean``.
 
-    .. code-block::
+    `Input graph`
 
-        Input graph:
+    .. code-block::
 
                                     const (scalar)
                                         |
         input ----> reduce_sum ----> mul/real_div -----------> output
 
-        Output graph:
+
+    `Output graph`
+
+    .. code-block::
 
         input --------> reduce_mean ---------> output
 

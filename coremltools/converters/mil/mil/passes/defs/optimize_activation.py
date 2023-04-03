@@ -179,6 +179,33 @@ class fuse_gelu_tanh_approximation(AbstractGraphPass):
     The implementation of this pass uses the generic graph pattern matching and transform algorithm
     implemented in ``coremltools.converters.mil.experimental.passes.generic_pass_infrastructure`` and
     documented in ``coremltools/converters/mil/experimental/passes/readme.md``.
+    
+    `Graph for` ``get_gelu_pattern1()``
+    
+    ``y = x * (0.5 * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1))``
+
+    .. code-block::
+
+	    [...] -----> pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) ----> mul (0.5) -----> mul ---> [...]
+	      |                                            ^                                                                          ^
+	      |                                            |                                                                          |
+	      |------------------------------------------------------------------------------------------------------------------------
+
+
+    `Graph for` ``get_gelu_pattern2()``
+    
+    ``y = (0.5 * x) * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1)``
+
+    .. code-block::
+
+                       --------------------------------------------------------------------------------------------------------
+                       ^                                                                                                      |
+                       |                                                                                                      V
+        [...] -----> mul(0.5)    pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) -----> mul ---> [...]
+          |                        ^                               ^
+          |                        |                               |
+          |---------------------------------------------------------
+
     """
 
     def apply(self, prog):
@@ -277,13 +304,13 @@ class fuse_gelu_tanh_approximation(AbstractGraphPass):
 
         .. code-block::
 
-							---------------------------------------------------------------------------------------------------------
-							^                                                                                                       |
-							|                                                                                                       V
-			 [...] -----> mul(0.5)    pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) -----> mul ---> [...]
-			  |                         ^                               ^
-			  |                         |                               |
-			  |------------------------------------------------------------
+                           --------------------------------------------------------------------------------------------------------
+                           ^                                                                                                      |
+                           |                                                                                                      V
+            [...] -----> mul(0.5)    pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) -----> mul ---> [...]
+              |                        ^                               ^
+              |                        |                               |
+              |---------------------------------------------------------
 		
         """
 
@@ -311,32 +338,36 @@ class fuse_leaky_relu(AbstractGraphPass):
     """
     Detect the ``mul`` ---> ``max`` pattern than can be mapped to ``leaky_relu``.
 
+    `In code form - Input`
+    
     .. code-block::
 
-        In code form:
-        ------------
-
-        Input:
-            %2 = const(value = alpha) # where 0 <= alpha <= 1
-            %3 = mul(%1, %2) # alpha * x
-            %4 = max(%3, %1) # max(alpha * x, x)
-
-        Output:
-            %4 = leaky_relu(x=%1, alpha=%2)
+       %2 = const(value = alpha) # where 0 <= alpha <= 1
+       %3 = mul(%1, %2) # alpha * x
+       %4 = max(%3, %1) # max(alpha * x, x)
 
 
-        In graphical form:
-        -----------------
+    `In code form - Output`
+    
+    .. code-block::
 
-        Input graph:
+       %4 = leaky_relu(x=%1, alpha=%2)
 
-                const (val = alpha)
-                    |
+
+    `In graphical form - Input graph`
+    
+    .. code-block::
+
+                 const (val = alpha)
+                     |
         input ----> mul ---------------> maximum -----------> output
           |                                 |
           |----------------------------------
 
-        Output graph:
+
+    `In graphical form - Output graph`
+    
+    .. code-block::
 
         input --------> leaky_relu ---------> output
 
@@ -557,25 +588,30 @@ class fuse_prelu(AbstractGraphPass):
     
     ``y = a * relu(-1 * x) + relu(x)``
 
+    `Pattern 1`
+
     .. code-block::
-
-        Pattern 1:
-
 
                           | ------------> relu --------------------|
                           |                                        V
            x (BCHW) ------|                                       add -----> y (BCHW)
                           |                                        ^
                           --------> mul -------> relu -----> mul---|
-                                    ^                         ^
-                                    |                         |
-                                Const(val=-1)               Const(name=a, shape=(C,1,1) or (1,C,1,1))
+                                     ^                        ^
+                                     |                        |
+                                Const(val=-1)            Const(name=a, shape=(C,1,1) or (1,C,1,1))
 
-        This will be mapped to:
+
+    This will be mapped to:
+
+    .. code-block::
+
             x (BCHW) ------> prelu(alpha=a, shape=(C,)) ---------> y (BCHW)
 
 
-        Pattern 2:
+    `Pattern 2`
+
+    .. code-block::
 
                                           | ------------> relu --------------------|
                                           |                                        V
@@ -586,7 +622,11 @@ class fuse_prelu(AbstractGraphPass):
                                                      |                        |
                                             Const(val=-1)    Const(shape=(C,) or (1,C) or (1,1,C) or (1,1,1,C))
 
-        This will be mapped to:
+
+    This will be mapped to:
+
+    .. code-block::
+
             x (BCHW) ------> prelu ---------> transpose ------> y (BHWC)
     """
 

@@ -715,18 +715,22 @@ class replace_stack_reshape(AbstractGraphPass):
 class use_reflection_padding(AbstractGraphPass):
     """
     Identify a reflection padding layer composed out of `slices` and `concats`.
-
+    
     .. code-block::
 
         Input graph:
+        
                 ------------------------------------------------------------------------------------- |
                 |                                                                                     v
         input(1, 2, 6, 8) ------> slice_by_index(begin=[0, 0, 0, 1], end=[0, 0, 0, 2]) -----> concat(axis=3) ---> out(1, 2, 6, 10)
                 |                                                                                     ^
                 ----------------> slice_by_index(begin=[0, 0, 0, -2], end=[0, 0, 0, -1]) -------------|
 
+        
         Output graph:
+        
         input(1, 2, 6, 8) -----0> pad(mode=reflect, size=[0, 0, 1, 1]) -----> out(1, 2, 6, 10)
+
     """
 
     def apply(self, prog):

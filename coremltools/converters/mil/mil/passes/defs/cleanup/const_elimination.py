@@ -28,7 +28,8 @@ class const_elimination(AbstractGraphPass):
             %4 = other_op(%2_const, %3)
 
     Support options:
-    - skip_const_by_size: Skip folding consts that have larger number of elements than a threshold.
+    
+    - ``skip_const_by_size``: Skip folding ``const`` ops that have larger number of elements than a threshold.
     """
 
     _skip_const_by_size = None

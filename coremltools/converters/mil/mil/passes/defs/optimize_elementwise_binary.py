@@ -193,10 +193,10 @@ class rank0_expand_dims_swap(AbstractGraphPass):
     should be added after both of the ``rank-0`` tensors, and the final ``expand_dims`` should be removed.
     If the output var of the binary elementwise op is consumed by more than one op, a ``squeeze`` op
     is inserted.
+    
+    `Input`
 
     .. code-block::
-
-        Input:
 
             [...](rank-0) --> sub --> expand_dims (axes=[0]) --> [...]
                                ^   |
@@ -206,7 +206,10 @@ class rank0_expand_dims_swap(AbstractGraphPass):
                                |
                          [scalar const]
 
-        Output:
+    `Output`
+
+    .. code-block::
+
             [...](rank-0) --> expand_dims (axes=[0]) --> sub --> [...]
                                                           ^   |
                                                           |   |--> squeeze ---> op2
@@ -218,6 +221,7 @@ class rank0_expand_dims_swap(AbstractGraphPass):
                                                           |
                                                           |
                                                     [scalar const]
+
     """
 
     def apply(self, prog):
