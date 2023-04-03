@@ -283,6 +283,8 @@ class MLModel:
                 - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
                 - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,
                   but not the neural engine.
+                - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
+                  not the GPU. Available only for macOS >= 13.0.
 
         weights_dir: str
             Path to the weight directory, required when loading an MLModel of type mlprogram,

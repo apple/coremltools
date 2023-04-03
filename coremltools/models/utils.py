@@ -1010,7 +1010,8 @@ def make_pipeline(*models):
 
     Parameters
     ----------
-    *models - two or more instances of ct.models.MLModel
+    *models
+        Two or more instances of ct.models.MLModel.
 
     Returns
     -------
@@ -1018,10 +1019,13 @@ def make_pipeline(*models):
 
     Examples
     --------
-    my_model1 = ct.models.MLModel('/tmp/m1.mlpackage')
-    my_model2 = ct.models.MLModel('/tmp/m2.mlmodel')
+    .. sourcecode:: python
 
-    my_pipeline_model = ct.utils.make_pipeline(my_model1, my_model2)
+        my_model1 = ct.models.MLModel('/tmp/m1.mlpackage')
+        my_model2 = ct.models.MLModel('/tmp/m2.mlmodel')
+        
+        my_pipeline_model = ct.utils.make_pipeline(my_model1, my_model2)
+
     """
 
     def updateBlobFileName(proto_message, new_path):
