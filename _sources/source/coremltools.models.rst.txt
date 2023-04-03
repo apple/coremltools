@@ -23,6 +23,13 @@ array\_feature\_extractor
    :members:
 
 
+extract_submodel
+----------------
+
+.. automodule:: coremltools.converters.mil.debugging_utils
+	:members: extract_submodel
+
+
 feature\_vectorizer
 ---------------------------------------------
 

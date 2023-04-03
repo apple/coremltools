@@ -28,11 +28,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../../../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -45,6 +49,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -66,7 +71,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
       <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.recurrent</li>
       <li class="wy-breadcrumbs-aside">
@@ -84,16 +89,18 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DefaultInputs</span><span class="p">,</span>
-                                                       <span class="n">InputSpec</span><span class="p">,</span>
-                                                       <span class="n">TensorInputType</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">TensorInputType</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 
 
 <div class="viewcode-block" id="gru"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">gru</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Gated recurrent unit (GRU).</span>
+<span class="sd">    Gated Recurrent Unit (GRU)</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">       r_t = \rm{recurrent\_activation}(W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})</span>
@@ -109,9 +116,10 @@
 
 <span class="sd">    Where:</span>
 
-<span class="sd">    * :math:`W_{ir}`, :math:`W_{io}`, and :math:`W_{iz}` are state input-hidden weights for reset, output</span>
-<span class="sd">      and update gate, respectively.</span>
-<span class="sd">    * :math:`W_{h[r|o|z]}` are recurrent weights on hidden state to reset, output, and update gates, respectively.</span>
+<span class="sd">    * :math:`W_{i[r|o|z]}` are state input weights for reset, output and update gate, respectively.</span>
+<span class="sd">    * :math:`b_{i[r|o|z]}` are input biases for reset, output and update gate, respectively.</span>
+<span class="sd">    * :math:`W_{h[r|o|z]}` are recurrent/hidden weights on hidden state to reset, output, and update gates, respectively.</span>
+<span class="sd">    * :math:`b_{h[r|o|z]}` are recurrent/hidden biases on hidden state to reset, output, and update gates, respectively.</span>
 <span class="sd">    * :math:`h_t`  is the hidden state at time ``t``.</span>
 <span class="sd">    * :math:`x_t` is the input at time ``t``.</span>
 <span class="sd">    * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial</span>
@@ -250,7 +258,7 @@
 <div class="viewcode-block" id="lstm"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">lstm</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Single long short-term memory (LSTM) sequence.</span>
+<span class="sd">    Long Short-Term Memory (LSTM)</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">       i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_{t-1} + B_{hi})</span>
@@ -278,7 +286,11 @@
 <span class="sd">    * :math:`h_t`  is the hidden state at time ``t``.</span>
 <span class="sd">    * :math:`W_{ii}`, :math:`W_{if}`, :math:`W_{io}`, and :math:`W_{iz}` are input weights for input,</span>
 <span class="sd">      forget, output, and cell gate, respectively.</span>
+<span class="sd">    * :math:`B_{ii}`, :math:`B_{if}`, :math:`B_{io}`, and :math:`B_{iz}` are input biases for input,</span>
+<span class="sd">      forget, output, and cell gate, respectively.</span>
 <span class="sd">    * :math:`W_{hi}`, :math:`W_{hf}`, :math:`W_{ho}`, and :math:`W_{hz}` are recurrent weights for input,</span>
+<span class="sd">      forget, output, and cell gate, respectively.</span>
+<span class="sd">    * :math:`B_{hi}`, :math:`B_{hf}`, :math:`B_{ho}`, and :math:`B_{hz}` are recurrent weights for input,</span>
 <span class="sd">      forget, output, and cell gate, respectively.</span>
 
 <span class="sd">    Parameters</span>
@@ -287,14 +299,14 @@
 <span class="sd">        * ``s`` is the sequence length, ``b`` is the batch size, and ``I`` is the</span>
 <span class="sd">          input dimension.</span>
 
-<span class="sd">    initial_h: &lt;b, DIRECTION*H, T&gt; (Required)</span>
-<span class="sd">        * Initial hidden state. ``DIRECTION = 1`` for uni-directional, ``2`` for</span>
-<span class="sd">          bi-directional LSTM.</span>
+<span class="sd">    initial_h: &lt;b, DIRECTIONS*H, T&gt; (Required)</span>
+<span class="sd">        * Initial hidden state. ``DIRECTIONS = 1`` for uni-directional.</span>
+<span class="sd">          ``DIRECTIONS = 2`` for bi-directional LSTM.</span>
 <span class="sd">        * ``H`` denotes hidden size.</span>
 <span class="sd">        * ``[b, :H]`` and ``[b, H:]`` represents forward and reverse direction</span>
 <span class="sd">          values, respectively.</span>
 
-<span class="sd">    initial_c: &lt;b, DIRECTION*H, T&gt; (Required)</span>
+<span class="sd">    initial_c: &lt;b, DIRECTIONS*H, T&gt; (Required)</span>
 <span class="sd">        * Initial cell state.</span>
 <span class="sd">        * Format is same as ``initial_h``.</span>
 
@@ -312,12 +324,12 @@
 <span class="sd">        * If direction==&quot;bidirectional&quot;, this is applied in forward direction.</span>
 <span class="sd">        * If direction==&quot;forward&quot; or &quot;backward&quot; these weights are used.</span>
 
-<span class="sd">    bias: const&lt;4*H, T&gt; (Optional) [Default all 0s]</span>
+<span class="sd">    bias: const&lt;4*H, T&gt; (Optional, default all 0s)</span>
 <span class="sd">        * bias = input-hidden bias + hidden-hidden bias</span>
 <span class="sd">        * If direction==&quot;bidirectional&quot;, this is applied in forward direction.</span>
 <span class="sd">        * If direction==&quot;forward&quot; or &quot;backward&quot; this bias are used.</span>
 
-<span class="sd">    peephole: const&lt;3*H, T&gt; (Optional, default to 0)</span>
+<span class="sd">    peephole: const&lt;3*H, T&gt; (Optional, default all 0s)</span>
 <span class="sd">        * Weight tensor for peephole.</span>
 <span class="sd">        * Order is ``[input_gate, forget_gate, output_gate]``.</span>
 <span class="sd">        * Shape of each peephole vector is ``(H,)`` (``H`` is hidden size).</span>
@@ -340,13 +352,13 @@
 <span class="sd">        * This is only used when `direction` is &quot;bidirectional&quot;.</span>
 <span class="sd">        * For direction=&quot;reverse&quot; use `weight_hh` instead.</span>
 
-<span class="sd">    bias_back: const&lt;4*H, T&gt; (Optional) [Default all 0s]</span>
+<span class="sd">    bias_back: const&lt;4*H, T&gt; (Optional, default all 0s)</span>
 <span class="sd">        * bias = input-hidden bias + hidden-hidden bias.</span>
 <span class="sd">        * Bias of backward direction for `bidirectional lstm`</span>
 <span class="sd">        * This is only used when `direction` is &quot;bidirectional&quot;.</span>
 <span class="sd">        * For direction=&quot;reverse&quot; use `bias` instead.</span>
 
-<span class="sd">    peephole_back: const&lt;3*H, T&gt; (Optional, default to 0)</span>
+<span class="sd">    peephole_back: const&lt;3*H, T&gt; (Optional, default all 0s)</span>
 <span class="sd">        * Weight tensor for peephole in backward direction for `bidirectional LSTM`.</span>
 <span class="sd">        * Order is ``[input_gate, forget_gate, output_gate]``.</span>
 <span class="sd">        * Shape of each peephole vector is ``(H,)`` (``H`` is hidden size).</span>
@@ -365,7 +377,7 @@
 <span class="sd">    recurrent_activation: const&lt;str&gt; (Optional) [Default=sigmoid]</span>
 <span class="sd">        * Activation applied on input, forget, and output gates.</span>
 
-<span class="sd">    cell_activation: const&lt;str&gt; (Optional) [Default=tang]</span>
+<span class="sd">    cell_activation: const&lt;str&gt; (Optional) [Default=tanh]</span>
 <span class="sd">        * Activation applied on cell gate.</span>
 
 <span class="sd">    activation: const&lt;str&gt; (Optional) [Default=tanh]</span>
@@ -376,13 +388,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    &lt;s, b, DIRECTION*H, T&gt; or &lt;1, b, DIRECTION*H, T&gt;</span>
+<span class="sd">    &lt;s, b, DIRECTIONS*H, T&gt; or &lt;1, b, DIRECTIONS*H, T&gt;</span>
 <span class="sd">        * If ``output_sequence == True`` (hidden states from every step):</span>
-<span class="sd">          ``&lt;s, b, DIRECTION*H, T&gt;``.</span>
-<span class="sd">        * Else ``&lt;1, b, DIRECTION*H, T&gt;`` (hidden states of the final step).</span>
-<span class="sd">    &lt;b, DIRECTION*H, T&gt;</span>
+<span class="sd">          ``&lt;s, b, DIRECTIONS*H, T&gt;``.</span>
+<span class="sd">        * Else ``&lt;1, b, DIRECTIONS*H, T&gt;`` (hidden states of the final step).</span>
+<span class="sd">    &lt;b, DIRECTIONS*H, T&gt;</span>
 <span class="sd">        * Hidden states of the final step.</span>
-<span class="sd">    &lt;b, DIRECTION*H, T&gt;</span>
+<span class="sd">    &lt;b, DIRECTIONS*H, T&gt;</span>
 <span class="sd">        * Memory state of the final step.</span>
 
 <span class="sd">    Attributes</span>
@@ -482,7 +494,7 @@
 <div class="viewcode-block" id="rnn"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">rnn</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Recurrent neural network (RNN).</span>
+<span class="sd">    Recurrent Neural Network (RNN)</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">       h_t = \rm{activation}(W_{ih} x_t + b_{ih} + W_{hh} h_{t−1} + b_{hh})</span>
@@ -494,7 +506,9 @@
 <span class="sd">    * :math:`h_t`  is the hidden state at time ``t``.</span>
 <span class="sd">    * :math:`x_t` is the input at time ``t``.</span>
 <span class="sd">    * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial</span>
-<span class="sd">      hidden state at time ``0``.</span>
+<span class="sd">      hidden state at ``t = 0``.</span>
+<span class="sd">    * :math:`b_{ih}` is the input bias.</span>
+<span class="sd">    * :math:`b_{hh}` if the hidden/recurrent bias.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
