@@ -22,13 +22,13 @@ def extract_submodel(
         function_name: str = "main"
     ) -> MLModel:
     """
-    This utility function allows the user to extract a submodel from a Core ML model.
+    This utility function lets you extract a submodel from a Core ML model.
     
-    For the NeuralNetwork model, only in memory Core ML model can be extracted. That is to say,
-    the user should always call this function to a model directly from `ct.convert`. It is not
-    allowed to load the model from the disk, and call this API.
+    For a NeuralNetwork model, the function extracts only in-memory Core ML models.
+    You should always call this function to a model directly from ``ct.convert``. It is not
+    allowed to load the model from disk and then call this API.
     
-    For the ML program model, both cases (in memory / from disk) are supported.
+    For an ML program model, both cases (in-memory and from disk) are supported.
 
     Parameters
     ----------
@@ -40,10 +40,10 @@ def extract_submodel(
         
     inputs: list[str] (Optional)
         A list of names of Vars, which are the inputs of the extracted submodel.
-        If not provided, we use the inputs from the original model.
+        If not provided, the inputs from the original model are used.
 
     function_name: str (Optional)
-        Name of the function where the subgraph is extracted. Default "main".
+        Name of the function where the subgraph is extracted. Default ``main``.
         
     Examples
     --------
@@ -56,6 +56,7 @@ def extract_submodel(
         >>> submodel = extract_submodel(mlmodel, outputs)
         
     ML Program:
+
         >>> from coremltools.converters.mil.debugging_utils import extract_submodel
         >>> mlmodel = ct.convert(model, convert_to="mlprogram")
         >>> outputs = ["output_0", "output_1"]
@@ -67,7 +68,7 @@ def extract_submodel(
         >>> mlmodel.save("model.mlpackage")
         >>> mlmodel = coremltools.model.models.MLModel("model.mlpackage")
         >>> submodel = extract_submodel(mlmodel, outputs)
-     
+
     """
     def validate_inputs(func, input_vars):
         reachable_vars = set(input_vars)
