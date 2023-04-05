@@ -139,6 +139,39 @@ def _restore_conj(
 
     return real_data, imag_data
 
+def _calculate_dft_matrix(
+    dim: Var,
+    before_op: Operation,
+) -> Tuple[Var, Var]:
+    """
+    The core issue is how to derive the DFT matrix. As the DFT matrix is consist of different powers
+    of `w`, where w=e^(2pi/N i), we need to separate the real and imaginary part of w. To achieve
+    that, we need to find a way to construct the following matrix (from the power of `w` in DFT):
+        0    0    0      ...    0
+        0    1    2      ...    N-1
+        0    2    4      ...    2(N-1)
+        ...    ....      ...
+        0   N-1  2(N-1)  ...    (N-1)(N-1)
+    This matrix could be derived by outer product of two range tensors.
+
+    After getting that base matrix, we can take sin and cos to get the corresponding `sin_base` and
+    `cos_base` matrix.
+    """
+    tmp = mb.range_1d(start=0.0, end=dim, step=1.0, before_op=before_op)
+
+     # Use MIL ops to calculate base = torch.outer(tmp, tmp) * (2 * torch.pi / N).
+    tmp_x = mb.reshape(x=tmp, shape=[-1, 1], before_op=before_op)
+    tmp_y = mb.reshape(x=tmp, shape=[1, -1], before_op=before_op)
+    
+    base = mb.matmul(x=tmp_x, y=tmp_y, before_op=before_op)
+    base = mb.mul(x=base, y=2 * np.pi, before_op=before_op)
+    base = mb.real_div(x=base, y=dim, before_op=before_op)
+    
+    # Get real part and imaginary part separately.
+    cos_base = mb.cos(x=base, before_op=before_op)
+    sin_base = mb.sin(x=base, before_op=before_op)
+    
+    return cos_base, sin_base
 
 def _fft_1d(
     input_real: Var,
@@ -152,18 +185,7 @@ def _fft_1d(
     """
     1-D FFT by DFT Matrix Multiplication.
 
-    The core issue is how to derive the DFT matrix. As the DFT matrix is consist of different powers
-    of `w`, where w=e^(2pi/N i), we need to separate the real and imaginary part of w. To achieve
-    that, we need to find a way to construct the following matrix (from the power of `w` in DFT):
-        0    0    0      ...    0
-        0    1    2      ...    N-1
-        0    2    4      ...    2(N-1)
-        ...    ....      ...
-        0   N-1  2(N-1)  ...    (N-1)(N-1)
-    This matrix could be derived by outer product of two range tensors.
-
-    After getting that base matrix, we can take sin and cos to get the corresponding `sin_base` and
-    `cos_base` matrix. Now based on some math formulas including:
+    Now based on some math formulas including:
         * The addition of complex numbers is: (a+bi)+(c+di)=(a+c)+(b+d)i.
         * The multiplication of complex numbers is: (a+bi)(c+di)=ac+adi+bci−bd=(ac−bd)+(ad+bc)i.
         * Euler’s formula: e^xi=cosx+isinx.
@@ -202,18 +224,9 @@ def _fft_1d(
     N = transposed_input_real.shape[0]
     reshaped_input_real = mb.reshape(x=transposed_input_real, shape=[N, -1], before_op=before_op)
     reshaped_input_imag = mb.reshape(x=transposed_input_imag, shape=[N, -1], before_op=before_op)
-    tmp = mb.range_1d(start=0, end=N, step=1, before_op=before_op)
-    # Use MIL ops to calculate base = torch.outer(tmp, tmp) * (2 * torch.pi / N).
-    tmp_x = mb.reshape(x=tmp, shape=[-1, 1], before_op=before_op)
-    tmp_y = mb.reshape(x=tmp, shape=[1, -1], before_op=before_op)
-    base = mb.matmul(x=tmp_x, y=tmp_y, before_op=before_op)
-    base = mb.cast(x=base, dtype="fp32", before_op=before_op)
-    base = mb.mul(x=base, y=2 * np.pi, before_op=before_op)
+    
     N = mb.cast(x=N, dtype="fp32", before_op=before_op)
-    base = mb.real_div(x=base, y=N, before_op=before_op)
-    # Get real part and imaginary part separately.
-    cos_base = mb.cos(x=base, before_op=before_op)
-    sin_base = mb.sin(x=base, before_op=before_op)
+    cos_base, sin_base = _calculate_dft_matrix(N, before_op)
 
     if not inverse:
         real_part = mb.add(
