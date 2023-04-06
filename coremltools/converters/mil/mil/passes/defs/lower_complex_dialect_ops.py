@@ -307,8 +307,8 @@ def _stft_real(
     hop_length: Optional[Var],
     win_length: Optional[Var],
     window: Optional[Var],
-    normalized: Optional[bool],
-    onesided: Optional[bool],
+    normalized: Optional[Var],
+    onesided: Optional[Var],
     before_op: Operation,
 ) -> Tuple[Var, Var]:
     """
@@ -317,33 +317,40 @@ def _stft_real(
     and individually invoking fft_1d on them.
     Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
     """
-    hop_length = hop_length or mb.div(x=n_fft, y=4.0, before_op=before_op)
+    hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
     win_length = win_length or n_fft
 
-    if onesided:
-        window_size = mb.floor_div(x=n_fft, y=2, before_op=before_op)
-        window_size = mb.add(x=window_size, y=1, before_op=before_op)
-    else:
-        window_size = n_fft
+    print("STFT PARAMS:", "HOP", hop_length.val, "WIN", win_length.val, "WINDOW", window, "NORM", normalized.val, "ONESIDE", onesided.val)
 
-    window_size = mb.cast(x=window_size, dtype="fp32", before_op=before_op)
-    dft_real, dft_imag = _calculate_dft_matrix(window_size, before_op=before_op)
+    if onesided and onesided.val:
+        win_length = mb.floor_div(x=win_length, y=2, before_op=before_op)
+        win_length = mb.add(x=win_length, y=1, before_op=before_op)
+
+    win_length = mb.cast(x=win_length, dtype="fp32", before_op=before_op)
+    dft_real, dft_imag = _calculate_dft_matrix(win_length, before_op=before_op)
 
     # apply time window
     if window:
-        window = mb.slice_by_size(x=window, begin=0, size=window_size, before_op=before_op)
+        window = mb.slice_by_size(x=window, begin=0, size=win_length, before_op=before_op)
         dft_real = mb.mul(x=window, y=dft_real, before_op=before_op)
         dft_imag = mb.mul(x=window, y=dft_imag, before_op=before_op)
 
     # conv with DFT kernel across the input signal
     dft_real = mb.expand_dims(x=dft_real, axes=(1,), before_op=before_op)
     dft_imag = mb.expand_dims(x=dft_imag, axes=(1,), before_op=before_op)
-    signal = mb.expand_dims(x=input, axis=(1,), before_op=before_op)
-    real_data = mb.conv(x=signal, weight=dft_real, strides=hop_length, pad_type='valid', before_op=before_op)
-    imag_data = mb.conv(x=signal, weight=dft_imag, strides=hop_length, pad_type='valid', before_op=before_op)
+    signal = mb.expand_dims(x=input, axes=(1,), before_op=before_op)
+    hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
+    print("SIGNAL SHAPE", signal.shape, dft_real.shape, dft_imag.shape)
+    real_data = mb.conv(x=signal, weight=dft_real, strides=hop_size, pad_type='valid', before_op=before_op)
+    imag_data = mb.conv(x=signal, weight=dft_imag, strides=hop_size, pad_type='valid', before_op=before_op)
 
-    if normalized:
-        divisor = mb.sqrt(x=window_size, before_op=before_op)
+    # slice to the correct number of frames
+    frames = (input.shape[-1] - n_fft.val) // hop_length.val + 1
+    real_data = _resize_data(real_data, (-1,), (frames,), before_op=before_op)
+    imag_data = _resize_data(imag_data, (-1,), (frames,), before_op=before_op)
+
+    if normalized and normalized.val:
+        divisor = mb.sqrt(x=win_length, before_op=before_op)
         real_data = mb.real_div(x=real_data, y=divisor, before_op=before_op)
         imag_data = mb.real_div(x=imag_data, y=divisor, before_op=before_op)
 
@@ -543,13 +550,14 @@ def _lower_complex_irfftn(op: Operation):
 
     return real_data
 
-@LowerComplex.register_lower_func(op_type="stft")
+@LowerComplex.register_lower_func(op_type="complex_stft")
 def _lower_complex_stft(op: Operation):
-    if not types.is_complex(op.data.dtype):
-        real, imag = _stft_real(op.data.real, op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
+    if not types.is_complex(op.input.dtype):
+        real, imag = _stft_real(op.input, op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
     else:
         assert False, "Not currently implemented"
-        
+
+    print("SHAPE STFT", real.shape, imag.shape)    
     return _wrap_complex_output(op.outputs[0], real, imag)
 
 
