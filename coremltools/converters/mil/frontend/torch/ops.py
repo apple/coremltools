@@ -5676,6 +5676,13 @@ def fft_irfftn(context, node):
     irfftn_res = mb.complex_irfftn(data=input_data, shapes=shapes, dims=dims, norm=norm)
     context.add(irfftn_res, node.name)
 
+@register_torch_op
+def stft(context, node):
+    """
+    """
+    input_data, n_fft, hop_length, win_length, window, normalized, onesided, _ = _get_inputs(context, node, min_expected=[2])
+    stft_res = mb.stft(input_data, n_fft, hop_length, win_length, window, normalized, onesided)
+    context.add(stft_res, node.name)
 
 @register_torch_op(torch_alias=["torchvision::nms"])
 def torchvision_nms(context, node):

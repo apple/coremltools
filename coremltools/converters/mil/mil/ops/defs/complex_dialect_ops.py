@@ -742,3 +742,78 @@ class complex_shape(Operation):
             return np.array(res)
         else:
             return np.array(self.x.real.shape).astype(np.int32)
+
+@register_op(namespace="complex")
+class stft(Operation):
+    """
+    Dialect op for 1-D STFT.
+
+    Parameters
+    ----------
+    data: tensor<\*D, T> (Required)
+        * The input tensor.
+    n: const i32 (Optional. Default=None)
+        * Signal length. If given, the input will either be zero-padded or trimmed to this length
+          before computing the FFT.
+    dim: const i32 (Optional. Default=``-1``)
+        * The dimension along which to take the one dimensional FFT.
+    norm: const str (Optional. Default=``backward``)
+        * Normalization mode. For the forward transform (fft()), these correspond to:
+            * "forward" - normalize by 1/n
+            * "backward" - no normalization
+            * "ortho" - normalize by 1/sqrt(n) (making the FFT orthonormal)
+        * Calling the backward transform (ifft()) with the same normalization mode will apply an
+          overall normalization of 1/n between the two transforms. This is required to make ifft()
+          the exact inverse.
+        * Default is "backward" (no normalization).
+
+    Returns
+    -------
+    tensor<\*V, complex64>
+        * A complex tensor where real and imag parts have the same shape.
+        * If ``n`` is None, real's and imag's shapes are same as the input.
+        * If ``n`` is specified, shape is ``V[dim]=n``.
+
+    Attributes
+    ----------
+    T: fp32, complex64
+
+    References
+    ----------
+    See `torch.stft <https://pytorch.org/docs/stable/generated/torch.stft.html>`_.
+    """
+
+    input_spec = InputSpec(
+        input=TensorInputType(type_domain="T"),
+        n_fft=TensorInputType(const=True, type_domain=types.int32),
+        hop_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        win_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        window=TensorInputType(const=True, optional=True, type_domain="R"),
+        normalized=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        onesided=TensorInputType(const=True, optional=True, type_domain=types.bool),
+    )
+
+    type_domains = {
+        "T": (types.fp32, types.complex64),
+        "R": (types.fp32),
+    }
+
+    def default_inputs(self):
+        return DefaultInputs(
+            hop_length = None,
+            win_length = None,
+            window = None,
+            normalized = False,
+            onesided = True,
+        )
+
+    def type_inference(self):
+        output_type = (
+            self.data.dtype if types.is_complex(self.data.dtype) else types.complex64
+        )
+        # The shape of FFT output is determined by `n` and `dim`.
+        output_shape = list(self.data.shape)
+        output_shape[-2] = self.n_fft
+        output_shape[-1] = output_shape[-1] // (self.hop_length if self.hop_length else self.n_fft // 4) + 1
+        return types.tensor(output_type, tuple(output_shape))
+
