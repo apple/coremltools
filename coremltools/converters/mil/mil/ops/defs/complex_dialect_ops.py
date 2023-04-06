@@ -744,7 +744,7 @@ class complex_shape(Operation):
             return np.array(self.x.real.shape).astype(np.int32)
 
 @register_op(namespace="complex")
-class stft(Operation):
+class complex_stft(Operation):
     """
     Dialect op for 1-D STFT.
 
@@ -788,14 +788,13 @@ class stft(Operation):
         n_fft=TensorInputType(const=True, type_domain=types.int32),
         hop_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
         win_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
-        window=TensorInputType(const=True, optional=True, type_domain="R"),
+        window=TensorInputType(const=True, optional=True, type_domain=types.fp32),
         normalized=TensorInputType(const=True, optional=True, type_domain=types.bool),
         onesided=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
 
     type_domains = {
         "T": (types.fp32, types.complex64),
-        "R": (types.fp32),
     }
 
     def default_inputs(self):
@@ -808,12 +807,23 @@ class stft(Operation):
         )
 
     def type_inference(self):
-        output_type = (
-            self.data.dtype if types.is_complex(self.data.dtype) else types.complex64
-        )
-        # The shape of FFT output is determined by `n` and `dim`.
-        output_shape = list(self.data.shape)
-        output_shape[-2] = self.n_fft
-        output_shape[-1] = output_shape[-1] // (self.hop_length if self.hop_length else self.n_fft // 4) + 1
+        output_type = (types.complex64)
+        
+        # STFT shape is [B x N x T], where N is the number of frequency bins
+        # and T is the number of windows
+        # B is 1 for a time series or 2 for a batch of time series
+
+        window_length = self.win_length if self.win_length else self.n_fft.val
+        hop = self.hop_length if self.hop_length else self.n_fft.val // 4
+
+        # if onesided is true, the input is real valued
+        # because of Hermitian symmetry, we only need to calculate the FFT
+        # for the first half of the frequences
+        if self.onesided:
+            window_length = window_length // 2 + 1
+
+        frames = (self.input.shape[-1] - self.n_fft.val) // hop + 1
+        output_shape = [self.input.rank - 1, window_length, frames]
+        
         return types.tensor(output_type, tuple(output_shape))
 
