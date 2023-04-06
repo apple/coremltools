@@ -4,11 +4,14 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
+from coremltools import ComputeUnit
 
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.defs.lower_complex_dialect_ops import _calculate_dft_matrix
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
     assert_model_is_valid,
+    ct_convert,
     get_op_types_in_program,
 )
 
@@ -54,3 +57,24 @@ class TestLowerComplexDialectOps:
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 3)},
         )
+    
+    def test_calculate_dft_matrix(self):
+        expected_C = np.zeros((16, 16))
+        expected_S = np.zeros((16, 16))
+
+        _range = np.arange(16)
+        for k in range(16):
+            expected_C[k, :] = np.cos(2 * np.pi * k * _range / 16)
+            expected_S[k, :] = np.sin(2 * np.pi * k * _range / 16)
+
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,))])
+        def prog(x):
+            return _calculate_dft_matrix(x, None)
+
+        model = ct_convert(program=prog, convert_to=("neuralnetwork", "fp32"), compute_units=ComputeUnit.CPU_ONLY)    
+        p = model.predict({"x": np.array([16.0])})
+        cos_matrix, sin_matrix = p["cos_0"], p["sin_0"]
+
+        np.testing.assert_allclose(expected_C, cos_matrix, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(expected_S, sin_matrix, atol=1e-04, rtol=1e-05)
