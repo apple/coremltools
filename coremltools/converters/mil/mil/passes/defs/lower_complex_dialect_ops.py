@@ -301,6 +301,53 @@ def _rfft_1d(
 
     return real_data, imag_data
 
+def _stft_real(
+    input: Var,
+    n_fft: Var,
+    hop_length: Optional[Var],
+    win_length: Optional[Var],
+    window: Optional[Var],
+    normalized: Optional[bool],
+    onesided: Optional[bool],
+    before_op: Operation,
+) -> Tuple[Var, Var]:
+    """
+    For real-valued STFT, we can write STFT in terms of convolutions with a DFT kernel.
+    This is more efficient than generating len(input) // n_fft + 1 tensors with slice_by_index
+    and individually invoking fft_1d on them.
+    Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
+    """
+    hop_length = hop_length or mb.div(x=n_fft, y=4.0, before_op=before_op)
+    win_length = win_length or n_fft
+
+    if onesided:
+        window_size = mb.floor_div(x=n_fft, y=2, before_op=before_op)
+        window_size = mb.add(x=window_size, y=1, before_op=before_op)
+    else:
+        window_size = n_fft
+
+    window_size = mb.cast(x=window_size, dtype="fp32", before_op=before_op)
+    dft_real, dft_imag = _calculate_dft_matrix(window_size, before_op=before_op)
+
+    # apply time window
+    if window:
+        window = mb.slice_by_size(x=window, begin=0, size=window_size, before_op=before_op)
+        dft_real = mb.mul(x=window, y=dft_real, before_op=before_op)
+        dft_imag = mb.mul(x=window, y=dft_imag, before_op=before_op)
+
+    # conv with DFT kernel across the input signal
+    dft_real = mb.expand_dims(x=dft_real, axes=(1,), before_op=before_op)
+    dft_imag = mb.expand_dims(x=dft_imag, axes=(1,), before_op=before_op)
+    signal = mb.expand_dims(x=input, axis=(1,), before_op=before_op)
+    real_data = mb.conv(x=signal, weight=dft_real, strides=hop_length, pad_type='valid', before_op=before_op)
+    imag_data = mb.conv(x=signal, weight=dft_imag, strides=hop_length, pad_type='valid', before_op=before_op)
+
+    if normalized:
+        divisor = mb.sqrt(x=window_size, before_op=before_op)
+        real_data = mb.real_div(x=real_data, y=divisor, before_op=before_op)
+        imag_data = mb.real_div(x=imag_data, y=divisor, before_op=before_op)
+
+    return real_data, imag_data
 
 def _wrap_complex_output(original_output: Var, real_data: Var, imag_data: Var) -> ComplexVar:
     return ComplexVar(
@@ -495,6 +542,15 @@ def _lower_complex_irfftn(op: Operation):
     real_data = _resize_data(real_data, dims=(dim.val,), sizes=(n.val,), before_op=op)
 
     return real_data
+
+@LowerComplex.register_lower_func(op_type="stft")
+def _lower_complex_stft(op: Operation):
+    if not types.is_complex(op.data.dtype):
+        real, imag = _stft_real(op.data.real, op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
+    else:
+        assert False, "Not currently implemented"
+        
+    return _wrap_complex_output(op.outputs[0], real, imag)
 
 
 @LowerComplex.register_lower_func(op_type="complex_shape")
