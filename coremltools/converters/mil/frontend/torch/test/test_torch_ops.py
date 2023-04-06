@@ -8099,6 +8099,30 @@ class TestFft(TorchBaseTest):
             (2, 3, 4), FftnModel(), backend=backend, compute_unit=compute_unit
         )
 
+class TestSTFT(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, n_fft",
+        itertools.product(
+            compute_units, 
+            backends,
+            [16], # n_fft
+        )
+    )
+    def test_stft(self, compute_unit, backend, n_fft):
+        class STFTModel(torch.nn.Module):
+            def forward(self, x):
+                x = torch.stft(x, n_fft=n_fft, center=False, return_complex=True)
+                print("TORCH SHAPE", x.shape)
+                x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                print("STACK SHAPE", x.shape)
+                return x
+        TorchBaseTest.run_compare_torch(
+            (1, 32),
+            STFTModel(),
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
 
 class TestNms(TorchBaseTest):
     @pytest.mark.parametrize(
