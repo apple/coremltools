@@ -814,7 +814,7 @@ class complex_stft(Operation):
         # B is 1 for a time series or 2 for a batch of time series
 
         window_length = self.win_length if self.win_length else self.n_fft.val
-        hop = self.hop_length if self.hop_length else self.n_fft.val // 4
+        hop = self.hop_length.val if self.hop_length else self.n_fft.val // 4
 
         # if onesided is true, the input is real valued
         # because of Hermitian symmetry, we only need to calculate the FFT
