@@ -823,7 +823,11 @@ class complex_stft(Operation):
             window_length = window_length // 2 + 1
 
         frames = (self.input.shape[-1] - self.n_fft.val) // hop + 1
-        output_shape = [self.input.rank - 1, window_length, frames]
+        output_shape = [window_length, frames]
+
+        # add back rank if needed
+        if self.input.rank == 2:
+            output_shape = [self.input.shape[0]] + output_shape
         
         return types.tensor(output_type, tuple(output_shape))
 

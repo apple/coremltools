@@ -329,6 +329,11 @@ def _stft_real(
     """
     hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
 
+    # input should always be 2D
+    should_increase_rank = input.rank == 1
+    if should_increase_rank:
+        input = mb.expand_dims(x=input, axes=(0,), before_op=before_op)
+
     is_onesided = onesided and onesided.val
     cos_base, sin_base = _calculate_dft_matrix(
         n_fft,
@@ -366,6 +371,11 @@ def _stft_real(
     hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
     cos_windows = mb.conv(x=signal, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
     sin_windows = mb.conv(x=signal, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    # reduce the rank of the output
+    if should_increase_rank:
+        cos_windows = mb.squeeze(x=cos_windows, axes=(0,), before_op=before_op)
+        sin_windows = mb.squeeze(x=sin_windows, axes=(0,), before_op=before_op)
 
     # if normalized and normalized.val:
     #     divisor = mb.sqrt(x=win_length, before_op=before_op)

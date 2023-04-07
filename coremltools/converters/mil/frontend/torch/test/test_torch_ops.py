@@ -8101,17 +8101,18 @@ class TestFft(TorchBaseTest):
 
 class TestSTFT(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, n_fft, hop_length, win_length, window",
+        "compute_unit, backend, input_shape, n_fft, hop_length, win_length, window",
         itertools.product(
             compute_units, 
             backends,
+            [(1, 32), (32,)], # input shape
             [16], # n_fft
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
             [None, torch.hann_window], # window
         )
     )
-    def test_stft(self, compute_unit, backend, n_fft, hop_length, win_length, window):
+    def test_stft(self, compute_unit, backend, input_shape, n_fft, hop_length, win_length, window):
         class STFTModel(torch.nn.Module):
             def forward(self, x):
                 applied_window = window(win_length) if window and win_length else None
@@ -8126,7 +8127,7 @@ class TestSTFT(TorchBaseTest):
                 x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
         TorchBaseTest.run_compare_torch(
-            (1, 32),
+            input_shape,
             STFTModel(),
             backend=backend,
             compute_unit=compute_unit
