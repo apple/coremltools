@@ -377,10 +377,10 @@ def _stft_real(
         cos_windows = mb.squeeze(x=cos_windows, axes=(0,), before_op=before_op)
         sin_windows = mb.squeeze(x=sin_windows, axes=(0,), before_op=before_op)
 
-    # if normalized and normalized.val:
-    #     divisor = mb.sqrt(x=win_length, before_op=before_op)
-    #     cos_windows = mb.real_div(x=cos_windows, y=divisor, before_op=before_op)
-    #     sin_windows = mb.real_div(x=sin_windows, y=divisor, before_op=before_op)
+    if normalized and normalized.val:
+        divisor = mb.sqrt(x=mb.cast(x=n_fft, dtype="fp32", before_op=before_op), before_op=before_op)
+        cos_windows = mb.real_div(x=cos_windows, y=divisor, before_op=before_op)
+        sin_windows = mb.real_div(x=sin_windows, y=divisor, before_op=before_op)
 
     return cos_windows, sin_windows
 
