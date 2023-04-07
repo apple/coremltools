@@ -1538,7 +1538,13 @@ def view(context, node):
         shape = mb.concat(values=shape, axis=0)
 
     shape = mb.cast(x=shape, dtype="int32")
-    view = mb.reshape(x=x, shape=shape, name=node.name)
+
+    if types.is_complex(x.dtype):
+        real, imag = (mb.reshape(x=x, shape=shape, name=node.name) for x in (x.real, x.imag))
+        view = mb.complex(real_data=real, imag_data=imag, name=node.name)
+    else:
+        view = mb.reshape(x=x, shape=shape, name=node.name)
+        
     context.add(view)
 
 
@@ -1565,7 +1571,11 @@ def pad(context, node):
     if inputs[val_index] and inputs[val_index].op.op_type == "const":
         scalar_val = float(scalar_val.val)
 
-    res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
+    if types.is_complex(x.dtype):
+        real, imag = (mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name) for x in (x.real, x.imag))
+        res = mb.complex(real_data=real, imag_data=imag, name=node.name)
+    else:
+        res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
     context.add(res)
 
 
