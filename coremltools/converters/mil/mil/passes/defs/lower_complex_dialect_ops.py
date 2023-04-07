@@ -346,7 +346,8 @@ def _stft_real(
         n_right = n_fft.val - win_length.val - n_left
 
         left = mb.fill(shape=(n_left,), value=0., before_op=before_op)
-        window = mb.fill(shape=(win_length.val,), value=1., before_op=before_op)
+        if not window:
+            window = mb.fill(shape=(win_length.val,), value=1., before_op=before_op)
         right = mb.fill(shape=(n_right,), value=0., before_op=before_op)
         
         # concatenate
