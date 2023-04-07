@@ -599,12 +599,18 @@ def _lower_complex_irfftn(op: Operation):
 @LowerComplex.register_lower_func(op_type="complex_stft")
 def _lower_complex_stft(op: Operation):
     is_complex = types.is_complex(op.input.dtype)
+
+    # check parameters for validity
+    if op.win_length and op.win_length.val > op.n_fft.val:
+        raise ValueError("Window length must be less than or equal to n_fft")
+    if is_complex and op.onesided and op.onesided.val:
+        raise ValueError("Onesided is only valid for real inputs")
+
     real, imag = _stft(
         op.input.real if is_complex else op.input, 
         op.input.imag if is_complex else None, 
         op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
    
-    print("SHAPE STFT", real.shape, imag.shape)    
     return _wrap_complex_output(op.outputs[0], real, imag)
 
 
