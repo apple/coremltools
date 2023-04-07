@@ -813,7 +813,7 @@ class complex_stft(Operation):
         # and T is the number of windows
         # B is 1 for a time series or 2 for a batch of time series
 
-        window_length = self.win_length if self.win_length else self.n_fft.val
+        window_length = self.n_fft.val
         hop = self.hop_length.val if self.hop_length else self.n_fft.val // 4
 
         # if onesided is true, the input is real valued

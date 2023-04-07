@@ -322,24 +322,38 @@ def _stft_real(
 ) -> Tuple[Var, Var]:
     """
     For real-valued STFT, we can write STFT in terms of convolutions with a DFT kernel.
-    This is more efficient than generating len(input) // n_fft + 1 tensors with slice_by_index
-    and individually invoking fft_1d on them.
     We can get
         * The real part output is: cos_base * input_real + sin_base * input_imag
         * The imaginary part output is: - (sin_base * input_real - cos_base * input_imag)
     Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
     """
     hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
-    win_length = win_length or n_fft
 
+    is_onesided = onesided and onesided.val
     cos_base, sin_base = _calculate_dft_matrix(
         n_fft,
-        onesided=onesided and onesided.val,
+        onesided=is_onesided,
         before_op=before_op)
+    
+    # create a window of centered 1s of the requested size
+    if win_length:
+        # n_left = mb.sub(x=n_fft, y=win_length, before_op=before_op)
+        # n_left = mb.floor_div(x=n_left, y=2, before_op=before_op)
+        # n_right = mb.sub(x=n_fft, y=win_length, before_op=before_op)
+        # n_right = mb.sub(x=n_right, y=n_left, before_op=before_op)
+
+        n_left = (n_fft.val - win_length.val) // 2
+        n_right = n_fft.val - win_length.val - n_left
+
+        left = mb.fill(shape=(n_left,), value=0., before_op=before_op)
+        window = mb.fill(shape=(win_length.val,), value=1., before_op=before_op)
+        right = mb.fill(shape=(n_right,), value=0., before_op=before_op)
+        
+        # concatenate
+        window = mb.concat(values=(left, window, right), axis=0, before_op=before_op)
 
     # apply time window
     if window:
-        # window = mb.slice_by_size(x=window, begin=0, size=win_length, before_op=before_op)
         cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
         sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
 
