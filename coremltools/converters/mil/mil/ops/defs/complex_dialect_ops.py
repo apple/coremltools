@@ -819,7 +819,7 @@ class complex_stft(Operation):
         # if onesided is true, the input is real valued
         # because of Hermitian symmetry, we only need to calculate the FFT
         # for the first half of the frequences
-        if self.onesided:
+        if self.onesided and self.onesided.val:
             window_length = window_length // 2 + 1
 
         frames = (self.input.shape[-1] - self.n_fft.val) // hop + 1

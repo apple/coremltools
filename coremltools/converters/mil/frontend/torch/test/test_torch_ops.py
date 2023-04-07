@@ -8101,24 +8101,27 @@ class TestFft(TorchBaseTest):
 
 class TestSTFT(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, n_fft, hop_length, win_length, window, center, pad_mode, normalized",
+        "compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided",
         itertools.product(
             compute_units, 
             backends,
             [(1, 32), (32,)], # input shape
+            [False], # complex
             [16], # n_fft
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
             [None, torch.hann_window], # window
-            [False, True], # center
+            [None, False, True], # center
             ["constant", "reflect", "replicate"], # pad mode
             [False, True], # normalized
+            [None, False, True], # onesided
         )
     )
-    def test_stft(self, compute_unit, backend, input_shape, n_fft, hop_length, win_length, window, center, pad_mode, normalized):
+    def test_stft(self, compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided):
         class STFTModel(torch.nn.Module):
             def forward(self, x):
                 applied_window = window(win_length) if window and win_length else None
+                x = torch.complex(x, x) if complex else x
                 x = torch.stft(
                     x, 
                     n_fft=n_fft, 
@@ -8128,6 +8131,7 @@ class TestSTFT(TorchBaseTest):
                     center=center, 
                     pad_mode=pad_mode,
                     normalized=normalized,
+                    onesided=onesided,
                     return_complex=True)
                 x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
