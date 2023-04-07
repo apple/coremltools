@@ -377,7 +377,7 @@ def _stft(
     sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
 
     if input_imaginary:
-        signal_imaginary = mb.expand_dims(x=signal_imaginary, axes=(1,), before_op=before_op)
+        signal_imaginary = mb.expand_dims(x=input_imaginary, axes=(1,), before_op=before_op)
         cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
         sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
 
@@ -598,11 +598,12 @@ def _lower_complex_irfftn(op: Operation):
 
 @LowerComplex.register_lower_func(op_type="complex_stft")
 def _lower_complex_stft(op: Operation):
-    if not types.is_complex(op.input.dtype):
-        real, imag = _stft(op.input, None, op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
-    else:
-        assert False, "Not currently implemented"
-
+    is_complex = types.is_complex(op.input.dtype)
+    real, imag = _stft(
+        op.input.real if is_complex else op.input, 
+        op.input.imag if is_complex else None, 
+        op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
+   
     print("SHAPE STFT", real.shape, imag.shape)    
     return _wrap_complex_output(op.outputs[0], real, imag)
 
