@@ -310,8 +310,9 @@ def _rfft_1d(
 
     return real_data, imag_data
 
-def _stft_real(
-    input: Var,
+def _stft(
+    input_real: Var,
+    input_imaginary: Optional[Var],
     n_fft: Var,
     hop_length: Optional[Var],
     win_length: Optional[Var],
@@ -330,9 +331,11 @@ def _stft_real(
     hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
 
     # input should always be 2D
-    should_increase_rank = input.rank == 1
+    should_increase_rank = input_real.rank == 1
     if should_increase_rank:
-        input = mb.expand_dims(x=input, axes=(0,), before_op=before_op)
+        input_real = mb.expand_dims(x=input_real, axes=(0,), before_op=before_op)
+        if input_imaginary:
+            input_imaginary = mb.expand_dims(x=input_imaginary, axes=(0,), before_op=before_op)
 
     is_onesided = onesided and onesided.val
     cos_base, sin_base = _calculate_dft_matrix(
@@ -367,22 +370,37 @@ def _stft_real(
     sin_base = mb.sub(x=0., y=sin_base, before_op=before_op)
     cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
     sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
-    signal = mb.expand_dims(x=input, axes=(1,), before_op=before_op)
     hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
-    cos_windows = mb.conv(x=signal, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
-    sin_windows = mb.conv(x=signal, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    signal_real = mb.expand_dims(x=input_real, axes=(1,), before_op=before_op)
+    cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    if input_imaginary:
+        signal_imaginary = mb.expand_dims(x=signal_imaginary, axes=(1,), before_op=before_op)
+        cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+        sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    # add everything together
+    if input_imaginary:
+        # sign base is already negative so subtract
+        real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
+        imag_result = mb.add(x=sin_windows_real, y=cos_windows_imag, before_op=before_op)
+    else:
+        real_result = cos_windows_real
+        imag_result = sin_windows_real
 
     # reduce the rank of the output
     if should_increase_rank:
-        cos_windows = mb.squeeze(x=cos_windows, axes=(0,), before_op=before_op)
-        sin_windows = mb.squeeze(x=sin_windows, axes=(0,), before_op=before_op)
+        real_result = mb.squeeze(x=real_result, axes=(0,), before_op=before_op)
+        imag_result = mb.squeeze(x=imag_result, axes=(0,), before_op=before_op)
 
     if normalized and normalized.val:
         divisor = mb.sqrt(x=mb.cast(x=n_fft, dtype="fp32", before_op=before_op), before_op=before_op)
-        cos_windows = mb.real_div(x=cos_windows, y=divisor, before_op=before_op)
-        sin_windows = mb.real_div(x=sin_windows, y=divisor, before_op=before_op)
+        real_result = mb.real_div(x=real_result, y=divisor, before_op=before_op)
+        imag_result = mb.real_div(x=imag_result, y=divisor, before_op=before_op)
 
-    return cos_windows, sin_windows
+    return real_result, imag_result
 
 def _wrap_complex_output(original_output: Var, real_data: Var, imag_data: Var) -> ComplexVar:
     return ComplexVar(
@@ -581,7 +599,7 @@ def _lower_complex_irfftn(op: Operation):
 @LowerComplex.register_lower_func(op_type="complex_stft")
 def _lower_complex_stft(op: Operation):
     if not types.is_complex(op.input.dtype):
-        real, imag = _stft_real(op.input, op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
+        real, imag = _stft(op.input, None, op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
     else:
         assert False, "Not currently implemented"
 
