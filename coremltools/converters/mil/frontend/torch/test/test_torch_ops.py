@@ -8122,6 +8122,7 @@ class TestSTFT(TorchBaseTest):
             def forward(self, x):
                 applied_window = window(win_length) if window and win_length else None
                 x = torch.complex(x, x) if complex else x
+                onesided_val = False if complex else onesided # onesided not possible for complex inputs
                 x = torch.stft(
                     x, 
                     n_fft=n_fft, 
@@ -8131,7 +8132,7 @@ class TestSTFT(TorchBaseTest):
                     center=center, 
                     pad_mode=pad_mode,
                     normalized=normalized,
-                    onesided=onesided,
+                    onesided=onesided_val,
                     return_complex=True)
                 x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
