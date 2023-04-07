@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
+import pytest
 from coremltools import ComputeUnit
 
 from coremltools.converters.mil.mil import Builder as mb
@@ -57,8 +58,12 @@ class TestLowerComplexDialectOps:
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 3)},
         )
-    
-    def test_calculate_dft_matrix(self):
+
+    @pytest.mark.parametrize(
+        "onesided", 
+        [True, False]
+    )
+    def test_calculate_dft_matrix(self, onesided):
         expected_C = np.zeros((16, 16))
         expected_S = np.zeros((16, 16))
 
@@ -66,11 +71,14 @@ class TestLowerComplexDialectOps:
         for k in range(16):
             expected_C[k, :] = np.cos(2 * np.pi * k * _range / 16)
             expected_S[k, :] = np.sin(2 * np.pi * k * _range / 16)
-
+        
+        if onesided:
+            expected_C = expected_C[:9]
+            expected_S = expected_S[:9]
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(1,))])
         def prog(x):
-            return _calculate_dft_matrix(x, None)
+            return _calculate_dft_matrix(x, onesided=onesided)
 
         model = ct_convert(program=prog, convert_to=("neuralnetwork", "fp32"), compute_units=ComputeUnit.CPU_ONLY)    
         p = model.predict({"x": np.array([16.0])})

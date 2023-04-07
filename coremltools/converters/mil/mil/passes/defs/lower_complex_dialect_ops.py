@@ -140,8 +140,9 @@ def _restore_conj(
     return real_data, imag_data
 
 def _calculate_dft_matrix(
-    dim: Var,
-    before_op: Operation,
+    n_fft: Var,
+    onesided: bool = False,
+    before_op: Operation = None,
 ) -> Tuple[Var, Var]:
     """
     The core issue is how to derive the DFT matrix. As the DFT matrix is consist of different powers
@@ -156,16 +157,24 @@ def _calculate_dft_matrix(
 
     After getting that base matrix, we can take sin and cos to get the corresponding `sin_base` and
     `cos_base` matrix.
+
+    If the onesided flag is passed, we can take advantage of Hermitian symmetry and return a
+    weight matrix consisting of only the first (n_fft // 2 + 1) values.
     """
-    tmp = mb.range_1d(start=0.0, end=dim, step=1.0, before_op=before_op)
+    n_fft = mb.cast(x=n_fft, dtype="fp32", before_op=before_op)
+    half = mb.floor_div(x=n_fft, y=2., before_op=before_op)
+    half = mb.add(x=half, y=1., before_op=before_op)
+
+    tmp_x = mb.range_1d(start=0.0, end=(half if onesided else n_fft), step=1.0, before_op=before_op)
+    tmp_y = mb.range_1d(start=0.0, end=n_fft, step=1.0, before_op=before_op)
 
      # Use MIL ops to calculate base = torch.outer(tmp, tmp) * (2 * torch.pi / N).
-    tmp_x = mb.reshape(x=tmp, shape=[-1, 1], before_op=before_op)
-    tmp_y = mb.reshape(x=tmp, shape=[1, -1], before_op=before_op)
+    tmp_x = mb.reshape(x=tmp_x, shape=[-1, 1], before_op=before_op)
+    tmp_y = mb.reshape(x=tmp_y, shape=[1, -1], before_op=before_op)
     
     base = mb.matmul(x=tmp_x, y=tmp_y, before_op=before_op)
     base = mb.mul(x=base, y=2 * np.pi, before_op=before_op)
-    base = mb.real_div(x=base, y=dim, before_op=before_op)
+    base = mb.real_div(x=base, y=n_fft, before_op=before_op)
     
     # Get real part and imaginary part separately.
     cos_base = mb.cos(x=base, before_op=before_op)
@@ -226,7 +235,7 @@ def _fft_1d(
     reshaped_input_imag = mb.reshape(x=transposed_input_imag, shape=[N, -1], before_op=before_op)
     
     N = mb.cast(x=N, dtype="fp32", before_op=before_op)
-    cos_base, sin_base = _calculate_dft_matrix(N, before_op)
+    cos_base, sin_base = _calculate_dft_matrix(N, onesided=False, before_op=before_op)
 
     if not inverse:
         real_part = mb.add(
@@ -315,6 +324,9 @@ def _stft_real(
     For real-valued STFT, we can write STFT in terms of convolutions with a DFT kernel.
     This is more efficient than generating len(input) // n_fft + 1 tensors with slice_by_index
     and individually invoking fft_1d on them.
+    We can get
+        * The real part output is: cos_base * input_real + sin_base * input_imag
+        * The imaginary part output is: - (sin_base * input_real - cos_base * input_imag)
     Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
     """
     hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
