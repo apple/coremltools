@@ -332,41 +332,32 @@ def _stft_real(
     hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
     win_length = win_length or n_fft
 
-    print("STFT PARAMS:", "HOP", hop_length.val, "WIN", win_length.val, "WINDOW", window, "NORM", normalized.val, "ONESIDE", onesided.val)
-
-    if onesided and onesided.val:
-        win_length = mb.floor_div(x=win_length, y=2, before_op=before_op)
-        win_length = mb.add(x=win_length, y=1, before_op=before_op)
-
-    win_length = mb.cast(x=win_length, dtype="fp32", before_op=before_op)
-    dft_real, dft_imag = _calculate_dft_matrix(win_length, before_op=before_op)
+    cos_base, sin_base = _calculate_dft_matrix(
+        n_fft,
+        onesided=onesided and onesided.val,
+        before_op=before_op)
 
     # apply time window
     if window:
-        window = mb.slice_by_size(x=window, begin=0, size=win_length, before_op=before_op)
-        dft_real = mb.mul(x=window, y=dft_real, before_op=before_op)
-        dft_imag = mb.mul(x=window, y=dft_imag, before_op=before_op)
+        # window = mb.slice_by_size(x=window, begin=0, size=win_length, before_op=before_op)
+        cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
+        sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
 
     # conv with DFT kernel across the input signal
-    dft_real = mb.expand_dims(x=dft_real, axes=(1,), before_op=before_op)
-    dft_imag = mb.expand_dims(x=dft_imag, axes=(1,), before_op=before_op)
+    sin_base = mb.sub(x=0., y=sin_base, before_op=before_op)
+    cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
+    sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
     signal = mb.expand_dims(x=input, axes=(1,), before_op=before_op)
     hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
-    print("SIGNAL SHAPE", signal.shape, dft_real.shape, dft_imag.shape)
-    real_data = mb.conv(x=signal, weight=dft_real, strides=hop_size, pad_type='valid', before_op=before_op)
-    imag_data = mb.conv(x=signal, weight=dft_imag, strides=hop_size, pad_type='valid', before_op=before_op)
+    cos_windows = mb.conv(x=signal, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    sin_windows = mb.conv(x=signal, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
 
-    # slice to the correct number of frames
-    frames = (input.shape[-1] - n_fft.val) // hop_length.val + 1
-    real_data = _resize_data(real_data, (-1,), (frames,), before_op=before_op)
-    imag_data = _resize_data(imag_data, (-1,), (frames,), before_op=before_op)
+    # if normalized and normalized.val:
+    #     divisor = mb.sqrt(x=win_length, before_op=before_op)
+    #     cos_windows = mb.real_div(x=cos_windows, y=divisor, before_op=before_op)
+    #     sin_windows = mb.real_div(x=sin_windows, y=divisor, before_op=before_op)
 
-    if normalized and normalized.val:
-        divisor = mb.sqrt(x=win_length, before_op=before_op)
-        real_data = mb.real_div(x=real_data, y=divisor, before_op=before_op)
-        imag_data = mb.real_div(x=imag_data, y=divisor, before_op=before_op)
-
-    return real_data, imag_data
+    return cos_windows, sin_windows
 
 def _wrap_complex_output(original_output: Var, real_data: Var, imag_data: Var) -> ComplexVar:
     return ComplexVar(
