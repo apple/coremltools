@@ -8105,7 +8105,7 @@ class TestSTFT(TorchBaseTest):
         itertools.product(
             compute_units, 
             backends,
-            [(1, 32), (32,)], # input shape
+            [(1, 32), (32,), (3, 32)], # input shape
             [False], # complex
             [16], # n_fft
             [None, 4, 5], # hop_length
