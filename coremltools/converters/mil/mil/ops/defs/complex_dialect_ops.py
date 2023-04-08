@@ -780,29 +780,25 @@ class complex_stft(Operation):
 
     Parameters
     ----------
-    data: tensor<\*D, T> (Required)
+    input: tensor<\*D, T> (Required)
         * The input tensor.
-    n: const i32 (Optional. Default=None)
-        * Signal length. If given, the input will either be zero-padded or trimmed to this length
-          before computing the FFT.
-    dim: const i32 (Optional. Default=``-1``)
-        * The dimension along which to take the one dimensional FFT.
-    norm: const str (Optional. Default=``backward``)
-        * Normalization mode. For the forward transform (fft()), these correspond to:
-            * "forward" - normalize by 1/n
-            * "backward" - no normalization
-            * "ortho" - normalize by 1/sqrt(n) (making the FFT orthonormal)
-        * Calling the backward transform (ifft()) with the same normalization mode will apply an
-          overall normalization of 1/n between the two transforms. This is required to make ifft()
-          the exact inverse.
-        * Default is "backward" (no normalization).
+    n_fft: const i32 (Required)
+        * Size of the fourier transform.
+    hop_length: const i32 (Optional)
+        * Stride between window frames of the input tensor.
+    win_length: const i32 (optional)
+        * The size of the window frame.
+    window: tensor<1, win_length> (optional)
+        * The window to apply to the input signal before performing the fourier transform.
+    normalized: const bool (optional, Default=``false``)
+        * Whether to normalize the results of the STFT
+    onesided: const bool (optional, Default=``true``)
+        * For real-valued inputs, whether to return the first half of the results.
 
     Returns
     -------
     tensor<\*V, complex64>
         * A complex tensor where real and imag parts have the same shape.
-        * If ``n`` is None, real's and imag's shapes are same as the input.
-        * If ``n`` is specified, shape is ``V[dim]=n``.
 
     Attributes
     ----------

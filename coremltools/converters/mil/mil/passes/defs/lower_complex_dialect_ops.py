@@ -322,8 +322,8 @@ def _stft(
     before_op: Operation,
 ) -> Tuple[Var, Var]:
     """
-    For real-valued STFT, we can write STFT in terms of convolutions with a DFT kernel.
-    We can get
+    We can write STFT in terms of convolutions with a DFT kernel.
+    At the end:
         * The real part output is: cos_base * input_real + sin_base * input_imag
         * The imaginary part output is: - (sin_base * input_real - cos_base * input_imag)
     Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
