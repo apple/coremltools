@@ -746,6 +746,20 @@ class complex_shape(Operation):
 @register_op(namespace="complex")
 class complex_abs(Operation):
     """
+    Returns the absolute value of a complex tensor.
+
+    Parameters
+    ----------
+    x: tensor<[*d], T> (Required)
+    
+    Returns
+    -------
+    tensor<[*d], fp32>
+        * A float tensor with the same shape as ``x``
+
+    Attributes
+    ----------
+    T: complex64
     """
 
     input_spec = InputSpec(x=TensorInputType(type_domain="T"))
