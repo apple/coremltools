@@ -11,6 +11,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 import torch.nn as nn
+import torchaudio
 import torchvision
 
 import coremltools as ct
@@ -8140,6 +8141,39 @@ class TestSTFT(TorchBaseTest):
         TorchBaseTest.run_compare_torch(
             input_shape,
             STFTModel(),
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+class TestSpectrogram(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, spec, power",
+        itertools.product(
+            compute_units, 
+            backends,
+            [(1, 1000), (1000,), (3, 1000)], # input shape
+            [torchaudio.transforms.Spectrogram],
+            [None] # magnitude or power
+        )
+    )
+    def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
+        class SpectrogramModel(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                # the other spectrogram options are passed through to stft
+                # and are tested in TestSTFT
+                self.spec = spec(power=power, n_fft=128)
+            
+            def forward(self, x):
+                x = self.spec(x)
+                if power is None:
+                    # complex: stack them
+                    x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                return x
+        
+        TorchBaseTest.run_compare_torch(
+            input_shape,
+            SpectrogramModel(),
             backend=backend,
             compute_unit=compute_unit
         )
