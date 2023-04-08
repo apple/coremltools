@@ -1540,7 +1540,7 @@ def view(context, node):
     shape = mb.cast(x=shape, dtype="int32")
 
     if types.is_complex(x.dtype):
-        real, imag = (mb.reshape(x=x, shape=shape, name=node.name) for x in (x.real, x.imag))
+        real, imag = (mb.reshape(x=x, shape=shape, name=node.name) for x in (mb.complex_real(data=x), mb.complex_imag(data=x)))
         view = mb.complex(real_data=real, imag_data=imag, name=node.name)
     else:
         view = mb.reshape(x=x, shape=shape, name=node.name)
@@ -1572,7 +1572,7 @@ def pad(context, node):
         scalar_val = float(scalar_val.val)
 
     if types.is_complex(x.dtype):
-        real, imag = (mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name) for x in (x.real, x.imag))
+        real, imag = (mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name) for x in (mb.complex_real(data=x), mb.complex_imag(data=x)))
         res = mb.complex(real_data=real, imag_data=imag, name=node.name)
     else:
         res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
