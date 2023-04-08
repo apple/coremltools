@@ -8185,6 +8185,27 @@ class TestSpectrogram(TorchBaseTest):
             atol=1e-4,
         )
 
+class TestComplex(TorchBaseTest):   
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units, 
+            backends,
+        )
+    )
+    def test_abs(self, compute_unit, backend):
+        class AbsModel(torch.nn.Module):
+            def forward(self, x):
+                x = torch.complex(x, x)
+                return torch.abs(x)
+        
+        TorchBaseTest.run_compare_torch(
+            (1, 16),
+            AbsModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestNms(TorchBaseTest):
     @pytest.mark.parametrize(
