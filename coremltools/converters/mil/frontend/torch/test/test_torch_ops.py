@@ -8107,7 +8107,7 @@ class TestSTFT(TorchBaseTest):
             compute_units, 
             backends,
             [(1, 32), (32,), (3, 32)], # input shape
-            [False], # complex
+            [False, True], # complex
             [16], # n_fft
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
@@ -8119,11 +8119,13 @@ class TestSTFT(TorchBaseTest):
         )
     )
     def test_stft(self, compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided):
+        if complex and onesided:
+            pytest.skip("Onesided stft not possible for complex inputs")
+
         class STFTModel(torch.nn.Module):
             def forward(self, x):
                 applied_window = window(win_length) if window and win_length else None
                 x = torch.complex(x, x) if complex else x
-                onesided_val = False if complex else onesided # onesided not possible for complex inputs
                 x = torch.stft(
                     x, 
                     n_fft=n_fft, 
@@ -8133,7 +8135,7 @@ class TestSTFT(TorchBaseTest):
                     center=center, 
                     pad_mode=pad_mode,
                     normalized=normalized,
-                    onesided=onesided_val,
+                    onesided=onesided,
                     return_complex=True)
                 x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
@@ -8159,7 +8161,7 @@ class TestSpectrogram(TorchBaseTest):
     def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
         if spec is torchaudio.transforms.MelSpectrogram and power is None:
             pytest.skip("power or magnitude required for melspec")
-            
+
         class SpectrogramModel(torch.nn.Module):
             def __init__(self) -> None:
                 super().__init__()

@@ -5694,6 +5694,8 @@ def stft(context, node):
     """
     """
     input_data, n_fft, hop_length, win_length, window, normalized, onesided, _ = _get_inputs(context, node, min_expected=2)
+    if types.is_complex(input_data.dtype):
+        onesided = False # pytorch defaults onesided to False for complex inputs
     stft_res = mb.complex_stft(
         input=input_data, 
         n_fft=n_fft, 
