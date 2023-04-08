@@ -345,11 +345,6 @@ def _stft(
     
     # create a window of centered 1s of the requested size
     if win_length:
-        # n_left = mb.sub(x=n_fft, y=win_length, before_op=before_op)
-        # n_left = mb.floor_div(x=n_left, y=2, before_op=before_op)
-        # n_right = mb.sub(x=n_fft, y=win_length, before_op=before_op)
-        # n_right = mb.sub(x=n_right, y=n_left, before_op=before_op)
-
         n_left = (n_fft.val - win_length.val) // 2
         n_right = n_fft.val - win_length.val - n_left
 
