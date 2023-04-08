@@ -8153,7 +8153,7 @@ class TestSpectrogram(TorchBaseTest):
             backends,
             [(1, 1000), (1000,), (3, 1000)], # input shape
             [torchaudio.transforms.Spectrogram],
-            [None] # magnitude or power
+            [None, 1, 2] # magnitude or power
         )
     )
     def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
@@ -8175,7 +8175,9 @@ class TestSpectrogram(TorchBaseTest):
             input_shape,
             SpectrogramModel(),
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
+            rtol=1e-4,
+            atol=1e-4,
         )
 
 
