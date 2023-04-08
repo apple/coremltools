@@ -8152,11 +8152,14 @@ class TestSpectrogram(TorchBaseTest):
             compute_units, 
             backends,
             [(1, 1000), (1000,), (3, 1000)], # input shape
-            [torchaudio.transforms.Spectrogram],
+            [torchaudio.transforms.Spectrogram, torchaudio.transforms.MelSpectrogram],
             [None, 1, 2] # magnitude or power
         )
     )
     def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
+        if spec is torchaudio.transforms.MelSpectrogram and power is None:
+            pytest.skip("power or magnitude required for melspec")
+            
         class SpectrogramModel(torch.nn.Module):
             def __init__(self) -> None:
                 super().__init__()
