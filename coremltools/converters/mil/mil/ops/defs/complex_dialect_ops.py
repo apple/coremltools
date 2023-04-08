@@ -732,16 +732,16 @@ class complex_shape(Operation):
     def type_inference(self):
         if not isinstance(self.x, ComplexVar):
             raise ValueError("x must be a ComplexVar.")
-        input_rank = self.x.real.rank
+        input_rank = self.x.rank
         return types.tensor(types.int32, tuple([input_rank]))
 
     def value_inference(self):
-        if any_symbolic(self.x.real.shape):
+        if any_symbolic(self.x.shape):
             # convert elements in shape to int32
-            res = [x if is_symbolic(x) else np.int32(x) for x in self.x.real.shape]
+            res = [x if is_symbolic(x) else np.int32(x) for x in self.x.shape]
             return np.array(res)
         else:
-            return np.array(self.x.real.shape).astype(np.int32)
+            return np.array(self.x.shape).astype(np.int32)
 
 @register_op(namespace="complex")
 class complex_stft(Operation):
