@@ -744,6 +744,22 @@ class complex_shape(Operation):
             return np.array(self.x.shape).astype(np.int32)
 
 @register_op(namespace="complex")
+class complex_abs(Operation):
+    """
+    """
+
+    input_spec = InputSpec(x=TensorInputType(type_domain="T"))
+
+    type_domains = {
+        "T": (types.complex64,),
+    }
+
+    def type_inference(self):
+        if not isinstance(self.x, ComplexVar):
+            raise ValueError("x must be a ComplexVar.")
+        return types.tensor(infer_fp_dtype_from_complex(self.x.dtype), self.x.shape)
+
+@register_op(namespace="complex")
 class complex_stft(Operation):
     """
     Dialect op for 1-D STFT.

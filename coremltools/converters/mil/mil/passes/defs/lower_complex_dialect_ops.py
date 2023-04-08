@@ -618,6 +618,11 @@ def _lower_complex_stft(op: Operation):
 def _lower_complex_shape(op: Operation):
     return mb.shape(x=op.data.real, before_op=op)
 
+@LowerComplex.register_lower_func(op_type="complex_abs")
+def _lower_complex_abs(op: Operation):
+    mag_r, mag_i = (mb.square(x=x, before_op=op) for x in (op.x.real, op.x.imag))
+    mag = mb.add(x=mag_r, y=mag_i, before_op=op)
+    return mb.sqrt(x=mag, before_op=op)
 
 def _match_and_replace_dialect_op(block, op):
     if not LowerComplex.has_lower_func(op.op_type):

@@ -4437,8 +4437,11 @@ def index_select(context, node):
 
 @register_torch_op(torch_alias=["abs"])
 def _abs(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.abs(x=inputs[0], name=node.name))
+    x = _get_inputs(context, node, expected=1)[0]
+    if types.is_complex(x.dtype):
+        context.add(mb.complex_abs(x=x, name=node.name))
+    else:
+        context.add(mb.abs(x=x, name=node.name))
 
 
 @register_torch_op
