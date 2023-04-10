@@ -5692,6 +5692,7 @@ def fft_irfftn(context, node):
 @register_torch_op
 def stft(context, node):
     """
+    Lowers torch.stft with the dialect op `complex_stft` from complex_dialect_ops.py
     """
     input_data, n_fft, hop_length, win_length, window, normalized, onesided, _ = _get_inputs(context, node, min_expected=2)
     if types.is_complex(input_data.dtype):

@@ -378,7 +378,7 @@ def _stft(
 
     # add everything together
     if input_imaginary:
-        # sign base is already negative so subtract
+        # sin base is already negative so subtract
         real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
         imag_result = mb.add(x=sin_windows_real, y=cos_windows_imag, before_op=before_op)
     else:
