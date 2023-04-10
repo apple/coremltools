@@ -124,7 +124,7 @@ TreeEnsembleParameters.TreeNode.EvaluationInfo
 
 The leaf mode.
 
-If ``nodeBahavior`` == ``LeafNode``,
+If ``nodeBehavior`` == ``LeafNode``,
 then the evaluationValue is added to the base prediction value
 in order to get the final prediction.
 To support multiclass classification
