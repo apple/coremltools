@@ -1339,6 +1339,8 @@ def maximum(context, node):
 @register_torch_op
 def div(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
+    x = mb.cast(x=inputs[0], dtype="fp32")
+    y = mb.cast(x=inputs[1], dtype="fp32")
 
     if len(inputs) > 2 and inputs[2] is not None:
         rounding_mode = inputs[2].val
@@ -1347,14 +1349,12 @@ def div(context, node):
             # e.g.:
             # values before floor: [2.6, -3.4, -3.6]
             # values after floor: [2, -4, -4]
-            res = mb.floor_div(x=inputs[0], y=inputs[1], name=node.name)
+            res = mb.floor_div(x=x, y=y, name=node.name)
         elif rounding_mode == "trunc":
             # round towards 0
             # e.g.:
             # values before trunc: [2.6, -3.4, -3.6]
             # values after trunc: [2, -3, -3]
-            x = mb.cast(x=inputs[0], dtype="fp32")
-            y = mb.cast(x=inputs[1], dtype="fp32")
             z = mb.real_div(x=x, y=y)
             s = mb.sign(x=z)
             all_positive = mb.mul(x=z, y=s)
@@ -1365,9 +1365,8 @@ def div(context, node):
                 'rounding mode "{}" not supported in the "div" op'.format(rounding_mode)
             )
     else:
-        x = mb.cast(x=inputs[0], dtype="fp32")
-        y = mb.cast(x=inputs[1], dtype="fp32")
         res = mb.real_div(x=x, y=y, name=node.name)
+
     context.add(res)
 
 

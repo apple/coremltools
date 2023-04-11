@@ -4790,15 +4790,15 @@ class TestActivation(TorchBaseTest):
         self.run_compare_torch([shape], model, backend=backend)
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rounding_mode",
-        itertools.product(compute_units, backends, [None, "floor", "trunc"]),
+        "compute_unit, backend, rounding_mode, x2_type",
+        itertools.product(compute_units, backends, [None, "floor", "trunc"], [np.float32, np.int32]),
     )
-    def test_div(self, compute_unit, backend, rounding_mode):
+    def test_div(self, compute_unit, backend, rounding_mode, x2_type):
         model = ModuleWrapper(
             function=torch.div, kwargs={"rounding_mode": rounding_mode}
         )
         x1 = torch.from_numpy(np.array([2.3, 2.6, -3.6, -3.2], dtype=np.float32))
-        x2 = torch.from_numpy(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
+        x2 = torch.from_numpy(np.array([1.0, 1.0, 1.0, 1.0], dtype=x2_type))
         out = torch.div(x1, x2, rounding_mode=rounding_mode)
         self.run_compare_torch(
             [x1, x2],
