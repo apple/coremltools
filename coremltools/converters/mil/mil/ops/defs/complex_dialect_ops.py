@@ -729,6 +729,10 @@ class complex_shape(Operation):
         "T": (types.complex64,),
     }
 
+    # If type_inference or value_inference is invoked when the graph is being constructed, 
+    # x.real and x.imag may not be set since the complex lowering pass hasn't yet been invoked.
+    # self.x should already have the shape set, so use that instead.
+
     def type_inference(self):
         if not isinstance(self.x, ComplexVar):
             raise ValueError("x must be a ComplexVar.")
