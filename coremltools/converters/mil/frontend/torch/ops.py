@@ -3632,6 +3632,22 @@ def randint(context, node):
     rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
     context.add(rand_int)
 
+@register_torch_op
+def randn(context, node):
+    inputs = _get_inputs(context, node, expected=5)
+    shape = inputs[0]
+    rand_normal = mb.random_normal(shape=shape)
+    rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)
+    context.add(rand_fp32)
+
+@register_torch_op
+def randn_like(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    x = inputs[0]
+    shape = mb.shape(x=x)
+    rand_normal = mb.random_normal(shape=shape)
+    rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)
+    context.add(rand_fp32)
 
 @register_torch_op
 def bitwise_not(context, node):
