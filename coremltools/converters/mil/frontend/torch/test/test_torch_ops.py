@@ -8180,6 +8180,9 @@ class TestSpectrogram(TorchBaseTest):
         )
     )
     def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
+        if platform.machine() != "arm64":
+            pytest.xfail("rdar://108001659 ([PyTorch] Torchaudio Spectrogram Failed on Intel Machine)")
+
         if spec is torchaudio.transforms.MelSpectrogram and power is None:
             pytest.skip("power or magnitude required for melspec")
 
