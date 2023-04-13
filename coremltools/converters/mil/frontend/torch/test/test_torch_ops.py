@@ -11,6 +11,7 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 import torch.nn as nn
+import torchaudio
 import torchvision
 
 import coremltools as ct
@@ -7877,6 +7878,26 @@ class TestComplex(TorchBaseTest):
                 (2, 3, 4), ComplexModel(), backend=backend, compute_unit=compute_unit
             )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units, 
+            backends,
+        )
+    )
+    def test_abs(self, compute_unit, backend):
+        class AbsModel(torch.nn.Module):
+            def forward(self, x):
+                x = torch.complex(x, x)
+                return torch.abs(x)
+        
+        TorchBaseTest.run_compare_torch(
+            (1, 16),
+            AbsModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestReal(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -8099,6 +8120,94 @@ class TestFft(TorchBaseTest):
             (2, 3, 4), FftnModel(), backend=backend, compute_unit=compute_unit
         )
 
+class TestSTFT(TorchBaseTest):
+    @pytest.mark.slow
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided",
+        itertools.product(
+            compute_units, 
+            backends,
+            [(1, 32), (32,), (3, 32)], # input shape
+            [False, True], # complex
+            [16], # n_fft
+            [None, 4, 5], # hop_length
+            [None, 16, 9], # win_length
+            [None, torch.hann_window], # window
+            [None, False, True], # center
+            ["constant", "reflect", "replicate"], # pad mode
+            [False, True], # normalized
+            [None, False, True], # onesided
+        )
+    )
+    def test_stft(self, compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided):
+        if complex and onesided:
+            pytest.skip("Onesided stft not possible for complex inputs")
+
+        class STFTModel(torch.nn.Module):
+            def forward(self, x):
+                applied_window = window(win_length) if window and win_length else None
+                x = torch.complex(x, x) if complex else x
+                x = torch.stft(
+                    x, 
+                    n_fft=n_fft, 
+                    hop_length=hop_length, 
+                    win_length=win_length,
+                    window=applied_window,
+                    center=center, 
+                    pad_mode=pad_mode,
+                    normalized=normalized,
+                    onesided=onesided,
+                    return_complex=True)
+                x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                return x
+        
+        TorchBaseTest.run_compare_torch(
+            input_shape,
+            STFTModel(),
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+class TestSpectrogram(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, spec, power",
+        itertools.product(
+            compute_units, 
+            backends,
+            [(1, 1000), (1000,), (3, 1000)], # input shape
+            [torchaudio.transforms.Spectrogram, torchaudio.transforms.MelSpectrogram],
+            [None, 1, 2] # magnitude or power
+        )
+    )
+    def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
+        if platform.machine() != "arm64":
+            pytest.xfail("rdar://108001659 ([PyTorch] Torchaudio Spectrogram Failed on Intel Machine)")
+
+        if spec is torchaudio.transforms.MelSpectrogram and power is None:
+            pytest.skip("power or magnitude required for melspec")
+
+        class SpectrogramModel(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                # the other spectrogram options are passed through to stft
+                # and are tested in TestSTFT
+                self.spec = spec(power=power, n_fft=128)
+            
+            def forward(self, x):
+                x = self.spec(x)
+                if power is None:
+                    # complex: stack them
+                    x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                return x
+        
+        TorchBaseTest.run_compare_torch(
+            input_shape,
+            SpectrogramModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            rtol=1e-4,
+            atol=1e-4,
+        )
 
 class TestNms(TorchBaseTest):
     @pytest.mark.parametrize(

@@ -285,7 +285,7 @@ class TensorInputType(_InputType):
 
     @type_domain.setter
     def type_domain(self, val):
-        msg = "type_domain must be a tuple of builtin types"
+        msg = f"type_domain {val} must be a tuple of builtin types"
         if not isinstance(val, tuple) or any(map(lambda t: t not in _SUPPORT_TYPES, val)):
             raise ValueError(msg)
         self._type_domain = val

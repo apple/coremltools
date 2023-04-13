@@ -139,6 +139,48 @@ def _restore_conj(
 
     return real_data, imag_data
 
+def _calculate_dft_matrix(
+    n_fft: Var,
+    onesided: bool = False,
+    before_op: Operation = None,
+) -> Tuple[Var, Var]:
+    """
+    The core issue is how to derive the DFT matrix. As the DFT matrix is consist of different powers
+    of `w`, where w=e^(2pi/N i), we need to separate the real and imaginary part of w. To achieve
+    that, we need to find a way to construct the following matrix (from the power of `w` in DFT):
+        0    0    0      ...    0
+        0    1    2      ...    N-1
+        0    2    4      ...    2(N-1)
+        ...    ....      ...
+        0   N-1  2(N-1)  ...    (N-1)(N-1)
+    This matrix could be derived by outer product of two range tensors.
+
+    After getting that base matrix, we can take sin and cos to get the corresponding `sin_base` and
+    `cos_base` matrix.
+
+    If the onesided flag is passed, we can take advantage of Hermitian symmetry and return a
+    weight matrix consisting of only the first (n_fft // 2 + 1) values.
+    """
+    n_fft = mb.cast(x=n_fft, dtype="fp32", before_op=before_op)
+    half = mb.floor_div(x=n_fft, y=2., before_op=before_op)
+    half = mb.add(x=half, y=1., before_op=before_op)
+
+    tmp_x = mb.range_1d(start=0.0, end=(half if onesided else n_fft), step=1.0, before_op=before_op)
+    tmp_y = mb.range_1d(start=0.0, end=n_fft, step=1.0, before_op=before_op)
+
+     # Use MIL ops to calculate base = torch.outer(tmp, tmp) * (2 * torch.pi / N).
+    tmp_x = mb.reshape(x=tmp_x, shape=[-1, 1], before_op=before_op)
+    tmp_y = mb.reshape(x=tmp_y, shape=[1, -1], before_op=before_op)
+    
+    base = mb.matmul(x=tmp_x, y=tmp_y, before_op=before_op)
+    base = mb.mul(x=base, y=2 * np.pi, before_op=before_op)
+    base = mb.real_div(x=base, y=n_fft, before_op=before_op)
+    
+    # Get real part and imaginary part separately.
+    cos_base = mb.cos(x=base, before_op=before_op)
+    sin_base = mb.sin(x=base, before_op=before_op)
+    
+    return cos_base, sin_base
 
 def _fft_1d(
     input_real: Var,
@@ -152,18 +194,7 @@ def _fft_1d(
     """
     1-D FFT by DFT Matrix Multiplication.
 
-    The core issue is how to derive the DFT matrix. As the DFT matrix is consist of different powers
-    of `w`, where w=e^(2pi/N i), we need to separate the real and imaginary part of w. To achieve
-    that, we need to find a way to construct the following matrix (from the power of `w` in DFT):
-        0    0    0      ...    0
-        0    1    2      ...    N-1
-        0    2    4      ...    2(N-1)
-        ...    ....      ...
-        0   N-1  2(N-1)  ...    (N-1)(N-1)
-    This matrix could be derived by outer product of two range tensors.
-
-    After getting that base matrix, we can take sin and cos to get the corresponding `sin_base` and
-    `cos_base` matrix. Now based on some math formulas including:
+    Now based on some math formulas including:
         * The addition of complex numbers is: (a+bi)+(c+di)=(a+c)+(b+d)i.
         * The multiplication of complex numbers is: (a+bi)(c+di)=ac+adi+bci−bd=(ac−bd)+(ad+bc)i.
         * Euler’s formula: e^xi=cosx+isinx.
@@ -202,18 +233,9 @@ def _fft_1d(
     N = transposed_input_real.shape[0]
     reshaped_input_real = mb.reshape(x=transposed_input_real, shape=[N, -1], before_op=before_op)
     reshaped_input_imag = mb.reshape(x=transposed_input_imag, shape=[N, -1], before_op=before_op)
-    tmp = mb.range_1d(start=0, end=N, step=1, before_op=before_op)
-    # Use MIL ops to calculate base = torch.outer(tmp, tmp) * (2 * torch.pi / N).
-    tmp_x = mb.reshape(x=tmp, shape=[-1, 1], before_op=before_op)
-    tmp_y = mb.reshape(x=tmp, shape=[1, -1], before_op=before_op)
-    base = mb.matmul(x=tmp_x, y=tmp_y, before_op=before_op)
-    base = mb.cast(x=base, dtype="fp32", before_op=before_op)
-    base = mb.mul(x=base, y=2 * np.pi, before_op=before_op)
+    
     N = mb.cast(x=N, dtype="fp32", before_op=before_op)
-    base = mb.real_div(x=base, y=N, before_op=before_op)
-    # Get real part and imaginary part separately.
-    cos_base = mb.cos(x=base, before_op=before_op)
-    sin_base = mb.sin(x=base, before_op=before_op)
+    cos_base, sin_base = _calculate_dft_matrix(N, onesided=False, before_op=before_op)
 
     if not inverse:
         real_part = mb.add(
@@ -288,6 +310,92 @@ def _rfft_1d(
 
     return real_data, imag_data
 
+def _stft(
+    input_real: Var,
+    input_imaginary: Optional[Var],
+    n_fft: Var,
+    hop_length: Optional[Var],
+    win_length: Optional[Var],
+    window: Optional[Var],
+    normalized: Optional[Var],
+    onesided: Optional[Var],
+    before_op: Operation,
+) -> Tuple[Var, Var]:
+    """
+    We can write STFT in terms of convolutions with a DFT kernel.
+    At the end:
+        * The real part output is: cos_base * input_real + sin_base * input_imag
+        * The imaginary part output is: - (sin_base * input_real - cos_base * input_imag)
+    Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
+    """
+    hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
+
+    # input should always be 2D
+    should_increase_rank = input_real.rank == 1
+    if should_increase_rank:
+        input_real = mb.expand_dims(x=input_real, axes=(0,), before_op=before_op)
+        if input_imaginary:
+            input_imaginary = mb.expand_dims(x=input_imaginary, axes=(0,), before_op=before_op)
+
+    is_onesided = onesided and onesided.val
+    cos_base, sin_base = _calculate_dft_matrix(
+        n_fft,
+        onesided=is_onesided,
+        before_op=before_op)
+    
+    # create a window of centered 1s of the requested size
+    if win_length:
+        n_left = (n_fft.val - win_length.val) // 2
+        n_right = n_fft.val - win_length.val - n_left
+
+        left = mb.fill(shape=(n_left,), value=0., before_op=before_op)
+        if not window:
+            window = mb.fill(shape=(win_length.val,), value=1., before_op=before_op)
+        right = mb.fill(shape=(n_right,), value=0., before_op=before_op)
+        
+        # concatenate
+        window = mb.concat(values=(left, window, right), axis=0, before_op=before_op)
+
+    # apply time window
+    if window:
+        cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
+        sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
+
+    # conv with DFT kernel across the input signal
+    sin_base = mb.sub(x=0., y=sin_base, before_op=before_op)
+    cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
+    sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
+    hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
+
+    signal_real = mb.expand_dims(x=input_real, axes=(1,), before_op=before_op)
+    cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    if input_imaginary:
+        signal_imaginary = mb.expand_dims(x=input_imaginary, axes=(1,), before_op=before_op)
+        cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+        sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    # add everything together
+    if input_imaginary:
+        # sin base is already negative so subtract
+        real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
+        imag_result = mb.add(x=sin_windows_real, y=cos_windows_imag, before_op=before_op)
+    else:
+        real_result = cos_windows_real
+        imag_result = sin_windows_real
+
+    # reduce the rank of the output
+    if should_increase_rank:
+        real_result = mb.squeeze(x=real_result, axes=(0,), before_op=before_op)
+        imag_result = mb.squeeze(x=imag_result, axes=(0,), before_op=before_op)
+
+    if normalized and normalized.val:
+        divisor = mb.sqrt(x=mb.cast(x=n_fft, dtype="fp32", before_op=before_op), before_op=before_op)
+        real_result = mb.real_div(x=real_result, y=divisor, before_op=before_op)
+        imag_result = mb.real_div(x=imag_result, y=divisor, before_op=before_op)
+
+    return real_result, imag_result
 
 def _wrap_complex_output(original_output: Var, real_data: Var, imag_data: Var) -> ComplexVar:
     return ComplexVar(
@@ -483,11 +591,33 @@ def _lower_complex_irfftn(op: Operation):
 
     return real_data
 
+@LowerComplex.register_lower_func(op_type="complex_stft")
+def _lower_complex_stft(op: Operation):
+    is_complex = types.is_complex(op.input.dtype)
+
+    # check parameters for validity
+    if op.win_length and op.win_length.val > op.n_fft.val:
+        raise ValueError("Window length must be less than or equal to n_fft")
+    if is_complex and op.onesided and op.onesided.val:
+        raise ValueError("Onesided is only valid for real inputs")
+
+    real, imag = _stft(
+        op.input.real if is_complex else op.input, 
+        op.input.imag if is_complex else None, 
+        op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
+   
+    return _wrap_complex_output(op.outputs[0], real, imag)
+
 
 @LowerComplex.register_lower_func(op_type="complex_shape")
 def _lower_complex_shape(op: Operation):
     return mb.shape(x=op.data.real, before_op=op)
 
+@LowerComplex.register_lower_func(op_type="complex_abs")
+def _lower_complex_abs(op: Operation):
+    mag_r, mag_i = (mb.square(x=x, before_op=op) for x in (op.x.real, op.x.imag))
+    mag = mb.add(x=mag_r, y=mag_i, before_op=op)
+    return mb.sqrt(x=mag, before_op=op)
 
 def _match_and_replace_dialect_op(block, op):
     if not LowerComplex.has_lower_func(op.op_type):

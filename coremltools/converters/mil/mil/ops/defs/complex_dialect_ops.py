@@ -729,16 +729,135 @@ class complex_shape(Operation):
         "T": (types.complex64,),
     }
 
+    # If type_inference or value_inference is invoked when the graph is being constructed, 
+    # x.real and x.imag may not be set since the complex lowering pass hasn't yet been invoked.
+    # self.x should already have the shape set, so use that instead.
+
     def type_inference(self):
         if not isinstance(self.x, ComplexVar):
             raise ValueError("x must be a ComplexVar.")
-        input_rank = self.x.real.rank
+        input_rank = self.x.rank
         return types.tensor(types.int32, tuple([input_rank]))
 
     def value_inference(self):
-        if any_symbolic(self.x.real.shape):
+        if any_symbolic(self.x.shape):
             # convert elements in shape to int32
-            res = [x if is_symbolic(x) else np.int32(x) for x in self.x.real.shape]
+            res = [x if is_symbolic(x) else np.int32(x) for x in self.x.shape]
             return np.array(res)
         else:
-            return np.array(self.x.real.shape).astype(np.int32)
+            return np.array(self.x.shape).astype(np.int32)
+
+@register_op(namespace="complex")
+class complex_abs(Operation):
+    """
+    Returns the absolute value of a complex tensor.
+
+    Parameters
+    ----------
+    x: tensor<[*d], T> (Required)
+    
+    Returns
+    -------
+    tensor<[*d], fp32>
+        * A float tensor with the same shape as ``x``
+
+    Attributes
+    ----------
+    T: complex64
+    """
+
+    input_spec = InputSpec(x=TensorInputType(type_domain="T"))
+
+    type_domains = {
+        "T": (types.complex64,),
+    }
+
+    def type_inference(self):
+        if not isinstance(self.x, ComplexVar):
+            raise ValueError("x must be a ComplexVar.")
+        return types.tensor(infer_fp_dtype_from_complex(self.x.dtype), self.x.shape)
+
+@register_op(namespace="complex")
+class complex_stft(Operation):
+    """
+    Dialect op for 1-D STFT.
+
+    Parameters
+    ----------
+    input: tensor<\*D, T> (Required)
+        * The input tensor.
+    n_fft: const i32 (Required)
+        * Size of the fourier transform.
+    hop_length: const i32 (Optional)
+        * Stride between window frames of the input tensor.
+    win_length: const i32 (optional)
+        * The size of the window frame.
+    window: tensor<1, win_length> (optional)
+        * The window to apply to the input signal before performing the fourier transform.
+    normalized: const bool (optional, Default=``false``)
+        * Whether to normalize the results of the STFT
+    onesided: const bool (optional, Default=``true``)
+        * For real-valued inputs, whether to return the first half of the results.
+
+    Returns
+    -------
+    tensor<\*V, complex64>
+        * A complex tensor where real and imag parts have the same shape.
+
+    Attributes
+    ----------
+    T: fp32, complex64
+
+    References
+    ----------
+    See `torch.stft <https://pytorch.org/docs/stable/generated/torch.stft.html>`_.
+    """
+
+    input_spec = InputSpec(
+        input=TensorInputType(type_domain="T"),
+        n_fft=TensorInputType(const=True, type_domain=types.int32),
+        hop_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        win_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        window=TensorInputType(const=True, optional=True, type_domain=types.fp32),
+        normalized=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        onesided=TensorInputType(const=True, optional=True, type_domain=types.bool),
+    )
+
+    type_domains = {
+        "T": (types.fp32, types.complex64),
+    }
+
+    def default_inputs(self):
+        return DefaultInputs(
+            hop_length = None,
+            win_length = None,
+            window = None,
+            normalized = False,
+            onesided = True,
+        )
+
+    def type_inference(self):
+        output_type = (types.complex64)
+        
+        # STFT shape is [B x N x T], where N is the number of frequency bins
+        # and T is the number of windows
+        # B is 1 for a time series or 2 for a batch of time series
+
+        window_length = self.n_fft.val
+        hop = self.hop_length.val if self.hop_length else self.n_fft.val // 4
+
+        # if onesided is true, the input is real valued
+        # because of Hermitian symmetry, we only need to calculate the FFT
+        # for the first half of the frequences
+        if self.onesided and self.onesided.val:
+            window_length = window_length // 2 + 1
+
+        frames = (self.input.shape[-1] - self.n_fft.val) // hop + 1
+        output_shape = [window_length, frames]
+
+        # add back rank if needed
+        if self.input.rank == 2:
+            output_shape = [self.input.shape[0]] + output_shape
+        
+        return types.tensor(output_type, tuple(output_shape))
+

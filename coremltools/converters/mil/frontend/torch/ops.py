@@ -1537,7 +1537,13 @@ def view(context, node):
         shape = mb.concat(values=shape, axis=0)
 
     shape = mb.cast(x=shape, dtype="int32")
-    view = mb.reshape(x=x, shape=shape, name=node.name)
+
+    if types.is_complex(x.dtype):
+        real, imag = (mb.reshape(x=x, shape=shape, name=node.name) for x in (mb.complex_real(data=x), mb.complex_imag(data=x)))
+        view = mb.complex(real_data=real, imag_data=imag, name=node.name)
+    else:
+        view = mb.reshape(x=x, shape=shape, name=node.name)
+        
     context.add(view)
 
 
@@ -1564,7 +1570,11 @@ def pad(context, node):
     if inputs[val_index] and inputs[val_index].op.op_type == "const":
         scalar_val = float(scalar_val.val)
 
-    res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
+    if types.is_complex(x.dtype):
+        real, imag = (mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name) for x in (mb.complex_real(data=x), mb.complex_imag(data=x)))
+        res = mb.complex(real_data=real, imag_data=imag, name=node.name)
+    else:
+        res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
     context.add(res)
 
 
@@ -4426,8 +4436,11 @@ def index_select(context, node):
 
 @register_torch_op(torch_alias=["abs"])
 def _abs(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.abs(x=inputs[0], name=node.name))
+    x = _get_inputs(context, node, expected=1)[0]
+    if types.is_complex(x.dtype):
+        context.add(mb.complex_abs(x=x, name=node.name))
+    else:
+        context.add(mb.abs(x=x, name=node.name))
 
 
 @register_torch_op
@@ -5675,6 +5688,23 @@ def fft_irfftn(context, node):
     irfftn_res = mb.complex_irfftn(data=input_data, shapes=shapes, dims=dims, norm=norm)
     context.add(irfftn_res, node.name)
 
+@register_torch_op
+def stft(context, node):
+    """
+    Lowers torch.stft with the dialect op `complex_stft` from complex_dialect_ops.py
+    """
+    input_data, n_fft, hop_length, win_length, window, normalized, onesided, _ = _get_inputs(context, node, min_expected=2)
+    if types.is_complex(input_data.dtype):
+        onesided = False # pytorch defaults onesided to False for complex inputs
+    stft_res = mb.complex_stft(
+        input=input_data, 
+        n_fft=n_fft, 
+        hop_length=hop_length, 
+        win_length=win_length, 
+        window=window, 
+        normalized=normalized, 
+        onesided=onesided)
+    context.add(stft_res, node.name)
 
 @register_torch_op(torch_alias=["torchvision::nms"])
 def torchvision_nms(context, node):
