@@ -24,7 +24,9 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
     """
     A graph optimization pass on PyMIL to detect and fuse several variants of ``layer_norm`` or
     ``instance_norm``. Pattern 1 corresponds to either ``layer_norm`` or ``instance_norm``. Patterns 2-4
-    are ``instance_norm``.
+    are ``instance_norm``. You can find these patterns in the methods for this class in the source code.
+    To quickly view the source code, click the **[source]** button at the end of the class definition.
+    
     """
 
     _DEBUG = False  # set to true to plot the block before and after the transformation
@@ -271,7 +273,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         It is ``layer_norm`` if all of the following are true:
             - ``axes`` is either ``[-1]``, ``[-1, -2]``, or ``[-1, -2, -3]``, and so on.
             - ``rank`` of ``gamma`` and ``beta`` is equal to the length of the ``axes``.
-        """
+        
+         """
         ops_to_remove = []
         root_var = reduce_op.x
 
