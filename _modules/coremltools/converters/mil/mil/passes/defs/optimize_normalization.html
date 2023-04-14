@@ -109,7 +109,9 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A graph optimization pass on PyMIL to detect and fuse several variants of ``layer_norm`` or</span>
 <span class="sd">    ``instance_norm``. Pattern 1 corresponds to either ``layer_norm`` or ``instance_norm``. Patterns 2-4</span>
-<span class="sd">    are ``instance_norm``.</span>
+<span class="sd">    are ``instance_norm``. You can find these patterns in the methods for this class in the source code.</span>
+<span class="sd">    To quickly view the source code, click the **[source]** button at the end of the class definition.</span>
+<span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_DEBUG</span> <span class="o">=</span> <span class="kc">False</span>  <span class="c1"># set to true to plot the block before and after the transformation</span>
@@ -356,7 +358,8 @@
 <span class="sd">        It is ``layer_norm`` if all of the following are true:</span>
 <span class="sd">            - ``axes`` is either ``[-1]``, ``[-1, -2]``, or ``[-1, -2, -3]``, and so on.</span>
 <span class="sd">            - ``rank`` of ``gamma`` and ``beta`` is equal to the length of the ``axes``.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">         &quot;&quot;&quot;</span>
         <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">root_var</span> <span class="o">=</span> <span class="n">reduce_op</span><span class="o">.</span><span class="n">x</span>
 
