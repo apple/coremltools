@@ -485,40 +485,55 @@ class MLModel:
 
         Parameters
         ----------
-        data: dict[str, value]
-            Dictionary of data to make predictions from where the keys are
-            the names of the input features.
-            If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.
+        data: dict[str, value] or list[dict[str, value]]
+            Dictionary of data to use for predictions, where the keys are the names of the input features.
+            For batch predictons, use a list of such dictionaries.
+
+            The following dictionary values types are acceptable: list, array, numpy.ndarray, tensorflow.Tensor
+            and torch.Tensor.
 
         Returns
         -------
         dict[str, value]
-            Predictions as a dictionary where each key is the output feature
-            name.
+            Predictions as a dictionary where each key is the output feature name.
+
+        list[dict[str, value]]
+            For batch prediction, returns a list of the above dictionaries.
 
         Examples
         --------
         data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
         predictions = model.predict(data)
-        data = {'array': numpy.array([[1.0, 2.0], [3.0, 4.0]])}
-        predictions = model.predict(data)
-        data = {'array': torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}
-        predictions = model.predict(data)
-        data = {'array': tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}
-        predictions = model.predict(data)
+
+        data = [ {'bedroom': 1.0, 'bath': 1.0, 'size': 1240},
+                 {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
+        batch_predictions = model.predict(data)
         """
+        def verify_and_convert_input_dict(d):
+            self._verify_input_dict(d)
+            self._convert_tensor_to_numpy(d)
+            # TODO: remove the following call when this is fixed: rdar://92239209
+            self._update_float16_multiarray_input_to_float32(d)
+
         if self.is_package and _is_macos() and _macos_version() < (12, 0):
             raise Exception(
                 "predict() for .mlpackage is not supported in macOS version older than 12.0."
             )
+        if type(data) not in (list, dict):
+            raise TypeError("\"data\" parameter must be either a dict or list of dict.")
+        if type(data) == list and not all(map(lambda x: type(x) == dict, data)):
+            raise TypeError("\"data\" list must contain only dictionaries")
 
         if self.__proxy__:
-            self._verify_input_dict(data)
-            self._convert_tensor_to_numpy(data)
-            # TODO: remove the following call when this is fixed: rdar://92239209
-            self._update_float16_multiarray_input_to_float32(data)
-            return self.__proxy__.predict(data)
-        else:
+            if type(data) == dict:
+                verify_and_convert_input_dict(data)
+                return self.__proxy__.predict(data)
+            else:
+                assert type(data) == list
+                for i in data:
+                    verify_and_convert_input_dict(i)
+                return self.__proxy__.batchPredict(data)
+        else:   # Error case
             if _macos_version() < (10, 13):
                 raise Exception(
                     "Model prediction is only supported on macOS version 10.13 or later."
@@ -601,6 +616,7 @@ class MLModel:
         """
         return _deepcopy(self._mil_program)
 
+
     def _verify_input_dict(self, input_dict):
         # Check if the input name given by the user is valid.
         # Although this is checked during prediction inside CoreML Framework,
@@ -610,6 +626,7 @@ class MLModel:
 
         # verify that the pillow image modes are correct, for image inputs
         self._verify_pil_image_modes(input_dict)
+
 
     def _verify_pil_image_modes(self, input_dict):
         if not _HAS_PIL:
