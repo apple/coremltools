@@ -10,14 +10,15 @@ stages:
 ##
 #########################################################################
 
-check_python_flake8:
+check_python_ruff:
   tags:
     - macos12
   stage: check
   script:
     - python -m pip install --upgrade pip
-    - pip install flake8
-    - flake8 ./coremltools --count --select=E9,F5,F63,F7,F82 --show-source --statistics
+    - pip install ruff
+    - ruff --exclude=deps --line-length=53386 --target-version=py37 \
+           --ignore=E101,E402,E71,E722,E731,E741,F401,F403,F632,F811,F821,F841 .
 
 #########################################################################
 ##
