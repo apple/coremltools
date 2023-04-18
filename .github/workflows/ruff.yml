@@ -2,9 +2,9 @@
 name: ruff
 on:
   push:
-    branches: [main]
-  pull_request:
   #  branches: [main]
+  pull_request:
+    branches: [main]
 jobs:
   ruff:
     runs-on: ubuntu-latest
