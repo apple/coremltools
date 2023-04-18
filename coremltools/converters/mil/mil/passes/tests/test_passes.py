@@ -5591,7 +5591,7 @@ class TestReplaceStackReshape(unittest.TestCase):
 
         concat_ops = [op for op in block.operations if op.op_type == "concat"]
         concat_op = concat_ops[0]
-        assert concat_op.interleave.val == True
+        assert concat_op.interleave.val is True
 
         output_name = block.outputs[0].name
 
@@ -5653,7 +5653,7 @@ class TestReplaceStackReshape(unittest.TestCase):
 
         concat_ops = [op for op in block.operations if op.op_type == "concat"]
         concat_op = concat_ops[0]
-        assert concat_op.interleave.val == False
+        assert concat_op.interleave.val is False
 
         output_name = block.outputs[0].name
 

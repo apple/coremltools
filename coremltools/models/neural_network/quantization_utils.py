@@ -157,7 +157,7 @@ class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
                     return False
 
             elif weight_param == "bias":
-                return not "bias" in self.skip_layer_types
+                return "bias" not in self.skip_layer_types
             else:
                 raise ValueError(
                     "Unrecognized quantization weight field {}".format(weight_param)
@@ -167,7 +167,7 @@ class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
             if weight_param is None or weight_param == "weights":
                 return True
             if weight_param == "bias":
-                return not "bias" in self.skip_layer_types
+                return "bias" not in self.skip_layer_types
             else:
                 raise ValueError(
                     "Unrecognized quantization weight field {}".format(weight_param)

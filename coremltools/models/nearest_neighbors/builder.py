@@ -363,7 +363,7 @@ class KNearestNeighborsClassifierBuilder:
         None
         """
         index_type = index_type.lower()
-        if not index_type in self._VALID_INDEX_TYPES:
+        if index_type not in self._VALID_INDEX_TYPES:
             raise TypeError("Invalid index type")
 
         if index_type == "kd_tree":

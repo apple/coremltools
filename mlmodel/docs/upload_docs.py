@@ -73,7 +73,7 @@ dirs = [
     if os.path.isdir(os.path.join(docspath, f))
 ]
 for thisdir in dirs:
-    if os.path.basename(thisdir)[0] is not "_":
+    if os.path.basename(thisdir)[0] != "_":
         sanitize_names(thisdir)
         print("--------- Processing " + thisdir + " ----------")
         category = os.path.basename(thisdir)

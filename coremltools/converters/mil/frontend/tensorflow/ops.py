@@ -585,7 +585,7 @@ def ExtractImagePatches(context, node):
         raise ValueError(
             "ExtractImagePatches only supports strides (4D tensor) with 1s for batch and channel dimensions."
         )
-    if not padding in ["VALID", "SAME"]:
+    if padding not in ["VALID", "SAME"]:
         raise ValueError("non-supported padding for ExtractImagePatches.")
     h, w = x.shape[1], x.shape[2]
 
@@ -3128,7 +3128,7 @@ def TensorArrayV3(context, node):
 
     builtin_dtype = node.attr["dtype"]
     dtype_str = types.builtin_to_string(builtin_dtype)
-    if elem_shape is not None and not -1 in elem_shape:
+    if elem_shape is not None and -1 not in elem_shape:
         ls = mb.make_list(
             init_length=init_length,
             dtype=dtype_str,

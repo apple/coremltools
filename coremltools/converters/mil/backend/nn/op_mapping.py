@@ -1767,13 +1767,13 @@ def lstm(const_context, builder, op):
         num_layer = len(builder.layers)
         initial_h_expand = initial_h + "_expanded" + "_" + str(num_layer)
         # from shape (B, 2*H) to shape (1, Batch, 2*H, 1, 1)
-        if not (initial_h_expand in set(builder.layers)):
+        if initial_h_expand not in set(builder.layers):
             _expand_dim(builder, initial_h_expand, initial_h, [0, 3, 4])
         initial_h = initial_h_expand
 
         # initial_h may have the same name as initial_c (e.g., same Var)
         initial_c_expand = initial_c + "_expanded2" + "_" + str(num_layer)
-        if not (initial_c_expand in set(builder.layers)):
+        if initial_c_expand not in set(builder.layers):
             _expand_dim(builder, initial_c_expand, initial_c, [0, 3, 4])
         initial_c = initial_c_expand
 

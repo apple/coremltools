@@ -2043,13 +2043,9 @@ class NeuralNetworkBuilder:
             if isinstance(linear_upsample_mode, str)
             else linear_upsample_mode
         )
-        if not mode in ["NN", "BILINEAR"]:
+        if mode not in ["NN", "BILINEAR"]:
             raise ValueError("Unsupported upsampling mode %s" % mode)
-        if not linear_upsample_mode in [
-            "DEFAULT",
-            "ALIGN_CORNERS_TRUE",
-            "ALIGN_CORNERS_FALSE",
-        ]:
+        if linear_upsample_mode not in ["DEFAULT", "ALIGN_CORNERS_TRUE", "ALIGN_CORNERS_FALSE"]:
             raise ValueError(
                 "Unsupported linear upsampling mode %s" % linear_upsample_mode
             )
@@ -4773,7 +4769,7 @@ class NeuralNetworkBuilder:
         # are not in image_input_names.
         def check_valid_preprocessing_keys(input, target, input_name):
             for key in input:
-                if not key in target:
+                if key not in target:
                     raise ValueError("Invalid key {} in {}.".format(key, input_name))
 
         target = image_input_names

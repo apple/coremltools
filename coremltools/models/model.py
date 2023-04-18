@@ -667,6 +667,6 @@ class MLModel:
                 model_input_to_types[inp.name] = type_name
 
         for given_input_name, given_input in input_dict.items():
-            if not given_input_name in model_input_to_types:
+            if given_input_name not in model_input_to_types:
                 continue
             input_dict[given_input_name] = convert(given_input)

@@ -355,7 +355,7 @@ class WeightSparsifier(AbstractQuantizationPass):
         self.threshold = threshold
         self.target_percentile = target_percentile
 
-        if not self.mode in WeightSparsifier.WEIGHT_SPARSIFICATION_MODES:
+        if self.mode not in WeightSparsifier.WEIGHT_SPARSIFICATION_MODES:
             msg = "Only mode {} supported for weight sparsification. Got mode {}.".format(
                 WeightSparsifier.WEIGHT_SPARSIFICATION_MODES, self.mode
             )
@@ -471,7 +471,7 @@ class WeightPalettizer(AbstractQuantizationPass):
         self.mode = mode.upper()
         self.lut_function = lut_function
 
-        if not self.mode in WeightPalettizer.WEIGHT_PALETTIZATION_MODES:
+        if self.mode not in WeightPalettizer.WEIGHT_PALETTIZATION_MODES:
             msg = "Only mode {} supported for weight palettization. Got mode {}.".format(
                 WeightPalettizer.WEIGHT_PALETTIZATION_MODES, self.mode
             )
@@ -676,7 +676,7 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
         self.mode = mode.upper()
 
         # check mode
-        if not self.mode in WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES:
+        if self.mode not in WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES:
             msg = "Only mode {} supported for weight affine quantization. Got mode {}.".format(
                 WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES, self.mode
             )

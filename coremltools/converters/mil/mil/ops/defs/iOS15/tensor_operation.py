@@ -487,7 +487,7 @@ class pad(Operation):
         pad = self.pad
         if len(pad.shape) != 1:
             raise ValueError("Pad should be a 1D tensor!")
-        if self.mode and not self.mode.val in {'constant', 'reflect', 'replicate'}:
+        if self.mode and self.mode.val not in {"constant", "reflect", "replicate"}:
             raise ValueError("Pad mode should be one of {'constant', 'reflect', 'replicate'}")
 
         if pad.val is None:
