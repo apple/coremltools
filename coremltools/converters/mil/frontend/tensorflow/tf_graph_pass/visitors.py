@@ -190,9 +190,9 @@ class FindSubgraph:
         all_unreachable = True
         for i in node.outputs + node.control_outputs:
             visit_result = self.visit_impl(g, g[i])
-            if visit_result is True:  # pylint: disable=singleton-comparison
+            if visit_result is True:
                 reachable = True
-            if visit_result is not False:  # pylint: disable=singleton-comparison
+            if visit_result is not False:
                 all_unreachable = False
 
         if reachable:
