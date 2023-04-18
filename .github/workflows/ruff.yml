@@ -1,0 +1,15 @@
+# https://beta.ruff.rs
+name: ruff
+on:
+  push:
+    branches: [main]
+  pull_request:
+  #  branches: [main]
+jobs:
+  ruff:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - run: pip install --user ruff
+    - run: ruff --exclude=deps --format=github --line-length=53386 --target-version=py37
+                --ignore=E101,E402,E71,E722,E731,E741,F401,F403,F632,F811,F821,F841 .
