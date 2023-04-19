@@ -4113,7 +4113,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             for _ in range(20):
                 input_shape = np.random.randint(low=2, high=8, size=rank)
                 reverse_dim = [np.random.choice([True, False]) for _ in range(rank)]
-                axes = [i for i in range(rank) if reverse_dim[i] is True]
+                axes = [i for i in range(rank) if reverse_dim[i] == True]
 
                 input_features = [("data", datatypes.Array(*input_shape))]
                 output_features = [("output", None)]
