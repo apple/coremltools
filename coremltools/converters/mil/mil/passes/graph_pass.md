@@ -1,46 +1,44 @@
-# MIL Graph Pass
-
-## For Users
+# MIL Graph Pass Guide
 
 This guide describes the passes that optimize an MIL Program. 
 
-### Overview
+## Graph Passes in the Conversion Process
 
-In Core ML Tools, the conversion process, as described in [Model Intermediate Language](https://coremltools.readme.io/docs/model-intermediate-language#overview),
+The conversion process in Core ML Tools, as described in [Model Intermediate Language](https://coremltools.readme.io/docs/model-intermediate-language#overview),
 is roughly divided into the following stages based on the model representation:
 
-1. Frontend (PyTorch/TensorFlow/etc --> Model Intermediate Language (MIL) Program)
+1. Front-end: PyTorch, TensorFlow (and so on) -> Model Intermediate Language (MIL) Program
 2. MIL-based Graph Optimizations
-3. Backend (MIL --> NeuralNetworks/MLProgram Proto)
+3. Backend: MIL -> NeuralNetworks/MLProgram Proto
 
-The Program is a Python class for Core ML Tools's internal in-memory and Pythonic representation. It's the same class you would use when using the Core ML Tools [Python MIL Builder](https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program) directly.
+The Program is a Python class for Core ML Tools internal in-memory and Pythonic representation. It is the same class you would use when using the Core ML Tools [Python MIL Builder](https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program) directly.
 
 The Program consists of a `main` function implemented as a [`Block`](https://github.com/apple/coremltools/blob/main/coremltools/converters/mil/mil/block.py). Each `Block` contains a list of [`Operators`](https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html). Passes are applied to the Program representation to simplify and canonicalize it.
 
-During each conversion, the graph passes are specified in a pass pipeline (the `pass_pipeline` parameter in `ct.convert`). 
+During each conversion, the graph passes are specified in a pass pipeline (the `pass_pipeline` parameter in [`ct.convert`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert)). 
 All available passes are recorded in `_PIPELINE_NAME_TO_PASSES` in `ct.PassPipeline`.
-For a detailed description of each pass (including what it does and examples), see the
-[coremltools API Reference](https://apple.github.io/coremltools/index.html).
+For a detailed description of each pass, including what each pass does with examples, see the
+[MIL Graph Passes in the coremltools API Reference](https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#mil-graph-passes).
 
 You can find the code for all MIL passes at `coremltools/converters/mil/mil/passes/defs`.
 
-In addition to the using default setting, you can:
+In addition to using the default setting (`ct.PassPipeline()`), you can do the following:
 
 * Decide which passes and the order of passes to run (see
-[Specify Passes To Run](#specify-passes-to-run)). For example,
-   - Switching off certain fusions to correctly export Phoenix optimized models for palettization.
+[Specify Passes To Run](#specify-passes-to-run)). For example:
+   - Switching off certain fusions to correctly export Phoenix-optimized models for palettization.
    - Skipping all passes to keep the MIL Program untouched.
 
-* Set options for a specific pass to control the behaviour (see [Set Pass Option](#set-pass-option)). For example,
+* Set options for a specific pass to control the behaviour (see [Set Pass Option](#set-pass-option)). For example:
    - Setting a threshold in a constant elimination pass to trade off computation and model size.
    - Skipping ops in fp16 quantization casting.
 
 * Define a custom graph pass to do fully customized optimization on the Program (see [Define Custom Graph Pass](#define-custom-graph-pass)).
 
 
-### Specify Passes To Run
+## Specify Passes To Run
 
-If no pass pipeline is specified, a default pipeline will be used:
+If no pass pipeline is specified, the default pipeline is used:
 
 ```python
 # The following two conversions are equivalent.
@@ -86,19 +84,19 @@ pipeline.remove_passes({"common::fuse_conv_batchnorm"})
 ct.convert(model, pass_pipeline=pipeline)
 ```
 
-### Set Pass Option
+## Set Pass Option
 
-You can set options specific to a certain pass. 
-Each pass option is an attribute of the corresponding pass class. 
-In the following example, you can see how `skip_const_by_size` is supported in `const_elimination`. You can also add options to existing passes or your custom passes.
+You can set options specific to a certain pass. Each pass option is an attribute of the corresponding pass class. 
 
-The following example shows how to avoid folding too-large `const` ops that would lead to a large model:
+The following example shows how to avoid folding too-large `const` ops that would lead to a large model, and in the example you can see how `skip_const_by_size` is supported in `const_elimination`:
 
 ```python
 pipeline = ct.PassPipeline()
 pipeline.set_options("common::const_elimination", {"skip_const_by_size": "1e6"})
 ct.convert(model, pass_pipeline=pipeline)
 ```
+
+You can also add options to existing passes or to your custom passes.
 
 Another example is to skip ops during an fp16 quantization pass:
 
@@ -109,9 +107,10 @@ ct.convert(model, pass_pipeline=pipeline)
 ```
 
 
-### Define Custom Graph Pass
+## Define Custom Graph Pass
 
-If the currently available passes in the [Core ML Tools API Reference](https://apple.github.io/coremltools/index.html) don't meet your goal, you can  define custom graph passes.
+If the currently available 
+[MIL Graph Passes in the coremltools API Reference](https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#mil-graph-passes) do not meet your goal, you can  define custom graph passes.
 
 To illustrate how to define a custom graph pass, the following example demonstrates merging consecutive `relu` ops using a PyTorch model with 2 `relu` layers. You can directly convert this model using the following script:
 
@@ -266,15 +265,12 @@ main[CoreML5](%input: (1, 2, 3, fp32)(Tensor)) {
 }
 ```
 
-The custom graph pass is useful for local debugging. If you find that a custom graph pass may also
-benefit other use cases, please consider adding it as a new graph pass to the code base as described in the next section.
+The custom graph pass is useful for local debugging. If you find that a custom graph pass may also benefit other use cases, please consider adding it as a new graph pass to the code base as described in the next section.
 
 
-## For Developers
+## Add a New Graph Pass
 
-### Add a New Graph Pass
-
-If you feel a new graph pass is necessary, please follow these steps to contribute a new graph pass to the codebase.
+If you feel that a new graph pass is necessary, please follow these steps to contribute a new graph pass to the codebase.
 
 1. Determine which category the graph pass would fall into, and then create a new graph pass class in the corresponding `defs/*.py`.
 
@@ -282,14 +278,14 @@ If you feel a new graph pass is necessary, please follow these steps to contribu
 
 3. Update `coremltools/docs/source/coremltools.converters.mil.mil.passes.defs.rst` to include the new pass in the documentation.
 
-**Note:**
-The docstring for the pass class may need editing for correct Sphinx rendering. You can preview the documentation by first installing the packages in `reqs/docs.pip`, and then switching to the `coremltools/docs` directory and using the command `make html`. Open the generated `coremltools/docs/_build/html/index.html` to see if the docstring is formatted correctly.
+**Note:** The docstring for the pass class may need editing for correct Sphinx rendering. You can preview the documentation by first installing the packages in `reqs/docs.pip`, and then switching to the `coremltools/docs` directory and using the command `make html`. Open the generated `coremltools/docs/_build/html/index.html` to see if the docstring is formatted correctly.
 
-### Code Style: Reduce Block Context Instantiation
+
+## Code Style: Reduce Block Context Instantiation
 
 Using the `block_context_manager` decorator is highly recommended, especially when the
-original function involves calling `with block` multiple times. However, you may want to avoid
-recursively calling the function decorated with `block_context_manager`, since it involves expensive
-`_propagate_nonreplaceable_vars()`.
+original function involves calling `with block` multiple times. However, you may want to avoid recursively calling the function decorated with `block_context_manager`, since it involves expensive `_propagate_nonreplaceable_vars()`.
 
-For details about how to use a `_noop_elimination_block_wrapper` to avoid that recursive calling, see  [noop_elimination](https://github.com/apple/coremltools/blob/main/coremltools/converters/mil/mil/passes/noop_elimination.py).
+For details about how to use a `_noop_elimination_block_wrapper` to avoid that recursive calling, see  [noop_elimination](https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination).
+
+
