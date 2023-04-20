@@ -29,13 +29,13 @@ MilStoragePythonWriter::MilStoragePythonWriter(const std::string& filePath, bool
 namespace {
     template <typename T>
     u_int64_t writeData(MILBlob::Blob::StorageWriter& m_writer,
-                        const std::vector<T>& data) {
+                        const std::vector<const T>& data) {
         return m_writer.WriteData(MILBlob::Util::MakeSpan(data));
     }
 
     template <>
     u_int64_t writeData<uint16_t>(MILBlob::Blob::StorageWriter& m_writer,
-                                  const std::vector<uint16_t>& data) {
+                                  const std::vector<const uint16_t>& data) {
         auto intSpan = MILBlob::Util::MakeSpan(data);
         auto fpSpan = MILBlob::Util::SpanCast<const MILBlob::Fp16>(intSpan);
         return m_writer.WriteData(fpSpan);
@@ -45,19 +45,19 @@ namespace {
 // These methods are needed in addition to the above template methods
 // because pybind does not allow us to expose template methods to
 // Python with gcc on Linux.
-u_int64_t MilStoragePythonWriter::write_int8_data(const std::vector<int8_t>& data) {
+u_int64_t MilStoragePythonWriter::write_int8_data(const std::vector<const int8_t>& data) {
     return writeData<int8_t>(*m_writer, data);
 }
 
-u_int64_t MilStoragePythonWriter::write_uint8_data(const std::vector<uint8_t>& data) {
+u_int64_t MilStoragePythonWriter::write_uint8_data(const std::vector<const uint8_t>& data) {
     return writeData<uint8_t>(*m_writer, data);
 }
 
-u_int64_t MilStoragePythonWriter::write_fp16_data(const std::vector<uint16_t>& data) {
+u_int64_t MilStoragePythonWriter::write_fp16_data(const std::vector<const uint16_t>& data) {
     return writeData<uint16_t>(*m_writer, data);
 }
 
-u_int64_t MilStoragePythonWriter::write_float_data(const std::vector<float>& data) {
+u_int64_t MilStoragePythonWriter::write_float_data(const std::vector<const float>& data) {
     return writeData<float>(*m_writer, data);
 }
 

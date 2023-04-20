@@ -30,10 +30,10 @@ namespace CoreML {
             MilStoragePythonWriter(const std::string& filePath, bool truncateFile);
             ~MilStoragePythonWriter();
 
-            u_int64_t write_int8_data(const std::vector<int8_t>& data);
-            u_int64_t write_uint8_data(const std::vector<uint8_t>& data);
-            u_int64_t write_fp16_data(const std::vector<uint16_t>& data);
-            u_int64_t write_float_data(const std::vector<float>& data);
+            u_int64_t write_int8_data(const std::vector<const int8_t>& data);
+            u_int64_t write_uint8_data(const std::vector<const uint8_t>& data);
+            u_int64_t write_fp16_data(const std::vector<const uint16_t>& data);
+            u_int64_t write_float_data(const std::vector<const float>& data);
 
         private:
             std::unique_ptr<MILBlob::Blob::StorageWriter> m_writer;
