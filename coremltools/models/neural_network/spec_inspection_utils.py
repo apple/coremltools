@@ -152,7 +152,7 @@ def _summarize_neural_network_spec(mlmodel_spec):
 
     layers = (
         [_summarize_network_layer_info(layer) for layer in nn.layers]
-        if nn != None
+        if nn is not None
         else None
     )
     return (inputs, outputs, layers)

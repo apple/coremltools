@@ -59,7 +59,7 @@ class ReadMeSession:
                 )
                 if response is None:
                     return None
-                if len(response) is 0:
+                if len(response) == 0:
                     return out
                 out += response
                 i += 1

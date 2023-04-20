@@ -294,7 +294,7 @@ def remove_redundant_transposes(spec):
         output_to_layers = {}
         for layer in nn_layers:
             for input in layer.input:
-                if not input in output_to_layers:
+                if input not in output_to_layers:
                     output_to_layers[input] = [layer]
                 else:
                     output_to_layers[input].append(layer)
@@ -367,7 +367,7 @@ def remove_redundant_transposes(spec):
             while True:
                 if cursor.output[0] in output_to_layers:
                     layers.append(cursor)
-                if not cursor.input[0] in input_to_parent_layers:
+                if cursor.input[0] not in input_to_parent_layers:
                     break
                 cursor = input_to_parent_layers[cursor.input[0]]
                 if cursor.WhichOneof("layer") != "transpose":
