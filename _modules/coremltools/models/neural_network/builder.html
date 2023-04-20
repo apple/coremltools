@@ -45,7 +45,7 @@
               <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Model APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
@@ -2128,13 +2128,9 @@
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">linear_upsample_mode</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
             <span class="k">else</span> <span class="n">linear_upsample_mode</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;NN&quot;</span><span class="p">,</span> <span class="s2">&quot;BILINEAR&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;NN&quot;</span><span class="p">,</span> <span class="s2">&quot;BILINEAR&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported upsampling mode </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">mode</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">linear_upsample_mode</span> <span class="ow">in</span> <span class="p">[</span>
-            <span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ALIGN_CORNERS_TRUE&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;ALIGN_CORNERS_FALSE&quot;</span><span class="p">,</span>
-        <span class="p">]:</span>
+        <span class="k">if</span> <span class="n">linear_upsample_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span> <span class="s2">&quot;ALIGN_CORNERS_TRUE&quot;</span><span class="p">,</span> <span class="s2">&quot;ALIGN_CORNERS_FALSE&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Unsupported linear upsampling mode </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">linear_upsample_mode</span>
             <span class="p">)</span>
@@ -4858,7 +4854,7 @@
         <span class="c1"># are not in image_input_names.</span>
         <span class="k">def</span> <span class="nf">check_valid_preprocessing_keys</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">input_name</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">input</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">target</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">target</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid key </span><span class="si">{}</span><span class="s2"> in </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">input_name</span><span class="p">))</span>
 
         <span class="n">target</span> <span class="o">=</span> <span class="n">image_input_names</span>
