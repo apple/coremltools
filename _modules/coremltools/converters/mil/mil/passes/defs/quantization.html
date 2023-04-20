@@ -45,7 +45,7 @@
               <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Model APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
@@ -440,7 +440,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target_percentile</span> <span class="o">=</span> <span class="n">target_percentile</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="n">WeightSparsifier</span><span class="o">.</span><span class="n">WEIGHT_SPARSIFICATION_MODES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightSparsifier</span><span class="o">.</span><span class="n">WEIGHT_SPARSIFICATION_MODES</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Only mode </span><span class="si">{}</span><span class="s2"> supported for weight sparsification. Got mode </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">WeightSparsifier</span><span class="o">.</span><span class="n">WEIGHT_SPARSIFICATION_MODES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
             <span class="p">)</span>
@@ -556,7 +556,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lut_function</span> <span class="o">=</span> <span class="n">lut_function</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="n">WeightPalettizer</span><span class="o">.</span><span class="n">WEIGHT_PALETTIZATION_MODES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightPalettizer</span><span class="o">.</span><span class="n">WEIGHT_PALETTIZATION_MODES</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Only mode </span><span class="si">{}</span><span class="s2"> supported for weight palettization. Got mode </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">WeightPalettizer</span><span class="o">.</span><span class="n">WEIGHT_PALETTIZATION_MODES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
             <span class="p">)</span>
@@ -761,7 +761,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
 
         <span class="c1"># check mode</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="n">WeightAffineQuantizer</span><span class="o">.</span><span class="n">WEIGHT_AFFINE_QUANTIZATION_MODES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightAffineQuantizer</span><span class="o">.</span><span class="n">WEIGHT_AFFINE_QUANTIZATION_MODES</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Only mode </span><span class="si">{}</span><span class="s2"> supported for weight affine quantization. Got mode </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">WeightAffineQuantizer</span><span class="o">.</span><span class="n">WEIGHT_AFFINE_QUANTIZATION_MODES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
             <span class="p">)</span>

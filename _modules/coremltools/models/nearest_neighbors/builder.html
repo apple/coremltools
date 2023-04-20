@@ -45,7 +45,7 @@
               <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Model APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
@@ -448,7 +448,7 @@
 <span class="sd">        None</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">index_type</span> <span class="o">=</span> <span class="n">index_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">index_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_INDEX_TYPES</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">index_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_INDEX_TYPES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid index type&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">index_type</span> <span class="o">==</span> <span class="s2">&quot;kd_tree&quot;</span><span class="p">:</span>

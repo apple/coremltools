@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Models &mdash; coremltools API Reference  documentation</title>
+  <title>Model APIs &mdash; coremltools API Reference  documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -49,7 +49,7 @@
               <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Model APIs</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.model">MLModel</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.model.MLModel"><code class="docutils literal notranslate"><span class="pre">MLModel</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.__init__"><code class="docutils literal notranslate"><span class="pre">MLModel.__init__()</span></code></a></li>
@@ -186,7 +186,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">Models</li>
+      <li class="breadcrumb-item active">Model APIs</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.models.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -196,8 +196,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="models">
-<h1>Models<a class="headerlink" href="#models" title="Permalink to this heading"></a></h1>
+  <section id="model-apis">
+<h1>Model APIs<a class="headerlink" href="#model-apis" title="Permalink to this heading"></a></h1>
 <section id="module-coremltools.models.model">
 <span id="mlmodel"></span><h2>MLModel<a class="headerlink" href="#module-coremltools.models.model" title="Permalink to this heading"></a></h2>
 <dl class="py class">
@@ -457,10 +457,10 @@ If not provided, the inputs from the original model are used.</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Directly extract model in memory</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">submodel</span> <span class="o">=</span> <span class="n">extract_submodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-<span class="go">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt;</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="c1"># Extract model loaded from disk</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;model.mlpackage&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;model.mlpackage&quot;</span><span class="p">)</span>
