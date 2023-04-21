@@ -15,6 +15,7 @@ from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program
 from coremltools.models.pipeline import PipelineClassifier, PipelineRegressor
+from coremltools.models.utils import _is_macos
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
@@ -252,13 +253,15 @@ class TestMakePipeline:
 
         # Get non-pipeline result
         x = np.random.rand(20)
-        y1 = m1.predict({"x": x})["y1"]
-        y2 = m2.predict({"y1": y1})
+        if _is_macos():
+            y1 = m1.predict({"x": x})["y1"]
+            y2 = m2.predict({"y1": y1})
 
         pipeline_model = ct.utils.make_pipeline(m1, m2)
 
-        y_pipeline = pipeline_model.predict({"x": x})
-        np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+        if _is_macos():
+            y_pipeline = pipeline_model.predict({"x": x})
+            np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
 
         # Check save/load
         with tempfile.TemporaryDirectory() as save_dir:
@@ -268,10 +271,12 @@ class TestMakePipeline:
 
             # Check loading from a mlpackage path
             p2 = ct.models.MLModel(save_path)
-            y_pipeline = p2.predict({"x": x})
-            np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+            if _is_macos():
+                y_pipeline = p2.predict({"x": x})
+                np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
 
             # Check loading from spec and weight dir
             p3 = ct.models.MLModel(p2.get_spec(), weights_dir=p2.weights_dir)
-            y_pipeline = p3.predict({"x": x})
-            np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+            if _is_macos():
+                y_pipeline = p3.predict({"x": x})
+                np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
