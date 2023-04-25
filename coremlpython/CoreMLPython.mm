@@ -126,6 +126,35 @@ py::dict Model::predict(const py::dict& input) {
     }
 }
 
+
+py::list Model::batchPredict(const py::list& batch) {
+  @autoreleasepool {
+      NSError* error = nil;
+
+      // Convert input to a BatchProvider
+      NSMutableArray* array = [[NSMutableArray alloc] initWithCapacity: batch.size()];
+      for(int i = 0; i < batch.size(); i++) {
+        MLDictionaryFeatureProvider* cur = Utils::dictToFeatures(batch[i], &error);
+        Utils::handleError(error);
+        [array addObject: cur];
+      }
+      MLArrayBatchProvider* batchProvider = [[MLArrayBatchProvider alloc] initWithFeatureProviderArray: array];
+
+      // Get predictions
+      MLArrayBatchProvider* predictions = (MLArrayBatchProvider*)[m_model predictionsFromBatch:batchProvider
+                                                                                         error:&error];
+      Utils::handleError(error);
+
+      // Convert predictions to output
+      py::list ret;
+      for (int i = 0; i < predictions.array.count; i++) {
+        ret.append(Utils::featuresToDict(predictions.array[i]));
+      }
+      return ret;
+  }
+}
+
+
 py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
 
     CoreML::Specification::Model model;
@@ -158,6 +187,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::class_<Model>(m, "_MLModelProxy")
         .def(py::init<const std::string&, const std::string&>())
         .def("predict", &Model::predict)
+        .def("batchPredict", &Model::batchPredict)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
 

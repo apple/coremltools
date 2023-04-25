@@ -26,10 +26,10 @@ def _remove_path(path):
     else:
         os.remove(path)
 
+
 class TestMLModel:
 
     def setup_class(self):
-
         spec = Model_pb2.Model()
         spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
@@ -127,6 +127,7 @@ class TestMLModel:
 
                 preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
                 assert preds is not None
+                assert len(preds.keys()) == 1
                 assert preds["output"] == 3.1
                 assert loaded_model.compute_unit == compute_units
         else:
@@ -135,6 +136,23 @@ class TestMLModel:
 
         # cleanup
         _remove_path(package.name)
+
+
+    @pytest.mark.skipif(utils._macos_version() < (12, 0),
+                        reason="prediction available only on macOS12+")
+    def test_batch_predict(self):
+        model = MLModel(self.spec)
+        x = [ {"feature_1": 1.0, "feature_2": 1.0},
+              {"feature_1": 2.0, "feature_2": 2.0} ]
+
+        y = model.predict(x)
+
+        assert len(y) == 2
+        assert y[0]["output"] == 3.1
+        assert len(y[0].keys()) == 1
+        assert y[1]["output"] == 6.1
+        assert len(y[1].keys()) == 1
+
 
     def test_rename_input(self):
         utils.rename_feature(self.spec, "feature_1", "renamed_feature", rename_inputs=True)
