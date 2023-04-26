@@ -188,11 +188,12 @@ class fill(Operation):
     """
 
     input_spec = InputSpec(
-        shape=TensorInputType(type_domain=types.int32),
+        shape=TensorInputType(type_domain="S"),
         value=TensorInputType(const=True, optional=True, type_domain="T"),
     )
 
     type_domains = {
+        "S": (types.int32, types.fp32),
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
 
