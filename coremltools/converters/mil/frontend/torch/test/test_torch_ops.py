@@ -3825,21 +3825,21 @@ class TestRandn(TorchBaseTest):
 
 class TestRandnLike(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, other",
+        "compute_unit, backend, shape",
         itertools.product(
             compute_units,
             backends,
-            [torch.randn(1,2,3), torch.randn(2, 3)],
+            [(1,), (2, 3)],
         ),
     )
-    def test_randn_like(self, compute_unit, backend, other):
+    def test_randn_like(self, compute_unit, backend, shape):
         class TestModel(nn.Module):
             def forward(self, x):
-                y = torch.randn_like(x)
+                y = torch.randn_like(torch.randn(shape))
                 return torch.Tensor([len(y)])
 
         self.run_compare_torch(
-            other, TestModel(), backend=backend, compute_unit=compute_unit
+            shape, TestModel(), backend=backend, compute_unit=compute_unit
         )
 
 
