@@ -3594,6 +3594,8 @@ def _make_fill_op(size, val, name):
     assert val is not None
     if isinstance(size, list):
         size = mb.concat(values=size, axis=0)
+    if types.is_float(size.dtype):
+        size = mb.cast(x=size, dtype="int32")
     fill = mb.fill(shape=size, value=val, name=name)
     return fill
 
