@@ -3535,6 +3535,29 @@ class TestFull(TorchBaseTest):
         "compute_unit, backend, shape_val",
         itertools.product(
             compute_units,
+            backends,
+            [
+                [(1,), 0.0],
+                [(2, 3), 3.1415],
+                [(1, 1, 2, 5, 1), -2.0],
+            ],
+        ),
+    )
+    def test_full_scalar(self, compute_unit, backend, shape_val):
+        shape, val = shape_val
+
+        class FullStaticModel(nn.Module):
+            def forward(self, x):
+                return x / torch.full([], fill_value=val)
+
+        self.run_compare_torch(
+            shape, FullStaticModel().eval(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape_val",
+        itertools.product(
+            compute_units,
             [
                 ["neuralnetwork", "fp32", ct.target.iOS14],
                 ["mlprogram", "fp16", ct.target.iOS15],
