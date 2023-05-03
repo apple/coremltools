@@ -3546,12 +3546,12 @@ class TestFull(TorchBaseTest):
     def test_full_scalar(self, compute_unit, backend, shape_val):
         shape, val = shape_val
 
-        class FullStaticModel(nn.Module):
+        class FullScalarModel(nn.Module):
             def forward(self, x):
                 return x / torch.full([], fill_value=val)
 
         self.run_compare_torch(
-            shape, FullStaticModel().eval(), backend=backend, compute_unit=compute_unit
+            shape, FullScalarModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
