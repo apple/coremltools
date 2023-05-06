@@ -39,7 +39,11 @@ from coremltools.converters.mil.mil.types.symbolic import (
 class band_part(Operation):
     """
     Returns a tensor setting everything outside a center band to zeros for the innermost
-    matrix. Special cases:
+    matrix. That is,
+    band(m, n) = (lower < 0 || (m-n) <= lower) && (upper < 0 || (n-m) <= upper)
+    output[i, j, k, ..., m, n] = band(m, n) * input[i, j, k, ..., m, n]
+
+    Special cases:
 
     - ``band_part(x, 0, -1)`` returns upper triangular part.
     - ``band_part(x, -1, 0)`` returns lower triangular part.
@@ -85,6 +89,19 @@ class band_part(Operation):
 
     def type_inference(self):
         return self.x.sym_type
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        M, N = self.x.val.shape[-2:]
+        band = np.zeros((M, N), dtype=types.nptype_from_builtin(self.x.sym_type))
+        num_lower = self.lower.val
+        num_upper = self.upper.val
+        for m in range(M):
+            for n in range(N):
+                band[m, n] = (num_lower < 0 or (m - n) <= num_lower) and (
+                    num_upper < 0 or (n - m) <= num_upper
+                )
+        return np.multiply(band, self.x.val)
 
 
 @register_op
