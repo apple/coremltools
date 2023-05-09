@@ -5779,6 +5779,52 @@ def tupleindex(context, node):
     context.add(tuple_input[index_input.val], node.name)
 
 
+def _get_attn_mask(is_causal: Var, attn_mask: Var, query_var: Var, key_var: Var) -> Var:
+    if is_causal.val:
+        # create mask of shape (target_seq, source_seq)
+        # s.t the diagonal and lower triangular of the matrix is all 1s
+        # and upper triangular is a large negative number (e.g. -30k)
+        target_seq = query_var.shape[-2]
+        source_seq = key_var.shape[-2]
+        if is_symbolic(target_seq) or is_symbolic(source_seq):
+            raise NotImplementedError(
+                "scaled_dot_product_attention op: "
+                "is_causal flag not handled when sequence length is symbolic"
+            )
+
+        all_ones = mb.fill(value=1.0, shape=(target_seq, source_seq))
+        all_negative_inf = mb.fill(value=-3e4, shape=(target_seq, source_seq))
+        all_ones_lower = mb.band_part(
+            x=all_ones, lower=-1, upper=0
+        )  # will 0 out upper triangle, excluding diag
+        all_negative_inf_upper = mb.band_part(
+            x=all_negative_inf, lower=0, upper=-1
+        )  # will 0 out lower triangle, excluding diag
+        all_negative_inf_diag_only = mb.band_part(x=all_negative_inf_upper, lower=0, upper=0)
+        all_negative_inf_upper_no_diag = mb.sub(
+            x=all_negative_inf_upper, y=all_negative_inf_diag_only
+        )
+        return mb.add(x=all_ones_lower, y=all_negative_inf_upper_no_diag)
+    elif is_bool(attn_mask.dtype):
+        """
+        compute float mask as:
+        mask = cast(bool_mask) + (1-cast(bool_mask)) * -30k*ones(shape(bool_mask))
+        """
+        shape = mb.shape(x=attn_mask)
+        negative_inf = mb.fill(
+            shape=shape, value=_np.array([-3e4]).astype(types.nptype_from_builtin(query_var.dtype))
+        )
+        mask = mb.cast(x=attn_mask, dtype=types.builtin_to_string(query_var.dtype))
+        compliment_of_mask = mb.sub(
+            x=_np.array([1.0]).astype(types.nptype_from_builtin(mask.dtype)), y=mask
+        )
+        compliment_of_mask = mb.mul(x=negative_inf, y=compliment_of_mask)
+        return mb.add(x=mask, y=compliment_of_mask)
+    else:
+        return attn_mask
+
+
+
 @register_torch_op
 def scaled_dot_product_attention(context, node):
     """
@@ -5800,7 +5846,7 @@ def scaled_dot_product_attention(context, node):
     q, k, v, attn_mask, dropout, is_causal = _get_inputs(context, node, expected=6)
     if attn_mask is not None and is_causal.val:
         raise ValueError(
-            "scaled_dot_product_attention op: mask is provided when" " is_causal is set to True."
+            "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
         )
 
     # check that ranks of q, k, v and attn_mask match
@@ -5816,48 +5862,7 @@ def scaled_dot_product_attention(context, node):
     is_mask_present = False
     if is_causal.val or attn_mask is not None:
         is_mask_present = True
-        if is_causal.val:
-            # create mask of shape (target_seq, source_seq)
-            # s.t the diagonal and lower triangular of the matrix is all 1s
-            # and upper triangular is a large negative number (e.g. -30k)
-            target_seq = q.shape[-2]
-            source_seq = k.shape[-2]
-            if is_symbolic(target_seq) or is_symbolic(source_seq):
-                raise NotImplementedError(
-                    "scaled_dot_product_attention op: "
-                    "is_causal flag not handled when sequence length is symbolic"
-                )
-
-            all_ones = mb.fill(value=1.0, shape=(target_seq, source_seq))
-            all_negative_inf = mb.fill(value=-3e4, shape=(target_seq, source_seq))
-            all_ones_lower = mb.band_part(
-                x=all_ones, lower=-1, upper=0
-            )  # will 0 out upper triangle, excluding diag
-            all_negative_inf_upper = mb.band_part(
-                x=all_negative_inf, lower=0, upper=-1
-            )  # will 0 out lower triangle, excluding diag
-            all_negative_inf_diag_only = mb.band_part(x=all_negative_inf_upper, lower=0, upper=0)
-            all_negative_inf_upper_no_diag = mb.sub(
-                x=all_negative_inf_upper, y=all_negative_inf_diag_only
-            )
-            mask = mb.add(x=all_ones_lower, y=all_negative_inf_upper_no_diag)
-        elif is_bool(attn_mask.dtype):
-            """
-            compute float mask as:
-            mask = cast(bool_mask) + (1-cast(bool_mask)) * -30k*ones(shape(bool_mask))
-            """
-            shape = mb.shape(x=attn_mask)
-            negative_inf = mb.fill(
-                shape=shape, value=np.array([-3e4]).astype(types.nptype_from_builtin(q.dtype))
-            )
-            mask = mb.cast(x=attn_mask, dtype=types.builtin_to_string(q.dtype))
-            compliment_of_mask = mb.sub(
-                x=np.array([1.0]).astype(types.nptype_from_builtin(mask.dtype)), y=mask
-            )
-            compliment_of_mask = mb.mul(x=negative_inf, y=compliment_of_mask)
-            mask = mb.add(x=mask, y=compliment_of_mask)
-        else:
-            mask = attn_mask
+        mask = _get_attn_mask(is_causal, attn_mask, q, k)
 
     # scale the query input
     embed_size = q.shape[-1]

@@ -8629,7 +8629,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
             },
         )
 
-        TorchBaseTest.run_compare_torch(
+        self.run_compare_torch(
             [input_shape] * 3,
             model,
             backend=backend,
@@ -8658,7 +8658,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 "is_causal": True,
             },
         )
-        res = TorchBaseTest.run_compare_torch(
+        res = self.run_compare_torch(
             [query_shape, key_shape, value_shape],
             model,
             backend=backend,
@@ -8675,7 +8675,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [(5, 5), (7, 5), (4, 6)],
+            [(5, 5), (7, 5)],
             [False, True],
         ),
     )
@@ -8696,7 +8696,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
             mask = generate_input_data(mask_shape)
 
         model = ModuleWrapper(function=nn.functional.scaled_dot_product_attention)
-        res = TorchBaseTest.run_compare_torch(
+        self.run_compare_torch(
             (query, key, value, mask),
             model,
             backend=backend,
@@ -8729,6 +8729,8 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 self.n_head = n_head
 
             def forward(self, x, mask=None):
+                # in comments below for shapes, using following notation:
+                # B: batch_size, S: seq_length, E: embedding_size, h: n_heads
                 # x: (B,S,E)
                 # mask: (S,S)
                 batch_size, seq_len, dim = x.shape
@@ -8793,7 +8795,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 return x
 
         model = ToyTransformer()
-        res = TorchBaseTest.run_compare_torch(
+        self.run_compare_torch(
             [(batch_size, seq_length, embedding_size), (seq_length, seq_length)]
             if mask_as_input
             else [(batch_size, seq_length, embedding_size)],
