@@ -8612,3 +8612,217 @@ class TestTupleIndex(TorchBaseTest):
         self.run_compare_torch(x, OuterModel(),
                                input_as_shape=False, use_scripting=True,
                                backend=backend, compute_unit=compute_unit)
+
+class TestScaledDotProductAttention(TorchBaseTest):
+    """
+    Tests for torch.nn.functional.scaled_dot_product_attention op
+    (https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html)
+    """
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(
+            compute_units,
+            backends,
+            [2, 3, 4, 5],
+        ),
+    )
+    def test_different_input_ranks_no_mask(self, compute_unit, backend, rank):
+        """
+        The query/key/value inputs can be any rank 2 or greater.
+        """
+        batch_size, seq_len, n_heads_1, n_heads_2, d = 2, 10, 3, 4, 7
+        if rank == 2:
+            input_shape = (seq_len, d)
+        elif rank == 3:
+            input_shape = (batch_size, seq_len, d)
+        elif rank == 4:
+            input_shape = (batch_size, n_heads_1, seq_len, d)
+        elif rank == 5:
+            input_shape = (batch_size, n_heads_1, n_heads_1, seq_len, d)
+        else:
+            raise ValueError("invalid rank")
+
+        model = ModuleWrapper(
+            function=nn.functional.scaled_dot_product_attention,
+            kwargs={
+                "attn_mask": None,
+                "dropout_p": 0.0,
+                "is_causal": False,
+            },
+        )
+
+        self.run_compare_torch(
+            [input_shape] * 3,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, seq_lengths, include_heads",
+        itertools.product(
+            compute_units,
+            backends,
+            [(5, 5), (5, 7), (6, 4)],
+            [False, True],
+        ),
+    )
+    def test_is_causal_flag(self, compute_unit, backend, seq_lengths, include_heads):
+        source_seq_len, target_seq_len = seq_lengths
+        query_shape = (2, 2, target_seq_len, 7) if include_heads else (2, target_seq_len, 7)
+        key_shape = (2, 2, source_seq_len, 7) if include_heads else (2, source_seq_len, 7)
+        value_shape = key_shape
+
+        model = ModuleWrapper(
+            function=nn.functional.scaled_dot_product_attention,
+            kwargs={
+                "attn_mask": None,
+                "is_causal": True,
+            },
+        )
+        res = self.run_compare_torch(
+            [query_shape, key_shape, value_shape],
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+        # check that "fill" and "band_part" ops, which are needed to compute mask, have been constant folded
+        mil_prog = res[1]._get_mil_internal()
+        # assert that "lstm" ops are present in the mil program
+        assert len(mil_prog.find_ops(op_type="fill")) == 0
+        assert len(mil_prog.find_ops(op_type="band_part")) == 0
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, seq_lengths, bool_mask",
+        itertools.product(
+            compute_units,
+            backends,
+            [(5, 5), (7, 5)],
+            [False, True],
+        ),
+    )
+    def test_attn_mask(self, compute_unit, backend, seq_lengths, bool_mask):
+        source_seq_len, target_seq_len = seq_lengths
+        query_shape = (2, 3, target_seq_len, 7)
+        key_shape = (2, 3, source_seq_len, 7)
+        value_shape = key_shape
+        mask_shape = (target_seq_len, source_seq_len)
+
+        query = generate_input_data(query_shape)
+        key = generate_input_data(key_shape)
+        value = generate_input_data(value_shape)
+        if bool_mask:
+            mask = torch.rand(mask_shape) > 0.5
+            mask = mask.bool()
+        else:
+            mask = generate_input_data(mask_shape)
+
+        model = ModuleWrapper(function=nn.functional.scaled_dot_product_attention)
+        self.run_compare_torch(
+            (query, key, value, mask),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mask_as_input",
+        itertools.product(
+            compute_units,
+            backends,
+            [True, False],
+        ),
+    )
+    def test_toy_xformer_with_sdpa(self, compute_unit, backend, mask_as_input):
+        embedding_size = 32
+        seq_length = 16
+        n_heads = 4
+        batch_size = 2
+        num_blocks = 3
+
+        class AttentionBlock(nn.Module):
+            def __init__(self, embed_dim=embedding_size, n_head=n_heads):
+                super().__init__()
+                self.query_proj_op = nn.Linear(embed_dim, embed_dim)
+                self.key_proj_op = nn.Linear(embed_dim, embed_dim)
+                self.value_proj_op = nn.Linear(embed_dim, embed_dim)
+                self.out_proj_op = nn.Linear(embed_dim, embed_dim)
+                self.n_head = n_head
+
+            def forward(self, x, mask=None):
+                # in comments below for shapes, using following notation:
+                # B: batch_size, S: seq_length, E: embedding_size, h: n_heads
+                # x: (B,S,E)
+                # mask: (S,S)
+                batch_size, seq_len, dim = x.shape
+                query_proj = self.query_proj_op(x)  # (B,S,E)
+                key_proj = self.key_proj_op(x)  # (B,S,E)
+                value_proj = self.value_proj_op(x)  # (B,S,E)
+                # reshape to (B, h, S, E/h)
+                query_proj = query_proj.reshape(
+                    batch_size, seq_len, self.n_head, dim // self.n_head
+                ).permute(
+                    0, 2, 1, 3
+                )  # (B, h, S, E/h)
+                key_proj = key_proj.reshape(
+                    batch_size, seq_len, self.n_head, dim // self.n_head
+                ).permute(
+                    0, 2, 1, 3
+                )  # (B, h, S, E/h)
+                value_proj = value_proj.reshape(
+                    batch_size, seq_len, self.n_head, dim // self.n_head
+                ).permute(
+                    0, 2, 1, 3
+                )  # (B, h, S, E/h)
+                # now do scaled dot produce attention
+                if mask is None:
+                    out = nn.functional.scaled_dot_product_attention(
+                        query_proj, key_proj, value_proj, is_causal=True
+                    )  # (B, h, S, E/h)
+                else:
+                    out = nn.functional.scaled_dot_product_attention(
+                        query_proj, key_proj, value_proj, mask
+                    )  # (B, h, S, E/h)
+                # reshape back to (B, S, E)
+                out = out.permute(0, 2, 1, 3).reshape(batch_size, seq_len, dim)  # (B, S, E)
+                return self.out_proj_op(out)
+
+        class MLPBlock(nn.Module):
+            def __init__(self, embed_dim=embedding_size):
+                super().__init__()
+                self.fc1 = nn.Linear(embed_dim, embed_dim)
+                self.activation = nn.GELU()
+                self.fc2 = nn.Linear(embed_dim, embed_dim)
+
+            def forward(self, x):
+                x = self.fc1(x)
+                x = self.activation(x)
+                return self.fc2(x)
+
+        class ToyTransformer(nn.Module):
+            def __init__(self, n_blocks=num_blocks, embed_dim=embedding_size):
+                super().__init__()
+                self.attn_block = AttentionBlock(embed_dim=embed_dim)
+                self.mlp = MLPBlock(embed_dim=embed_dim)
+                self.n_blocks = n_blocks
+                self.lnorm = nn.LayerNorm(embed_dim)
+
+            def forward(self, x, mask=None):
+                for i in range(self.n_blocks):
+                    x = self.attn_block(x, mask) + x
+                    x = self.lnorm(x)
+                    x = self.mlp(x) + x
+                    x = self.lnorm(x)
+                return x
+
+        model = ToyTransformer()
+        self.run_compare_torch(
+            [(batch_size, seq_length, embedding_size), (seq_length, seq_length)]
+            if mask_as_input
+            else [(batch_size, seq_length, embedding_size)],
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )

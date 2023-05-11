@@ -20,7 +20,7 @@ from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 @register_op(opset_version=_IOS16_TARGET)
 class fill_like(Operation):
     """
-    Returns a tensor with the same size as the input tensor filled with a constant value.
+    Returns a tensor with the same shape as the input tensor filled with a constant value.
 
     Parameters
     ----------
@@ -45,7 +45,7 @@ class fill_like(Operation):
         ref_tensor=TensorInputType(type_domain="T"),
         value=TensorInputType(const=True, optional=True, type_domain="U"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
         "U": (types.fp16, types.fp32, types.int32, types.bool),

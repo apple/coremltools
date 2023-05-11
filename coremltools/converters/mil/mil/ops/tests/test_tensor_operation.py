@@ -13,7 +13,7 @@ import coremltools as ct
 from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_utils import (get_op_types_in_program,
                                                       random_gen, ssa_fn)
 from coremltools.models.utils import _macos_version
@@ -25,7 +25,6 @@ if _HAS_TF_2:
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
-
 
 class TestBandPart:
     @pytest.mark.parametrize(
@@ -110,6 +109,47 @@ class TestBandPart:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
+        )
+
+    def get_output_from_mlmodel(
+        self, x_val: np.ndarray, num_lower: int, num_upper: int
+    ) -> np.ndarray:
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 4))])
+        def prog(x):
+            return mb.band_part(x=x, lower=num_lower, upper=num_upper, name="out")
+
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+        out = mlmodel.predict({"x": x_val})["out"]
+        return out
+
+    def get_value_inference_output(
+        self, x_val: np.ndarray, num_lower: int, num_upper: int
+    ) -> np.ndarray:
+        func_inputs = {"x": mb.placeholder(shape=[3, 4])}
+        with Function(func_inputs) as ssa_fun:
+            x = ssa_fun.inputs["x"]
+            v = mb.band_part(x=x_val, lower=num_lower, upper=num_upper)
+        return v.val
+
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (10, 15), reason="needs mlprogram, skip on macos < 10.15"
+    )
+    @pytest.mark.parametrize(
+        "lower_upper",
+        [(0, -1), (-1, 0), (0, 0), (1, 1), (1, 2), (2, 1)],
+    )
+    def test_value_inference(self, lower_upper):
+        num_lower, num_upper = lower_upper
+        test_input = np.random.rand(3, 4).astype(np.float32)
+        out_value_inference = self.get_value_inference_output(test_input, num_lower, num_upper)
+        out_from_model_prediction = self.get_output_from_mlmodel(test_input, num_lower, num_upper)
+        np.testing.assert_allclose(
+            out_value_inference, out_from_model_prediction, atol=1e-3, rtol=1e-3
         )
 
 

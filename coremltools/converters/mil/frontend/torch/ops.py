@@ -5779,3 +5779,114 @@ def torchvision_nms(context, node):
 def tupleindex(context, node):
     tuple_input, index_input = _get_inputs(context, node, expected=2)
     context.add(tuple_input[index_input.val], node.name)
+
+
+def _get_attn_mask(is_causal: Var, attn_mask: Var, query_var: Var, key_var: Var) -> Var:
+    if is_causal.val:
+        # create mask of shape (target_seq, source_seq)
+        # s.t the diagonal and lower triangular of the matrix is all 1s
+        # and upper triangular is a large negative number (e.g. -30k)
+        target_seq = query_var.shape[-2]
+        source_seq = key_var.shape[-2]
+        if is_symbolic(target_seq) or is_symbolic(source_seq):
+            raise NotImplementedError(
+                "scaled_dot_product_attention op: "
+                "is_causal flag not handled when sequence length is symbolic"
+            )
+
+        all_ones = mb.fill(value=1.0, shape=(target_seq, source_seq))
+        all_negative_inf = mb.fill(value=-3e4, shape=(target_seq, source_seq))
+        all_ones_lower = mb.band_part(
+            x=all_ones, lower=-1, upper=0
+        )  # will 0 out upper triangle, excluding diag
+        all_negative_inf_upper = mb.band_part(
+            x=all_negative_inf, lower=0, upper=-1
+        )  # will 0 out lower triangle, excluding diag
+        all_negative_inf_diag_only = mb.band_part(x=all_negative_inf_upper, lower=0, upper=0)
+        all_negative_inf_upper_no_diag = mb.sub(
+            x=all_negative_inf_upper, y=all_negative_inf_diag_only
+        )
+        return mb.add(x=all_ones_lower, y=all_negative_inf_upper_no_diag)
+    elif is_bool(attn_mask.dtype):
+        """
+        compute float mask as:
+        mask = cast(bool_mask) + (1-cast(bool_mask)) * -30k*ones(shape(bool_mask))
+        """
+        shape = mb.shape(x=attn_mask)
+        negative_inf = mb.fill(
+            shape=shape, value=_np.array([-3e4]).astype(types.nptype_from_builtin(query_var.dtype))
+        )
+        mask = mb.cast(x=attn_mask, dtype=types.builtin_to_string(query_var.dtype))
+        compliment_of_mask = mb.sub(
+            x=_np.array([1.0]).astype(types.nptype_from_builtin(mask.dtype)), y=mask
+        )
+        compliment_of_mask = mb.mul(x=negative_inf, y=compliment_of_mask)
+        return mb.add(x=mask, y=compliment_of_mask)
+    else:
+        return attn_mask
+
+
+
+@register_torch_op
+def scaled_dot_product_attention(context, node):
+    """
+    Input shapes/types:
+    - query : (target_seq, d) or (B, target_seq, d) or (B, h, target_seq, d) or (B,.., target_seq, d)
+    - key : (source_seq, d) or (B, source_seq, d) or (B, h, source_seq, d) or (B,.., source_seq, d)
+    - value: (source_seq, d_v) or (B, source_seq, d_v) or (B, h, source_seq, d_v) or (B,.., source_seq, d_v)
+    - attn_mask : (target_seq, source_seq) or (B, target_seq, source_seq) or (B, h, target_seq, source_seq) or
+                  (B, ..., target_seq, source_seq)
+    - is_causal : bool
+
+    Output shape: (target_seq, d_v) or (B,...,target_seq, d_v)
+
+    output = softmax(scale*Q*K^transpose + mask) * V
+
+    See details at:
+    https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html
+    """
+    q, k, v, attn_mask, dropout, is_causal = _get_inputs(context, node, expected=6)
+    if attn_mask is not None and is_causal.val:
+        raise ValueError(
+            "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
+        )
+
+    # check that ranks of q, k, v and attn_mask match
+    if k.rank != q.rank:
+        raise ValueError(
+            "Rank of query and key do not match in scaled_dot_product_attention torch op"
+        )
+    if v.rank != q.rank:
+        raise ValueError(
+            "Rank of query and value do not match in scaled_dot_product_attention torch op"
+        )
+
+    is_mask_present = False
+    if is_causal.val or attn_mask is not None:
+        is_mask_present = True
+        mask = _get_attn_mask(is_causal, attn_mask, q, k)
+
+    # scale the query input
+    embed_size = q.shape[-1]
+    if is_symbolic(embed_size):
+        raise ValueError(
+            "The embedding size, i.e. last dimension of the shape of query tensor"
+            " cannot be symbolic, in scaled_dot_product_attention op"
+        )
+    multiplicative_scale_factor = 1 / _math.sqrt(embed_size)
+    q = mb.mul(x=q, y=multiplicative_scale_factor)
+
+    # multiply query and key input tensors
+    # shape of output: (target_seq, source_seq) or (B,...,target_seq, source_seq)
+    attn_weights = mb.matmul(x=q, y=k, transpose_y=True)
+
+    # add mask if applicable
+    if is_mask_present:
+        attn_weights = mb.add(x=attn_weights, y=mask)
+
+    # do softmax
+    attn_weights_normalized = mb.softmax(x=attn_weights, axis=-1)
+
+    # multiply attn_weights and value tensor
+    res = mb.matmul(x=attn_weights_normalized, y=v, name=node.name)
+    context.add(res)
