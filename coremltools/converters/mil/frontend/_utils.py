@@ -294,15 +294,12 @@ def solve_sum_einsum(parsed_vectors, vars):
     return ret_parsed_vectors, vars
 
 
-def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
+def solve_generic_einsum(parsed_vectors, vars, name) -> Var:
     """
     :param parsed_vectors: list[list[int]]
-    :param a_var:
-        - var
-        - first input variable
-    :param b_var:
-        - var
-        - second input variable
+    :param vars:
+        - list[var]
+        - input variables
     :param name:
         - str
         - name to be assigned to the output var
@@ -312,6 +309,12 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         - output var that contains the einsum result
     """
 
+    parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, vars)
+    parsed_vectors, vars = solve_sum_einsum(parsed_vectors, vars)
+    return solve_binary_generic_einsum(parsed_vectors, [vars[0], vars[1]], name)
+
+
+def solve_binary_generic_einsum(parsed_vectors, vars, name) -> Var:
     def _get_perm(src_axes, dst_axes):
         """
         :param src_axes: list[int]
@@ -328,8 +331,6 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
                 return 1
         return mb.concat(values=dims, axis=0)
 
-    parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, [a_var, b_var])
-    parsed_vectors, vars = solve_sum_einsum(parsed_vectors, vars)
     a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
 
