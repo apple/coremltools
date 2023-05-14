@@ -298,20 +298,22 @@ def parse_einsum_equation(equation: str) -> List[List[str]]:
     assert len(inputs) == 2, "unsupported einsum equation {}".format(equation)
 
     inouts = inputs + [output_str]
-    inouts_vec = [[-1 for i in range(len(input_str))] for input_str in inouts]
     map_char_to_int = {}
 
-    def _update_vec(str, vec, map_char_to_int, index):
+    def _update_vec(str, map_char_to_int, index):
+        vec = []
         for i, s in enumerate(str):
             if s not in map_char_to_int:
                 map_char_to_int[s] = index
                 index += 1
-            vec[i] = map_char_to_int[s]
-        return index
+            vec.append(map_char_to_int[s])
+        return index, vec
 
     index = 0
-    for inout_str, inout_vec in zip(inputs, inouts_vec):
-        index = _update_vec(input_str, inout_vec, map_char_to_int, index)
+    inouts_vec = []
+    for inout_str in inouts:
+        index, vec = _update_vec(inout_str, map_char_to_int, index)
+        inouts_vec.append(vec)
 
     return inouts_vec
 

@@ -168,7 +168,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
         else:
             x = mb.einsum(values=(b_var, a_var), equation=equation_rev, name=name)
     else:
-        x = solve_generic_einsum(parsed_vectors, a_var, b_var, name)
+        x = solve_generic_einsum(parsed_vectors, [a_var, b_var], name)
 
     return x
 
@@ -248,7 +248,6 @@ def solve_diagonal_einsum(parsed_vectors, vars):
                 ret_parsed_vector = [parsed_vector[0]] + parsed_vector[len(duplicated_indices):]
                 return ret_parsed_vector, x
 
-    parsed_vectors = list(parsed_vectors)
     for i in range(len(vars)):
         while len(parsed_vectors[i]) != len(set(parsed_vectors[i])):
             parsed_vector, var = solve_diagonal_einsum_one_step(parsed_vectors[i], vars[i])
@@ -311,10 +310,10 @@ def solve_generic_einsum(parsed_vectors, vars, name) -> Var:
 
     parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, vars)
     parsed_vectors, vars = solve_sum_einsum(parsed_vectors, vars)
-    return solve_binary_generic_einsum(parsed_vectors, [vars[0], vars[1]], name)
+    return solve_binary_generic_einsum(parsed_vectors, vars[0], vars[1], name)
 
 
-def solve_binary_generic_einsum(parsed_vectors, vars, name) -> Var:
+def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
     def _get_perm(src_axes, dst_axes):
         """
         :param src_axes: list[int]
@@ -331,7 +330,6 @@ def solve_binary_generic_einsum(parsed_vectors, vars, name) -> Var:
                 return 1
         return mb.concat(values=dims, axis=0)
 
-    a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
 
     a_dims = mb.shape(x=a_var)
