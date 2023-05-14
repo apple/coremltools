@@ -295,6 +295,7 @@ def parse_einsum_equation(equation: str) -> List[List[str]]:
     output_str = input_output_str[1]
 
     inputs = input_str.split(',')
+    # TODO: remove here if arbitrary number operands for einsum is supported.
     assert len(inputs) == 2, "unsupported einsum equation {}".format(equation)
 
     inouts = inputs + [output_str]
