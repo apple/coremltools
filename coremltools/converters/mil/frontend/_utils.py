@@ -117,6 +117,9 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
     )  # equation == "nchw,nwhu->nchu"
     vec_chw_whu_chu = ([0, 1, 2], [2, 1, 3], [0, 1, 3])  # equation == "chw,whu->chu"
 
+    if is_dynamic:
+        return solve_generic_einsum(parsed_vectors, a_var, b_var, name)
+
     # add the op(s) corresponding to the equation
     if vec_bnqd_bnkd_bnqk in [parsed_vectors, parsed_vectors_rev]:
         if parsed_vectors_rev == vec_bnqd_bnkd_bnqk:
@@ -130,7 +133,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
         if parsed_vectors_rev == vec_abc_cd_abd:
             a_var, b_var = _swap(a_var, b_var)
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False, name=name)
-    elif vec_abc_cde_abde in [parsed_vectors, parsed_vectors_rev] and not is_dynamic:
+    elif vec_abc_cde_abde in [parsed_vectors, parsed_vectors_rev]:
         if parsed_vectors_rev == vec_abc_cde_abde:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0] * a_var.shape[1], a_var.shape[2]])
@@ -151,7 +154,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
         b_var = mb.transpose(x=b_var, perm=[0, 2, 1, 3])
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False)
         x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=name)
-    elif vec_abcd_cde_abe in [parsed_vectors, parsed_vectors_rev] and not is_dynamic:
+    elif vec_abcd_cde_abe in [parsed_vectors, parsed_vectors_rev]:
         if parsed_vectors_rev == vec_abcd_cde_abe:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0], a_var.shape[1], a_var.shape[2] * a_var.shape[3]])
