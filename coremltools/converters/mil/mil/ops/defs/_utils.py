@@ -298,7 +298,7 @@ def parse_einsum_equation(equation: str) -> List[List[str]]:
     # TODO: remove here if arbitrary number operands for einsum is supported.
     assert len(inputs) == 2, "unsupported einsum equation {}".format(equation)
 
-    inouts = inputs + [output_str]
+    in_outs = inputs + [output_str]
     map_char_to_int = {}
 
     def _update_vec(str, map_char_to_int, index):
@@ -311,12 +311,12 @@ def parse_einsum_equation(equation: str) -> List[List[str]]:
         return index, vec
 
     index = 0
-    inouts_vec = []
-    for inout_str in inouts:
+    in_outs_vec = []
+    for inout_str in in_outs:
         index, vec = _update_vec(inout_str, map_char_to_int, index)
-        inouts_vec.append(vec)
+        in_outs_vec.append(vec)
 
-    return inouts_vec
+    return in_outs_vec
 
 def compute_gather(params, indices, axis, batch_dims):
     """
