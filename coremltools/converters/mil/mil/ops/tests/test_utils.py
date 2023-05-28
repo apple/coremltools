@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
+from coremltools.converters.mil import get_new_symbol
 
 from coremltools.converters.mil.mil.ops.defs._utils import (
     aggregated_pad, effective_kernel, spatial_dimensions_out_shape)
@@ -260,3 +261,15 @@ class TestOutputShape:
 
         expected = [5, 5]
         np.testing.assert_equal(actual, expected)
+
+    def test_symbolic_custom_pad(self):
+        input_shape = (get_new_symbol(), get_new_symbol())
+        actual = spatial_dimensions_out_shape(
+            pad_type="custom",
+            input_shape=input_shape,
+            kernel_shape=(1, 1),
+            strides=(1, 1),
+            dilations=(1, 1),
+            custom_pad=(0, 0, 0, 0),
+        )
+        np.testing.assert_equal(actual, input_shape)

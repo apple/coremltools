@@ -252,7 +252,10 @@ def spatial_dimensions_out_shape(
         # * `effective_ks` (effective kernel size, determined from kernel size + dilations) cannot be symbolic
         # * strides cannot be symbolic
         if is_symbolic(input_shape[r]):
-            out_shape.append(get_new_symbol())
+            if not is_symbolic(pad[r]) and pad[r] - effective_ks[r] == -1 and strides[r] == 1:
+                out_shape.append(input_shape[r])
+            else:
+                out_shape.append(get_new_symbol())
         else:
             out_dim = 0
             if not ceil_mode:
