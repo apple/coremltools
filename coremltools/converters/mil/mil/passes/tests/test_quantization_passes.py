@@ -833,6 +833,7 @@ class TestDequantizeQuantizePairElimination:
         ]
 
 
+@pytest.mark.skipif(ct.utils._macos_version() < (14, 0), reason="Requires Core ML 7")
 class TestDistributiveQuantizedBinaryOpScaleNormalization(QuantizationBaseTest):
     @pytest.mark.parametrize(
         "op_type, has_relu_fusion, input_rank, is_axis_x_present",
