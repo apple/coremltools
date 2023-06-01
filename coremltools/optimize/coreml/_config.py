@@ -379,7 +379,7 @@ class OpMagnitudePrunerConfig(OpCompressorConfig):
     def check_block_size(self, attr, block_size):
         if block_size is not None and self.n_m_ratio is not None:
             raise ValueError(
-                f"\"block_size\" and \"n_m_ratio\" cannot be set at the same time."
+                "\"block_size\" and \"n_m_ratio\" cannot be set at the same time."
             )
         if block_size is None:
             return
@@ -793,7 +793,7 @@ class OptimizationConfig:
         if op.op_type in self.op_type_configs:
             # We don't allow users to call set_op_type for "const" ops.
             # The users are supposed to use set_global instead
-            raise ValueError(f"const ops cannot be set by the `set_op_type` function. Please use `set_global`")
+            raise ValueError("const ops cannot be set by the `set_op_type` function. Please use `set_global`")
 
         # If the constant's output is only connected to the block output, we don't do compression
         # Due to this bug: rdar://108274019 ([Bug] constexpr ops cannot be directly fed to block output)

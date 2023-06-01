@@ -199,7 +199,7 @@ class TestScatter:
                 backend=backend,
                 minimum_deployment_target=ct.target.iOS17,
             )
-            if not isisntance(expected_error_msg, tuple):
+            if not isinstance(expected_error_msg, tuple):
                 expected_error_msg = expected_error_msg
             assert any([err in str(excinfo.value) for err in expected_error_msg])
 
@@ -395,7 +395,7 @@ class TestScatterAlongAxis:
                 backend=backend,
                 minimum_deployment_target=ct.target.iOS17,
             )
-            if not isisntance(expected_error_msg, tuple):
+            if not isinstance(expected_error_msg, tuple):
                 expected_error_msg = expected_error_msg
             assert any([err in str(excinfo.value) for err in expected_error_msg])
 
@@ -562,7 +562,7 @@ class TestScatterNd:
                 backend=backend,
                 minimum_deployment_target=ct.target.iOS17,
             )
-            if not isisntance(expected_error_msg, tuple):
+            if not isinstance(expected_error_msg, tuple):
                 expected_error_msg = expected_error_msg
             assert any([err in str(excinfo.value) for err in expected_error_msg])
 

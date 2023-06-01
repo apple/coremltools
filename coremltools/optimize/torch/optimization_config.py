@@ -191,8 +191,8 @@ def _structure_from_dict_hook_factory(conversion_cls: _Any) -> _Callable:
                     return_dict[key] = conversion_cls.from_dict(value)
                 else:
                     assert isinstance(value, conversion_cls), (
-                        f"value in module type dict should be either a dict or "
-                        f"a module config object."
+                        "value in module type dict should be either a dict or "
+                        "a module config object."
                     )
                     return_dict[key] = value
         return return_dict
@@ -214,7 +214,7 @@ def _from_yaml(
     else:
         dict_from_yml = _yaml.safe_load(yml)
     assert isinstance(dict_from_yml, dict), (
-        f"Invalid yaml received. yaml stream should return a dict "
+        "Invalid yaml received. yaml stream should return a dict "
         f"on parsing. Received type: {type(dict_from_yml)}."
     )
     return cls.from_dict(dict_from_yml)

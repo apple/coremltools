@@ -335,7 +335,7 @@ class MagnitudePruner(_BasePrunerWithPruningMethod):
     def prepare(self, inplace: bool = False) -> _torch.nn.Module:
         if self._is_prepared:
             _logger.warning(
-                f"Model has already been prepared for pruning. This API call " f"will be a no-op."
+                "Model has already been prepared for pruning. This API call will be a no-op."
             )
             return self._model
         self._model = super().prepare(inplace=inplace)
@@ -366,9 +366,9 @@ class MagnitudePruner(_BasePrunerWithPruningMethod):
     def step(self):
         if not self._is_prepared:
             _logger.warning(
-                f"Model has not been prepared for pruning. This API call "
-                f"will be a no-op. prepare method must be called before "
-                f"a call to the step method."
+                "Model has not been prepared for pruning. This API call "
+                "will be a no-op. prepare method must be called before "
+                "a call to the step method."
             )
             return
         self._step_count += 1

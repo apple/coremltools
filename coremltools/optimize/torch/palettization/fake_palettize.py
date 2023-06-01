@@ -439,8 +439,8 @@ class FakePalettize(_FakeQuantize, _Partitioner):
     def __repr__(self):
         rep = super().__repr__()
         if self.centroids.shape[0] != self.n_clusters:
-            rep += f" ===> centroids: uninitialised buffer, "
-            rep += f"labels: uninitialised buffer, "
+            rep += " ===> centroids: uninitialised buffer, "
+            rep += "labels: uninitialised buffer, "
         else:
             rep += f" ===> centroids: {self.centroids}, "
             rep += f"labels: {self.labels}, "

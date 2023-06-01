@@ -51,7 +51,7 @@ DEFAULT_PALETTIZATION_OPTIONS = {
     "quant_min": -128,
     "quant_max": 127,
     "dtype": _torch.qint8,
-    "cluster_dtype": f"32",
+    "cluster_dtype": "32",
     "weight_threshold": 2048,
     "milestone": 0,
     "quantize_activations": False,

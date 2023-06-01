@@ -142,7 +142,7 @@ class LinearQuantizer(Quantizer):
         """
         if self._is_prepared:
             _logger.warning(
-                f"Model has already been prepared for QAT. This API call " f"will be a no-op."
+                "Model has already been prepared for QAT. This API call will be a no-op."
             )
             return self._model
         model = self._model
@@ -182,9 +182,9 @@ class LinearQuantizer(Quantizer):
         """
         if not self._is_prepared:
             _logger.warning(
-                f"Model has not been prepared for QAT. This API call "
-                f"will be a no-op. prepare method must be called before "
-                f"a call to the step method."
+                "Model has not been prepared for QAT. This API call "
+                "will be a no-op. prepare method must be called before "
+                "a call to the step method."
             )
             return
         if self._milestones is None:
@@ -217,9 +217,9 @@ class LinearQuantizer(Quantizer):
         """
         if not self._is_prepared:
             _logger.warning(
-                f"Model has not been prepared for QAT. This API call "
-                f"will be a no-op. prepare method must be called before "
-                f"a call to the finalize method."
+                "Model has not been prepared for QAT. This API call "
+                "will be a no-op. prepare method must be called before "
+                "a call to the finalize method."
             )
             return self._model
         if model is None:

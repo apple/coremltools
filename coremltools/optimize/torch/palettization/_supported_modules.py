@@ -123,7 +123,7 @@ class LayerNorm(_nn.LayerNorm):
 
         assert isinstance(
             mod.weight, _nn.Parameter
-        ), f"CANNOT be prepared for palettization: weight is NOT learnable"
+        ), "CANNOT be prepared for palettization: weight is NOT learnable"
 
         qconfig = mod.qconfig
         qat = cls(mod.normalized_shape, eps=mod.eps, elementwise_affine=mod.elementwise_affine)
@@ -169,7 +169,7 @@ class Embedding(_nn.Embedding):
 
         assert isinstance(
             mod.weight, _nn.Parameter
-        ), f"CANNOT be prepared for palettization: weight is NOT learnable"
+        ), "CANNOT be prepared for palettization: weight is NOT learnable"
 
         qconfig = mod.qconfig
         qat = cls(

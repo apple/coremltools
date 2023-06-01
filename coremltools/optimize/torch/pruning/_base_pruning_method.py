@@ -186,14 +186,14 @@ class BaseDynamicPruningMethod(_prune.BasePruningMethod):
             weight = module.weight_fake_quant.palettize(weight)
 
         summary = {
-            f"structured_weight_sparsity": _structured_sparsity(weight),
-            f"unstructured_weight_sparsity": _unstructured_sparsity(weight),
+            "structured_weight_sparsity": _structured_sparsity(weight),
+            "unstructured_weight_sparsity": _unstructured_sparsity(weight),
         }
 
         if weight.size(0) % 2 == 0:
-            summary[f"block2_weight_sparsity"] = _block2_sparsity(weight)
+            summary["block2_weight_sparsity"] = _block2_sparsity(weight)
         else:
-            summary[f"block2_weight_sparsity"] = -1  # Not applicable
+            summary["block2_weight_sparsity"] = -1  # Not applicable
         return summary
 
 
