@@ -24,8 +24,7 @@ from .type_mapping import (builtin_to_proto_types, builtin_to_string,
                            string_to_builtin, type_to_builtin_type)
 from .type_str import str
 from .type_tensor import (is_compatible_type, is_tensor_and_is_compatible,
-                          is_tensor_and_is_compatible_general_shape, tensor,
-                          tensor_has_complete_shape)
+                          tensor, tensor_has_complete_shape)
 from .type_tuple import tuple
 from .type_unknown import unknown
 from .type_void import void

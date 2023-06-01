@@ -1,0 +1,94 @@
+name: packages
+# When the 'permissions' key is specified, unspecified permission scopes (e.g.,
+# actions, checks, etc.) are set to no access (none).
+permissions:
+  contents: read
+on:
+  workflow_dispatch:
+    inputs:
+      # When git-ref is empty, HEAD will be checked out.
+      git-ref:
+        description: Optional git ref (branch, tag, or full SHA)
+        required: false
+
+jobs:
+  sdist:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Clone
+      uses: actions/checkout@v2
+      with:
+        # When the ref is empty, HEAD will be checked out.
+        ref: ${{ github.event.inputs.git-ref }}
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Dependencies
+      run: python -m pip install --upgrade pip
+
+    - name: Build
+      run: python setup.py sdist
+
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: packages
+        path: ./dist
+
+  wheels:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # Use the oldest version of Ubuntu that supports the versions of Python
+        # you're targeting.
+        #  > "Building manylinux-compatible wheels is not trivial; as a general
+        #    rule, binaries built on one Linux distro will only work on other
+        #    Linux distros that are the same age or newer. Therefore, if we
+        #    want to make binaries that run on most Linux distros, we have to
+        #    use a very old distro -- CentOS 6."
+        #  - https://github.com/pypa/manylinux
+        os: [macos-latest, windows-latest, ubuntu-20.04]
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+
+    steps:
+    - name: Clone
+      uses: actions/checkout@v2
+      with:
+        # When the ref is empty, HEAD will be checked out.
+        ref: ${{ github.event.inputs.git-ref }}
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Dependencies
+      run: python -m pip install --upgrade pip wheel
+
+    - name: Build
+      run: python setup.py bdist_wheel
+
+    - name: manylinux
+      if: ${{ startsWith(matrix.os, 'ubuntu-') }}
+      run: |
+        python -m pip install --upgrade auditwheel
+        python -m auditwheel show dist/*.whl
+        # Use manylinux2014, as you can't use an older ABI because of the
+        # presence of too-recent versioned symbols. To target manylinux1 and/or
+        # manylinux2010, PyPA provides docker images.
+        python -m auditwheel repair --plat manylinux2014_x86_64 dist/*.whl
+        rm -r dist
+        mv wheelhouse dist
+
+    - name: Upload
+      uses: actions/upload-artifact@v2
+      with:
+        name: packages
+        path: ./dist

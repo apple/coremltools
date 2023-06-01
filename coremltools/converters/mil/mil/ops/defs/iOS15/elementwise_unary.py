@@ -818,11 +818,14 @@ class cast(Operation):
     """
     Cast the input ``x`` to the new type ``dtype``.
 
+    Notice that the underlying Core MIL op doesn't support int64 and fp64. We support them in PyMIL
+    by mapping int64 to int32, and mapping fp64 to fp32.
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
     dtype: const str (Required)
-        * Can be one of the following types: ``int32``, ``int64``, ``fp32``, ``fp64``.
+        * Can be one of the following types: ``int32``, ``int64``, ``fp32``, ``fp64``, ``bool``.
 
     Returns
     -------
@@ -843,56 +846,65 @@ class cast(Operation):
         "T": (types.fp16, types.fp32, types.fp64, types.int32, types.int64, types.bool),
     }
 
-    def type_inference(self):
-        type_map = {
-            "int32": types.int32,
-            "int64": types.int32,
-            "fp16": types.fp16,
-            "fp32": types.fp32,
-            "fp64": types.fp32,
-            "bool": types.bool,
-        }
+    str_to_types_map = {
+        "int32": types.int32,
+        "int64": types.int32,
+        "fp16": types.fp16,
+        "fp32": types.fp32,
+        "fp64": types.fp32,
+        "bool": types.bool,
+    }
 
-        if self.dtype.val not in type_map.keys():
+    str_to_numpy_type_map = {
+        "int32": np.int32,
+        "int64": np.int32,
+        "fp16": np.float16,
+        "fp32": np.float32,
+        "fp64": np.float32,
+        "bool": bool,
+    }
+
+    def type_inference(self):
+        if self.dtype.val not in self.str_to_types_map.keys():
             raise NotImplementedError(
                 "Parameter dtype of the cast operation can be one of the {}. "
-                "Provided {}".format(type_map.keys(), self.dtype.val)
+                "Provided {}".format(self.str_to_types_map.keys(), self.dtype.val)
             )
 
         if not types.is_tensor(self.x.sym_type):
-            return type_map[self.dtype.val]
+            return self.str_to_types_map[self.dtype.val]
 
         ret_shape = self.x.shape
-        return types.tensor(type_map[self.dtype.val], ret_shape)
+        return types.tensor(self.str_to_types_map[self.dtype.val], ret_shape)
 
     @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         return self.get_cast_value(self.x, self.dtype.val)
 
-    @staticmethod
-    def get_cast_value(input_var, dtype_val):
-        type_map = {
-            "int32": np.int32,
-            "int64": np.int32,
-            "fp16": np.float16,
-            "fp32": np.float32,
-            "fp64": np.float32,
-            "bool": bool,
-        }
-
-        if dtype_val not in type_map.keys():
+    @classmethod
+    def get_cast_value(cls, input_var, dtype_val):
+        if dtype_val not in cls.str_to_numpy_type_map.keys():
             raise NotImplementedError(
                 "Parameter dtype of the cast operation can be one of the {}. "
-                "Provided {}".format(type_map.keys(), dtype_val)
+                "Provided {}".format(cls.str_to_numpy_type_map.keys(), dtype_val)
             )
 
         if input_var.val is None:
-            if input_var.sym_val is not None and not is_symbolic(input_var.sym_val) and len(input_var.sym_val.shape) == 1:
-                result = [np.array(val).astype(dtype=type_map[dtype_val]).item() if not is_symbolic(val) else val for val in input_var.sym_val]
+            if (
+                input_var.sym_val is not None
+                and not is_symbolic(input_var.sym_val)
+                and len(input_var.sym_val.shape) == 1
+            ):
+                result = [
+                    np.array(val).astype(dtype=cls.str_to_numpy_type_map[dtype_val]).item()
+                    if not is_symbolic(val)
+                    else val
+                    for val in input_var.sym_val
+                ]
                 return np.array(result)
             return None
 
         if not types.is_tensor(input_var.sym_type):
-            return input_var.val.astype(dtype=type_map[dtype_val])
+            return input_var.val.astype(dtype=cls.str_to_numpy_type_map[dtype_val])
         else:
-            return np.array(input_var.val).astype(dtype=type_map[dtype_val])
+            return np.array(input_var.val).astype(dtype=cls.str_to_numpy_type_map[dtype_val])

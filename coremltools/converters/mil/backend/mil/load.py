@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
+import warnings
 
 import numpy as np
 
@@ -145,6 +146,8 @@ def translate_generic_op(op, parameters, blob_writer, literal_params=[]):
         attr_dict["parameters"] = create_list_scalarvalue(parameters, str)
         attr_dict["weights"] = create_list_scalarvalue(weights, str)
         attr_dict["description"] = create_scalar_value(description)
+
+    attr_dict["name"] = create_scalar_value(op.name)
 
     return pm.Operation(
         type=op_type,
@@ -329,8 +332,14 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
             image_input_names[input_type.name] = input_type
             # error checking for input(s) marked as images
             if input_type.name not in list(prog.functions["main"].inputs.keys()):
-                msg = "Provided image input '{}' is not one of the inputs of the MIL program"
-                raise ValueError(msg.format(input_type.name))
+                raise ValueError(
+                    f"Provided image input '{input_type.name}' is not one of the inputs of the MIL program"
+                )
+        if input_type.name is None:
+            raise ValueError(
+                'Fail to auto-determine the input name. Please specify the "name" '
+                'parameter when use "inputs" in ct.convert().'
+            )
         input_shape_map[input_type.name] = input_type
 
     for name, var in prog.functions["main"].inputs.items():
@@ -457,6 +466,11 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
     model.mlProgram.CopyFrom(proto)
 
     # Set symbolic shapes
+    default_lower_bound = 1
+    default_upper_bound = (
+        default_lower_bound + 1 if kwargs.get("convert_to", None) == "mlprogram" else -1
+    )
+    default_bound_used = False
     for input_name in symbolic_inputs:
         input_type = input_shape_map.get(input_name, None)
 
@@ -480,13 +494,15 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
                 if isinstance(H, RangeDim):
                     img_range.add_height_range((H.lower_bound, H.upper_bound))
                 elif is_symbolic(H):
-                    img_range.add_height_range((1, -1))
+                    img_range.add_height_range((default_lower_bound, default_upper_bound))
+                    default_bound_used = True
                 else:
                     img_range.add_height_range((H, H))
                 if isinstance(W, RangeDim):
                     img_range.add_width_range((W.lower_bound, W.upper_bound))
                 elif is_symbolic(W):
-                    img_range.add_width_range((1, -1))
+                    img_range.add_width_range((default_lower_bound, default_upper_bound))
+                    default_bound_used = True
                 else:
                     img_range.add_width_range((W, W))
 
@@ -506,8 +522,9 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
                         lb.append(s.lower_bound)
                         ub.append(s.upper_bound)
                     elif is_symbolic(s):
-                        lb.append(1)
-                        ub.append(-1)
+                        lb.append(default_lower_bound)
+                        ub.append(default_upper_bound)
+                        default_bound_used = True
                     else:
                         lb.append(s)
                         ub.append(s)
@@ -520,13 +537,30 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
             ub = []
             for s in sym_type.get_shape():
                 if is_symbolic(s):
-                    lb.append(1)
-                    ub.append(-1)
+                    lb.append(default_lower_bound)
+                    ub.append(default_upper_bound)
+                    default_bound_used = True
                 else:
                     lb.append(s)
                     ub.append(s)
             set_multiarray_ndshape_range(
                 model, input_name, lower_bounds=lb, upper_bounds=ub
+            )
+
+    if default_bound_used and kwargs.get("convert_to", None) == "mlprogram":
+        warnings.warn(
+            "Some dimensions in the input shape are unknown, hence they are set to flexible ranges "
+            f"with lower bound and default value = {default_lower_bound}, and upper bound = "
+            f"{default_upper_bound}. To set different values for the default shape and upper bound, "
+            "please use the ct.RangeDim() method as described here: "
+            "https://coremltools.readme.io/docs/flexible-inputs#set-the-range-for-each-dimension.",
+            UserWarning,
+        )
+        convert_from = kwargs.get("convert_from", None)
+        if convert_from is not None and convert_from.startswith("tensorflow"):
+            warnings.warn(
+                'There is "None" dim in TF input placeholder. Please consider specifying '
+                'input shapes by using the "inputs" param in ct.convert().'
             )
 
     # Set optional inputs

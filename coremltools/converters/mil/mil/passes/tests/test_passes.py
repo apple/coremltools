@@ -18,7 +18,6 @@ from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure 
 )
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, Symbol, get_new_symbol, types
-from coremltools.converters.mil.mil.passes.defs import quantization
 from coremltools.converters.mil.mil.passes.defs.cleanup import topological_reorder
 from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
@@ -32,9 +31,168 @@ from coremltools.converters.mil.testing_utils import (
     get_op_names_in_program,
     get_op_types_in_program,
 )
+from coremltools.models.utils import _macos_version
+
+import coremltools.optimize as cto
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
+
+
+class TestConstDeduplication:
+    def test_const_deduplication(self):
+        BATCH_DIM = 5
+        SEQUENCE_LENGTH = 4
+        ENCODING_DIM = 256
+        EMBEDDING_DIM = 128
+        weight = np.random.rand(EMBEDDING_DIM, ENCODING_DIM)
+        bias = np.random.rand(EMBEDDING_DIM)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
+                mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
+            ]
+        )
+        def prog(q, k):
+            q_e = mb.linear(x=q, weight=weight, bias=bias)
+            k_e = mb.linear(x=k, weight=weight, bias=bias)
+            attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
+            return attention
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=6, op="const")
+        assert_op_count_match(prog, expect=4, op="const")
+
+    def test_constexpr_deduplication(self):
+        BATCH_DIM = 5
+        SEQUENCE_LENGTH = 4
+        ENCODING_DIM = 256
+        EMBEDDING_DIM = 128
+        quantized_weight = np.random.randint(
+            -128, 128, size=(EMBEDDING_DIM, ENCODING_DIM), dtype=np.int8
+        )
+        quantized_bias = np.random.randint(-128, 128, size=EMBEDDING_DIM, dtype=np.int8)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
+                mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
+            ]
+        )
+        def prog(q, k):
+            weight_q = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_weight,
+                zero_point=np.int8(0),
+                scale=np.float32(1.0),
+                axis=0,
+            )
+            weight_k = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_weight,
+                zero_point=np.int8(0),
+                scale=np.float32(1.0),
+                axis=0,
+            )
+            bias_q = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_bias,
+                zero_point=np.int8(0),
+                scale=np.float32(1.0),
+                axis=0,
+            )
+            bias_k = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_bias,
+                zero_point=np.int8(0),
+                scale=np.float32(1.0),
+                axis=0,
+            )
+            q_e = mb.linear(x=q, weight=weight_q, bias=bias_q)
+            k_e = mb.linear(x=k, weight=weight_k, bias=bias_k)
+            attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
+            return attention
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=4, op="constexpr_affine_dequantize")
+        assert_op_count_match(prog, expect=2, op="constexpr_affine_dequantize")
+
+    def test_const_deduplication_as_outputs(self):
+        """
+        If the duplicated constants are block outputs, we should not remove them.
+        """
+        # case 1:
+        # const_2 can be eliminated since it is not block output
+        const = np.random.rand(40, 20, 30)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(
+                    shape=(
+                        40,
+                        20,
+                        30,
+                    )
+                )
+            ]
+        )
+        def prog(x):
+            const_1 = mb.const(val=const, name="const_1")
+            const_2 = mb.const(val=const, name="const_2")
+            x = mb.relu(x=x)
+            x = mb.add(x=x, y=const_2)
+            return x, const_1
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=2, op="const")
+        assert_op_count_match(prog, expect=1, op="const")
+        assert prog.functions["main"].outputs[1].name == "const_1"
+
+        # case 2:
+        # const_2 can not be eliminated since it is a block output
+        const = np.random.rand(40, 20, 30)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(
+                    shape=(
+                        40,
+                        20,
+                        30,
+                    )
+                )
+            ]
+        )
+        def prog(x):
+            const_1 = mb.const(val=const, name="const_1")
+            const_2 = mb.const(val=const, name="const_2")
+            x = mb.relu(x=x)
+            x = mb.add(x=x, y=const_2)
+            return x, const_1, const_2
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=2, op="const")
+        assert_op_count_match(prog, expect=2, op="const")
+        assert prog.functions["main"].outputs[1].name == "const_1"
+        assert prog.functions["main"].outputs[2].name == "const_2"
+
+    @pytest.mark.skip("rdar://109374995 consts are not shared across blocks")
+    def test_const_deduplication_multiple_blocks(self):
+        weight = np.random.rand(5, 3, 2, 2)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4, 3, 8, 8))])
+        def prog(x):
+            def _true_fn():
+                return mb.conv(x=x, weight=weight, pad_type="valid")
+
+            def _false_fn():
+                y = mb.mul(x=x, y=2.0)
+                return mb.conv(x=y, weight=weight, pad_type="valid")
+
+            x_gt_0_tensor = mb.greater(x=x, y=0.0)
+            x_gt_0 = mb.slice_by_index(x=x_gt_0_tensor, begin=(0, 0, 0, 0), end=(1, 1, 1, 1))
+            return mb.cond(pred=x_gt_0, _true_fn=_true_fn, _false_fn=_false_fn)
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        assert_op_count_match(prev_prog, expect=8, op="const")
+        assert_op_count_match(prog, expect=6, op="const")
 
 
 class TestConstElimination:
@@ -66,6 +224,27 @@ class TestConstElimination:
         assert get_op_types_in_program(prev_prog) == ["constexpr_cast", "add", "add"]
         # Not fold into const because the upstream constexpr_cast op is non-replaceable.
         assert get_op_types_in_program(prog) == ["constexpr_cast", "add", "add"]
+
+    def test_force_const_eliminate_nonreplaceable_ops(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,), dtype=types.int32)])
+        def prog(x):
+            a = np.random.rand(2, 3, 5).astype(np.float16)
+            constexpr_a = mb.constexpr_cast(source_val=a, output_dtype="fp32")
+            double_a = mb.add(x=constexpr_a, y=a.astype(np.float32))
+            a_shape = mb.shape(x=double_a)
+            return mb.add(x=x, y=a_shape)
+
+        assert get_op_types_in_program(prog) == ["constexpr_cast", "add", "shape", "add"]
+
+        apply_pass_and_basic_check(prog, "common::const_elimination")
+        # still fold shape into const regardless the non-replaceable upstream
+        # constexpr_cast op, since it only provides a shape
+        assert get_op_types_in_program(prog) == ["constexpr_cast", "add", "add"]
+
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        # constexpr_cast(a) and add(a, a) no longer contributes to output,
+        # so they should get dead code eliminated
+        assert get_op_types_in_program(prog) == ["add"]
 
     @patch(
         "coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination._skip_const_by_size",
@@ -1461,6 +1640,38 @@ class TestRemoveRedundantOps:
         ]
         assert get_op_types_in_program(prog) == ["cast", "random_uniform", "random_uniform", "add"]
 
+    def test_nonreplaceable_vars(self):
+        """
+        Nonreplaceable vars shouldn't be removed, e.g. palettized weights
+
+        const_1----->add---->add_1------|
+                      |                 |
+                    input              add---->output
+                      |                 |
+        const_2----->add---->add_2------|
+        """
+        def _constexpr_lut_to_dense():
+            lut_data = np.array(
+                [-19.0, 4.0, 0.0, -1.0, 1.0, 3.0, 5.0, -8.0, 19, 13, 42, 4.5, 5.4, 2.0, -6, -7]
+            ).astype(np.float32)
+            indices = np.array([212, 21]).astype(np.uint8)
+            shape = np.array([4, 1]).astype(np.uint32)
+            return mb.constexpr_lut_to_dense(lut=lut_data, indices=indices, shape=shape)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4, 1))])
+        def prog(x):
+            constexpr_1 = _constexpr_lut_to_dense()
+            constexpr_2 = _constexpr_lut_to_dense()
+            c = mb.add(x=constexpr_1, y=x)
+            d = mb.add(x=constexpr_2, y=x)
+            return mb.add(x=c, y=d)
+
+        prev_prog, _, _ = apply_pass_and_basic_check(
+            prog,
+            "common::remove_redundant_ops",
+        )
+        assert get_op_types_in_program(prev_prog) == get_op_types_in_program(prog)
+
 
 class TestTopologicalReorder:
     def test_move_sink_casts_to_the_end(self):
@@ -1955,6 +2166,33 @@ class TestGeluFusion:
             expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
         )
 
+    def test_gelu_tanh_multiple_final_operations(self):
+        """
+        The generic pattern matching only supports one final output operation. For multiple final
+        operations, we want to make sure it just skip the pattern matching instead of failing the
+        whole conversion.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x_1 = mb.mul(x=x, y=0.5)
+            x_2 = mb.pow(x=x, y=3.0)
+            x_2 = mb.mul(x=x_2, y=0.044715)
+            x_2 = mb.add(x=x, y=x_2)
+            x_2 = mb.mul(x=x_2, y=np.sqrt(2 / np.pi))
+            x_2 = mb.tanh(x=x_2)
+            x_2 = mb.add(x=x_2, y=1.0)
+            x_2 = mb.mul(x=x_1, y=x_2)
+            x_2 = mb.mul(x=x_2, y=1.0)
+            return x_2
+
+        with pytest.warns(
+            UserWarning,
+            match="User defined pattern matched to more than one final operation. "
+            "Skipped the pattern matching.",
+        ):
+            apply_pass_and_basic_check(prog, "common::fuse_gelu_tanh_approximation")
+
     @pytest.mark.parametrize(
         "op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first",
         itertools.product(
@@ -2316,8 +2554,8 @@ class TestSkipConstexprOps:
     @staticmethod
     def _get_constexpr_sparse_to_dense(shape):
         val = np.random.rand(*shape)
-        sparse_params = quantization.WeightSparsifier.compress(
-            val=val, mode="PERCENTILE_MODE", target_percentile=0.4
+        sparse_params = cto.coreml._quantization_passes.prune_weights.compress_by_magnitude(
+            val=val, target_sparsity=0.4
         )
         return mb.constexpr_sparse_to_dense(
             nonzero_data=sparse_params.nonzero_data,
@@ -2328,7 +2566,7 @@ class TestSkipConstexprOps:
     @staticmethod
     def _get_constexpr_lut_to_dense(shape):
         val = np.random.rand(*shape)
-        lut_params = quantization.WeightPalettizer.compress(val=val, nbits=4, mode="UNIFORM")
+        lut_params = cto.coreml._quantization_passes.palettize_weights.compress(val=val, nbits=4, mode="UNIFORM")
         return mb.constexpr_lut_to_dense(
             indices=lut_params.indices,
             lut=lut_params.lut,
@@ -2338,7 +2576,7 @@ class TestSkipConstexprOps:
     @staticmethod
     def _get_constexpr_affine_dequantize(shape):
         val = np.random.rand(*shape)
-        quant_params = quantization.WeightAffineQuantizer.compress(
+        quant_params = cto.coreml._quantization_passes.linear_quantize_weights.compress(
             val=val, axis=0, mode="LINEAR_SYMMETRIC", dtype=types.uint8
         )
         return mb.constexpr_affine_dequantize(
@@ -2780,8 +3018,8 @@ class TestMergeConsecutiveTransposes:
         """
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4))])
         def prog(x):
-            x1 = mb.transpose(x=x, perm=[0, 2, 1, 3]) 
-            x1 = mb.transpose(x=x1, perm=[3, 2, 0, 1]) 
+            x1 = mb.transpose(x=x, perm=[0, 2, 1, 3])
+            x1 = mb.transpose(x=x1, perm=[3, 2, 0, 1])
             x2 = mb.transpose(x=x, perm=[3, 2, 1, 0])
             x2 = mb.transpose(x=x2, perm=[2, 3, 0, 1])
             x2 = mb.transpose(x=x2, perm=[0, 2, 1, 3])
@@ -2809,7 +3047,7 @@ class TestMergeConsecutiveTransposes:
                        |                            |
                        v                            v
                     output_1                     output_2
-              
+
         Output:
             x --> transpose_1 -> transpose_6 -> transpose_7-> add -> output_1
                        |             |
@@ -2849,7 +3087,7 @@ class TestMergeConsecutiveTransposes:
         """
         Input:
             x --> transpose_1 -> add -> transpose_2 -> output
-              
+
         Output:
             x --> transpose_1 -> add -> transpose_2 -> output
         """
@@ -2878,12 +3116,12 @@ class TestExpandHighRankReshapeAndTranspose:
         coreml_input = {"x": x}
         mlmodel = ct.convert(prog, source="milinternal")
         coreml_output = list(mlmodel.predict(coreml_input).values())[0]
-        
+
         gt = np.reshape(x, reshape_shape)
         gt = np.transpose(gt, perm)
         gt = np.reshape(gt, output_shape)
-        np.testing.assert_allclose(gt, coreml_output, rtol=1e-03, atol=1e-05)    
-    
+        np.testing.assert_allclose(gt, coreml_output, rtol=1e-03, atol=1e-05)
+
     def test_rank6(self):
         input_shape = (1, 2, 3, 4, 5)
         reshape_shape = (1, 2, 3, 2, 2, 5)
@@ -2915,7 +3153,7 @@ class TestExpandHighRankReshapeAndTranspose:
             x = mb.reshape(x=x, shape=output_shape)
             return x
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
-       
+
         prog._check_invalid_tensor_rank()
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
@@ -2934,7 +3172,7 @@ class TestExpandHighRankReshapeAndTranspose:
             return x
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
-       
+
         prog._check_invalid_tensor_rank()
         assert get_op_types_in_program(prog) == ["reshape", "transpose"] * 16 + ["reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
@@ -2953,7 +3191,7 @@ class TestExpandHighRankReshapeAndTranspose:
             return x, x1
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
-        
+
         with pytest.raises(ValueError, match="Core ML only supports tensors with rank <= 5"):
             prog._check_invalid_tensor_rank()
 
@@ -5519,8 +5757,11 @@ class TestConcatInterleave:
 
 
 class TestFuseOnehotMatmulToGather:
-    @pytest.mark.parametrize("rank", [1, 2, 3, 4])
-    def test_fuse_onehot_matmul_to_gather(self, rank):
+    @pytest.mark.parametrize(
+        "backend, rank, opset_version",
+        itertools.product(backends, [1, 2, 3, 4], [None, ct.target.iOS17]),
+    )
+    def test_fuse_onehot_matmul_to_gather(self, backend, rank, opset_version):
         """
         Input:
             %2 = one_hot(%1, on_value=1, off_value=0, axis=-1)
@@ -5535,7 +5776,10 @@ class TestFuseOnehotMatmulToGather:
         vocab_size = 15
         embedding_size = 12
 
-        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.int32)])
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.int32)],
+            opset_version=opset_version,
+        )
         def prog(x):
             x = mb.one_hot(
                 indices=x, on_value=1.0, off_value=0.0, axis=-1, one_hot_vector_size=vocab_size
@@ -5547,11 +5791,29 @@ class TestFuseOnehotMatmulToGather:
             prog, "common::fuse_onehot_matmul_to_gather"
         )
         assert get_op_types_in_program(prev_prog) == ["one_hot", "matmul"]
-        assert get_op_types_in_program(prog) == ["gather"]
+        if opset_version == ct.target.iOS17:
+            # Several ops added to make sure indices in iOS17 gather is non-negative.
+            assert get_op_types_in_program(prog) == [
+                "greater_equal",
+                "shape",
+                "slice_by_index",
+                "add",
+                "select",
+                "gather",
+            ]
+        else:
+            assert get_op_types_in_program(prog) == ["gather"]
+
+        if opset_version == ct.target.iOS17:
+            if backend[0] != "mlprogram" or _macos_version() < (14, 0):
+                pytest.skip("IOS17 target available only on macOS 14+ with mlprogram.")
+
         assert_model_is_valid(
             prog,
             {"x": input_shape},
+            backend=backend,
             expected_output_shapes={block.outputs[0].name: input_shape + (embedding_size,)},
+            minimum_deployment_target=opset_version,
         )
 
 
@@ -7089,387 +7351,3 @@ class TestFuseMatmulWeightBias:
 
         if _VALIDATE_MODEL:
             assert_model_is_valid(prog, {"x": (2, 4)})
-
-
-class TestCompressionGraphPass:
-    """
-    Most of the numerical tests are already convered in coremltools.tests.ml_program.test_compression_utils.
-    This test is checking the basic behavior of the graph pass classes.
-    """
-
-    @staticmethod
-    def _get_conv_program():
-        @mb.program(
-            input_specs=[mb.TensorSpec(shape=(1, 30, 10, 10))], opset_version=ct.target.iOS16
-        )
-        def prog(x):
-            conv_weight = np.random.rand(90, 30, 2, 2).astype(np.float32)
-            x = mb.conv(x=x, weight=conv_weight)
-            return x
-
-        return prog
-
-    @pytest.mark.parametrize(
-        "fake_compression",
-        [True, False],
-    )
-    def test_affine_quantizer(self, fake_compression):
-        quantizer = quantization.WeightAffineQuantizer(
-            fake_compression=fake_compression, op_selector=lambda const: True
-        )
-        prog = self._get_conv_program()
-        quantizer.apply(prog)
-        expected_ops = ["constexpr_affine_dequantize", "conv"] if not fake_compression else ["conv"]
-        assert get_op_types_in_program(prog) == expected_ops
-
-    @pytest.mark.parametrize(
-        "fake_compression",
-        [True, False],
-    )
-    def test_weight_sparsifier(self, fake_compression):
-        quantizer = quantization.WeightSparsifier(
-            fake_compression=fake_compression,
-            op_selector=lambda const: True,
-            mode="percentile_based",
-            target_percentile=0.75,
-        )
-        prog = self._get_conv_program()
-        quantizer.apply(prog)
-        expected_ops = ["constexpr_sparse_to_dense", "conv"] if not fake_compression else ["conv"]
-        assert get_op_types_in_program(prog) == expected_ops
-
-    @pytest.mark.parametrize(
-        "fake_compression",
-        [True, False],
-    )
-    def test_weight_palettization(self, fake_compression):
-        quantizer = quantization.WeightPalettizer(
-            fake_compression=fake_compression,
-            op_selector=lambda const: True,
-            mode="uniform",
-            nbits=4,
-        )
-        prog = self._get_conv_program()
-        quantizer.apply(prog)
-        expected_ops = ["constexpr_lut_to_dense", "conv"] if not fake_compression else ["conv"]
-        assert get_op_types_in_program(prog) == expected_ops
-
-    @pytest.mark.parametrize(
-        "axis, mode, source_dtype, target_dtype, data_range",
-        itertools.product(
-            [0, 1, 2, 3, -1],
-            ["linear", "linear_symmetric"],
-            [np.float16, np.float32],
-            [types.uint8, types.int8],
-            [
-                [-1., 1.],
-                [-3., -1.],
-                [1., 3.],
-                # Test corner case of same values
-                [0., 0.],
-                [1., 1.],
-                [-1., -1.],
-            ]
-        ),
-    ) 
-    def test_affine_quantizer_compression(self, axis, mode, source_dtype, target_dtype, data_range):
-        input_shape = (10, 20, 30, 40)
-        low, high = data_range
-        val = np.random.uniform(low, high, input_shape).astype(source_dtype)
-        
-        params = quantization.WeightAffineQuantizer.compress(val, axis, mode, target_dtype)
-        decompressed_val = quantization.WeightAffineQuantizer.decompress(params)
-        
-        np.testing.assert_allclose(val, decompressed_val, rtol=1e-02, atol=1e-02)
-
-    @pytest.mark.parametrize(
-        "mode, nbits, shape",
-        itertools.product(
-            ["KMEANS", "UNIFORM", "UNIQUE"],
-            [1, 2, 4, 6, 8],
-            [
-                (1,),
-                (1, 1),
-                (1, 10),
-                (2, 20),
-                (3, 7, 9),
-                (17, 17, 17),
-            ]
-        ),
-    ) 
-    def test_palettizer_compression(self, mode, nbits, shape):
-        val_size = np.prod(shape)
-        max_val = 2 ** nbits
-        val = np.arange(max_val).tolist()
-        val = np.array(val * (val_size // max_val + 1))[:val_size].astype(np.float32)
-        params = quantization.WeightPalettizer.compress(val, mode=mode, nbits=nbits)
-        decompressed_val = quantization.WeightPalettizer.decompress(params)
-
-        # For
-        # 1. UNIQUE / KMEANS mode
-        # 2. UNIFORM mode with the data range <= tensor size
-        # We can perfecting re-construct the original value
-        if (mode in ["UNIQUE", "KMEANS"]) or (mode == "UNIFORM" and max_val <= val_size): 
-            np.testing.assert_allclose(val, decompressed_val, rtol=1e-02, atol=1e-02)
-
-class TestFP16CastTransform(unittest.TestCase):
-    """"""
-
-    """
-    Input graph:
-        input -----> square -----> out
-
-    Output graph:
-        input -----> cast(dtype="fp16") -----> square -----> cast(dtype="fp32") ---> out
-    """
-
-    def test_single_input_to_single_operation(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
-        def prog(x):
-            x = mb.square(x=x)
-            return x
-
-        self.assertEqual(get_op_types_in_program(prog), ["square"])
-
-        apply_pass_and_basic_check(
-            prog, quantization.FP16ComputePrecision(op_selector=lambda op: True)
-        )
-        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
-
-        self.assertEqual(get_op_types_in_program(prog), ["cast", "square", "cast"])
-
-        # Asserting first cast configuration
-        cast_1 = block.find_ops(op_type="cast")[0]
-        self.assertEqual(cast_1.dtype.val, "fp16")
-        self.assertEqual(len(cast_1.outputs), 1)
-        self.assertEqual(len(cast_1.outputs[0].child_ops), 1)
-        self.assertEqual(cast_1.outputs[0].child_ops[0].op_type, "square")
-
-        # Asserting second cast configuration
-        cast_2 = block.find_ops(op_type="cast")[1]
-        self.assertEqual(cast_2.dtype.val, "fp32")
-        self.assertEqual(len(cast_2.outputs), 1)
-        self.assertEqual(len(cast_2.outputs[0].child_ops), 0)
-
-        assert_model_is_valid(
-            prog,
-            {"x": (10, 20)},
-            expected_output_shapes={block.outputs[0].name: (10, 20)},
-        )
-
-    """
-    Input graph:
-        input -----> div -----> out
-                      ^
-        const(eps) ---|
-
-    Output graph:
-        input --------> cast(dtype="fp16") -----> div -----> cast(dtype="fp32") ---> out
-                                                   ^
-        const(eps) ---> cast(dtype="fp16") --------|
-    """
-
-    def test_divide_by_zero_operation(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
-        def prog(x):
-            eps = mb.const(val=1e-10)
-            x = mb.real_div(x=x, y=eps)
-            return x
-
-        prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, quantization.FP16ComputePrecision(op_selector=lambda op: True)
-        )
-
-        mlmodel = ct.convert(prog, source="milinternal", compute_units=ct.ComputeUnit.CPU_ONLY)
-        input_dict = {"x": np.random.rand(10, 20)}
-
-        if _IS_MACOS:
-            prediction = mlmodel.predict(input_dict)
-            assert not np.isnan(prediction["real_div_0"]).any()
-            assert np.isfinite(prediction["real_div_0"]).all()
-
-    """
-    Input graph:
-        input1 ----->|
-                     concat -----> out
-        input2 ----->|
-
-    Output graph:
-        input1 -----> cast(dtype="fp16") ----->|
-                                               concat -----> cast(dtype="fp32") ---> out
-        input2 -----> cast(dtype="fp16") ----->|
-
-    """
-
-    def test_multiple_inputs_to_single_operation(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20)), mb.TensorSpec(shape=(10, 20))])
-        def prog(x, y):
-            x = mb.concat(values=(x, y), axis=0)
-            return x
-
-        self.assertEqual(get_op_types_in_program(prog), ["concat"])
-
-        apply_pass_and_basic_check(
-            prog, quantization.FP16ComputePrecision(op_selector=lambda op: True)
-        )
-        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
-
-        self.assertEqual(get_op_types_in_program(prog), ["cast", "cast", "concat", "cast"])
-
-        # Asserting first cast configuration
-        cast_1 = block.find_ops(op_type="cast")[0]
-        self.assertEqual(cast_1.dtype.val, "fp16")
-        self.assertEqual(len(cast_1.outputs), 1)
-        self.assertEqual(len(cast_1.outputs[0].child_ops), 1)
-        self.assertEqual(cast_1.outputs[0].child_ops[0].op_type, "concat")
-
-        # Asserting second cast configuration
-        cast_2 = block.find_ops(op_type="cast")[1]
-        self.assertEqual(cast_2.dtype.val, "fp16")
-        self.assertEqual(len(cast_2.outputs), 1)
-        self.assertEqual(len(cast_2.outputs[0].child_ops), 1)
-        self.assertEqual(cast_2.outputs[0].child_ops[0].op_type, "concat")
-
-        # Asserting third cast configuration
-        cast_3 = block.find_ops(op_type="cast")[2]
-        self.assertEqual(cast_3.dtype.val, "fp32")
-        self.assertEqual(len(cast_3.outputs), 1)
-        self.assertEqual(len(cast_3.outputs[0].child_ops), 0)
-
-        assert_model_is_valid(
-            prog,
-            {"x": (10, 20), "y": (10, 20)},
-            expected_output_shapes={block.outputs[0].name: (20, 20)},
-        )
-
-    """
-    Input graph:
-                            |-----> output_1
-          input -----> split
-                            |-----> output_2
-
-    Output graph:
-
-                                                     |-----> cast(dtype="fp32") ---> output_1
-          input -----> cast(dtype="fp16") -----> split
-                                                     |-----> cast(dtype="fp32") ---> output_2
-
-    """
-
-    def test_multiple_outputs_from_single_operation(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
-        def prog(x):
-            x = mb.split(x=x, axis=0, num_splits=2)
-            return x
-
-        self.assertEqual(get_op_types_in_program(prog), ["split"])
-
-        apply_pass_and_basic_check(
-            prog, quantization.FP16ComputePrecision(op_selector=lambda op: True)
-        )
-        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
-
-        self.assertEqual(get_op_types_in_program(prog), ["cast", "split", "cast", "cast"])
-
-        # Asserting first cast configuration
-        cast_1 = block.find_ops(op_type="cast")[0]
-        self.assertEqual(cast_1.dtype.val, "fp16")
-        self.assertEqual(len(cast_1.outputs), 1)
-        self.assertEqual(len(cast_1.outputs[0].child_ops), 1)
-        self.assertEqual(cast_1.outputs[0].child_ops[0].op_type, "split")
-
-        # Asserting second cast configuration
-        cast_2 = block.find_ops(op_type="cast")[1]
-        self.assertEqual(cast_2.dtype.val, "fp32")
-        self.assertEqual(len(cast_2.outputs), 1)
-        self.assertEqual(len(cast_2.outputs[0].child_ops), 0)
-
-        # Asserting third cast configuration
-        cast_3 = block.find_ops(op_type="cast")[2]
-        self.assertEqual(cast_3.dtype.val, "fp32")
-        self.assertEqual(len(cast_3.outputs), 1)
-        self.assertEqual(len(cast_3.outputs[0].child_ops), 0)
-
-        assert_model_is_valid(
-            prog,
-            {"x": (10, 20)},
-            expected_output_shapes={block.outputs[0].name: (5, 20), block.outputs[1].name: (5, 20)},
-        )
-
-    """
-    Input graph:
-
-         |----> square ---> output_1
-    input|
-         |----> relu   ---> output_2
-
-    Output graph:
-
-                                        |---->square-----> cast(dtype="fp32") ---> output_1
-          input -----> cast(dtype="fp16")
-                                        |----> relu -----> cast(dtype="fp32") ---> output_2
-
-    """
-
-    def test_single_input_to_multiple_operations(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
-        def prog(x):
-            y = mb.square(x=x)
-            z = mb.relu(x=x)
-            return y, z
-
-        self.assertEqual(get_op_types_in_program(prog), ["square", "relu"])
-
-        apply_pass_and_basic_check(
-            prog, quantization.FP16ComputePrecision(op_selector=lambda op: True)
-        )
-        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
-
-        self.assertEqual(get_op_types_in_program(prog), ["cast", "square", "cast", "relu", "cast"])
-
-        # Asserting first cast configuration
-        cast_1 = block.find_ops(op_type="cast")[0]
-        self.assertEqual(cast_1.dtype.val, "fp16")
-        self.assertEqual(len(cast_1.outputs), 1)
-        self.assertEqual(len(cast_1.outputs[0].child_ops), 2)
-        self.assertEqual(cast_1.outputs[0].child_ops[0].op_type, "square")
-        self.assertEqual(cast_1.outputs[0].child_ops[1].op_type, "relu")
-
-        # Asserting second cast configuration
-        cast_2 = block.find_ops(op_type="cast")[1]
-        self.assertEqual(cast_2.dtype.val, "fp32")
-        self.assertEqual(len(cast_2.outputs), 1)
-        self.assertEqual(len(cast_2.outputs[0].child_ops), 0)
-
-        # Asserting third cast configuration
-        cast_3 = block.find_ops(op_type="cast")[2]
-        self.assertEqual(cast_3.dtype.val, "fp32")
-        self.assertEqual(len(cast_3.outputs), 1)
-        self.assertEqual(len(cast_3.outputs[0].child_ops), 0)
-
-        assert_model_is_valid(
-            prog,
-            {"x": (10, 20)},
-            expected_output_shapes={
-                block.outputs[0].name: (10, 20),
-                block.outputs[1].name: (10, 20),
-            },
-        )
-
-    def test_duplicate_output_vars(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2))])
-        def prog(x):
-            relu1 = mb.relu(x=x)
-            return relu1, relu1
-
-        _, _, block = apply_pass_and_basic_check(
-            prog, quantization.FP16ComputePrecision(op_selector=lambda op: True)
-        )
-        self.assertEqual(get_op_types_in_program(prog), ["cast", "relu", "cast"])
-
-        assert_model_is_valid(
-            prog,
-            {"x": (1, 2)},
-            expected_output_shapes={block.outputs[0].name: (1, 2), block.outputs[1].name: (1, 2)},
-            backend=("mlprogram", "fp16"),
-        )

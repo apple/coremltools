@@ -136,11 +136,14 @@ class remove_redundant_ops(AbstractGraphPass):
         # This can be safely done, since all the ops in ops_to_remove
         # appear after first_op, hence first_op.outputs[0] variable is in
         # scope before the op's output var
+        ops_removed = []
         for op in ops_to_remove:
-            op.enclosing_block.replace_uses_of_var_after_op(
-                anchor_op=op, old_var=op.outputs[0], new_var=first_op.outputs[0]
-            )
-        block.remove_ops(ops_to_remove)
+            if op.enclosing_block.try_replace_uses_of_var_after_op(
+                anchor_op=op, old_var=op.outputs[0], new_var=first_op.outputs[0]):
+                ops_removed.append(op)
+        if len(ops_removed) == 0:
+            return False
+        block.remove_ops(ops_removed)
         return True
 
     @staticmethod

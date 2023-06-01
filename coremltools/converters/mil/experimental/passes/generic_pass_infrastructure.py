@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import warnings
 from functools import partial
 
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
@@ -109,7 +110,11 @@ def _pattern_detected(pattern, program_op, pattern_op, program_root_var, pattern
         # Last op in the pattern
         if len(pattern_child_op_list) == 0:
             if pattern.final_op is not None and pattern.final_op != program_op:
-                raise ValueError("User defined pattern has more than one final operation")
+                warnings.warn(
+                    "User defined pattern matched to more than one final operation. "
+                    "Skipped the pattern matching."
+                )
+                return False
             pattern.set_final_op(pattern_op.name, program_op)
             return True
 
@@ -218,4 +223,3 @@ def register_generic_pass(ops_arrangement, var_constraints, transform_pattern, p
         pass_registry.PASS_REGISTRY.passes[pass_id] = PassContainer(pass_name)
 
     pass_registry.PASS_REGISTRY[pass_id].add(pass_function)
-

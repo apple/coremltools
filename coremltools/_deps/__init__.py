@@ -14,6 +14,7 @@ from distutils.version import StrictVersion as _StrictVersion
 
 from packaging import version
 
+from . import kmeans1d as _kmeans1d
 from coremltools import _logger as logger
 
 
@@ -154,6 +155,14 @@ try:
 except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
+
+
+_HAS_TORCH_VISION = True
+try:
+    import torchvision
+except:
+    _HAS_TORCH_VISION = False
+MSG_TORCH_VISION_NOT_FOUND = "TorchVision not found."
 
 
 # ---------------------------------------------------------------------------------------

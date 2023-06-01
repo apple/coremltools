@@ -148,6 +148,7 @@ namespace CoreML {
     bool hasFloat16MultiArray(const Specification::Model& model);
     bool hasGrayscaleFloat16Image(const Specification::Model& model);
     bool hasCoreML6Opsets(const Specification::Model& model);
+    bool hasCoreML7Opsets(const Specification::Model& model);
 
     bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
 

@@ -70,7 +70,7 @@ class TestTf2ModelFormats:
             source=frontend,
         )
         assert mlmodel is not None
-        
+
     def test_keras_hdf5_file(self):
         keras_model = tf.keras.Sequential(
             [tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)]
@@ -133,7 +133,7 @@ class TestTf2ModelFormats:
             [concrete_func], outputs=["Identity"], source=frontend
         )
         assert mlmodel is not None
-    
+
     def test_graphdef_from_tf_function(self):
         class build_model(tf.Module):
             def __init__(self):
@@ -177,17 +177,16 @@ class TestTf2ModelFormats:
         assert "tensorflow==2." in metadata_keys["com.github.apple.coremltools.source"]
 
     def test_invalid_format_none(self):
-        with pytest.raises(NotImplementedError) as e:
+        with pytest.raises(NotImplementedError, match="Expected model format: .* .h5"):
             converter.convert(None, source=frontend)
-        e.match(r"Expected model format: .* .h5")
 
     def test_invalid_format_invalid_extension(self):
-        _, invalid_filename = tempfile.mkstemp(
-            suffix=".invalid", prefix=self.saved_model_dir
-        )
-        with pytest.raises(NotImplementedError) as e:
+        _, invalid_filename = tempfile.mkstemp(suffix=".invalid", prefix=self.saved_model_dir)
+        with pytest.raises(
+            ValueError,
+            match="Input model path should be .h5/.hdf5 file or a directory, but got .*.invalid",
+        ):
             converter.convert(invalid_filename, source=frontend)
-        e.match(r"Expected model format: .* .h5")
 
     def test_invalid_format_multiple_concrete_functions(self):
         class build_model(tf.Module):
@@ -199,9 +198,10 @@ class TestTf2ModelFormats:
 
         model = build_model()
         cf = model.__call__.get_concrete_function()
-        with pytest.raises(NotImplementedError) as e:
+        with pytest.raises(
+            NotImplementedError, match="Only a single concrete function is supported"
+        ):
             converter.convert([cf, cf, cf], source=frontend)
-        e.match(r"Only a single concrete function is supported")
 
     def test_invalid_converter_type(self):
         keras_model = tf.keras.Sequential(

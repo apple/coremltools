@@ -485,12 +485,11 @@ class Operation:
         def check_and_detach(v_new, v_old, op, no_check_var_types):
             # Check new var's sym_type is compatible with the
             # existing's sym_type.
-            if (
-                not is_compatible_type(v_new.sym_type, v_old.sym_type)
-                and not no_check_var_types
-            ):
-                msg = "New var type {} not a subtype of " + "existing var type {}"
-                raise ValueError(msg.format(v_new.sym_type, v_old.sym_type))
+            if not is_compatible_type(v_new.sym_type, v_old.sym_type) and not no_check_var_types:
+                raise ValueError(
+                    f"New var type `{types.builtin_to_string(v_new.sym_type)}` not a "
+                    f"subtype of existing var type `{types.builtin_to_string(v_old.sym_type)}`."
+                )
             v_old.remove_child_op(op, no_check_var_types)
 
         self.input_spec.validate_inputs(self.name, self.op_type, input_kvs)

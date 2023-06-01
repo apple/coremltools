@@ -56,7 +56,7 @@ class upsample_nearest_neighbor(Operation):
             type_domain="U"
         ),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
         "U": (types.fp32, types.int32),
@@ -122,7 +122,7 @@ class resize_nearest_neighbor(Operation):
         target_size_height=TensorInputType(const=True, type_domain=types.int32),
         target_size_width=TensorInputType(const=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -144,10 +144,10 @@ class upsample_bilinear(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
     by scale factors using bilinear interpolation.
-    The upsample_bilinear operation in MIL corresponds to the recompute_scale_factor=True
+    The upsample_bilinear operation in MIL corresponds to the ``recompute_scale_factor=True``
     mode in the pyorch bilinear interpolation op. That is,
     the scale factor is recomputed by the output size.
-    Note that when the scale_factor_height and scale_factor_width are floating point, this
+    Note that when the ``scale_factor_height`` and ``scale_factor_width`` are floating point, this
     could result in a different scale factor due to rounding.
 
     Parameters
@@ -236,7 +236,7 @@ class upsample_bilinear(Operation):
             optional=True,
             type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
         "U": (types.int32, types.fp32),
@@ -375,7 +375,7 @@ class resize_bilinear(Operation):
             type_domain=types.str
         ),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -445,10 +445,10 @@ class crop_resize(Operation):
         * Target width for resizing each patch.
 
     normalized_coordinates : const<bool> (Optional, default=False)
-        * If true, the bounding box coordinates must be in the
+        * If ``True``, the bounding box coordinates must be in the
           interval ``[0, 1]``. Scaling is based on the input spatial
           dimensions: ``(H_in - 1)`` for height and ``(W_in - 1)`` for width.
-        * If false, the bounding box coordinates must be in the interval
+        * If ``False``, the bounding box coordinates must be in the interval
           ``[0, H_in - 1]`` for height dimensions and ``[0, W_in - 1]`` for
           width dimensions.
 
@@ -510,9 +510,23 @@ class crop_resize(Operation):
         box_coordinate_mode=TensorInputType(const=True, optional=True, type_domain=types.str),
         sampling_mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
+    }
+
+    _VALID_SAMPLING_MODES = {
+        "STRICT_ALIGN_CORNERS",
+        "ALIGN_CORNERS",
+        "UNALIGN_CORNERS",
+        "DEFAULT",
+        "OFFSET_CORNERS",
+    }
+    _VALID_BOX_COORDINATE_MODES = {
+        "CORNERS_HEIGHT_FIRST",
+        "CORNERS_WIDTH_FIRST",
+        "CENTER_SIZE_HEIGHT_FIRST",
+        "CENTER_SIZE_WIDTH_FIRST",
     }
 
     def default_inputs(self):
@@ -525,34 +539,26 @@ class crop_resize(Operation):
             sampling_mode="DEFAULT",
         )
 
-    def type_inference(self):
+    def _validate_input(self):
         if self.x.rank != 4:
             raise ValueError(
-                'input to the "crop_resize" op must be of rank 4. Provided {}'.format(
-                    self.x.rank
-                )
+                f'input to the "crop_resize" op must be of rank 4. Provided {self.x.rank}'
             )
-
         if self.roi.rank != 5:
             raise ValueError(
-                'ROI input to the "crop_resize" op must be of rank 5, provided {}'.format(
-                    self.roi.rank
-                )
+                f'ROI input to the "crop_resize" op must be of rank 5, provided {self.roi.rank}'
             )
-
-        if self.sampling_mode.val not in {
-            "STRICT_ALIGN_CORNERS",
-            "ALIGN_CORNERS",
-            "UNALIGN_CORNERS",
-            "DEFAULT",
-            "OFFSET_CORNERS",
-        }:
+        if self.box_coordinate_mode.val not in self._VALID_BOX_COORDINATE_MODES:
             raise ValueError(
-                '"crop_resize" op: unrecognized sampling mode "{}"'.format(
-                    self.sampling_mode
-                )
+                f'"crop_resize" op: unrecognized box_coordinate_mode "{self.box_coordinate_mode.val}"'
+            )
+        if self.sampling_mode.val not in self._VALID_SAMPLING_MODES:
+            raise ValueError(
+                f'"crop_resize" op: unrecognized sampling mode "{self.sampling_mode.val}"'
             )
 
+    def type_inference(self):
+        self._validate_input()
         # ret_shape: [N] + [B, C, h_out, w_out]
         N, B, C = self.roi.shape[0], self.x.shape[0], self.x.shape[1]
         ret_shape = [N, B, C, self.target_height.val, self.target_width.val]
@@ -592,7 +598,7 @@ class crop(Operation):
         crop_height=TensorInputType(const=True, type_domain=types.int32),
         crop_width=TensorInputType(const=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -709,7 +715,7 @@ class affine(Operation):
         coordinates_mode=TensorInputType(const=True, type_domain=types.str),
         align_corners=TensorInputType(const=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }

@@ -9,11 +9,11 @@ import numpy as np
 import pytest
 import scipy
 
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
-from coremltools.converters.mil.mil.ops.tests.testing_utils import \
-    run_compare_builder
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 
 backends = testing_reqs.backends
@@ -354,3 +354,47 @@ class TestReduction:
                 atol=1e-04,
                 rtol=1e-05
             )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, op_name, output_dtype",
+        itertools.product(
+            compute_units, backends, ["reduce_argmax", "reduce_argmin"], ["int32", "uint16", None]
+        ),
+    )
+    def test_reduce_arg_ios17_output_dtype(self, compute_unit, backend, op_name, output_dtype):
+        def build(x):
+            return getattr(mb, op_name)(x=x, axis=1, keep_dims=False, output_dtype=output_dtype)
+
+        val = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+        output_np_type = np.uint16 if output_dtype == "uint16" else np.int32
+        output_type = types.uint16 if output_dtype == "uint16" else types.int32
+        expected_output_types = (2, output_type)
+        expected_outputs = np.array(
+            [2, 2] if op_name == "reduce_argmax" else [0, 0], dtype=output_np_type
+        )
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    @pytest.mark.parametrize(
+        "op_name",
+        ["reduce_argmax", "reduce_argmin"],
+    )
+    def test_reduce_arg_ios17_output_dtype_invalid(self, op_name):
+        x = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
+
+        def prog():
+            return getattr(mb, op_name)(x=x, axis=1, keep_dims=False, output_dtype="dummy")
+
+        with pytest.raises(ValueError, match='Invalid "output_dtype" dummy'):
+            mb.program(input_specs=[], opset_version=ct.target.iOS17)(prog)

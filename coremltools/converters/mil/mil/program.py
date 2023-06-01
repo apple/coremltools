@@ -20,6 +20,10 @@ from .var import Var
 
 
 class Program:
+    @staticmethod
+    def _get_opset_str_value(op):
+        return f"coremltools.target.{op.name}"
+
     def __init__(self):
         self.main_input_types = []
         self.main_output_types = None
@@ -55,9 +59,13 @@ class Program:
                 expected_op_cls = _get_version_of_op(op._op_variants, max_opset_version)
                 if type(op) is not expected_op_cls:
                     msg = (
-                        "Op {} with an out of date version {!s} is detected. Please use @mb.program(input_specs=..., "
-                        "opset_version={!s})"
-                    ).format(op.op_type, op.opset_version, max_opset_version)
+                        "Op {} with an out of date version {} is detected. Please use @mb.program(input_specs=..., "
+                        "opset_version={})"
+                    ).format(
+                        op.op_type,
+                        self._get_opset_str_value(op.opset_version),
+                        self._get_opset_str_value(max_opset_version),
+                    )
                     raise ValueError(msg)
         for func in self.functions.values():
             check_version_compatibility_block(func)
@@ -69,18 +77,24 @@ class Program:
                 func.opset_version = max_opset_version
             else:
                 if func.opset_version < max_opset_version:
-                    msg = "function should have at least opset_version {!s}. Got {!s}".format(max_opset_version, func.opset_version)
+                    msg = "function should have at least opset_version {}. Got {}".format(
+                        self._get_opset_str_value(max_opset_version),
+                        self._get_opset_str_value(func.opset_version),
+                    )
                     raise ValueError(msg)
         for func in funcs:
             if func.opset_version != funcs[0].opset_version:
-                msg = "all functions must have the same opset_version. Got {!s} and {!s}.".format(func.opset_version, funcs[0].opset_version)
+                msg = "all functions must have the same opset_version. Got {} and {}.".format(
+                    self._get_opset_str_value(func.opset_version),
+                    self._get_opset_str_value(funcs[0].opset_version),
+                )
                 raise ValueError(msg)
 
     def _check_program_opset_version(self):
         max_opset_version, _ = self._get_max_opset_version_and_op()
         self._check_ops_version_compatibility(max_opset_version)
         self._check_or_set_functions_opset_version(max_opset_version)
-        
+
     def _check_invalid_tensor_rank(self):
         '''
         Early error out for tensor with rank >= 6

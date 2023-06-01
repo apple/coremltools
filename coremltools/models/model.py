@@ -20,11 +20,19 @@ from coremltools.converters.mil.mil.program import Program as _Program
 from ..proto import FeatureTypes_pb2 as _ft
 from ..proto import MIL_pb2 as _MIL_pb2
 from ..proto import Model_pb2 as _Model_pb2
-from .utils import (_MLMODEL_EXTENSION, _MLPACKAGE_AUTHOR_NAME,
-                    _MLPACKAGE_EXTENSION, _WEIGHTS_DIR_NAME, _create_mlpackage,
-                    _has_custom_layer, _is_macos, _macos_version,
-                    load_spec as _load_spec, save_spec as _save_spec,
-                    )
+from .utils import (
+    _MLMODEL_EXTENSION,
+    _MLPACKAGE_AUTHOR_NAME,
+    _MLPACKAGE_EXTENSION,
+    _MODEL_FILE_NAME,
+    _WEIGHTS_DIR_NAME,
+    _create_mlpackage,
+    _has_custom_layer,
+    _is_macos,
+    _macos_version,
+)
+from .utils import load_spec as _load_spec
+from .utils import save_spec as _save_spec
 
 if _HAS_TORCH:
     import torch as _torch
@@ -313,6 +321,31 @@ class MLModel:
             if _os.path.exists(package_path):
                 _shutil.rmtree(package_path)
 
+        def does_model_contain_mlprogram(model) -> bool:
+            """
+            Is this an mlprogram or is it a pipeline with at least one mlprogram?
+            """
+            model_type = model.WhichOneof("Type")
+
+            if model_type == "mlProgram":
+                return True
+            elif model_type not in ("pipeline", "pipelineClassifier", "pipelineRegressor"):
+                return False
+
+            # Does this pipeline contain an mlprogram?
+            if model_type == "pipeline":
+                pipeline_models = model.pipeline.models
+            elif model_type == "pipelineClassifier":
+                pipeline_models = model.pipelineClassifier.pipeline.models
+            else:
+                assert model_type == "pipelineRegressor"
+                pipeline_models = model.pipelineRegressor.pipeline.models
+
+            for m in pipeline_models:
+                if does_model_contain_mlprogram(m):
+                    return True
+            return False
+
         if not isinstance(compute_units, _ComputeUnit):
             raise TypeError('"compute_units" parameter must be of type: coremltools.ComputeUnit')
         elif (compute_units == _ComputeUnit.CPU_AND_NE
@@ -343,12 +376,13 @@ class MLModel:
                 model, compute_units, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
-            model_type = model.WhichOneof('Type')
-            if model_type in ("mlProgram", 'pipelineClassifier', 'pipelineRegressor', 'pipeline'):
-                if model_type == "mlProgram" and weights_dir is None:
-                    raise Exception('MLModel of type mlProgram cannot be loaded just from the model spec object. '
-                                    'It also needs the path to the weights file. Please provide that as well, '
-                                    'using the \'weights_dir\' argument.')
+            if does_model_contain_mlprogram(model):
+                if model.WhichOneof("Type") == "mlProgram" and weights_dir is None:
+                    raise Exception(
+                        "MLModel of type mlProgram cannot be loaded just from the model spec object. "
+                        "It also needs the path to the weights file. Please provide that as well, "
+                        "using the 'weights_dir' argument."
+                    )
                 self.is_package = True
                 self.is_temp_package = True
                 filename = _create_mlpackage(model, weights_dir)
@@ -460,6 +494,11 @@ class MLModel:
             elif ext != _MLPACKAGE_EXTENSION:
                 raise Exception("For an ML Program, extension must be {} (not {})".format(_MLPACKAGE_EXTENSION, ext))
             _shutil.copytree(self.package_path, save_path)
+
+            saved_spec_path = _os.path.join(
+                save_path, "Data", _MLPACKAGE_AUTHOR_NAME, _MODEL_FILE_NAME
+            )
+            _save_spec(self._spec, saved_spec_path)
         else:
             _save_spec(self._spec, save_path)
 
@@ -572,6 +611,13 @@ class MLModel:
                 else:
                     raise Exception("Unable to load CoreML.framework. Cannot make predictions.")
 
+    def _input_has_infinite_upper_bound(self) -> bool:
+        """Check if any input has infinite upper bound (-1)."""
+        for input_spec in self.input_description._fd_spec:
+            for size_range in input_spec.type.multiArrayType.shapeRange.sizeRanges:
+                if size_range.upperBound == -1:
+                    return True
+        return False
 
     def _set_build_info_mil_attributes(self, metadata):
         if self._spec.WhichOneof('Type') != "mlProgram":

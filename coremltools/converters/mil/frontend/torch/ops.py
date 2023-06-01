@@ -6,33 +6,30 @@
 import builtins
 import math as _math
 import numbers
+import re
 from collections.abc import Iterable
 from typing import List, Optional
 
 import numpy as _np
+import numpy as np
 import torch
 from tqdm import tqdm as _tqdm
 
 from coremltools import _logger as logger
-from coremltools.converters.mil._deployment_compatibility import (
-    AvailableTarget as target,
-)
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Symbol, types
-from coremltools.converters.mil.mil.block import (
-    is_current_opset_version_compatible_with,
-)
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.ops.defs._utils import (
-    MAX_SIZE_CONSTANT_FOLDING, promote_input_dtypes,
-    solve_slice_by_index_shape)
-from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
-from coremltools.converters.mil.mil.types.symbolic import (
-    any_symbolic,
-    is_symbolic,
+    MAX_SIZE_CONSTANT_FOLDING,
+    promote_input_dtypes,
+    solve_slice_by_index_shape,
 )
+from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 from coremltools.converters.mil.mil.var import ListVar, Var
 
-from .._utils import value_at, build_einsum_mil
+from .._utils import build_einsum_mil, value_at
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 
 # The pytorch args for many of the below ops were sourced from
@@ -80,9 +77,16 @@ def convert_nodes(context, graph):
 
         logger.info("Converting op {} : {}".format(node.name, node.kind))
         if add_op is None:
-            raise RuntimeError(
-                "PyTorch convert function for op '{}' not implemented.".format(node.kind)
-            )
+            if re.match(r".*_dynamic", node.kind):
+                raise RuntimeError(
+                    f"PyTorch convert function for op '{node.kind}' not implemented.\n"
+                    "Dynamic quantized models are not supported by Core ML.\n"
+                    "Please use static quantization or the APIs in coremltools.optimize to quantize/compress models."
+                )
+            else:
+                raise RuntimeError(
+                    f"PyTorch convert function for op '{node.kind}' not implemented."
+                )
 
         context.prepare_for_conversion(node)
         add_op(context, node)
@@ -136,6 +140,7 @@ NUM_TO_TORCH_DTYPE = {
     11: torch.bool,
     12: torch.qint8,
     13: torch.quint8,
+    14: torch.qint32,
 }
 
 NUMPY_DTYPE_TO_TORCH_NUM = {
@@ -163,6 +168,7 @@ NUM_TO_NUMPY_DTYPE = {
 }
 
 NUM_TO_DTYPE_STRING = {
+    2: "int16",
     3: "int32",
     4: "int32",
     5: "fp16",
@@ -215,6 +221,13 @@ def _list_select(shape_var, index):
     if shape_var.can_be_folded_to_const():
         res = mb.const(val=shape_var.val[index])
     else:
+        if is_current_opset_version_compatible_with(target.iOS17):
+            # IOS17 `gather` requires non-negative indices.
+            index = mb.select(
+                cond=mb.greater_equal(x=index, y=0),
+                a=index,
+                b=mb.add(x=index, y=value_at(mb.shape(x=shape_var), 0)),
+            )
         res = mb.gather(x=shape_var, indices=index)
     return res
 
@@ -1885,6 +1898,24 @@ def stack(context, node):
 
 
 @register_torch_op
+def tile(context, node):
+    x, dims = _get_inputs(context, node, expected=2)
+
+    # The torch.tile only supports tuple of ints for "dims", not Tensor. So it will not be dynamic.
+    if dims is None or dims.val is None:
+        raise ValueError("The `dims` input for torch.tile must be static (tuple of ints).")
+
+    dims_num = dims.shape[0]
+    if dims_num < x.rank:
+        # When the number of elements in dims is smaller than rank of x, ones are prepended.
+        prepend_ones = np.array([1] * (x.rank - dims_num))
+        dims = mb.concat(values=(prepend_ones, dims), axis=0)
+
+    res = mb.tile(x=x, reps=dims, name=node.name)
+    context.add(res)
+
+
+@register_torch_op
 def item(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -3362,13 +3393,15 @@ def index_put(context, node):
     if types.is_bool(indices_type):
         assert len(indices) == 1, "Unsupported index_put_ usage."
         indices = indices[0]
-        assert indices.shape == x.shape, "indices shape must equal to input shape for index put operation."
+        assert (
+            indices.shape == x.shape
+        ), "indices shape must equal to input shape for index put operation."
         indices = mb.cast(x=indices, dtype="int32")
         indices = mb.non_zero(x=indices)
 
     if types.is_int(indices_type):
         if len(indices) > 1:
-            indices = mb.stack(values=indices, axis=rank - 1)
+            indices = mb.stack(values=indices, axis=indices[0].rank)
         else:
             indices = mb.expand_dims(x=indices[0], axes=[-1])
 
@@ -3380,6 +3413,19 @@ def index_put(context, node):
         reps = mb.expand_dims(x=reps, axes=[0])
         values = mb.tile(x=values, reps=reps)
 
+    if is_current_opset_version_compatible_with(target.iOS17):
+        # IOS17 `scatter_nd` behaviour is undefined for negative indices.
+        cond = mb.greater_equal(x=indices, y=0)
+        x_shape = mb.shape(x=x)
+        indices_shape = mb.shape(x=indices)
+        indices_last_dim = value_at(indices_shape, indices.rank - 1)
+        indices_last_dim_expand = mb.expand_dims(x=indices_last_dim, axes=[0])
+        slice_shape = mb.slice_by_size(x=x_shape, begin=[0], size=indices_last_dim_expand)
+        indices = mb.select(
+            cond=cond,
+            a=indices,
+            b=mb.add(x=indices, y=slice_shape),
+        )
     result = mb.scatter_nd(data=x, indices=indices, updates=values, mode=mode, name=node.name)
     context.add(result)
 
@@ -3514,7 +3560,15 @@ def index(context, node):
     # For the single index axis case, we can use mb.gather directly
     if len(indices_axes) == 1:
         axis = indices_axes[0]
-        x = mb.gather(x=x, indices=valid_indices[0], axis=axis, name=node.name)
+        indices = valid_indices[0]
+        if is_current_opset_version_compatible_with(target.iOS17):
+            # IOS17 `gather` behaviour is undefined for negative indices.
+            indices = mb.select(
+                cond=mb.greater_equal(x=indices, y=0),
+                a=indices,
+                b=mb.add(x=indices, y=value_at(mb.shape(x=x), axis)),
+            )
+        x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
         context.add(x)
         return
 
@@ -3543,6 +3597,20 @@ def index(context, node):
     name = node.name + "_transpose" if is_connected else node.name
     perm = indices_axes + [axis for axis in range(x.rank) if axis not in indices_axes]
     x = mb.transpose(x=x, perm=perm)
+
+    if is_current_opset_version_compatible_with(target.iOS17):
+        # IOS17 `gather_nd` behaviour is undefined for negative indices.
+        cond = mb.greater_equal(x=indices, y=0)
+        x_shape = mb.shape(x=x)
+        indices_shape = mb.shape(x=indices)
+        indices_last_dim = value_at(indices_shape, indices.rank - 1)
+        indices_last_dim_expand = mb.expand_dims(x=indices_last_dim, axes=[0])
+        slice_shape = mb.slice_by_size(x=x_shape, begin=[0], size=indices_last_dim_expand)
+        indices = mb.select(
+            cond=cond,
+            a=indices,
+            b=mb.add(x=indices, y=slice_shape),
+        )
     x = mb.gather_nd(x=x, indices=indices, name=name)
 
     # if the index axes are connect, we need to transpose it back
@@ -4140,20 +4208,11 @@ def masked_fill(context, node):
     x = inputs[0]
     mask = inputs[1]
     value = inputs[2]
-    # @mb.select does not properly broadcast scalar input, so as a workaround
-    # we create a full sized tensor.
-
-    if types.is_int(value.dtype):
-        # @mb.fill cannot handle value with dtype integer
-        # so we cast the value.
-        value = mb.cast(x=value, dtype="fp32")
 
     if not types.is_bool(mask.dtype):
         # cond must be bool type
         mask = mb.cast(x=mask, dtype="bool")
 
-    shape = mb.shape(x=x, name=node.name + "_shape")
-    value = mb.fill(shape=shape, value=value, name=node.name + "_value")
     res = mb.select(cond=mask, a=value, b=x, name=node.name)
     context.add(res)
 
@@ -5731,9 +5790,7 @@ def torchvision_nms(context, node):
     iou_threshold = inputs[2].val
     # Use float min to avoid boxes being pruned by scores in MIL NMS op.
     score_threshold = (
-        _np.finfo(_np.float16).min
-        if boxes.dtype._width == 16
-        else _np.finfo(_np.float32).min
+        _np.finfo(_np.float16).min if boxes.dtype._width == 16 else _np.finfo(_np.float32).min
     )
 
     box_num = boxes.shape[0]
@@ -5758,21 +5815,46 @@ def torchvision_nms(context, node):
     boxes = mb.expand_dims(x=boxes, axes=[0])
     scores = mb.expand_dims(x=scores, axes=[0, -1])
 
-    _, _, indices, valid_outputs = mb.non_maximum_suppression(
-        boxes=boxes,
-        scores=scores,
-        max_boxes=box_num,
-        iou_threshold=iou_threshold,
-        score_threshold=score_threshold,
-    )
+    if not is_current_opset_version_compatible_with(target.iOS17):
+        _, _, indices, valid_outputs = mb.non_maximum_suppression(
+            boxes=boxes,
+            scores=scores,
+            max_boxes=box_num,
+            iou_threshold=iou_threshold,
+            score_threshold=score_threshold,
+        )
 
-    indices = mb.squeeze(x=indices, axes=[0])
-    valid_outputs = mb.squeeze(x=valid_outputs, axes=[0])
-    range = mb.range_1d(end=valid_outputs, start=0, step=1)
-    indices = mb.cast(x=indices, dtype="fp32")
-    valid_indices = mb.gather(x=indices, indices=range, axis=0)
-    valid_indices = mb.cast(x=valid_indices, dtype="int32", name=node.name)
-    context.add(valid_indices)
+        indices = mb.squeeze(x=indices, axes=[0])
+        valid_outputs = mb.squeeze(x=valid_outputs, axes=[0])
+        range = mb.range_1d(end=valid_outputs, start=0, step=1)
+        indices = mb.cast(x=indices, dtype="fp32")
+        valid_indices = mb.gather(x=indices, indices=range, axis=0)
+        valid_indices = mb.cast(x=valid_indices, dtype="int32", name=node.name)
+        context.add(valid_indices)
+    else:
+        # In IOS17, the MIL NMS op's inputs are ordered with number of boxes in the last dimension.
+        boxes = mb.transpose(x=boxes, perm=[0, 2, 1])
+        scores = mb.transpose(x=scores, perm=[0, 2, 1])
+
+        # In IOS17, the MIL NMS op's last output (number of valid boxes in each batch) gets removed.
+        _, _, indices = mb.non_maximum_suppression(
+            boxes=boxes,
+            scores=scores,
+            max_boxes=box_num,
+            iou_threshold=iou_threshold,
+        )
+
+        # Remove invalid indices (the padded -1 indices).
+        valid_outputs = mb.reduce_sum(
+            x=mb.cast(x=mb.greater(x=indices, y=-1), dtype="int32"), axes=[-1]
+        )
+        valid_indices = mb.slice_by_size(
+            x=mb.squeeze(x=indices, axes=[0]),
+            begin=mb.fill_like(ref_tensor=valid_outputs, value=0),
+            size=valid_outputs,
+            name=node.name,
+        )
+        context.add(valid_indices)
 
 
 @register_torch_op

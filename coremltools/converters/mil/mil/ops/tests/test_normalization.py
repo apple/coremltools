@@ -10,14 +10,13 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools._deps import (_HAS_TF_2, _HAS_TORCH, MSG_TF2_NOT_FOUND,
-                               MSG_TORCH_NOT_FOUND)
+from coremltools._deps import _HAS_TF_2, _HAS_TORCH, MSG_TF2_NOT_FOUND, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import random_gen
 
-from .testing_utils import UNK_SYM, run_compare_builder
+from .testing_utils import UNK_SYM, construct_inputs_from_placeholders, run_compare_builder
 
 if _HAS_TORCH:
     import torch
@@ -526,6 +525,9 @@ class TestNormalizationLayerNorm:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -550,7 +552,7 @@ class TestNormalizationLayerNorm:
 
         if backend == ("mlprogram", "fp16") and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://80662357 ([GPU failures] LayerNorm FP16 tests failing on GPU with numerical errors)")
-            
+
         if backend[0] == "neuralnetwork" and compute_unit != ct.ComputeUnit.CPU_ONLY and platform.machine() == "arm64":
             pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)")
 

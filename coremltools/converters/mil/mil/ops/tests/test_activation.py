@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 import scipy
 
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
@@ -392,14 +393,11 @@ class TestPReLU:
         v = mb.prelu(x=x_val, alpha=alpha)
 
         alpha_br = alpha
-
-        for i in range(1, len(x_val.shape)):
-            alpha_br = np.expand_dims(alpha_br, i)
-
-        x_pos = np.maximum(x_val, 0)
-        b = np.minimum(x_val, 0)
-
-        np.testing.assert_allclose(x_pos + b * alpha_br, v.val, atol=1e-04, rtol=1e-05)
+        for i in range(len(x_val.shape)):
+            if i != 1:
+                alpha_br = np.expand_dims(alpha_br, i)
+        expected_res = np.maximum(x_val, 0) + np.minimum(x_val, 0) * alpha_br
+        np.testing.assert_allclose(expected_res, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_eval1(self):
@@ -822,12 +820,13 @@ class TestSoftplusParametric:
 
         alpha_br = np.array([1, 2, 3], dtype=np.float32)
         beta_br = np.array([4, 5, 6], dtype=np.float32)
-        for i in range(1, len(x_val.shape)):
-            alpha_br = np.expand_dims(alpha_br, i)
-            beta_br = np.expand_dims(beta_br, i)
-        out = alpha_br * np.log(np.exp(x_val * beta_br) + 1)
+        for i in range(len(x_val.shape)):
+            if i != 1:
+                alpha_br = np.expand_dims(alpha_br, i)
+                beta_br = np.expand_dims(beta_br, i)
+        expected_res = alpha_br * np.log(np.exp(x_val * beta_br) + 1)
 
-        np.testing.assert_allclose(out, v.val, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(expected_res, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_eval2(self):
@@ -1077,4 +1076,174 @@ class TestThresholdedReLU:
             expected_outputs=expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
+        )
+
+
+class TestInputWeightDifferentDtypes:
+    """
+    Starting from IOS17 the alpha/beta can have different dtypes from the input/output, so this
+    test class is mainly to verify the behaviour of those alpha/beta related activations.
+    """
+
+    @pytest.mark.parametrize(
+        "opset_version, different_dtype, op_name",
+        itertools.product(
+            [None, ct.target.iOS17],
+            [True, False],
+            ["elu", "leaky_relu", "prelu", "thresholded_relu"],
+        ),
+    )
+    def test_builder_eval_alpha(self, opset_version, different_dtype, op_name):
+        x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
+        alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
+        if op_name == "prelu":
+            alpha = np.array([2.0, 2.0], dtype=alpha.dtype)  # prelu requires alpha to be rank 1.
+
+        def prog():
+            return getattr(mb, op_name)(x=x, alpha=alpha)
+
+        if different_dtype and opset_version != ct.target.iOS17:
+            # Before iOS17 it should raise error when alpha has different dtype than input/output.
+            with pytest.raises(ValueError, match="must have the same data type"):
+                mb.program(input_specs=[], opset_version=opset_version)(prog)
+        else:
+            mb.program(input_specs=[], opset_version=opset_version)(prog)
+
+    @pytest.mark.parametrize(
+        "opset_version, different_dtype, op_name",
+        itertools.product(
+            [None, ct.target.iOS17],
+            [True, False],
+            [
+                "clamped_relu",
+                "linear_activation",
+                "scaled_tanh",
+                "sigmoid_hard",
+                "softplus_parametric",
+            ],
+        ),
+    )
+    def test_builder_eval_alpha_beta(self, opset_version, different_dtype, op_name):
+        x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
+        alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
+        beta = np.float16(1.0) if different_dtype else np.float32(1.0)
+        if op_name == "softplus_parametric":
+            alpha = np.array([2.0, 2.0], dtype=alpha.dtype)
+            beta = np.array([1.0, 1.0], dtype=beta.dtype)
+
+        def prog():
+            return getattr(mb, op_name)(x=x, alpha=alpha, beta=beta)
+
+        if different_dtype and opset_version != ct.target.iOS17:
+            with pytest.raises(ValueError, match="must have the same data type"):
+                mb.program(input_specs=[], opset_version=opset_version)(prog)
+        else:
+            mb.program(input_specs=[], opset_version=opset_version)(prog)
+
+    @pytest.mark.parametrize(
+        "compute_unit, different_dtype, op_name",
+        itertools.product(
+            compute_units, [True, False], ["elu", "leaky_relu", "prelu", "thresholded_relu"]
+        ),
+    )
+    def test_builder_to_backend_numerical_alpha(self, compute_unit, different_dtype, op_name):
+        x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
+        alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
+        if op_name == "prelu":
+            alpha = np.array([2.0, 2.0], dtype=alpha.dtype)
+
+        def calculate_by_np():
+            if op_name == "elu":
+                res = np.copy(x)
+                res[res < 0] = alpha * (np.exp(res[res < 0]) - 1)
+                return res
+            elif op_name == "leaky_relu":
+                res = np.copy(x)
+                res[res < 0] *= 2.0
+                return res
+            elif op_name == "prelu":
+                alpha_br = np.copy(alpha)
+                for i in range(len(x.shape)):
+                    if i != 1:
+                        alpha_br = np.expand_dims(alpha_br, i)
+                res = np.maximum(x, 0) + np.minimum(x, 0) * alpha_br
+                return res
+            elif op_name == "thresholded_relu":
+                res = np.copy(x)
+                res[res < alpha] = 0.0
+                return res
+            else:
+                raise ValueError(f"Invalid op_name: {op_name}")
+
+        def build(x):
+            return getattr(mb, op_name)(x=x, alpha=alpha)
+
+        run_compare_builder(
+            build,
+            input_placeholders={"x": mb.placeholder(shape=x.shape)},
+            input_values={"x": x},
+            expected_output_types=x.shape + (types.fp32,),
+            expected_outputs=calculate_by_np(),
+            compute_unit=compute_unit,
+            backend=("mlprogram", "fp16"),
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, different_dtype, op_name",
+        itertools.product(
+            compute_units,
+            [True, False],
+            [
+                "clamped_relu",
+                "linear_activation",
+                "scaled_tanh",
+                "sigmoid_hard",
+                "softplus_parametric",
+            ],
+        ),
+    )
+    def test_builder_to_backend_numerical_alpha_beta(self, compute_unit, different_dtype, op_name):
+        x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
+        alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
+        beta = np.float16(1.0) if different_dtype else np.float32(1.0)
+        if op_name == "softplus_parametric":
+            alpha = np.array([2.0, 2.0], dtype=alpha.dtype)
+            beta = np.array([1.0, 1.0], dtype=beta.dtype)
+
+        def calculate_by_np():
+            if op_name == "clamped_relu":
+                return np.minimum(np.maximum(x, 0), beta) + np.minimum(
+                    np.minimum(x, 0) * alpha, beta
+                )
+            elif op_name == "linear_activation":
+                return x * alpha + beta
+            elif op_name == "scaled_tanh":
+                return alpha * np.tanh(x * beta)
+            elif op_name == "sigmoid_hard":
+                return np.minimum(np.maximum((alpha * x) + beta, 0), 1)
+            elif op_name == "softplus_parametric":
+                alpha_br = alpha
+                beta_br = beta
+                for i in range(len(x.shape)):
+                    if i != 1:
+                        alpha_br = np.expand_dims(alpha_br, i)
+                        beta_br = np.expand_dims(beta_br, i)
+                res = alpha_br * np.log(np.exp(x * beta_br) + 1)
+                return res
+            else:
+                raise ValueError(f"Invalid op_name: {op_name}")
+
+        def build(x):
+            return getattr(mb, op_name)(x=x, alpha=alpha, beta=beta)
+
+        run_compare_builder(
+            build,
+            input_placeholders={"x": mb.placeholder(shape=x.shape)},
+            input_values={"x": x},
+            expected_output_types=x.shape + (types.fp32,),
+            expected_outputs=calculate_by_np(),
+            compute_unit=compute_unit,
+            backend=("mlprogram", "fp16"),
+            minimum_deployment_target=ct.target.iOS17,
         )

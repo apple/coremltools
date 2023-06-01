@@ -3,12 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import Operation, types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType
-)
+from coremltools.converters.mil.mil import Operation, Var, types
+from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
@@ -291,12 +287,15 @@ class lstm(Operation):
 
     recurrent_activation: const<str> (Optional) [Default=sigmoid]
         * Activation applied on input, forget, and output gates.
+        * Supported values: ``hard_sigmoid``, ``linear``, ``relu``, ``scaled_tanh``, ``sigmoid``, ``tanh``
 
     cell_activation: const<str> (Optional) [Default=tanh]
         * Activation applied on cell gate.
+        * Supported values: ``hard_sigmoid``, ``linear``, ``relu``, ``scaled_tanh``, ``sigmoid``, ``tanh``
 
     activation: const<str> (Optional) [Default=tanh]
         * Activation applied on output gate.
+        * Supported values: ``hard_sigmoid``, ``linear``, ``relu``, ``scaled_tanh``, ``sigmoid``, ``tanh``
 
     clip: const<T> (optional) [Default=None]
         * Cell gate is clipped to ``[-clip, +clip]``.
@@ -353,47 +352,11 @@ class lstm(Operation):
             clip=None)
 
     def type_inference(self):
-        if self.x.rank != 3:
-            raise ValueError(
-                "Invalid input shape. Expecting Rank 3 input, got {}".format(
-                    len(self.x.rank)
-                )
-            )
+        self._validate_inputs()
+
         sequence_length, batch_size, input_size = self.x.shape
-
-        def weight_shape_check(wt_ih, wt_hh):
-            if wt_ih.rank != 2 or wt_hh.rank != 2:
-                raise ValueError(
-                    "Expecting Rank 2 input, got weight_ih rank: {}, weight_hh rank: {}".format(
-                        wt_ih.rank, wt_hh.rank
-                    )
-                )
-
-            hidden_size = wt_hh.shape[1]
-            if wt_hh.shape[0] // hidden_size != 4 or wt_ih.shape[0] // hidden_size != 4:
-                raise ValueError(
-                    "Incorrect weight matrix: hidden dim size mismatch. \
-                                Provided weight_ih {}, weight_hh {}. Expecting <4*H, H>".format(
-                        wt_ih.shape, wt_hh.shape
-                    )
-                )
-
-        direction = self.direction.val
-        valid_directions = {"forward", "reverse", "bidirectional"}
-        if direction not in valid_directions:
-            raise ValueError(
-                "Direction {} not supported. Supported directions: {}".format(
-                    direction, valid_directions
-                )
-            )
-
-        weight_shape_check(self.weight_ih, self.weight_hh)
-        if direction == "bidirectional":
-            weight_shape_check(self.weight_ih_back, self.weight_hh_back)
-
         hidden_dim, hidden_size = self.weight_hh.shape
-
-        dim_factor = 8 if direction == "bidirectional" else 4
+        dim_factor = 8 if self.direction.val == "bidirectional" else 4
         out_seq_len = sequence_length if self.output_sequence.val else 1
         num_directions = dim_factor // 4
         output_shape = [out_seq_len, batch_size, num_directions * hidden_size]
@@ -404,6 +367,52 @@ class lstm(Operation):
             types.tensor(self.x.dtype, tuple(output_h_shape)),
             types.tensor(self.x.dtype, tuple(output_c_shape)),
         )
+
+    def _validate_inputs(self):
+        _ALLOWED_DIRECTIONS = {"forward", "reverse", "bidirectional"}
+        _ALLOWED_ACTIVATIONS = {"tanh", "scaled_tanh", "sigmoid", "hard_sigmoid", "relu", "linear"}
+
+        def check_activation(activation: str):
+            if activation.lower() not in _ALLOWED_ACTIVATIONS:
+                raise ValueError(
+                    f"Activation `{activation}` not supported. Supported activations: {_ALLOWED_ACTIVATIONS}"
+                )
+
+        if self.x.rank != 3:
+            raise ValueError(f"Invalid input shape. Expecting Rank 3 input, got {len(self.x.rank)}")
+
+        direction = self.direction.val
+        if direction not in _ALLOWED_DIRECTIONS:
+            raise ValueError(
+                f"Direction {direction} not supported. Supported directions: {_ALLOWED_DIRECTIONS}"
+            )
+
+        self._weight_shape_check(self.weight_ih, self.weight_hh)
+        if direction == "bidirectional":
+            if self.weight_ih_back is None or self.weight_hh_back is None:
+                raise ValueError(
+                    "For bidirectional LSTM, the `weight_ih_back` and `weight_hh_back`"
+                    " must be provided."
+                )
+            self._weight_shape_check(self.weight_ih_back, self.weight_hh_back)
+
+        check_activation(self.recurrent_activation.val)
+        check_activation(self.cell_activation.val)
+        check_activation(self.activation.val)
+
+    @staticmethod
+    def _weight_shape_check(wt_ih: Var, wt_hh: Var):
+        if wt_ih.rank != 2 or wt_hh.rank != 2:
+            raise ValueError(
+                f"Expecting Rank 2 input, got weight_ih rank: {wt_ih.rank}, "
+                f"weight_hh rank: {wt_hh.rank}"
+            )
+        hidden_size = wt_hh.shape[1]
+        if wt_hh.shape[0] // hidden_size != 4 or wt_ih.shape[0] // hidden_size != 4:
+            raise ValueError(
+                f"Incorrect weight matrix: hidden dim size mismatch. Provided "
+                f"weight_ih {wt_ih.shape}, weight_hh {wt_hh.shape}. Expecting <4*H, H>"
+            )
 
 
 @register_op

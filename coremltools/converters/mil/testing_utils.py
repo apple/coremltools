@@ -8,8 +8,10 @@ import os
 import re
 from functools import partial
 from pathlib import Path
+from typing import Dict, List, Tuple
 
 import numpy as np
+import pytest
 from PIL import Image
 
 import coremltools as ct
@@ -22,12 +24,21 @@ from coremltools.proto import FeatureTypes_pb2 as ft
 
 np.random.seed(10)
 
-DTYPE_TO_FEATURE_TYPE_MAP = {"int32": ft.ArrayFeatureType.INT32,
-                             "fp32": ft.ArrayFeatureType.FLOAT32,
-                             "fp16": ft.ArrayFeatureType.FLOAT16,
-                             }
+DTYPE_TO_FEATURE_TYPE_MAP: Dict[str, ft.ArrayFeatureType] = {
+    "int32": ft.ArrayFeatureType.INT32,
+    "fp32": ft.ArrayFeatureType.FLOAT32,
+    "fp16": ft.ArrayFeatureType.FLOAT16,
+}
 
-einsum_equations = [
+# The minimum macOS version for an IOS target. For example, iOS16 target requires macOS13+.
+IOS_TO_MINIMUM_MACOS_VERSION: Dict[ct.target, int] = {
+    ct.target.iOS14: 11,
+    ct.target.iOS15: 12,
+    ct.target.iOS16: 13,
+    ct.target.iOS17: 14,
+}
+
+einsum_equations: List[str] = [
     # hardcoded cases
     "abcd,adce->abce",
     "abc,cbd->abd",
@@ -102,7 +113,12 @@ def assert_op_count_match(program, expect, op=None, verbose=False):
 
 
 def assert_model_is_valid(
-    program, inputs, backend=("neuralnetwork", "fp32"), verbose=True, expected_output_shapes=None
+    program,
+    inputs,
+    backend=("neuralnetwork", "fp32"),
+    verbose=True,
+    expected_output_shapes=None,
+    minimum_deployment_target: ct.target = None,
 ):
     """
     Assert Core ML model is valid.
@@ -112,6 +128,9 @@ def assert_model_is_valid(
     - input: str -> shape tuple. All program input names need to appear in str.
       shape tuple can only contain positive integers.
     """
+    if minimum_deployment_target is not None:
+        validate_minimum_deployment_target(minimum_deployment_target, backend)
+
     # Avoid circular import
     from coremltools.converters.mil.testing_reqs import ct
 
@@ -119,8 +138,13 @@ def assert_model_is_valid(
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
 
-    mlmodel = ct_convert(program, source="milinternal", convert_to=backend,
-                         compute_units=ct.ComputeUnit.CPU_ONLY)
+    mlmodel = ct_convert(
+        program,
+        source="milinternal",
+        convert_to=backend,
+        compute_units=ct.ComputeUnit.CPU_ONLY,
+        minimum_deployment_target=minimum_deployment_target,
+    )
     assert mlmodel is not None
 
     if verbose:
@@ -245,7 +269,7 @@ def compare_backend(
     mlmodel,
     input_key_values,
     expected_outputs,
-    dtype = "fp32",
+    dtype="fp32",
     atol=1e-04,
     rtol=1e-05,
     also_compare_shapes=True,
@@ -292,9 +316,7 @@ def compare_backend(
     return None
 
 
-def compare_shapes(
-    mlmodel, input_key_values, expected_outputs, pred=None
-):
+def compare_shapes(mlmodel, input_key_values, expected_outputs, pred=None):
     """
     Inputs:
         - mlmodel: MLModel.
@@ -499,7 +521,8 @@ def random_gen_input_feature_type(input_desc):
     else:
         raise ValueError('unsupported type')
 
-def gen_input_shapes_einsum(equation, dynamic):
+
+def gen_input_shapes_einsum(equation: str, dynamic: bool, backend: Tuple[str, str]):
     equation = equation.replace(" ", "")
     left = equation.split("->")[0]
     a_desc, b_desc = left.split(",")
@@ -510,7 +533,10 @@ def gen_input_shapes_einsum(equation, dynamic):
         if symbol not in shapes:
             shapes[symbol] = cur_default_shape
             if dynamic:
-                converter_shapes[symbol] = ct.RangeDim(default=cur_default_shape)
+                converter_shapes[symbol] = ct.RangeDim(
+                    default=cur_default_shape,
+                    upper_bound=cur_default_shape if backend[0] == "mlprogram" else -1,
+                )
             else:
                 converter_shapes[symbol] = cur_default_shape
             cur_default_shape += 1
@@ -543,3 +569,19 @@ def assert_cast_ops_count(mlmodel, expected_count):
 
 def assert_ops_in_mil_program(mlmodel, expected_op_list):
     assert expected_op_list == get_op_types_in_program(mlmodel._mil_program)
+
+
+def validate_minimum_deployment_target(
+    minimum_deployment_target: ct.target, backend: Tuple[str, str]
+):
+    """
+    Validates the minimum deployment target based on backend and macOS version. Only used in tests.
+    """
+    if minimum_deployment_target >= ct.target.iOS15 and backend[0] != "mlprogram":
+        pytest.skip("IOS15+ target only compatible with mlprogram.")
+    if coremltoolsutils._is_macos():
+        macos_major_version = coremltoolsutils._macos_version()[0]
+        if macos_major_version < IOS_TO_MINIMUM_MACOS_VERSION[minimum_deployment_target]:
+            pytest.skip(
+                f"IOS{minimum_deployment_target} target requires macOS {macos_major_version}+."
+            )

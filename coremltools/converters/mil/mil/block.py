@@ -452,6 +452,7 @@ class Block:
         anchor_op,
         old_var,
         new_var,
+        end_op=None,
         no_check_var_types=False,
         no_check_var_visibility=False,
     ):
@@ -459,6 +460,7 @@ class Block:
         :param anchor_op: Operation
         :param old_var: Var
         :param new_var: Var
+        :param end_op: Operation
         :param no_check_var_types: bool
         :param no_check_var_visibility: bool
         :return: True if the old_var can be replaced by new_var. False otherwsie.
@@ -474,6 +476,7 @@ class Block:
 
         self.replace_uses_of_var_after_op(
             anchor_op=anchor_op,
+            end_op=end_op,
             old_var=old_var,
             new_var=new_var,
             no_check_var_types=no_check_var_types,

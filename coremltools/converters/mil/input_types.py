@@ -4,14 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from enum import Enum
+from typing import Optional
 
 import numpy as np
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil.types.type_mapping import (
-    is_builtin, numpy_type_to_builtin_type)
-
+from coremltools.converters.mil.mil.types.type_mapping import is_builtin, numpy_type_to_builtin_type
 
 
 class ColorLayout(Enum):
@@ -106,7 +105,7 @@ class ImageType(InputType):
 
         color_layout: string or enumeration of type ``ct.colorlayout``
             Color layout of the image. Valid values are as follows:
-            
+
             Enumeration (recommended):
                 * ``ct.colorlayout.RGB``
                 * ``ct.colorlayout.BGR``
@@ -264,29 +263,36 @@ class TensorType(InputType):
 
 
 class RangeDim:
-    def __init__(self, lower_bound=1, upper_bound=-1, default=None,
-            symbol=None):
+    def __init__(
+        self,
+        lower_bound: int = 1,
+        upper_bound: int = -1,
+        default: Optional[int] = None,
+        symbol: Optional[str] = None,
+    ):
         """
         A class for providing a range of accepted shapes.
 
         Parameters
         ----------
-        lower_bound: (int)
+        lower_bound:
             The minimum valid value for the shape.
 
-        upper_bound: (int)
+        upper_bound:
             The maximum valid value for the shape.
 
-            Set to ``-1`` if there is no upper limit.
+            Set to ``-1`` if there is no upper limit (only works if backend is set to "neuralnetwork").
+            When backend is set to "mlprogram" during conversion, -1 is not allowed. A finite
+            positive upper bound must be provided.
 
-        default: (int) or None
-            The default value that is used for initiating the model, and set in the input shape field of the model file.
+        default:
+            The default value that is used for initiating the model, and set in the input shape
+            field of the model file.
 
             If set to ``None``, ``lower_bound`` would be used as default.
 
-        symbol: (str)
-            Optional symbol name for the dim. Autogenerate a symbol name if
-            not specified.
+        symbol:
+            Optional symbol name for the dim. Autogenerate a symbol name if not specified.
         """
         if symbol is None:
             from coremltools.converters.mil.mil import get_new_symbol
@@ -296,20 +302,17 @@ class RangeDim:
             self.symbol = Symbol(symbol)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
+
         if default is None:
             self.default = lower_bound
         else:
             if default < lower_bound:
                 raise ValueError(
-                    "Default value {} is less than minimum value ({}) for range".format(
-                        default, lower_bound
-                    )
+                    f"Default value {default} is less than minimum value ({lower_bound}) for range"
                 )
-            if upper_bound > 0 and default > upper_bound:
+            if default > upper_bound > 0:
                 raise ValueError(
-                    "Default value {} is greater than maximum value ({}) for range".format(
-                        default, upper_bound
-                    )
+                    f"Default value {default} is greater than maximum value ({upper_bound}) for range"
                 )
             self.default = default
 
@@ -330,11 +333,11 @@ class Shape:
         ----------
         shape: list of (int), symbolic values, RangeDim object
             The valid shape of the input.
-        
+
         default: tuple of int or None
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
-            
+
             If None, then ``shape`` is used.
         """
         from coremltools.converters.mil.mil import get_new_symbol

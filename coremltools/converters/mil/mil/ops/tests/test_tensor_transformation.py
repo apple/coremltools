@@ -17,7 +17,12 @@ from coremltools.converters.mil.mil.types import nptype_from_builtin
 from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
 
-from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
+from .testing_utils import (
+    UNK_SYM,
+    UNK_VARIADIC,
+    construct_inputs_from_placeholders,
+    run_compare_builder,
+)
 
 if _HAS_TORCH:
     import torch
@@ -90,7 +95,7 @@ class TestSpaceToBatch:
 class TestBatchToSpace:
     @pytest.mark.parametrize(
         "compute_unit, backend", itertools.product(compute_units, backends,)
-    )    
+    )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (8, 1, 1, 3, fp32)
         val = np.array([[[[ 0,  1,  3]]],
@@ -204,6 +209,9 @@ class TestExpandDims:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -311,6 +319,7 @@ class TestExpandDims:
             backend=backend,
         )
 
+
 class TestReshapeLike:
     @pytest.mark.parametrize(
         "compute_unit, backend, InputShape_RefShapes_Begins_Ends_EndMasks, InputType_RefType",
@@ -334,20 +343,20 @@ class TestReshapeLike:
         ):
         if backend[0] == "neuralnetwork":
             pytest.skip("reshape_like not supoprted in neuralnetwork backend.")
-            
+
         if ct.utils._macos_version() < (13, 0):
             pytest.skip("reshape_like not supported in macOS12 or older.")
-            
+
         input_shape, ref_shapes, begins, ends, end_masks = InputShape_RefShapes_Begins_Ends_EndMasks
         ref_shape_1, ref_shape_2 = ref_shapes
         input_type, ref_type = InputType_RefType
-        
+
         t = np.random.rand(*input_shape).astype(np.float32)
         ref_tensor_1 = np.random.rand(*ref_shape_1).astype(np.float32)
         ref_tensor_2 = np.random.rand(*ref_shape_2).astype(np.float32)
 
         input_placeholders = {
-            "x": mb.placeholder(shape=t.shape), 
+            "x": mb.placeholder(shape=t.shape),
             "ref_tensor_1": mb.placeholder(shape=ref_shape_1),
             "ref_tensor_2": mb.placeholder(shape=ref_shape_2),
         }
@@ -360,14 +369,14 @@ class TestReshapeLike:
         def build(x, ref_tensor_1, ref_tensor_2):
             if input_type == types.bool:
                 x = mb.cast(x=x, dtype="bool")
-                
+
             if ref_type == types.bool:
                 ref_tensor_1 = mb.cast(x=ref_tensor_1, dtype="bool")
                 ref_tensor_2 = mb.cast(x=ref_tensor_2, dtype="bool")
-                
+
             ref_tensors = (ref_tensor_1, ref_tensor_2)
             return mb.reshape_like(x=x, ref_tensors=ref_tensors, begins=begins, ends=ends, end_masks=end_masks)
-            
+
         output_shape = ()
         for ref_shape, begin, end, end_mask in zip((ref_shape_1, ref_shape_2), begins, ends, end_masks):
             if end_mask:
@@ -483,6 +492,71 @@ class TestReshape:
             "shape": np.array([2, 1, 3], dtype=np.float32),
             "shape2": np.array([2, 1, 3], dtype=np.float32),
         }
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    @ssa_fn
+    def test_too_many_neg_ones(self):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        with pytest.raises(ValueError, match="Reshape op supports only one dimension to be -1"):
+            mb.reshape(x=x, shape=[-1, -1])
+
+    @ssa_fn
+    def test_invalid_target_shape(self):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        with pytest.raises(ValueError, match="Invalid target shape in `reshape` op"):
+            mb.reshape(x=x, shape=[4, -1])
+
+    @ssa_fn
+    def test_invalid_target_shape_with_zero(self):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        with pytest.raises(ValueError, match="Invalid target shape in `reshape` op"):
+            mb.reshape(x=x, shape=[0, 7])
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_reshape_with_zero(self, compute_unit, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
+
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            return [
+                mb.reshape(x=x, shape=[0, -1]),
+                mb.reshape(x=x, shape=[0, 3]),
+                mb.reshape(x=x, shape=[-1, 0]),
+            ]
+
+        expected_output_types = [
+            (2, 3, types.fp32),
+            (2, 3, types.fp32),
+            (2, 3, types.fp32),
+        ]
+        expected_outputs = [
+            np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
+            np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
+            np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
+        ]
+
         run_compare_builder(
             build,
             input_placeholders,
@@ -492,6 +566,123 @@ class TestReshape:
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_reshape_with_zero_different_len(self, compute_unit, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
+
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            return [
+                mb.reshape(x=x, shape=[1, 0, -1, 0]),
+            ]
+
+        expected_output_types = [
+            (1, 1, 2, 3, types.fp32),
+        ]
+        expected_outputs = [
+            np.array([[[[1, 2, 3], [4, 5, 6]]]], dtype=np.float32),
+        ]
+
+        with pytest.raises(
+            ValueError,
+            match="When there is 0 in shape, the rank of x .* must "
+            "equal to the target shape len",
+        ):
+            run_compare_builder(
+                build,
+                input_placeholders,
+                input_values,
+                expected_output_types,
+                expected_outputs,
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_reshape_with_zero_different_len(self, compute_unit, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
+
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            return [mb.reshape(x=x, shape=[1, 0, -1, 0])]
+
+        # In IOS15/16 it will error out because rank of x needs to have same length as shape.
+        with pytest.raises(
+            ValueError,
+            match="When there is 0 in shape, the rank of x .* must "
+            "equal to the target shape len",
+        ):
+            run_compare_builder(
+                build,
+                input_placeholders,
+                input_values,
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+        # In IOS17 it accepts different length.
+        expected_output_types = [(1, 1, 2, 3, types.fp32)]
+        expected_outputs = [np.array([[[[1, 2, 3], [4, 5, 6]]]], dtype=np.float32)]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_reshape_invalid_with_zero(self, compute_unit, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
+
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            return [mb.reshape(x=x, shape=[4, 0, -1, 0])]
+
+        with pytest.raises(ValueError, match="Invalid target shape in `reshape` op"):
+            run_compare_builder(
+                build,
+                input_placeholders,
+                input_values,
+                compute_unit=compute_unit,
+                backend=backend,
+                minimum_deployment_target=ct.target.iOS17,
+            )
+
 
 
 class TestReverse:
@@ -659,6 +850,9 @@ class TestReverseSequence:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -848,6 +1042,9 @@ class TestTranspose:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -883,12 +1080,16 @@ class TestTranspose:
         input_values = {
             "x": np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
         }
+
         run_compare_builder(
             build,
             input_placeholders,
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -999,7 +1200,7 @@ class TestPixelUnshuffle:
     ):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
-            
+
         val = np.random.rand(*shape)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}

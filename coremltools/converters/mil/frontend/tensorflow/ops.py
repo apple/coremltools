@@ -4,19 +4,16 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as _np
+import numpy as np
 
 from coremltools import _logger as logger
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as target
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.block import \
-    is_current_opset_version_compatible_with
-from coremltools.converters.mil.mil.ops.defs._utils import (
-    broadcast_shapes, promote_input_dtypes)
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes, promote_input_dtypes
 from coremltools.converters.mil.mil.types import builtin_to_string
-from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
-                                                           is_symbolic)
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 from .._utils import build_einsum_mil
 from .convert_utils import convert_graph
@@ -620,22 +617,32 @@ def ExtractImagePatches(context, node):
     box_indices = _np.transpose(box_indices)
     box_indices = box_indices.reshape(-1, 1)
     boxes = _np.tile(boxes, (batch, 1))
-    boxes = _np.concatenate([box_indices, boxes], axis=1)
-    boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
 
-    # use crop_and_resize
     x = _transpose_NHWC_to_NCHW(x)
-    x = mb.crop_resize(
-        x=x,
-        roi=boxes,
-        target_height=sizes[1],
-        target_width=sizes[2],
-        normalized_coordinates=False,
-        spatial_scale=1.0,
-        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-        sampling_mode="ALIGN_CORNERS",
-    )
-    x = mb.squeeze(x=x, axes=[1])
+    crop_resize_args = {
+        "x": x,
+        "target_height": sizes[1],
+        "target_width": sizes[2],
+        "normalized_coordinates": False,
+        "spatial_scale": 1.0,
+        "box_coordinate_mode": "CORNERS_HEIGHT_FIRST",
+        "sampling_mode": "ALIGN_CORNERS",
+    }
+    if not is_current_opset_version_compatible_with(target.iOS17):
+        # Before IOS17, boxes need to be shape [N,1,4,1,1] or [N,1,5,1,1].
+        boxes = _np.concatenate([box_indices, boxes], axis=1)
+        boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
+        # Before IOS17, the input param is `roi` instead of `boxes`.
+        crop_resize_args["roi"] = boxes
+        x = mb.crop_resize(**crop_resize_args)
+        # Before IOS17, the output has an extra dim at axis 1.
+        x = mb.squeeze(x=x, axes=[1])
+    else:
+        # At this point `boxes` has shape [N, 4], which is good enough for IOS17+.
+        crop_resize_args["boxes"] = boxes
+        box_indices = np.squeeze(box_indices, axis=-1)
+        crop_resize_args["box_indices"] = box_indices
+        x = mb.crop_resize(**crop_resize_args)
     x = _transpose_NCHW_to_NHWC(x, node_name=node.name + "_transpose_to_nhwc")
     x = mb.reshape(x=x, shape=(batch, len(h_index), len(w_index), -1), name=node.name)
     context.add(node.name, x)
@@ -2257,6 +2264,7 @@ def Gather(context, node):
     x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
     context.add(node.name, x)
 
+
 def _perform_gather_with_batch_dims(x, indices, batch_dims, gather_func, func_args, name):
     """
     An utility function to compute gather and gather_nd with batch_dims
@@ -3011,16 +3019,18 @@ def ZerosLike(context, node):
 @register_tf_op
 def IsFinite(context, node):
     x = context[node.inputs[0]]
-    if any_symbolic(x.shape):
-        x_shape = mb.shape(x=x)
-    else:
-        x_shape = [1] if x.shape == () else x.shape
-    max_tensor = mb.fill(shape=x_shape, value=_np.finfo(_np.float32).max)
-    min_tensor = mb.fill(shape=x_shape, value=_np.finfo(_np.float32).min)
-    less_then = mb.less_equal(x=x, y=max_tensor)
-    greater_than = mb.greater_equal(x=x, y=min_tensor)
-    x = mb.logical_and(x=less_then, y=greater_than, name=node.name)
-    context.add(node.name, x)
+
+    # In floating-point arithmetic, symbolically, inf + anything = inf,
+    # so we can detect if x is finite by x + y != x
+    #
+    # To avoid false alarm, i.e. x + y = x due to rounding error for small y,
+    # here we use the fp16 max as y
+    dtype = types.nptype_from_builtin(x.sym_type.get_primitive())
+    y_add = dtype(_np.finfo(_np.float16).max)
+    x_plus = mb.add(x=x, y=y_add)
+    result = mb.not_equal(x=x, y=x_plus, name=node.name)
+
+    context.add(node.name, result)
 
 
 @register_tf_op
@@ -3045,20 +3055,22 @@ def CropAndResize(context, node):
     if const_box_info:
         boxes = context[node.inputs[1]].val
         box_indices = context[node.inputs[2]].val
-        box_indices = _np.expand_dims(box_indices, axis=1)
-        boxes = _np.concatenate([box_indices, boxes], axis=1)
-        # CoreML expects boxes/ROI in
-        # [N, 1, 5, 1, 1] format
-        boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
+        if not is_current_opset_version_compatible_with(target.iOS17):
+            # Before IOS17, CoreML expects boxes/ROI in [N, 1, 5, 1, 1] shape.
+            box_indices = _np.expand_dims(box_indices, axis=1)
+            boxes = _np.concatenate([box_indices, boxes], axis=1)
+            boxes = boxes.reshape(boxes.shape[0], 1, boxes.shape[1], 1, 1)
     else:
         box_indices = context[node.inputs[2]]
         boxes = context[node.inputs[1]]
-        box_indices = mb.expand_dims(x=box_indices, axes=[1])
-        if box_indices.dtype != boxes.dtype:
-            box_indices = mb.cast(x=box_indices, dtype=types.builtin_to_string(boxes.dtype))
-        boxes = mb.concat(values=(box_indices, boxes), axis=1)
-        # TODO: Dynamic rank: Use GetShape and select indices dynamically
-        boxes = mb.reshape(x=boxes, shape=[boxes.shape[0], 1, boxes.shape[1], 1, 1])
+        if not is_current_opset_version_compatible_with(target.iOS17):
+            # Before IOS17, CoreML expects ROI in [N, 1, 5, 1, 1] shape.
+            if box_indices.dtype != boxes.dtype:
+                box_indices = mb.cast(x=box_indices, dtype=types.builtin_to_string(boxes.dtype))
+            box_indices = mb.expand_dims(x=box_indices, axes=[1])
+            boxes = mb.concat(values=(box_indices, boxes), axis=1)
+            # TODO: Dynamic rank: Use GetShape and select indices dynamically
+            boxes = mb.reshape(x=boxes, shape=[boxes.shape[0], 1, boxes.shape[1], 1, 1])
 
     # Get Height and Width of crop
     h_out, w_out = crop_size[0], crop_size[1]
@@ -3078,9 +3090,8 @@ def CropAndResize(context, node):
     x = _transpose_NHWC_to_NCHW(x)
 
     # Crop Resize
-    args = {
+    crop_resize_args = {
         "x": x,
-        "roi": boxes,
         "target_height": h_out,
         "target_width": w_out,
         "normalized_coordinates": True,
@@ -3089,19 +3100,26 @@ def CropAndResize(context, node):
         "sampling_mode": method,
     }
     if is_current_opset_version_compatible_with(target.iOS16):
-        args["pad_value"] = pad_value
+        crop_resize_args["pad_value"] = pad_value
     else:
         if pad_value != 0.0:
-            msg = (
-                    "For iOS15 or older, only extrapolation_value=0.0 is supported or the tf CropAndResize op. "
-                    "Got {}"
-            ).format(pad_value)
-            raise ValueError(msg)
-    x = mb.crop_resize(**args)
+            raise ValueError(
+                f"For iOS15 or older, only extrapolation_value=0.0 is supported or the tf CropAndResize op. Got {pad_value}"
+            )
+    if not is_current_opset_version_compatible_with(target.iOS17):
+        # Before IOS17, the input param is `roi` instead of `boxes`.
+        crop_resize_args["roi"] = boxes
+    else:
+        crop_resize_args["boxes"] = boxes
+        crop_resize_args["box_indices"] = box_indices
 
-    # CoreML output format: [N, 1, C, h_out, w_out]
-    # TF output format: [N, h_out, w_out, C]
-    x = mb.squeeze(x=x, axes=[1])
+    x = mb.crop_resize(**crop_resize_args)
+
+    if not is_current_opset_version_compatible_with(target.iOS17):
+        # Before IOS17, the output has an extra dim at axis 1.
+        # CoreML output format: [N, 1, C, h_out, w_out]
+        # TF output format: [N, h_out, w_out, C]
+        x = mb.squeeze(x=x, axes=[1])
     x = _transpose_NCHW_to_NHWC(x, node.name)
     context.add(node.name, x)
 

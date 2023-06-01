@@ -107,14 +107,18 @@ def _load_file_value(context, filevalue_spec, dtype):
         context.blob_reader_from_filename[filename] = blob_reader
 
     if dtype == types.uint8:
-        np_value = np.array(blob_reader.read_uint8_data(offset), np.uint8)
+        np_value = blob_reader.read_uint8_data(offset)
     elif dtype == types.int8:
-        np_value = np.array(blob_reader.read_int8_data(offset), np.int8)
+        np_value = blob_reader.read_int8_data(offset)
+    elif dtype == types.uint16:
+        np_value = blob_reader.read_uint16_data(offset)
+    elif dtype == types.int16:
+        np_value = blob_reader.read_int16_data(offset)
     elif dtype == types.fp16:
-        np_value_uint16 = np.array(blob_reader.read_fp16_data(offset), np.uint16)
+        np_value_uint16 = blob_reader.read_fp16_data(offset)
         np_value = np.frombuffer(np_value_uint16.tobytes(), np.float16)
     elif dtype == types.fp32:
-        np_value = np.array(blob_reader.read_float_data(offset), np.float32)
+        np_value = blob_reader.read_float_data(offset)
     else:
         raise ValueError("Invalid dtype for blob file value type")
 
@@ -263,9 +267,6 @@ def _load_operation(context, op_spec):
                 "Loading Custom Layer operation not yet implemented"
             )
 
-        if op_spec.attributes:
-            raise ValueError("Attributes on operation not supported")
-
         # The conversion steps of an operation proto -> PyMIL operation are as following:
 
         # (i)   Convert the input arguments:
@@ -289,7 +290,12 @@ def _load_operation(context, op_spec):
         # (iv)  Set the outer_op for control flow
         #       Once the operation is created, we replace the dummy outer_op with the legit one, to make it a valid PyMIL program
 
-        inputs = {}
+        attrs = list(op_spec.attributes.items())
+        if len(attrs) > 0:
+            if len(attrs) != 1 or attrs[0][0] != "name":
+                raise ValueError("\"name\" is the only supported attribute for operation")
+        inputs = {k: _load_value(context, v) for k, v in op_spec.attributes.items()}
+
         for param_name, argument in op_spec.inputs.items():
             vars = []
             for binding in argument.arguments:

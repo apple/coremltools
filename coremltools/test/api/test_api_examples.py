@@ -390,7 +390,7 @@ class TestGraphPassManagement:
         example_input = torch.rand(1, 1, 28, 28)
         traced_model = torch.jit.trace(model, example_input)
 
-        pipeline = ct.PassPipeline.get_empty_pipeline()
+        pipeline = ct.PassPipeline.EMPTY
 
         model_converted = ct.convert(
             traced_model,
@@ -466,7 +466,7 @@ class TestGraphPassManagement:
         )
 
         pipeline.set_options(
-            "common::const_elimination", {"skip_const_by_size": "-1"}, override=True
+            "common::const_elimination", {"skip_const_by_size": "-1"}
         )
         model_converted = ct.convert(
             traced_model,

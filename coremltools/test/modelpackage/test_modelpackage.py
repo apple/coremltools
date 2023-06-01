@@ -12,12 +12,15 @@ import pytest
 
 import coremltools
 from coremltools import ComputeUnit, utils
+from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
 from coremltools.libmodelpackage import ModelPackage
 from coremltools.models import MLModel
-from coremltools.models.utils import (_MLPACKAGE_AUTHOR_NAME,
-                                      _WEIGHTS_DIR_NAME)
+from coremltools.models.utils import _MLPACKAGE_AUTHOR_NAME, _WEIGHTS_DIR_NAME
 from coremltools.proto import Model_pb2
+
+if _HAS_TORCH:
+    import torch
 
 
 def _remove_path(path):
@@ -30,6 +33,7 @@ def _remove_path(path):
 class TestMLModel:
 
     def setup_class(self):
+
         spec = Model_pb2.Model()
         spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
@@ -100,14 +104,43 @@ class TestMLModel:
         model.save(package.name)
         loaded_model = MLModel(package.name)
 
-        assert model.author == "Test author"
-        assert model.license == "Test license"
-        assert model.short_description == "Test model"
-        assert model.input_description["feature_1"] == "This is feature 1"
-        assert model.output_description["output"] == "This is output"
+        assert loaded_model.author == "Test author"
+        assert loaded_model.license == "Test license"
+        assert loaded_model.short_description == "Test model"
+        assert loaded_model.input_description["feature_1"] == "This is feature 1"
+        assert loaded_model.output_description["output"] == "This is output"
 
         # cleanup
         _remove_path(package.name)
+
+
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
+    def test_save_from_mlpackage(self):
+        class Model(torch.nn.Module):
+            def forward(self, x):
+                return x
+
+        example_input = torch.rand(1, 3, 50, 50)
+        traced_model = torch.jit.trace(Model().eval(), example_input)
+
+        model = coremltools.convert(
+            traced_model,
+            inputs=[coremltools.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+        )
+
+        author = "Bobby Joe!"
+        model.author = author
+
+        save_dir = tempfile.TemporaryDirectory(suffix=".mlpackage").name
+
+        model.save(save_dir)
+        loaded_model = MLModel(save_dir)
+
+        assert loaded_model.author == author
+
+        _remove_path(save_dir)
+
 
     def test_predict_api(self):
         model = MLModel(self.spec)
@@ -232,15 +265,14 @@ class TestMLModel:
 
         _remove_path(package.name)
 
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_mil_as_package(self):
-        import torch
-
         num_tokens = 3
         embedding_size = 5
 
         class TestModule(torch.nn.Module):
             def __init__(self):
-                super(TestModule, self).__init__()
+                super().__init__()
                 self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
 
             def forward(self, x):
@@ -310,7 +342,7 @@ class TestMLModel:
 
         class TestModule(torch.nn.Module):
             def __init__(self):
-                super(TestModule, self).__init__()
+                super().__init__()
                 self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
 
             def forward(self, x):

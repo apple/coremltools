@@ -5,16 +5,12 @@
 
 import os
 import platform
-import urllib
-from io import BytesIO
 from os import chdir, getcwd
 from shutil import rmtree
 from tempfile import mkdtemp
 
 import numpy as np
 import pytest
-import requests
-from PIL import Image
 
 import coremltools as ct
 from coremltools.converters.mil.mil import types
@@ -141,12 +137,12 @@ class TestTensorFlow2ConverterExamples:
         chdir(self._cwd)
         if os.path.exists(self._temp_dir):
             rmtree(self._temp_dir)
-    
+
     @staticmethod
     def test_convert_tf_keras_h5_file():
         if platform.machine() == "arm64":
             pytest.xfail("rdar://101162740 ([CI] [TF] The tf_keras_h5_file API testing is failing on M1 with new OS)")
-            
+
         for file_extension in ("h5", "hdf5"):
             x = tf.keras.Input(shape=(32,), name="input")
             y = tf.keras.layers.Dense(16, activation="softmax")(x)

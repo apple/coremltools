@@ -60,6 +60,10 @@ _SPECIFICATION_VERSION_IOS_15 = 6
 # New versions for iOS 16.0
 _SPECIFICATION_VERSION_IOS_16 = 7
 
+# New versions for iOS 17.0
+_SPECIFICATION_VERSION_IOS_17 = 8
+
+
 class ComputeUnit(_Enum):
     '''
     The set of processing-unit configurations the model can use to make predictions.
@@ -76,6 +80,7 @@ _OPSET = {
     _SPECIFICATION_VERSION_IOS_14: "CoreML4",
     _SPECIFICATION_VERSION_IOS_15: "CoreML5",
     _SPECIFICATION_VERSION_IOS_16: "CoreML6",
+    _SPECIFICATION_VERSION_IOS_17: "CoreML7",
 }
 
 # Default specification version for each backend
@@ -84,7 +89,7 @@ _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM = _SPECIFICATION_VERSION_IO
 
 
 # expose sub packages as directories
-from . import converters, models, proto
+from . import converters, models, optimize, proto
 
 # expose unified converter in coremltools package level
 from .converters import ClassifierConfig

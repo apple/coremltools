@@ -8,8 +8,7 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools._deps import (_HAS_TF_1, _HAS_TF_2, _HAS_TORCH)
-
+from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 
 # Setting up backend / precision
 backends = []
@@ -31,11 +30,11 @@ else:
     backends = [('mlprogram', "fp16"), ('neuralnetwork', "fp32")]
     if os.getenv('INCLUDE_MIL_FP32_UNIT_TESTS') == '1':
         backends.append(('mlprogram', 'fp32'))
-        
+
 # Setting up compute unit
 compute_units = []
-if 'COMPUTE_UNITS' in os.environ:
-    for i, cur_str_val in enumerate(os.environ['COMPUTE_UNITS'].split(',')):
+if "COMPUTE_UNITS" in os.environ:
+    for cur_str_val in os.environ["COMPUTE_UNITS"].split(","):
         cur_str_val = cur_str_val.strip().upper()
         if cur_str_val not in ct.ComputeUnit.__members__:
             raise ValueError("Compute unit \"{}\" not supported in coremltools.".format(cur_str_val))
@@ -52,3 +51,6 @@ if _HAS_TF_1:
 if _HAS_TF_2:
     tf = pytest.importorskip("tensorflow")
     tf.random.set_seed(1234)
+
+if _HAS_TORCH:
+    torch = pytest.importorskip("torch")

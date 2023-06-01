@@ -107,6 +107,8 @@ namespace CoreML {
                         const CustomModel& b);
         bool operator==(const LinkedModel& a,
                         const LinkedModel& b);
+        bool operator==(const ClassConfidenceThresholding& a,
+                        const ClassConfidenceThresholding& b);
 
         // Apple provided models
         bool operator==(const CoreMLModels::WordTagger& a,

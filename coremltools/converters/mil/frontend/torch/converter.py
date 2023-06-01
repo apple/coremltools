@@ -14,6 +14,7 @@ from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.input_types import ImageType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
+from coremltools.converters.mil.mil.types import is_float
 
 from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
@@ -40,6 +41,137 @@ torch_to_mil_types = {
 mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
 
 
+class QuantizationContext:
+    """
+    Utilities to manage information pertaining to quantization of tensors in a PyTorch graph.
+    """
+
+    def __init__(self, context):
+        self._context = context
+
+        # Maps var name to tuple of (torch dtype, scale, zero_point)
+        # zero_point is in a NumPy dtype corresponding to torch one (for e.g. np.uint8 for torch.quint8).
+        self._quant_param_map = {}
+        # In MIL Programs, if a MIL op doesn't support quantized I/O but the PyTorch ops do,
+        # we just use floating-point tensors after dequantization. This means that information about
+        # what dtype (int8/uint8) quantized tensors had in the PyTorch graph is not carried into
+        # in the MIL graph.
+        # To simplify, we only support a single dtype for activation quantizations throughout the
+        # incoming graph.
+        # The other option is to remember dtypes across ops, including MIL ones that don't support
+        # quantized I/O. We will need to be careful about edge cases like conflicting dtypes, etc.
+        self._quant_dtype = None
+
+    def add_quantization_info(self, name, torch_dtype, scale, zero_point, axis=None):
+        """
+        Stores the quantization parameters (torch dtype, scale, zero_point) corresponding to a named
+        var in the graph.
+        zero_point should be in a NumPy dtype corresponding to torch one (for e.g. np.uint8 for torch.quint8).
+        """
+        self._quant_param_map[name] = (torch_dtype, scale, zero_point, axis)
+
+    def get_quantization_info(self, name):
+        """
+        Retrieves the information added via add_quantization_info, if applicable.
+        Returns None if quantization parameters could not be found.
+        """
+        if name not in self._quant_param_map:
+            return None
+        return self._quant_param_map[name]
+
+    def maybe_handle_quantized_inputs(self, node: InternalTorchIRNode):
+        """
+        If a node's op doesn't support quantized inputs but gets one, this will wire it to
+        receive a dequantized version of it.
+        """
+
+        op_type = node.kind
+        if op_type in {"quantize_per_tensor", "dequantize"} or "quantized::" in op_type:
+            # Op can handle quantized inputs. Nothing to do here.
+            return
+
+        for input_name in node.inputs:
+            if self.get_quantization_info(input_name) is None:
+                # Not a quantized tensor
+                continue
+
+            # We need a dequantized version of the input to feed to the op.
+            dequantized_var, _ = self.get_dequantized_var(input_name)
+            node.replace_name(input_name, dequantized_var.name)
+
+    def get_quantized_per_tensor(self, name, torch_dtype, scale, zero_point, quantized_name):
+        """
+        Quantizes the provided named var as per quantization params.
+        zero_point will be cast to the appropriate dtype based on torch_dtype.
+        """
+        if self._quant_dtype is None:
+            self._quant_dtype = torch_dtype
+        elif self._quant_dtype != torch_dtype:
+            raise NotImplementedError(
+                "Currently we only support a single activation dtype throughout the model"
+            )
+
+        if torch_dtype == torch.quint8:
+            zero_point = np.uint8(zero_point)
+            output_dtype = "uint8"
+        elif torch_dtype == torch.qint8:
+            zero_point = np.int8(zero_point)
+            output_dtype = "int8"
+        else:
+            raise ValueError(f"Invalid torch dtype for quantization: {torch_dtype}")
+        if np.isscalar(zero_point):
+            # MIL allows skipping zero_point if its zero.
+            if zero_point == 0:
+                zero_point = None
+            # TODO (rdar://107718371): skip 128 for uint8 by switching to int8
+
+        result = mb.quantize(
+            input=self._context[name], zero_point=zero_point, scale=scale, output_dtype=output_dtype
+        )
+        self._context.add(result, quantized_name)
+        self._context.quant_context.add_quantization_info(
+            quantized_name, torch_dtype, scale, zero_point
+        )
+        return result
+
+    def get_dequantized_var(self, name: str, dequantized_name: str = None):
+        """
+        Returns dequantized var & torch dtype corresponding to the named var.
+        """
+
+        original_var = self._context[name]
+        if is_float(original_var.dtype):
+            # Input doesn't need dequantization.
+            # This might happen if in the PyTorch graph the upstream nodes supported quantized inputs,
+            # but MIL does not. In that case, we already dequantized the vars before feeding them to
+            # the MIL op.
+            if dequantized_name is not None:
+                self._context.add(original_var, dequantized_name)
+            if self._quant_dtype is None:
+                raise AssertionError("Trying to dequantize without quantization info")
+            return original_var, self._quant_dtype
+
+        quant_params = self.get_quantization_info(name)
+        if quant_params is None:
+            raise ValueError(
+                f"Could not find quantization parameters for quantized var {original_var.name}"
+            )
+        torch_dtype, scale, zero_point, axis = quant_params
+
+        # We add a new var corresponding to each dequantized value.
+        # This ensures the atomicity of quantized op patterns in MIL.
+        dequantized_var = mb.dequantize(
+            input=original_var, scale=scale, zero_point=zero_point, axis=axis
+        )
+        if dequantized_name is not None:
+            dequantized_var_name = dequantized_name
+        else:
+            dequantized_var_name = dequantized_var.name
+        self._context.add(dequantized_var, dequantized_var_name)
+
+        return dequantized_var, torch_dtype
+
+
 class TranscriptionContext:
     """
     Maintains a map from torch operations to their MIL values
@@ -51,13 +183,29 @@ class TranscriptionContext:
     def __init__(self, name=None):
         self.name = name if name else ""
         self._current_graph = [{}]
+        self._torch_graph = None
+        self._quant_context = QuantizationContext(self)
+
+    @property
+    def torch_graph(self):
+        if self._torch_graph is None:
+            raise ValueError("InternalTorchIRGraph not set yet on context")
+        return self._torch_graph
+
+    @property
+    def quant_context(self):
+        return self._quant_context
+
+    @torch_graph.setter
+    def torch_graph(self, graph: InternalTorchIRGraph):
+        self._torch_graph = graph
 
     def prepare_for_conversion(self, node: InternalTorchIRNode):
         """
         Perform any preparation necessary before node-specific frontend conversion
         is invoked.
         """
-        pass
+        self.quant_context.maybe_handle_quantized_inputs(node)
 
     def add(self, ssa_var, torch_name=None):
         """
@@ -69,7 +217,7 @@ class TranscriptionContext:
         if torch_name is None:
             torch_name = ssa_var.name
         if torch_name in self._current_graph[-1]:
-            print("Torch var {} is added again.".format(torch_name))
+            print(f"Torch var {torch_name} is added again.")
             return
         self._current_graph[-1][torch_name] = ssa_var
 
@@ -83,9 +231,7 @@ class TranscriptionContext:
             current_graph = self._current_graph[idx]
             if torch_name in current_graph:
                 return self._current_graph[idx][torch_name]
-        raise ValueError(
-            "Torch var {} not found in context {}".format(torch_name, self.name)
-        )
+        raise ValueError(f"Torch var {torch_name} not found in context {self.name}")
 
     def __contains__(self, torch_name):
         """Returns whether or not the torch var exist in context."""
@@ -121,7 +267,7 @@ class TranscriptionContext:
                     shape_str = v.sym_shape()
                 else:
                     shape_str = "None"
-                __str += "%{} : {}\n".format(k, shape_str)
+                __str += f"%{k} : {shape_str}\n"
             _str += __str + "\n"
         return _str
 
@@ -174,6 +320,7 @@ class TorchConverter:
         self.graph = InternalTorchIRGraph(
             raw_graph, params_dict, self.inputs, cut_at_symbols
         )
+        self.context.torch_graph = self.graph
 
         # TODO (rdar://106161395): Register Torch IR passes and unify them into the pass pipeline.
         # Apply Torch IR passes
@@ -231,8 +378,16 @@ class TorchConverter:
 
     def convert_const(self):
         for name, val in self.graph.params.items():
-            if not isinstance(val, np.ndarray):
-                raise ValueError("unsupported class for {} in PyTorch graph: {}".format(name, type(val)))
+            if isinstance(val, torch._C.ScriptObject):
+                logger.info(f"Encountered constant {name} of type _torch._C.ScriptObject")
+                continue
+            elif not isinstance(val, np.ndarray):
+                raise ValueError(f"unsupported class for {name} in PyTorch graph: {type(val)}")
+            # TODO (rdar://107718371): support uint8 quantization
+            # Some torch models store indices with uint8, which are unrelated to quantization and
+            # need to be cast to int32 since Core ML does not support int8.
+            # We need a way to distinguish whether an uint8 is quantization (so should be kept)
+            # or not (so should be cast to int32).
             if val.dtype == np.uint8:
                 val = val.astype(np.int32)
             const = mb.const(val=val, name=name)
@@ -289,18 +444,15 @@ class TorchConverter:
             # in Fairseq MT.
             for g in graph_outputs:
                 if g is None:
-                    msg = "Droping output {} which is None"
-                    logger.warning(msg.format(g))
+                    logger.warning(f"Droping output {g} which is None")
             graph_outputs = [g for g in graph_outputs if g is not None]
 
             # Output renaming occurs
             if self.outputs is not None:
                 if len(self.outputs) != len(graph_outputs):
-                    msg = "Number of outputs provided, {}, do not match the number of outputs detected in the model, {}."
-                    raise ValueError(msg.format(
-                        len(self.outputs),
-                        len(graph_outputs),
-                    ))
+                    raise ValueError(
+                        f"Number of outputs provided, {len(self.outputs)}, do not match the number of outputs detected in the model, {len(graph_outputs)}."
+                    )
             if self.output_names:
                 for index, var in enumerate(graph_outputs):
                     if self.output_names[index] is not None:
@@ -384,7 +536,7 @@ class TorchConverter:
             if not isinstance(module, torch.Tensor):
                 return False
             if str(node.output().type()) not in ("Tensor", "Optional[Tensor]"):
-                raise TypeError("Type \"{}\" not supported".format(node.output().type()))
+                raise TypeError(f'Type "{node.output().type()}" not supported')
             return True
 
         def _check_is_quantized_tensor(node, module):

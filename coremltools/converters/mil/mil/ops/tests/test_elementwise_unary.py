@@ -4,17 +4,19 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 import scipy
 
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import (Function, get_new_symbol,
-                                            types)
-from coremltools.converters.mil.mil.types.symbolic import \
-    is_compatible_symbolic_vector
+from coremltools.converters.mil.mil import Function, get_new_symbol, types
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
+from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.testing_utils import ssa_fn
 
 from .testing_utils import run_compare_builder
@@ -670,6 +672,87 @@ class TestElementwiseUnary:
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, src_dtype, dst_dtype",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16")],
+            [np.float16, np.float32, np.float64, np.int64, np.int32, np.int16, np.uint16],
+            [np.float16, np.float32, np.float64, np.int64, np.int32, np.int16, np.uint16],
+        ),
+    )
+    def test_builder_eval_cast_ios17(self, compute_unit, backend, src_dtype, dst_dtype):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=src_dtype)
+        dst_dtype_str = types.builtin_to_string(
+            types.type_mapping.numpy_type_to_builtin_type(dst_dtype)
+        )
+        expected_res = x.astype(dtype=np.float16)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+        def prog():
+            return mb.cast(x=x, dtype=dst_dtype_str)
+
+        main_func = prog.functions["main"]
+        cast_op = main_func.find_ops(op_type="cast")[0]
+        np.testing.assert_allclose(expected_res, cast_op.outputs[0].val, atol=1e-04, rtol=1e-05)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, src_dtype, dst_dtype",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16")],
+            [np.float16, np.float32, np.int16, np.int32, np.uint16],
+            [np.float16, np.float32, np.int16, np.int32, np.uint16],
+        ),
+    )
+    def test_builder_to_backend_cast_ios17(self, compute_unit, backend, src_dtype, dst_dtype):
+        _SUPPORTED_IO_DTYPES = {types.fp16, types.fp32, types.int32}
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=src_dtype)
+        src_builtin_dtype = types.type_mapping.numpy_type_to_builtin_type(src_dtype)
+        dst_builtin_dtype = types.type_mapping.numpy_type_to_builtin_type(dst_dtype)
+        expected_res = x.astype(dtype=np.float16)
+
+        expected_cast_num = 1
+        if src_builtin_dtype not in _SUPPORTED_IO_DTYPES:
+            # A cast will be inserted for unsupported dtypes inputs.
+            expected_cast_num += 1
+
+        # As CoreML IO only allows fp16/32 and int32, the output will be further cast.
+        expected_res_builtin_dtype = dst_builtin_dtype
+        if dst_builtin_dtype not in _SUPPORTED_IO_DTYPES:
+            expected_res_builtin_dtype = (
+                types.int32 if types.is_int(dst_builtin_dtype) else types.fp32
+            )
+            expected_cast_num += 1
+
+        def build(x):
+            return mb.cast(x=x, dtype=types.builtin_to_string(dst_builtin_dtype))
+
+        with patch.object(Var, "_is_nonreplaceable_var") as mocked_is_nonreplaceable_var:
+            # Mock that the cast is non-replaceable, to make sure it's kept in the graph.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and var.op.op_type == "cast"
+            )
+            # Remove the cast optimization pass to make sure all cast are kept in the graph.
+            pass_pipeline: PassPipeline = PassPipeline.DEFAULT
+            pass_pipeline.remove_passes(
+                ["common::cast_optimization", "common::topological_reorder"]
+            )
+            mlmodel = run_compare_builder(
+                build,
+                {"x": mb.placeholder(shape=x.shape, dtype=src_builtin_dtype)},
+                input_values={"x": x},
+                expected_output_types=x.shape + (expected_res_builtin_dtype,),
+                expected_outputs=expected_res,
+                compute_unit=compute_unit,
+                backend=backend,
+                minimum_deployment_target=ct.target.iOS17,
+                pass_pipeline=pass_pipeline,
+            )
+            prog = mlmodel._mil_program
+            cast_ops = prog["main"].find_ops(op_type="cast")
+            assert len(cast_ops) == expected_cast_num
 
     def test_erf_value_inference(self):
         INPUT_SIZE=(2, 3, 4)

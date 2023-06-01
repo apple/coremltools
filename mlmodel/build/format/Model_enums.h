@@ -19,6 +19,7 @@ enum MLModelType: int {
     MLModelType_mlProgram = 502,
     MLModelType_customModel = 555,
     MLModelType_linkedModel = 556,
+    MLModelType_classConfidenceThresholding = 560,
     MLModelType_oneHotEncoder = 600,
     MLModelType_imputer = 601,
     MLModelType_featureVectorizer = 602,
@@ -79,6 +80,8 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_customModel";
         case MLModelType_linkedModel:
             return "MLModelType_linkedModel";
+        case MLModelType_classConfidenceThresholding:
+            return "MLModelType_classConfidenceThresholding";
         case MLModelType_oneHotEncoder:
             return "MLModelType_oneHotEncoder";
         case MLModelType_imputer:

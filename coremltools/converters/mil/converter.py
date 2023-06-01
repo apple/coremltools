@@ -15,7 +15,7 @@ from coremltools.models import MLModel
 from coremltools.models.model import _create_mlpackage
 
 from . import ImageType, InputType
-from .mil.passes.pass_pipeline import PassPipeline, PipelineManager
+from .mil.passes.pass_pipeline import PassPipeline, PassPipelineManager
 
 
 class ConverterRegistry:
@@ -47,9 +47,9 @@ class MILFrontend:
             max_opset_version, op = model._get_max_opset_version_and_op()
             if max_opset_version > specification_version:
                 msg = (
-                    "Please update the minimum_deployment_target to {!s},"
-                    " since op {} is only available in opset {!s} or newer."
-                ).format(max_opset_version, op.op_type, max_opset_version)
+                    "Please update the minimum_deployment_target to coremltools.target.{},"
+                    " since op {} is only available in opset coremltools.target.{} or newer."
+                ).format(max_opset_version.name, op.op_type, max_opset_version.name)
                 raise ValueError(msg)
 
         if "inputs" in kwargs and kwargs["inputs"] is not None:
@@ -269,6 +269,7 @@ def mil_convert_to_proto(
             f"one of: {list(converter_registry.frontends.keys())}"
         )
 
+    kwargs.setdefault("convert_from", convert_from)
     kwargs.setdefault("convert_to", convert_to)
 
     if main_pipeline is None:
@@ -283,16 +284,16 @@ def mil_convert_to_proto(
 
     frontend_converter = frontend_converter_type()
     prog = frontend_converter(model, **kwargs)
-    PipelineManager.apply_pipeline(prog, frontend_pipeline)
+    PassPipelineManager.apply_pipeline(prog, frontend_pipeline)
 
-    PipelineManager.apply_pipeline(prog, main_pipeline)
+    PassPipelineManager.apply_pipeline(prog, main_pipeline)
 
     prog._check_invalid_tensor_rank()
 
     if convert_to == 'milinternal':
         return None, prog
 
-    PipelineManager.apply_pipeline(prog, backend_pipeline)
+    PassPipelineManager.apply_pipeline(prog, backend_pipeline)
     backend_converter_type = converter_registry.backends.get(convert_to.lower())
     if not backend_converter_type:
         raise NotImplementedError(

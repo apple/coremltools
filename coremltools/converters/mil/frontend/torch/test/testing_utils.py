@@ -12,9 +12,8 @@ import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
 from coremltools import RangeDim, TensorType
 from coremltools._deps import _IS_MACOS
-from coremltools.converters.mil.mil.types.type_mapping import \
-    nptype_from_builtin
-from coremltools.converters.mil.testing_utils import ct_convert
+from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
+from coremltools.converters.mil.testing_utils import ct_convert, validate_minimum_deployment_target
 
 from ..converter import torch_to_mil_types
 
@@ -148,7 +147,7 @@ def convert_and_compare(
     backend=("neuralnetwork", "fp32"),
     converter_input_type=None,
     compute_unit=ct.ComputeUnit.CPU_ONLY,
-    minimum_deployment_target=None
+    minimum_deployment_target=None,
 ):
     """
     If expected results is not set, it will by default
@@ -188,11 +187,8 @@ def convert_and_compare(
     if not coremltoolsutils._has_custom_layer(mlmodel._spec):
         coreml_preds = mlmodel.predict(coreml_inputs)
         coreml_outputs = mlmodel._spec.description.output
-        coreml_results = [
-            coreml_preds[output.name] for output in coreml_outputs
-        ]
-        for torch_result, coreml_result in zip(expected_results,
-                                               coreml_results):
+        coreml_results = [coreml_preds[output.name] for output in coreml_outputs]
+        for torch_result, coreml_result in zip(expected_results, coreml_results):
 
             if torch_result.shape == ():
                 torch_result = np.array([torch_result])
@@ -212,18 +208,18 @@ class TorchBaseTest:
 
     @staticmethod
     def run_compare_torch(
-            input_data,
-            model,
-            expected_results=None,
-            atol=1e-04,
-            rtol=1e-05,
-            input_as_shape=True,
-            backend=("neuralnetwork", "fp32"),
-            rand_range=(-1.0, 1.0),
-            use_scripting=False,
-            converter_input_type=None,
-            compute_unit=ct.ComputeUnit.CPU_ONLY,
-            minimum_deployment_target=None,
+        input_data,
+        model,
+        expected_results=None,
+        atol=1e-04,
+        rtol=1e-05,
+        input_as_shape=True,
+        backend=("neuralnetwork", "fp32"),
+        rand_range=(-1.0, 1.0),
+        use_scripting=False,
+        converter_input_type=None,
+        compute_unit=ct.ComputeUnit.CPU_ONLY,
+        minimum_deployment_target=None,
     ):
         """
         Traces a model and runs a numerical test.
@@ -233,6 +229,9 @@ class TorchBaseTest:
             converter_input_type: If not None, then pass it to the "inputs" argument to the
                 ct.convert() call.
         """
+        if minimum_deployment_target is not None:
+            validate_minimum_deployment_target(minimum_deployment_target, backend)
+
         model.eval()
         if input_as_shape:
             input_data = generate_input_data(input_data, rand_range)
@@ -242,18 +241,17 @@ class TorchBaseTest:
         else:
             model_spec = trace_model(model, _copy_input_data(input_data))
 
-        model_spec, mlmodel, coreml_inputs, coreml_results = \
-            convert_and_compare(
-                input_data,
-                model_spec,
-                expected_results=expected_results,
-                atol=atol,
-                rtol=rtol,
-                backend=backend,
-                converter_input_type=converter_input_type,
-                compute_unit=compute_unit,
-                minimum_deployment_target=minimum_deployment_target,
-            )
+        model_spec, mlmodel, coreml_inputs, coreml_results = convert_and_compare(
+            input_data,
+            model_spec,
+            expected_results=expected_results,
+            atol=atol,
+            rtol=rtol,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+        )
 
         return model_spec, mlmodel, coreml_inputs, coreml_results, \
             TorchBaseTest.testclassname, TorchBaseTest.testmodelname

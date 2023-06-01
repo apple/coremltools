@@ -1708,13 +1708,15 @@ def lstm(const_context, builder, op):
 
     if direction in {"forward", "reverse"}:
         # Expand initial_h and initial_c,
-        # from shape (B, H) to shape (1, Batch, H, 1, 1)
-        _expand_dim(builder, initial_h + "_expanded", initial_h, [0, 3, 4])
-        initial_h += "_expanded"
-        # initial_h may have the same name as initial_c (e.g., same Var).
-        # Append a different string to avoid conflict
-        _expand_dim(builder, initial_c + "_expanded2", initial_c, [0, 3, 4])
-        initial_c += "_expanded2"
+        # from shape (B, H) to shape (1, Batch, H, 1, 1).
+        # Since initial_h and initial_c may get used in multiple places,
+        # prepend input_name to avoid conflict
+        _expand_dim(builder, input_name + initial_h + "_expanded", initial_h, [0, 3, 4])
+        initial_h = input_name + initial_h + "_expanded"
+        # initial_c may have the same name as initial_h (e.g., same Var).
+        # Append a different string to initial_c to avoid conflict
+        _expand_dim(builder, input_name + initial_c + "_expanded2", initial_c, [0, 3, 4])
+        initial_c = input_name + initial_c + "_expanded2"
 
         # w_x: [H*I, H*I, H*I, H*I]
         # w_h: [H*H, H*H, H*H, H*H]

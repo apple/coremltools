@@ -49,13 +49,13 @@ namespace CoreML {
             case Specification::CoreMLModels::VisionFeaturePrint::kObjects:
                 if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for objects is invalid");
-                } else if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1 || visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_2) {
+                } else if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1) {
 
                     if (visionFeaturePrint.objects().output_size() != 2) {
                         return Result(ResultType::INVALID_MODEL_PARAMETERS, "Two outputs for objects need to be provided");
                     }
 
-                    // validate the outputs: only two outputs with multiarray type is allowed for version 1 and version 2.
+                    // validate the outputs: only two outputs with multiarray type is allowed for version 1.
                     result = validateDescriptionsContainFeatureWithTypes(interface.output(), 2, {Specification::FeatureType::kMultiArrayType});
                     if (!result.good()) {
                         return result;

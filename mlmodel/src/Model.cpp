@@ -114,6 +114,7 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(soundAnalysisPreprocessing);
                 VALIDATE_MODEL_TYPE(audioFeaturePrint);
                 VALIDATE_MODEL_TYPE(linkedModel);
+                VALIDATE_MODEL_TYPE(classConfidenceThresholding);
             case MLModelType_serializedModel:
             case MLModelType_mlProgram:
                 return {};

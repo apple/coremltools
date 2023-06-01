@@ -12,19 +12,27 @@ from PIL import Image
 
 import coremltools as ct
 from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
-from coremltools.converters.mil.frontend.torch.test.testing_utils import \
-    _copy_input_data
+from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
 from coremltools.converters.mil.testing_utils import (
-    assert_cast_ops_count, assert_input_dtype, assert_ops_in_mil_program,
-    assert_output_dtype, assert_prog_input_type, assert_prog_output_type,
-    assert_spec_input_image_type, assert_spec_output_image_type,
-    verify_prediction)
+    assert_cast_ops_count,
+    assert_input_dtype,
+    assert_ops_in_mil_program,
+    assert_output_dtype,
+    assert_prog_input_type,
+    assert_prog_output_type,
+    assert_spec_input_image_type,
+    assert_spec_output_image_type,
+    get_op_types_in_program,
+    verify_prediction,
+)
 from coremltools.proto import FeatureTypes_pb2 as ft
 from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
 if _HAS_TORCH:
     import torch
     import torchvision
+
+    torch.manual_seed(1818)
 
 #################################################################################
 # Note: all tests are also used as examples in https://coremltools.readme.io/docs
@@ -98,7 +106,7 @@ class TestPyTorchConverterExamples:
         if ct.utils._is_macos():
             results = mlmodel.predict({"input": example_input.numpy()})
             assert isinstance(results, dict)
-            
+
     @staticmethod
     def test_convert_torch_traced_model_to_milinternal(tmpdir):
         from torch import nn
@@ -127,7 +135,7 @@ class TestPyTorchConverterExamples:
             convert_to='milinternal'
         )
         assert isinstance(model, ct.converters.mil.Program)
-        
+
     @staticmethod
     def test_torch_classifier():
         class Net(torch.nn.Module):
@@ -178,7 +186,7 @@ class TestPyTorchConverterExamples:
             _test_classifier(traced_model, example_input, class_type, "neuralnetwork")
             if ct.utils._macos_version() >= (12, 0):
                 _test_classifier(traced_model, example_input, class_type, "mlprogram")
-                
+
     @staticmethod
     @pytest.mark.parametrize("convert_to", ['neuralnetwork', 'mlprogram'])
     def test_convert_to_argument_with_torch_model(tmpdir, convert_to):
@@ -207,7 +215,7 @@ class TestPyTorchConverterExamples:
             assert spec.WhichOneof('Type') == 'mlProgram'
         else:
             assert spec.WhichOneof('Type') == 'neuralNetwork'
-            
+
     @staticmethod
     def test_deployment_target_argument_with_torch_model():
         class Network(torch.nn.Module):
@@ -266,7 +274,7 @@ class TestPyTorchConverterExamples:
         expected_error = "When 'convert_to' is mlprogram, the minimum deployment target " \
                          "must be at least iOS15/macOS12/watchOS8/tvOS15"
         assert expected_error == str(e.value)
-        
+
     @staticmethod
     def test_get_milprogram_method_with_torch_model():
         class Network(torch.nn.Module):
@@ -290,7 +298,7 @@ class TestPyTorchConverterExamples:
             convert_to='mlprogram'
         )
         assert isinstance(model._get_mil_internal(), ct.converters.mil.Program)
-        
+
     @staticmethod
     @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason='Model produces specification 6.')
     @pytest.mark.parametrize(
@@ -342,7 +350,7 @@ class TestTorchInputs(_TestInputs):
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
     def test_torch_predict_input():
         TestTorchInputs._test_variant_input_type_prediction(torch.tensor)
-        
+
     @staticmethod
     def test_int64_inputs():
 
@@ -416,7 +424,7 @@ class TestTorchInputs(_TestInputs):
                 ],
                 outputs=["output"],
             )
-            
+
     @staticmethod
     def test_fully_dynamic_inputs():
         """
@@ -441,7 +449,7 @@ class TestTorchInputs(_TestInputs):
             scripted_model,
             inputs=[
                 ct.TensorType("x", shape=(ct.RangeDim(), ct.RangeDim())),
-                ct.TensorType("y", shape=(ct.RangeDim(), ct.RangeDim()))
+                ct.TensorType("y", shape=(ct.RangeDim(), ct.RangeDim())),
             ],
         )
 
@@ -462,7 +470,7 @@ class TestTorchInputs(_TestInputs):
               "y": y.cpu().detach().numpy()})
             for i, name in enumerate(mlmodel.output_description):
                 np.testing.assert_allclose(torch_res[i], results[name])
-                
+
     @staticmethod
     def test_rank0_inputs_torch():
         """Similar to TestPyTorchConverterExamples::test_int64_inputs but
@@ -497,7 +505,7 @@ class TestTorchInputs(_TestInputs):
                     )
                 ],
             )
-        
+
     @staticmethod
     @pytest.mark.parametrize("variable_length", [True, False])
     def test_torch_range_dim_lstm(variable_length):
@@ -538,8 +546,7 @@ class TestTorchInputs(_TestInputs):
         # ct.RangeDim() tells coremltools that this dimension can change for
         # each inference example (aka "runtime-determined"). If the sequence
         # length is always the same (e.g., 2 step LSTM would have seq_len == 2)
-        # Note that fixed-length models usually run slightly faster
-        # than variable length models.
+        # Note that fixed-length models usually run slightly faster than variable length models.
         ct_seq_len = ct.RangeDim() if variable_length else seq_len
         seq_input = ct.TensorType(shape=(ct_seq_len, batch, input_size),
             name="seq_input")
@@ -747,7 +754,8 @@ class TestTorchInputs(_TestInputs):
         traced_model = torch.jit.trace(model, example_input)
 
         required_input = ct.TensorType(
-            name="required_input", shape=(ct.RangeDim(),), dtype=np.int64)
+            name="required_input", shape=(ct.RangeDim(),), dtype=np.int64
+        )
         default_value = np.array([3]).astype(np.float32)
         optional_input = ct.TensorType(name="optional_input", shape=(1,),
             default_value=default_value)
@@ -1399,3 +1407,153 @@ class TestGrayscaleImagePredictions:
         reference_output = rank4_grayscale_input_model(torch.from_numpy(sample_input)).detach().numpy()
         reference_output = np.squeeze(reference_output)
         np.testing.assert_allclose(reference_output, model_output_as_numpy, rtol=1e-2, atol=1e-2)
+
+
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (14, 0), reason="Tests are for deployment target ios17/macos14"
+)
+class TestQuantizationConversionAPI:
+    def test_dynamic_quantization(self):
+        torch.backends.quantized.engine = "qnnpack"
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.fc = torch.nn.Linear(3, 2)
+
+            def forward(self, x):
+                x = self.fc(x)
+                return x
+
+        SHAPE = (4, 3)
+        x = torch.randn(SHAPE)
+
+        model_fp32 = Model()
+        model_int8 = torch.ao.quantization.quantize_dynamic(
+            model_fp32,
+            {torch.nn.Linear},  # a set of layers to dynamically quantize
+            dtype=torch.qint8,
+        )
+        model_int8.eval()
+
+        traced_model = torch.jit.trace(model_int8, x)
+
+        with pytest.raises(
+            RuntimeError,
+            match=(
+                r"PyTorch convert function for op '.*_dynamic' not implemented\.\n"
+                r"Dynamic quantized models are not supported by Core ML.\n"
+                r"Please use static quantization or the APIs in coremltools.optimize to quantize/compress models."
+            ),
+        ):
+            ct.convert(traced_model, inputs=[ct.TensorType(shape=SHAPE)])
+
+    def test_static_quantization_as_activation_quantization(self):
+        torch.backends.quantized.engine = "qnnpack"
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.quant = torch.ao.quantization.QuantStub()
+                self.conv = torch.nn.Conv2d(3, 2, 5)
+                self.relu = torch.nn.ReLU()
+                self.dequant = torch.ao.quantization.DeQuantStub()
+
+            def forward(self, x):
+                x = self.quant(x)
+                x = self.conv(x)
+                x = self.relu(x)
+                x = self.dequant(x)
+                return x
+
+        SHAPE = (4, 3, 8, 16)
+        x = torch.randn(SHAPE)
+
+        model_fp32 = Model()
+        model_fp32.eval()
+
+        model_fp32.qconfig = torch.ao.quantization.get_default_qconfig("qnnpack")
+        model_fp32_fused = torch.ao.quantization.fuse_modules(model_fp32, [["conv", "relu"]])
+        model_fp32_prepared = torch.ao.quantization.prepare(model_fp32_fused)
+        model_fp32_prepared(x)
+        model_int8 = torch.ao.quantization.convert(model_fp32_prepared)
+
+        traced_model = torch.jit.trace(model_int8, x)
+        coreml_model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="x", shape=SHAPE)],
+            outputs=[ct.TensorType(name="y")],
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+        ops = get_op_types_in_program(coreml_model._mil_program)
+        # constexpr_affine_dequantize and cast -> quantize can have arbitrary order
+        assert ops[:3] == ["cast", "quantize", "constexpr_affine_dequantize"] or ops[:3] == [
+            "constexpr_affine_dequantize",
+            "cast",
+            "quantize",
+        ]
+        # these ops have well-defined order
+        assert ops[3:] == [
+            # quantized ConvRelu op
+            "dequantize",
+            "conv",
+            "relu",
+            "quantize",
+            # dequantize and output
+            "dequantize",
+            "cast",
+        ]
+
+        output = traced_model(x)
+        coreml_output = coreml_model.predict({"x": x})["y"]
+        np.testing.assert_allclose(output, coreml_output, rtol=1e-2, atol=2e-2)
+
+    def test_static_quantization_as_weight_compression(self):
+        torch.backends.quantized.engine = "qnnpack"
+
+        weight = torch.rand(5, 3, 2, 4)
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.quant = torch.ao.quantization.QuantStub()
+                self.dequant = torch.ao.quantization.DeQuantStub()
+
+            def forward(self, x):
+                quantized_weight = self.quant(weight)
+                dequantized_weight = self.dequant(quantized_weight)
+                y = torch.nn.functional.conv2d(x, dequantized_weight)
+                return y
+
+        SHAPE = (4, 3, 16, 32)
+        x = torch.randn(SHAPE)
+
+        model_fp32 = Model()
+        model_fp32.eval()
+
+        model_fp32.qconfig = torch.ao.quantization.get_default_qconfig("qnnpack")
+        model_fp32_prepared = torch.ao.quantization.prepare(model_fp32)
+        model_fp32_prepared(x)
+        model_int8 = torch.ao.quantization.convert(model_fp32_prepared)
+
+        traced_model = torch.jit.trace(model_int8, x)
+        coreml_model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="x", shape=SHAPE)],
+            outputs=[ct.TensorType(name="y")],
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+        ops = get_op_types_in_program(coreml_model._mil_program)
+        # constexpr_affine_dequantize and cast can have arbitrary order
+        assert ops[:2] == ["cast", "constexpr_affine_dequantize"] or ops[:2] == [
+            "constexpr_affine_dequantize",
+            "cast",
+        ]
+        # these ops have well-defined order
+        assert ops[2:] == ["conv", "cast"]
+
+        output = traced_model(x)
+        coreml_output = coreml_model.predict({"x": x})["y"]
+        np.testing.assert_allclose(output, coreml_output, rtol=1e-2, atol=2e-2)

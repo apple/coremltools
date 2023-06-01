@@ -7,7 +7,7 @@ import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline, PipelineManager
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline, PassPipelineManager
 from coremltools.converters.mil.testing_utils import assert_model_is_valid, get_op_types_in_program
 
 np.random.seed(1984)
@@ -23,10 +23,10 @@ class TestPassPipeline:
             return x
 
         assert get_op_types_in_program(prog) == ["relu", "relu", "add"]
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = PassPipeline.EMPTY
         pipeline.append_pass("common::merge_consecutive_relus")
         assert pipeline.passes == ["common::merge_consecutive_relus"]
-        PipelineManager.apply_pipeline(prog, pipeline)
+        PassPipelineManager.apply_pipeline(prog, pipeline)
         assert get_op_types_in_program(prog) == ["relu", "add"]
 
         inputs = {"x": (2, 3)}
@@ -37,7 +37,7 @@ class TestPassPipeline:
         )
 
     def test_insert_pass_at_index(self):
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = PassPipeline.EMPTY
         pipeline.insert_pass(index=0, pass_name="common::merge_consecutive_relus")
         pipeline.insert_pass(index=0, pass_name="common::noop_elimination")
         pipeline.insert_pass(index=1, pass_name="common::noop_elimination")
@@ -50,7 +50,7 @@ class TestPassPipeline:
         ]
 
     def test_insert_invalid_pass(self):
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = PassPipeline.EMPTY
         with pytest.raises(ValueError, match="The pass test_pass is not registered."):
             pipeline.append_pass("test_pass")
         with pytest.raises(ValueError, match="The pass test_pass is not registered."):
@@ -59,7 +59,7 @@ class TestPassPipeline:
             pipeline.passes = ["invalid_pass"]
 
     def test_remove_passes(self):
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = PassPipeline.EMPTY
         pipeline.passes = [
             "common::noop_elimination",
             "common::merge_consecutive_reshapes",
@@ -75,7 +75,7 @@ class TestPassPipeline:
         assert pipeline.passes == ["common::merge_consecutive_reshapes"]
 
     def test_set_pass_options(self):
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = PassPipeline.EMPTY
         pipeline.append_pass("common::add_fp16_cast")
         assert pipeline.get_options("common::add_fp16_cast") is None
         pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "matmul,const"})
@@ -89,14 +89,14 @@ class TestPassPipeline:
         with pytest.raises(
             ValueError, match="The pass common::add_fp16_cast already has associated options."
         ):
-            pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "concat"})
+            pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "concat"}, override=False)
         # Override the options.
-        pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "concat"}, override=True)
+        pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "concat"})
         assert pipeline.get_options("common::add_fp16_cast")[0].option_name == "skip_ops_by_type"
         assert pipeline.get_options("common::add_fp16_cast")[0].option_val == "concat"
 
     def test_set_pass_options_for_pass_not_in_pipeline(self):
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = PassPipeline.EMPTY
         pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "matmul,const"})
         with pytest.raises(
             ValueError,
