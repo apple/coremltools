@@ -2,6 +2,7 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import itertools
 
 import copy
 import os
@@ -502,11 +503,11 @@ def random_gen_input_feature_type(input_desc):
 def gen_input_shapes_einsum(equation, dynamic):
     equation = equation.replace(" ", "")
     left = equation.split("->")[0]
-    a_desc, b_desc = left.split(",")
+    var_descs = left.split(",")
     converter_shapes = {}
     shapes = {}
     cur_default_shape = 2
-    for symbol in a_desc + b_desc:
+    for symbol in itertools.chain.from_iterable(var_descs):
         if symbol not in shapes:
             shapes[symbol] = cur_default_shape
             if dynamic:
@@ -514,13 +515,11 @@ def gen_input_shapes_einsum(equation, dynamic):
             else:
                 converter_shapes[symbol] = cur_default_shape
             cur_default_shape += 1
-    a_shape = [shapes[symbol] for symbol in a_desc]
-    b_shape = [shapes[symbol] for symbol in b_desc]
-    a_converter_shape = [converter_shapes[symbol] for symbol in a_desc]
-    b_converter_shape = [converter_shapes[symbol] for symbol in b_desc]
-    return ([a_shape, b_shape],
-            [ct.TensorType(shape=a_converter_shape, dtype=np.float32),
-             ct.TensorType(shape=b_converter_shape, dtype=np.float32)])
+    var_shapes = [[shapes[symbol] for symbol in var_desc] for var_desc in var_descs]
+    converted_shapes = [ct.TensorType(shape=[converter_shapes[symbol] for symbol in var_desc], dtype=np.float32)
+                        for var_desc in var_descs]
+    return var_shapes, converted_shapes
+
 
 def verify_prediction(mlmodel, multiarray_type=None):
     spec = mlmodel._spec

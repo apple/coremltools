@@ -1116,10 +1116,9 @@ def relu6(context, node):
 
 @register_torch_op
 def einsum(context, node):
-    a = context[node.inputs[1]][0]
-    b = context[node.inputs[1]][1]
+    vars = context[node.inputs[1]]
     equation = context[node.inputs[0]].val
-    x = build_einsum_mil(a, b, equation, node.name)
+    x = build_einsum_mil(vars, equation, node.name)
     context.add(x)
 
 

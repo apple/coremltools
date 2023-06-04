@@ -2,6 +2,7 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import itertools
 
 from typing import List, Optional
 
@@ -45,17 +46,14 @@ def _reverse_input_einsum_eq(equation: str) -> str:
     return equation
 
 
-def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
+def build_einsum_mil(vars: List[Var], equation: str, name: str) -> Var:
     """
     Get MIL variables as input and build a variable using MIL builder, that
     contains the output of the einsum equation
 
-    :param a_var:
-        - var
-        - first input variable
-    :param b_var:
-        - var
-        - second input variable
+    :param vars:
+        - List[var]
+        - list of input variables
     :param equation:
         - str
         - the einsum equation
@@ -71,13 +69,18 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
     ## TODO: rdar://73851694 (Update einsum op translation to support generic cases)
     equation = equation.replace(" ", "")
     parsed_vectors = parse_einsum_equation(equation)
+
+    if len(vars) != 2:
+        return solve_generic_einsum(parsed_vectors, vars, name)
+
     equation_rev = _reverse_input_einsum_eq(equation)
     parsed_vectors_rev = parse_einsum_equation(equation_rev)
 
     def _swap(a, b):
         return b, a
 
-    is_dynamic = any_symbolic(a_var.shape) or any_symbolic(b_var.shape)
+    a_var, b_var = vars
+    is_dynamic = any([is_symbolic(var) for var in vars])
     # list of equations supported for explicit mil translations
     vec_bnqd_bnkd_bnqk = (
         [0, 1, 2, 3],
@@ -293,6 +296,19 @@ def solve_sum_einsum(parsed_vectors, vars):
     return ret_parsed_vectors, vars
 
 
+def get_perm_transpose_einsum(src_axes, dst_axes):
+    """
+    :param src_axes: list[int]
+    :param dst_axes: list[int]
+    :return: list[int]
+    """
+    return [src_axes.index(s) for s in dst_axes]
+
+
+def solve_transpose_einsum(src_parsed_vector: List[int], dst_parsed_vector: List[int], var: Var, name: str) -> Var:
+    return mb.transpose(x=var, perm=get_perm_transpose_einsum(src_parsed_vector, dst_parsed_vector), name=name)
+
+
 def solve_generic_einsum(parsed_vectors, vars, name) -> Var:
     """
     :param parsed_vectors: list[list[int]]
@@ -310,18 +326,23 @@ def solve_generic_einsum(parsed_vectors, vars, name) -> Var:
 
     parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, vars)
     parsed_vectors, vars = solve_sum_einsum(parsed_vectors, vars)
-    return solve_binary_generic_einsum(parsed_vectors, vars[0], vars[1], name)
+    if len(vars) == 1:
+        return solve_transpose_einsum(parsed_vectors[0], parsed_vectors[1], vars[0], name)
+    while len(vars) >= 2:
+        out_vector = []
+        input_symbols = list(itertools.chain.from_iterable(parsed_vectors[:2]))
+        for symbol in itertools.chain.from_iterable(parsed_vectors[2:]):
+            if symbol in input_symbols and symbol not in out_vector:
+                out_vector.append(symbol)
+        temp_parsed_vectors = [parsed_vectors[0], parsed_vectors[1], out_vector]
+        parsed_vectors[0] = out_vector
+        parsed_vectors.pop(1)
+        vars[0] = solve_binary_generic_einsum(temp_parsed_vectors, vars[0], vars[1], name if len(vars) == 2 else None)
+        vars.pop(1)
+    return vars[0]
 
 
 def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
-    def _get_perm(src_axes, dst_axes):
-        """
-        :param src_axes: list[int]
-        :param dst_axes: list[int]
-        :return: list[int]
-        """
-        return [src_axes.index(s) for s in dst_axes]
-
     def _concat_dims(dims, none_if_empty=False):
         if len(dims) == 0:
             if none_if_empty:
@@ -375,13 +396,13 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
     concat_b_unique_dims = _concat_dims(b_unique_dims)
 
     a_transpose_axes = batched_axes + a_unique_axes + reduced_axes
-    a = mb.transpose(x=a_var, perm=_get_perm(a_axes, a_transpose_axes))
+    a = mb.transpose(x=a_var, perm=get_perm_transpose_einsum(a_axes, a_transpose_axes))
     a_reshape_dims = _concat_dims(
         [mb.reduce_prod(x=x) for x in [concat_batch_dims, concat_a_unique_dims, concat_reduce_dims] if x is not None])
     a = mb.reshape(x=a, shape=a_reshape_dims)
 
     b_transpose_axes = batched_axes + reduced_axes + b_unique_axes
-    b = mb.transpose(x=b_var, perm=_get_perm(b_axes, b_transpose_axes))
+    b = mb.transpose(x=b_var, perm=get_perm_transpose_einsum(b_axes, b_transpose_axes))
     b_reshape_dims = _concat_dims(
         [mb.reduce_prod(x=x) for x in [concat_batch_dims, concat_reduce_dims, concat_b_unique_dims] if x is not None])
     b = mb.reshape(x=b, shape=b_reshape_dims)
@@ -400,10 +421,16 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
     )
     # Removes excessive dimensions for scalar output
     if ab_reshaped_dims is None:
-        return mb.squeeze(x=ab, name=name)
+        if name is None:
+            return mb.squeeze(x=ab)
+        else:
+            return mb.squeeze(x=ab, name=name)
     # Reshape tensor output to specified output shape
     else:
         ab = mb.reshape(x=ab, shape=ab_reshaped_dims)
         ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
-        ab = mb.transpose(x=ab, perm=_get_perm(ab_reshaped_axes, out_axes), name=name)
+        if name is None:
+            ab = mb.transpose(x=ab, perm=get_perm_transpose_einsum(ab_reshaped_axes, out_axes))
+        else:
+            ab = mb.transpose(x=ab, perm=get_perm_transpose_einsum(ab_reshaped_axes, out_axes), name=name)
         return ab

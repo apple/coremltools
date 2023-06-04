@@ -550,9 +550,8 @@ def Cross(context, node):
 @register_tf_op
 def Einsum(context, node):
     equation = node.attr["equation"]
-    a = context[node.inputs[0]]
-    b = context[node.inputs[1]]
-    x = build_einsum_mil(a, b, equation, node.name)
+    vars = context[node.inputs[1]]
+    x = build_einsum_mil(vars, equation, node.name)
     context.add(node.name, x)
 
 
