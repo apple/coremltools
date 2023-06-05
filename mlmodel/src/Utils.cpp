@@ -658,7 +658,7 @@ bool CoreML::hasIOS16Features(const Specification::Model& model) {
 
 bool CoreML::hasIOS17Features(const Specification::Model& model) {
     // New in IOS17 features:
-    // - Apple Vision feature extractor for scenes using scene net V5 (revision == 2)
+    // - Revision 2 of Apple Vision feature extractor for scenes
     // - BERT embedding for text classifier and word tagger (revision == 4)
 
     bool result = false;
