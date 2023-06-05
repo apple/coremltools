@@ -6,7 +6,7 @@ import functools
 import warnings
 
 
-def deprecated(obj=None, suffix=""):
+def deprecated(obj=None, suffix="", version="", obj_prefix=""):
     """
     Decorator to mark a function or a class as deprecated
     """
@@ -16,16 +16,14 @@ def deprecated(obj=None, suffix=""):
         def wrapped(*args, **kwargs):
             if isinstance(obj, type):
                 msg = (
-                    'Class "%s" is deprecated and will be removed in 6.0.'
-                    % obj.__name__
+                    f"Class {obj_prefix}{obj.__name__} is deprecated and will be removed in {version}."
                 )
             else:
                 msg = (
-                    'Function "%s" is deprecated and will be removed in 6.0.'
-                    % obj.__name__
+                    f"Function {obj_prefix}{obj.__name__} is deprecated and will be removed in {version}."
                 )
             if suffix:
-                msg += "; %s" % suffix
+                msg += f"; {suffix}"
             warnings.warn(msg, category=FutureWarning)
             return obj(*args, **kwargs)
 

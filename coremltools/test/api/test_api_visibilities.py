@@ -43,6 +43,7 @@ EXPECTED_MODULES = [
     "transform",
     "libmodelpackage",
     "libmilstoragepython",
+    "optimize",
 ]
 
 
@@ -159,6 +160,27 @@ class TestApiVisibilities:
             "xgboost",
         ]
         _check_visible_modules(_get_visible_items(ct.converters), expected)
+
+    def test_optimize(self):
+        expected = [
+            "coreml",
+            "torch",
+        ]
+        _check_visible_modules(_get_visible_items(ct.optimize), expected)
+
+    def test_optimize_coreml(self):
+        expected = [
+            "OpLinearQuantizerConfig",
+            "OpMagnitudePrunerConfig",
+            "OpPalettizerConfig",
+            "OptimizationConfig",
+            "OpThresholdPrunerConfig",
+            "linear_quantize_weights",
+            "palettize_weights",
+            "prune_weights",
+            "decompress_weights",
+        ]
+        _check_visible_modules(_get_visible_items(ct.optimize.coreml), expected)
 
     def test_converters_libsvm(self):
         _check_visible_modules(_get_visible_items(ct.converters.libsvm), ["convert"])

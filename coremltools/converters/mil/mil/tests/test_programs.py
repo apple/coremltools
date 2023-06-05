@@ -146,7 +146,9 @@ def test_reserved_node_names():
     def prog(x):
         return mb.square(x=x, name="tensor")
 
-    mlmodel = ct.convert(prog, source="milinternal", convert_to="mlprogram")
+    mlmodel = ct.convert(
+        prog, source="milinternal", convert_to="mlprogram", compute_units=ct.ComputeUnit.CPU_ONLY
+    )
 
     feed_dict = {
         "x": np.random.rand(10, 20).astype(np.float32),
@@ -224,7 +226,9 @@ class TestMLProgramVersionHandling:
     @staticmethod
     def test_pymil_front_end_conversion():
         prog = get_simple_topk_pixel_unshuffle_program(opset_version=ct.target.iOS16)
-        mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS16)
+        mlmodel = ct.convert(
+            prog, minimum_deployment_target=ct.target.iOS16, compute_units=ct.ComputeUnit.CPU_ONLY
+        )
 
     @staticmethod
     def test_nested_block_opset_version_selection():
@@ -253,7 +257,9 @@ class TestMLProgramVersionHandling:
             "since op pixel_unshuffle is only available in opset coremltools.target.iOS16 or newer."
         )
         with pytest.raises(ValueError, match=expected_err_str):
-            mlmodel = ct.convert(prog, convert_to="mlprogram")
+            mlmodel = ct.convert(
+                prog, convert_to="mlprogram", compute_units=ct.ComputeUnit.CPU_ONLY
+            )
 
     @staticmethod
     def test_pymil_front_end_conversion_early_error_out():
@@ -263,7 +269,11 @@ class TestMLProgramVersionHandling:
             "since op pixel_unshuffle is only available in opset coremltools.target.iOS16 or newer."
         )
         with pytest.raises(ValueError, match=expected_err_str):
-            mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS15)
+            mlmodel = ct.convert(
+                prog,
+                minimum_deployment_target=ct.target.iOS15,
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+            )
 
     @staticmethod
     def test_unsupported_op_early_error_out():
@@ -322,8 +332,9 @@ class TestMLProgramVersionHandling:
             def prog(x):
                 res = mb.reshape(x=x, shape=(1, 1, 1, 1, 1, 1), name="reshape_0")
                 return res
-            ct.convert(prog, source="milinternal")
-                
+
+            ct.convert(prog, source="milinternal", compute_units=ct.ComputeUnit.CPU_ONLY)
+
     @staticmethod
     def test_rank5_list_early_error_out():
         '''
@@ -343,5 +354,3 @@ class TestMLProgramVersionHandling:
                     name="list_0",
                 )
                 return ls
-
-

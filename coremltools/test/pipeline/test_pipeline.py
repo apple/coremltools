@@ -184,9 +184,17 @@ class LinearRegressionPipeline(unittest.TestCase):
         input_names = self.scikit_data.feature_names
         output_name = "target"
 
-        p_regressor = converter.convert(
-            self.scikit_model, input_names, "target"
-        ).get_spec()
+        p_regressor_model = converter.convert(self.scikit_model, input_names, "target")
+
+        x = dict(zip(self.scikit_data["feature_names"], self.scikit_data["data"][0]))
+        y = p_regressor_model.predict(x)
+        self.assertIsNotNone(y)
+
+        with tempfile.TemporaryDirectory() as save_dir:
+            p_regressor_model.save(save_dir + "/test.mlmodel")
+
+        p_regressor = p_regressor_model.get_spec()
+
         self.assertIsNotNone(p_regressor)
         self.assertEqual(len(p_regressor.pipelineRegressor.pipeline.models), 2)
 

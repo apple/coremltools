@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
 import os
 import tempfile
 
@@ -11,11 +12,19 @@ import pytest
 
 import coremltools as ct
 from coremltools._deps import _HAS_TF_1, _HAS_TF_2, MSG_TF1_NOT_FOUND
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import (
-    assert_cast_ops_count, assert_input_dtype, assert_ops_in_mil_program,
-    assert_output_dtype, assert_prog_input_type, assert_prog_output_type,
-    assert_spec_input_image_type, assert_spec_output_image_type,
-    get_op_types_in_program, verify_prediction)
+    assert_cast_ops_count,
+    assert_input_dtype,
+    assert_ops_in_mil_program,
+    assert_output_dtype,
+    assert_prog_input_type,
+    assert_prog_output_type,
+    assert_spec_input_image_type,
+    assert_spec_output_image_type,
+    get_op_types_in_program,
+    verify_prediction,
+)
 from coremltools.proto import FeatureTypes_pb2 as ft
 from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
@@ -245,6 +254,53 @@ class TestTf1Inputs(_TestInputs):
         expected_error = "Multiple inputs are found in graph, but no input name was provided"
         expected_error = "Input ({}) provided is not found in given tensorflow graph. Placeholders in graph are: {}".format("wrong_input", ["input", "input_1"])
         assert expected_error == str(e.value)
+
+    @pytest.mark.parametrize(
+        "backend, compute_unit",
+        itertools.product(
+            backends,
+            compute_units,
+        ),
+    )
+    def test_input_dynamic_without_inputs_param(self, backend, compute_unit):
+        """The `inputs` param is not provided for a dynamic input (shape has `None`)."""
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(None, None, 3), name="input")
+            x1 = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input_1")
+            y = tf.nn.relu(x, name="output")
+            y1 = tf.nn.relu(x1, name="output_1")
+
+        convert_to = backend[0]
+        if convert_to == "mlprogram":
+            with pytest.warns(
+                UserWarning,
+                match="Some dimensions in the input shape are unknown, hence they are set to "
+                "flexible ranges with lower bound and default value = 1, and upper bound = 2. "
+                "To set different values for the default shape and upper bound, please use "
+                "the ct.RangeDim.*",
+            ):
+                mlmodel = ct.convert(
+                    graph,
+                    convert_to=convert_to,
+                    compute_units=compute_unit,
+                )
+        else:
+            mlmodel = ct.convert(
+                graph,
+                convert_to=convert_to,
+                compute_units=compute_unit,
+            )
+
+        spec = mlmodel.get_spec()
+        assert list(spec.description.input[0].type.multiArrayType.shape) == [1, 1, 3]
+        assert (
+            spec.description.input[0].type.multiArrayType.shapeRange.sizeRanges[1].lowerBound == 1
+        )
+        assert (
+            spec.description.input[0].type.multiArrayType.shapeRange.sizeRanges[1].upperBound == -1
+            if convert_to == "neuralnetwork"
+            else 2
+        )
 
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")

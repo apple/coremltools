@@ -12,8 +12,11 @@ import pytest
 import coremltools.models.utils as coremltoolsutils
 from coremltools._deps import _HAS_TF_2
 from coremltools.converters.mil.testing_reqs import ct
-from coremltools.converters.mil.testing_utils import (compare_backend,
-                                                      ct_convert)
+from coremltools.converters.mil.testing_utils import (
+    compare_backend,
+    ct_convert,
+    validate_minimum_deployment_target,
+)
 
 tf = pytest.importorskip("tensorflow", minversion="1.15.0")
 
@@ -147,11 +150,31 @@ def tf_graph_to_mlmodel(
     input_names = get_tf_node_names(list(feed_dict.keys()), mode="inputs")
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
-        
-    inputs = inputs_for_conversion if inputs_for_conversion is not None else None
+
+    if inputs_for_conversion is None and backend[0] == "mlprogram":
+        # As mlprogram by default use a small upper-bound for dynamic shapes, set a larger one here
+        # to avoid test failures.
+        has_dynamic_shape = False
+        input_types = []
+        for input_placeholder in list(feed_dict.keys()):
+            input_shape = [
+                ct.RangeDim(upper_bound=64) if dim.value is None else dim.value
+                for dim in input_placeholder.shape
+            ]
+            input_types.append(
+                ct.TensorType(name=input_placeholder.name.split(":")[0], shape=input_shape)
+            )
+            if any([dim.value is None for dim in input_placeholder.shape]):
+                has_dynamic_shape = True
+        if has_dynamic_shape:
+            inputs_for_conversion = input_types
 
     mlmodel = ct_convert(
-        graph, inputs=inputs, outputs=output_names, source=frontend, convert_to=backend,
+        graph,
+        inputs=inputs_for_conversion,
+        outputs=output_names,
+        source=frontend,
+        convert_to=backend,
         compute_units=compute_unit,
         minimum_deployment_target=minimum_deployment_target,
     )
@@ -287,13 +310,13 @@ def run_compare_tf(
     pred = None
     if not coremltoolsutils._has_custom_layer(mlmodel._spec):
         pred = compare_backend(
-                mlmodel,
-                input_key_values,
-                expected_outputs,
-                atol=atol,
-                rtol=rtol,
-                also_compare_shapes=True,
-                dtype=backend[1],
+            mlmodel,
+            input_key_values,
+            expected_outputs,
+            atol=atol,
+            rtol=rtol,
+            also_compare_shapes=True,
+            dtype=backend[1],
         )
     else:
         print('Skipping model prediction as it has a custom nn layer!')
@@ -334,6 +357,8 @@ class TensorFlowBaseTest:
                        backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05,
                        freeze_graph=False, tf_outputs=None,
                        minimum_deployment_target=None):
+        if minimum_deployment_target is not None:
+            validate_minimum_deployment_target(minimum_deployment_target, backend)
 
         res = run_compare_tf(graph,
                              feed_dict,
@@ -348,7 +373,7 @@ class TensorFlowBaseTest:
                              tf_outputs=tf_outputs,
                              minimum_deployment_target=minimum_deployment_target
         )
-        
+
         alist = []
         if res is not None:
             alist = list(res)
@@ -361,13 +386,11 @@ class TensorFlowBaseTest:
     def _op_count_in_mil_program(mlmodel, op_type):
         prog = mlmodel._mil_program
         return len(prog.find_ops(op_type=op_type))
-        
-        
+
+
 if _HAS_TF_2:
     from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
         TensorFlow2BaseTest, make_tf2_graph)
-    from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
-        TensorFlowBaseTest
+    from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import TensorFlowBaseTest
     TensorFlowBaseTest.run_compare_tf = TensorFlow2BaseTest.run_compare_tf2
     make_tf_graph = make_tf2_graph
-

@@ -7,6 +7,7 @@
 Module containing unit tests for verifying various quantizations.
 """
 
+import itertools
 import unittest
 
 import numpy as np
@@ -560,3 +561,64 @@ class TestQuantizeWeightsAPI:
     )
     def test_embeddingND_quantize_CPU_and_NE(self):
         self.test_embeddingND_quantize(ComputeUnit.CPU_AND_NE)
+
+
+class TestKMeansLookup:
+    @pytest.mark.parametrize("weightShape, dtype",
+                             itertools.product(
+                                 [(20, 20), (120, 120)],
+                                 [np.float16, np.float32]
+                             ))
+    def test_kmeans_lookup(self, weightShape, dtype):
+        nbits = 4
+        w = np.random.rand(*weightShape).astype(dtype)
+
+        lookup_table, quantized_weights = quantization_utils._get_kmeans_lookup_table_and_weight(nbits, w)
+
+        assert(len(lookup_table) == 2 ** nbits)
+        assert(quantized_weights.shape == (np.prod(weightShape),))
+        assert(len(np.unique(quantized_weights)) <= len(lookup_table))
+
+        quantized_weight_values = lookup_table[quantized_weights]
+        max_deltas = np.abs(w.flatten() - quantized_weight_values.flatten()).max()
+        assert max_deltas < 0.1
+
+    def test_kmeans1d_exact_value(self):
+        w = np.array(
+            [
+                [12.0, 11.0, 12.0, 33.0, 32.0, 99.0, 0.0, 34.0, 40.0],
+                [41.0, 34.0, 98.0, 75.1, 89.0, 99.0, 0.0, 10.0, 41.0],
+            ]
+        )
+
+        lookup_table, quantized_weights = quantization_utils._get_kmeans_lookup_table_and_weight(
+            4, w, force_kmeans1d=True
+        )
+
+        assert all(
+            lookup_table
+            == np.array(
+                [
+                    0.0,
+                    10.0,
+                    11.0,
+                    12.0,
+                    32.0,
+                    33.0,
+                    34.0,
+                    40.0,
+                    41.0,
+                    75.1,
+                    89.0,
+                    98.0,
+                    99.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ]
+            )
+        )
+        assert all(
+            quantized_weights
+            == np.array([3, 2, 3, 5, 4, 12, 0, 6, 7, 8, 6, 11, 9, 10, 12, 0, 1, 8])
+        )

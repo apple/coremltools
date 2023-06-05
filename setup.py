@@ -66,7 +66,14 @@ setup(
     url="https://github.com/apple/coremltools",
     packages=find_packages(),
     package_data={
-        "": ["LICENSE.txt", "README.md", "libmilstoragepython.so", "libcoremlpython.so", "libmodelpackage.so"]
+        "": [
+            "_core.*.so",  # kmeans1d
+            "libcoremlpython.so",
+            "libmilstoragepython.so",
+            "libmodelpackage.so",
+            "LICENSE.txt",
+            "README.md",
+        ]
     },
     install_requires=[
         "numpy >= 1.14.5",
@@ -74,6 +81,9 @@ setup(
         "sympy",
         "tqdm",
         "packaging",
+        "attrs",
+        "cattrs",
+        "pyaml",
     ],
     classifiers=[
         "Development Status :: 5 - Production/Stable",
@@ -84,6 +94,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Topic :: Scientific/Engineering",
         "Topic :: Software Development",
     ],

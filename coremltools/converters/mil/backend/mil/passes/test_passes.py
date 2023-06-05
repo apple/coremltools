@@ -9,9 +9,7 @@ import itertools
 import numpy as np
 import pytest
 
-# import mil internal ops to add it to the builder
 import coremltools as ct
-# Set the testing backend
 from coremltools.converters.mil._deployment_compatibility import \
     AvailableTarget as target
 from coremltools.converters.mil.mil import Builder as mb
@@ -193,7 +191,7 @@ class TestAdjustToSupportedTypes:
             assert get_op_types_in_program(prog) == ['relu']
             assert inputs[0][1].dtype == types.fp16
             assert block.outputs[0].dtype == types.fp16
-            
+
     def test_float16_input_output_with_opset_version_inference(self):
         """
         Input graph:
@@ -203,14 +201,14 @@ class TestAdjustToSupportedTypes:
             %pixel_unshuffle_0: (1, 4, 2, 2, fp16)(Tensor) = pixel_unshuffle(x=%x, downscale_factor=2, name="pixel_unshuffle_0")
           } -> (%pixel_unshuffle_0)
         }
-        
+
         This function would be inferred as an iOS16 function, and the graph pass should behave properly
         """
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4), dtype=types.fp16)])
         def prog(x):
             x = mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(2))
             return x
-            
+
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "mil_backend::adjust_io_to_supported_types"
         )
@@ -249,6 +247,65 @@ class TestAdjustToSupportedTypes:
         inputs = list(prog.functions['main'].inputs.items())
         assert prev_inputs[0][1].name == inputs[0][1].name
         assert inputs[0][1].dtype == types.int32
+
+    @pytest.mark.parametrize(
+        "opset_version",
+        [None, target.iOS17],
+    )
+    def test_int16_input(self, opset_version):
+        """
+        Input graph:
+            func main(int16 x) {
+            ....
+            } -> (x)
+
+        Before IOS17, it becomes
+            func main(int32 x) {
+            ....
+            } -> (x)
+
+        In IOS17+, it becomes
+            func main(int32 x) {
+                %cast_0: (1, 1, 1, 1, int16)(Tensor) = cast(x=%x, dtype="int16", name="cast_0")
+                ....
+                %cast_1: (1, 1, 1, 1, int32)(Tensor) = cast(x=%x, dtype="int32", name="cast_1")
+            } -> (cast_1)
+        because IOS17+ supports int16 in Runtime (but doesn't support int16 for I/O).
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 1, 1, 1), dtype=types.int16)],
+            opset_version=opset_version,
+        )
+        def prog(x):
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "mil_backend::adjust_io_to_supported_types"
+        )
+
+        prev_inputs = list(prev_block.inputs.items())
+        inputs = list(block.inputs.items())
+        prev_outputs = prev_block.outputs
+        outputs = block.outputs
+        assert prev_inputs[0][1].dtype == types.int16
+        assert prev_outputs[0].dtype == types.int16
+        assert inputs[0][1].dtype == types.int32
+        assert outputs[0].dtype == types.int32
+        assert prev_inputs[0][1].name == inputs[0][1].name
+        assert outputs[0].name == prev_outputs[0].name
+        if opset_version and opset_version >= target.iOS17:
+            assert get_op_types_in_program(prog) == ["cast", "cast"]
+            cast_ops = [op for op in prog["main"].operations if op.op_type != "const"]
+            # The first cast is for int32 to int16.
+            assert cast_ops[0].x.dtype == types.int32
+            assert cast_ops[0].outputs[0].dtype == types.int16
+            # The second cast is for int16 to int32.
+            assert cast_ops[1].x.dtype == types.int16
+            assert cast_ops[1].outputs[0].dtype == types.int32
+        else:
+            # Before IOS17, the int16 is not supported in Runtime, so there is no cast inserted.
+            assert get_op_types_in_program(prog) == []
 
     def test_subblock(self):
         """
@@ -885,4 +942,3 @@ class TestPassFuseActivationSiLU:
             backend=("mlprogram", "fp32"),
             expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
         )
-

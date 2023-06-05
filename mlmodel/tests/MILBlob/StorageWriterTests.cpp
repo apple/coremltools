@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+#include "MILBlob/Bf16.hpp"
 #include "MILBlob/Blob/StorageFormat.hpp"
 #include "MILBlob/Blob/StorageWriter.hpp"
 #include "MILBlob/Fp16.hpp"
@@ -61,6 +62,7 @@ int testStorageWriterTestsSupportedTypes()
 {
     AutoDeleteTempFile tempfile;
     auto filePath = tempfile.GetFilename();
+    uint32_t headerCount = 0;
 
     // Writing uint8_t values
     {
@@ -73,9 +75,57 @@ int testStorageWriterTestsSupportedTypes()
         }
 
         ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
-        ML_ASSERT(IsCorrectHeader(filePath, 1 /*count*/));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
         ML_ASSERT(IsCorrectMetadata<uint8_t>(filePath, offset, 4, BlobDataType::UInt8));
         ML_ASSERT(IsCorrectData<uint8_t>(filePath, offset, expectedSpan));
+    }
+
+    // Writing uint16_t values
+    {
+        const std::vector<uint16_t> val = {0xFFC2, 0x0, 0x8000, 0x03DE};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount));
+        ML_ASSERT(IsCorrectMetadata<uint16_t>(filePath, offset, 4, BlobDataType::UInt16));
+        ML_ASSERT(IsCorrectData<uint16_t>(filePath, offset, expectedSpan));
+    }
+
+    // Writing int16_t values
+    {
+        const std::vector<int16_t> val = {int16_t(0xFFC2), 0x7FFF, int16_t(0x8000), 0x03DE};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount));
+        ML_ASSERT(IsCorrectMetadata<int16_t>(filePath, offset, 4, BlobDataType::Int16));
+        ML_ASSERT(IsCorrectData<int16_t>(filePath, offset, expectedSpan));
+    }
+
+    // Writing bf16 values
+    {
+        const std::vector<Bf16> val = {Bf16(0x12), Bf16(0x00), Bf16(0x124), Bf16(0xabcd)};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<Bf16>(filePath, offset, 4, BlobDataType::BFloat16));
+        ML_ASSERT(IsCorrectData<Bf16>(filePath, offset, expectedSpan));
     }
 
     // Writing fp16 values
@@ -89,7 +139,7 @@ int testStorageWriterTestsSupportedTypes()
         }
 
         ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
-        ML_ASSERT(IsCorrectHeader(filePath, 2 /*count*/));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
         ML_ASSERT(IsCorrectMetadata<Fp16>(filePath, offset, 4, BlobDataType::Float16));
         ML_ASSERT(IsCorrectData<Fp16>(filePath, offset, expectedSpan));
     }
@@ -105,7 +155,7 @@ int testStorageWriterTestsSupportedTypes()
         }
 
         ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
-        ML_ASSERT(IsCorrectHeader(filePath, 3 /*count*/));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
         ML_ASSERT(IsCorrectMetadata<float>(filePath, offset, 4, BlobDataType::Float32));
         ML_ASSERT(IsCorrectData<float>(filePath, offset, expectedSpan));
     }
@@ -121,7 +171,7 @@ int testStorageWriterTestsSupportedTypes()
         }
 
         ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
-        ML_ASSERT(IsCorrectHeader(filePath, 4 /*count*/));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
         ML_ASSERT(IsCorrectMetadata<int8_t>(filePath, offset, 4, BlobDataType::Int8));
         ML_ASSERT(IsCorrectData<int8_t>(filePath, offset, expectedSpan));
     }
@@ -220,4 +270,3 @@ int testStorageWriterTestsAlignment()
 
     return 0;
 }
-

@@ -2,6 +2,7 @@ include("${CMAKE_SOURCE_DIR}/cmake/coreml-utils.cmake")
 
 include_directories(
   ..
+  ../deps/FP16/include
   ../deps/protobuf/src
   src
 )
@@ -77,6 +78,7 @@ add_library(mlmodel
     ${CMAKE_CURRENT_BINARY_DIR}/format/AudioFeaturePrint.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/BayesianProbitRegressor.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/CategoricalMapping.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/format/ClassConfidenceThresholding.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/CustomModel.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/DataStructures.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/DictVectorizer.pb.cc
@@ -134,6 +136,7 @@ add_library(mlmodel
     src/Validation/AudioFeaturePrintValidator.cpp
     src/Validation/BayesianProbitRegressionValidator.cpp
     src/Validation/CategoricalMappingValidator.cpp
+    src/Validation/ClassConfidenceThresholdingValidator.cpp
     src/Validation/CustomModelValidator.cpp
     src/Validation/DictVectorizerValidator.cpp
     src/Validation/FeatureVectorizerValidator.cpp
@@ -184,6 +187,7 @@ set(proto_files
     AudioFeaturePrint
     BayesianProbitRegressor
     CategoricalMapping
+	ClassConfidenceThresholding
     CustomModel
     DataStructures
     DictVectorizer

@@ -246,9 +246,10 @@ class prelu(activation_with_alpha):
     Parameters
     ----------
     x: tensor<[B, C, 1..3], T> (Required)
-        * x must have rank 4 or rank 3 or rank 5, i.e. a shape of (B,C,H) or (B,C,H,W) or (B,C,D,H,W)
+        * ``x`` must have rank 4, rank 3, or rank 5; that is, a shape of
+          ``(B,C,H)``, ``(B,C,H,W)``, or ``(B,C,D,H,W)``.
     alpha: const tensor<[C], T>, (Required)
-        * The length of alpha must match the second dimension of x (channel dimension)
+        * The length of ``alpha`` must match the second dimension of ``x`` (channel dimension).
 
     Returns
     -------
@@ -262,9 +263,11 @@ class prelu(activation_with_alpha):
 
     @precondition(allow=VALUE)
     def value_inference(self):
+        # Expends alpha on all dims besides the channel (2nd) dim.
         alpha_br = self.alpha.val
-        for i in range(1, len(self.x.shape)):
-            alpha_br = np.expand_dims(alpha_br, i)
+        for i in range(len(self.x.shape)):
+            if i != 1:
+                alpha_br = np.expand_dims(alpha_br, i)
         x_pos = np.maximum(self.x.val, 0)
         b = np.minimum(self.x.val, 0)
         return x_pos + b * alpha_br
@@ -280,8 +283,8 @@ class prelu(activation_with_alpha):
             raise ValueError("alpha should be rank 1")
         if self.x.shape[1] != self.alpha.val.shape[0]:
             raise ValueError(
-                "Size of dimension 1 of alpha should be the same as "
-                + "the size of dimension 1 of x."
+                f"Size of dimension 0 of alpha ({self.alpha.val.shape[0]}) should be "
+                f"the same as the size of dimension 1 of x ({self.x.shape[1]})."
             )
         if self.x.rank in (3, 5):
             # check whether all alpha values are the same or not
@@ -493,9 +496,11 @@ class softplus_parametric(activation_with_alpha_and_beta):
     def value_inference(self):
         alpha_br = np.copy(self.alpha.val)
         beta_br = np.copy(self.beta.val)
-        for i in range(1, len(self.x.val.shape)):
-            alpha_br = np.expand_dims(alpha_br, i)
-            beta_br = np.expand_dims(beta_br, i)
+        # Expends alpha and beta on all dims besides the channel (2nd) dim.
+        for i in range(len(self.x.val.shape)):
+            if i != 1:
+                alpha_br = np.expand_dims(alpha_br, i)
+                beta_br = np.expand_dims(beta_br, i)
         return alpha_br * np.log(1 + np.exp(self.x.val * beta_br))
 
     def type_inference(self):

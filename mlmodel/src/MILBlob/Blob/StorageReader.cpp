@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+#include "MILBlob/Bf16.hpp"
 #include "MILBlob/Blob/MMapFileReader.hpp"
 #include "MILBlob/Blob/MMapFileReaderFactory.hpp"
 #include "MILBlob/Blob/StorageFormat.hpp"
@@ -69,7 +70,37 @@ public:
 
     bool IsEncrypted() const
     {
+        EnsureLoaded();
         return m_reader->IsEncrypted();
+    }
+
+    BlobDataType GetDataType(uint64_t metadataOffset) const
+    {
+        auto metadata = GetMetadata(metadataOffset);
+        return metadata.mil_dtype;
+    }
+
+    std::vector<uint64_t> GetAllOffsets() const
+    {
+        EnsureLoaded();
+
+        const auto& header = m_reader->ReadStruct<storage_header>(0);
+        auto numBlobs = header.count;
+
+        std::vector<uint64_t> allOffsets;
+        allOffsets.reserve(numBlobs);
+        // The first metadata offset lies just after the file header.
+        uint64_t currMetadataOffset = sizeof(storage_header);
+        for (uint32_t i = 0; i < numBlobs; ++i) {
+            allOffsets.push_back(currMetadataOffset);
+            auto metadata = GetMetadata(currMetadataOffset);
+            // Update offset for next iteration to aligned value.
+            currMetadataOffset = metadata.offset + metadata.sizeInBytes;
+            if (currMetadataOffset % DefaultStorageAlignment != 0) {
+                currMetadataOffset += DefaultStorageAlignment - currMetadataOffset % DefaultStorageAlignment;
+            }
+        }
+        return allOffsets;
     }
 
 private:
@@ -128,6 +159,12 @@ Util::Span<const uint8_t> StorageReader::GetDataView<uint8_t>(uint64_t offset) c
 }
 
 template <>
+Util::Span<const Bf16> StorageReader::GetDataView<Bf16>(uint64_t offset) const
+{
+    return m_impl->GetDataView<Bf16>(offset);
+}
+
+template <>
 Util::Span<const Fp16> StorageReader::GetDataView<Fp16>(uint64_t offset) const
 {
     return m_impl->GetDataView<Fp16>(offset);
@@ -137,6 +174,18 @@ template <>
 Util::Span<const float> StorageReader::GetDataView<float>(uint64_t offset) const
 {
     return m_impl->GetDataView<float>(offset);
+}
+
+template <>
+Util::Span<const int16_t> StorageReader::GetDataView<int16_t>(uint64_t offset) const
+{
+    return m_impl->GetDataView<int16_t>(offset);
+}
+
+template <>
+Util::Span<const uint16_t> StorageReader::GetDataView<uint16_t>(uint64_t offset) const
+{
+    return m_impl->GetDataView<uint16_t>(offset);
 }
 
 Util::Span<const uint8_t> StorageReader::GetRawDataView(uint64_t offset) const
@@ -157,4 +206,14 @@ uint64_t StorageReader::GetDataSize(uint64_t metadataOffset) const
 bool StorageReader::IsEncrypted() const
 {
     return m_impl->IsEncrypted();
+}
+
+BlobDataType StorageReader::GetDataType(uint64_t metadataOffset) const
+{
+    return m_impl->GetDataType(metadataOffset);
+}
+
+std::vector<uint64_t> StorageReader::GetAllOffsets() const
+{
+    return m_impl->GetAllOffsets();
 }

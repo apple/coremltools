@@ -8,23 +8,37 @@ import copy
 import numpy as np
 
 from coremltools import _logger as logger
-from coremltools.converters.mil.mil import (Block, get_existing_symbol,
-                                            get_new_symbol, types)
-from coremltools.converters.mil.mil.input_type import (DefaultInputs,
-                                                       InputSpec,
-                                                       InternalInputType,
-                                                       ListInputType,
-                                                       PyFunctionInputType,
-                                                       TensorInputType,
-                                                       TupleInputType)
-from coremltools.converters.mil.mil.operation import (NONE, SYMBOL, VALUE,
-                                                      Operation, mil_list,
-                                                      precondition)
+from coremltools.converters.mil.mil import Block, get_existing_symbol, get_new_symbol, types
+from coremltools.converters.mil.mil.input_type import (
+    DefaultInputs,
+    InputSpec,
+    InternalInputType,
+    ListInputType,
+    PyFunctionInputType,
+    TensorInputType,
+    TupleInputType,
+)
+from coremltools.converters.mil.mil.operation import (
+    NONE,
+    SYMBOL,
+    VALUE,
+    Operation,
+    mil_list,
+    precondition,
+)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs._utils import (
+    infer_type_with_broadcast,
+    promoted_primitive_type,
+)
 from coremltools.converters.mil.mil.types import is_compatible_type
+from coremltools.converters.mil.mil.types.type_list import list as types_list
 from coremltools.converters.mil.mil.types.type_mapping import (
-    builtin_to_string, is_subtype, numpy_type_to_builtin_type,
-    numpy_val_to_builtin_val)
+    builtin_to_string,
+    is_subtype,
+    numpy_type_to_builtin_type,
+    numpy_val_to_builtin_val,
+)
 
 
 @register_op
@@ -192,8 +206,6 @@ class Const(Operation):
             # mil_list is a special case that we want to preserve the int64 element type
             if isinstance(list_value[0], np.int64):
                 builtin_elem_type = types.int64
-            from coremltools.converters.mil.mil.types.type_list import \
-                list as types_list
             builtin_type = types_list(builtin_elem_type, init_length=len(list_value), dynamic_length=False)
             return builtin_type, value
 
@@ -276,23 +288,21 @@ class select(Operation):
     }
 
     def type_inference(self):
-        a_type = self.a.sym_type
-        b_type = self.b.sym_type
-        if all([a_type, b_type]):
-            compatible, ret_type = types.is_tensor_and_is_compatible_general_shape(
-                a_type, b_type
-            )
-            if compatible:
-                return ret_type
-            elif a_type == b_type:
-                return a_type
-            else:
-                raise ValueError("Type mismatch {} vs. {}".format(a_type, b_type))
-        return a_type if a_type is not None else b_type
+        typea = self.a.sym_type
+        typeb = self.b.sym_type
+        primitive_type = promoted_primitive_type(typea, typeb)
+        if primitive_type is None:
+            raise ValueError("Incompatible primitive types in broadcast operation")
+
+        return infer_type_with_broadcast(typea, typeb, primitive_type)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.where(self.cond.val, self.a.val, self.b.val)
+        res = np.where(self.cond.val, self.a.val, self.b.val)
+        sym_type = self.type_inference()
+        if types.is_scalar(sym_type) and not np.isscalar(res):
+            res = getattr(np, str(res.dtype))(res.item())
+        return res
 
 
 @register_op
@@ -528,7 +538,7 @@ class make_list(Operation):
           ``init_length`` is the fixed length of the list throughout runtime.
 
     dynamic_length: <bool> (Optional, Default is True)
-    
+
     elem_shape: Tuple[const<T>] (Required)
         * 1-D vector denoting the shape of elements.
         * If ``T = int32``, the element shape is known at compile time.
@@ -544,7 +554,7 @@ class make_list(Operation):
     Returns
     -------
     List[*]
-    
+
     Attributes
     ----------
     T: i32, string

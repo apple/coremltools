@@ -107,6 +107,8 @@ namespace CoreML {
                     return a.soundanalysispreprocessing() == b.soundanalysispreprocessing();
                 case Model::kLinkedModel:
                     return a.linkedmodel() == b.linkedmodel();
+                case Model::kClassConfidenceThresholding:
+                    return a.classconfidencethresholding() == b.classconfidencethresholding();
                 case Model::TYPE_NOT_SET:
                     return true;
             }
@@ -821,6 +823,26 @@ namespace CoreML {
                     break;
             }
             return true;
+        }
+
+        bool operator==(const ClassConfidenceThresholding& a,
+                        const ClassConfidenceThresholding& b) {
+            if (!std::equal(a.precisionrecallcurves().begin(), a.precisionrecallcurves().end(), b.precisionrecallcurves().begin(),
+                [] (const CoreML::Specification::PrecisionRecallCurve& a, const CoreML::Specification::PrecisionRecallCurve& b) {
+                    if (!std::equal(a.precisionvalues().vector().begin(), a.precisionvalues().vector().end(),
+                                    b.precisionvalues().vector().begin())) return false;
+                    if (!std::equal(a.precisionconfidencethresholds().vector().begin(), a.precisionconfidencethresholds().vector().end(),
+                                    b.precisionconfidencethresholds().vector().begin())) return false;
+                    if (!std::equal(a.recallvalues().vector().begin(), a.recallvalues().vector().end(),
+                                    b.recallvalues().vector().begin())) return false;
+                    if (!std::equal(a.recallconfidencethresholds().vector().begin(), a.recallconfidencethresholds().vector().end(),
+                                    b.recallconfidencethresholds().vector().begin())) return false;
+                    return true;
+                })) {
+                return false;
+            } else {
+                return true;
+            }
         }
 
         bool operator==(const CoreMLModels::WordTagger& a,

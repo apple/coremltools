@@ -5,6 +5,7 @@
 
 import itertools
 import platform
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -14,11 +15,16 @@ from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, get_new_symbol, types
-from coremltools.converters.mil.testing_utils import (get_op_types_in_program,
-                                                      random_gen, ssa_fn)
-from coremltools.models.utils import _macos_version
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
+from coremltools.converters.mil.mil.var import Var
+from coremltools.converters.mil.testing_utils import get_op_types_in_program, random_gen, ssa_fn
 
-from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
+from .testing_utils import (
+    UNK_SYM,
+    UNK_VARIADIC,
+    construct_inputs_from_placeholders,
+    run_compare_builder,
+)
 
 if _HAS_TF_2:
     import tensorflow as tf
@@ -386,6 +392,9 @@ class TestFill:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 3)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -712,7 +721,7 @@ class TestNonZero:
         x_val = np.random.randint(low=-1, high=2, size=(6, 1, 7))
         res = mb.non_zero(x=x_val)
         np.testing.assert_allclose(np.transpose(np.nonzero(x_val)), res.val, atol=1e-04, rtol=1e-05)
-        
+
     @ssa_fn
     def test_shape_inference_for_deterministic_input(self):
         # If the input is compile time known, the builder should be able to infer the shape from value
@@ -1261,16 +1270,6 @@ class TestTopK:
         )
     )
     def test_builder_to_backend_smoke_iOS16(self, compute_unit, backend, return_indices, sort):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("nn backend not supported")
-        if _macos_version() < (13, 0):
-            pytest.skip("New functionality in macOS13/iOS16")
-
-        if not return_indices:
-            pytest.xfail(
-                "rdar://92880117 (Topk with return_indices = False error out at the MIL->EIR stage)"
-            )
-
         val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
@@ -1301,6 +1300,61 @@ class TestTopK:
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, x_dtype, k_dtype",
+        itertools.product(
+            compute_units,
+            [("mlprogram", "fp16")],
+            [np.float32, np.float16, np.int32, np.int16, np.uint16],
+            [np.int32, np.int16],
+        ),
+    )
+    def test_ios17_different_dtypes(self, compute_unit, backend, x_dtype, k_dtype):
+        def build(x):
+            return mb.topk(x=x, k=k_dtype(2), axis=1)
+
+        if k_dtype == np.int16:
+            pytest.xfail("k with dtype int16 will trigger backend error.")
+
+        val = np.array([[2, 3, 1], [5, 4, 6]], dtype=x_dtype)
+        x_mb_dtype = types.type_mapping.numpy_type_to_builtin_type(x_dtype)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape, dtype=x_mb_dtype)}
+        input_values = {"x": val}
+        # As int16 is not in CoreML I/O supported dtypes, it will be cast to int32.
+        expected_output_types = [(2, 2, x_mb_dtype), (2, 2, types.int32)]
+        expected_outputs = [
+            np.array([[3, 2], [6, 5]], dtype=x_dtype),
+            np.array([[1, 0], [2, 0]], dtype=np.int32),
+        ]
+
+        with patch.object(Var, "_is_nonreplaceable_var") as mocked_is_nonreplaceable_var:
+            # Mock that the cast is non-replaceable, to make sure it's kept in the graph.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and var.op.op_type == "cast"
+            )
+            # Remove the cast optimization pass to make sure all cast are kept in the graph.
+            pass_pipeline: PassPipeline = PassPipeline.DEFAULT
+            pass_pipeline.remove_passes(
+                ["common::cast_optimization", "common::topological_reorder"]
+            )
+            mlmodel = run_compare_builder(
+                build,
+                input_placeholders,
+                input_values,
+                expected_output_types,
+                expected_outputs,
+                compute_unit=compute_unit,
+                backend=backend,
+                minimum_deployment_target=ct.target.iOS17,
+                pass_pipeline=pass_pipeline,
+            )
+        prog = mlmodel._mil_program
+        topk_op = prog["main"].find_ops(op_type="topk")[0]
+        expected_x_dtype = x_mb_dtype
+        if backend[1] == "fp16" and types.is_float(x_mb_dtype):
+            expected_x_dtype = types.fp16
+        assert types.builtin_to_string(topk_op.x.dtype) == types.builtin_to_string(expected_x_dtype)
 
     @ssa_fn
     def test_builder_eval(self):
@@ -1480,6 +1534,9 @@ class TestFlatten2d:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -1562,6 +1619,9 @@ class TestShape:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -1683,3 +1743,52 @@ class TestArgSort:
         res = mb.argsort(x=x_val, axis=-3)
         # The default np argsort mode is ascending, which is opposite to MIL's argsort op.
         np.testing.assert_allclose(np.argsort(-x_val, axis=-3), res.val, atol=1e-04, rtol=1e-05)
+
+
+class TestConcat:
+    @pytest.mark.parametrize(
+        "compute_unit, backend, axis",
+        itertools.product(
+            compute_units,
+            backends,
+            [0, 1],
+        ),
+    )
+    def test_builder_to_backend_numerical(self, compute_unit, backend, axis):
+        def build(x1, x2):
+            return mb.concat(values=[x1, x2], axis=axis)
+
+        val1 = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
+        val2 = -val1
+        input_placeholders = {
+            "x1": mb.placeholder(shape=val1.shape),
+            "x2": mb.placeholder(shape=val2.shape),
+        }
+        input_values = {"x1": val1, "x2": val2}
+        expected_res = np.concatenate([val1, val2], axis=axis)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types=[expected_res.shape + (types.fp32,)],
+            expected_outputs=expected_res,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    def test_builder_eval_different_dtypes_error_out(self):
+        """If the input to the concat op has different dtypes, it will error out."""
+        with pytest.raises(
+            ValueError,
+            match="Tensors in 'values' of the concat op \(concat_0\) should share the same data type",
+        ):
+
+            @mb.program(
+                input_specs=[
+                    mb.TensorSpec(shape=(2, 3), dtype=types.fp32),
+                    mb.TensorSpec(shape=(2, 3), dtype=types.int32),
+                ]
+            )
+            def prog(x1, x2):
+                return mb.concat(values=[x1, x2], axis=0)

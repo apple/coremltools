@@ -13,17 +13,32 @@ from coremltools import _logger as logger
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil import Program
 from coremltools.converters.mil.mil.passes.graph_pass import PassOption
+from coremltools.converters.mil.mil.passes.helper import classproperty as _classproperty
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
 _COMMON_PASSES: List[Text] = [
     "common::lower_complex_dialect_ops",
     "common::update_output_dtypes",
     "common::cast_optimization",
+    "common::noop_elimination",
+    # quantization pass 1: canonicalize zero point
+    # always start quantization passes with canonicalizations
+    "common::nullify_redundant_quantization_zero_point",
+    # quantization pass 2: remove redundancy
+    # remove redundancy after canonicalization but before anything else
+    "common::dequantize_quantize_pair_elimination",
+    # the main quantization passes
+    "common::distributive_quantized_binary_op_scale_normalization",
+    # the last quantization pass: replace const dequantize with constexpr
+    # after all quantization passes, since constexpr will not be further optimized
+    # before const elimination, otherwise const dequantize would get bloated
+    "common::dequantize_to_constexpr",
     "common::const_elimination",
     "common::sanitize_input_output_names",
     "common::divide_to_multiply",
     "common::add_conv_transpose_output_shape",
     "common::const_elimination",
+    "common::const_deduplication",  # after all consts have been settled
     "common::loop_invariant_elimination",
     "common::remove_symbolic_reshape",
     "common::noop_elimination",
@@ -82,6 +97,7 @@ _CLEANUP_PASSES: List[Text] = [
     "common::const_elimination",
     "common::cast_optimization",
     "common::const_elimination",
+    "common::const_deduplication",  # after all consts have been settled
     "common::loop_invariant_elimination",
     "common::noop_elimination",
     "common::dedup_op_and_var_names",
@@ -91,7 +107,15 @@ _CLEANUP_PASSES: List[Text] = [
     "common::dead_code_elimination",  # always end with dce
 ]
 
-_FRONTEND_TORCH_PASSES = [
+_PALETTIZATION_PASSES: List[Text] = [
+    "compression::palettize_weights",
+]
+
+_SPARSIFICATION_PASSES: List[Text] = [
+    "compression::prune_weights",
+]
+
+_FRONTEND_TORCH_PASSES: List[Text] = [
     "common::dead_code_elimination",
     "common::loop_invariant_elimination",
     "common::dead_code_elimination",
@@ -99,7 +123,7 @@ _FRONTEND_TORCH_PASSES = [
     "torch::torch_tensor_assign_to_core",
 ]
 
-_FRONTEND_TF1_PASSES = [
+_FRONTEND_TF1_PASSES: List[Text] = [
     "common::dead_code_elimination",
     "common::loop_invariant_elimination",
     "tensorflow::backfill_make_list_elem_type",
@@ -112,7 +136,7 @@ _FRONTEND_TF1_PASSES = [
     "tensorflow::expand_tf_lstm",
 ]
 
-_FRONTEND_TF2_PASSES = [
+_FRONTEND_TF2_PASSES: List[Text] = [
     "common::dead_code_elimination",
     "common::loop_invariant_elimination",
     # tensorflow2::remove_vacuous_cond should come before
@@ -128,12 +152,13 @@ _FRONTEND_TF2_PASSES = [
     "tensorflow::expand_tf_lstm",
 ]
 
-_BACKEND_MIL_PASSES = [
+_BACKEND_MIL_PASSES: List[Text] = [
     "common::const_elimination",
     "mil_backend::adjust_io_to_supported_types",
     "mil_backend::insert_image_preprocessing_ops",
     "mil_backend::fuse_activation_silu",
     "common::const_elimination",  # rank0_expand_dims_swap might introduce some new const tensor
+    "common::const_deduplication",  # after all consts have been settled
     "common::cast_optimization",
     "common::dead_code_elimination",
     "mil_backend::sanitize_name_strings",
@@ -141,11 +166,12 @@ _BACKEND_MIL_PASSES = [
     "nn_backend::handle_unused_inputs",  # must come after dce.
 ]
 
-_BACKEND_NN_PASSES = [
+_BACKEND_NN_PASSES: List[Text] = [
     "nn_backend::decompose_conv1d",  # at the beginning of nn pass
     "nn_backend::commingle_loop_vars",
     "nn_backend::handle_return_inputs_as_outputs",
     "common::const_elimination",
+    "common::const_deduplication",  # after all consts have been settled
     # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
     # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
     # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
@@ -165,19 +191,19 @@ class PassPipeline:
 
     .. sourcecode:: python
 
-        pipeline = PassPipeline()
+        pipeline = ct.PassPipeline.DEFAULT
 
     Create an empty pipeline (this will result in no graph passes being applied to the model):
 
     .. sourcecode:: python
 
-        pipeline = PassPipeline.get_empty_pipeline()
+        pipeline = ct.PassPipeline.EMPTY
 
     Add passes to pipeline:
 
     .. sourcecode:: python
 
-        pipeline=ct.PassPipeline()
+        pipeline = ct.PassPipeline.DEFAULT
         pipeline.append_pass("common::reduce_transposes")
         pipeline.insert_pass(index=0, pass_name="common::reduce_transposes")
         # Can also specify all passes by setting the passes of the pipeline.
@@ -199,19 +225,28 @@ class PassPipeline:
         # Get all passes.
         pass_names = pipeline.passes
         # Find indexes of a specific pass.
-        pass_indexes = [idx for idx, pass_name in enumerate(pass_names) if pass_names[idx] == "common::reduce_transposes"]
+        pass_indexes = [
+            idx
+            for idx, pass_name in enumerate(pass_names)
+            if pass_names[idx] == "common::reduce_transposes"
+        ]
 
     Set options for a specific pass:
 
     .. sourcecode:: python
 
-        pipeline=ct.PassPipeline()
-        pipeline.set_options(pass_name="common::const_elimination", options={"skip_const_by_size":
-            "100000"}, override=False)
+        pipeline = ct.PassPipeline.DEFAULT
+        pipeline.set_options(
+            pass_name="common::const_elimination",
+            options={"skip_const_by_size": "100000"},
+        )
     """
 
     _PIPELINE_NAME_TO_PASSES = {
         "default": _COMMON_PASSES + _CLEANUP_PASSES,
+        "cleanup": _CLEANUP_PASSES,
+        "default_palettization": _PALETTIZATION_PASSES + _COMMON_PASSES + _CLEANUP_PASSES,
+        "default_sparsification": _SPARSIFICATION_PASSES + _COMMON_PASSES + _CLEANUP_PASSES,
         "empty": [],
         # Frontend pipelines.
         "frontend_milinternal": [],
@@ -286,17 +321,16 @@ class PassPipeline:
         """Gets all options in the pipeline."""
         return self._pass_options
 
-    def set_options(self, pass_name: Text, options: Dict[Text, Text], override: bool = False):
+    def set_options(self, pass_name: Text, options: Dict[Text, Text], override: bool = True):
         """Sets options for a specific pass."""
-        if self._pass_options.get(pass_name, None) and not override:
-            raise ValueError(f"The pass {pass_name} already has associated options.")
+        if self._pass_options.get(pass_name, None):
+            if not override:
+                raise ValueError(f"The pass {pass_name} already has associated options.")
+            else:
+                logger.warning(f"The pass {pass_name} already has associated options. Override the existing options.")
+
         pass_options: List[PassOption] = []
         for option_name, option_val in options.items():
-            if not (isinstance(option_name, str) and isinstance(option_val, str)):
-                raise ValueError(
-                    f"The options must be specified by Dict[Text, Text], but got "
-                    f"Dict[{type(option_name)}, {type(option_val)}]"
-                )
             pass_option = PassOption(option_name=option_name, option_val=option_val)
             pass_options.append(pass_option)
         self._pass_options[pass_name] = pass_options
@@ -322,24 +356,10 @@ class PassPipeline:
                 )
 
     @staticmethod
-    def get_empty_pipeline() -> PassPipeline:
-        """Creates an empty pipeline without any pass."""
-        return PassPipeline(pass_names=[])
-
-    @staticmethod
     def get_pipeline(pipeline_name: Text) -> PassPipeline:
         """
         Gets a pipeline based on the name. Raises an error if no pipeline is found.
-        Available Pipelines:
-        - "default": _COMMON_PASSES + _CLEANUP_PASSES
-        - "empty": empty
-        - "frontend_pytorch": _FRONTEND_TORCH_PASSES
-        - "frontend_tensorflow": _FRONTEND_TF1_PASSES
-        - "frontend_tensorflow2": _FRONTEND_TF2_PASSES
-        - "frontend_milinternal": empty
-        - "backend_mlprogram": _BACKEND_MIL_PASSES
-        - "backend_neuralnetwork": _BACKEND_NN_PASSES
-        - "backend_milinternal": empty
+        Available Pipelines are defined in _PIPELINE_NAME_TO_PASSES
         """
         if pipeline_name not in PassPipeline._PIPELINE_NAME_TO_PASSES:
             raise ValueError(
@@ -348,8 +368,55 @@ class PassPipeline:
             )
         return PassPipeline(PassPipeline._PIPELINE_NAME_TO_PASSES[pipeline_name], pipeline_name)
 
+    """
+    =======================================
+    Pre-defined PassPipeline configurations
+    =======================================
+    """
+    @_classproperty
+    def EMPTY(cls) -> PassPipeline:
+        """Creates an empty pipeline without any pass."""
+        return PassPipeline(pass_names=[])
 
-class PipelineManager:
+    @_classproperty
+    def DEFAULT(cls) -> PassPipeline:
+        """Creates a pipeline that the converter uses by default."""
+        return PassPipeline.get_pipeline("default")
+
+    @_classproperty
+    def CLEANUP(cls) -> PassPipeline:
+        """Create a pipeline that contains cleanup passes."""
+        return PassPipeline.get_pipeline("cleanup")
+
+    @_classproperty
+    def DEFAULT_PALETTIZATION(cls) -> PassPipeline:
+        """Create a default palettization pipeline to convert a compressed source model"""
+        # We use delayed import to avoid circular import
+        from coremltools.optimize.coreml import OpPalettizerConfig, OptimizationConfig
+        pipeline = PassPipeline.get_pipeline("default_palettization")
+
+        # set default palettization
+        config = OptimizationConfig(global_config=OpPalettizerConfig(mode="unique"))
+        pipeline.set_options("compression::palettize_weights", {"config": config})
+        return pipeline
+
+    @_classproperty
+    def DEFAULT_PRUNING(cls) -> PassPipeline:
+        """Create a default sparsification pipeline to convert a compressed source model"""
+        # We use delayed import to avoid circular import
+        from coremltools.optimize.coreml import OpThresholdPrunerConfig, OptimizationConfig
+        pipeline = PassPipeline.get_pipeline("default_sparsification")
+
+        # set default sparsification
+        config = OptimizationConfig(
+            global_config=OpThresholdPrunerConfig(
+                threshold=1e-3,
+            )
+        )
+        pipeline.set_options("compression::prune_weights", {"config": config})
+        return pipeline
+
+class PassPipelineManager:
     @staticmethod
     @_profile
     def apply_pipeline(prog: Program, pass_pipeline: PassPipeline):

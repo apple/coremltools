@@ -5,7 +5,10 @@
 
 import numpy as np
 
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget
+from coremltools.converters.mil.frontend._utils import value_at
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
     _check_child_op_type,
@@ -15,10 +18,11 @@ from coremltools.converters.mil.mil.passes.helper import (
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
+
 @register_pass(namespace="common")
 class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
     """
-    Detect the pattern ``reshape_1-->transpose-->reshape_2``, where ``reshape_1`` has 
+    Detect the pattern ``reshape_1-->transpose-->reshape_2``, where ``reshape_1`` has
     a output tensor with rank >= 6, and the reshape_2 produces a tensor with rank <= 5.
 
     In general, we can expand this pattern into a sequence of rank 4 ``reshape`` and ``transpose`` ops,
@@ -48,7 +52,7 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
 
     @staticmethod
     def _match_pattern(op):
-        # We are detecting the 
+        # We are detecting the
         # reshape(>= rank 6) -> transpose -> reshape(<= rank 5) pattern
         ops = [op]
         if op.op_type != "reshape":
@@ -89,7 +93,7 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
         original_shape = reshape_op.outputs[0].shape
         original_perm = transpose_op.perm.val.tolist()
 
-        # Group the consecutive axes in the perm, sometimes this could directly lower the 
+        # Group the consecutive axes in the perm, sometimes this could directly lower the
         # rank under 6.
         #
         # For instance:
@@ -110,7 +114,7 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
         group_axes = []
         i = 0
         res = []
-        for i in range(len(original_perm)):  
+        for i in range(len(original_perm)):
             if i > 0 and original_perm[i] == original_perm[i-1] + 1:
                 res.append(original_perm[i])
             else:
@@ -140,7 +144,7 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
             # we can directly use them to replace the original pattern
             x = mb.reshape(x=x, shape=shape, before_op=reshape_op)
             x = mb.transpose(x=x, perm=perm, before_op=reshape_op)
-        
+
         else:
             # Otherwise, we need to expand the rank-N tensor into N reshape, and N transpose ops.
             # Note that all intrermediate tensors have rank 4.
@@ -166,9 +170,9 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
                 dim = shape[axis]
                 memo.add(axis)
                 reshape_shape = [
-                    leading_dim, 
-                    _get_prod(0, axis, shape, memo), 
-                    dim, 
+                    leading_dim,
+                    _get_prod(0, axis, shape, memo),
+                    dim,
                     _get_prod(axis + 1, rank, shape, memo)
                 ]
                 x = mb.reshape(x=x, shape=reshape_shape, before_op=reshape_op)
@@ -547,8 +551,21 @@ class fuse_onehot_matmul_to_gather(AbstractGraphPass):
             return False
 
         # remove onehot and matmul and replace with gather op
-        out_name = matmul_op.outputs[0].name
-        x = mb.gather(x=W_var, indices=root_var, axis=0, name=out_name, before_op=matmul_op)
+        if is_current_opset_version_compatible_with(AvailableTarget.iOS17):
+            # IOS17 `gather` requires non-negative indices.
+            root_var = mb.select(
+                cond=mb.greater_equal(x=root_var, y=0, before_op=matmul_op),
+                a=root_var,
+                b=mb.add(
+                    x=root_var,
+                    y=value_at(mb.shape(x=W_var, before_op=matmul_op), 0, before_op=matmul_op),
+                    before_op=matmul_op,
+                ),
+                before_op=matmul_op,
+            )
+        x = mb.gather(
+            x=W_var, indices=root_var, axis=0, name=matmul_op.outputs[0].name, before_op=matmul_op
+        )
 
         matmul_op.enclosing_block.replace_uses_of_var_after_op(
             anchor_op=matmul_op, old_var=matmul_op.outputs[0], new_var=x
@@ -715,20 +732,20 @@ class replace_stack_reshape(AbstractGraphPass):
 class use_reflection_padding(AbstractGraphPass):
     """
     Identify a reflection padding layer composed out of `slices` and `concats`.
-    
+
     .. code-block::
 
         Input graph:
-        
+
                 ------------------------------------------------------------------------------------- |
                 |                                                                                     v
         input(1, 2, 6, 8) ------> slice_by_index(begin=[0, 0, 0, 1], end=[0, 0, 0, 2]) -----> concat(axis=3) ---> out(1, 2, 6, 10)
                 |                                                                                     ^
                 ----------------> slice_by_index(begin=[0, 0, 0, -2], end=[0, 0, 0, -1]) -------------|
 
-        
+
         Output graph:
-        
+
         input(1, 2, 6, 8) -----0> pad(mode=reflect, size=[0, 0, 1, 1]) -----> out(1, 2, 6, 10)
 
     """

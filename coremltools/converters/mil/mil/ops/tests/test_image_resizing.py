@@ -261,7 +261,7 @@ class TestUpsampleNearestNeighborFractionalScales:
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
-        
+
         if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398448 (TestUpsampleNearestNeighborFractionalScales failing on GPU)")
 
@@ -490,7 +490,7 @@ class TestUpsampleBilinear:
             )
 
         expected_output_type = (1, 1, 2, 6, types.fp32)
-        
+
         if align_corners and not half_pixel_centers:
             expected_output = [1., 1.2, 1.4, 1.6, 1.8, 2., 1., 1.2, 1.4, 1.6, 1.8, 2.]
         elif not align_corners and half_pixel_centers:
@@ -703,16 +703,11 @@ class TestCrop:
 
 class TestCropResize:
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(compute_units, backends),
+        "compute_unit, backend, pad_value",
+        itertools.product(compute_units, backends, [0.0, 1.0, 10.0]),
     )
-    def test_builder_to_backend_smoke_pad_value(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("pad_mode only supported on iOS16 or above")
-            
-        if ct.utils._macos_version() < (13, 0):
-            pytest.skip("pad_value not supported in macOS12 or older.")
-
+    def test_builder_to_backend_ios16(self, compute_unit, backend, pad_value):
+        """For iOS16+ the crop_resize op supports pad_value."""
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
             dtype=np.float32,
@@ -723,24 +718,40 @@ class TestCropResize:
             [0, 0.5, 1.8, 1., 0.3],
             [0, 0.0, 0.4, 0.6, 0.7],
         ], dtype=np.float32).reshape(3, 1, 5, 1, 1)
-        
+
         def build(x):
             return mb.crop_resize(
-                    x=x,
-                    roi=roi,
-                    target_width=2,
-                    target_height=2,
-                    normalized_coordinates=True,
-                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-                    sampling_mode="ALIGN_CORNERS",
-                    pad_value=10.0,
+                x=x,
+                roi=roi,
+                target_width=2,
+                target_height=2,
+                normalized_coordinates=True,
+                box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                sampling_mode="ALIGN_CORNERS",
+                pad_value=pad_value,
             )
-        
+
         expected_output_type = [
             (3, 1, 1, 2, 2, types.fp32),
         ]
         expected_output = [
-            np.array([ 3.1, 5.2, 10, 10, 10, 7.899, 10, 13.9, 2.2, 3.1, 9.4, 10.3], dtype=np.float32).reshape(3, 1, 1, 2, 2),
+            np.array(
+                [
+                    3.1,
+                    5.2,
+                    pad_value,
+                    pad_value,
+                    pad_value,
+                    7.899,
+                    pad_value,
+                    13.9,
+                    2.2,
+                    3.1,
+                    9.4,
+                    10.3,
+                ],
+                dtype=np.float32,
+            ).reshape(3, 1, 1, 2, 2),
         ]
 
         input_placeholder_dict = {"x": mb.placeholder(shape=(1, 1, 4, 4))}
@@ -756,11 +767,10 @@ class TestCropResize:
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
         )
-        
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend, is_symbolic",
-        itertools.product(compute_units, backends, compute_units),
+        itertools.product(compute_units, backends, [True, False]),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend, is_symbolic):
         if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
@@ -921,14 +931,119 @@ class TestCropResize:
         ]
 
         for mode in range(6):
-            # nn-proto does not support UNALIGN_CORNERS
-            if not (backend[0] == 'neuralnetwork' and mode == 5):
-                run_compare_builder(
-                    functools.partial(build, mode=mode),
-                    input_placeholder_dict,
-                    input_value_dict,
-                    expected_output_type[mode],
-                    expected_output[mode],
-                    compute_unit=compute_unit,
-                    backend=backend,
-                )
+            if backend[0] == "neuralnetwork" and mode == 5:
+                pytest.skip("nn-proto does not support UNALIGN_CORNERS")
+            run_compare_builder(
+                functools.partial(build, mode=mode),
+                input_placeholder_dict,
+                input_value_dict,
+                expected_output_type[mode],
+                expected_output[mode],
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, N",
+        itertools.product(compute_units, backends, [1, 3]),
+    )
+    def test_builder_to_backend_ios17(self, compute_unit, backend, N):
+        """For iOS17+ the `roi` input is replaced by `boxes` and `box_indices`."""
+        x = np.arange(1, 17, dtype=np.float32).reshape(1, 1, 4, 4)
+        boxes = np.array([1, 1, 2, 2], dtype=np.float32).reshape(1, 4)
+        box_indices = None
+        normalized_coordinates = False
+        if N == 3:
+            boxes = np.array(
+                [
+                    [0.1, 0.3, 1.3, 1.0],
+                    [0.5, 1.8, 1.0, 0.3],
+                    [0.0, 0.4, 0.6, 0.7],
+                ],
+                dtype=np.float32,
+            )
+            box_indices = np.array([0] * 3, dtype=np.int32)
+            normalized_coordinates = True
+
+        def build(x):
+            return mb.crop_resize(
+                x=x,
+                boxes=boxes,
+                box_indices=box_indices,
+                target_width=2,
+                target_height=2,
+                normalized_coordinates=normalized_coordinates,
+                box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                sampling_mode="ALIGN_CORNERS",
+                pad_value=10.0,
+            )
+
+        expected_outputs = [np.array([6, 7, 10, 11], dtype=np.float32).reshape(1, 1, 2, 2)]
+        if N == 3:
+            expected_outputs = [
+                np.array(
+                    [3.1, 5.2, 10.0, 10.0, 10.0, 7.899, 10.0, 13.9, 2.2, 3.1, 9.4, 10.3],
+                    dtype=np.float32,
+                ).reshape(3, 1, 2, 2)
+            ]
+
+        run_compare_builder(
+            build,
+            input_placeholders={"x": mb.placeholder(shape=(1, 1, 4, 4))},
+            input_values={"x": x},
+            expected_output_types=[(N, 1, 2, 2, types.fp32)],
+            expected_outputs=expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+
+    def test_builder_eval_ios17_invalid(self):
+        x = np.arange(1, 17, dtype=np.float32).reshape(1, 1, 4, 4)
+        three_boxes = np.array(
+            [
+                [0.1, 0.3, 1.3, 1.0],
+                [0.5, 1.8, 1.0, 0.3],
+                [0.0, 0.4, 0.6, 0.7],
+            ],
+            dtype=np.float32,
+        )
+        with pytest.raises(
+            ValueError,
+            match='N dimension of "boxes" \(3\) should not be greater '
+            'than the B dimension of "x" \(1\)',
+        ):
+
+            @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+            def prog():
+                return mb.crop_resize(x=x, boxes=three_boxes)
+
+        one_box = np.array([1, 1, 2, 2], dtype=np.float32).reshape(1, 4)
+        indices_out_of_bound = np.array([10], dtype=np.int32)
+        with pytest.raises(
+            ValueError,
+            match='input "box_indices" should not have values >= B '
+            "dimension of x \(1\), but got \[10\]",
+        ):
+
+            @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+            def prog():
+                return mb.crop_resize(x=x, boxes=one_box, box_indices=indices_out_of_bound)
+
+        indices_two_dim = np.array([[0]], dtype=np.int32)
+        with pytest.raises(
+            ValueError, match='input "box_indices" must has shape \[1\], but got \(1, 1\)'
+        ):
+
+            @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+            def prog():
+                return mb.crop_resize(x=x, boxes=one_box, box_indices=indices_two_dim)
+
+        x_rank5 = np.arange(1, 17, dtype=np.float32).reshape(1, 1, 4, 4, 1)
+        with pytest.raises(
+            ValueError, match='input to the "crop_resize" op must be of rank 4, but got 5'
+        ):
+
+            @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+            def prog():
+                return mb.crop_resize(x=x_rank5, boxes=one_box)

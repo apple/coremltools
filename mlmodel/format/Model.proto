@@ -35,6 +35,7 @@
  *   - `LinkedModel`
  *   - `SoundAnalysisPreprocessing`
  *   - `ItemSimilarityRecommender`
+ *   - `ClassConfidenceThresholding`
  *
  * Feature Engineering
  *   - `Imputer`
@@ -89,6 +90,7 @@ import public "Parameters.proto";
 import public "ItemSimilarityRecommender.proto";
 import public "SoundAnalysisPreprocessing.proto";
 import public "LinkedModel.proto";
+import public "ClassConfidenceThresholding.proto";
 
 package CoreML.Specification;
 
@@ -258,7 +260,7 @@ message SerializedModel {
  * 8 : iOS 17, macOS 14, tvOS 17, watchOS 10 (Core ML 7)
  * - iOS 17 ops
  * - Scene print v2
- * - Detection print v2
+ * - ClassConfidenceThresholding model
  */
 message Model {
     int32 specificationVersion = 1;
@@ -305,6 +307,9 @@ message Model {
         CustomModel customModel = 555;
         LinkedModel linkedModel = 556;
 
+        // Precision Recall Curve 'container''
+        ClassConfidenceThresholding classConfidenceThresholding = 560;
+        
         // feature engineering starts at 600
         OneHotEncoder oneHotEncoder = 600;
         Imputer imputer = 601;

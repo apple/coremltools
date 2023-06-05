@@ -72,6 +72,30 @@ def broadcast_shapes(shape_x, shape_y):
     return tuple(ret_shapes)
 
 
+def infer_type_with_broadcast(typea, typeb, primitive_type):
+    """
+    Given 2 primitive types `typea` and `typeb`, and their promotion `primitive_type`,
+    return the type after broadcast
+    """
+
+    # broadcast
+    if not types.is_tensor(typea) and not types.is_tensor(typeb):
+        # both typea and typeb are not tensors
+        return primitive_type
+    if types.is_tensor(typea) and not types.is_tensor(typeb):
+        # a is tensor, b is not
+        return types.tensor(primitive_type, typea.get_shape())
+    if not types.is_tensor(typea) and types.is_tensor(typeb):
+        # a is not tensor, b is
+        return types.tensor(primitive_type, typeb.get_shape())
+
+    # both a, b are tensors
+    shapea = list(typea.get_shape())
+    shapeb = list(typeb.get_shape())
+    ret_shape = broadcast_shapes(shapea, shapeb)
+    return types.tensor(primitive_type, ret_shape)
+
+
 def promoted_primitive_type(type1, type2):
     """
     Given a pair of tensor or primitive types, find the smallest type that can store an instance

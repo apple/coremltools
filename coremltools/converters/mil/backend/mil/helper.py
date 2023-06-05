@@ -177,7 +177,14 @@ def create_scalar_value(py_scalar):
 
     # Set the tensor value
     t_field = _tensor_field_by_type(t_val, builtin_type)
-    if builtin_type in (types.fp16, types.int8, types.uint8, types.uint32):
+    if builtin_type in (
+        types.fp16,
+        types.int8,
+        types.uint8,
+        types.int16,
+        types.uint16,
+        types.uint32,
+    ):
         val.immediateValue.tensor.bytes.values = np_val_to_py_type(py_scalar)
     else:
         if builtin_type == types.str:
@@ -284,14 +291,22 @@ def types_to_proto(valuetype):
 
 def create_file_value(output_var, blob_writer):
     if output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 4:
-        offset = blob_writer.write_float_data(output_var.val.flatten())
-    elif output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 2:
-        output_var_fp16_to_bytes_to_uint16 = np.frombuffer(output_var.val.flatten().tobytes(), np.uint16)
-        offset = blob_writer.write_fp16_data(output_var_fp16_to_bytes_to_uint16)
+        offset = blob_writer.write_float_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.val.dtype.kind == "f" and output_var.val.dtype.itemsize == 2:
+        output_var_fp16_to_bytes_to_uint16 = np.frombuffer(
+            output_var.val.flatten().tobytes(), np.uint16
+        )
+        offset = blob_writer.write_fp16_data(
+            np.ascontiguousarray(output_var_fp16_to_bytes_to_uint16)
+        )
     elif output_var.val.dtype.kind == "u" and output_var.val.dtype.itemsize == 1:
-        offset = blob_writer.write_uint8_data(output_var.val.flatten())
+        offset = blob_writer.write_uint8_data(np.ascontiguousarray(output_var.val.flatten()))
     elif output_var.val.dtype.kind == "i" and output_var.val.dtype.itemsize == 1:
-        offset = blob_writer.write_int8_data(output_var.val.flatten())
+        offset = blob_writer.write_int8_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.val.dtype.kind == "u" and output_var.val.dtype.itemsize == 2:
+        offset = blob_writer.write_uint16_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.val.dtype.kind == "i" and output_var.val.dtype.itemsize == 2:
+        offset = blob_writer.write_int16_data(np.ascontiguousarray(output_var.val.flatten()))
     else:
         raise TypeError("Unsupported type, {}, for net buffer serialization.".format(output_var.val.dtype))
 

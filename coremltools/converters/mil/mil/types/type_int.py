@@ -36,11 +36,9 @@ def make_int(width, unsigned):
             from .type_mapping import (builtin_to_string, nptype_from_builtin,
                                        numpy_type_to_builtin_type)
 
-            if not isinstance(v, (np.generic, sm.Basic)):
+            if not isinstance(v, (np.generic, np.ndarray, sm.Basic)):
                 raise ValueError(
-                    "types should have value of numpy type or Symbols, got {} instead".format(
-                        type(v)
-                    )
+                    f"types should have value of numpy type or Symbols, got {type(v)} instead"
                 )
 
             if isinstance(v, sm.Basic):
@@ -54,16 +52,14 @@ def make_int(width, unsigned):
                 else:
                     self._val = v.astype(nptype_from_builtin(self.__class__))
                     logger.warning(
-                        "Saving value type of {} into a builtin type of {}, might overflow or loses precision!".format(
-                            v.dtype, builtin_to_string(self.__class__)
-                        )
+                        f"Saving value type of {v.dtype} into a builtin type of "
+                        f"{builtin_to_string(self.__class__)}, might overflow or loses precision!"
                     )
             else:
                 self._val = v.astype(nptype_from_builtin(self.__class__))
                 logger.warning(
-                    "Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(
-                        v.dtype, builtin_to_string(self.__class__)
-                    )
+                    f"Saving value type of {v.dtype} into a builtin type of "
+                    f"{builtin_to_string(self.__class__)}, might be incompatible or loses precision!"
                 )
 
         @classmethod

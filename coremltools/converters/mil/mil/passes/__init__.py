@@ -37,6 +37,7 @@ from coremltools.converters.mil.mil.passes.defs import (
     optimize_elementwise_binary,
     optimize_linear,
     optimize_normalization,
+    optimize_quantization,
     optimize_repeat_ops,
     optimize_tensor_operation,
     preprocess,

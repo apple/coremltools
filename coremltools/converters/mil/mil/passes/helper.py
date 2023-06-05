@@ -10,6 +10,12 @@ import numpy as np
 from coremltools.converters.mil.mil import Block, Operation, Var
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
+class classproperty(property):
+    """
+    A decorator class that allow us to have a class-level property
+    """
+    def __get__(self, owner, cls):
+        return self.fget(cls)
 
 def block_context_manager(func):
     """

@@ -8,12 +8,14 @@ import itertools
 import numpy as np
 import pytest
 
+import coremltools as ct
 from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.testing_utils import ssa_fn
 
-from .testing_utils import run_compare_builder
+from .testing_utils import construct_inputs_from_placeholders, run_compare_builder
 
 if _HAS_TORCH:
     import torch
@@ -46,8 +48,8 @@ class TestGRU:
             [True, False],
             ["forward", "reverse"],
             [
-                ["TANH", "SIGMOID"],
-                ["SIGMOID", "TANH"],
+                ["tanh", "sigmoid"],
+                ["sigmoid", "tanh"],
             ],
             [True, False],
         ),
@@ -79,17 +81,21 @@ class TestGRU:
         b_o = 2 * np.random.rand(hidden_size) - 1 if has_bias else np.zeros((hidden_size))
 
         def apply_act(x, option):
-            if option == 'TANH':
+            if option == "tanh":
                 return np.tanh(x)
-            elif option == 'SIGMOID':
-                return 1. / (1 + np.exp(-x))
+            elif option == "sigmoid":
+                return 1.0 / (1 + np.exp(-x))
             else:
                 raise ValueError("activation invalid")
 
-        def get_numpy_prediction_gru(X, H, return_seq, direction,
-                                     inner_activation_str='SIGMOID',
-                                     activation_str='TANH',
-                                     ):
+        def get_numpy_prediction_gru(
+            X,
+            H,
+            return_seq,
+            direction,
+            inner_activation_str="sigmoid",
+            activation_str="tanh",
+        ):
             """
             shape of X : (B, Seq, input_size)
 
@@ -117,9 +123,9 @@ class TestGRU:
             output = np.transpose(output, (1, 0, 2))
             return output, output[-1, :, :]
 
-        def get_numpy_prediction_gru_single_batch(X, h, return_seq, direction,
-                                                  inner_activation_str='SIGMOID',
-                                                  activation_str='TANH'):
+        def get_numpy_prediction_gru_single_batch(
+            X, h, return_seq, direction, inner_activation_str="sigmoid", activation_str="tanh"
+        ):
             np_out = np.zeros((seq_len, hidden_size))
             batch_x = X if direction == "forward" else X[::-1, :]
             for k in range(seq_len):
@@ -193,6 +199,9 @@ class TestGRU:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=10)
+            if symbolic and backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -222,9 +231,9 @@ class TestLSTM:
             backends,
             [[8, 32, 32]],
             [1, 4],
-            ["SIGMOID"],
-            ["TANH"],
-            ["TANH", "SIGMOID"],
+            ["sigmoid"],
+            ["tanh"],
+            ["relu", "scaled_tanh", "hard_sigmoid", "linear"],
             [False, True],
             [False, True],
             [False, True],
@@ -250,15 +259,17 @@ class TestLSTM:
         clip,
     ):
         def _apply_act(x, option):
-            if option == "TANH":
+            # All activation functions use their standard default values.
+            # This makes `tanh` equivalent to `scaled_tanh`, and makes `linear` a pass through.
+            if option == "tanh" or option == "scaled_tanh":
                 return np.tanh(x)
-            elif option == "RELU":
+            elif option == "relu":
                 return np.maximum(0, x)
-            elif option == "SIGMOID":
+            elif option == "sigmoid":
                 return 1.0 / (1 + np.exp(-x))
-            elif option == "SIGMOID_HARD":
+            elif option == "hard_sigmoid":
                 return np.minimum(np.maximum(0.2 * x + 0.5, 0), 1)
-            elif option == "LINEAR":
+            elif option == "linear":
                 return x
             else:
                 raise ValueError("activation invalid")
@@ -517,6 +528,9 @@ class TestLSTM:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=64)
+            if symbolic and backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -670,9 +684,56 @@ class TestLSTM:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=64)
+            if symbolic and backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @ssa_fn
+    def test_invalid_bidirectional_lstm(self):
+        with pytest.raises(
+            ValueError,
+            match="For bidirectional LSTM, the `weight_ih_back` and "
+            "`weight_hh_back` must be provided.",
+        ):
+            seq_len = 3
+            batch = 2
+            input_size = 4
+            hidden_size = 5
+            mb.lstm(
+                x=np.random.rand(seq_len, batch, input_size),
+                initial_h=np.zeros((batch, hidden_size)).astype(np.float32),
+                initial_c=np.zeros((batch, hidden_size)).astype(np.float32),
+                weight_ih=np.random.rand(4 * hidden_size, input_size),
+                weight_hh=np.random.rand(4 * hidden_size, hidden_size),
+                direction="bidirectional",
+            )
+
+    @ssa_fn
+    def test_invalid_activation_lstm(self):
+        seq_len = 3
+        batch = 2
+        input_size = 4
+        hidden_size = 5
+        arguments = {
+            "x": np.random.rand(seq_len, batch, input_size),
+            "initial_h": np.zeros((batch, hidden_size)).astype(np.float32),
+            "initial_c": np.zeros((batch, hidden_size)).astype(np.float32),
+            "weight_ih": np.random.rand(4 * hidden_size, input_size),
+            "weight_hh": np.random.rand(4 * hidden_size, hidden_size),
+            "direction": "forward",
+        }
+
+        with pytest.raises(ValueError, match="Activation `dummy` not supported."):
+            mb.lstm(recurrent_activation="dummy", **arguments)
+
+        with pytest.raises(ValueError, match="Activation `dummy` not supported."):
+            mb.lstm(cell_activation="dummy", **arguments)
+
+        with pytest.raises(ValueError, match="Activation `dummy` not supported."):
+            mb.lstm(activation="dummy", **arguments)
 
 
 class TestRNN:
@@ -785,6 +846,9 @@ class TestRNN:
             input_values,
             expected_output_types,
             expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=64)
+            if symbolic and backend[0] == "mlprogram"
+            else None,
             compute_unit=compute_unit,
             backend=backend,
         )

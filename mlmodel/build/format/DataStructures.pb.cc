@@ -46,6 +46,8 @@ class Int64SetDefaultTypeInternal : public ::google::protobuf::internal::Explici
 } _Int64Set_default_instance_;
 class DoubleRangeDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<DoubleRange> {
 } _DoubleRange_default_instance_;
+class PrecisionRecallCurveDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<PrecisionRecallCurve> {
+} _PrecisionRecallCurve_default_instance_;
 
 namespace protobuf_DataStructures_2eproto {
 
@@ -60,6 +62,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] = {
+  { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
@@ -90,6 +93,7 @@ void TableStruct::Shutdown() {
   _Int64Range_default_instance_.Shutdown();
   _Int64Set_default_instance_.Shutdown();
   _DoubleRange_default_instance_.Shutdown();
+  _PrecisionRecallCurve_default_instance_.Shutdown();
 }
 
 void TableStruct::InitDefaultsImpl() {
@@ -112,6 +116,7 @@ void TableStruct::InitDefaultsImpl() {
   _Int64Range_default_instance_.DefaultConstruct();
   _Int64Set_default_instance_.DefaultConstruct();
   _DoubleRange_default_instance_.DefaultConstruct();
+  _PrecisionRecallCurve_default_instance_.DefaultConstruct();
   _StringToInt64Map_MapEntry_default_instance_.get_mutable()->set_default_instance(_StringToInt64Map_MapEntry_default_instance_.get_mutable());
   _StringToInt64Map_MapEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
   _Int64ToStringMap_MapEntry_default_instance_.get_mutable()->set_default_instance(_Int64ToStringMap_MapEntry_default_instance_.get_mutable());
@@ -120,6 +125,14 @@ void TableStruct::InitDefaultsImpl() {
   _StringToDoubleMap_MapEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
   _Int64ToDoubleMap_MapEntry_default_instance_.get_mutable()->set_default_instance(_Int64ToDoubleMap_MapEntry_default_instance_.get_mutable());
   _Int64ToDoubleMap_MapEntry_default_instance_.get_mutable()->InitAsDefaultInstance();
+  _PrecisionRecallCurve_default_instance_.get_mutable()->precisionvalues_ = const_cast< ::CoreML::Specification::FloatVector*>(
+      ::CoreML::Specification::FloatVector::internal_default_instance());
+  _PrecisionRecallCurve_default_instance_.get_mutable()->precisionconfidencethresholds_ = const_cast< ::CoreML::Specification::FloatVector*>(
+      ::CoreML::Specification::FloatVector::internal_default_instance());
+  _PrecisionRecallCurve_default_instance_.get_mutable()->recallvalues_ = const_cast< ::CoreML::Specification::FloatVector*>(
+      ::CoreML::Specification::FloatVector::internal_default_instance());
+  _PrecisionRecallCurve_default_instance_.get_mutable()->recallconfidencethresholds_ = const_cast< ::CoreML::Specification::FloatVector*>(
+      ::CoreML::Specification::FloatVector::internal_default_instance());
 }
 
 void InitDefaults() {
@@ -2821,6 +2834,480 @@ void DoubleRange::set_maxvalue(double value) {
   
   maxvalue_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.DoubleRange.maxValue)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int PrecisionRecallCurve::kPrecisionValuesFieldNumber;
+const int PrecisionRecallCurve::kPrecisionConfidenceThresholdsFieldNumber;
+const int PrecisionRecallCurve::kRecallValuesFieldNumber;
+const int PrecisionRecallCurve::kRecallConfidenceThresholdsFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+PrecisionRecallCurve::PrecisionRecallCurve()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_DataStructures_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.PrecisionRecallCurve)
+}
+PrecisionRecallCurve::PrecisionRecallCurve(const PrecisionRecallCurve& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  if (from.has_precisionvalues()) {
+    precisionvalues_ = new ::CoreML::Specification::FloatVector(*from.precisionvalues_);
+  } else {
+    precisionvalues_ = NULL;
+  }
+  if (from.has_precisionconfidencethresholds()) {
+    precisionconfidencethresholds_ = new ::CoreML::Specification::FloatVector(*from.precisionconfidencethresholds_);
+  } else {
+    precisionconfidencethresholds_ = NULL;
+  }
+  if (from.has_recallvalues()) {
+    recallvalues_ = new ::CoreML::Specification::FloatVector(*from.recallvalues_);
+  } else {
+    recallvalues_ = NULL;
+  }
+  if (from.has_recallconfidencethresholds()) {
+    recallconfidencethresholds_ = new ::CoreML::Specification::FloatVector(*from.recallconfidencethresholds_);
+  } else {
+    recallconfidencethresholds_ = NULL;
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.PrecisionRecallCurve)
+}
+
+void PrecisionRecallCurve::SharedCtor() {
+  ::memset(&precisionvalues_, 0, reinterpret_cast<char*>(&recallconfidencethresholds_) -
+    reinterpret_cast<char*>(&precisionvalues_) + sizeof(recallconfidencethresholds_));
+  _cached_size_ = 0;
+}
+
+PrecisionRecallCurve::~PrecisionRecallCurve() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.PrecisionRecallCurve)
+  SharedDtor();
+}
+
+void PrecisionRecallCurve::SharedDtor() {
+  if (this != internal_default_instance()) {
+    delete precisionvalues_;
+  }
+  if (this != internal_default_instance()) {
+    delete precisionconfidencethresholds_;
+  }
+  if (this != internal_default_instance()) {
+    delete recallvalues_;
+  }
+  if (this != internal_default_instance()) {
+    delete recallconfidencethresholds_;
+  }
+}
+
+void PrecisionRecallCurve::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const PrecisionRecallCurve& PrecisionRecallCurve::default_instance() {
+  protobuf_DataStructures_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+PrecisionRecallCurve* PrecisionRecallCurve::New(::google::protobuf::Arena* arena) const {
+  PrecisionRecallCurve* n = new PrecisionRecallCurve;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void PrecisionRecallCurve::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.PrecisionRecallCurve)
+  if (GetArenaNoVirtual() == NULL && precisionvalues_ != NULL) {
+    delete precisionvalues_;
+  }
+  precisionvalues_ = NULL;
+  if (GetArenaNoVirtual() == NULL && precisionconfidencethresholds_ != NULL) {
+    delete precisionconfidencethresholds_;
+  }
+  precisionconfidencethresholds_ = NULL;
+  if (GetArenaNoVirtual() == NULL && recallvalues_ != NULL) {
+    delete recallvalues_;
+  }
+  recallvalues_ = NULL;
+  if (GetArenaNoVirtual() == NULL && recallconfidencethresholds_ != NULL) {
+    delete recallconfidencethresholds_;
+  }
+  recallconfidencethresholds_ = NULL;
+}
+
+bool PrecisionRecallCurve::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.PrecisionRecallCurve)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // .CoreML.Specification.FloatVector precisionValues = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_precisionvalues()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.FloatVector precisionConfidenceThresholds = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_precisionconfidencethresholds()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.FloatVector recallValues = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_recallvalues()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.FloatVector recallConfidenceThresholds = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_recallconfidencethresholds()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.PrecisionRecallCurve)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.PrecisionRecallCurve)
+  return false;
+#undef DO_
+}
+
+void PrecisionRecallCurve::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.PrecisionRecallCurve)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .CoreML.Specification.FloatVector precisionValues = 1;
+  if (this->has_precisionvalues()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1, *this->precisionvalues_, output);
+  }
+
+  // .CoreML.Specification.FloatVector precisionConfidenceThresholds = 2;
+  if (this->has_precisionconfidencethresholds()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2, *this->precisionconfidencethresholds_, output);
+  }
+
+  // .CoreML.Specification.FloatVector recallValues = 3;
+  if (this->has_recallvalues()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      3, *this->recallvalues_, output);
+  }
+
+  // .CoreML.Specification.FloatVector recallConfidenceThresholds = 4;
+  if (this->has_recallconfidencethresholds()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      4, *this->recallconfidencethresholds_, output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.PrecisionRecallCurve)
+}
+
+size_t PrecisionRecallCurve::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.PrecisionRecallCurve)
+  size_t total_size = 0;
+
+  // .CoreML.Specification.FloatVector precisionValues = 1;
+  if (this->has_precisionvalues()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->precisionvalues_);
+  }
+
+  // .CoreML.Specification.FloatVector precisionConfidenceThresholds = 2;
+  if (this->has_precisionconfidencethresholds()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->precisionconfidencethresholds_);
+  }
+
+  // .CoreML.Specification.FloatVector recallValues = 3;
+  if (this->has_recallvalues()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->recallvalues_);
+  }
+
+  // .CoreML.Specification.FloatVector recallConfidenceThresholds = 4;
+  if (this->has_recallconfidencethresholds()) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        *this->recallconfidencethresholds_);
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void PrecisionRecallCurve::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const PrecisionRecallCurve*>(&from));
+}
+
+void PrecisionRecallCurve::MergeFrom(const PrecisionRecallCurve& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.PrecisionRecallCurve)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  if (from.has_precisionvalues()) {
+    mutable_precisionvalues()->::CoreML::Specification::FloatVector::MergeFrom(from.precisionvalues());
+  }
+  if (from.has_precisionconfidencethresholds()) {
+    mutable_precisionconfidencethresholds()->::CoreML::Specification::FloatVector::MergeFrom(from.precisionconfidencethresholds());
+  }
+  if (from.has_recallvalues()) {
+    mutable_recallvalues()->::CoreML::Specification::FloatVector::MergeFrom(from.recallvalues());
+  }
+  if (from.has_recallconfidencethresholds()) {
+    mutable_recallconfidencethresholds()->::CoreML::Specification::FloatVector::MergeFrom(from.recallconfidencethresholds());
+  }
+}
+
+void PrecisionRecallCurve::CopyFrom(const PrecisionRecallCurve& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.PrecisionRecallCurve)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool PrecisionRecallCurve::IsInitialized() const {
+  return true;
+}
+
+void PrecisionRecallCurve::Swap(PrecisionRecallCurve* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void PrecisionRecallCurve::InternalSwap(PrecisionRecallCurve* other) {
+  std::swap(precisionvalues_, other->precisionvalues_);
+  std::swap(precisionconfidencethresholds_, other->precisionconfidencethresholds_);
+  std::swap(recallvalues_, other->recallvalues_);
+  std::swap(recallconfidencethresholds_, other->recallconfidencethresholds_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string PrecisionRecallCurve::GetTypeName() const {
+  return "CoreML.Specification.PrecisionRecallCurve";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// PrecisionRecallCurve
+
+// .CoreML.Specification.FloatVector precisionValues = 1;
+bool PrecisionRecallCurve::has_precisionvalues() const {
+  return this != internal_default_instance() && precisionvalues_ != NULL;
+}
+void PrecisionRecallCurve::clear_precisionvalues() {
+  if (GetArenaNoVirtual() == NULL && precisionvalues_ != NULL) delete precisionvalues_;
+  precisionvalues_ = NULL;
+}
+const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::precisionvalues() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.PrecisionRecallCurve.precisionValues)
+  return precisionvalues_ != NULL ? *precisionvalues_
+                         : *::CoreML::Specification::FloatVector::internal_default_instance();
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_precisionvalues() {
+  
+  if (precisionvalues_ == NULL) {
+    precisionvalues_ = new ::CoreML::Specification::FloatVector;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.PrecisionRecallCurve.precisionValues)
+  return precisionvalues_;
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_precisionvalues() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.precisionValues)
+  
+  ::CoreML::Specification::FloatVector* temp = precisionvalues_;
+  precisionvalues_ = NULL;
+  return temp;
+}
+void PrecisionRecallCurve::set_allocated_precisionvalues(::CoreML::Specification::FloatVector* precisionvalues) {
+  delete precisionvalues_;
+  precisionvalues_ = precisionvalues;
+  if (precisionvalues) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.precisionValues)
+}
+
+// .CoreML.Specification.FloatVector precisionConfidenceThresholds = 2;
+bool PrecisionRecallCurve::has_precisionconfidencethresholds() const {
+  return this != internal_default_instance() && precisionconfidencethresholds_ != NULL;
+}
+void PrecisionRecallCurve::clear_precisionconfidencethresholds() {
+  if (GetArenaNoVirtual() == NULL && precisionconfidencethresholds_ != NULL) delete precisionconfidencethresholds_;
+  precisionconfidencethresholds_ = NULL;
+}
+const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::precisionconfidencethresholds() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds)
+  return precisionconfidencethresholds_ != NULL ? *precisionconfidencethresholds_
+                         : *::CoreML::Specification::FloatVector::internal_default_instance();
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_precisionconfidencethresholds() {
+  
+  if (precisionconfidencethresholds_ == NULL) {
+    precisionconfidencethresholds_ = new ::CoreML::Specification::FloatVector;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds)
+  return precisionconfidencethresholds_;
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_precisionconfidencethresholds() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds)
+  
+  ::CoreML::Specification::FloatVector* temp = precisionconfidencethresholds_;
+  precisionconfidencethresholds_ = NULL;
+  return temp;
+}
+void PrecisionRecallCurve::set_allocated_precisionconfidencethresholds(::CoreML::Specification::FloatVector* precisionconfidencethresholds) {
+  delete precisionconfidencethresholds_;
+  precisionconfidencethresholds_ = precisionconfidencethresholds;
+  if (precisionconfidencethresholds) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds)
+}
+
+// .CoreML.Specification.FloatVector recallValues = 3;
+bool PrecisionRecallCurve::has_recallvalues() const {
+  return this != internal_default_instance() && recallvalues_ != NULL;
+}
+void PrecisionRecallCurve::clear_recallvalues() {
+  if (GetArenaNoVirtual() == NULL && recallvalues_ != NULL) delete recallvalues_;
+  recallvalues_ = NULL;
+}
+const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::recallvalues() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.PrecisionRecallCurve.recallValues)
+  return recallvalues_ != NULL ? *recallvalues_
+                         : *::CoreML::Specification::FloatVector::internal_default_instance();
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_recallvalues() {
+  
+  if (recallvalues_ == NULL) {
+    recallvalues_ = new ::CoreML::Specification::FloatVector;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.PrecisionRecallCurve.recallValues)
+  return recallvalues_;
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_recallvalues() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.recallValues)
+  
+  ::CoreML::Specification::FloatVector* temp = recallvalues_;
+  recallvalues_ = NULL;
+  return temp;
+}
+void PrecisionRecallCurve::set_allocated_recallvalues(::CoreML::Specification::FloatVector* recallvalues) {
+  delete recallvalues_;
+  recallvalues_ = recallvalues;
+  if (recallvalues) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.recallValues)
+}
+
+// .CoreML.Specification.FloatVector recallConfidenceThresholds = 4;
+bool PrecisionRecallCurve::has_recallconfidencethresholds() const {
+  return this != internal_default_instance() && recallconfidencethresholds_ != NULL;
+}
+void PrecisionRecallCurve::clear_recallconfidencethresholds() {
+  if (GetArenaNoVirtual() == NULL && recallconfidencethresholds_ != NULL) delete recallconfidencethresholds_;
+  recallconfidencethresholds_ = NULL;
+}
+const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::recallconfidencethresholds() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds)
+  return recallconfidencethresholds_ != NULL ? *recallconfidencethresholds_
+                         : *::CoreML::Specification::FloatVector::internal_default_instance();
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_recallconfidencethresholds() {
+  
+  if (recallconfidencethresholds_ == NULL) {
+    recallconfidencethresholds_ = new ::CoreML::Specification::FloatVector;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds)
+  return recallconfidencethresholds_;
+}
+::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_recallconfidencethresholds() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds)
+  
+  ::CoreML::Specification::FloatVector* temp = recallconfidencethresholds_;
+  recallconfidencethresholds_ = NULL;
+  return temp;
+}
+void PrecisionRecallCurve::set_allocated_recallconfidencethresholds(::CoreML::Specification::FloatVector* recallconfidencethresholds) {
+  delete recallconfidencethresholds_;
+  recallconfidencethresholds_ = recallconfidencethresholds;
+  if (recallconfidencethresholds) {
+    
+  } else {
+    
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

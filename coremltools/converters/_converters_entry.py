@@ -6,7 +6,7 @@
 import collections
 import gc
 import os
-from typing import Optional, Text, Union
+from typing import List, Optional, Text, Union
 
 from coremltools import (
     _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM,
@@ -23,8 +23,11 @@ from coremltools.converters.mil._deployment_compatibility import (
 from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.input_types import (
     ClassifierConfig,
+    EnumeratedShapes,
     ImageType,
     InputType,
+    RangeDim,
+    Shape,
     TensorType,
 )
 from coremltools.converters.mil.mil import Program, types
@@ -395,7 +398,7 @@ def convert(
 
             pipeline = ct.PassPipeline()
             pipeline.remove_passes({"common::fuse_conv_batchnorm"})
-            ct.convert(model, pass_pipeline=pipeline)
+            mlmodel = ct.convert(model, pass_pipeline=pipeline)
 
         * To avoid folding too-large ``const`` ops that lead to a large model, set pass option
           as shown in the following example:
@@ -404,7 +407,34 @@ def convert(
 
             pipeline = ct.PassPipeline()
             pipeline.set_options("common::const_elimination", {"skip_const_by_size": "1e6"})
-            ct.convert(model, pass_pipeline=pipeline)
+            mlmodel = ct.convert(model, pass_pipeline=pipeline)
+
+        We also provide a set of predefined pass pipelines that you can directly call.
+
+        * To avoid running all graph pass, you can use:
+
+          .. sourcecode:: python
+
+             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.EMPTY)
+
+        * To only run the cleanup graph passes, like constant_elimination, dead_code_elimination, etc.
+          You can use:
+
+          .. sourcecode:: python
+
+             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.CLEANUP)
+
+        * To convert a source model with sparse weights to a sparse format Core ML model, you can use:
+
+          .. sourcecode:: python
+
+             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.DEFAULT_PRUNING)
+
+        * To convert a source model with palettized weights to a compressed format Core ML model, you can use:
+
+          .. sourcecode:: python
+
+             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION)
 
     Returns
     -------
@@ -463,9 +493,17 @@ def convert(
                                      outputs_as_tensor_or_image_types,
                                      outputs)
     exact_target = _determine_target(convert_to, minimum_deployment_target)
-    _validate_conversion_arguments(model, exact_source, inputs, outputs_as_tensor_or_image_types,
-                                   classifier_config, compute_precision,
-                                   exact_target, minimum_deployment_target)
+    _validate_conversion_arguments(
+        model,
+        exact_source,
+        exact_target,
+        inputs,
+        outputs_as_tensor_or_image_types,
+        classifier_config,
+        compute_precision,
+        exact_target,
+        minimum_deployment_target,
+    )
 
     if pass_pipeline is None:
         pass_pipeline = PassPipeline()
@@ -504,6 +542,12 @@ def convert(
         main_pipeline=pass_pipeline,
     )
 
+    if exact_target == "mlprogram" and mlmodel._input_has_infinite_upper_bound():
+        raise ValueError(
+            "For mlprogram, inputs with infinite upper_bound is not allowed. Please set upper_bound"
+            ' to a positive value in "RangeDim()" for the "inputs" param in ct.convert().'
+        )
+
     if exact_target == 'milinternal':
         return mlmodel  # Returns the MIL program
 
@@ -539,7 +583,7 @@ def _need_fp16_cast_pass(
         raise ValueError(f"Invalid value of the argument 'compute_precision': {compute_precision}")
 
 
-def _set_default_specification_version(target):
+def _set_default_specification_version(target) -> Optional[AvailableTarget]:
     if target == "neuralnetwork":
         return _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK
     elif target == "mlprogram":
@@ -625,18 +669,20 @@ def _validate_outputs_argument(outputs):
                 return output_names, outputs
 
 
-def _validate_conversion_arguments(model,
-                                   exact_source,
-                                   inputs,
-                                   outputs,
-                                   classifier_config,
-                                   compute_precision,
-                                   convert_to,
-                                   minimum_deployment_target,
-                                   ):
+def _validate_conversion_arguments(
+    model,
+    exact_source,
+    exact_target,
+    inputs,
+    outputs,
+    classifier_config,
+    compute_precision,
+    convert_to,
+    minimum_deployment_target,
+):
     """
     Validate and process model, inputs, classifier_config based on
-    `exact_source` (which cannot be `auto`)
+    `exact_source` (which cannot be `auto`) and `exact_target`.
     """
 
     def raise_if_duplicated(input_list):
@@ -672,10 +718,10 @@ def _validate_conversion_arguments(model,
 
         # get flattened inputs
         flat_inputs = _flatten_list(inputs)
-        for t in flat_inputs:
-            if not isinstance(t, InputType):
+        for flat_input in flat_inputs:
+            if not isinstance(flat_input, InputType):
                 raise ValueError("inputs must be a list of type ct.TensorType or ct.ImageType")
-            if t.dtype == types.fp16:
+            if flat_input.dtype == types.fp16:
                 if not (
                     minimum_deployment_target is not None
                     and minimum_deployment_target >= AvailableTarget.iOS16
@@ -684,6 +730,24 @@ def _validate_conversion_arguments(model,
                         "float16 dtype for inputs is only supported for deployment "
                         "target >= iOS16/macOS13/watchOS9/tvOS16"
                     )
+
+    if exact_target == "mlprogram":
+        err_msg_infinite_bound = (
+            "For mlprogram, inputs with infinite upper_bound is not allowed. Please set upper_bound"
+            ' to a positive value in "RangeDim()" for the "inputs" param in ct.convert().'
+        )
+        if inputs is not None:
+            for flat_input in _flatten_list(inputs):
+                tensor_shapes: List[Optional[Shape]] = (
+                    flat_input.shape.shapes
+                    if isinstance(flat_input.shape, EnumeratedShapes)
+                    else [flat_input.shape]
+                )
+                for tensor_shape in tensor_shapes:
+                    if tensor_shape is not None:
+                        for shape in tensor_shape.shape:
+                            if isinstance(shape, RangeDim) and shape.upper_bound < 0:
+                                raise ValueError(err_msg_infinite_bound)
 
     if outputs is not None:
         for t in outputs:

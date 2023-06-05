@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+#include "MILBlob/Bf16.hpp"
 #include "MILBlob/Blob/FileWriter.hpp"
 #include "MILBlob/Blob/StorageFormat.hpp"
 #include "MILBlob/Blob/StorageWriter.hpp"
@@ -34,7 +35,8 @@ public:
     ~Impl() = default;
 
     Impl(const std::string& filePath, bool truncateFile)
-        : m_fileWriter(std::make_unique<FileWriter>(filePath, truncateFile))
+        : m_filePath(filePath)
+        , m_fileWriter(std::make_unique<FileWriter>(filePath, truncateFile))
     {
         if (truncateFile) {
             m_fileWriter->WriteData(CastAndMakeSpan(m_header), 0);
@@ -61,7 +63,13 @@ public:
     template <typename T>
     uint64_t WriteData(Util::Span<const T> data);
 
+    std::string GetFilePath() const
+    {
+        return m_filePath;
+    }
+
 private:
+    std::string m_filePath;
     std::unique_ptr<FileWriter> m_fileWriter;
     storage_header m_header;
 };
@@ -120,6 +128,12 @@ uint64_t StorageWriter::WriteData<uint8_t>(Util::Span<const uint8_t> data)
 }
 
 template <>
+uint64_t StorageWriter::WriteData<Bf16>(Util::Span<const Bf16> data)
+{
+    return m_impl->WriteData(data);
+}
+
+template <>
 uint64_t StorageWriter::WriteData<Fp16>(Util::Span<const Fp16> data)
 {
     return m_impl->WriteData(data);
@@ -129,4 +143,21 @@ template <>
 uint64_t StorageWriter::WriteData<float>(Util::Span<const float> data)
 {
     return m_impl->WriteData(data);
+}
+
+template <>
+uint64_t StorageWriter::WriteData<int16_t>(Util::Span<const int16_t> data)
+{
+    return m_impl->WriteData(data);
+}
+
+template <>
+uint64_t StorageWriter::WriteData<uint16_t>(Util::Span<const uint16_t> data)
+{
+    return m_impl->WriteData(data);
+}
+
+std::string StorageWriter::GetFilePath() const
+{
+    return m_impl->GetFilePath();
 }

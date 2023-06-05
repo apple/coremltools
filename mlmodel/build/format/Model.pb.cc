@@ -52,6 +52,7 @@ class ModelDefaultTypeInternal : public ::google::protobuf::internal::Explicitly
   const ::CoreML::Specification::MILSpec::Program* mlprogram_;
   const ::CoreML::Specification::CustomModel* custommodel_;
   const ::CoreML::Specification::LinkedModel* linkedmodel_;
+  const ::CoreML::Specification::ClassConfidenceThresholding* classconfidencethresholding_;
   const ::CoreML::Specification::OneHotEncoder* onehotencoder_;
   const ::CoreML::Specification::Imputer* imputer_;
   const ::CoreML::Specification::FeatureVectorizer* featurevectorizer_;
@@ -142,6 +143,7 @@ void TableStruct::InitDefaultsImpl() {
   ::CoreML::Specification::protobuf_ItemSimilarityRecommender_2eproto::InitDefaults();
   ::CoreML::Specification::CoreMLModels::protobuf_SoundAnalysisPreprocessing_2eproto::InitDefaults();
   ::CoreML::Specification::protobuf_LinkedModel_2eproto::InitDefaults();
+  ::CoreML::Specification::protobuf_ClassConfidenceThresholding_2eproto::InitDefaults();
   _Pipeline_default_instance_.DefaultConstruct();
   _PipelineClassifier_default_instance_.DefaultConstruct();
   _PipelineRegressor_default_instance_.DefaultConstruct();
@@ -201,6 +203,7 @@ void AddDescriptorsImpl() {
   ::CoreML::Specification::protobuf_ItemSimilarityRecommender_2eproto::AddDescriptors();
   ::CoreML::Specification::CoreMLModels::protobuf_SoundAnalysisPreprocessing_2eproto::AddDescriptors();
   ::CoreML::Specification::protobuf_LinkedModel_2eproto::AddDescriptors();
+  ::CoreML::Specification::protobuf_ClassConfidenceThresholding_2eproto::AddDescriptors();
   ::google::protobuf::internal::OnShutdown(&TableStruct::Shutdown);
 }
 
@@ -3077,6 +3080,7 @@ const int Model::kItemSimilarityRecommenderFieldNumber;
 const int Model::kMlProgramFieldNumber;
 const int Model::kCustomModelFieldNumber;
 const int Model::kLinkedModelFieldNumber;
+const int Model::kClassConfidenceThresholdingFieldNumber;
 const int Model::kOneHotEncoderFieldNumber;
 const int Model::kImputerFieldNumber;
 const int Model::kFeatureVectorizerFieldNumber;
@@ -3190,6 +3194,10 @@ Model::Model(const Model& from)
     }
     case kLinkedModel: {
       mutable_linkedmodel()->::CoreML::Specification::LinkedModel::MergeFrom(from.linkedmodel());
+      break;
+    }
+    case kClassConfidenceThresholding: {
+      mutable_classconfidencethresholding()->::CoreML::Specification::ClassConfidenceThresholding::MergeFrom(from.classconfidencethresholding());
       break;
     }
     case kOneHotEncoder: {
@@ -3383,6 +3391,10 @@ void Model::clear_Type() {
     }
     case kLinkedModel: {
       delete Type_.linkedmodel_;
+      break;
+    }
+    case kClassConfidenceThresholding: {
+      delete Type_.classconfidencethresholding_;
       break;
     }
     case kOneHotEncoder: {
@@ -3736,6 +3748,18 @@ bool Model::MergePartialFromCodedStream(
             static_cast< ::google::protobuf::uint8>(4450u)) {
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
                input, mutable_linkedmodel()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // .CoreML.Specification.ClassConfidenceThresholding classConfidenceThresholding = 560;
+      case 560: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(4482u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_classconfidencethresholding()));
         } else {
           goto handle_unusual;
         }
@@ -4109,6 +4133,12 @@ void Model::SerializeWithCachedSizes(
       556, *Type_.linkedmodel_, output);
   }
 
+  // .CoreML.Specification.ClassConfidenceThresholding classConfidenceThresholding = 560;
+  if (has_classconfidencethresholding()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      560, *Type_.classconfidencethresholding_, output);
+  }
+
   // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
   if (has_onehotencoder()) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -4370,6 +4400,13 @@ size_t Model::ByteSizeLong() const {
           *Type_.linkedmodel_);
       break;
     }
+    // .CoreML.Specification.ClassConfidenceThresholding classConfidenceThresholding = 560;
+    case kClassConfidenceThresholding: {
+      total_size += 2 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.classconfidencethresholding_);
+      break;
+    }
     // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
     case kOneHotEncoder: {
       total_size += 2 +
@@ -4599,6 +4636,10 @@ void Model::MergeFrom(const Model& from) {
     }
     case kLinkedModel: {
       mutable_linkedmodel()->::CoreML::Specification::LinkedModel::MergeFrom(from.linkedmodel());
+      break;
+    }
+    case kClassConfidenceThresholding: {
+      mutable_classconfidencethresholding()->::CoreML::Specification::ClassConfidenceThresholding::MergeFrom(from.classconfidencethresholding());
       break;
     }
     case kOneHotEncoder: {
@@ -5639,6 +5680,54 @@ void Model::set_allocated_linkedmodel(::CoreML::Specification::LinkedModel* link
     Type_.linkedmodel_ = linkedmodel;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.linkedModel)
+}
+
+// .CoreML.Specification.ClassConfidenceThresholding classConfidenceThresholding = 560;
+bool Model::has_classconfidencethresholding() const {
+  return Type_case() == kClassConfidenceThresholding;
+}
+void Model::set_has_classconfidencethresholding() {
+  _oneof_case_[0] = kClassConfidenceThresholding;
+}
+void Model::clear_classconfidencethresholding() {
+  if (has_classconfidencethresholding()) {
+    delete Type_.classconfidencethresholding_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::ClassConfidenceThresholding& Model::classconfidencethresholding() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.classConfidenceThresholding)
+  return has_classconfidencethresholding()
+      ? *Type_.classconfidencethresholding_
+      : ::CoreML::Specification::ClassConfidenceThresholding::default_instance();
+}
+::CoreML::Specification::ClassConfidenceThresholding* Model::mutable_classconfidencethresholding() {
+  if (!has_classconfidencethresholding()) {
+    clear_Type();
+    set_has_classconfidencethresholding();
+    Type_.classconfidencethresholding_ = new ::CoreML::Specification::ClassConfidenceThresholding;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.classConfidenceThresholding)
+  return Type_.classconfidencethresholding_;
+}
+::CoreML::Specification::ClassConfidenceThresholding* Model::release_classconfidencethresholding() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.classConfidenceThresholding)
+  if (has_classconfidencethresholding()) {
+    clear_has_Type();
+    ::CoreML::Specification::ClassConfidenceThresholding* temp = Type_.classconfidencethresholding_;
+    Type_.classconfidencethresholding_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void Model::set_allocated_classconfidencethresholding(::CoreML::Specification::ClassConfidenceThresholding* classconfidencethresholding) {
+  clear_Type();
+  if (classconfidencethresholding) {
+    set_has_classconfidencethresholding();
+    Type_.classconfidencethresholding_ = classconfidencethresholding;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.classConfidenceThresholding)
 }
 
 // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;

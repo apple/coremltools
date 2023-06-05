@@ -9,11 +9,11 @@ import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 
-from .testing_utils import UNK_SYM, run_compare_builder
+from .testing_utils import UNK_SYM, construct_inputs_from_placeholders, run_compare_builder
 
 
 class TestSelect:
@@ -54,11 +54,12 @@ class TestSelect:
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
     )
     def test_builder_to_backend_smoke_broadcast(self, compute_unit, backend):
         cond_val = np.array([[1], [0], [2]], dtype=np.float32)
-        a_val = np.array([[3, 1, 1], [1, 4, 1], [5, 6, 1]], dtype=np.float32)
+        a_val = np.array([1, 7, 8], dtype=np.float32)
         b_val = np.array([[3, 2, 2], [2, 4, 2], [5, 6, 2]], dtype=np.float32)
         input_placeholders = {
             "cond": mb.placeholder(shape=cond_val.shape),
@@ -74,9 +75,7 @@ class TestSelect:
 
         expected_output_types = [(3, 3, types.fp32)]
         expected_outputs = [
-            np.array(
-                [[3.0, 1.0, 1.0], [2.0, 4.0, 2.0], [5.0, 6.0, 1.0]], dtype=np.float32
-            )
+            np.array([[1.0, 7.0, 8.0], [2.0, 4.0, 2.0], [1.0, 7.0, 8.0]], dtype=np.float32)
         ]
 
         run_compare_builder(
@@ -85,6 +84,68 @@ class TestSelect:
             input_values,
             expected_output_types,
             expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_builder_to_backend_smoke_scalar_and_tensor(self, compute_unit, backend):
+        cond_val = np.array([[1], [0], [2]], dtype=np.float32)
+        a_val = np.float32(1.0)
+        b_val = np.array([[3, 2, 2], [2, 4, 2], [5, 6, 2]], dtype=np.float32)
+        input_placeholders = {
+            "cond": mb.placeholder(shape=cond_val.shape),
+            "b": mb.placeholder(shape=b_val.shape),
+        }
+        input_values = {"cond": cond_val, "b": b_val}
+
+        def build(cond, b):
+            if not types.is_bool(cond.dtype):
+                cond = mb.cast(x=cond, dtype="bool")
+            return [mb.select(cond=cond, a=a_val, b=b)]
+
+        expected_output_types = [(3, 3, types.fp32)]
+        expected_outputs = [
+            np.array([[1.0, 1.0, 1.0], [2.0, 4.0, 2.0], [1.0, 1.0, 1.0]], dtype=np.float32)
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_builder_to_backend_smoke_symbolic(self, compute_unit, backend):
+        SYMBOLIC_SHAPE = tuple([get_new_symbol() for _ in range(5)])
+        VALUE = 100.0
+
+        input_placeholders = {"a": mb.placeholder(shape=SYMBOLIC_SHAPE)}
+
+        def build(a):
+            return [mb.select(cond=False, a=a, b=np.float32(VALUE))]
+
+        shape = tuple(np.random.randint(1, 5, size=len(SYMBOLIC_SHAPE)))
+        a = np.random.rand(*shape)
+        input_values = {"a": a}
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types=[SYMBOLIC_SHAPE + (types.fp32,)],
+            expected_outputs=[VALUE],
+            inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=10),
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -101,10 +162,17 @@ class TestSelect:
     def test_builder_eval_broadcast(self):
         cond = np.array([[True], [False], [True]])
         a = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
-        b = np.array([[7, 8], [9, 10], [11, 12]], dtype=np.float32)
+        b = np.array([7, 8], dtype=np.float32)
         res = mb.select(cond=cond, a=a, b=b)
-        np.testing.assert_allclose(np.array([[1, 2], [9, 10], [5, 6]], dtype=np.float32), res.val, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(
+            np.array([[1, 2], [7, 8], [5, 6]], dtype=np.float32), res.val, atol=1e-04, rtol=1e-05
+        )
 
+    @ssa_fn
+    def test_builder_eval_scalar(self):
+        res = mb.select(cond=True, a=np.float32(1), b=np.float32(2))
+        assert isinstance(res.val, np.float32)
+        np.testing.assert_allclose(np.float32(1), res.val)
 
 class TestCond:
     @pytest.mark.parametrize(

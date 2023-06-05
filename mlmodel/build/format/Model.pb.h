@@ -60,6 +60,7 @@
 #include "ItemSimilarityRecommender.pb.h"  // IWYU pragma: export
 #include "SoundAnalysisPreprocessing.pb.h"  // IWYU pragma: export
 #include "LinkedModel.pb.h"  // IWYU pragma: export
+#include "ClassConfidenceThresholding.pb.h"  // IWYU pragma: export
 // @@protoc_insertion_point(includes)
 namespace CoreML {
 namespace Specification {
@@ -222,6 +223,9 @@ extern CeilLayerParamsDefaultTypeInternal _CeilLayerParams_default_instance_;
 class ClampedReLULayerParams;
 class ClampedReLULayerParamsDefaultTypeInternal;
 extern ClampedReLULayerParamsDefaultTypeInternal _ClampedReLULayerParams_default_instance_;
+class ClassConfidenceThresholding;
+class ClassConfidenceThresholdingDefaultTypeInternal;
+extern ClassConfidenceThresholdingDefaultTypeInternal _ClassConfidenceThresholding_default_instance_;
 class ClipLayerParams;
 class ClipLayerParamsDefaultTypeInternal;
 extern ClipLayerParamsDefaultTypeInternal _ClipLayerParams_default_instance_;
@@ -672,6 +676,9 @@ extern PoolingLayerParams_ValidCompletePaddingDefaultTypeInternal _PoolingLayerP
 class PowBroadcastableLayerParams;
 class PowBroadcastableLayerParamsDefaultTypeInternal;
 extern PowBroadcastableLayerParamsDefaultTypeInternal _PowBroadcastableLayerParams_default_instance_;
+class PrecisionRecallCurve;
+class PrecisionRecallCurveDefaultTypeInternal;
+extern PrecisionRecallCurveDefaultTypeInternal _PrecisionRecallCurve_default_instance_;
 class QuantizationParams;
 class QuantizationParamsDefaultTypeInternal;
 extern QuantizationParamsDefaultTypeInternal _QuantizationParams_default_instance_;
@@ -1958,6 +1965,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kMlProgram = 502,
     kCustomModel = 555,
     kLinkedModel = 556,
+    kClassConfidenceThresholding = 560,
     kOneHotEncoder = 600,
     kImputer = 601,
     kFeatureVectorizer = 602,
@@ -2210,6 +2218,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::LinkedModel* release_linkedmodel();
   void set_allocated_linkedmodel(::CoreML::Specification::LinkedModel* linkedmodel);
 
+  // .CoreML.Specification.ClassConfidenceThresholding classConfidenceThresholding = 560;
+  bool has_classconfidencethresholding() const;
+  void clear_classconfidencethresholding();
+  static const int kClassConfidenceThresholdingFieldNumber = 560;
+  const ::CoreML::Specification::ClassConfidenceThresholding& classconfidencethresholding() const;
+  ::CoreML::Specification::ClassConfidenceThresholding* mutable_classconfidencethresholding();
+  ::CoreML::Specification::ClassConfidenceThresholding* release_classconfidencethresholding();
+  void set_allocated_classconfidencethresholding(::CoreML::Specification::ClassConfidenceThresholding* classconfidencethresholding);
+
   // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;
   bool has_onehotencoder() const;
   void clear_onehotencoder();
@@ -2393,6 +2410,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_mlprogram();
   void set_has_custommodel();
   void set_has_linkedmodel();
+  void set_has_classconfidencethresholding();
   void set_has_onehotencoder();
   void set_has_imputer();
   void set_has_featurevectorizer();
@@ -2440,6 +2458,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::MILSpec::Program* mlprogram_;
     ::CoreML::Specification::CustomModel* custommodel_;
     ::CoreML::Specification::LinkedModel* linkedmodel_;
+    ::CoreML::Specification::ClassConfidenceThresholding* classconfidencethresholding_;
     ::CoreML::Specification::OneHotEncoder* onehotencoder_;
     ::CoreML::Specification::Imputer* imputer_;
     ::CoreML::Specification::FeatureVectorizer* featurevectorizer_;
@@ -4324,6 +4343,54 @@ inline void Model::set_allocated_linkedmodel(::CoreML::Specification::LinkedMode
     Type_.linkedmodel_ = linkedmodel;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.linkedModel)
+}
+
+// .CoreML.Specification.ClassConfidenceThresholding classConfidenceThresholding = 560;
+inline bool Model::has_classconfidencethresholding() const {
+  return Type_case() == kClassConfidenceThresholding;
+}
+inline void Model::set_has_classconfidencethresholding() {
+  _oneof_case_[0] = kClassConfidenceThresholding;
+}
+inline void Model::clear_classconfidencethresholding() {
+  if (has_classconfidencethresholding()) {
+    delete Type_.classconfidencethresholding_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::ClassConfidenceThresholding& Model::classconfidencethresholding() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.classConfidenceThresholding)
+  return has_classconfidencethresholding()
+      ? *Type_.classconfidencethresholding_
+      : ::CoreML::Specification::ClassConfidenceThresholding::default_instance();
+}
+inline ::CoreML::Specification::ClassConfidenceThresholding* Model::mutable_classconfidencethresholding() {
+  if (!has_classconfidencethresholding()) {
+    clear_Type();
+    set_has_classconfidencethresholding();
+    Type_.classconfidencethresholding_ = new ::CoreML::Specification::ClassConfidenceThresholding;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.classConfidenceThresholding)
+  return Type_.classconfidencethresholding_;
+}
+inline ::CoreML::Specification::ClassConfidenceThresholding* Model::release_classconfidencethresholding() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.classConfidenceThresholding)
+  if (has_classconfidencethresholding()) {
+    clear_has_Type();
+    ::CoreML::Specification::ClassConfidenceThresholding* temp = Type_.classconfidencethresholding_;
+    Type_.classconfidencethresholding_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_classconfidencethresholding(::CoreML::Specification::ClassConfidenceThresholding* classconfidencethresholding) {
+  clear_Type();
+  if (classconfidencethresholding) {
+    set_has_classconfidencethresholding();
+    Type_.classconfidencethresholding_ = classconfidencethresholding;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.classConfidenceThresholding)
 }
 
 // .CoreML.Specification.OneHotEncoder oneHotEncoder = 600;

@@ -127,9 +127,7 @@ class compose_conv1d(AbstractGraphPass):
         def help_compose_conv1d_block(block: Block) -> bool:
             for op in list(block.operations):
                 for b in op.blocks:
-                    block_changed = True
-                    while block_changed:
-                        block_changed = help_compose_conv1d_block(b)
+                    self._compose_conv1d_block(b)
 
                 # must start with expanding a 3-D tensor,
                 # who has batch, channel, length dimensions
@@ -328,7 +326,7 @@ class compose_conv1d(AbstractGraphPass):
 @register_pass(namespace="common")
 class fuse_conv_batchnorm(AbstractGraphPass):
     """
-    Fuse the following ``batch_norm`` layer into ``conv`` and ``conv_transpose``. 
+    Fuse the following ``batch_norm`` layer into ``conv`` and ``conv_transpose``.
     That is, convert ``conv + batch_norm`` to ``conv``, by modifying the weight and bias in the ``conv`` layer.
 
     .. code-block::

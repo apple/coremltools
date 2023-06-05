@@ -1284,6 +1284,9 @@ class stack(Operation):
         axis = self.axis.val
         if axis < 0:
             axis += (self.values[0].rank + 1)
+        rank = self.values[0].rank
+        if axis > rank:
+            raise ValueError(f"axis must in range [{-rank}, {rank}). Got {axis}")
         ret_shape = list(t_shape)
         ret_shape.insert(axis, num_tensors)
         return types.tensor(self.values[0].dtype, ret_shape)

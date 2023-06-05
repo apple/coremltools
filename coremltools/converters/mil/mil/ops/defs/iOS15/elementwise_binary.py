@@ -6,13 +6,19 @@ import operator
 
 import numpy as np
 
-from coremltools.converters.mil.mil import (InputSpec, Operation,
-                                            TensorInputType, precondition,
-                                            types)
+from coremltools.converters.mil.mil import (
+    InputSpec,
+    Operation,
+    TensorInputType,
+    precondition,
+    types,
+)
 from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import (
-    broadcast_shapes, promoted_primitive_type)
+    infer_type_with_broadcast,
+    promoted_primitive_type,
+)
 
 
 class elementwise_binary(Operation):
@@ -36,22 +42,7 @@ class elementwise_binary(Operation):
             raise ValueError("Incompatible primitive types in broadcast operation")
         primitive_type = self.get_dtype(primitive_type)
 
-        # broadcast
-        if not types.is_tensor(typea) and not types.is_tensor(typeb):
-            # both typea and typeb are not tensors
-            return primitive_type
-        if types.is_tensor(typea) and not types.is_tensor(typeb):
-            # a is tensor, b is not
-            return types.tensor(primitive_type, typea.get_shape())
-        if not types.is_tensor(typea) and types.is_tensor(typeb):
-            # a is not tensor, b is
-            return types.tensor(primitive_type, typeb.get_shape())
-
-        # both a, b are tensors
-        shapea = list(typea.get_shape())
-        shapeb = list(typeb.get_shape())
-        ret_shape = broadcast_shapes(shapea, shapeb)
-        return types.tensor(primitive_type, ret_shape)
+        return infer_type_with_broadcast(typea, typeb, primitive_type)
 
     @precondition(allow=VALUE)
     def value_inference(self):

@@ -527,6 +527,11 @@ class TestConvolution(TensorFlowBaseTest):
         TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen((1, 80, 40, 1), rand_min=-10, rand_max=10)],
+            inputs_for_conversion=[
+                ct.TensorType(
+                    shape=(1, ct.RangeDim(upper_bound=80), ct.RangeDim(upper_bound=80), 1)
+                )
+            ],
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -1038,9 +1043,14 @@ class TestNormalization(TensorFlowBaseTest):
     def test_layer_normalization(self, compute_unit, backend, rank, axis, epsilon, dynamic):
         shape = np.random.randint(low=2, high=4, size=rank)
         keras_shape = shape.tolist()
+        inputs_for_conversion = None
 
         if dynamic:
             keras_shape[0] = None
+            if backend[0] == "mlprogram":
+                inputs_for_conversion = [
+                    ct.TensorType(shape=[ct.RangeDim(upper_bound=4)] + keras_shape[1:])
+                ]
 
         model = tf.keras.Sequential(
             [
@@ -1052,6 +1062,7 @@ class TestNormalization(TensorFlowBaseTest):
         TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-100, rand_max=100)],
+            inputs_for_conversion=inputs_for_conversion,
             compute_unit=compute_unit,
             backend=backend,
         )
@@ -1690,9 +1701,16 @@ class TestUpSampling(TensorFlowBaseTest):
             kwargs = {"data_format": data_format}
             shape = np.random.randint(low=2, high=4, size=5)
             keras_shape = np.copy(shape).tolist()
-            # not support upsampling3D with dynamic input shape, since 6D tensors are produced in that case
             if dynamic:
-                return
+                pytest.skip(
+                    "upsampling3D with dynamic input shape is not supported, since 6D tensors are produced in that case"
+                )
+
+        inputs_for_conversion = None
+        if backend[0] == "mlprogram" and dynamic:
+            inputs_for_conversion = [
+                ct.TensorType(shape=[dim or ct.RangeDim(upper_bound=10) for dim in keras_shape])
+            ]
 
         model = tf.keras.Sequential(
             [op(batch_input_shape=keras_shape, size=upsample_factor, **kwargs)]
@@ -1700,6 +1718,7 @@ class TestUpSampling(TensorFlowBaseTest):
         spec = TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
+            inputs_for_conversion=inputs_for_conversion,
             compute_unit=compute_unit,
             backend=backend,
         )[0]

@@ -10,7 +10,7 @@
  * - A Function consists of
  *     - List of named inputs and output types
  *     - A block defining scope for a function - similar to a function in C/C++
- * - A Block consists of 
+ * - A Block consists of
  *     - List of named inputs and output names
  *     - Topologically sorted Ops
  * - A Op consists of
@@ -23,7 +23,7 @@
  * Identifiers, generally used for names and keys, must match the
  * regular expression [A-Za-z\_][A-Za-z0-9\_@]*
  */
- 
+
 syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 
@@ -82,7 +82,7 @@ message Block {
     // The names to give to values returned by this block. They must be
     // identifiers as described above.
     //
-    // ValueType of outputs[i] is Operation[j].outputs[k].type where 
+    // ValueType of outputs[i] is Operation[j].outputs[k].type where
     // i, j and k are indices of block output, block Operation and
     // jth operation's output respectively.
     // this is due to
@@ -202,6 +202,7 @@ enum DataType {
     FLOAT16 = 10;
     FLOAT32 = 11;
     FLOAT64 = 12;
+    BFLOAT16 = 13;
 
     // Ints
     INT8 = 21;
@@ -312,7 +313,7 @@ message TensorValue {
     message RepeatedFloats {
         repeated float values = 1 [packed = true];
     }
-    
+
     message RepeatedDoubles {
         repeated double values = 1 [packed = true];
     }

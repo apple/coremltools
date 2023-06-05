@@ -16,6 +16,13 @@ from packaging import version
 
 from coremltools import _logger as logger
 
+_HAS_KMEANS1D = True
+try:
+    from . import kmeans1d as _kmeans1d
+except:
+    _kmeans1d = None
+    _HAS_KMEANS1D = False
+
 
 def _get_version(version):
     # matching 1.6.1, and 1.6.1rc, 1.6.1.dev
@@ -154,6 +161,14 @@ try:
 except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
+
+
+_HAS_TORCH_VISION = True
+try:
+    import torchvision
+except:
+    _HAS_TORCH_VISION = False
+MSG_TORCH_VISION_NOT_FOUND = "TorchVision not found."
 
 
 # ---------------------------------------------------------------------------------------

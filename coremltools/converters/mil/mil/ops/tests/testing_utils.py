@@ -3,13 +3,19 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Dict, List, Optional
+
 import coremltools as ct
 from coremltools import _logger as logger
-from coremltools.converters.mil.mil import Function, Program
+from coremltools.converters.mil.input_types import TensorType
+from coremltools.converters.mil.mil import Function, Placeholder, Program
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.testing_utils import (compare_backend,
-                                                      ct_convert)
-
+from coremltools.converters.mil.testing_utils import (
+    compare_backend,
+    ct_convert,
+    validate_minimum_deployment_target,
+)
 
 UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
@@ -30,6 +36,7 @@ def run_compare_builder(
     also_compare_shapes=False,
     converter=ct.convert,
     minimum_deployment_target=None,
+    pass_pipeline: Optional[PassPipeline] = None,
 ):
     """
     Inputs:
@@ -66,6 +73,9 @@ def run_compare_builder(
     Returns:
         The converted mlmodel
     """
+    if minimum_deployment_target is not None:
+        validate_minimum_deployment_target(minimum_deployment_target, backend)
+
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
 
@@ -94,13 +104,8 @@ def run_compare_builder(
     assert len(output_vars) == len(expected_output_types), assert_msg
 
     for out_var, s in zip(output_vars, expected_output_types):
-        if out_var.dtype != s[-1]:
-            raise ValueError(
-                "Output {} type: expect {}, got {}. Program:\n{}".format(
-                    out_var.name, s[-1].__type_info__(),
-                    out_var.dtype.__type_info__(), prog
-                )
-            )
+        # The output type will be casted by the `adjust_io_to_supported_types` pass, so we don't
+        # check the output var dtype matching here.
         if UNK_VARIADIC in s[:-1]:
             msg = "Skip type checking for UNK_VARIADIC. Output shape: {} vs expected shape: {}"
             logger.debug(msg.format(out_var.shape, s[:-1]))
@@ -123,13 +128,15 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    mlmodel = ct_convert(prog,
-                         converter=converter,
-                         source="milinternal",
-                         convert_to=backend,
-                         inputs=inputs,
-                         compute_units=compute_unit,
-                         minimum_deployment_target=minimum_deployment_target
+    mlmodel = ct_convert(
+        prog,
+        converter=converter,
+        source="milinternal",
+        convert_to=backend,
+        inputs=inputs,
+        compute_units=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
+        pass_pipeline=pass_pipeline,
     )
 
     if frontend_only:
@@ -153,7 +160,22 @@ def run_compare_builder(
         atol=atol,
         rtol=rtol,
         also_compare_shapes=also_compare_shapes,
-        dtype=backend[1]
+        dtype=backend[1],
     )
 
     return mlmodel
+
+
+def construct_inputs_from_placeholders(
+    input_placeholders: Dict[str, Placeholder], upper_bound: int
+) -> [List[TensorType]]:
+    """Construct the `inputs` param from placeholders with upper_bound."""
+    inputs: [List[TensorType]] = []
+    for input_name, placeholder in input_placeholders.items():
+        input_shape = [
+            ct.RangeDim(upper_bound=upper_bound) if is_symbolic(shape) else shape
+            for shape in placeholder.sym_shape
+        ]
+        input_tensor_type = TensorType(name=input_name, shape=input_shape)
+        inputs.append(input_tensor_type)
+    return inputs

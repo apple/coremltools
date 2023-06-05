@@ -21,10 +21,6 @@ class PassOption:
     def __init__(self, option_name: Text, option_val: Union[Text, Callable[[Operation], bool]]):
         if not isinstance(option_name, Text):
             raise ValueError(f"The option name should be text, but got {type(option_name)}")
-        if not isinstance(option_val, Text) and not isinstance(option_val, Callable):
-            raise ValueError(
-                f"The option value should be text or callable, but got {type(option_val)}"
-            )
         self._option_name = option_name
         self._option_val = option_val
 

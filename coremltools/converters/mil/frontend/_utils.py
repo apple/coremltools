@@ -12,7 +12,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 
-def value_at(x: Var, idx: int, name=None):
+def value_at(x: Var, idx: int, name=None, before_op=None):
     """
     input x: 1D tensor (vector).
     return value at index idx. x[idx].
@@ -27,6 +27,8 @@ def value_at(x: Var, idx: int, name=None):
     }
     if name is not None:
         args["name"] = name
+    if before_op is not None:
+        args["before_op"] = before_op
     return mb.slice_by_index(**args)
 
 

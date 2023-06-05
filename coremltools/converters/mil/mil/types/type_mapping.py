@@ -416,7 +416,7 @@ def np_val_to_py_type(val):
     if not isinstance(val, (_np.ndarray, _np.generic)):
         return val
 
-    if val.dtype in [_np.float16, _np.uint8, _np.int8, _np.uint32]:
+    if val.dtype in (_np.float16, _np.uint8, _np.int8, _np.uint16, _np.int16, _np.uint32):
         return val.tobytes()
     else:
         # val is np.ndarray or np.generic

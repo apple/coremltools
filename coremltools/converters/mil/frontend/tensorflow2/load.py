@@ -90,39 +90,38 @@ class TF2Loader(TFLoader):
         ]
 
     def _get_concrete_functions_and_graph_def(self):
-        msg = (
-            "Expected model format: [SavedModel | [concrete_function] | "
-            "tf.keras.Model | .h5 | GraphDef], got {}"
-        )
-        if (
-            isinstance(self.model, list)
-            or isinstance(self.model, _tf.keras.Model)
-            or isinstance(self.model, str)
-            or isinstance(self.model, _tf.compat.v1.GraphDef)
-        ):
-            cfs = []
-            if isinstance(self.model, list):
-                cfs = self.model
-            if isinstance(self.model, _tf.keras.Model):
-                cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
-            elif isinstance(self.model, _tf.compat.v1.GraphDef):
-                return None, self.model
-            elif isinstance(self.model, str):
-                if not _os_path.exists(self.model):
-                    raise ValueError(
-                        'Input model "{}" does not exist'.format(self.model)
-                    )
-                elif _os_path.isfile(self.model) \
-                     and (self.model.endswith(".h5") or self.model.endswith(".hdf5")):
-                    cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
-                elif _os_path.isdir(self.model):
-                    saved_model = _tf.saved_model.load(self.model)
-                    sv = saved_model.signatures.values()
-                    cfs = sv if isinstance(sv, list) else list(sv)
-                else:
-                    raise NotImplementedError(msg.format(self.model))
-        else:
-            raise NotImplementedError(msg.format(self.model))
+        if not isinstance(self.model, (list, str, _tf.keras.Model, _tf.compat.v1.GraphDef)):
+            raise NotImplementedError(
+                f"Expected model format: [SavedModel | concrete_function | "
+                f"tf.keras.Model | .h5 | GraphDef], got {self.model}"
+            )
+
+        cfs = []
+        if isinstance(self.model, list):
+            cfs = self.model
+        if isinstance(self.model, _tf.keras.Model):
+            cfs = self._concrete_fn_from_tf_keras(self.model)
+        elif isinstance(self.model, _tf.compat.v1.GraphDef):
+            return None, self.model
+        elif isinstance(self.model, str):
+            if not _os_path.exists(self.model):
+                raise ValueError(f'Input model "{self.model}" does not exist')
+            elif _os_path.isfile(self.model) and (
+                self.model.endswith(".h5") or self.model.endswith(".hdf5")
+            ):
+                # Keep a reference to loaded model, or it errors out due to variables deletion, see
+                # https://github.com/tensorflow/tensorflow/issues/37615#issuecomment-1552237114.
+                keras_model = _tf.keras.models.load_model(self.model)
+                cfs = self._concrete_fn_from_tf_keras(keras_model)
+            elif _os_path.isdir(self.model):
+                saved_model = _tf.saved_model.load(self.model)
+                sv = saved_model.signatures.values()
+                cfs = sv if isinstance(sv, list) else list(sv)
+            else:
+                raise ValueError(
+                    f"Input model path should be .h5/.hdf5 file or a directory, but "
+                    f"got {self.model}"
+                )
 
         graph_def = self._graph_def_from_concrete_fn(cfs)
 
@@ -311,9 +310,7 @@ class TF2Loader(TFLoader):
         return graph_dict, graph_inputs, graph_outputs, graph_ret
 
     @staticmethod
-    def _concrete_fn_from_tf_keras_or_h5(keras_model):
-        if not isinstance(keras_model, _tf.keras.Model):
-            keras_model = _tf.keras.models.load_model(keras_model)
+    def _concrete_fn_from_tf_keras(keras_model: _tf.keras.Model):
         input_signature = _saving_utils.model_input_signature(
             keras_model, keep_original_batch_size=True
         )

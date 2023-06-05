@@ -191,6 +191,19 @@ else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
 endif()
 
+# Build kmeans-1d
+set(KMEANS_DIR "${PROJECT_SOURCE_DIR}/deps/kmeans1d")
+execute_process(
+  COMMAND python3 setup.py build_ext --inplace
+  WORKING_DIRECTORY ${KMEANS_DIR}
+)
+
+# Copy kmeans-1d to Python deps folder
+execute_process(
+  COMMAND cp -r kmeans1d ../../coremltools/_deps
+  WORKING_DIRECTORY ${KMEANS_DIR}
+)
+
 set(PYTHON_TAG "cp${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
 if(APPLE)
   execute_process(COMMAND uname -m OUTPUT_VARIABLE HARDWARE_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)

@@ -28,7 +28,7 @@ class const_elimination(AbstractGraphPass):
             %4 = other_op(%2_const, %3)
 
     Support options:
-    
+
     - ``skip_const_by_size``: Skip folding ``const`` ops that have larger number of elements than a threshold.
     """
 
@@ -97,6 +97,23 @@ class const_elimination(AbstractGraphPass):
                         output.set_name(output.name + "_ignored")
                     else:
                         all_outputs_are_replaced = False
+                # force const folding of the shape op
+                elif output.val is not None and op.op_type == "shape":
+                    res = mb.const(
+                        val=output.val,
+                        before_op=op,
+                        # same var name, but different python
+                        # instance does not violate SSA property.
+                        name=output.name,
+                    )
+                    op.enclosing_block.replace_uses_of_var_after_op(
+                        anchor_op=op,
+                        old_var=output,
+                        new_var=res,
+                        force_replace=True,
+                    )
+                    # rename the const output
+                    output.set_name(output.name + "_ignored")
                 else:
                     all_outputs_are_replaced = False
 

@@ -3,24 +3,29 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List
+
 import numpy as np
 import sympy as sm
 
 from coremltools import _logger as logger
-from coremltools.converters.mil.mil import (Operation, get_new_symbol,
-                                            get_new_variadic_symbol,
-                                            precondition, types)
-from coremltools.converters.mil.mil.input_type import (DefaultInputs,
-                                                       InputSpec,
-                                                       TensorInputType)
+from coremltools.converters.mil.mil import (
+    Operation,
+    get_new_symbol,
+    get_new_variadic_symbol,
+    precondition,
+    types,
+)
+from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import SYMBOL, VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import \
-    solve_slice_by_index_shape
-from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
-                                                           any_variadic,
-                                                           is_symbolic,
-                                                           isscalar)
+from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
+from coremltools.converters.mil.mil.types.symbolic import (
+    any_symbolic,
+    any_variadic,
+    is_symbolic,
+    isscalar,
+)
 
 
 @register_op
@@ -214,9 +219,61 @@ class reshape(Operation):
         return val
 
     def _get_type_val(self):
-        x_type = self.x.dtype
-        x_shape = self.x.shape
-        x_vol = np.prod(x_shape)
+        count_neg_one = np.count_nonzero(self.shape.sym_val == -1)
+        if count_neg_one > 1:
+            raise ValueError(
+                f"Reshape op supports only one dimension to be -1, "
+                f"but got {count_neg_one} dimensions be -1."
+            )
+
+        if not any_symbolic(self.x.shape) and self.shape.val is not None:
+            ret_shape = self._infer_shape_static()
+        else:
+            ret_shape = self._infer_shape_dynamic()
+
+        ret_val = None
+        if self.x.val is not None and all(isscalar(a) and not is_symbolic(a) for a in ret_shape):
+            ret_val = reshape_with_symbol(self.x.val, ret_shape)
+        return types.tensor(self.x.dtype, tuple(ret_shape)), ret_val
+
+    @staticmethod
+    def replace_zeros_in_shape(from_shape: List[int], to_shape: List[int]) -> List[int]:
+        """Replaces 0s in `to_shape` by the corresponding dims in `from_shape`."""
+        if to_shape.count(0):
+            if len(from_shape) != len(to_shape):
+                raise ValueError(
+                    f"When there is 0 in shape, the rank of x ({len(from_shape)}) "
+                    f"must equal to the target shape len ({len(to_shape)})."
+                )
+            to_shape = [s if s != 0 else from_shape[dim] for dim, s in enumerate(to_shape)]
+        return to_shape
+
+    @staticmethod
+    def replace_neg_one_in_shape(from_shape: List[int], to_shape: List[int]) -> List[int]:
+        """Replaces -1 in `to_shape` by the corresponding dims in `from_shape`."""
+        if to_shape.count(-1):
+            neg_one_idx = to_shape.index(-1)
+            total_element_num = np.prod(from_shape)
+            remain_element_num = np.prod(
+                [dim for idx, dim in enumerate(to_shape) if idx != neg_one_idx]
+            )
+            infer_dim = total_element_num // remain_element_num
+            to_shape[neg_one_idx] = infer_dim
+        return to_shape
+
+    def _infer_shape_static(self):
+        from_shape = list(self.x.shape)
+        to_shape = list(self.shape.val)
+        to_shape = self.replace_zeros_in_shape(from_shape, to_shape)
+        to_shape = self.replace_neg_one_in_shape(from_shape, to_shape)
+        if np.prod(from_shape) != np.prod(to_shape):
+            raise ValueError(
+                f"Invalid target shape in `reshape` op ({from_shape} to {list(self.shape.val)})."
+            )
+        return to_shape
+
+    def _infer_shape_dynamic(self):
+        x_vol = np.prod(self.x.shape)
         # shape is const, and thus sym_val is not None
         sym_shape = self.shape.sym_val
         sym_shape = [get_new_symbol() if d == -1 else d for d in sym_shape]
@@ -224,10 +281,7 @@ class reshape(Operation):
             ret_shape = reshape.enforce_volumetric_constraint(x_vol, sym_shape)
         except:
             ret_shape = sym_shape
-        ret_val = None
-        if self.x.val is not None and all(isscalar(a) and not is_symbolic(a) for a in ret_shape):
-            ret_val = reshape_with_symbol(self.x.val, ret_shape)
-        return types.tensor(x_type, tuple(ret_shape)), ret_val
+        return ret_shape
 
     @staticmethod
     def enforce_volumetric_constraint(left_volume, inshape):
@@ -240,13 +294,6 @@ class reshape(Operation):
 
         # Handling when reshape is given 0 instead of actual input
         # input tensor shape: [4, 3, 2], reshape:[0, -1], output tensor shape: [4, 6]
-        if shape.count(-1) > 1:
-            raise ValueError(
-                "Reshape op supports only one dimension to be -1. Given {}".format(
-                    shape.count(-1)
-                )
-            )
-
         infer_dim_index = shape.index(-1) if -1 in shape else None
         right_volume = 1
         for i in shape:
