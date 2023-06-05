@@ -7,6 +7,7 @@ import itertools
 import unittest
 
 import numpy as np
+import pytest
 
 import coremltools.models.datatypes as datatypes
 from coremltools import ComputeUnit
@@ -390,6 +391,9 @@ class StressTest(CorrectnessTest):
 
     @unittest.skipUnless(_macos_version() >= (10, 14), "Only supported on MacOS 10.14+")
     def test_crop_resize(self, cpu_only=False):
+        if _macos_version()[0] == 12:
+            pytest.xfail("rdar://110274216")
+
         def get_coreml_model_crop_resize(params):
             eval = True
             mlmodel = None
