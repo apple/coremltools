@@ -14,8 +14,14 @@ from distutils.version import StrictVersion as _StrictVersion
 
 from packaging import version
 
-from . import kmeans1d as _kmeans1d
 from coremltools import _logger as logger
+
+_HAS_KMEANS1D = True
+try:
+    from . import kmeans1d as _kmeans1d
+except:
+    _kmeans1d = None
+    _HAS_KMEANS1D = False
 
 
 def _get_version(version):
