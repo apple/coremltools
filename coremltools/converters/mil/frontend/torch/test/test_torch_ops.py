@@ -5623,6 +5623,29 @@ class TestOnesLike(TorchBaseTest):
         )
 
 
+class TestFill(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 3],
+        ),
+    )
+    def test_fill_(self, compute_unit, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        input_shape = tuple(input_shape)
+
+        class FillModel(nn.Module):
+            def forward(self, x):
+                y = torch.empty(*input_shape)
+                y.fill_(0.2)
+                return y
+
+        model = FillModel()
+        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+
+
 class TestZeros(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
