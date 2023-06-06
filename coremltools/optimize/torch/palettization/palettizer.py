@@ -47,6 +47,51 @@ class Palettizer(_BaseModelOptimizer):
 
 
 class DKMPalettizer(Palettizer):
+    """
+    A palettization algorithm based on `"DKM: Differentiable K-Means Clustering Layer for Neural Network
+    Compression" <https://arxiv.org/pdf/2108.12659.pdf>`_. It clusters the weights
+    using a differentiable version of ``k-means``, allowing the look-up-table (LUT)
+    and indices of palettized weights to be learnt using a gradient-based optimization algorithm such as SGD.
+
+    Example:
+
+        .. code-block:: python
+
+            import torch
+            from coremltools.optimize.torch.palettization import (
+                DKMPalettizer,
+                DKMPalettizerConfig,
+                ModuleDKMPalettizerConfig,
+            )
+
+            # code that defines the pytorch model, loss and optimizer.
+            model, loss_fn, optimizer = create_model_loss_and_optimizer()
+
+            # initialize the palettizer
+            config = DKMPalettizerConfig(global_config=ModuleDKMPalettizerConfig(n_bits=4))
+
+            palettizer = DKMPalettizer(model, config)
+
+            # prepare the model to insert FakePalettize layers for palettization
+            model = palettizer.prepare(inplace=True)
+
+            # use palettizer in your PyTorch training loop
+            for inputs, labels in data:
+                output = model(inputs)
+                loss = loss_fn(output, labels)
+                loss.backward()
+                optimizer.step()
+                palettizer.step()
+
+            # fold LUT and indices into weights
+            model = palettizer.finalize(inplace=True)
+
+    Args:
+        model (:py:class:`torch.nn.Module`): Model on which the palettizer will act.
+        config (:py:class:`DKMPalettizerConfig`): Config which specifies how
+            different submodules in the model will be configured for palettization.
+            Default config is used when passed as ``None``.
+    """
     def __init__(self, model: _nn.Module, config: _Optional[_DKMPalettizerConfig] = None):
         config = _DKMPalettizerConfig() if config is None else config
         super().__init__(model, config)

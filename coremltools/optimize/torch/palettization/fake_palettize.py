@@ -19,7 +19,15 @@ from .palettization_config import DEFAULT_PALETTIZATION_ADVANCED_OPTIONS
 
 class FakePalettize(_FakeQuantize, _Partitioner):
     """
-    A class that implements the `DKM algorithm <https://arxiv.org/abs/2108.12659>`_.
+    A class that implements palettization algorithm described in
+    `DKM: Differentiable K-Means Clustering Layer for Neural Network Compression
+    <https://arxiv.org/abs/2108.12659>`_. It clusters the weights
+    using a differentiable version of ``k-means``, allowing the look-up-table (LUT)
+    and indices of palettized weights to be learnt using a gradient-based optimization
+    algorithm such as SGD.
+
+    Extends :py:class:`torch.quantization.FakeQuantize` to add support for
+    palettization.
 
     Example:
             .. code-block:: python
@@ -71,7 +79,8 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         observer_kwargs (optional): Arguments for the observer module.
 
     .. note::
-        You can find the allowed keys for ``advanced_options`` in `DEFAULT_PALETTIZATION_ADVANCED_OPTIONS`.
+        Allowed keys for ``advanced_options`` are the parameters listed as ``optional`` in
+        :py:class:`ModuleDKMPalettizerConfig`, besides the ones already covered by other parameters in this class.
     """
 
     fake_palett_enabled: _torch.Tensor

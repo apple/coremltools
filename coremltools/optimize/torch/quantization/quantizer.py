@@ -47,7 +47,16 @@ class Quantizer(_BaseModelOptimizer):
 
 class LinearQuantizer(Quantizer):
     """
-    Perform quantization aware training (QAT) of models.
+    Perform quantization aware training (QAT) of models. This algorithm simulates the effects of
+    quantization during training, by quantizing and dequantizing the weights and/or activations during
+    the model's forward pass. The forward and backward pass computations are conducted in ``float`` dtype,
+    however, these ``float`` values follow the constraints imposed by ``int8`` and ``quint8`` dtypes. Thus,
+    this algorithm adjusts the model's weights while closely simulating the numerics which get
+    executed during quantized inference, allowing model's weights to adjust to quantization
+    constraints.
+
+    For more details, please refer to  `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only
+    Inference <https://arxiv.org/pdf/1712.05877.pdf>`_.
 
     Example:
 
@@ -139,10 +148,19 @@ class LinearQuantizer(Quantizer):
         Args:
             inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and
                 the original module is mutated, otherwise a copy of the model is mutated and returned.
+
+        .. note::
+            This method uses `prepare_qat_fx method <https://pytorch.org/docs/stable/generated/torch.ao.quantization.quantize_fx.prepare_qat_fx.html#torch.ao.quantization.quantize_fx.prepare_qat_fx>`_
+            to insert quantization layers and the returned model is a :py:class:`torch.fx.GraphModule`.
+            Some models, like those with dynamic control flow, may not be trace-able into a
+            :py:class:`torch.fx.GraphModule`. Please follow directions in `Limitations of Symbolic Tracing <https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing>`_
+            to update your model first before using :py:class:`LinearQuantizer` algorithm.
+
         """
         if self._is_prepared:
             _logger.warning(
-                "Model has already been prepared for QAT. This API call will be a no-op."
+                "Model has already been prepared for QAT. This API call "
+                "will be a no-op."
             )
             return self._model
         model = self._model

@@ -97,28 +97,91 @@ _default_quantization_options = {
 @_define
 class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
     """
-    Module level configuration for :py:class:`LinearQuantizer`.
+    Configuration class for specifying global and module level quantization options for linear quantization
+    algorithm implemented in :py:class:`LinearQuantizer`.
+
+    Linear quantization algorithm simulates the effects of quantization during training, by quantizing
+    and dequantizing the weights and/or activations during the model's forward pass. The forward and
+    backward pass computations are conducted in ``float`` dtype, however, these ``float`` values follow
+    the constraints imposed by ``int8`` and ``quint8`` dtypes. For more details, please refer to
+    `Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
+    <https://arxiv.org/pdf/1712.05877.pdf>`_.
+
+    For most applications, the only parameters that need to be set are ``quantization_scheme`` and
+    ``milestones``.
+
+    By default, ``quantization_scheme`` is set to :py:class:`QuantizationScheme.symmetric`, which means
+    all weights are quantized with zero point as zero, and activations are quantized with zero point as zero for
+    non-negative activations and 128 for all other activations. The weights are quantized using :py:class:`torch.qint8`
+    and activations are quantized using :py:class:`torch.quint8`.
+
+    Linear quantization algorithm inserts ``observers`` for each weight/activation tensor.
+    These observers collect statistics of these tensors' values, for example, the minimum and maximum values they can
+    take. These statistics are then used to compute the scale and zero point, which are in turn used for quantizing
+    the weights/activations. By default, ``moving_average_min_max`` observer is used. For more details, please
+    check `MinMaxObserver <https://pytorch.org/docs/stable/generated/torch.ao.quantization.observer.MinMaxObserver.html#torch.ao.quantization.observer.MinMaxObserver>`_.
+
+    The ``milestones`` parameter controls the flow of the quantization algorithm.  The example below illustrates its
+    usage in more detail:
+
+    .. code-block:: python
+
+            model = define_model()
+
+            config = LinearQuantizerConfig(
+                global_config=ModuleLinearQuantizerConfig(
+                    quantization_scheme="symmetric",
+                    milestones=[0, 100, 300, 200],
+                )
+            )
+
+            quantizer = LinearQuantizer(model, config)
+
+            # prepare the model to insert FakeQuantize layers for QAT
+            model = quantizer.prepare()
+
+            # use quantizer in your PyTorch training loop
+            for inputs, labels in data:
+                output = model(inputs)
+                loss = loss_fn(output, labels)
+                loss.backward()
+                optimizer.step()
+                quantizer.step()
+
+            # In this example, from step 0 onwards, observers will collect statistics
+            # of the values of weights/activations. However, between steps 0 and 100,
+            # effects of quantization will not be simulated. At step 100, quantization
+            # simulation will begin and at step 300, observer statistics collection will
+            # stop. A batch norm layer computes mean and variance of input batch for normalizing
+            # it during training, and collects running estimates of its computed mean and variance,
+            # which are then used for normalization during evaluation. At step 200, batch norm
+            # statistics collection is frozen, and the batch norm layers switch to evaluation
+            # mode, thus more closely simulating the inference numerics during training time.
 
     Args:
-        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. Defaults to
-            :py:class:`torch.qint8`.
+        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. When dtype
+            is set to :py:class:`torch.float32`, the weights corresponding to that layer are not quantized.
+            Defaults to :py:class:`torch.qint8`.
         weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights. Defaults
             to ``moving_average_min_max``.
         weight_per_channel (:obj:`bool`): When ``True``, weights are quantized per channel; otherwise, per tensor.
-        activation_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the activations. Defaults to
-            :py:class:`torch.qint8`.
-        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations. Defaults
-            to ``moving_average_min_max``.
+        activation_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the activations. When dtype
+            is set to :py:class:`torch.float32`, the activations corresponding to that layer are not quantized.
+            Defaults to :py:class:`torch.quint8`.
+        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations. Allowed
+            values are ``min_max`` and ``moving_average_min_max``. Defaults to ``moving_average_min_max``.
         quantization_scheme: (:py:class:`QuantizationScheme`): Type of quantization configuration to use. When
             this parameter is set to :py:class:`QuantizationScheme.symmetric`, all weights are
-            quantized with zero point as zero, and all activations are quantized with zero point as zero for
+            quantized with zero point as zero, and activations are quantized with zero point as zero for
             non-negative activations and 128 for all other activations. When it is set to
             :py:class:`QuantizationScheme.affine`, zero point can be set anywhere in the range of values allowed
-            for the quantized weight/activation.
+            for the quantized weight/activation. Defaults to :py:class:`QuantizationScheme.symmetric`.
         milestones (:obj:`list` of :obj:`int`): A list of four integers indicating milestones to use during
             quantization. The first milestone corresponds to enabling observers, the second to enabling fake
-            quantization simulation, the third to disabling observers, and the last
-            to freezing batch norm statistics.
+            quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.
+            Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and
+            all observers and quantization simulation will be turned on from the first step, batch norm layers always
+            operate in training mode, and mean and varaince statistics collection is not frozen.
     """
 
     weight_dtype: _torch.dtype = _field(
@@ -193,7 +256,47 @@ _ModuleTypeConfigType = _NewType(
 @_define
 class LinearQuantizerConfig(_OptimizationConfig):
     """
-    Configuration for :py:class:`LinearQuantizer`.
+    Configuration class for specifying how different submodules of a model are
+    quantized by :py:class:`LinearQuantizer`.
+
+    In order to disable quantizing a layer or an operation, ``module_type_config`` or
+    ``module_name_config`` corresponding to that operation can be set to ``None``.
+
+    For example:
+
+    .. code-block:: python
+
+            # The following config will enable weight only quantization for all layers:
+            config = LinearQuantizerConfig.from_dict(
+                {
+                    "global_config": {
+                        "activation_dtype": "float32",
+                    }
+                }
+            )
+
+            # The following config will disable quantization for all linear layers and
+            # set quantization mode to weight only quantization for convolution layers:
+            config = LinearQuantizerConfig.from_dict(
+                {
+                    "module_type_configs": {
+                        "Linear": None,
+                        "Conv2d": {
+                            "activation_dtype": "float32",
+                        },
+                    }
+                }
+            )
+
+            # The following config will disable quantization for layers named conv1 and conv2:
+            config = LinearQuantizerConfig.from_dict(
+                {
+                    "module_name_configs": {
+                        "conv1": None,
+                        "conv2": None,
+                    }
+                }
+            )
 
     Args:
         global_config (:py:class:`ModuleLinearQuantizerConfig`): Config to be applied globally
