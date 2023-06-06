@@ -51,7 +51,7 @@ DEFAULT_PALETTIZATION_OPTIONS = {
     "quant_min": -128,
     "quant_max": 127,
     "dtype": _torch.qint8,
-    "cluster_dtype": "32",
+    "cluster_dtype": "f32",
     "weight_threshold": 2048,
     "milestone": 0,
     "quantize_activations": False,
@@ -84,17 +84,19 @@ SUPPORTED_PYTORCH_QAT_MODULES = (_nn.Linear, _nn.Conv2d, _nn.Conv3d)
 @_define
 class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
     r"""
-    Module level configuration for :py:class:`DKMPalettizer`.
+    Configuration class for specifying global and module-level options for palettization
+    algorithm implemented in :py:class:`DKMPalettizer`.
 
-    For most use cases, the only parameters you need to specify are ``n_bits``, ``cluster_dim``,
-    ``weight_threshold``, and ``milestone``.
+    The parameters specified in this config control the DKM algorithm, described in
+    `DKM: Differentiable K-Means Clustering Layer for Neural Network Compression
+    <https://arxiv.org/abs/2108.12659>`_.
+
+    For most use cases, the only parameters you need to specify are ``n_bits``,  ``weight_threshold``,
+    and ``milestone``.
 
     .. note::
-        Some of the following parameters are meant for advanced use cases and for further fine-tuning the
-        DKM algorithm. The default values usually work for a majority of tasks. These parameters are ``partition_size``, ``cluster_permute``, ``palett_max_mem``,
-        ``kmeans_max_iter``, ``prune_threshold``, ``kmeans_init``, ``kmeans_opt1d_threshold``,
-        ``enforce_zero``, ``palett_mode``, ``palett_tau``, ``palett_epsilon``, ``palett_lambda``,
-        ``add_extra_centroid`` and ``palett_cluster_tol``.
+        Most of the parameters in this class are meant for advanced use cases and for further fine-tuning the
+        DKM algorithm. The default values usually work for a majority of tasks.
 
     .. note::
         Change the following parameters only when you use activation quantization in conjunction with
@@ -102,45 +104,61 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
 
     Args:
         n_bits (:obj:`int`): Number of clusters. The number of clusters used is :math:`2^{n\_bits}`.
-        cluster_dim (:obj:`int`): The dimension of each cluster.
-        quant_min: (:obj:`int`): The minimum value for each element in the weight clusters if they are quantized.
-            Defaults to ``-128``.
-        quant_max: (:obj:`int`): The maximum value for each element in the weight clusters if they are quantized.
-            Defaults to ``127``
-        dtype (:py:class:`torch.dtype`): The ``dtype`` to use for quantizing the activations. Only applies when
-            ``quantize_activations`` is ``True``. Defaults to :py:class:`torch.qint8`.
-        cluster_dtype (:obj:`str`): ``dtype`` to use for quantizing the clusters. Defaults to ``f'32'``, i.e.,
-            by default, the clusters aren't quantized.
+            Defaults to ``4`` for linear layers and ``2`` for all other layers.
         weight_threshold (:obj:`int`): A module is only palettized if the number of elements in
-            its weight matrix exceeds ``weight_threshold``. Defaults to ``0``.
+            its weight matrix exceeds ``weight_threshold``. Defaults to ``2048``.
         milestone (:obj:`int`): Step or epoch at which palettization begins. Defaults to ``0``.
-        quantize_activations (:obj:`bool`): When ``True``, the activation are quantized. Defaults to ``False``.
-        partition_size (:obj:`int`): partition_size helps in per channel palettization.
-        cluster_permute (:obj:`tuple`): Permute to apply to weight partitions. Defaults to ``None``.
-        palett_max_mem (:obj:`float`): Proportion of available GPU memory that should be used for palettization.
-            Defaults to ``1.0``.
-        kmeans_max_iter (:obj:`int`): Maximum number of differentiable ``k-means`` iterations. Defaults to ``3``.
-        prune_threshold (:obj:`float`): Hard-shrinks weights between [``-prune_threshold``, ``prune_threshold``] to
-            zero. Defaults to ``0.0``. Useful for joint pruning and palettization.
-        kmeans_init (:obj:`str`): ``k-means`` algorithm to use. Defaults to ``cpu.kmeans++``.
-            Other available options are ``efficient_kmeans`` and ``kmeans_pp``.
-        kmeans_opt1d_threshold (:obj:`int`): Channel threshold to decide if ``opt1d kmeans`` should be used.
-            Defaults to ``1024``.
-        enforce_zero (:obj:`bool`): If ``True``, enforces closest to origin LUT cluster to be fixed to zero.
+        cluster_dim (:obj:`int`, ``optional``): The dimension of each cluster. Defaults to ``1``.
+        quant_min: (:obj:`int`, ``optional``): The minimum value for each element in the weight clusters if they are
+            quantized. Defaults to ``-128``.
+        quant_max: (:obj:`int`, ``optional``): The maximum value for each element in the weight clusters if they are
+            quantized. Defaults to ``127``
+        dtype (:py:class:`torch.dtype`, ``optional``): The ``dtype`` to use for quantizing the activations. Only applies
+            when ``quantize_activations`` is ``True``. Defaults to :py:class:`torch.qint8`.
+        cluster_dtype (:obj:`str`, ``optional``): ``dtype`` to use for quantizing the clusters. Allowed options are
+            ``'i8'``, ``'u8'``, ``'f16'``, ``'bf16'``, ``'f32'``.  Defaults to ``'f32'``, i.e.,
+            by default, the clusters aren't quantized.
+        quantize_activations (:obj:`bool`, ``optional``): When ``True``, the activation are quantized.
             Defaults to ``False``.
-        palett_mode (:obj:`str`): Criteria to calculate attention during ``k-means``. Defaults to ``dkm``.
-            Other available options are ``gsm`` and ``hard``.
-        palett_tau (:obj:`float`): Temperature factor for softmax using in DKM algorithm. Defaults to ``0.0001``.
-        palett_epsilon (:obj:`float`): Distance threshold for clusters between ``k-means`` iterations.
+        partition_size (:obj:`int`, ``optional``): partition_size helps in per channel palettization.
+            Defaults to ``2000000000``.
+        cluster_permute (:obj:`tuple`, ``optional``): Permutation order to apply to weight partitions.
+            Defaults to ``None``.
+        palett_max_mem (:obj:`float`, ``optional``): Proportion of available GPU memory that should be used for
+            palettization. Defaults to ``1.0``.
+        kmeans_max_iter (:obj:`int`, ``optional``): Maximum number of differentiable ``k-means`` iterations.
+            Defaults to ``3``.
+        prune_threshold (:obj:`float`, ``optional``): Hard-shrinks weights between [``-prune_threshold``,
+            ``prune_threshold``] to zero. Useful for joint pruning and palettization. Defaults to ``0.0``.
+        kmeans_init (:obj:`str`, ``optional``): ``k-means`` algorithm to use. Allowed options are
+            ``efficient_kmeans``, ``cpu.kmeans++`` and ``kmeans_pp``. Defaults to ``cpu.kmeans++``.
+        kmeans_opt1d_threshold (:obj:`int`, ``optional``): Channel threshold to decide if ``opt1d kmeans``
+            should be used. Defaults to ``1024``.
+        enforce_zero (:obj:`bool`, ``optional``): If ``True``, enforces the LUT centroid which is closest to
+            the origin to be fixed to zero. Defaults to ``False``.
+        palett_mode (:obj:`str`, ``optional``): Criteria to calculate attention during ``k-means``. Allowed options are
+            ``gsm``, ``dkm`` and ``hard``. Defaults to ``dkm``.
+        palett_tau (:obj:`float`, ``optional``): Temperature factor for softmax used in DKM algorithm.
             Defaults to ``0.0001``.
-        palett_lambda (:obj:`float`): Reduces effects of outliers during centroid calculation. Defaults to
-            ``0.0``.
-        add_extra_centroid (:obj:`bool`): If true, adds an extra centroid to LUT. Defaults to ``False``.
-        palett_cluster_tol (:obj:`float`): Tolerance for non-unique centroids in the LUT. The higher the number,
-            the more tolerance for non-unique centroids. Defaults to ``0.05``.
+        palett_epsilon (:obj:`float`, ``optional``): Distance threshold for clusters between ``k-means`` iterations.
+            Defaults to ``0.0001``.
+        palett_lambda (:obj:`float`, ``optional``): Reduces effects of outliers during centroid calculation.
+            Defaults to ``0.0``.
+        add_extra_centroid (:obj:`bool`, ``optional``): If ``True``, adds an extra centroid to the LUT.
+            Defaults to ``False``.
+        palett_cluster_tol (:obj:`float`, ``optional``): Tolerance for non-unique centroids in the LUT.
+            The higher the number, the more tolerance for non-unique centroids. Defaults to ``0.05``.
     """
     n_bits: _Optional[int] = _field(
         default=None, validator=_validators.optional(_validators.instance_of(int))
+    )
+    weight_threshold: int = _field(
+        default=DEFAULT_PALETTIZATION_OPTIONS["weight_threshold"],
+        validator=_validators.instance_of(int),
+    )
+    milestone: int = _field(
+        default=DEFAULT_PALETTIZATION_OPTIONS["milestone"],
+        validator=_validators.instance_of(int),
     )
     cluster_dim: _Optional[int] = _field(
         default=None, validator=_validators.optional(_validators.instance_of(int))
@@ -161,14 +179,6 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
     cluster_dtype: str = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["cluster_dtype"],
         validator=_validators.instance_of(str),
-    )
-    weight_threshold: int = _field(
-        default=DEFAULT_PALETTIZATION_OPTIONS["weight_threshold"],
-        validator=_validators.instance_of(int),
-    )
-    milestone: int = _field(
-        default=DEFAULT_PALETTIZATION_OPTIONS["milestone"],
-        validator=_validators.instance_of(int),
     )
     quantize_activations: bool = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["quantize_activations"],
@@ -273,7 +283,8 @@ def _validate_dkm_config_type(instance, attribute, value):
 @_define
 class DKMPalettizerConfig(_OptimizationConfig):
     """
-    Configuration for :py:class:`DKMPalettizer`.
+    Configuration for specifying how different submodules of a model are palettized by
+    :py:class:`DKMPalettizer`.
 
     The ``module_type_configs`` parameter can accept a list of :py:class:`ModuleDKMPalettizerConfig`
     as values for a given module type. The list can specify
@@ -289,7 +300,7 @@ class DKMPalettizerConfig(_OptimizationConfig):
         custom_config = {
             nn.Conv2d: [
                 {"n_bits": 4, "cluster_dim": 4, "weight_threshold": 1000},
-                {"n_bits": 2, "cluster_dim": 2, "weight_threshold": 400},
+                {"n_bits": 2, "cluster_dim": 2, "weight_threshold": 300},
             ]
         }
         config = DKMPalettizerConfig.from_dict({"module_type_configs": custom_config})
@@ -299,11 +310,13 @@ class DKMPalettizerConfig(_OptimizationConfig):
             to all supported modules. Missing values are chosen from the default config.
         module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleDKMPalettizerConfig`):
             Module type level configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.
-            The keys can be either strings or module classes.
+            The keys can be either strings or module classes. When ``module_type_config`` is set to ``None``
+            for a module type, it is not palettized.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleDKMPalettizerConfig`):
             Module level configs applied to specific modules.
             The name of the module must be a fully qualified name that can be used to fetch it
-            from the top level module using the ``module.get_submodule(target)`` method.
+            from the top level module using the ``module.get_submodule(target)`` method. When
+            ``module_name_config`` is set to ``None`` for a module, it is not palettized.
     """
 
     global_config: _GlobalConfigType = _field(default=None, validator=_validate_dkm_config_type)
