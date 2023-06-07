@@ -17,7 +17,6 @@ Post-training compression for Core ML models:
    
    coremltools.optimize.coreml.post_training_quantization.rst
    coremltools.optimize.coreml.config.rst
-   coremltools.optimize.coreml.graph.rst
 
 
 Training-Time Compression

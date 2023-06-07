@@ -24,7 +24,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Training-Time Palettization" href="coremltools.optimize.torch.palettization.html" />
-    <link rel="prev" title="Compression Graph Passes" href="coremltools.optimize.coreml.graph.html" /> 
+    <link rel="prev" title="Compression Configuration" href="coremltools.optimize.coreml.config.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -58,8 +58,8 @@
 <li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#post-training-compression">Post-Training Compression</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#training-time-compression">Training-Time Compression</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Training-Time Pruning</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#module-coremltools.optimize.torch.pruning">Magnitude Pruning</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id6">Pruning scheduler</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#magnitude-pruning">Magnitude Pruning</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#pruning-scheduler">Pruning scheduler</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Training-Time Palettization</a></li>
@@ -106,17 +106,15 @@
 <p>Pruning a model is the process of sparsifying the weight matrices of the
 model’s layers, thereby reducing its storage size. You can also use pruning to reduce a
 model’s inference latency and power consumption.</p>
-<section id="module-coremltools.optimize.torch.pruning">
-<span id="magnitude-pruning"></span><h2>Magnitude Pruning<a class="headerlink" href="#module-coremltools.optimize.torch.pruning" title="Permalink to this heading"></a></h2>
-<section id="id1">
-<h3><span class="target" id="magnitudepruner">MagnitudePruner</span><a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<section id="magnitude-pruning">
+<h2>Magnitude Pruning<a class="headerlink" href="#magnitude-pruning" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">ModuleMagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id8" title="coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler"><span class="pre">PolynomialDecayScheduler</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#id11" title="coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler"><span class="pre">ConstantSparsityScheduler</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ConstantSparsityScheduler(begin_step=0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'per_scalar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_m_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'weight'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#ModuleMagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">ModuleMagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler" title="coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler"><span class="pre">PolynomialDecayScheduler</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler" title="coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler"><span class="pre">ConstantSparsityScheduler</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ConstantSparsityScheduler(begin_step=0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'per_scalar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_m_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'weight'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#ModuleMagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Configuration class for specifying global and module level pruning options for magnitude pruning
-algorithm implemented in <a class="reference internal" href="#id4" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.</p>
+algorithm implemented in <a class="reference internal" href="#coremltools.optimize.torch.pruning.MagnitudePruner" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.</p>
 <p>This class supports four different modes of sparsity:</p>
-<p>1. <strong>Unstructured sparsity</strong>: This is the default sparsity mode used by <a class="reference internal" href="#id4" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.
+<p>1. <strong>Unstructured sparsity</strong>: This is the default sparsity mode used by <a class="reference internal" href="#coremltools.optimize.torch.pruning.MagnitudePruner" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.
 It is activated when <code class="docutils literal notranslate"><span class="pre">block_size</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span> <span class="pre">=</span> <span class="pre">None</span></code> and <code class="docutils literal notranslate"><span class="pre">granularity</span> <span class="pre">=</span> <span class="pre">per_scalar</span></code>.
 In this mode, the <code class="docutils literal notranslate"><span class="pre">n</span></code> weights with the lowest absolute values are set to 0,
 where <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">floor(size_of_weight_tensor</span> <span class="pre">*</span> <span class="pre">target_sparsity)</span></code>.
@@ -334,18 +332,18 @@ path to the yaml file.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.MagnitudePrunerConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">MagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.magnitude_pruner.ModuleMagnitudePrunerConfig"><span class="pre">ModuleMagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.magnitude_pruner.ModuleMagnitudePrunerConfig"><span class="pre">ModuleMagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig" title="Permalink to this definition"></a></dt>
-<dd><p>Configuration class for specifying how different submodules in a model are pruned by <a class="reference internal" href="#id4" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">MagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.magnitude_pruner.ModuleMagnitudePrunerConfig"><span class="pre">ModuleMagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.magnitude_pruner.ModuleMagnitudePrunerConfig"><span class="pre">ModuleMagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration class for specifying how different submodules in a model are pruned by <a class="reference internal" href="#coremltools.optimize.torch.pruning.MagnitudePruner" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>global_config</strong> (<a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Config to be applied globally
+<li><p><strong>global_config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Config to be applied globally
 to all supported modules. Missing values are chosen from the default config.</p></li>
-<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Module
+<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Module
 type level configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
 The keys can be either strings or module classes. If <code class="docutils literal notranslate"><span class="pre">module_type_config</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code>
 for a module type, it wouldn’t get pruned.</p></li>
-<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Module level
+<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Module level
 configs applied to specific modules. The name of the module must be a fully qualified name that can
 be used to fetch it from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method. If
 <code class="docutils literal notranslate"><span class="pre">module_name_config</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for a module, it wouldn’t get pruned.</p></li>
@@ -360,7 +358,7 @@ be used to fetch it from the top level module using the <code class="docutils li
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#id3" title="coremltools.optimize.torch.pruning.magnitude_pruner.MagnitudePrunerConfig"><span class="pre">MagnitudePrunerConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePrunerConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.magnitude_pruner.MagnitudePrunerConfig"><span class="pre">MagnitudePrunerConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePrunerConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict" title="Permalink to this definition"></a></dt>
 <dd><p>Create class from a dictionary of string keys and values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -406,7 +404,7 @@ for an existing module type was already set, the new config will override the ol
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.MagnitudePruner">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">MagnitudePruner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id3" title="coremltools.optimize.torch.pruning.magnitude_pruner.MagnitudePrunerConfig"><span class="pre">MagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePruner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.MagnitudePruner" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">MagnitudePruner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.magnitude_pruner.MagnitudePrunerConfig"><span class="pre">MagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePruner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.MagnitudePruner" title="Permalink to this definition"></a></dt>
 <dd><p>A pruning algorithm based on <a class="reference external" href="https://arxiv.org/pdf/1710.01878.pdf">To prune, or not to prune: exploring the efficacy of
 pruning for model compression</a>. It extends the idea in the paper
 to different kinds of structured sparsity modes, in addition to unstructured sparsity. In order to
@@ -414,7 +412,7 @@ achieve the desired sparsity, this algorithm sorts a module’s weight matrix by
 its elements, and sets all elements less than a threshold to zero.</p>
 <p>Four different modes of sparsity are supported, encompassing both structured and unstructured
 sparsity. For details on how to select these different sparsity modes, please see
-<a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>.</p>
+<a class="reference internal" href="#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>.</p>
 <p class="rubric">Example</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
@@ -465,7 +463,7 @@ sparsity. For details on how to select these different sparsity modes, please se
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>) – Model on which the pruner will act.</p></li>
-<li><p><strong>config</strong> (<a class="reference internal" href="#id3" title="coremltools.optimize.torch.pruning.MagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePrunerConfig</span></code></a>) – Config which specifies how
+<li><p><strong>config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.pruning.MagnitudePrunerConfig" title="coremltools.optimize.torch.pruning.MagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePrunerConfig</span></code></a>) – Config which specifies how
 different submodules in the model will be configured for pruning.
 Default config is used when passed as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
@@ -521,13 +519,11 @@ aggregated over all the modules set up for pruning.</p>
 
 </section>
 <section id="pruning-scheduler">
-<h3>Pruning scheduler<a class="headerlink" href="#pruning-scheduler" title="Permalink to this heading"></a></h3>
-<p><a class="reference internal" href="#module-coremltools.optimize.torch.pruning.pruning_scheduler" title="coremltools.optimize.torch.pruning.pruning_scheduler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler</span></code></a> submodule contains classes
+<h2>Pruning scheduler<a class="headerlink" href="#pruning-scheduler" title="Permalink to this heading"></a></h2>
+<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler</span></code> submodule contains classes
 that implement pruning schedules, which can be used for changing the
 sparsity of pruning masks applied by various types of pruning algorithms
 to prune neural network parameters.</p>
-<section id="base-class">
-<h4>Base class<a class="headerlink" href="#base-class" title="Permalink to this heading"></a></h4>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler.</span></span><span class="sig-name descname"><span class="pre">PruningScheduler</span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#PruningScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler" title="Permalink to this definition"></a></dt>
@@ -537,13 +533,10 @@ changing the sparsity of pruning masks applied by various types of
 pruning algorithms to module parameters over the course of the training.</p>
 </dd></dl>
 
-</section>
-<section id="polynomialdecayscheduler">
-<h4>PolynomialDecayScheduler<a class="headerlink" href="#polynomialdecayscheduler" title="Permalink to this heading"></a></h4>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler.</span></span><span class="sig-name descname"><span class="pre">PolynomialDecayScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#PolynomialDecayScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#id7" title="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler" title="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code></a></p>
 <p>A pruning scheduler inspired by the paper <a class="reference external" href="https://arxiv.org/pdf/1710.01878.pdf">“To prune or not to prune”</a>.</p>
 <p>It sets the sparsity at step <span class="math notranslate nohighlight">\(t\)</span> using the formula:</p>
 <div class="math notranslate nohighlight">
@@ -584,13 +577,10 @@ target sparsity and initial sparsity.</p></li>
 
 </dd></dl>
 
-</section>
-<section id="constantsparsityscheduler">
-<h4>ConstantSparsityScheduler<a class="headerlink" href="#constantsparsityscheduler" title="Permalink to this heading"></a></h4>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler.</span></span><span class="sig-name descname"><span class="pre">ConstantSparsityScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">begin_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#ConstantSparsityScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#id7" title="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler" title="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code></a></p>
 <p>A pruning schedule with constant sparsity throughout training.</p>
 <p>Sparsity is set to zero initially and to <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> at
 step <code class="docutils literal notranslate"><span class="pre">begin_step</span></code>.</p>
@@ -621,389 +611,12 @@ target sparsity and initial sparsity.</p></li>
 
 </section>
 </section>
-<dl class="py class">
-<dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">ModuleMagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scheduler</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id8" title="coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler"><span class="pre">PolynomialDecayScheduler</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#id11" title="coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler"><span class="pre">ConstantSparsityScheduler</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ConstantSparsityScheduler(begin_step=0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initial_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'per_scalar'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_m_ratio</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'weight'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#ModuleMagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
-<dd><p>Configuration class for specifying global and module level pruning options for magnitude pruning
-algorithm implemented in <a class="reference internal" href="#id4" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.</p>
-<p>This class supports four different modes of sparsity:</p>
-<p>1. <strong>Unstructured sparsity</strong>: This is the default sparsity mode used by <a class="reference internal" href="#id4" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.
-It is activated when <code class="docutils literal notranslate"><span class="pre">block_size</span> <span class="pre">=</span> <span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span> <span class="pre">=</span> <span class="pre">None</span></code> and <code class="docutils literal notranslate"><span class="pre">granularity</span> <span class="pre">=</span> <span class="pre">per_scalar</span></code>.
-In this mode, the <code class="docutils literal notranslate"><span class="pre">n</span></code> weights with the lowest absolute values are set to 0,
-where <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">=</span> <span class="pre">floor(size_of_weight_tensor</span> <span class="pre">*</span> <span class="pre">target_sparsity)</span></code>.
-For example, given the following:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">weight</span> <span class="pre">=</span> <span class="pre">[0.3,</span> <span class="pre">-0.2,</span> <span class="pre">-0.01,</span> <span class="pre">0.05]</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">target_sparsity</span> <span class="pre">=</span> <span class="pre">0.75</span></code></p></li>
-</ul>
-</div></blockquote>
-<p>The pruned weight would be <code class="docutils literal notranslate"><span class="pre">[0.3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code></p>
-<p>2.  <strong>Block structured sparsity</strong>: This mode is activated when <code class="docutils literal notranslate"><span class="pre">block_size</span> <span class="pre">&gt;</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span> <span class="pre">=</span> <span class="pre">None</span></code>.
-In this mode, the weight matrix is first reshaped to a rank 2 matrix by folding all dimensions <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">1</span></code>
-into a single dimension. Then, blocks of size <code class="docutils literal notranslate"><span class="pre">block_size</span></code> along the <code class="docutils literal notranslate"><span class="pre">0-th</span></code> dimension,
-which have the lowest <code class="docutils literal notranslate"><span class="pre">L2</span></code> norm, are set to 0. The number of blocks which are zeroed out is
-determined by the <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> parameter. The blocks are chosen in a non-overlapping fashion.</p>
-<p>For example:</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given a 4 x 2 weight with the following value, and block_size = 2.</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-    <span class="p">[</span><span class="o">-</span><span class="mi">6</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-    <span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-<span class="p">]</span>
-
-<span class="c1"># L2 norm  is computed along the 0-th dimension for blocks of size 2:</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mf">6.08</span><span class="p">,</span> <span class="mf">7.62</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">9.00</span><span class="p">,</span> <span class="mf">3.61</span><span class="p">],</span>
-<span class="p">]</span>
-
-<span class="c1"># Then the smallest values are picked to prune. So if target_sparsity = 0.5,</span>
-<span class="c1"># then the blocks that will be pruned will be with ones with L2 norm values</span>
-<span class="c1"># of 6.08 and 3.61. And hence, the elements in the first and third</span>
-<span class="c1"># block are pruned. The final pruned tensor is:</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">7</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-    <span class="p">[</span><span class="o">-</span><span class="mi">9</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>3. <strong>n:m structured sparsity</strong>: This mode is activated when <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span> <span class="pre">!=</span> <span class="pre">None</span></code>. Similar to
-block structured sparsity, in this mode, the weight matrix is reshaped to a rank 2 matrix.
-Then, out of non-overlapping blocks of size <code class="docutils literal notranslate"><span class="pre">m</span></code> along the <code class="docutils literal notranslate"><span class="pre">0-th</span></code> or <code class="docutils literal notranslate"><span class="pre">1-st</span></code> dimension, the <code class="docutils literal notranslate"><span class="pre">n</span></code>
-elements with the smallest absolute value are set to 0. The dimension along which the blocks
-are chosen is controlled by the <code class="docutils literal notranslate"><span class="pre">dim</span></code> parameter and it defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>. For linear layers,
-<code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">1</span></code> and ratios where <code class="docutils literal notranslate"><span class="pre">m</span></code> is a factor of 16 (e.g. <code class="docutils literal notranslate"><span class="pre">3:4</span></code>, <code class="docutils literal notranslate"><span class="pre">7:8</span></code> etc.) are recommended
-to get latency gains for models executing specifically on the CPU.</p>
-<p>For example:</p>
-<blockquote>
-<div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given a 4 x 4 weight of</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">],</span>
-    <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span>
-<span class="p">]</span>
-
-<span class="c1"># For n_m_ratio = (1, 2) with dim = 1 (default), the resulting pruned weight is</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">8</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-</div></blockquote>
-<p>4. <strong>General structured sparsity</strong>: This mode is activated when <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is set to
-one of <code class="docutils literal notranslate"><span class="pre">per_channel</span></code> or <code class="docutils literal notranslate"><span class="pre">per_kernel</span></code>. It only applies to weights of <code class="docutils literal notranslate"><span class="pre">rank</span> <span class="pre">&gt;=</span> <span class="pre">3</span></code>.
-For example, a rank 4 weight matrix of shape <code class="docutils literal notranslate"><span class="pre">[C_o</span> <span class="pre">x</span> <span class="pre">C_i</span> <span class="pre">x</span> <span class="pre">H</span> <span class="pre">x</span> <span class="pre">W]</span></code> can be thought
-of as <code class="docutils literal notranslate"><span class="pre">C_o</span></code> matrices of shape <code class="docutils literal notranslate"><span class="pre">[C_i</span> <span class="pre">x</span> <span class="pre">H</span> <span class="pre">X</span> <span class="pre">W]</span></code> or <code class="docutils literal notranslate"><span class="pre">C_o*C_i</span></code> matrices of size <code class="docutils literal notranslate"><span class="pre">[H</span> <span class="pre">x</span> <span class="pre">W]</span></code>.
-<code class="docutils literal notranslate"><span class="pre">per_channel</span></code> granularity sets some of the <code class="docutils literal notranslate"><span class="pre">[C_i</span> <span class="pre">x</span> <span class="pre">H</span> <span class="pre">X</span> <span class="pre">W]</span></code> matrices to 0 whereas
-<code class="docutils literal notranslate"><span class="pre">per_kernel</span></code> granularity sets some of the <code class="docutils literal notranslate"><span class="pre">[H</span> <span class="pre">x</span> <span class="pre">W]</span></code> matrices to 0.</p>
-<p>When granularity is <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, the weight matrix is reshaped to a rank 2 matrix,
-where all dimensions <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">1</span></code> are folded into a single dimension. Then <code class="docutils literal notranslate"><span class="pre">L2</span></code> norm is
-computed for all rows and the weights corresponding to <code class="docutils literal notranslate"><span class="pre">n</span></code> smallest <code class="docutils literal notranslate"><span class="pre">L2</span></code> norm rows
-are set to 0 to achieve <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code>.</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Given a 2 x 2 x 1 x 2 weight, granularity = per_channel,</span>
-<span class="p">[</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">]],</span>
-    <span class="p">],</span>
-<span class="p">]</span>
-
-<span class="c1"># It is first reshaped to shape 2 x 4, i.e.:</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
-    <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">],</span>
-<span class="p">]</span>
-
-<span class="c1"># Then L2 norm is computed for each row of the matrix:</span>
-<span class="p">[</span><span class="mf">4.2426</span><span class="p">,</span> <span class="mf">6.2450</span><span class="p">]</span>
-
-<span class="c1"># Finally, to achieve target sparsity = 0.5, since the first element is</span>
-<span class="c1"># smaller, the corresponding row is set to 0, resulting in the pruned weight:</span>
-<span class="p">[</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">]],</span>
-    <span class="p">],</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-<p>When granularity is <code class="docutils literal notranslate"><span class="pre">per_kernel</span></code>, the weight matrix is reshaped to a rank 3 matrix,
-where all dimensions <code class="docutils literal notranslate"><span class="pre">&gt;=</span> <span class="pre">2</span></code> are folded into a single dimension. Then <code class="docutils literal notranslate"><span class="pre">L2</span></code> norm is
-computed for all vectors along the last dimension, <code class="docutils literal notranslate"><span class="pre">dim</span> <span class="pre">=</span> <span class="pre">2</span></code> and the weights corresponding
-to the <code class="docutils literal notranslate"><span class="pre">n</span></code> smallest <code class="docutils literal notranslate"><span class="pre">L2</span></code> norm vectors are set to 0 to achieve <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code>.</p>
-<p>For the same example as before, setting granularity <code class="docutils literal notranslate"><span class="pre">per_kernel</span></code> will achieve:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The original 2 x 2 x 1 x 2 weight matrix is reshaped into shape 2 x 2 x 2, i.e.:</span>
-<span class="p">[</span>
-    <span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
-    <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">]],</span>
-<span class="p">]</span>
-
-<span class="c1"># Then L2 norm is computed for each of the 4 vectors of size 2, [2, -1], [-3, 2], etc.:</span>
-<span class="p">[</span>
-    <span class="p">[</span><span class="mf">2.2361</span><span class="p">,</span> <span class="mf">3.6056</span><span class="p">],</span>
-    <span class="p">[</span><span class="mf">5.3852</span><span class="p">,</span> <span class="mf">3.1623</span><span class="p">],</span>
-<span class="p">]</span>
-
-<span class="c1"># Finally, to achieve target sparsity = 0.5, since the first and last elements are</span>
-<span class="c1"># smallest, the corresponding row in the weights is set to 0,</span>
-<span class="c1"># resulting in the pruned weight:</span>
-<span class="p">[</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">]],</span>
-    <span class="p">],</span>
-    <span class="p">[</span>
-        <span class="p">[[</span><span class="mi">5</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]],</span>
-        <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span>
-    <span class="p">],</span>
-<span class="p">]</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scheduler</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code>) – A pruning scheduler which specifies how the
-sparsity should be changed over the course of the training. Defaults to constant
-sparsity scheduler which sets the  sparsity to <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> at step <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p><strong>initial_sparsity</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>) – Desired fraction of zeroes at the beginning of the
-training process. Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
-<li><p><strong>target_sparsity</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>) – Desired fraction of zeroes at the end of the
-training process. Defaults to <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
-<li><p><strong>granularity</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Specifies the granularity at which the pruning mask will be
-computed. Can be one of <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, <code class="docutils literal notranslate"><span class="pre">per_kernel</span></code> or <code class="docutils literal notranslate"><span class="pre">per_scalar</span></code>.
-Defaults to <code class="docutils literal notranslate"><span class="pre">per_scalar</span></code>.</p></li>
-<li><p><strong>block_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Block size for inducing block sparsity within the mask. This
-is applied on the output channel dimension of the parameter (the <code class="docutils literal notranslate"><span class="pre">0</span></code> -th dimension).
-Having larger block size may be beneficial for latency compared to smaller block sizes,
-for models running on certain compute units such as the neural engine.
-<code class="docutils literal notranslate"><span class="pre">block_size</span></code> must be greater than <code class="docutils literal notranslate"><span class="pre">1</span></code> to enable block sparsity, and must be at most half
-the number of output channels. When the number of output channels is not divisible by the block size,
-the weight matrix is padded with zeros to compute the pruning mask and then un-padded to the original size.
-Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><strong>n_m_ratio</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – A tuple of two integers which specify how <code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning should be
-applied. In <code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning, out of every <code class="docutils literal notranslate"><span class="pre">m</span></code> elements,
-<code class="docutils literal notranslate"><span class="pre">n</span></code> with lowest magnitude are set to zero. When <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">block_size</span></code>,
-<code class="docutils literal notranslate"><span class="pre">granularity</span></code>, and <code class="docutils literal notranslate"><span class="pre">initial_sparsity</span></code> should be <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">per_scalar</span></code>, and <code class="docutils literal notranslate"><span class="pre">0.0</span></code> respectively.
-The value of <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> is ignored and the actual target sparsity is determined by the
-<code class="docutils literal notranslate"><span class="pre">n:m</span></code> ratio. For more information, see <a class="reference external" href="https://arxiv.org/abs/2102.04010">Learning N:M Fine-Grained Structured Sparse Neural Networks From Scratch</a>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which means <code class="docutils literal notranslate"><span class="pre">n:m</span></code> sparsity is not used.</p></li>
-<li><p><strong>dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Dimension along which blocks of <code class="docutils literal notranslate"><span class="pre">m</span></code> elements are chosen when applying <code class="docutils literal notranslate"><span class="pre">n:m</span></code> sparsity. This
-parameter is only used when <code class="docutils literal notranslate"><span class="pre">n_m_ratio</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p><strong>param_name</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – The name of the parameter to be pruned. Defaults to <code class="docutils literal notranslate"><span class="pre">weight</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id3">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">MagnitudePrunerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.magnitude_pruner.ModuleMagnitudePrunerConfig"><span class="pre">ModuleMagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.magnitude_pruner.ModuleMagnitudePrunerConfig"><span class="pre">ModuleMagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePrunerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id3" title="Permalink to this definition"></a></dt>
-<dd><p>Configuration class for specifying how different submodules in a model are pruned by <a class="reference internal" href="#id4" title="coremltools.optimize.torch.pruning.MagnitudePruner"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>global_config</strong> (<a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Config to be applied globally
-to all supported modules. Missing values are chosen from the default config.</p></li>
-<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Module
-type level configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
-The keys can be either strings or module classes. If <code class="docutils literal notranslate"><span class="pre">module_type_config</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code>
-for a module type, it wouldn’t get pruned.</p></li>
-<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>) – Module level
-configs applied to specific modules. The name of the module must be a fully qualified name that can
-be used to fetch it from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method. If
-<code class="docutils literal notranslate"><span class="pre">module_name_config</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for a module, it wouldn’t get pruned.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id4">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.</span></span><span class="sig-name descname"><span class="pre">MagnitudePruner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id3" title="coremltools.optimize.torch.pruning.magnitude_pruner.MagnitudePrunerConfig"><span class="pre">MagnitudePrunerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/magnitude_pruner.html#MagnitudePruner"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id4" title="Permalink to this definition"></a></dt>
-<dd><p>A pruning algorithm based on <a class="reference external" href="https://arxiv.org/pdf/1710.01878.pdf">To prune, or not to prune: exploring the efficacy of
-pruning for model compression</a>. It extends the idea in the paper
-to different kinds of structured sparsity modes, in addition to unstructured sparsity. In order to
-achieve the desired sparsity, this algorithm sorts a module’s weight matrix by the magnitude of
-its elements, and sets all elements less than a threshold to zero.</p>
-<p>Four different modes of sparsity are supported, encompassing both structured and unstructured
-sparsity. For details on how to select these different sparsity modes, please see
-<a class="reference internal" href="#id0" title="coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleMagnitudePrunerConfig</span></code></a>.</p>
-<p class="rubric">Example</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.pruning</span> <span class="kn">import</span> <span class="n">MagnitudePruner</span><span class="p">,</span> <span class="n">MagnitudePrunerConfig</span>
-
-<span class="c1"># define model and loss function</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
-    <span class="n">OrderedDict</span><span class="p">(</span>
-        <span class="p">[</span>
-            <span class="p">(</span><span class="s2">&quot;conv1&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)),</span>
-            <span class="p">(</span><span class="s2">&quot;conv2&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s2">&quot;same&quot;</span><span class="p">)),</span>
-        <span class="p">]</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">define_loss</span><span class="p">()</span>  <span class="c1"># define the loss function</span>
-
-<span class="c1"># initialize pruner and configure it</span>
-<span class="c1"># we only prune the fisrt conv layer</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">MagnitudePrunerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;module_name_configs&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;conv1&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;scheduler&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;update_steps&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">]},</span>
-                <span class="s2">&quot;target_sparsity&quot;</span><span class="p">:</span> <span class="mf">0.75</span><span class="p">,</span>
-                <span class="s2">&quot;granularity&quot;</span><span class="p">:</span> <span class="s2">&quot;per_channel&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-
-<span class="n">pruner</span> <span class="o">=</span> <span class="n">MagnitudePruner</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-
-<span class="c1"># insert pruning layers in the model</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pruner</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
-
-<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-    <span class="n">pruner</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
-<span class="c1"># commit pruning masks to model parameters</span>
-<span class="n">pruner</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>) – Model on which the pruner will act.</p></li>
-<li><p><strong>config</strong> (<a class="reference internal" href="#id3" title="coremltools.optimize.torch.pruning.MagnitudePrunerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">MagnitudePrunerConfig</span></code></a>) – Config which specifies how
-different submodules in the model will be configured for pruning.
-Default config is used when passed as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</section>
-<section id="id6">
-<h2>Pruning scheduler<a class="headerlink" href="#id6" title="Permalink to this heading"></a></h2>
-<p>The <a class="reference internal" href="#module-coremltools.optimize.torch.pruning.pruning_scheduler" title="coremltools.optimize.torch.pruning.pruning_scheduler"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler</span></code></a> submodule contains classes
-that implement pruning schedules, which can be used for changing the
-sparsity of pruning masks applied by various types of pruning algorithms
-to prune neural network parameters.</p>
-<span class="target" id="module-coremltools.optimize.torch.pruning.pruning_scheduler"></span><dl class="py class">
-<dt class="sig sig-object py" id="id7">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler.</span></span><span class="sig-name descname"><span class="pre">PruningScheduler</span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#PruningScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id7" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>An abstraction for implementing schedules to be used for
-changing the sparsity of pruning masks applied by various types of
-pruning algorithms to module parameters over the course of the training.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id8">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler.</span></span><span class="sig-name descname"><span class="pre">PolynomialDecayScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">update_steps</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tensor</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#PolynomialDecayScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#id7" title="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code></a></p>
-<p>A pruning scheduler inspired by the paper <a class="reference external" href="https://arxiv.org/pdf/1710.01878.pdf">“To prune or not to prune”</a>.</p>
-<p>It sets the sparsity at step <span class="math notranslate nohighlight">\(t\)</span> using the formula:</p>
-<div class="math notranslate nohighlight">
-\[sparsity_t = target\_sparsity + (initial\_sparsity - target\_sparsity)
-           * (1 - \frac{update\_index}{total\_number\_of\_updates}) ^ {power}\]</div>
-<p>If <span class="math notranslate nohighlight">\(t\)</span> is in <span class="math notranslate nohighlight">\(update\_steps\)</span>, else it keeps the sparsity at its previous value.</p>
-<p>Here, <span class="math notranslate nohighlight">\(update\_index\)</span> is the index of <span class="math notranslate nohighlight">\(t\)</span> in the <span class="math notranslate nohighlight">\(update\_steps\)</span> array and
-<span class="math notranslate nohighlight">\(total\_number\_of\_updates\)</span> is the length of <span class="math notranslate nohighlight">\(update\_steps\)</span> array.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>update_steps</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – The indices of
-optimization steps at which pruning should be performed. This can
-be passed in as a string representing the range, such as
-<code class="docutils literal notranslate"><span class="pre">range(start_index,</span> <span class="pre">end_index,</span> <span class="pre">step_size)</span></code>.</p></li>
-<li><p><strong>power</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, optional) – Exponent to be used in the
-sparsity function. Defaults to <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="id10">
-<span class="sig-name descname"><span class="pre">compute_sparsity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleOptimizationConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#PolynomialDecayScheduler.compute_sparsity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id10" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the sparsity at the next step given the previous sparsity
-and the module optimization config.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>step_count</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Current step count.</p></li>
-<li><p><strong>prev_sparsity</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>) – Sparsity at previous step.</p></li>
-<li><p><strong>config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleOptimizationConfig</span></code>) – Optimization
-config for the module which contains information such as
-target sparsity and initial sparsity.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id11">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.pruning.pruning_scheduler.</span></span><span class="sig-name descname"><span class="pre">ConstantSparsityScheduler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">begin_step</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#ConstantSparsityScheduler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id11" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#id7" title="coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler"><code class="xref py py-class docutils literal notranslate"><span class="pre">PruningScheduler</span></code></a></p>
-<p>A pruning schedule with constant sparsity throughout training.</p>
-<p>Sparsity is set to zero initially and to <code class="docutils literal notranslate"><span class="pre">target_sparsity</span></code> at
-step <code class="docutils literal notranslate"><span class="pre">begin_step</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>begin_step</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – step at which to begin pruning.</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="id12">
-<span class="sig-name descname"><span class="pre">compute_sparsity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">step_count</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prev_sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleOptimizationConfig</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/pruning/pruning_scheduler.html#ConstantSparsityScheduler.compute_sparsity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id12" title="Permalink to this definition"></a></dt>
-<dd><p>Compute the sparsity at the next step given the previous sparsity
-and the module optimization config.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>step_count</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Current step count.</p></li>
-<li><p><strong>prev_sparsity</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>) – Sparsity at previous step.</p></li>
-<li><p><strong>config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleOptimizationConfig</span></code>) – Optimization
-config for the module which contains information such as
-target sparsity and initial sparsity.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-</section>
-</section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="coremltools.optimize.coreml.graph.html" class="btn btn-neutral float-left" title="Compression Graph Passes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.optimize.coreml.config.html" class="btn btn-neutral float-left" title="Compression Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="coremltools.optimize.torch.palettization.html" class="btn btn-neutral float-right" title="Training-Time Palettization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

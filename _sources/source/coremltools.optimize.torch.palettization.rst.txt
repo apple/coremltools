@@ -12,21 +12,18 @@ of a LUT and indices.
 Palettizer
 ----------
 
-.. automodule:: coremltools.optimize.torch.palettization
+.. autoclass:: coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig
+    :members: from_dict, as_dict, from_yaml
 
-    .. autoclass:: ModuleDKMPalettizerConfig
-        :members: from_dict, as_dict, from_yaml
+.. autoclass:: coremltools.optimize.torch.palettization.DKMPalettizerConfig
+    :members: set_global, set_module_type, set_module_name, from_dict, as_dict, from_yaml
 
-    .. autoclass:: DKMPalettizerConfig
-        :members: set_global, set_module_type, set_module_name, from_dict, as_dict, from_yaml
+.. autoclass:: coremltools.optimize.torch.palettization.DKMPalettizer
+    :members: prepare, step, report, finalize
 
-    .. autoclass:: DKMPalettizer
-        :members: prepare, step, report, finalize
 
 Palettization Layers
 --------------------
 
-.. automodule:: coremltools.optimize.torch.palettization
-
-    .. autoclass:: FakePalettize
-        :no-members:
+.. autoclass:: coremltools.optimize.torch.palettization.FakePalettize
+    :no-members:

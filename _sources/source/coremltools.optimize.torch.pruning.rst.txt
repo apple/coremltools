@@ -8,13 +8,14 @@ model's inference latency and power consumption.
 Magnitude Pruning
 -----------------
 
-.. automodule:: coremltools.optimize.torch.pruning
+.. autoclass:: coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig
+    :members: from_dict, as_dict, from_yaml
 
-    .. autoclass:: ModuleMagnitudePrunerConfig
+.. autoclass:: coremltools.optimize.torch.pruning.MagnitudePrunerConfig
+    :members: set_global, set_module_type, set_module_name, from_dict, as_dict, from_yaml
 
-    .. autoclass:: MagnitudePrunerConfig
-
-    .. autoclass:: MagnitudePruner
+.. autoclass:: coremltools.optimize.torch.pruning.MagnitudePruner
+    :members: prepare, step, report, finalize
 
 
 Pruning scheduler
@@ -25,16 +26,14 @@ that implement pruning schedules, which can be used for changing the
 sparsity of pruning masks applied by various types of pruning algorithms
 to prune neural network parameters.
 
-.. automodule:: coremltools.optimize.torch.pruning.pruning_scheduler
+.. autoclass:: coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler
+    :show-inheritance:
+    :no-members:
 
-    .. autoclass:: PruningScheduler
-        :show-inheritance:
-        :no-members:
+.. autoclass:: coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler
+    :show-inheritance:
+    :members: compute_sparsity
 
-    .. autoclass:: PolynomialDecayScheduler
-        :show-inheritance:
-        :members: compute_sparsity
-
-    .. autoclass:: ConstantSparsityScheduler
-        :show-inheritance:
-        :members: compute_sparsity
+.. autoclass:: coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler
+    :show-inheritance:
+    :members: compute_sparsity

@@ -58,12 +58,11 @@
 <li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Training-Time Pruning</a></li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Training-Time Palettization</a></li>
 <li class="toctree-l3 current"><a class="current reference internal" href="#">Training-Time Quantization</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id1">LinearQuantizer</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id0"><code class="docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">LinearQuantizerConfig</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id15"><code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id23"><code class="docutils literal notranslate"><span class="pre">ObserverType</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id24"><code class="docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">LinearQuantizerConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizer"><code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType"><code class="docutils literal notranslate"><span class="pre">ObserverType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.QuantizationScheme"><code class="docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -109,17 +108,11 @@
 floating point. Quantization can reduce a model’s size and also improve a model’s inference latency and
 memory bandwidth requirement, because many hardware platforms offer high-performance implementations of quantized
 operations.</p>
-<span class="target" id="module-coremltools.optimize.torch.quantization"></span><p id="coremltools-optimize-torch-qat">Quantization refers to techniques for performing neural network computations in lower precision than
-floating point. Quantization can reduce a model’s size and also improve a model’s inference latency and
-memory bandwidth requirement, because many hardware platforms offer high-performance implementations of quantized
-operations.</p>
-<section id="id1">
-<h2><span class="target" id="linearquantizer">LinearQuantizer</span><a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">ModuleLinearQuantizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">torch.qint8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_observer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ObserverType.moving_average_min_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_per_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">torch.quint8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_observer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ObserverType.moving_average_min_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationScheme.symmetric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">milestones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#ModuleLinearQuantizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Configuration class for specifying global and module level quantization options for linear quantization
-algorithm implemented in <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
+algorithm implemented in <a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
 <p>Linear quantization algorithm simulates the effects of quantization during training, by quantizing
 and dequantizing the weights and/or activations during the model’s forward pass. The forward and
 backward pass computations are conducted in <code class="docutils literal notranslate"><span class="pre">float</span></code> dtype, however, these <code class="docutils literal notranslate"><span class="pre">float</span></code> values follow
@@ -177,15 +170,15 @@ usage in more detail:</p>
 <li><p><strong>weight_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the weights. When dtype
 is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the weights corresponding to that layer are not quantized.
 Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.qint8</span></code>.</p></li>
-<li><p><strong>weight_observer</strong> (<a class="reference internal" href="#id23" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing weights. Defaults
+<li><p><strong>weight_observer</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing weights. Defaults
 to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
 <li><p><strong>weight_per_channel</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are quantized per channel; otherwise, per tensor.</p></li>
 <li><p><strong>activation_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the activations. When dtype
 is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the activations corresponding to that layer are not quantized.
 Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.quint8</span></code>.</p></li>
-<li><p><strong>activation_observer</strong> (<a class="reference internal" href="#id23" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing activations. Allowed
+<li><p><strong>activation_observer</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing activations. Allowed
 values are <code class="docutils literal notranslate"><span class="pre">min_max</span></code> and <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
-<li><p><strong>quantization_scheme</strong> – (<a class="reference internal" href="#id24" title="coremltools.optimize.torch.quantization.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>): Type of quantization configuration to use. When
+<li><p><strong>quantization_scheme</strong> – (<a class="reference internal" href="#coremltools.optimize.torch.quantization.QuantizationScheme" title="coremltools.optimize.torch.quantization.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>): Type of quantization configuration to use. When
 this parameter is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>, all weights are
 quantized with zero point as zero, and activations are quantized with zero point as zero for
 non-negative activations and 128 for all other activations. When it is set to
@@ -194,7 +187,7 @@ for the quantized weight/activation. Defaults to <code class="xref py py-class d
 <li><p><strong>milestones</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – A list of four integers indicating milestones to use during
 quantization. The first milestone corresponds to enabling observers, the second to enabling fake
 quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.
-Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which means the <code class="docutils literal notranslate"><span class="pre">step</span></code> method of <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> will be a no-op and
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which means the <code class="docutils literal notranslate"><span class="pre">step</span></code> method of <a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> will be a no-op and
 all observers and quantization simulation will be turned on from the first step, batch norm layers always
 operate in training mode, and mean and varaince statistics collection is not frozen.</p></li>
 </ul>
@@ -234,9 +227,9 @@ path to the yaml file.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.quantization.LinearQuantizerConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">LinearQuantizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.quantization_config.ModuleLinearQuantizerConfig"><span class="pre">ModuleLinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.quantization_config.ModuleLinearQuantizerConfig"><span class="pre">ModuleLinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_traceable_module_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#LinearQuantizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">LinearQuantizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig" title="coremltools.optimize.torch.quantization.quantization_config.ModuleLinearQuantizerConfig"><span class="pre">ModuleLinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig" title="coremltools.optimize.torch.quantization.quantization_config.ModuleLinearQuantizerConfig"><span class="pre">ModuleLinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_traceable_module_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#LinearQuantizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="Permalink to this definition"></a></dt>
 <dd><p>Configuration class for specifying how different submodules of a model are
-quantized by <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
+quantized by <a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
 <p>In order to disable quantizing a layer or an operation, <code class="docutils literal notranslate"><span class="pre">module_type_config</span></code> or
 <code class="docutils literal notranslate"><span class="pre">module_name_config</span></code> corresponding to that operation can be set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 <p>For example:</p>
@@ -276,12 +269,12 @@ quantized by <a class="reference internal" href="#id15" title="coremltools.optim
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>global_config</strong> (<a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Config to be applied globally
+<li><p><strong>global_config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Config to be applied globally
 to all supported modules. Missing values are chosen from the default config.</p></li>
-<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Module type level configs applied to a specific
+<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Module type level configs applied to a specific
 module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>. The keys can be either strings
 or module classes.</p></li>
-<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Module level configs applied to specific modules.
+<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Module level configs applied to specific modules.
 The name of the module must be a fully qualified name that can be used to fetch it
 from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method.</p></li>
 <li><p><strong>non_traceable_module_names</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Names of modules which cannot be traced using <code class="docutils literal notranslate"><span class="pre">torch.fx</span></code>.</p></li>
@@ -300,7 +293,7 @@ from the top level module using the <code class="docutils literal notranslate"><
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#id8" title="coremltools.optimize.torch.quantization.quantization_config.LinearQuantizerConfig"><span class="pre">LinearQuantizerConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#LinearQuantizerConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="coremltools.optimize.torch.quantization.quantization_config.LinearQuantizerConfig"><span class="pre">LinearQuantizerConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#LinearQuantizerConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict" title="Permalink to this definition"></a></dt>
 <dd><p>Create class from a dictionary of string keys and values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -346,7 +339,7 @@ for an existing module type was already set, the new config will override the ol
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.quantization.LinearQuantizer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">LinearQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id8" title="coremltools.optimize.torch.quantization.quantization_config.LinearQuantizerConfig"><span class="pre">LinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">LinearQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="coremltools.optimize.torch.quantization.quantization_config.LinearQuantizerConfig"><span class="pre">LinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="Permalink to this definition"></a></dt>
 <dd><p>Perform quantization aware training (QAT) of models. This algorithm simulates the effects of
 quantization during training, by quantizing and dequantizing the weights and/or activations during
 the model’s forward pass. The forward and backward pass computations are conducted in <code class="docutils literal notranslate"><span class="pre">float</span></code> dtype,
@@ -450,7 +443,7 @@ the original module is mutated, otherwise a copy of the model is mutated and ret
 to insert quantization layers and the returned model is a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.fx.GraphModule</span></code>.
 Some models, like those with dynamic control flow, may not be trace-able into a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.fx.GraphModule</span></code>. Please follow directions in <a class="reference external" href="https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">Limitations of Symbolic Tracing</a>
-to update your model first before using <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> algorithm.</p>
+to update your model first before using <a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> algorithm.</p>
 </div>
 </dd></dl>
 
@@ -491,387 +484,6 @@ to disabling observers, and the last to freezing batch norm statistics.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.quantization.QuantizationScheme">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">QuantizationScheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#QuantizationScheme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.QuantizationScheme" title="Permalink to this definition"></a></dt>
-<dd><p>An enum indicating the type of quantization to be performed. Allowed options are symmetric
-and affine.</p>
-</dd></dl>
-
-</section>
-<dl class="py class">
-<dt class="sig sig-object py" id="id0">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">ModuleLinearQuantizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">torch.qint8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_observer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ObserverType.moving_average_min_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_per_channel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">torch.quint8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">activation_observer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ObserverType.moving_average_min_max</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">QuantizationScheme.symmetric</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">milestones</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#ModuleLinearQuantizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id0" title="Permalink to this definition"></a></dt>
-<dd><p>Configuration class for specifying global and module level quantization options for linear quantization
-algorithm implemented in <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
-<p>Linear quantization algorithm simulates the effects of quantization during training, by quantizing
-and dequantizing the weights and/or activations during the model’s forward pass. The forward and
-backward pass computations are conducted in <code class="docutils literal notranslate"><span class="pre">float</span></code> dtype, however, these <code class="docutils literal notranslate"><span class="pre">float</span></code> values follow
-the constraints imposed by <code class="docutils literal notranslate"><span class="pre">int8</span></code> and <code class="docutils literal notranslate"><span class="pre">quint8</span></code> dtypes. For more details, please refer to
-<a class="reference external" href="https://arxiv.org/pdf/1712.05877.pdf">Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference</a>.</p>
-<p>For most applications, the only parameters that need to be set are <code class="docutils literal notranslate"><span class="pre">quantization_scheme</span></code> and
-<code class="docutils literal notranslate"><span class="pre">milestones</span></code>.</p>
-<p>By default, <code class="docutils literal notranslate"><span class="pre">quantization_scheme</span></code> is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>, which means
-all weights are quantized with zero point as zero, and activations are quantized with zero point as zero for
-non-negative activations and 128 for all other activations. The weights are quantized using <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.qint8</span></code>
-and activations are quantized using <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.quint8</span></code>.</p>
-<p>Linear quantization algorithm inserts <code class="docutils literal notranslate"><span class="pre">observers</span></code> for each weight/activation tensor.
-These observers collect statistics of these tensors’ values, for example, the minimum and maximum values they can
-take. These statistics are then used to compute the scale and zero point, which are in turn used for quantizing
-the weights/activations. By default, <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code> observer is used. For more details, please
-check <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.ao.quantization.observer.MinMaxObserver.html#torch.ao.quantization.observer.MinMaxObserver">MinMaxObserver</a>.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">milestones</span></code> parameter controls the flow of the quantization algorithm.  The example below illustrates its
-usage in more detail:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">define_model</span><span class="p">()</span>
-
-<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="p">(</span>
-    <span class="n">global_config</span><span class="o">=</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">(</span>
-        <span class="n">quantization_scheme</span><span class="o">=</span><span class="s2">&quot;symmetric&quot;</span><span class="p">,</span>
-        <span class="n">milestones</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">300</span><span class="p">,</span> <span class="mi">200</span><span class="p">],</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">quantizer</span> <span class="o">=</span> <span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-
-<span class="c1"># prepare the model to insert FakeQuantize layers for QAT</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
-
-<span class="c1"># use quantizer in your PyTorch training loop</span>
-<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-    <span class="n">quantizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
-<span class="c1"># In this example, from step 0 onwards, observers will collect statistics</span>
-<span class="c1"># of the values of weights/activations. However, between steps 0 and 100,</span>
-<span class="c1"># effects of quantization will not be simulated. At step 100, quantization</span>
-<span class="c1"># simulation will begin and at step 300, observer statistics collection will</span>
-<span class="c1"># stop. A batch norm layer computes mean and variance of input batch for normalizing</span>
-<span class="c1"># it during training, and collects running estimates of its computed mean and variance,</span>
-<span class="c1"># which are then used for normalization during evaluation. At step 200, batch norm</span>
-<span class="c1"># statistics collection is frozen, and the batch norm layers switch to evaluation</span>
-<span class="c1"># mode, thus more closely simulating the inference numerics during training time.</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>weight_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the weights. When dtype
-is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the weights corresponding to that layer are not quantized.
-Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.qint8</span></code>.</p></li>
-<li><p><strong>weight_observer</strong> (<a class="reference internal" href="#id23" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing weights. Defaults
-to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
-<li><p><strong>weight_per_channel</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are quantized per channel; otherwise, per tensor.</p></li>
-<li><p><strong>activation_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the activations. When dtype
-is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the activations corresponding to that layer are not quantized.
-Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.quint8</span></code>.</p></li>
-<li><p><strong>activation_observer</strong> (<a class="reference internal" href="#id23" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing activations. Allowed
-values are <code class="docutils literal notranslate"><span class="pre">min_max</span></code> and <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
-<li><p><strong>quantization_scheme</strong> – (<a class="reference internal" href="#id24" title="coremltools.optimize.torch.quantization.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>): Type of quantization configuration to use. When
-this parameter is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>, all weights are
-quantized with zero point as zero, and activations are quantized with zero point as zero for
-non-negative activations and 128 for all other activations. When it is set to
-<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme.affine</span></code>, zero point can be set anywhere in the range of values allowed
-for the quantized weight/activation. Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>.</p></li>
-<li><p><strong>milestones</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – A list of four integers indicating milestones to use during
-quantization. The first milestone corresponds to enabling observers, the second to enabling fake
-quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.
-Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which means the <code class="docutils literal notranslate"><span class="pre">step</span></code> method of <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> will be a no-op and
-all observers and quantization simulation will be turned on from the first step, batch norm layers always
-operate in training mode, and mean and varaince statistics collection is not frozen.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="id5">
-<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#id5" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the config as a dictionary.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id6">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ModuleOptimizationConfig</span></span></span><a class="headerlink" href="#id6" title="Permalink to this definition"></a></dt>
-<dd><p>Create class from a dictionary of string keys and values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config_dict</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> and values) – A nested dictionary of strings
-and values.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id7">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">IO</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ModuleOptimizationConfig</span></span></span><a class="headerlink" href="#id7" title="Permalink to this definition"></a></dt>
-<dd><p>Create class from a yaml stream.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>yml</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code> stream containing yaml or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>
-path to the yaml file.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id8">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">LinearQuantizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.quantization_config.ModuleLinearQuantizerConfig"><span class="pre">ModuleLinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.quantization_config.ModuleLinearQuantizerConfig"><span class="pre">ModuleLinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">non_traceable_module_names</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">[]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#LinearQuantizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id8" title="Permalink to this definition"></a></dt>
-<dd><p>Configuration class for specifying how different submodules of a model are
-quantized by <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
-<p>In order to disable quantizing a layer or an operation, <code class="docutils literal notranslate"><span class="pre">module_type_config</span></code> or
-<code class="docutils literal notranslate"><span class="pre">module_name_config</span></code> corresponding to that operation can be set to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># The following config will enable weight only quantization for all layers:</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;activation_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;float32&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-
-<span class="c1"># The following config will disable quantization for all linear layers and</span>
-<span class="c1"># set quantization mode to weight only quantization for convolution layers:</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;module_type_configs&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;Linear&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s2">&quot;Conv2d&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;activation_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;float32&quot;</span><span class="p">,</span>
-            <span class="p">},</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-
-<span class="c1"># The following config will disable quantization for layers named conv1 and conv2:</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;module_name_configs&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;conv1&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s2">&quot;conv2&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>global_config</strong> (<a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Config to be applied globally
-to all supported modules. Missing values are chosen from the default config.</p></li>
-<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Module type level configs applied to a specific
-module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>. The keys can be either strings
-or module classes.</p></li>
-<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#id0" title="coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>) – Module level configs applied to specific modules.
-The name of the module must be a fully qualified name that can be used to fetch it
-from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method.</p></li>
-<li><p><strong>non_traceable_module_names</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Names of modules which cannot be traced using <code class="docutils literal notranslate"><span class="pre">torch.fx</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">quantization_scheme</span></code> parameter must be the same across all configs.</p>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="id9">
-<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#id9" title="Permalink to this definition"></a></dt>
-<dd><p>Returns the config as a dictionary.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id10">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#id8" title="coremltools.optimize.torch.quantization.quantization_config.LinearQuantizerConfig"><span class="pre">LinearQuantizerConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#LinearQuantizerConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id10" title="Permalink to this definition"></a></dt>
-<dd><p>Create class from a dictionary of string keys and values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config_dict</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> and values) – A nested dictionary of strings
-and values.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id11">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">IO</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#id11" title="Permalink to this definition"></a></dt>
-<dd><p>Create class from a yaml stream.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>yml</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code> stream containing yaml or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>
-path to the yaml file.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id12">
-<span class="sig-name descname"><span class="pre">set_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleOptimizationConfig</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#id12" title="Permalink to this definition"></a></dt>
-<dd><p>Set the global config.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id13">
-<span class="sig-name descname"><span class="pre">set_module_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleOptimizationConfig</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#id13" title="Permalink to this definition"></a></dt>
-<dd><p>Set the module level optimization config for a given module instance. If the module level optimization config
-for an existing module was already set, the new config will override the old one.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id14">
-<span class="sig-name descname"><span class="pre">set_module_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleOptimizationConfig</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#id14" title="Permalink to this definition"></a></dt>
-<dd><p>Set the module level optimization config for a given module type. If the module level optimization config
-for an existing module type was already set, the new config will override the old one.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id15">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">LinearQuantizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#id8" title="coremltools.optimize.torch.quantization.quantization_config.LinearQuantizerConfig"><span class="pre">LinearQuantizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id15" title="Permalink to this definition"></a></dt>
-<dd><p>Perform quantization aware training (QAT) of models. This algorithm simulates the effects of
-quantization during training, by quantizing and dequantizing the weights and/or activations during
-the model’s forward pass. The forward and backward pass computations are conducted in <code class="docutils literal notranslate"><span class="pre">float</span></code> dtype,
-however, these <code class="docutils literal notranslate"><span class="pre">float</span></code> values follow the constraints imposed by <code class="docutils literal notranslate"><span class="pre">int8</span></code> and <code class="docutils literal notranslate"><span class="pre">quint8</span></code> dtypes. Thus,
-this algorithm adjusts the model’s weights while closely simulating the numerics which get
-executed during quantized inference, allowing model’s weights to adjust to quantization
-constraints.</p>
-<p>For more details, please refer to  <a class="reference external" href="https://arxiv.org/pdf/1712.05877.pdf">Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only
-Inference</a>.</p>
-<p class="rubric">Example</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">LinearQuantizer</span><span class="p">,</span>
-    <span class="n">LinearQuantizerConfig</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
-    <span class="n">OrderedDict</span><span class="p">(</span>
-        <span class="p">{</span>
-            <span class="s2">&quot;conv&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
-            <span class="s2">&quot;relu1&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
-            <span class="s2">&quot;conv2&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
-            <span class="s2">&quot;relu2&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
-        <span class="p">}</span>
-    <span class="p">)</span>
-<span class="p">)</span>
-
-<span class="n">loss_fn</span> <span class="o">=</span> <span class="n">define_loss</span><span class="p">()</span>
-
-<span class="c1"># initialize the quantizer</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
-    <span class="p">{</span>
-        <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;quantization_scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;symmetric&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;milestones&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">400</span><span class="p">,</span> <span class="mi">400</span><span class="p">],</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-<span class="p">)</span>
-
-<span class="n">quantizer</span> <span class="o">=</span> <span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
-
-<span class="c1"># prepare the model to insert FakeQuantize layers for QAT</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
-
-<span class="c1"># use quantizer in your PyTorch training loop</span>
-<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
-    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-    <span class="n">quantizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
-
-<span class="c1"># convert operations to their quanitzed counterparts using parameters learnt via QAT</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>) – Module to be trained.</p></li>
-<li><p><strong>config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">_LinearQuantizerConfig</span></code>) – Config that specifies how
-different submodules in the model will be quantized.
-Default config is used when passed as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="id17">
-<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id17" title="Permalink to this definition"></a></dt>
-<dd><p>Prepares the model for export.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">_torch.nn.Module</span></code>) – Model to be finalized.</p></li>
-<li><p><strong>inplace</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, model transformations are carried out in-place and
-the original module is mutated; otherwise, a copy of the model is mutated and returned.</p></li>
-</ul>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Once the model is finalized with <code class="docutils literal notranslate"><span class="pre">in_place</span> <span class="pre">=</span> <span class="pre">True</span></code>, it may not be
-runnable on the GPU.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id18">
-<span class="sig-name descname"><span class="pre">prepare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">example_inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer.prepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id18" title="Permalink to this definition"></a></dt>
-<dd><p>Prepares the model for quantization aware training by inserting
-<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.ao.quantization.FakeQuantize</span></code> layers in the model in appropriate places.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inplace</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, model transformations are carried out in-place and
-the original module is mutated, otherwise a copy of the model is mutated and returned.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This method uses <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.ao.quantization.quantize_fx.prepare_qat_fx.html#torch.ao.quantization.quantize_fx.prepare_qat_fx">prepare_qat_fx method</a>
-to insert quantization layers and the returned model is a <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.fx.GraphModule</span></code>.
-Some models, like those with dynamic control flow, may not be trace-able into a
-<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.fx.GraphModule</span></code>. Please follow directions in <a class="reference external" href="https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">Limitations of Symbolic Tracing</a>
-to update your model first before using <a class="reference internal" href="#id15" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> algorithm.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id21">
-<span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">_Report</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer.report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id21" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a dictionary with important statistics related to current state of quantization.
-Each key in the dictionary corresponds to a module name, and the
-value is a dictionary containing the statistics such as scale, zero point,
-number of parameters, and so on.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="id22">
-<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantizer.html#LinearQuantizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id22" title="Permalink to this definition"></a></dt>
-<dd><p>Steps through the milestones defined for this quantizer.</p>
-<p>The first milestone corresponds to enabling observers, the second
-to enabling fake quantization simulation, the third
-to disabling observers, and the last to freezing batch norm statistics.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If milestones argument is set as <code class="docutils literal notranslate"><span class="pre">None</span></code>, this method is a no-op.</p>
-</div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>In order to not use a particular milestone, its value can be set as <code class="docutils literal notranslate"><span class="pre">float('inf')</span></code>.</p>
-</div>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id23">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">ObserverType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#ObserverType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id23" title="Permalink to this definition"></a></dt>
-<dd><p>An enum indicating the type of observer. Allowed options are moving_average_min_max and mix_max.</p>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="id24">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">QuantizationScheme</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#QuantizationScheme"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#id24" title="Permalink to this definition"></a></dt>
 <dd><p>An enum indicating the type of quantization to be performed. Allowed options are symmetric
 and affine.</p>
 </dd></dl>
