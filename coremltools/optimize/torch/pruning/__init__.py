@@ -4,9 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 """
-.. _coremltools_optimize_torch_pruning:
-
-.. include:: pruning_desc.rst
 
 _`MagnitudePruner`
 ==================
