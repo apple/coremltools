@@ -22,6 +22,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimizers" href="coremltools.optimize.html" />
     <link rel="prev" title="MIL Ops" href="coremltools.converters.mil.mil.ops.defs.html" /> 
 </head>
 
@@ -53,6 +54,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Graph Passes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.cleanup">cleanup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication"><code class="docutils literal notranslate"><span class="pre">const_deduplication</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination"><code class="docutils literal notranslate"><span class="pre">const_elimination</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination"><code class="docutils literal notranslate"><span class="pre">dead_code_elimination</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names"><code class="docutils literal notranslate"><span class="pre">dedup_op_and_var_names</span></code></a></li>
@@ -96,6 +98,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm"><code class="docutils literal notranslate"><span class="pre">fuse_layernorm_or_instancenorm</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">optimize_quantization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point"><code class="docutils literal notranslate"><span class="pre">nullify_redundant_quantization_zero_point</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination"><code class="docutils literal notranslate"><span class="pre">dequantize_quantize_pair_elimination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization"><code class="docutils literal notranslate"><span class="pre">distributive_quantized_binary_op_scale_normalization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr"><code class="docutils literal notranslate"><span class="pre">dequantize_to_constexpr</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops">optimize_repeat_ops</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization"><code class="docutils literal notranslate"><span class="pre">cast_optimization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_paddings"><code class="docutils literal notranslate"><span class="pre">merge_consecutive_paddings</span></code></a></li>
@@ -108,10 +117,10 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation">optimize_tensor_operation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle"><code class="docutils literal notranslate"><span class="pre">concat_to_pixel_shuffle</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave"><code class="docutils literal notranslate"><span class="pre">detect_concat_interleave</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose"><code class="docutils literal notranslate"><span class="pre">expand_high_rank_reshape_and_transpose</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather"><code class="docutils literal notranslate"><span class="pre">fuse_onehot_matmul_to_gather</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.replace_stack_reshape"><code class="docutils literal notranslate"><span class="pre">replace_stack_reshape</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.use_reflection_padding"><code class="docutils literal notranslate"><span class="pre">use_reflection_padding</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose"><code class="docutils literal notranslate"><span class="pre">expand_high_rank_reshape_and_transpose</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.preprocess">preprocess</a><ul>
@@ -126,6 +135,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -163,6 +173,38 @@
 <p>Graph Passes supported by the Model Intermediate Language (MIL):</p>
 <section id="module-coremltools.converters.mil.mil.passes.defs.cleanup">
 <span id="cleanup"></span><h2>cleanup<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.cleanup" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">const_deduplication</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/const_deduplication.html#const_deduplication"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication" title="Permalink to this definition"></a></dt>
+<dd><p>Remove duplicated large constants (tensor with 100+ elements)</p>
+<p>For example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span> <span class="p">(</span><span class="n">where</span> <span class="n">weight</span> <span class="ow">and</span> <span class="n">bias</span> <span class="n">are</span> <span class="n">large</span> <span class="n">constants</span><span class="p">):</span>
+    <span class="n">weight_q</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">weight_k</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">bias_q</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span>
+    <span class="n">bias_k</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span>
+    <span class="n">q_embedding</span> <span class="o">=</span> <span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">q</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight_q</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_q</span><span class="p">)</span>
+    <span class="n">k_embedding</span> <span class="o">=</span> <span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight_k</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_k</span><span class="p">)</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">weight_q</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">weight</span><span class="p">)</span>
+    <span class="n">bias_q</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">bias</span><span class="p">)</span>
+    <span class="n">q_embedding</span> <span class="o">=</span> <span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">q</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight_q</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_q</span><span class="p">)</span>
+    <span class="n">k_embedding</span> <span class="o">=</span> <span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight_q</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_q</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Concretely, we consider a constant as duplicated if there exists such a previous constant that:</p>
+<ol class="arabic simple">
+<li><p>has same dtype and value</p></li>
+<li><p>comes from same type of op</p></li>
+</ol>
+<p>The reason why op type is considered is, there are 2 types of constants in Core ML:</p>
+<ol class="arabic simple">
+<li><p>The usual constant, i.e., the output of <code class="docutils literal notranslate"><span class="pre">const</span></code> op</p></li>
+<li><p>The result of const expression, i.e., the output of <code class="docutils literal notranslate"><span class="pre">constexpr_*</span></code> ops</p></li>
+</ol>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">const_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/const_elimination.html#const_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination" title="Permalink to this definition"></a></dt>
@@ -855,6 +897,187 @@ To quickly view the source code, click the <strong>[source]</strong> button at t
 </dd></dl>
 
 </section>
+<section id="module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">
+<span id="optimize-quantization"></span><h2>optimize_quantization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">nullify_redundant_quantization_zero_point</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#nullify_redundant_quantization_zero_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point" title="Permalink to this definition"></a></dt>
+<dd><p>In Core ML quantization, the performance is better when <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">0</span></code>,
+so we try to make <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">0</span></code> if possible:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">-128</span></code></dt><dd><ul>
+<li><p>this must be an int8 quantization</p></li>
+<li><p>equivalent to uint8 quantization with 0 zero point</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">128</span></code></dt><dd><ul>
+<li><p>this must be an uint8 quantization</p></li>
+<li><p>equivalent to int8 quantization with 0 zero point</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Since <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">0</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">None</span></code> in Core ML semantics,
+we further canonicalize to <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">None</span></code> to:</p>
+<ul class="simple">
+<li><p>make further graph passes easier</p></li>
+<li><p>avoid serializing trivial 0</p></li>
+</ul>
+<p>The <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">0</span></code> case can be canonicalized trivially</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">op</span><span class="p">:</span>
+
+    <span class="n">quantize</span><span class="o">/</span><span class="n">dequantize</span><span class="p">(</span><span class="n">zero_point</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+<span class="n">Output</span> <span class="n">op</span><span class="p">:</span>
+
+    <span class="n">quantize</span><span class="o">/</span><span class="n">dequantize</span><span class="p">(</span><span class="n">zero_point</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To guarantee the conservation of output regardless the zero-point shift
+in <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">±128</span></code> cases, we would only transform:</p>
+<ul class="simple">
+<li><p>const dequantize, where we fuse the zero-point shift into the const</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Input op:
+
+    dequantize(input=const, zero_point=±128)
+
+Output op:
+
+    dequantize(input=const∓128, zero_point=None)
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize</span> <span class="pre">-&gt;</span> <span class="pre">dequantize</span></code>, where we nullify both simultaneously</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Input graph:
+
+    input -&gt; quantize(zero_point=±128) -&gt; dequantize(zero_point=±128) -&gt; output
+
+Output graph:
+
+    input -&gt; quantize(zero_point=None) -&gt; dequantize(zero_point=None) -&gt; output
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">dequantize_quantize_pair_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#dequantize_quantize_pair_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination" title="Permalink to this definition"></a></dt>
+<dd><p>When a <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> is followed by an identical <code class="docutils literal notranslate"><span class="pre">quantize</span></code> (same scale,
+zero point, axis), they cancel out and can be eliminated</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">dequantize</span> <span class="o">-&gt;</span> <span class="n">quantize</span> <span class="o">-&gt;</span> <span class="n">output</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">output</span>
+</pre></div>
+</div>
+<p>PS: On the other hand, the reversed pattern, i.e., <code class="docutils literal notranslate"><span class="pre">quantize</span> <span class="pre">-&gt;</span> <span class="pre">dequantize</span></code>,
+is not redundant, since that is the pattern which naturally occurs when a
+quantized op is converted.
+In current activation quantization conversion, a quantized op becomes</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dequantize</span> <span class="o">-&gt;</span> <span class="n">regular</span> <span class="n">op</span> <span class="o">-&gt;</span> <span class="n">quantize</span>
+</pre></div>
+</div>
+<p>so if we have a sequence of quantized ops, we will get</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dequantize</span> <span class="o">-&gt;</span> <span class="n">regular</span> <span class="n">op1</span> <span class="o">-&gt;</span> <span class="n">quantize</span> <span class="o">-&gt;</span> <span class="n">dequantize</span> <span class="o">-&gt;</span> <span class="n">regular</span> <span class="n">op2</span> <span class="o">-&gt;</span> <span class="n">quantize</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">quantize</span> <span class="pre">-&gt;</span> <span class="pre">dequantize</span></code> pair in the middle is not redundant, even if
+they have identical scales and zero points and axes, since removing them will lead to
+loss of information about the quantization parameters of the output var of op1</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">distributive_quantized_binary_op_scale_normalization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#distributive_quantized_binary_op_scale_normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization" title="Permalink to this definition"></a></dt>
+<dd><p>In the backend, for better performance, quantized op can have 1 input scale
+fused within the quantized op kernel. For binary ops, there are 2 inputs,
+but only 1 can get fused. For example, for quantized <code class="docutils literal notranslate"><span class="pre">add</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">MIL</span> <span class="n">graph</span> <span class="p">(</span><span class="n">consists</span> <span class="n">of</span> <span class="n">MIL</span> <span class="n">ops</span><span class="p">):</span>
+
+    <span class="n">dequantize</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">s_x</span><span class="p">,</span> <span class="n">zp_x</span><span class="p">)</span> <span class="o">-|</span>
+    <span class="n">x_fp</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">zp_x</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_x</span>   <span class="o">|</span>
+                              <span class="o">|-&gt;</span>  <span class="n">add</span><span class="p">(</span><span class="n">x_fp</span><span class="p">,</span> <span class="n">y_fp</span><span class="p">)</span>   <span class="o">-&gt;</span> <span class="n">quantize</span><span class="p">(</span><span class="n">z_fp</span><span class="p">,</span> <span class="n">s_z</span><span class="p">,</span> <span class="n">zp_z</span><span class="p">)</span>
+    <span class="n">dequantize</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">s_y</span><span class="p">,</span> <span class="n">zp_y</span><span class="p">)</span> <span class="o">-|</span>   <span class="n">z_fp</span> <span class="o">=</span> <span class="n">x_fp</span> <span class="o">+</span> <span class="n">y_fp</span>      <span class="n">z</span> <span class="o">=</span> <span class="n">z_fp</span> <span class="o">/</span> <span class="n">s_z</span> <span class="o">+</span> <span class="n">zp_z</span>
+    <span class="n">y_fp</span> <span class="o">=</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">zp_y</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_y</span>
+
+<span class="n">Backend</span> <span class="n">graph</span> <span class="p">(</span><span class="n">consists</span> <span class="n">of</span> <span class="n">backend</span> <span class="n">instructions</span><span class="p">,</span> <span class="n">usually</span> <span class="n">including</span> <span class="o">+</span> <span class="o">-</span> <span class="o">*</span> <span class="o">/</span> <span class="ow">and</span> <span class="n">fused</span> <span class="o">*+</span><span class="p">):</span>
+
+    <span class="n">x_shift</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">zp_x</span> <span class="o">-------------------------|</span>
+                                                <span class="o">|-&gt;</span> <span class="n">z_fp</span> <span class="o">=</span> <span class="n">s_x</span> <span class="o">*</span> <span class="n">x_shift</span> <span class="o">+</span> <span class="n">y_fp</span> <span class="o">-&gt;</span> <span class="n">z</span> <span class="o">=</span> <span class="n">z_fp</span> <span class="o">/</span> <span class="n">s_z</span> <span class="o">+</span> <span class="n">zp_z</span>
+    <span class="n">y_shift</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">zp_y</span> <span class="o">-&gt;</span> <span class="n">y_fp</span> <span class="o">=</span> <span class="n">s_y</span> <span class="o">*</span> <span class="n">y_shift</span> <span class="o">-|</span>
+</pre></div>
+</div>
+<p>Where <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> are the inputs, <code class="docutils literal notranslate"><span class="pre">z</span></code> is the output,
+<code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">zp</span></code> are the corresponding scale and zero point.</p>
+<p>The reason why fusing one scale leads to better performance is,
+instead of 2 instructions <code class="docutils literal notranslate"><span class="pre">x_fp</span> <span class="pre">=</span> <span class="pre">s_x</span> <span class="pre">*</span> <span class="pre">x_shift</span></code> and <code class="docutils literal notranslate"><span class="pre">z_fp</span> <span class="pre">=</span> <span class="pre">x_fp</span> <span class="pre">+</span> <span class="pre">y_fp</span></code>,
+a single <code class="docutils literal notranslate"><span class="pre">z_fp</span> <span class="pre">=</span> <span class="pre">x_shift</span> <span class="pre">*</span> <span class="pre">s_x</span> <span class="pre">+</span> <span class="pre">y_fp</span></code> instruction achieves the same result.</p>
+<p>In this pass, we normalize <code class="docutils literal notranslate"><span class="pre">s_y</span></code> to 1, so the <code class="docutils literal notranslate"><span class="pre">y_fp</span> <span class="pre">=</span> <span class="pre">s_y</span> <span class="pre">*</span> <span class="pre">y_shift</span></code>
+instruction can get skipped as well, leading to even better performance.
+This pass only applies to distributive binary ops such as <code class="docutils literal notranslate"><span class="pre">add</span></code> and <code class="docutils literal notranslate"><span class="pre">sub</span></code></p>
+<p>Appendix: Mathematical and Computer-Scientific Details</p>
+<p>Mathematically, for a binary operator <code class="docutils literal notranslate"><span class="pre">.op.</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">z_fp</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">zp_x</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_x</span> <span class="o">.</span><span class="n">op</span><span class="o">.</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">zp_y</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_y</span>
+     <span class="o">=</span> <span class="n">s_y</span> <span class="o">*</span> <span class="p">[(</span><span class="n">x</span> <span class="o">-</span> <span class="n">zp_x</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_x</span><span class="o">/</span><span class="n">s_y</span> <span class="o">.</span><span class="n">op</span><span class="o">.</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">zp_y</span><span class="p">)</span> <span class="o">*</span> <span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>The corresponding pseudo code is</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># before</span>
+<span class="n">z_fp</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">zp_x</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_x</span> <span class="o">.</span><span class="n">op</span><span class="o">.</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">zp_y</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_y</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">z_fp</span> <span class="o">/</span> <span class="n">s</span> <span class="o">-</span> <span class="n">zp_z</span>
+
+<span class="c1"># after</span>
+<span class="n">z_fp_modified</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">zp_x</span><span class="p">)</span> <span class="o">*</span> <span class="n">s_x</span><span class="o">/</span><span class="n">s_y</span> <span class="o">.</span><span class="n">op</span><span class="o">.</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">zp_y</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span>
+<span class="n">z</span> <span class="o">=</span> <span class="n">z_fp_modified</span> <span class="o">/</span> <span class="p">(</span><span class="n">s_z</span><span class="o">/</span><span class="n">s_y</span><span class="p">)</span> <span class="o">-</span> <span class="n">zp_z</span>
+</pre></div>
+</div>
+<p>Concretely, as a MIL graph pass</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">dequantize</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">s_x</span><span class="p">)</span> <span class="o">-|</span>
+                           <span class="o">|-&gt;</span> <span class="n">op</span> <span class="o">-&gt;</span> <span class="n">quantize</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">s_z</span><span class="p">)</span>
+    <span class="n">dequantize</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">s_y</span><span class="p">)</span> <span class="o">-|</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">dequantize</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">s_x</span><span class="o">/</span><span class="n">s_y</span><span class="p">)</span> <span class="o">-|</span>
+                               <span class="o">|-&gt;</span> <span class="n">op</span> <span class="o">-&gt;</span> <span class="n">quantize</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="n">s_z</span><span class="o">/</span><span class="n">s_y</span><span class="p">)</span>
+    <span class="n">dequantize</span><span class="p">(</span><span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>     <span class="o">-|</span>
+</pre></div>
+</div>
+<p>PS: we only support scalar <code class="docutils literal notranslate"><span class="pre">s_y</span></code> for now. If <code class="docutils literal notranslate"><span class="pre">s_y</span></code> is not scalar but
+<code class="docutils literal notranslate"><span class="pre">s_x</span></code> is, we would swap <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code>. Support for both-vector case is
+to be explored, due to the broadcasting complication.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">dequantize_to_constexpr</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#dequantize_to_constexpr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr" title="Permalink to this definition"></a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">dequantize</span></code> op with constant input is equivalent to <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code>.
+This is one of the canoncalization pass that transforms all such
+<code class="docutils literal notranslate"><span class="pre">dequantize</span></code> ops to respective <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> ops.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+
+    <span class="n">dequantize</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">const</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">downstream</span> <span class="n">op</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+
+    <span class="n">constexpr_affine_dequantize</span> <span class="o">-&gt;</span> <span class="n">downstream</span> <span class="n">op</span>
+</pre></div>
+</div>
+<p>This pass is being performed because constant tensors being propagated
+through <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> op would be serialized in bloated/decompressed fashion,
+whereas with <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code>,
+constant weights/tensors remain compressed at serialization.</p>
+</dd></dl>
+
+</section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops">
 <span id="optimize-repeat-ops"></span><h2>optimize_repeat_ops<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops" title="Permalink to this heading"></a></h2>
 <dl class="py class">
@@ -1107,6 +1330,30 @@ along the channel axis <code class="docutils literal notranslate"><span class="p
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">expand_high_rank_reshape_and_transpose</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#expand_high_rank_reshape_and_transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose" title="Permalink to this definition"></a></dt>
+<dd><p>Detect the pattern <code class="docutils literal notranslate"><span class="pre">reshape_1--&gt;transpose--&gt;reshape_2</span></code>, where <code class="docutils literal notranslate"><span class="pre">reshape_1</span></code> has
+a output tensor with rank &gt;= 6, and the reshape_2 produces a tensor with rank &lt;= 5.</p>
+<p>In general, we can expand this pattern into a sequence of rank 4 <code class="docutils literal notranslate"><span class="pre">reshape</span></code> and <code class="docutils literal notranslate"><span class="pre">transpose</span></code> ops,
+which is supported by Core ML runtime.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
+    <span class="o">%</span><span class="mi">1</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">d3</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">dn</span><span class="p">))</span>
+    <span class="o">%</span><span class="mi">2</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="mi">1</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">pn</span><span class="p">))</span>
+    <span class="o">%</span><span class="mi">3</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o3</span><span class="p">,</span> <span class="n">o4</span><span class="p">,</span> <span class="n">o5</span><span class="p">))</span>
+
+<span class="n">Result</span><span class="p">:</span>
+    <span class="o">%</span><span class="n">t1</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">y11</span><span class="p">,</span> <span class="n">y12</span><span class="p">,</span> <span class="n">y13</span><span class="p">,</span> <span class="n">y14</span><span class="p">))</span>
+    <span class="o">%</span><span class="n">h1</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="n">t1</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+    <span class="o">%</span><span class="n">t2</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">h1</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">y21</span><span class="p">,</span> <span class="n">y22</span><span class="p">,</span> <span class="n">y23</span><span class="p">,</span> <span class="mi">214</span><span class="p">))</span>
+    <span class="o">%</span><span class="n">h2</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="n">t2</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+    <span class="o">....</span>
+    <span class="o">%</span><span class="n">hn</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="n">tn</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
+    <span class="o">%</span><span class="mi">3</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">hn</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o3</span><span class="p">,</span> <span class="n">o4</span><span class="p">,</span> <span class="n">o5</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">fuse_onehot_matmul_to_gather</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#fuse_onehot_matmul_to_gather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather" title="Permalink to this definition"></a></dt>
 <dd><p>Detect if <code class="docutils literal notranslate"><span class="pre">onehot</span> <span class="pre">(axis=-1,</span> <span class="pre">on_value=1,</span> <span class="pre">off_value=0)</span></code> is followed by a <code class="docutils literal notranslate"><span class="pre">matmul</span></code> op (no bias).
@@ -1171,30 +1418,6 @@ just before it is doubled), then the <code class="docutils literal notranslate">
 <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
 
 <span class="nb">input</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span> <span class="o">-----</span><span class="mi">0</span><span class="o">&gt;</span> <span class="n">pad</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="n">reflect</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span> <span class="o">-----&gt;</span> <span class="n">out</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">expand_high_rank_reshape_and_transpose</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#expand_high_rank_reshape_and_transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose" title="Permalink to this definition"></a></dt>
-<dd><p>Detect the pattern <code class="docutils literal notranslate"><span class="pre">reshape_1--&gt;transpose--&gt;reshape_2</span></code>, where <code class="docutils literal notranslate"><span class="pre">reshape_1</span></code> has
-a output tensor with rank &gt;= 6, and the reshape_2 produces a tensor with rank &lt;= 5.</p>
-<p>In general, we can expand this pattern into a sequence of rank 4 <code class="docutils literal notranslate"><span class="pre">reshape</span></code> and <code class="docutils literal notranslate"><span class="pre">transpose</span></code> ops,
-which is supported by Core ML runtime.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
-    <span class="o">%</span><span class="mi">1</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">d1</span><span class="p">,</span> <span class="n">d2</span><span class="p">,</span> <span class="n">d3</span><span class="p">,</span> <span class="n">d4</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">dn</span><span class="p">))</span>
-    <span class="o">%</span><span class="mi">2</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="mi">1</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">pn</span><span class="p">))</span>
-    <span class="o">%</span><span class="mi">3</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="mi">2</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o3</span><span class="p">,</span> <span class="n">o4</span><span class="p">,</span> <span class="n">o5</span><span class="p">))</span>
-
-<span class="n">Result</span><span class="p">:</span>
-    <span class="o">%</span><span class="n">t1</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">y11</span><span class="p">,</span> <span class="n">y12</span><span class="p">,</span> <span class="n">y13</span><span class="p">,</span> <span class="n">y14</span><span class="p">))</span>
-    <span class="o">%</span><span class="n">h1</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="n">t1</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-    <span class="o">%</span><span class="n">t2</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">h1</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">y21</span><span class="p">,</span> <span class="n">y22</span><span class="p">,</span> <span class="n">y23</span><span class="p">,</span> <span class="mi">214</span><span class="p">))</span>
-    <span class="o">%</span><span class="n">h2</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="n">t2</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-    <span class="o">....</span>
-    <span class="o">%</span><span class="n">hn</span> <span class="o">=</span> <span class="n">transpose</span><span class="p">(</span><span class="o">%</span><span class="n">tn</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">])</span>
-    <span class="o">%</span><span class="mi">3</span> <span class="o">=</span> <span class="n">reshape</span><span class="p">(</span><span class="o">%</span><span class="n">hn</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">o1</span><span class="p">,</span> <span class="n">o2</span><span class="p">,</span> <span class="n">o3</span><span class="p">,</span> <span class="n">o4</span><span class="p">,</span> <span class="n">o5</span><span class="p">))</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1266,6 +1489,7 @@ other passes’ interfaces.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="coremltools.converters.mil.mil.ops.defs.html" class="btn btn-neutral float-left" title="MIL Ops" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.optimize.html" class="btn btn-neutral float-right" title="Optimizers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

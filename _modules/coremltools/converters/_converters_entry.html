@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -91,7 +92,7 @@
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM</span><span class="p">,</span>
@@ -108,8 +109,11 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ClassifierConfig</span><span class="p">,</span>
+    <span class="n">EnumeratedShapes</span><span class="p">,</span>
     <span class="n">ImageType</span><span class="p">,</span>
     <span class="n">InputType</span><span class="p">,</span>
+    <span class="n">RangeDim</span><span class="p">,</span>
+    <span class="n">Shape</span><span class="p">,</span>
     <span class="n">TensorType</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
@@ -480,7 +484,7 @@
 
 <span class="sd">            pipeline = ct.PassPipeline()</span>
 <span class="sd">            pipeline.remove_passes({&quot;common::fuse_conv_batchnorm&quot;})</span>
-<span class="sd">            ct.convert(model, pass_pipeline=pipeline)</span>
+<span class="sd">            mlmodel = ct.convert(model, pass_pipeline=pipeline)</span>
 
 <span class="sd">        * To avoid folding too-large ``const`` ops that lead to a large model, set pass option</span>
 <span class="sd">          as shown in the following example:</span>
@@ -489,7 +493,34 @@
 
 <span class="sd">            pipeline = ct.PassPipeline()</span>
 <span class="sd">            pipeline.set_options(&quot;common::const_elimination&quot;, {&quot;skip_const_by_size&quot;: &quot;1e6&quot;})</span>
-<span class="sd">            ct.convert(model, pass_pipeline=pipeline)</span>
+<span class="sd">            mlmodel = ct.convert(model, pass_pipeline=pipeline)</span>
+
+<span class="sd">        We also provide a set of predefined pass pipelines that you can directly call.</span>
+
+<span class="sd">        * To avoid running all graph pass, you can use:</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
+<span class="sd">             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.EMPTY)</span>
+
+<span class="sd">        * To only run the cleanup graph passes, like constant_elimination, dead_code_elimination, etc.</span>
+<span class="sd">          You can use:</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
+<span class="sd">             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.CLEANUP)</span>
+
+<span class="sd">        * To convert a source model with sparse weights to a sparse format Core ML model, you can use:</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
+<span class="sd">             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.DEFAULT_PRUNING)</span>
+
+<span class="sd">        * To convert a source model with palettized weights to a compressed format Core ML model, you can use:</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
+<span class="sd">             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -548,9 +579,17 @@
                                      <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
                                      <span class="n">outputs</span><span class="p">)</span>
     <span class="n">exact_target</span> <span class="o">=</span> <span class="n">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span>
-    <span class="n">_validate_conversion_arguments</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
-                                   <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span>
-                                   <span class="n">exact_target</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span>
+    <span class="n">_validate_conversion_arguments</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">exact_source</span><span class="p">,</span>
+        <span class="n">exact_target</span><span class="p">,</span>
+        <span class="n">inputs</span><span class="p">,</span>
+        <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
+        <span class="n">classifier_config</span><span class="p">,</span>
+        <span class="n">compute_precision</span><span class="p">,</span>
+        <span class="n">exact_target</span><span class="p">,</span>
+        <span class="n">minimum_deployment_target</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">pass_pipeline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pass_pipeline</span> <span class="o">=</span> <span class="n">PassPipeline</span><span class="p">()</span>
@@ -589,6 +628,12 @@
         <span class="n">main_pipeline</span><span class="o">=</span><span class="n">pass_pipeline</span><span class="p">,</span>
     <span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="ow">and</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">_input_has_infinite_upper_bound</span><span class="p">():</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;For mlprogram, inputs with infinite upper_bound is not allowed. Please set upper_bound&quot;</span>
+            <span class="s1">&#39; to a positive value in &quot;RangeDim()&quot; for the &quot;inputs&quot; param in ct.convert().&#39;</span>
+        <span class="p">)</span>
+
     <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s1">&#39;milinternal&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">mlmodel</span>  <span class="c1"># Returns the MIL program</span>
 
@@ -624,7 +669,7 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid value of the argument &#39;compute_precision&#39;: </span><span class="si">{</span><span class="n">compute_precision</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_set_default_specification_version</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_set_default_specification_version</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]:</span>
     <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;neuralnetwork&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span>
     <span class="k">elif</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span><span class="p">:</span>
@@ -710,18 +755,20 @@
                 <span class="k">return</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">outputs</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_conversion_arguments</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
-                                   <span class="n">exact_source</span><span class="p">,</span>
-                                   <span class="n">inputs</span><span class="p">,</span>
-                                   <span class="n">outputs</span><span class="p">,</span>
-                                   <span class="n">classifier_config</span><span class="p">,</span>
-                                   <span class="n">compute_precision</span><span class="p">,</span>
-                                   <span class="n">convert_to</span><span class="p">,</span>
-                                   <span class="n">minimum_deployment_target</span><span class="p">,</span>
-                                   <span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_conversion_arguments</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">exact_source</span><span class="p">,</span>
+    <span class="n">exact_target</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="p">,</span>
+    <span class="n">outputs</span><span class="p">,</span>
+    <span class="n">classifier_config</span><span class="p">,</span>
+    <span class="n">compute_precision</span><span class="p">,</span>
+    <span class="n">convert_to</span><span class="p">,</span>
+    <span class="n">minimum_deployment_target</span><span class="p">,</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate and process model, inputs, classifier_config based on</span>
-<span class="sd">    `exact_source` (which cannot be `auto`)</span>
+<span class="sd">    `exact_source` (which cannot be `auto`) and `exact_target`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">raise_if_duplicated</span><span class="p">(</span><span class="n">input_list</span><span class="p">):</span>
@@ -757,10 +804,10 @@
 
         <span class="c1"># get flattened inputs</span>
         <span class="n">flat_inputs</span> <span class="o">=</span> <span class="n">_flatten_list</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">flat_inputs</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">InputType</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">flat_input</span> <span class="ow">in</span> <span class="n">flat_inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flat_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;inputs must be a list of type ct.TensorType or ct.ImageType&quot;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">flat_input</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span>
                     <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
                     <span class="ow">and</span> <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS16</span>
@@ -769,6 +816,24 @@
                         <span class="s2">&quot;float16 dtype for inputs is only supported for deployment &quot;</span>
                         <span class="s2">&quot;target &gt;= iOS16/macOS13/watchOS9/tvOS16&quot;</span>
                     <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span><span class="p">:</span>
+        <span class="n">err_msg_infinite_bound</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;For mlprogram, inputs with infinite upper_bound is not allowed. Please set upper_bound&quot;</span>
+            <span class="s1">&#39; to a positive value in &quot;RangeDim()&quot; for the &quot;inputs&quot; param in ct.convert().&#39;</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">flat_input</span> <span class="ow">in</span> <span class="n">_flatten_list</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+                <span class="n">tensor_shapes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">Shape</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">flat_input</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shapes</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flat_input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">EnumeratedShapes</span><span class="p">)</span>
+                    <span class="k">else</span> <span class="p">[</span><span class="n">flat_input</span><span class="o">.</span><span class="n">shape</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">tensor_shape</span> <span class="ow">in</span> <span class="n">tensor_shapes</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">tensor_shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">tensor_shape</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">RangeDim</span><span class="p">)</span> <span class="ow">and</span> <span class="n">shape</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg_infinite_bound</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>

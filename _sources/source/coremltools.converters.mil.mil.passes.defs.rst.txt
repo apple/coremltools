@@ -8,6 +8,7 @@ cleanup
 
 .. automodule:: coremltools.converters.mil.mil.passes.defs.cleanup
 
+    .. autoclass:: const_deduplication
     .. autoclass:: const_elimination
     .. autoclass:: dead_code_elimination
     .. autoclass:: dedup_op_and_var_names
@@ -71,6 +72,17 @@ optimize_normalization
     .. autoclass:: fuse_layernorm_or_instancenorm
 
 
+optimize_quantization
+---------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.passes.defs.optimize_quantization
+
+    .. autoclass:: nullify_redundant_quantization_zero_point
+    .. autoclass:: dequantize_quantize_pair_elimination
+    .. autoclass:: distributive_quantized_binary_op_scale_normalization
+    .. autoclass:: dequantize_to_constexpr
+
+
 optimize_repeat_ops
 ---------------------------------------------------------
 
@@ -91,10 +103,10 @@ optimize_tensor_operation
 
     .. autoclass:: concat_to_pixel_shuffle
     .. autoclass:: detect_concat_interleave
+    .. autoclass:: expand_high_rank_reshape_and_transpose
     .. autoclass:: fuse_onehot_matmul_to_gather
     .. autoclass:: replace_stack_reshape
     .. autoclass:: use_reflection_padding
-    .. autoclass:: expand_high_rank_reshape_and_transpose
 
 
 preprocess

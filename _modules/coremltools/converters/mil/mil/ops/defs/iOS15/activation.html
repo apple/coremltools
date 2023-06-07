@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -331,9 +332,10 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[B, C, 1..3], T&gt; (Required)</span>
-<span class="sd">        * x must have rank 4 or rank 3 or rank 5, i.e. a shape of (B,C,H) or (B,C,H,W) or (B,C,D,H,W)</span>
+<span class="sd">        * ``x`` must have rank 4, rank 3, or rank 5; that is, a shape of</span>
+<span class="sd">          ``(B,C,H)``, ``(B,C,H,W)``, or ``(B,C,D,H,W)``.</span>
 <span class="sd">    alpha: const tensor&lt;[C], T&gt;, (Required)</span>
-<span class="sd">        * The length of alpha must match the second dimension of x (channel dimension)</span>
+<span class="sd">        * The length of ``alpha`` must match the second dimension of ``x`` (channel dimension).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -347,9 +349,11 @@
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Expends alpha on all dims besides the channel (2nd) dim.</span>
         <span class="n">alpha_br</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">val</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
-            <span class="n">alpha_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">alpha_br</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">alpha_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">alpha_br</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="n">x_pos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="n">b</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">x_pos</span> <span class="o">+</span> <span class="n">b</span> <span class="o">*</span> <span class="n">alpha_br</span>
@@ -365,8 +369,8 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;alpha should be rank 1&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Size of dimension 1 of alpha should be the same as &quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;the size of dimension 1 of x.&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Size of dimension 0 of alpha (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">) should be &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;the same as the size of dimension 1 of x (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2">).&quot;</span>
             <span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">):</span>
             <span class="c1"># check whether all alpha values are the same or not</span>
@@ -578,9 +582,11 @@
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">alpha_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alpha</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
         <span class="n">beta_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">beta</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
-            <span class="n">alpha_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">alpha_br</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
-            <span class="n">beta_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">beta_br</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+        <span class="c1"># Expends alpha and beta on all dims besides the channel (2nd) dim.</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">alpha_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">alpha_br</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">beta_br</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">beta_br</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">alpha_br</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">beta_br</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

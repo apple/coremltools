@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -113,7 +114,7 @@
 <span class="sd">            %4 = other_op(%2_const, %3)</span>
 
 <span class="sd">    Support options:</span>
-<span class="sd">    </span>
+
 <span class="sd">    - ``skip_const_by_size``: Skip folding ``const`` ops that have larger number of elements than a threshold.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -182,6 +183,23 @@
                         <span class="n">output</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_ignored&quot;</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">all_outputs_are_replaced</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="c1"># force const folding of the shape op</span>
+                <span class="k">elif</span> <span class="n">output</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;shape&quot;</span><span class="p">:</span>
+                    <span class="n">res</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
+                        <span class="n">val</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+                        <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                        <span class="c1"># same var name, but different python</span>
+                        <span class="c1"># instance does not violate SSA property.</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                        <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                        <span class="n">old_var</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
+                        <span class="n">new_var</span><span class="o">=</span><span class="n">res</span><span class="p">,</span>
+                        <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                    <span class="p">)</span>
+                    <span class="c1"># rename the const output</span>
+                    <span class="n">output</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_ignored&quot;</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">all_outputs_are_replaced</span> <span class="o">=</span> <span class="kc">False</span>
 

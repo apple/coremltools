@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -327,12 +328,12 @@
         <li><a href="source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.add_model">(coremltools.models.pipeline.PipelineRegressor method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration">add_multiarray_ndshape_enumeration() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_multiply_broadcastable">add_multiply_broadcastable() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_mvn">add_mvn() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_nms">add_nms() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
@@ -491,6 +492,20 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.argsort">argsort (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.as_dict">as_dict() (coremltools.optimize.torch.palettization.DKMPalettizerConfig method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id11">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id34">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.as_dict">(coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id30">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id7">[2]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.as_dict">(coremltools.optimize.torch.pruning.MagnitudePrunerConfig method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig.as_dict">(coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.as_dict">(coremltools.optimize.torch.quantization.LinearQuantizerConfig method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id9">[1]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig.as_dict">(coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id5">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.asin">asin (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.atan">atan (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
@@ -524,23 +539,41 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast">cast (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.cast">(class in coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization">cast_optimization (class in coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.ceil">ceil (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.clamped_relu">clamped_relu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.clamped_relu">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig">ClassifierConfig (class in coremltools.converters.mil.input_types)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.classify.classify">classify (class in coremltools.converters.mil.mil.ops.defs.iOS15.classify)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.clip">clip (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.clip">(class in coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.compare_models">compare_models() (in module coremltools.models.neural_network.quantization_utils)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.compose_conv1d">compose_conv1d (class in coremltools.converters.mil.mil.passes.defs.optimize_conv)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler.compute_sparsity">compute_sparsity() (coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler method)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id12">[1]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler.compute_sparsity">(coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler method)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id10">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.concat">concat (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle">concat_to_pixel_shuffle (class in coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation)</a>
@@ -549,7 +582,11 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.Const">Const (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
+      <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication">const_deduplication (class in coremltools.converters.mil.mil.passes.defs.cleanup)</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination">const_elimination (class in coremltools.converters.mil.mil.passes.defs.cleanup)</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler">ConstantSparsityScheduler (class in coremltools.optimize.torch.pruning.pruning_scheduler)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id11">[1]</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize">constexpr_affine_dequantize (class in coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops)</a>
 </li>
@@ -715,8 +752,6 @@
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation
 
@@ -739,6 +774,13 @@
 </li>
       </ul></li>
       <li>
+    coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather">module</a>
+</li>
+      </ul></li>
+      <li>
     coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation
 
       <ul>
@@ -750,6 +792,64 @@
 
       <ul>
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.activation
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.activation">module</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.reduction
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.reduction">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">module</a>
 </li>
       </ul></li>
       <li>
@@ -792,6 +892,13 @@
 
       <ul>
         <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil.passes.defs.optimize_quantization
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">module</a>
 </li>
       </ul></li>
       <li>
@@ -920,6 +1027,48 @@
         <li><a href="source/coremltools.models.html#module-coremltools.models.utils">module</a>
 </li>
       </ul></li>
+      <li>
+    coremltools.optimize.coreml
+
+      <ul>
+        <li><a href="source/coremltools.optimize.coreml.config.html#module-coremltools.optimize.coreml">module</a>, <a href="source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml">[1]</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.optimize.coreml._quantization_passes
+
+      <ul>
+        <li><a href="source/coremltools.optimize.coreml.graph.html#module-coremltools.optimize.coreml._quantization_passes">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.optimize.torch.palettization
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#module-0">module</a>, <a href="source/coremltools.optimize.torch.palettization.html#module-coremltools.optimize.torch.palettization">[1]</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.optimize.torch.pruning
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#module-coremltools.optimize.torch.pruning">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.optimize.torch.pruning.pruning_scheduler
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#module-coremltools.optimize.torch.pruning.pruning_scheduler">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.optimize.torch.quantization
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#module-coremltools.optimize.torch.quantization">module</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cos">cos (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cosh">cosh (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
@@ -931,7 +1080,13 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop">crop (class in coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop_resize">crop_resize (class in coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.crop_resize">(class in coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing)</a>
 </li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.crop_resize">(class in coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing)</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.cumsum">cumsum (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
   </ul></td>
@@ -942,17 +1097,31 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination">dead_code_elimination (class in coremltools.converters.mil.mil.passes.defs.cleanup)</a>
 </li>
+      <li><a href="source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.decompress_weights">decompress_weights() (in module coremltools.optimize.coreml)</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names">dedup_op_and_var_names (class in coremltools.converters.mil.mil.passes.defs.cleanup)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space">depth_to_space (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation)</a>
 </li>
-      <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description">description (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder property)</a>
+      <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.dequantize">dequantize (class in coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops)</a>
+</li>
+      <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination">dequantize_quantize_pair_elimination (class in coremltools.converters.mil.mil.passes.defs.optimize_quantization)</a>
+</li>
+      <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr">dequantize_to_constexpr (class in coremltools.converters.mil.mil.passes.defs.optimize_quantization)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description">description (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder property)</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave">detect_concat_interleave (class in coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation)</a>
 </li>
+      <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization">distributive_quantized_binary_op_scale_normalization (class in coremltools.converters.mil.mil.passes.defs.optimize_quantization)</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.divide_to_multiply">divide_to_multiply (class in coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary)</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">DKMPalettizer (class in coremltools.optimize.torch.palettization)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id17">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id40">[2]</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig">DKMPalettizerConfig (class in coremltools.optimize.torch.palettization)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id10">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id33">[2]</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">do_quantize() (coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector method)</a>
 
@@ -969,7 +1138,11 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.linear.einsum">einsum (class in coremltools.converters.mil.mil.ops.defs.iOS15.linear)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.elu">elu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.elu">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes">EnumeratedShapes (class in coremltools.converters.mil.input_types)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.equal">equal (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
@@ -978,10 +1151,10 @@
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.utils.evaluate_classifier">evaluate_classifier() (in module coremltools.models.utils)</a>
 </li>
-      <li><a href="source/coremltools.models.html#coremltools.models.utils.evaluate_classifier_with_probabilities">evaluate_classifier_with_probabilities() (in module coremltools.models.utils)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.models.html#coremltools.models.utils.evaluate_classifier_with_probabilities">evaluate_classifier_with_probabilities() (in module coremltools.models.utils)</a>
+</li>
       <li><a href="source/coremltools.models.html#coremltools.models.utils.evaluate_regressor">evaluate_regressor() (in module coremltools.models.utils)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.utils.evaluate_transformer">evaluate_transformer() (in module coremltools.models.utils)</a>
@@ -1002,16 +1175,60 @@
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.FakePalettize">FakePalettize (class in coremltools.optimize.torch.palettization)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id49">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id51">[2]</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.fill">fill (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.fill_like">fill_like (class in coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.finalize">finalize() (coremltools.optimize.torch.palettization.DKMPalettizer method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id19">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id42">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.finalize">(coremltools.optimize.torch.pruning.MagnitudePruner method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.finalize">(coremltools.optimize.torch.quantization.LinearQuantizer method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id17">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.flatten2d">flatten2d (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.floor">floor (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.floor_div">floor_div (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
 </li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.from_dict">from_dict() (coremltools.optimize.coreml.OptimizationConfig class method)</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_dict">(coremltools.optimize.torch.palettization.DKMPalettizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id12">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id35">[2]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.from_dict">(coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id31">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id8">[2]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict">(coremltools.optimize.torch.pruning.MagnitudePrunerConfig class method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig.from_dict">(coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig class method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict">(coremltools.optimize.torch.quantization.LinearQuantizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id10">[1]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig.from_dict">(coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id6">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.from_yaml">from_yaml() (coremltools.optimize.coreml.OptimizationConfig class method)</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_yaml">(coremltools.optimize.torch.palettization.DKMPalettizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id13">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id36">[2]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.from_yaml">(coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id32">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id9">[2]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_yaml">(coremltools.optimize.torch.pruning.MagnitudePrunerConfig class method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig.from_yaml">(coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig class method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_yaml">(coremltools.optimize.torch.quantization.LinearQuantizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id11">[1]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig.from_yaml">(coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig class method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id7">[1]</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_batchnorm">fuse_conv_batchnorm (class in coremltools.converters.mil.mil.passes.defs.optimize_conv)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_bias">fuse_conv_bias (class in coremltools.converters.mil.mil.passes.defs.optimize_conv)</a>
@@ -1020,8 +1237,6 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm">fuse_elementwise_to_batchnorm (class in coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_exact">fuse_gelu_exact (class in coremltools.converters.mil.mil.passes.defs.optimize_activation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_tanh_approximation">fuse_gelu_tanh_approximation (class in coremltools.converters.mil.mil.passes.defs.optimize_activation)</a>
@@ -1049,15 +1264,31 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather">gather (class in coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather">(class in coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather)</a>
 </li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather">(class in coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather)</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_along_axis">gather_along_axis (class in coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_along_axis">(class in coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_nd">gather_nd (class in coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather_nd">(class in coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather)</a>
 </li>
-      <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.gelu">gelu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_nd">(class in coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.gelu">gelu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+</li>
       <li><a href="source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">get_spec() (coremltools.models.model.MLModel method)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater">greater (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
@@ -1131,7 +1362,11 @@
       <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size">leaf_size (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder property)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.leaky_relu">leaky_relu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.leaky_relu">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less">less (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less_equal">less_equal (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
@@ -1141,13 +1376,25 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.linear.linear">linear (class in coremltools.converters.mil.mil.ops.defs.iOS15.linear)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.linear_activation">linear_activation (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.linear_activation">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
+</li>
+      </ul></li>
+      <li><a href="source/coremltools.optimize.coreml.graph.html#coremltools.optimize.coreml._quantization_passes.linear_quantize_weights">linear_quantize_weights (class in coremltools.optimize.coreml._quantization_passes)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights">linear_quantize_weights() (in module coremltools.optimize.coreml)</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer">LinearQuantizer (class in coremltools.optimize.torch.quantization)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id15">[1]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig">LinearQuantizerConfig (class in coremltools.optimize.torch.quantization)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id8">[1]</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_gather">list_gather (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_length">list_length (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_read">list_read (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_scatter">list_scatter (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
@@ -1178,6 +1425,10 @@
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner">MagnitudePruner (class in coremltools.optimize.torch.pruning)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id4">[1]</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig">MagnitudePrunerConfig (class in coremltools.optimize.torch.pruning)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id3">[1]</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.make_list">make_list (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.utils.make_pipeline">make_pipeline() (in module coremltools.models.utils)</a>
@@ -1258,9 +1509,27 @@
 </li>
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</a>
 </li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather">coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather</a>
+</li>
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation</a>
 </li>
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.activation">coremltools.converters.mil.mil.ops.defs.iOS17.activation</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary">coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing">coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops">coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.reduction">coremltools.converters.mil.mil.ops.defs.iOS17.reduction</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather">coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation</a>
 </li>
         <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.cleanup">coremltools.converters.mil.mil.passes.defs.cleanup</a>
 </li>
@@ -1273,6 +1542,8 @@
         <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.optimize_linear">coremltools.converters.mil.mil.passes.defs.optimize_linear</a>
 </li>
         <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization">coremltools.converters.mil.mil.passes.defs.optimize_normalization</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">coremltools.converters.mil.mil.passes.defs.optimize_quantization</a>
 </li>
         <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops</a>
 </li>
@@ -1310,9 +1581,27 @@
 </li>
         <li><a href="source/coremltools.models.html#module-coremltools.models.utils">coremltools.models.utils</a>
 </li>
+        <li><a href="source/coremltools.optimize.coreml.config.html#module-coremltools.optimize.coreml">coremltools.optimize.coreml</a>, <a href="source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml">[1]</a>
+</li>
+        <li><a href="source/coremltools.optimize.coreml.graph.html#module-coremltools.optimize.coreml._quantization_passes">coremltools.optimize.coreml._quantization_passes</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#module-0">coremltools.optimize.torch.palettization</a>, <a href="source/coremltools.optimize.torch.palettization.html#module-coremltools.optimize.torch.palettization">[1]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#module-coremltools.optimize.torch.pruning">coremltools.optimize.torch.pruning</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#module-coremltools.optimize.torch.pruning.pruning_scheduler">coremltools.optimize.torch.pruning.pruning_scheduler</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#module-coremltools.optimize.torch.quantization">coremltools.optimize.torch.quantization</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig">ModuleDKMPalettizerConfig (class in coremltools.optimize.torch.palettization)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id0">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id28">[2]</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig">ModuleLinearQuantizerConfig (class in coremltools.optimize.torch.quantization)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id0">[1]</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig">ModuleMagnitudePrunerConfig (class in coremltools.optimize.torch.pruning)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id0">[1]</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mul">mul (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
 </li>
   </ul></td>
@@ -1332,7 +1621,11 @@
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange">NeuralNetworkMultiArrayShapeRange (class in coremltools.models.neural_network.flexible_shape_utils)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_maximum_suppression">non_maximum_suppression (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.non_maximum_suppression">(class in coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation)</a>
 </li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_zero">non_zero (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
@@ -1340,6 +1633,8 @@
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination">noop_elimination (class in coremltools.converters.mil.mil.passes.defs.cleanup)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.not_equal">not_equal (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
+</li>
+      <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point">nullify_redundant_quantization_zero_point (class in coremltools.converters.mil.mil.passes.defs.optimize_quantization)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions">number_of_dimensions (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder property)</a>
 </li>
@@ -1355,10 +1650,22 @@
 <h2 id="O">O</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ObserverType">ObserverType (class in coremltools.optimize.torch.quantization)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id23">[1]</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.one_hot">one_hot (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpLinearQuantizerConfig">OpLinearQuantizerConfig (class in coremltools.optimize.coreml)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig">OpMagnitudePrunerConfig (class in coremltools.optimize.coreml)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpPalettizerConfig">OpPalettizerConfig (class in coremltools.optimize.coreml)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpThresholdPrunerConfig">OpThresholdPrunerConfig (class in coremltools.optimize.coreml)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig">OptimizationConfig (class in coremltools.optimize.coreml)</a>
+</li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.OutputMetric">OutputMetric (class in coremltools.models.neural_network.quantization_utils)</a>
 </li>
   </ul></td>
@@ -1369,8 +1676,14 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.pad">pad (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
-      <li><a href="source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.palettize_weights">palettize_weights() (in module coremltools.models.ml_program.compression_utils)</a>
+      <li><a href="source/coremltools.optimize.coreml.graph.html#coremltools.optimize.coreml._quantization_passes.palettize_weights">palettize_weights (class in coremltools.optimize.coreml._quantization_passes)</a>
 </li>
+      <li><a href="source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.palettize_weights">palettize_weights() (in module coremltools.models.ml_program.compression_utils)</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">(in module coremltools.optimize.coreml)</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.models.html#coremltools.models.pipeline.Pipeline">Pipeline (class in coremltools.models.pipeline)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier">PipelineClassifier (class in coremltools.models.pipeline)</a>
@@ -1379,19 +1692,37 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle">pixel_shuffle (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.pixel_unshuffle">pixel_unshuffle (class in coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler">PolynomialDecayScheduler (class in coremltools.optimize.torch.pruning.pruning_scheduler)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id8">[1]</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.pow">pow (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.model.MLModel.predict">predict() (coremltools.models.model.MLModel method)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.prelu">prelu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.prelu">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_activation.prelu_to_lrelu">prelu_to_lrelu (class in coremltools.converters.mil.mil.passes.defs.optimize_activation)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.prepare">prepare() (coremltools.optimize.torch.palettization.DKMPalettizer method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id21">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id44">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.prepare">(coremltools.optimize.torch.pruning.MagnitudePruner method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.prepare">(coremltools.optimize.torch.quantization.LinearQuantizer method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id18">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">program() (coremltools.converters.mil.mil.Builder static method)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.prune_weights">prune_weights() (in module coremltools.optimize.coreml)</a>
+</li>
+      <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler">PruningScheduler (class in coremltools.optimize.torch.pruning.pruning_scheduler)</a>, <a href="source/coremltools.optimize.torch.pruning.html#id7">[1]</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1399,10 +1730,14 @@
 <h2 id="Q">Q</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights">quantize_weights() (in module coremltools.models.neural_network.quantization_utils)</a>
+      <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.QuantizationScheme">QuantizationScheme (class in coremltools.optimize.torch.quantization)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id24">[1]</a>
+</li>
+      <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.quantize">quantize (class in coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights">quantize_weights() (in module coremltools.models.neural_network.quantization_utils)</a>
+</li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">QuantizedLayerSelector (class in coremltools.models.neural_network.quantization_utils)</a>
 </li>
   </ul></td>
@@ -1430,9 +1765,17 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.real_div">real_div (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax">reduce_argmax (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmax">(class in coremltools.converters.mil.mil.ops.defs.iOS17.reduction)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin">reduce_argmin (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmin">(class in coremltools.converters.mil.mil.ops.defs.iOS17.reduction)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l1_norm">reduce_l1_norm (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l2_norm">reduce_l2_norm (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
@@ -1449,10 +1792,10 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_prod">reduce_prod (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum">reduce_sum (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum_square">reduce_sum_square (class in coremltools.converters.mil.mil.ops.defs.iOS15.reduction)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes">reduce_transposes (class in coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops)</a>
@@ -1469,6 +1812,14 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.replace_stack_reshape">replace_stack_reshape (class in coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.report">report() (coremltools.optimize.torch.palettization.DKMPalettizer method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id22">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id45">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.report">(coremltools.optimize.torch.pruning.MagnitudePruner method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.report">(coremltools.optimize.torch.quantization.LinearQuantizer method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id21">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample">resample (class in coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing)</a>
 
       <ul>
@@ -1476,7 +1827,11 @@
 </li>
       </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape">reshape (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape">(class in coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like">reshape_like (class in coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear">resize_bilinear (class in coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing)</a>
@@ -1506,13 +1861,29 @@
       <li><a href="source/coremltools.models.html#coremltools.models.utils.save_spec">save_spec() (in module coremltools.models.utils)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.scaled_tanh">scaled_tanh (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.scaled_tanh">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter">scatter (class in coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter">(class in coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter_along_axis">scatter_along_axis (class in coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter_along_axis">(class in coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter_nd">scatter_nd (class in coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter_nd">(class in coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select">select (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_categorical_cross_entropy_loss">set_categorical_cross_entropy_loss() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
@@ -1521,20 +1892,52 @@
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value">set_default_prediction_value() (coremltools.models.tree_ensemble.TreeEnsembleBase method)</a>
 </li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_global">set_global() (coremltools.optimize.coreml.OptimizationConfig method)</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_global">(coremltools.optimize.torch.palettization.DKMPalettizerConfig method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id14">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id37">[2]</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.set_global">(coremltools.optimize.torch.pruning.MagnitudePrunerConfig method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.set_global">(coremltools.optimize.torch.quantization.LinearQuantizerConfig method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id12">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">set_index_type() (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder method)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_input">set_input() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_mean_squared_error_loss">set_mean_squared_error_loss() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_module_name">set_module_name() (coremltools.optimize.torch.palettization.DKMPalettizerConfig method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id15">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id38">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.set_module_name">(coremltools.optimize.torch.pruning.MagnitudePrunerConfig method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.set_module_name">(coremltools.optimize.torch.quantization.LinearQuantizerConfig method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id13">[1]</a>
+</li>
+      </ul></li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_module_type">set_module_type() (coremltools.optimize.torch.palettization.DKMPalettizerConfig method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id16">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id39">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.set_module_type">(coremltools.optimize.torch.pruning.MagnitudePrunerConfig method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.set_module_type">(coremltools.optimize.torch.quantization.LinearQuantizerConfig method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id14">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range">set_multiarray_ndshape_range() (in module coremltools.models.neural_network.flexible_shape_utils)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">set_number_of_neighbors_with_bounds() (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder method)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name">set_op_name() (coremltools.optimize.coreml.OptimizationConfig method)</a>
+</li>
+      <li><a href="source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type">set_op_type() (coremltools.optimize.coreml.OptimizationConfig method)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_optional_input">set_optional_input() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_output">set_output() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform">set_post_evaluation_transform() (coremltools.models.tree_ensemble.TreeEnsembleBase method)</a>
 </li>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_pre_processing_parameters">set_pre_processing_parameters() (coremltools.models.neural_network.builder.NeuralNetworkBuilder method)</a>
@@ -1549,8 +1952,6 @@
         <li><a href="source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.set_training_input">(coremltools.models.pipeline.PipelineRegressor method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.update_optimizer_utils.SgdParams">SgdParams (class in coremltools.models.neural_network.update_optimizer_utils)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape">Shape (class in coremltools.converters.mil.input_types)</a>
@@ -1560,7 +1961,11 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid">sigmoid (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid_hard">sigmoid_hard (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.sigmoid_hard">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sign">sign (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.silu">silu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
@@ -1580,7 +1985,11 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus">softplus (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus_parametric">softplus_parametric (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.softplus_parametric">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softsign">softsign (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth">space_to_depth (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation)</a>
@@ -1597,6 +2006,14 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.stack">stack (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
+      <li><a href="source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.step">step() (coremltools.optimize.torch.palettization.DKMPalettizer method)</a>, <a href="source/coremltools.optimize.torch.palettization.html#id23">[1]</a>, <a href="source/coremltools.optimize.torch.palettization.html#id46">[2]</a>
+
+      <ul>
+        <li><a href="source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.step">(coremltools.optimize.torch.pruning.MagnitudePruner method)</a>
+</li>
+        <li><a href="source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.step">(coremltools.optimize.torch.quantization.LinearQuantizer method)</a>, <a href="source/coremltools.optimize.torch.quantization.html#id22">[1]</a>
+</li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.sub">sub (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary)</a>
 </li>
   </ul></td>
@@ -1614,7 +2031,11 @@
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.threshold">threshold (class in coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.thresholded_relu">thresholded_relu (class in coremltools.converters.mil.mil.ops.defs.iOS15.activation)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.activation.thresholded_relu">(class in coremltools.converters.mil.mil.ops.defs.iOS17.activation)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.tile">tile (class in coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation)</a>
 </li>
   </ul></td>
@@ -1623,6 +2044,8 @@
 
       <ul>
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk">(class in coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation)</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk">(class in coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation)</a>
 </li>
       </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder">topological_reorder (class in coremltools.converters.mil.mil.passes.defs.cleanup)</a>
@@ -1650,7 +2073,11 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear">upsample_bilinear (class in coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.upsample_bilinear">(class in coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing)</a>
 </li>
+      </ul></li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_nearest_neighbor">upsample_nearest_neighbor (class in coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.use_reflection_padding">use_reflection_padding (class in coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation)</a>
@@ -1661,10 +2088,12 @@
 <h2 id="W">W</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme">weighting_scheme (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder property)</a>
+      <li><a href="source/coremltools.optimize.coreml.graph.html#coremltools.optimize.coreml._quantization_passes.WeightDecompressor">WeightDecompressor (class in coremltools.optimize.coreml._quantization_passes)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme">weighting_scheme (coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder property)</a>
+</li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.while_loop">while_loop (class in coremltools.converters.mil.mil.ops.defs.iOS15.control_flow)</a>
 </li>
   </ul></td>

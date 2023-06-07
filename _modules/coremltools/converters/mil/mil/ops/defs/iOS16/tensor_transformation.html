@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -229,8 +230,8 @@
 <span class="k">class</span> <span class="nc">pixel_unshuffle</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from spatial dimensions into depth (channel).</span>
-<span class="sd">    It is basically the inverse operation of `pixel_shuffle &lt;#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle&gt;`_.</span>
-<span class="sd">    Equivalent to PyTorch&#39;s ``PixelUnshuffle``.</span>
+<span class="sd">    It is basically the inverse operation of :py:class:`~.iOS15.tensor_transformation.pixel_shuffle`.</span>
+<span class="sd">    Equivalent to `PyTorch PixelUnshuffle &lt;https://pytorch.org/docs/stable/generated/torch.nn.PixelUnshuffle.html#pixelunshuffle&gt;`_.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -243,7 +244,7 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C * f^2, H, W], T&gt;</span>
-<span class="sd">        * Where ``f`` is the downscale factor.</span>
+<span class="sd">        * In which ``f`` is the downscale factor.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>

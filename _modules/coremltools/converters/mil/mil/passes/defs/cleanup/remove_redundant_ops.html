@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -221,11 +222,14 @@
         <span class="c1"># This can be safely done, since all the ops in ops_to_remove</span>
         <span class="c1"># appear after first_op, hence first_op.outputs[0] variable is in</span>
         <span class="c1"># scope before the op&#39;s output var</span>
+        <span class="n">ops_removed</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops_to_remove</span><span class="p">:</span>
-            <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
-                <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">first_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="p">)</span>
-        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_to_remove</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">first_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                <span class="n">ops_removed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops_removed</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_removed</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="nd">@staticmethod</span>

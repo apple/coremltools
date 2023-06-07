@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.torch.pruning.pruning_scheduler &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/norightmargin.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+        <script src="../../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.torch.pruning.pruning_scheduler</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.torch.pruning.pruning_scheduler</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span> <span class="k">as</span> <span class="n">_ABC</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span> <span class="k">as</span> <span class="n">_abstractmethod</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+
+<span class="kn">import</span> <span class="nn">attr</span> <span class="k">as</span> <span class="nn">_attr</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">list_or_str_to_tensor</span> <span class="k">as</span> <span class="n">_list_or_str_to_tensor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.pruning._utils</span> <span class="kn">import</span> <span class="n">spline</span> <span class="k">as</span> <span class="n">_spline</span>
+
+
+<div class="viewcode-block" id="PruningScheduler"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler">[docs]</a><span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">PruningScheduler</span><span class="p">(</span><span class="n">_ABC</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An abstraction for implementing schedules to be used for</span>
+<span class="sd">    changing the sparsity of pruning masks applied by various types of</span>
+<span class="sd">    pruning algorithms to module parameters over the course of the training.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@_abstractmethod</span>
+    <span class="k">def</span> <span class="nf">compute_sparsity</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">step_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_sparsity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_ModuleOptimizationConfig</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the sparsity at the next step given the previous sparsity</span>
+<span class="sd">        and the module optimization config.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            step_count (:obj:`int`): Current step count.</span>
+<span class="sd">            prev_sparsity (:obj:`float`): Sparsity at previous step.</span>
+<span class="sd">            config (:py:class:`ModuleOptimizationConfig`): Optimization</span>
+<span class="sd">                config for the module which contains information such as</span>
+<span class="sd">                target sparsity and initial sparsity.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="PolynomialDecayScheduler"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler">[docs]</a><span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">PolynomialDecayScheduler</span><span class="p">(</span><span class="n">PruningScheduler</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pruning scheduler inspired by the paper `&quot;To prune or not to prune&quot; &lt;https://arxiv.org/pdf/1710.01878.pdf&gt;`_.</span>
+
+<span class="sd">    It sets the sparsity at step :math:`t` using the formula:</span>
+
+<span class="sd">    .. math::</span>
+
+<span class="sd">            sparsity_t = target\_sparsity + (initial\_sparsity - target\_sparsity)</span>
+<span class="sd">                       * (1 - \frac{update\_index}{total\_number\_of\_updates}) ^ {power}</span>
+
+<span class="sd">    If :math:`t` is in :math:`update\_steps`, else it keeps the sparsity at its previous value.</span>
+
+<span class="sd">    Here, :math:`update\_index` is the index of :math:`t` in the :math:`update\_steps` array and</span>
+<span class="sd">    :math:`total\_number\_of\_updates` is the length of :math:`update\_steps` array.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        update_steps (:obj:`list` of :obj:`int` or :obj:`str`): The indices of</span>
+<span class="sd">            optimization steps at which pruning should be performed. This can</span>
+<span class="sd">            be passed in as a string representing the range, such as</span>
+<span class="sd">            ``range(start_index, end_index, step_size)``.</span>
+<span class="sd">        power (:obj:`int`, optional): Exponent to be used in the</span>
+<span class="sd">            sparsity function. Defaults to ``3``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">update_steps</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">tensor</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">_list_or_str_to_tensor</span><span class="p">,</span> <span class="n">eq</span><span class="o">=</span><span class="n">_attr</span><span class="o">.</span><span class="n">cmp_using</span><span class="p">(</span><span class="n">eq</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">equal</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+
+    <span class="nd">@update_steps</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_update_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">size</span><span class="p">())</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;update_steps: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> must be a 1-D tensor or list of ints.&quot;</span>
+        <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">elem</span><span class="o">.</span><span class="n">int</span><span class="p">()</span> <span class="o">!=</span> <span class="n">elem</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Each element of update_steps </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> must be an integer.&quot;</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">elem</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;All elements of update_steps must be non-negative. Received: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span>
+
+<div class="viewcode-block" id="PolynomialDecayScheduler.compute_sparsity"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler.compute_sparsity">[docs]</a>    <span class="k">def</span> <span class="nf">compute_sparsity</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">step_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_sparsity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_ModuleOptimizationConfig</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="n">cur_step_update_steps_mask</span> <span class="o">=</span> <span class="n">step_count</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_steps</span>
+        <span class="k">if</span> <span class="n">_torch</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">cur_step_update_steps_mask</span><span class="p">):</span>
+            <span class="n">update_number</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">cur_step_update_steps_mask</span><span class="p">,</span> <span class="n">as_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">update_step_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">update_steps</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">update_step_shape</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="mf">1.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">update_number</span> <span class="o">/</span> <span class="p">(</span><span class="n">update_step_shape</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">initial_sparsity</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">config</span><span class="o">.</span><span class="n">initial_sparsity</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;initial_sparsity&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="mf">0.0</span>
+            <span class="p">)</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;target_sparsity&quot;</span><span class="p">),</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Attribute target_sparsity not found in config </span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2"> only works with configs &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;which have this attribute.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">_spline</span><span class="p">(</span><span class="n">initial_sparsity</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">target_sparsity</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">prev_sparsity</span></div></div>
+
+
+<div class="viewcode-block" id="ConstantSparsityScheduler"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler">[docs]</a><span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">ConstantSparsityScheduler</span><span class="p">(</span><span class="n">PruningScheduler</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pruning schedule with constant sparsity throughout training.</span>
+
+<span class="sd">    Sparsity is set to zero initially and to ``target_sparsity`` at</span>
+<span class="sd">    step ``begin_step``.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        begin_step (:obj:`int`): step at which to begin pruning.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">begin_step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+
+<div class="viewcode-block" id="ConstantSparsityScheduler.compute_sparsity"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler.compute_sparsity">[docs]</a>    <span class="k">def</span> <span class="nf">compute_sparsity</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">step_count</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">prev_sparsity</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_ModuleOptimizationConfig</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">step_count</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">begin_step</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;target_sparsity&quot;</span><span class="p">),</span> <span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Attribute target_sparsity not found in config </span><span class="si">{</span><span class="n">config</span><span class="si">}</span><span class="s2">. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="si">}</span><span class="s2"> only works with configs &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;which have this attribute.&quot;</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">config</span><span class="o">.</span><span class="n">target_sparsity</span>
+        <span class="k">return</span> <span class="n">prev_sparsity</span></div></div>
+
+
+<span class="n">_PruningSchedulerType</span> <span class="o">=</span> <span class="n">_Union</span><span class="p">[</span><span class="n">PolynomialDecayScheduler</span><span class="p">,</span> <span class="n">ConstantSparsityScheduler</span><span class="p">]</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

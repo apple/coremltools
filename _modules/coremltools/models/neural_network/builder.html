@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -127,7 +128,8 @@
         <span class="n">param</span><span class="o">.</span><span class="n">tanh</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;LINEAR&quot;</span><span class="p">:</span>
         <span class="n">param</span><span class="o">.</span><span class="n">linear</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-    <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;SIGMOID_HARD&quot;</span><span class="p">:</span>
+    <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;SIGMOID_HARD&quot;</span> <span class="ow">or</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;HARD_SIGMOID&quot;</span><span class="p">:</span>
+        <span class="c1"># The standard name is &quot;hard_sigmoid&quot;, but in nn there are still usages of &quot;sigmoid_hard&quot;.</span>
         <span class="n">param</span><span class="o">.</span><span class="n">sigmoidHard</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">activation</span> <span class="o">==</span> <span class="s2">&quot;SCALED_TANH&quot;</span><span class="p">:</span>
         <span class="n">param</span><span class="o">.</span><span class="n">scaledTanh</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -308,8 +310,8 @@
 <span class="sd">    defined. The builder can also set preprocessing steps to handle</span>
 <span class="sd">    specialized input formats (such as images), and set class labels for neural</span>
 <span class="sd">    network classifiers.</span>
-<span class="sd">    </span>
-<span class="sd">    Refer to the protobuf messages in the specification (NeuralNetwork.proto) </span>
+
+<span class="sd">    Refer to the protobuf messages in the specification (NeuralNetwork.proto)</span>
 <span class="sd">    for more details.</span>
 
 <span class="sd">    Examples</span>
@@ -322,20 +324,28 @@
 <span class="sd">        # Create a neural network binary classifier that classifies</span>
 <span class="sd">        # 3-dimensional data points</span>
 <span class="sd">        # Specify input and output dimensions</span>
-<span class="sd">        &gt;&gt;&gt; input_dim = (3,)</span>
-<span class="sd">        &gt;&gt;&gt; output_dim = (2,)</span>
+<span class="sd">        input_dim = (3,)</span>
+<span class="sd">        output_dim = (2,)</span>
 
 <span class="sd">        # Specify input and output features</span>
-<span class="sd">        &gt;&gt;&gt; input_features = [(&#39;data&#39;, datatypes.Array(*input_dim))]</span>
-<span class="sd">        &gt;&gt;&gt; output_features = [(&#39;probs&#39;, datatypes.Array(*output_dim))]</span>
+<span class="sd">        input_features = [(&quot;data&quot;, datatypes.Array(*input_dim))]</span>
+<span class="sd">        output_features = [(&quot;probs&quot;, datatypes.Array(*output_dim))]</span>
 
 <span class="sd">        # Build a simple neural network with 1 inner product layer</span>
-<span class="sd">        &gt;&gt;&gt; builder = NeuralNetworkBuilder(input_features, output_features)</span>
-<span class="sd">        &gt;&gt;&gt; builder.add_inner_product(name=&#39;ip_layer&#39;, W=weights, b=bias, input_channels=3, output_channels=2,</span>
-<span class="sd">        ... has_bias=True, input_name=&#39;data&#39;, output_name=&#39;probs&#39;)</span>
+<span class="sd">        builder = NeuralNetworkBuilder(input_features, output_features)</span>
+<span class="sd">        builder.add_inner_product(</span>
+<span class="sd">            name=&quot;ip_layer&quot;,</span>
+<span class="sd">            W=weights,</span>
+<span class="sd">            b=bias,</span>
+<span class="sd">            input_channels=3,</span>
+<span class="sd">            output_channels=2,</span>
+<span class="sd">            has_bias=True,</span>
+<span class="sd">            input_name=&quot;data&quot;,</span>
+<span class="sd">            output_name=&quot;probs&quot;,</span>
+<span class="sd">        )</span>
 
 <span class="sd">        # save the spec by the builder</span>
-<span class="sd">        &gt;&gt;&gt; save_spec(builder.spec, &#39;network.mlmodel&#39;)</span>
+<span class="sd">        save_spec(builder.spec, &quot;network.mlmodel&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="NeuralNetworkBuilder.__init__"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -358,22 +368,22 @@
 <span class="sd">        ----------</span>
 
 <span class="sd">        input_features: [(str, datatypes.Array)] or None</span>
-<span class="sd">            List of input feature of the network. </span>
-<span class="sd">            Each feature is a ``(name, array)`` tuple, where ``name`` is the </span>
-<span class="sd">            name of the feature, and ``array`` is a ``datatype.Array`` object </span>
+<span class="sd">            List of input feature of the network.</span>
+<span class="sd">            Each feature is a ``(name, array)`` tuple, where ``name`` is the</span>
+<span class="sd">            name of the feature, and ``array`` is a ``datatype.Array`` object</span>
 <span class="sd">            describing the feature type.</span>
-<span class="sd">            </span>
+
 <span class="sd">            * When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.</span>
 
 <span class="sd">        output_features: [(str, datatypes.Array or None)] or None</span>
-<span class="sd">            List of output feature of the network. Each feature is a </span>
-<span class="sd">            ``(name, array)`` tuple, where ``name`` is the name of the feature, </span>
+<span class="sd">            List of output feature of the network. Each feature is a</span>
+<span class="sd">            ``(name, array)`` tuple, where ``name`` is the name of the feature,</span>
 <span class="sd">            and ``array`` is a ``datatypes.Array`` object describing the feature type.</span>
-<span class="sd">            </span>
+
 <span class="sd">            * The ``array`` can be ``None`` if not known.</span>
-<span class="sd">            </span>
+
 <span class="sd">            * When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.</span>
-<span class="sd">            </span>
+
 <span class="sd">        mode: str (&#39;classifier&#39;, &#39;regressor&#39; or None)</span>
 <span class="sd">            Mode (one of ``&#39;classifier&#39;``, ``&#39;regressor&#39;``, or ``None``).</span>
 
@@ -383,28 +393,28 @@
 
 <span class="sd">        disable_rank5_shape_mapping: bool</span>
 <span class="sd">            Only applicable for neural networks.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If True, inputs are no longer forced to map to rank 5 tensors</span>
 <span class="sd">            (rank is equal to the length of the shape of the tensor).</span>
 <span class="sd">            Instead, for multi-array inputs ``&quot;EXACT_ARRAY_MAPPING&quot;`` mapping is used, whereas</span>
-<span class="sd">            for image inputs ``&quot;RANK4_IMAGE_MAPPING&quot;`` is used. For details, </span>
+<span class="sd">            for image inputs ``&quot;RANK4_IMAGE_MAPPING&quot;`` is used. For details,</span>
 <span class="sd">            see description of enums ``NeuralNetworkMultiArrayShapeMapping``</span>
 <span class="sd">            and ``NeuralNetworkImageShapeMapping`` in NeuralNetwork.proto.</span>
-<span class="sd">            </span>
+
 <span class="sd">            When ``spec`` is not ``None``, this argument will be ignored.</span>
 
 <span class="sd">        spec: None or coremltools.proto.Model_pb2</span>
-<span class="sd">            If ``None``, a new MLModel spec will be created by the builder with </span>
+<span class="sd">            If ``None``, a new MLModel spec will be created by the builder with</span>
 <span class="sd">            input and output features.</span>
-<span class="sd">            </span>
-<span class="sd">            Otherwise, the builder will continue to build on ``spec``. </span>
+
+<span class="sd">            Otherwise, the builder will continue to build on ``spec``.</span>
 <span class="sd">            This is useful when the MLModel is built incrementally.</span>
 
 <span class="sd">        nn_spec: None or coremltools.proto.NeuralNetwork_pb2</span>
 <span class="sd">            If ``None``, a new, empty NeuralNetwork proto will be created for spec.</span>
-<span class="sd">            </span>
-<span class="sd">            If ``nn_spec`` is not ``None`` and ``spec`` is ``None``, the builder will </span>
-<span class="sd">            build a NeuralNetwork spec without wrapping it within an MLModel. </span>
+
+<span class="sd">            If ``nn_spec`` is not ``None`` and ``spec`` is ``None``, the builder will</span>
+<span class="sd">            build a NeuralNetwork spec without wrapping it within an MLModel.</span>
 <span class="sd">            This is useful to create nested NeuralNetworks for models</span>
 <span class="sd">            with control flow operations.</span>
 
@@ -418,9 +428,9 @@
 
 <span class="sd">            # Construct a builder that builds a neural network classifier with a 299 x 299 x 3</span>
 <span class="sd">            # dimensional input and 1000 dimensional output</span>
-<span class="sd">            &gt;&gt;&gt; input_features = [(&#39;data&#39;, datatypes.Array((299, 299, 3)))]</span>
-<span class="sd">            &gt;&gt;&gt; output_features = [(&#39;probs&#39;, datatypes.Array((1000,)))]</span>
-<span class="sd">            &gt;&gt;&gt; builder = NeuralNetworkBuilder(input_features, output_features, mode=&#39;classifier&#39;)</span>
+<span class="sd">            input_features = [(&quot;data&quot;, datatypes.Array((299, 299, 3)))]</span>
+<span class="sd">            output_features = [(&quot;probs&quot;, datatypes.Array((1000,)))]</span>
+<span class="sd">            builder = NeuralNetworkBuilder(input_features, output_features, mode=&quot;classifier&quot;)</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -533,7 +543,7 @@
 
 <span class="sd">            # Set the neural network spec inputs to be 3 dimensional vector data1 and</span>
 <span class="sd">            # 4 dimensional vector data2.</span>
-<span class="sd">            &gt;&gt;&gt; builder.set_input(input_names=[&#39;data1&#39;, &#39;data2&#39;], input_dims=[(3,), (4,)])</span>
+<span class="sd">            builder.set_input(input_names=[&quot;data1&quot;, &quot;data2&quot;], input_dims=[(3,), (4,)])</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -594,7 +604,7 @@
 
 <span class="sd">            # Set the neural network spec outputs to be 3 dimensional vector feature1 and</span>
 <span class="sd">            # 4 dimensional vector feature2.</span>
-<span class="sd">            &gt;&gt;&gt; builder.set_output(output_names=[&#39;feature1&#39;, &#39;feature2&#39;], output_dims=[(3,), (4,)])</span>
+<span class="sd">            builder.set_output(output_names=[&quot;feature1&quot;, &quot;feature2&quot;], output_dims=[(3,), (4,)])</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -629,7 +639,7 @@
 
 <span class="sd">            # Set the neural network spec training inputs to be 3 dimensional vector for &#39;input&#39; and</span>
 <span class="sd">            # Double for &#39;target&#39;.</span>
-<span class="sd">            &gt;&gt;&gt; builder.set_training_input([(&#39;input&#39;, datatypes.Array(3)), (&#39;target&#39;, &#39;Double&#39;)])</span>
+<span class="sd">            builder.set_training_input([(&quot;input&quot;, datatypes.Array(3)), (&quot;target&quot;, &quot;Double&quot;)])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
         <span class="n">set_training_features</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">training_input</span><span class="p">)</span></div>
@@ -1018,19 +1028,19 @@
 
 <div class="viewcode-block" id="NeuralNetworkBuilder.set_categorical_cross_entropy_loss"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_categorical_cross_entropy_loss">[docs]</a>    <span class="k">def</span> <span class="nf">set_categorical_cross_entropy_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Categorical Cross Entropy is used for single label categorization </span>
+<span class="sd">        Categorical Cross Entropy is used for single label categorization</span>
 <span class="sd">        (only one category is applicable for each data point).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name: The name of the loss layer</span>
 <span class="sd">        input: The name of the input</span>
-<span class="sd">        	The ``input`` should be a vector of length N representing the </span>
-<span class="sd">        	distribution over N categories. This must be the output of a softmax.</span>
+<span class="sd">                The ``input`` should be a vector of length N representing the</span>
+<span class="sd">                distribution over N categories. This must be the output of a softmax.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
-<span class="sd">        </span>
+
 <span class="sd">        .. math::</span>
 <span class="sd">           Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -1123,16 +1133,16 @@
 <div class="viewcode-block" id="NeuralNetworkBuilder.set_mean_squared_error_loss"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.set_mean_squared_error_loss">[docs]</a>    <span class="k">def</span> <span class="nf">set_mean_squared_error_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">input_feature</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        input_feature: [(str, datatypes.Array)] or None</span>
-<span class="sd">            The input feature of the loss layer. Each feature is a </span>
-<span class="sd">            ``(name, array)`` tuple, where ``name`` is the name of the model&#39;s </span>
-<span class="sd">            tensor our loss will be attached to, and ``array`` is a </span>
+<span class="sd">            The input feature of the loss layer. Each feature is a</span>
+<span class="sd">            ``(name, array)`` tuple, where ``name`` is the name of the model&#39;s</span>
+<span class="sd">            tensor our loss will be attached to, and ``array`` is a</span>
 <span class="sd">            ``datatypes.Array`` object describing the shape of that tensor.</span>
 <span class="sd">            Both the name and the array&#39;s shape must be provided in the tuple.</span>
-<span class="sd">            </span>
+
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        </span>
-<span class="sd">            &gt;&gt;&gt; feature = [(&#39;output_tensor&#39;, datatypes.Array((299, 299, 3)))]</span>
+
+<span class="sd">            feature = [(&#39;output_tensor&#39;, datatypes.Array((299, 299, 3)))]</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span>
@@ -1548,7 +1558,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an inner product layer to the model.</span>
-<span class="sd">        Refer to the ``InnerProductLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``InnerProductLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -1557,7 +1567,7 @@
 <span class="sd">            The name of this layer.</span>
 <span class="sd">        W: numpy.array or bytes()</span>
 <span class="sd">            Weight matrix of shape ``(output_channels, input_channels)``.</span>
-<span class="sd">            If ``W`` is of type ``bytes()`` (quantized), other quantization </span>
+<span class="sd">            If ``W`` is of type ``bytes()`` (quantized), other quantization</span>
 <span class="sd">            related arguments must be provided as well (see below).</span>
 <span class="sd">        b: numpy.array</span>
 <span class="sd">            Bias vector of shape: ``(output_channels, )``.</span>
@@ -1570,7 +1580,7 @@
 
 <span class="sd">            - If True, the bias vector of this layer is not ignored.</span>
 <span class="sd">            - If False, the bias vector is ignored.</span>
-<span class="sd">        </span>
+
 <span class="sd">        input_name: str</span>
 <span class="sd">            The input blob name of this layer.</span>
 <span class="sd">        output_name: str</span>
@@ -1579,31 +1589,31 @@
 <span class="sd">        Quantization arguments, used when ``W`` is of type ``bytes()``:</span>
 <span class="sd">            int_8_dynamic_quantize: boolean</span>
 <span class="sd">                Whether to quantize and dequantize before and after inner product, respectively.</span>
-<span class="sd">                Expects byte weights, representing int8 values, if True. </span>
+<span class="sd">                Expects byte weights, representing int8 values, if True.</span>
 <span class="sd">                See NeuralNetwork.proto for other validation conditions.</span>
 
 <span class="sd">            is_quantized_weight: bool, optional</span>
-<span class="sd">                Set it to true when ``W`` is of type ``bytes()``, representing </span>
+<span class="sd">                Set it to true when ``W`` is of type ``bytes()``, representing</span>
 <span class="sd">                quantized weights, default: false.</span>
 
 <span class="sd">            quantization_type: str</span>
-<span class="sd">                When weights are quantized (that is, ``W`` is of type ``bytes()``), </span>
+<span class="sd">                When weights are quantized (that is, ``W`` is of type ``bytes()``),</span>
 <span class="sd">                this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``.</span>
 
 <span class="sd">            nbits: int</span>
-<span class="sd">                Should be between 1 and 8 (inclusive). Number of bits per weight </span>
+<span class="sd">                Should be between 1 and 8 (inclusive). Number of bits per weight</span>
 <span class="sd">                value. Only applicable when weights are quantized.</span>
 
 <span class="sd">            quant_scale: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">                scale vector to be used with linear quantization. Must be of </span>
+<span class="sd">                scale vector to be used with linear quantization. Must be of</span>
 <span class="sd">                length either 1 or output_channels.</span>
 
 <span class="sd">            quant_bias: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">                bias vector to be used with linear quantization. Must be of </span>
+<span class="sd">                bias vector to be used with linear quantization. Must be of</span>
 <span class="sd">                length either 1 or output_channels.</span>
 
 <span class="sd">            quant_lut: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">                the LUT (look up table) to be used with LUT quantization. </span>
+<span class="sd">                the LUT (look up table) to be used with LUT quantization.</span>
 <span class="sd">                Must be of length 2^n bits.</span>
 
 <span class="sd">        See Also</span>
@@ -1672,7 +1682,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an embedding layer to the model.</span>
-<span class="sd">        Refer to the ``EmbeddingLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``EmbeddingLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -1681,7 +1691,7 @@
 <span class="sd">            The name of this layer.</span>
 <span class="sd">        W: float32 numpy.array or bytes()</span>
 <span class="sd">            Weight matrix of shape ``(output_channels, input_dim)``.</span>
-<span class="sd">            If ``W`` is of type ``bytes()`` (quantized to 1-8 bits), other </span>
+<span class="sd">            If ``W`` is of type ``bytes()`` (quantized to 1-8 bits), other</span>
 <span class="sd">            quantization related arguments must be provided as well (see below).</span>
 <span class="sd">        b: numpy.array</span>
 <span class="sd">            Bias vector of shape ``(output_channels, )``.</span>
@@ -1707,22 +1717,22 @@
 <span class="sd">            Set it to true when ``W`` is of type ``bytes()``, representing quantized weights.</span>
 
 <span class="sd">        quantization_type: str</span>
-<span class="sd">            When weights are quantized (that is, ``W`` is of type ``bytes()``), </span>
+<span class="sd">            When weights are quantized (that is, ``W`` is of type ``bytes()``),</span>
 <span class="sd">            this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``.</span>
 
 <span class="sd">        nbits: int</span>
 <span class="sd">            Should be between 1 and 8 (inclusive). Number of bits per weight value.</span>
 
 <span class="sd">        quant_scale: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">            Scale vector to be used with linear quantization. </span>
+<span class="sd">            Scale vector to be used with linear quantization.</span>
 <span class="sd">            Must be of length either 1 or output_channels.</span>
 
 <span class="sd">        quant_bias: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">            Bias vector to be used with linear quantization. </span>
+<span class="sd">            Bias vector to be used with linear quantization.</span>
 <span class="sd">            Must be of length either 1 or output_channels.</span>
 
 <span class="sd">        quant_lut: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">            The LUT (look up table) to be used with LUT quantization. </span>
+<span class="sd">            The LUT (look up table) to be used with LUT quantization.</span>
 <span class="sd">            Must be of length 2^n bits.</span>
 
 <span class="sd">        See Also</span>
@@ -1772,7 +1782,7 @@
 <div class="viewcode-block" id="NeuralNetworkBuilder.add_softmax"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_softmax">[docs]</a>    <span class="k">def</span> <span class="nf">add_softmax</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">output_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a softmax layer to the model.</span>
-<span class="sd">        Refer to the ``SoftmaxLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``SoftmaxLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -1832,19 +1842,19 @@
 <span class="sd">                  ``f(x) = min(max(alpha * x + beta, -1), 1)``</span>
 
 <span class="sd">                  where ``alpha`` and ``beta`` are constant scalars.</span>
-<span class="sd">                  </span>
+
 <span class="sd">                - ``&#39;LEAKYRELU&#39;``: leaky relu function, defined as:</span>
 
 <span class="sd">                  ``f(x) = (x &gt;= 0) * x + (x &lt; 0) * alpha * x``</span>
 
 <span class="sd">                  where ``alpha`` is a constant scalar.</span>
-<span class="sd">                  </span>
+
 <span class="sd">                - ``&#39;PRELU&#39;``: Parametric ReLU function, defined as:</span>
 
 <span class="sd">                  ``f(x) = (x &gt;= 0) * x + (x &lt; 0) * alpha * x``</span>
 
 <span class="sd">                  where ``alpha`` is a multi-dimensional array of same size as ``x``.</span>
-<span class="sd">                  </span>
+
 <span class="sd">                - ``&#39;ELU&#39;``: Exponential linear unit function, defined as:</span>
 
 <span class="sd">                  ``f(x) = (x &gt;= 0) * x + (x &lt; 0) * (alpha * exp(x) - 1)``</span>
@@ -1855,15 +1865,15 @@
 
 <span class="sd">                  ``f(x) = alpha * log(1 + exp(beta * x))``</span>
 
-<span class="sd">                  where ``alpha`` and ``beta`` are two multi-dimensional arrays </span>
+<span class="sd">                  where ``alpha`` and ``beta`` are two multi-dimensional arrays</span>
 <span class="sd">                  of same size as ``x``.</span>
-<span class="sd">                  </span>
+
 <span class="sd">                - ``&#39;THRESHOLDEDRELU&#39;``: Thresholded ReLU function, defined as:</span>
 
 <span class="sd">                  ``f(x) = (x &gt;= alpha) * x``</span>
 
 <span class="sd">                  where ``alpha`` is a constant scalar.</span>
-<span class="sd">                  </span>
+
 <span class="sd">                - ``&#39;LINEAR&#39;``: linear function.</span>
 
 <span class="sd">                   ``f(x) = alpha * x + beta``</span>
@@ -1875,17 +1885,17 @@
 <span class="sd">        params: list of float or numpy.array</span>
 <span class="sd">            Parameters for the activation, depending on non_linearity.</span>
 
-<span class="sd">                - When ``non_linearity`` is one of [``&#39;RELU&#39;``, ``&#39;SIGMOID&#39;``, ``&#39;TANH&#39;``, ``&#39;SCALED_TANH&#39;``, ``&#39;SOFTPLUS&#39;``, ``&#39;SOFTSIGN&#39;``], </span>
+<span class="sd">                - When ``non_linearity`` is one of [``&#39;RELU&#39;``, ``&#39;SIGMOID&#39;``, ``&#39;TANH&#39;``, ``&#39;SCALED_TANH&#39;``, ``&#39;SOFTPLUS&#39;``, ``&#39;SOFTSIGN&#39;``],</span>
 <span class="sd">                  params is ignored.</span>
-<span class="sd">                - When ``non_linearity`` is one of [``&#39;SCALED_TANH&#39;``, ``&#39;SIGMOID_HARD&#39;``, ``&#39;LINEAR&#39;``], </span>
+<span class="sd">                - When ``non_linearity`` is one of [``&#39;SCALED_TANH&#39;``, ``&#39;SIGMOID_HARD&#39;``, ``&#39;LINEAR&#39;``],</span>
 <span class="sd">                  param is a list of 2 floats ``[alpha, beta]``.</span>
-<span class="sd">                - When ``non_linearity`` is one of [``&#39;LEAKYRELU&#39;``, ``&#39;ELU&#39;``, ``&#39;THRESHOLDEDRELU&#39;``], </span>
+<span class="sd">                - When ``non_linearity`` is one of [``&#39;LEAKYRELU&#39;``, ``&#39;ELU&#39;``, ``&#39;THRESHOLDEDRELU&#39;``],</span>
 <span class="sd">                  param is a list of 1 float ``[alpha]``.</span>
-<span class="sd">                - When ``non_linearity`` is ``&#39;PRELU&#39;``, param is a list of 1 numpy array ``[alpha]``. </span>
+<span class="sd">                - When ``non_linearity`` is ``&#39;PRELU&#39;``, param is a list of 1 numpy array ``[alpha]``.</span>
 <span class="sd">                  The shape of ``alpha`` is ``(C,)``, where ``C`` is either the number of input channels or</span>
 <span class="sd">                  1. When ``C = 1``, same ``alpha`` is applied to all channels.</span>
-<span class="sd">                - When ``non_linearity`` is ``&#39;PARAMETRICSOFTPLUS&#39;``, param is a </span>
-<span class="sd">                  list of 2 numpy arrays ``[alpha, beta]``. The shape of ``alpha`` and </span>
+<span class="sd">                - When ``non_linearity`` is ``&#39;PARAMETRICSOFTPLUS&#39;``, param is a</span>
+<span class="sd">                  list of 2 numpy arrays ``[alpha, beta]``. The shape of ``alpha`` and</span>
 <span class="sd">                  `beta` is ``(C, )``, where ``C`` is either</span>
 <span class="sd">                  the number of input channels or 1. When ``C = 1``, same ``alpha`` and</span>
 <span class="sd">                  ``beta`` are applied to all channels.</span>
@@ -2011,18 +2021,18 @@
 <span class="sd">            - ``&#39;SEQUENCE_CONCAT&#39;``: Concatenate input blobs along the sequence axis.</span>
 <span class="sd">            - ``&#39;ADD&#39;``: Perform an element-wise summation over the input blobs.</span>
 <span class="sd">            - ``&#39;MULTIPLY&#39;``: Perform an element-wise multiplication over the input blobs.</span>
-<span class="sd">            - ``&#39;DOT&#39;``: Compute the dot product of the two input blobs. </span>
+<span class="sd">            - ``&#39;DOT&#39;``: Compute the dot product of the two input blobs.</span>
 <span class="sd">              In this mode, the length of ``input_names`` should be 2.</span>
-<span class="sd">            - ``&#39;COS&#39;``: Compute the cosine similarity of the two input blobs. </span>
+<span class="sd">            - ``&#39;COS&#39;``: Compute the cosine similarity of the two input blobs.</span>
 <span class="sd">              In this mode, the length of ``input_names`` should be 2.</span>
 <span class="sd">            - ``&#39;MAX&#39;``: Compute the element-wise maximum over the input blobs.</span>
 <span class="sd">            - ```&#39;MIN&#39;```: Compute the element-wise minimum over the input blobs.</span>
 <span class="sd">            - ``&#39;AVE&#39;``: Compute the element-wise average over the input blobs.</span>
 
 <span class="sd">        alpha: float</span>
-<span class="sd">            * if ``mode == &#39;ADD&#39;`` and there is only one ``input_name``, </span>
+<span class="sd">            * if ``mode == &#39;ADD&#39;`` and there is only one ``input_name``,</span>
 <span class="sd">              ``alpha`` is added to the input.</span>
-<span class="sd">            * if ``mode == &#39;MULTIPLY&#39;`` and there is only one ``input_name``, </span>
+<span class="sd">            * if ``mode == &#39;MULTIPLY&#39;`` and there is only one ``input_name``,</span>
 <span class="sd">              ``alpha`` is multiplied to the input.</span>
 
 <span class="sd">        See Also</span>
@@ -2073,7 +2083,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an upsample layer to the model.</span>
-<span class="sd">        Refer to the ``UpsampleLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``UpsampleLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -2081,10 +2091,10 @@
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
 <span class="sd">        scaling_factor_h: int or float</span>
-<span class="sd">            Scaling factor on the vertical direction. Float values only </span>
+<span class="sd">            Scaling factor on the vertical direction. Float values only</span>
 <span class="sd">            supported with ``BILINEAR`` and ``ALIGN_CORNERS_*``.</span>
 <span class="sd">        scaling_factor_w: int or float</span>
-<span class="sd">            Scaling factor on the horizontal direction. Float values only </span>
+<span class="sd">            Scaling factor on the horizontal direction. Float values only</span>
 <span class="sd">            supported with ``BILINEAR`` and ``ALIGN_CORNERS_*``.</span>
 <span class="sd">        input_name: str</span>
 <span class="sd">            The input blob name of this layer.</span>
@@ -2092,26 +2102,26 @@
 <span class="sd">            The output blob name of this layer.</span>
 <span class="sd">        mode: str</span>
 <span class="sd">            Overall interpolation mode. The following values are supported:</span>
-<span class="sd">            </span>
+
 <span class="sd">            * ``&#39;NN&#39;``: nearest neighbour</span>
 <span class="sd">            * ``&#39;BILINEAR&#39;``: bilinear interpolation</span>
-<span class="sd">            </span>
+
 <span class="sd">        linear_upsample_mode: str</span>
-<span class="sd">            Specifies the behavior for linear upsampling. Only valid when </span>
+<span class="sd">            Specifies the behavior for linear upsampling. Only valid when</span>
 <span class="sd">            Interpolation Mode is ``BILINEAR``.</span>
-<span class="sd">            </span>
-<span class="sd">            If input grid is ``[0, Xin-1]`` (corresponding to an input size of </span>
+
+<span class="sd">            If input grid is ``[0, Xin-1]`` (corresponding to an input size of</span>
 <span class="sd">            ``Xin``), and if the output size is ``Xout``,</span>
 <span class="sd">            then the grid points are sampled in the following manner:</span>
-<span class="sd">            </span>
+
 <span class="sd">            &#39;DEFAULT&#39;:</span>
 <span class="sd">                - ``spacing = (Xin-Xin/Xout) / (Xout-1)``</span>
 <span class="sd">                - ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``</span>
-<span class="sd">                </span>
+
 <span class="sd">            &#39;ALIGN_CORNERS_TRUE&#39;:</span>
 <span class="sd">                - ``spacing = (Xin-1) / (Xout-1)``</span>
 <span class="sd">                - ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``</span>
-<span class="sd">                </span>
+
 <span class="sd">            &#39;ALIGN_CORNERS_FALSE&#39;:</span>
 <span class="sd">                - ``spacing = Xin / Xout``</span>
 <span class="sd">                - ``grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,..,Xout-1``</span>
@@ -2187,7 +2197,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a scale layer to the model.</span>
-<span class="sd">        Refer to the ``ScaleLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``ScaleLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -2206,10 +2216,10 @@
 <span class="sd">            The output blob name of this layer.</span>
 
 <span class="sd">        shape_scale: list of int or tuple of int</span>
-<span class="sd">            List of ints that specifies the shape of the scale parameter. </span>
+<span class="sd">            List of ints that specifies the shape of the scale parameter.</span>
 <span class="sd">            Can be ``[1]``, ``[C]``, ``[1,H,W]``, or ``[C,H,W]``.</span>
 <span class="sd">        shape_bias: list of int</span>
-<span class="sd">            List of ints that specifies the shape of the bias parameter </span>
+<span class="sd">            List of ints that specifies the shape of the bias parameter</span>
 <span class="sd">            (if present). Can be ``[1]``, ``[C]``, ``[1,H,W]``, or ``[C,H,W]``.</span>
 
 <span class="sd">        See Also</span>
@@ -2256,7 +2266,7 @@
 <div class="viewcode-block" id="NeuralNetworkBuilder.add_bias"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bias">[docs]</a>    <span class="k">def</span> <span class="nf">add_bias</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">shape_bias</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a bias layer to the model.</span>
-<span class="sd">        Refer to the ``BiasLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``BiasLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -2270,7 +2280,7 @@
 <span class="sd">        output_name: str</span>
 <span class="sd">            The output blob name of this layer.</span>
 <span class="sd">        shape_bias: list of int</span>
-<span class="sd">            List of ints that specifies the shape of the bias parameter </span>
+<span class="sd">            List of ints that specifies the shape of the bias parameter</span>
 <span class="sd">            (if present). Can be ``[1]``, ``[C]``, ``[1,H,W]``, or ``[C,H,W]``.</span>
 
 <span class="sd">        See Also</span>
@@ -2304,7 +2314,7 @@
 <div class="viewcode-block" id="NeuralNetworkBuilder.add_sequence_repeat"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_sequence_repeat">[docs]</a>    <span class="k">def</span> <span class="nf">add_sequence_repeat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">nrep</span><span class="p">,</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">output_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a sequence repeat layer to the model.</span>
-<span class="sd">        Refer to the ``SequenceRepeatLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``SequenceRepeatLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -2355,12 +2365,12 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a convolution layer to the network.</span>
-<span class="sd">        Refer to the ``ConvolutionLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``ConvolutionLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        </span>
+
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
 
@@ -2384,27 +2394,27 @@
 
 <span class="sd">        border_mode: str</span>
 <span class="sd">            Option for the padding type and output blob shape. Can be either &#39;valid&#39; or &#39;same&#39;.</span>
-<span class="sd"> </span>
+
 <span class="sd">        groups: int</span>
-<span class="sd">            Number of kernel groups. Input is divided into groups along the channel axis. </span>
+<span class="sd">            Number of kernel groups. Input is divided into groups along the channel axis.</span>
 <span class="sd">            Each kernel group share the same weights.</span>
-<span class="sd"> </span>
+
 <span class="sd">        W: numpy.array or bytes() or None</span>
 
 <span class="sd">            Weight of the convolution kernels.</span>
 
-<span class="sd">            * If ``is_deconv`` is False, ``W`` should have </span>
+<span class="sd">            * If ``is_deconv`` is False, ``W`` should have</span>
 <span class="sd">              shape ``(height, width, kernel_channels, output_channels)``, where:</span>
 <span class="sd">                 ``kernel_channel = input_channels / groups``</span>
-<span class="sd">            * If ``is_deconv`` is True, ``W`` should have </span>
+<span class="sd">            * If ``is_deconv`` is True, ``W`` should have</span>
 <span class="sd">              shape ``(height, width, kernel_channels, output_channels / groups)``, where:</span>
 <span class="sd">                 ``kernel_channel = input_channels``</span>
 
-<span class="sd">            If ``W`` is of type ``bytes()`` (quantized), other quantization </span>
+<span class="sd">            If ``W`` is of type ``bytes()`` (quantized), other quantization</span>
 <span class="sd">            related arguments must be provided as well (see below).</span>
 
 <span class="sd">            For Core ML specification version &gt;=4, ``W`` can be ``None``. In this case,</span>
-<span class="sd">            the convolution layer takes 2 inputs, where the 1st input represents </span>
+<span class="sd">            the convolution layer takes 2 inputs, where the 1st input represents</span>
 <span class="sd">            the input feature map, and the 2nd input represents the weight blob.</span>
 
 <span class="sd">        b: numpy.array</span>
@@ -2417,16 +2427,16 @@
 <span class="sd">            - If False, bias is ignored.</span>
 
 <span class="sd">        is_deconv: boolean</span>
-<span class="sd">            Whether the convolution layer is performing a convolution or a </span>
+<span class="sd">            Whether the convolution layer is performing a convolution or a</span>
 <span class="sd">            transposed convolution (deconvolution).</span>
 
 <span class="sd">            - If True, the convolution layer is performing transposed convolution.</span>
 <span class="sd">            - If False, the convolution layer is performing regular convolution.</span>
 
 <span class="sd">        output_shape: tuple or None</span>
-<span class="sd">            Either ``None`` or a 2-tuple, specifying the output </span>
-<span class="sd">            shape ``(output_height, output_width)``. </span>
-<span class="sd">            </span>
+<span class="sd">            Either ``None`` or a 2-tuple, specifying the output</span>
+<span class="sd">            shape ``(output_height, output_width)``.</span>
+
 <span class="sd">            - Used only when ``is_deconv == True``.</span>
 <span class="sd">            - When ``is_deconv == False``, this parameter is ignored.</span>
 <span class="sd">            - If it is ``None``, the output shape is calculated automatically using the ``border_mode``.</span>
@@ -2442,39 +2452,39 @@
 <span class="sd">            Defaults to ``[1, 1]``.</span>
 
 <span class="sd">        padding_top, padding_bottom, padding_left, padding_right: int</span>
-<span class="sd">            Values of height (top, bottom) and width (left, right) padding </span>
+<span class="sd">            Values of height (top, bottom) and width (left, right) padding</span>
 <span class="sd">            to be used if ``border_more`` is ``&quot;valid&quot;``.</span>
 
 <span class="sd">        same_padding_asymmetry_mode: str</span>
 <span class="sd">            Type of asymmetric padding to be used when  ``border_mode`` is ``&#39;same&#39;``.</span>
 <span class="sd">            Can be either ``&#39;BOTTOM_RIGHT_HEAVY&#39;`` or  ``&#39;TOP_LEFT_HEAVY&#39;``.</span>
 
-<span class="sd">		Quantization</span>
-<span class="sd">			Quantization arguments expected in ``kwargs``, when ``W`` is of type ``bytes()``.</span>
-<span class="sd">        </span>
-<span class="sd">				quantization_type: str</span>
-<span class="sd">					When weights are quantized (that is, ``W`` is of type ``bytes()``), </span>
-<span class="sd">					this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``.</span>
+<span class="sd">                Quantization</span>
+<span class="sd">                        Quantization arguments expected in ``kwargs``, when ``W`` is of type ``bytes()``.</span>
 
-<span class="sd">				nbits: int</span>
-<span class="sd">					Should be between 1 and 8 (inclusive). Number of bits per weight </span>
-<span class="sd">					value. Only applicable when weights are quantized.</span>
+<span class="sd">                                quantization_type: str</span>
+<span class="sd">                                        When weights are quantized (that is, ``W`` is of type ``bytes()``),</span>
+<span class="sd">                                        this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``.</span>
 
-<span class="sd">				quant_scale: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">					scale vector to be used with linear quantization. Must be of </span>
-<span class="sd">					length either 1 or ``output_channels``.</span>
+<span class="sd">                                nbits: int</span>
+<span class="sd">                                        Should be between 1 and 8 (inclusive). Number of bits per weight</span>
+<span class="sd">                                        value. Only applicable when weights are quantized.</span>
 
-<span class="sd">				quant_bias: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">					bias vector to be used with linear quantization. Must be of </span>
-<span class="sd">					length either 1 or ``output_channels``.</span>
+<span class="sd">                                quant_scale: numpy.array(dtype=numpy.float32)</span>
+<span class="sd">                                        scale vector to be used with linear quantization. Must be of</span>
+<span class="sd">                                        length either 1 or ``output_channels``.</span>
 
-<span class="sd">				quant_lut: numpy.array(dtype=numpy.float32)</span>
-<span class="sd">					the LUT (look up table) to be used with LUT quantization. </span>
+<span class="sd">                                quant_bias: numpy.array(dtype=numpy.float32)</span>
+<span class="sd">                                        bias vector to be used with linear quantization. Must be of</span>
+<span class="sd">                                        length either 1 or ``output_channels``.</span>
+
+<span class="sd">                                quant_lut: numpy.array(dtype=numpy.float32)</span>
+<span class="sd">                                        the LUT (look up table) to be used with LUT quantization.</span>
 <span class="sd">                                        Must be of length 2^n bits.</span>
 
 <span class="sd">        Depthwise convolution</span>
-<span class="sd">        	Depthwise convolution is a special case of convolution, in which:</span>
-<span class="sd">        </span>
+<span class="sd">                Depthwise convolution is a special case of convolution, in which:</span>
+
 <span class="sd">                  * ``kernel_channels = 1 (== input_channels / groups)``</span>
 <span class="sd">                  * ``output_channels = channel_multiplier * input_channels``</span>
 <span class="sd">                  * ``groups = input_channels``</span>
@@ -2640,7 +2650,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a 3 dimensional convolution layer to the network.</span>
-<span class="sd">        Refer to the ``Convolution3DLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``Convolution3DLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -2668,17 +2678,17 @@
 <span class="sd">            Weight of the convolution kernels. ``W`` should have shape:</span>
 
 <span class="sd">            - If ``deconv`` is False:</span>
-<span class="sd">            </span>
+
 <span class="sd">                 ``(output_channels, kernel_channels, depth, height, width)``, where:</span>
-<span class="sd">                 </span>
+
 <span class="sd">                 ``kernel_channels = input_channels / groups``</span>
-<span class="sd">              </span>
-<span class="sd">            - If ``deconv`` is True: </span>
-<span class="sd">            </span>
+
+<span class="sd">            - If ``deconv`` is True:</span>
+
 <span class="sd">                 ``(output_channels / groups, kernel_channels, depth, height, width)``, where:</span>
-<span class="sd">              </span>
+
 <span class="sd">                 ``kernel_channels = input_channels``</span>
-<span class="sd">              </span>
+
 <span class="sd">        b: numpy.array</span>
 <span class="sd">            Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.</span>
 
@@ -2708,7 +2718,7 @@
 <span class="sd">            Tuple of length 3 if Convolution Transpose.</span>
 
 <span class="sd">        padding_mode: str</span>
-<span class="sd">            Option for the padding type and output blob shape. </span>
+<span class="sd">            Option for the padding type and output blob shape.</span>
 <span class="sd">            Can be ``&#39;custom&#39;``, ``&#39;valid&#39;``, or ``&#39;same&#39;``.</span>
 <span class="sd">            Defaults to ``&#39;valid&#39;``. Case-insensitive.</span>
 
@@ -2723,8 +2733,8 @@
 <span class="sd">            The output blob name of this layer.</span>
 
 <span class="sd">        Depthwise convolution</span>
-<span class="sd">        	Depthwise convolution is a special case of convolution, in which:</span>
-<span class="sd">        </span>
+<span class="sd">                Depthwise convolution is a special case of convolution, in which:</span>
+
 <span class="sd">            * ``kernel_channels = 1`` (``== input_channels / groups``)</span>
 <span class="sd">            * ``output_channels = channel_multiplier * input_channels``</span>
 <span class="sd">            * ``groups = input_channels``</span>
@@ -2837,7 +2847,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a pooling layer to the model that performs spatial pooling.</span>
-<span class="sd">        Refer to the ``PoolingLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``PoolingLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -2862,7 +2872,7 @@
 <span class="sd">            Type of pooling performed. Can either be ``&#39;MAX&#39;``, ``&#39;AVERAGE&#39;``, or ``&#39;L2&#39;``.</span>
 
 <span class="sd">        padding_type: str</span>
-<span class="sd">            Option for the type of padding and output blob shape. Can be either </span>
+<span class="sd">            Option for the type of padding and output blob shape. Can be either</span>
 <span class="sd">            ``&#39;VALID&#39;``, ``&#39;SAME&#39;``, or ``&#39;INCLUDE_LAST_PIXEL&#39;``.</span>
 
 <span class="sd">        input_name: str</span>
@@ -2874,20 +2884,20 @@
 <span class="sd">        exclude_pad_area: boolean</span>
 <span class="sd">            Whether to exclude padded area in the ``&#39;AVERAGE&#39;`` pooling operation,</span>
 <span class="sd">            default: true. This flag is only used with average pooling.</span>
-<span class="sd">            </span>
+
 <span class="sd">            - If True, the value of the padded area will be excluded.</span>
 <span class="sd">            - If False, the padded area will be included.</span>
 
 <span class="sd">        is_global: boolean</span>
 <span class="sd">            Whether the pooling operation is global. Defaults to False.</span>
-<span class="sd">            </span>
-<span class="sd">            - If True, the pooling operation is global. The pooling region </span>
+
+<span class="sd">            - If True, the pooling operation is global. The pooling region</span>
 <span class="sd">              is of the same size of the input blob.</span>
 <span class="sd">              Parameters ``height``, ``width``, ``stride_height``, and ``stride_width`` will be ignored.</span>
 <span class="sd">            - If False, the pooling operation is not global.</span>
 
 <span class="sd">        padding_top, padding_bottom, padding_left, padding_right: int</span>
-<span class="sd">            Values of height (top, bottom) and width (left, right) padding </span>
+<span class="sd">            Values of height (top, bottom) and width (left, right) padding</span>
 <span class="sd">            to be used if padding type is ``&quot;VALID&quot;`` or ``&quot;INCLUDE_LAST_PIXEL&quot;``.</span>
 
 <span class="sd">        same_padding_asymmetry_mode: str.</span>
@@ -2979,7 +2989,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a pooling layer to the model that performs spatial pooling across three dimensions.</span>
-<span class="sd">        Refer to the ``Pooling3DLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``Pooling3DLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3073,8 +3083,8 @@
 <span class="sd">        Add a layer to pool three spatial dimensions down to one value.</span>
 <span class="sd">        This behaves like a special case of Pooling3DLayerParams in which</span>
 <span class="sd">        the Kernel is the size of the input and there is no padding.</span>
-<span class="sd">        </span>
-<span class="sd">        Refer to the ``GlobalPooling3DLayerParams`` message in the specification </span>
+
+<span class="sd">        Refer to the ``GlobalPooling3DLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3123,8 +3133,8 @@
 
 
 <span class="sd">        Add a padding layer to the model that performs padding along spatial dimensions.</span>
-<span class="sd">        </span>
-<span class="sd">        Refer to the ``PaddingLayerParams`` message in the specification </span>
+
+<span class="sd">        Refer to the ``PaddingLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3190,7 +3200,7 @@
 <span class="sd">            - When it has 2 input blobs, it crops the first input blob based</span>
 <span class="sd">              on the dimension of the second blob with an offset.</span>
 
-<span class="sd">        Refer to the ``CropLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``CropLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3252,7 +3262,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a simple recurrent layer to the model.</span>
-<span class="sd">        Refer to the ``SimpleRecurrentLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``SimpleRecurrentLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3260,13 +3270,13 @@
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
 <span class="sd">        W_h: numpy.array</span>
-<span class="sd">            Weights of the recurrent layer&#39;s hidden state. </span>
+<span class="sd">            Weights of the recurrent layer&#39;s hidden state.</span>
 <span class="sd">            Must be of shape ``(hidden_size, hidden_size)``.</span>
 <span class="sd">        W_x: numpy.array</span>
-<span class="sd">            Weights of the recurrent layer&#39;s input. </span>
+<span class="sd">            Weights of the recurrent layer&#39;s input.</span>
 <span class="sd">            Must be of shape ``(hidden_size, input_size)``.</span>
 <span class="sd">        b: numpy.array or None</span>
-<span class="sd">            Bias of the recurrent layer&#39;s output. If ``None``, bias is ignored. </span>
+<span class="sd">            Bias of the recurrent layer&#39;s output. If ``None``, bias is ignored.</span>
 <span class="sd">            Otherwise it must be of shape ``(hidden_size, )``.</span>
 <span class="sd">        hidden_size: int</span>
 <span class="sd">            Number of hidden units. This is equal to the number of channels of output shape.</span>
@@ -3335,7 +3345,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a Gated-Recurrent Unit (GRU) layer to the model.</span>
-<span class="sd">        Refer to the ``GRULayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``GRULayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3344,17 +3354,17 @@
 <span class="sd">            The name of this layer.</span>
 <span class="sd">        W_h: [numpy.array]</span>
 <span class="sd">            List of recursion weight matrices. The ordering is ``[R_z, R_r, R_o]``,</span>
-<span class="sd">            where ``R_z``, ``R_r`` and ``R_o`` are weight matrices at update gate, </span>
+<span class="sd">            where ``R_z``, ``R_r`` and ``R_o`` are weight matrices at update gate,</span>
 <span class="sd">            reset gate and output gate.</span>
 <span class="sd">            The shapes of these matrices are ``(hidden_size, hidden_size)``.</span>
 <span class="sd">        W_x: [numpy.array]</span>
 <span class="sd">            List of input weight matrices. The ordering is ``[W_z, W_r, W_o]``,</span>
-<span class="sd">            where ``W_z``, ``W_r``, and ``W_o`` are weight matrices at update gate, </span>
+<span class="sd">            where ``W_z``, ``W_r``, and ``W_o`` are weight matrices at update gate,</span>
 <span class="sd">            reset gate and output gate.</span>
 <span class="sd">            The shapes of these matrices are ``(hidden_size, input_size)``.</span>
 <span class="sd">        b: [numpy.array] or None</span>
 <span class="sd">            List of biases of the GRU layer. The ordering is ``[b_z, b_r, b_o]``,</span>
-<span class="sd">            where ``b_z``, ``b_r``, and ``b_o`` are biases at update gate, </span>
+<span class="sd">            where ``b_z``, ``b_r``, and ``b_o`` are biases at update gate,</span>
 <span class="sd">            reset gate and output gate.</span>
 <span class="sd">            If ``None``, biases are ignored. Otherwise the shapes of the biases are ``(hidden_size, )``.</span>
 <span class="sd">        hidden_size: int</span>
@@ -3367,7 +3377,7 @@
 <span class="sd">            Defaults to ``&#39;TANH&#39;``.</span>
 <span class="sd">            See add_activation for more detailed description.</span>
 <span class="sd">        inner_activation: str</span>
-<span class="sd">            Inner activation function used at update and reset gates. </span>
+<span class="sd">            Inner activation function used at update and reset gates.</span>
 <span class="sd">            Can be one of the following options:</span>
 <span class="sd">            [``&#39;RELU&#39;``, ``&#39;TANH&#39;``, ``&#39;SIGMOID&#39;``, ``&#39;SCALED_TANH&#39;``, ``&#39;SIGMOID_HARD&#39;``, ``&#39;LINEAR&#39;``].</span>
 <span class="sd">            Defaults to ``&#39;SIGMOID_HARD&#39;``.</span>
@@ -3449,7 +3459,7 @@
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a Uni-directional LSTM layer to the model.</span>
-<span class="sd">        Refer to the ``UniDirectionalLSTMLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``UniDirectionalLSTMLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -3601,39 +3611,39 @@
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
 <span class="sd">        W_h: [numpy.array]</span>
-<span class="sd">            List of recursion weight matrices for the forward layer. </span>
+<span class="sd">            List of recursion weight matrices for the forward layer.</span>
 <span class="sd">            The ordering is ``[R_i, R_f, R_o, R_z]``,</span>
-<span class="sd">            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices at </span>
+<span class="sd">            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices at</span>
 <span class="sd">            input gate, forget gate, output gate and cell gate.</span>
 <span class="sd">            The shapes of these matrices are ``(hidden_size, hidden_size)``.</span>
 <span class="sd">        W_x: [numpy.array]</span>
-<span class="sd">            List of input weight matrices for the forward layer. The ordering </span>
+<span class="sd">            List of input weight matrices for the forward layer. The ordering</span>
 <span class="sd">            is ``[W_i, W_f, W_o, W_z]``,</span>
-<span class="sd">            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices at </span>
+<span class="sd">            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices at</span>
 <span class="sd">            input gate, forget gate, output gate and cell gate.</span>
 <span class="sd">            The shapes of these matrices are ``(hidden_size, input_size)``.</span>
 <span class="sd">        b: [numpy.array]</span>
-<span class="sd">            List of biases for the forward layer. The ordering is </span>
+<span class="sd">            List of biases for the forward layer. The ordering is</span>
 <span class="sd">            ``[b_i, b_f, b_o, b_z]``,</span>
-<span class="sd">            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input </span>
+<span class="sd">            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input</span>
 <span class="sd">            gate, forget gate, output gate and cell gate.</span>
-<span class="sd">            If ``None``, biases are ignored. Otherwise the shapes of the biases </span>
+<span class="sd">            If ``None``, biases are ignored. Otherwise the shapes of the biases</span>
 <span class="sd">            are ``(hidden_size, )``.</span>
 <span class="sd">        W_h_back: [numpy.array]</span>
-<span class="sd">            List of recursion weight matrices for the backward layer. The </span>
+<span class="sd">            List of recursion weight matrices for the backward layer. The</span>
 <span class="sd">            ordering is ``[R_i, R_f, R_o, R_z]``,</span>
-<span class="sd">            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices </span>
+<span class="sd">            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices</span>
 <span class="sd">            at input gate, forget gate, output gate and cell gate.</span>
 <span class="sd">            The shapes of these matrices are ``(hidden_size, hidden_size)``.</span>
 <span class="sd">        W_x_back: [numpy.array]</span>
-<span class="sd">            List of input weight matrices for the backward layer. The ordering </span>
+<span class="sd">            List of input weight matrices for the backward layer. The ordering</span>
 <span class="sd">            is `[W_i, W_f, W_o, W_z]``,</span>
-<span class="sd">            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices </span>
+<span class="sd">            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices</span>
 <span class="sd">            at input gate, forget gate, output gate and cell gate.</span>
 <span class="sd">            The shapes of these matrices are ``(hidden_size, input_size)``.</span>
 <span class="sd">        b_back: [numpy.array]</span>
 <span class="sd">            List of biases for the backward layer. The ordering is ``[b_i, b_f, b_o, b_z]``,</span>
-<span class="sd">            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input </span>
+<span class="sd">            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input</span>
 <span class="sd">            gate, forget gate, output gate and cell gate.</span>
 <span class="sd">            The shapes of the biases ``(hidden_size)``.</span>
 <span class="sd">        hidden_size: int</span>
@@ -3641,18 +3651,18 @@
 <span class="sd">        input_size: int</span>
 <span class="sd">            Number of the number of channels of input shape.</span>
 <span class="sd">        input_names: list of str</span>
-<span class="sd">            The input blob names of this layer, in the order of </span>
+<span class="sd">            The input blob names of this layer, in the order of</span>
 <span class="sd">            ``[x, h_input, c_input, h_reverse_input, c_reverse_input]``.</span>
 <span class="sd">        output_names: list of str</span>
-<span class="sd">            The output blob names of this layer, in the order of </span>
+<span class="sd">            The output blob names of this layer, in the order of</span>
 <span class="sd">            ``[y, h_output, c_output, h_reverse_output, c_reverse_output]``.</span>
 <span class="sd">        inner_activation: str</span>
-<span class="sd">            Inner activation function used at input and forget gate. Can be one </span>
+<span class="sd">            Inner activation function used at input and forget gate. Can be one</span>
 <span class="sd">            of the following options:</span>
 <span class="sd">            [``&#39;RELU&#39;``, ``&#39;TANH&#39;``, ``&#39;SIGMOID&#39;``, ``&#39;SCALED_TANH&#39;``, ``&#39;SIGMOID_HARD&#39;``, ``&#39;LINEAR&#39;``].</span>
 <span class="sd">            Defaults to ``&#39;SIGMOID&#39;``.</span>
 <span class="sd">        cell_state_update_activation: str</span>
-<span class="sd">            Cell state update activation function used at the cell state update gate. </span>
+<span class="sd">            Cell state update activation function used at the cell state update gate.</span>
 <span class="sd">            Can be one of the following options:</span>
 <span class="sd">            [``&#39;RELU&#39;``, ``&#39;TANH&#39;``, ``&#39;SIGMOID&#39;``, ``&#39;SCALED_TANH&#39;``, ``&#39;SIGMOID_HARD&#39;``, ``&#39;LINEAR&#39;``].</span>
 <span class="sd">            Defaults to ``&#39;TANH&#39;``.</span>
@@ -3661,15 +3671,15 @@
 <span class="sd">            [``&#39;RELU&#39;``, ``&#39;TANH&#39;``, ``&#39;SIGMOID&#39;``, ``&#39;SCALED_TANH&#39;``, ``&#39;SIGMOID_HARD&#39;``, ``&#39;LINEAR&#39;``].</span>
 <span class="sd">            Defaults to ``&#39;TANH&#39;``.</span>
 <span class="sd">        peep: [numpy.array] or None</span>
-<span class="sd">            List of peephole vectors for the forward layer. The ordering </span>
+<span class="sd">            List of peephole vectors for the forward layer. The ordering</span>
 <span class="sd">            is ``[p_i, p_f, p_o]``,</span>
-<span class="sd">            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input </span>
+<span class="sd">            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input</span>
 <span class="sd">            gate, forget gate, and output gate.</span>
 <span class="sd">            The shapes of the peephole vectors are ``(hidden_size,)``. Defaults to ``None``.</span>
 <span class="sd">        peep_back: [numpy.array] or None</span>
-<span class="sd">            List of peephole vectors for the backward layer. The ordering </span>
+<span class="sd">            List of peephole vectors for the backward layer. The ordering</span>
 <span class="sd">            is ``[p_i, p_f, p_o]``,</span>
-<span class="sd">            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input </span>
+<span class="sd">            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input</span>
 <span class="sd">            gate, forget gate, and output gate.</span>
 <span class="sd">            The shapes of the peephole vectors are ``(hidden_size,)``. Defaults to ``None``.</span>
 <span class="sd">        output_all: boolean</span>
@@ -3782,9 +3792,9 @@
 
 <div class="viewcode-block" id="NeuralNetworkBuilder.add_flatten"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_flatten">[docs]</a>    <span class="k">def</span> <span class="nf">add_flatten</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">output_name</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Add a flatten layer. Only flattens the channel, height and width axis. </span>
+<span class="sd">        Add a flatten layer. Only flattens the channel, height and width axis.</span>
 <span class="sd">        Leaves the sequence axis as is.</span>
-<span class="sd">        Refer to the ``FlattenLayerParams`` message in the </span>
+<span class="sd">        Refer to the ``FlattenLayerParams`` message in the</span>
 <span class="sd">        specification (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -4016,7 +4026,7 @@
 
 <span class="sd">        ``y = gamma * (x - mean) / sqrt(variance + epsilon) + beta``</span>
 
-<span class="sd">        Refer to the ``BatchnormLayerParams`` message in the specification </span>
+<span class="sd">        Refer to the ``BatchnormLayerParams`` message in the specification</span>
 <span class="sd">        (NeuralNetwork.proto) for more details.</span>
 
 <span class="sd">        Parameters</span>
@@ -4041,7 +4051,7 @@
 <span class="sd">            Set to ``True`` if mean and variance is to be computed from the input data.</span>
 <span class="sd">        instance_normalization: bool</span>
 <span class="sd">            Set compute_mean_var and this to ``True`` to perform</span>
-<span class="sd">            instance normalization. That is, mean and variance are computed </span>
+<span class="sd">            instance normalization. That is, mean and variance are computed</span>
 <span class="sd">            from the single input instance.</span>
 <span class="sd">        epsilon: float</span>
 <span class="sd">            Value of epsilon. Defaults to ``1e-5`` if not specified.</span>
@@ -4674,7 +4684,7 @@
 <span class="sd">              All the N~ RoIs are extracted from all the batches of the input.</span>
 <span class="sd">            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the</span>
 <span class="sd">              channel axis specifies the input batch id from which to extract the RoI and</span>
-<span class="sd">              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is </span>
+<span class="sd">              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is</span>
 <span class="sd">              extracted from the ``RoI[n,0,0,0]`` -th input batch id.</span>
 <span class="sd">              The last four elements of the channel axis specify the</span>
 <span class="sd">              bounding box coordinates.</span>
@@ -4689,22 +4699,22 @@
 <span class="sd">            Output width dimension.</span>
 
 <span class="sd">        mode: str</span>
-<span class="sd">            * The following values are supported: </span>
-<span class="sd">              ``&#39;STRICT_ALIGN_ENDPOINTS_MODE&#39;``, ``&#39;ALIGN_ENDPOINTS_MODE&#39;``, </span>
+<span class="sd">            * The following values are supported:</span>
+<span class="sd">              ``&#39;STRICT_ALIGN_ENDPOINTS_MODE&#39;``, ``&#39;ALIGN_ENDPOINTS_MODE&#39;``,</span>
 <span class="sd">              ``&#39;UPSAMPLE_MODE&#39;``, ``&#39;ROI_ALIGN_MODE&#39;``.</span>
 <span class="sd">            * This parameter determines the sampling grid used for bilinear interpolation.</span>
 
 <span class="sd">        normalized_roi: bool</span>
 <span class="sd">            * If true the bounding box coordinates must be in the interval ``[0, 1]``.</span>
-<span class="sd">              They are scaled by ``(input_height - 1)``, ``(input_width - 1)``; </span>
+<span class="sd">              They are scaled by ``(input_height - 1)``, ``(input_width - 1)``;</span>
 <span class="sd">              that is, based on the input spatial dimensions.</span>
 <span class="sd">            * If false the bounding box coordinates must be in the interval</span>
-<span class="sd">              ``[0, input_height - 1]`` and ``[0, input_width - 1]``, </span>
+<span class="sd">              ``[0, input_height - 1]`` and ``[0, input_width - 1]``,</span>
 <span class="sd">              respectively for height and width dimensions.</span>
 
 <span class="sd">        box_indices_mode: str</span>
-<span class="sd">            * The following values are supported: </span>
-<span class="sd">              ``&#39;CORNERS_HEIGHT_FIRST&#39;``, ``&#39;CORNERS_WIDTH_FIRST&#39;``, </span>
+<span class="sd">            * The following values are supported:</span>
+<span class="sd">              ``&#39;CORNERS_HEIGHT_FIRST&#39;``, ``&#39;CORNERS_WIDTH_FIRST&#39;``,</span>
 <span class="sd">              ``&#39;CENTER_SIZE_HEIGHT_FIRST&#39;``, ``&#39;CENTER_SIZE_WIDTH_FIRST&#39;``.</span>
 <span class="sd">            * Representation used to interpret the bounding box coordinates (RoI) input.</span>
 <span class="sd">                * ``&#39;CORNERS_HEIGHT_FIRST&#39;``: ``[h_start, w_start, h_end, w_end]``</span>
@@ -7130,7 +7140,7 @@
 <span class="sd">            Must be equal to the last dimension of the output, default: 0.</span>
 
 <span class="sd">        W: float32 numpy.array or bytes(), optional</span>
-<span class="sd">            Weight matrix of shape ``(weight_matrix_rows, weight_matrix_columns)``. </span>
+<span class="sd">            Weight matrix of shape ``(weight_matrix_rows, weight_matrix_columns)``.</span>
 <span class="sd">            If ``W`` is of type ``bytes()`` (quantized to 1-8 bits), other</span>
 <span class="sd">            quantization-related arguments must be provided as well (see below).</span>
 
@@ -7138,36 +7148,36 @@
 <span class="sd">            Bias vector of shape (weight_matrix_columns,).</span>
 
 <span class="sd">        Quantization</span>
-<span class="sd">        	Quantization arguments, used when ``W`` is of type ``bytes()``:</span>
+<span class="sd">                Quantization arguments, used when ``W`` is of type ``bytes()``:</span>
 
-<span class="sd">				is_quantized_weight: bool, optional</span>
-<span class="sd">					Set it to true when ``W`` is of type ``bytes()``, representing</span>
-<span class="sd">					quantized weights, default: false.</span>
+<span class="sd">                                is_quantized_weight: bool, optional</span>
+<span class="sd">                                        Set it to true when ``W`` is of type ``bytes()``, representing</span>
+<span class="sd">                                        quantized weights, default: false.</span>
 
-<span class="sd">				quantization_type: str, optional</span>
-<span class="sd">					When weights are quantized (that is, ``W`` is of type ``bytes()``),</span>
-<span class="sd">					this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``, default: ``&quot;linear&quot;``.</span>
+<span class="sd">                                quantization_type: str, optional</span>
+<span class="sd">                                        When weights are quantized (that is, ``W`` is of type ``bytes()``),</span>
+<span class="sd">                                        this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``, default: ``&quot;linear&quot;``.</span>
 
-<span class="sd">				nbits: int, optional</span>
-<span class="sd">					Should be between 1 and 8 (inclusive). Number of bits per weight value, default: 8.</span>
+<span class="sd">                                nbits: int, optional</span>
+<span class="sd">                                        Should be between 1 and 8 (inclusive). Number of bits per weight value, default: 8.</span>
 
-<span class="sd">				quant_scale: numpy.array(dtype=numpy.float32), optional</span>
-<span class="sd">					Scale vector to be used with linear quantization. </span>
-<span class="sd">					Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.</span>
+<span class="sd">                                quant_scale: numpy.array(dtype=numpy.float32), optional</span>
+<span class="sd">                                        Scale vector to be used with linear quantization.</span>
+<span class="sd">                                        Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.</span>
 
-<span class="sd">				quant_bias: numpy.array(dtype=numpy.float32), optional</span>
-<span class="sd">					Bias vector to be used with linear quantization. </span>
-<span class="sd">					Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.</span>
+<span class="sd">                                quant_bias: numpy.array(dtype=numpy.float32), optional</span>
+<span class="sd">                                        Bias vector to be used with linear quantization.</span>
+<span class="sd">                                        Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.</span>
 
-<span class="sd">				quant_lut: numpy.array(dtype=numpy.float32), optional</span>
-<span class="sd">					The LUT (look up table) to be used with LUT quantization. </span>
-<span class="sd">					Must be of length 2^n bits, default: ``None``.</span>
+<span class="sd">                                quant_lut: numpy.array(dtype=numpy.float32), optional</span>
+<span class="sd">                                        The LUT (look up table) to be used with LUT quantization.</span>
+<span class="sd">                                        Must be of length 2^n bits, default: ``None``.</span>
 
-<span class="sd">				int_8_dynamic_quantize: bool</span>
-<span class="sd">					Whether to quantize and dequantize before and after </span>
-<span class="sd">					batched matmul, respectively.</span>
-<span class="sd">					Expects byte weights, representing int8 values, if True. </span>
-<span class="sd">					See NeuralNetwork.proto for other validation conditions.</span>
+<span class="sd">                                int_8_dynamic_quantize: bool</span>
+<span class="sd">                                        Whether to quantize and dequantize before and after</span>
+<span class="sd">                                        batched matmul, respectively.</span>
+<span class="sd">                                        Expects byte weights, representing int8 values, if True.</span>
+<span class="sd">                                        See NeuralNetwork.proto for other validation conditions.</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>

@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -91,13 +92,19 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InputSpec</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span>
-                                            <span class="n">TensorInputType</span><span class="p">,</span> <span class="n">precondition</span><span class="p">,</span>
-                                            <span class="n">types</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">precondition</span><span class="p">,</span>
+    <span class="n">types</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">VALUE</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">broadcast_shapes</span><span class="p">,</span> <span class="n">promoted_primitive_type</span><span class="p">)</span>
+    <span class="n">infer_type_with_broadcast</span><span class="p">,</span>
+    <span class="n">promoted_primitive_type</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">elementwise_binary</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -121,22 +128,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Incompatible primitive types in broadcast operation&quot;</span><span class="p">)</span>
         <span class="n">primitive_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_dtype</span><span class="p">(</span><span class="n">primitive_type</span><span class="p">)</span>
 
-        <span class="c1"># broadcast</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">typea</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">typeb</span><span class="p">):</span>
-            <span class="c1"># both typea and typeb are not tensors</span>
-            <span class="k">return</span> <span class="n">primitive_type</span>
-        <span class="k">if</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">typea</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">typeb</span><span class="p">):</span>
-            <span class="c1"># a is tensor, b is not</span>
-            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">primitive_type</span><span class="p">,</span> <span class="n">typea</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">typea</span><span class="p">)</span> <span class="ow">and</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">typeb</span><span class="p">):</span>
-            <span class="c1"># a is not tensor, b is</span>
-            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">primitive_type</span><span class="p">,</span> <span class="n">typeb</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
-
-        <span class="c1"># both a, b are tensors</span>
-        <span class="n">shapea</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">typea</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
-        <span class="n">shapeb</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">typeb</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())</span>
-        <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">broadcast_shapes</span><span class="p">(</span><span class="n">shapea</span><span class="p">,</span> <span class="n">shapeb</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">primitive_type</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">infer_type_with_broadcast</span><span class="p">(</span><span class="n">typea</span><span class="p">,</span> <span class="n">typeb</span><span class="p">,</span> <span class="n">primitive_type</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

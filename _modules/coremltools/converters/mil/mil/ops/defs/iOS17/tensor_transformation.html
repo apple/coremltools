@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../../../../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../../../_static/css/norightmargin.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../../../../" id="documentation_options" src="../../../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">reshape</span> <span class="k">as</span> <span class="n">_reshape_iOS15</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS17</span> <span class="kn">import</span> <span class="n">_IOS17_TARGET</span>
+
+
+<div class="viewcode-block" id="reshape"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">reshape</span><span class="p">(</span><span class="n">_reshape_iOS15</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return a tensor that has the same values as ``x`` with shape ``shape``.</span>
+<span class="sd">    ``shape`` must have the same volume (number of elements) as ``x``.</span>
+
+<span class="sd">    The major difference between this version and the iOS 15 :py:class:`~.iOS15.tensor_transformation.reshape` is as follows:</span>
+
+<span class="sd">    When the ``shape`` contains ``0``,</span>
+<span class="sd">    the restriction about ``K == rank(x)`` is no longer enforced. Each ``0`` in ``shape`` will match the</span>
+<span class="sd">    corresponding dimension in ``x.shape``, counting from the rightmost element. So ``shape[i]``</span>
+<span class="sd">    matches ``input[j]`` if ``length(shape)-i == rank(input)-j``. If a ``0`` is out of range, assign ``1``</span>
+<span class="sd">    (equivalent to ``expand_dims`` for ``x.shape``).</span>
+
+<span class="sd">    More specifically, when ``x.shape`` is ``[2, 50]`` and ``shape`` is ``[1, 0, -1, 0]``, it will error out</span>
+<span class="sd">    in iOS 15 or iOS 16 because ``x`` has rank ``2`` while the ``len`` of ``shape`` is ``4``. In iOS 17, the result will</span>
+<span class="sd">    have ``shape`` ``[1, 1, 2, 50]``, because the rightmost ``0`` will be changed to the rightmost dim of</span>
+<span class="sd">    ``x.shape``, which is ``50``. There is no other ``0`` that has a corresponding dim in ``x.shape``, so it is set</span>
+<span class="sd">    as ``1``. Finally, the ``-1`` is calculated based on knowing dimensions that produce ``2``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
+
+<span class="sd">        * An ``n-D`` tensor or a scalar.</span>
+<span class="sd">        * If ``x`` has a fixed rank (and possibly contains symbolic dimension),</span>
+<span class="sd">          ``shape`` may contain elements that are not positive integers (see below).</span>
+<span class="sd">        * If ``x`` has a variadic rank, ``shape`` can only contain positive integers.</span>
+
+<span class="sd">    shape: tensor&lt;[K], i32&gt; (Required)</span>
+
+<span class="sd">        A 1-D tensor, with elements from the following:</span>
+
+<span class="sd">            * Positive integers.</span>
+<span class="sd">            * Symbols: All but one symbol in ``shape`` must be present in ``x.shape``.</span>
+<span class="sd">              The new symbol that is not present in ``x.shape`` represents a dimension</span>
+<span class="sd">              such that the total size remains constant. Symbol is illegal</span>
+<span class="sd">              if ``x`` has a variadic rank.</span>
+<span class="sd">            * ``-1``: ``-1`` introduces a new symbol (see Symbols). Therefore, ``-1`` is</span>
+<span class="sd">              allowed if all symbols in the ``shape`` appear in ``x.shape``. ``-1`` is illegal</span>
+<span class="sd">              if ``x`` has a variadic rank.</span>
+<span class="sd">            * ``0``: It will match the corresponding dimension in ``x.shape``. See the previous</span>
+<span class="sd">              description of different behaviors with iOS 17.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * Tensor with shape determined by the input shape.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp16, fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">replace_zeros_in_shape</span><span class="p">(</span><span class="n">from_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">to_shape</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Replaces 0s in `to_shape` by the corresponding dims in `from_shape`.</span>
+
+<span class="sd">        Overrides IOS15&#39;s method to demonstrate IOS17&#39;s different behaviours.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">to_shape</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># To do right alignment, we reverse the input and do left alignment instead.</span>
+            <span class="n">from_shape_reversed</span> <span class="o">=</span> <span class="n">from_shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">to_shape_reversed</span> <span class="o">=</span> <span class="n">to_shape</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">to_element</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_shape_reversed</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">to_element</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">to_shape_reversed</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">from_shape_reversed</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="k">if</span> <span class="n">idx</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">from_shape_reversed</span><span class="p">)</span> <span class="k">else</span> <span class="mi">1</span>
+                    <span class="p">)</span>
+            <span class="c1"># Reverse the result back to make the right alignment.</span>
+            <span class="n">to_shape</span> <span class="o">=</span> <span class="n">to_shape_reversed</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">to_shape</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

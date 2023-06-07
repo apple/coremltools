@@ -103,6 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -158,20 +159,28 @@ for more details.</p>
 <span class="c1"># Create a neural network binary classifier that classifies</span>
 <span class="c1"># 3-dimensional data points</span>
 <span class="c1"># Specify input and output dimensions</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">input_dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">output_dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,)</span>
+<span class="n">input_dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
+<span class="n">output_dim</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="p">,)</span>
 
 <span class="c1"># Specify input and output features</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">input_dim</span><span class="p">))]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;probs&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">output_dim</span><span class="p">))]</span>
+<span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">input_dim</span><span class="p">))]</span>
+<span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;probs&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">output_dim</span><span class="p">))]</span>
 
 <span class="c1"># Build a simple neural network with 1 inner product layer</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span><span class="o">.</span><span class="n">add_inner_product</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;ip_layer&#39;</span><span class="p">,</span> <span class="n">W</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span> <span class="n">input_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">output_channels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-<span class="o">...</span> <span class="n">has_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;probs&#39;</span><span class="p">)</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">)</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">add_inner_product</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;ip_layer&quot;</span><span class="p">,</span>
+    <span class="n">W</span><span class="o">=</span><span class="n">weights</span><span class="p">,</span>
+    <span class="n">b</span><span class="o">=</span><span class="n">bias</span><span class="p">,</span>
+    <span class="n">input_channels</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+    <span class="n">output_channels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">has_bias</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">input_name</span><span class="o">=</span><span class="s2">&quot;data&quot;</span><span class="p">,</span>
+    <span class="n">output_name</span><span class="o">=</span><span class="s2">&quot;probs&quot;</span><span class="p">,</span>
+<span class="p">)</span>
 
 <span class="c1"># save the spec by the builder</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">save_spec</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;network.mlmodel&#39;</span><span class="p">)</span>
+<span class="n">save_spec</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s2">&quot;network.mlmodel&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
@@ -239,9 +248,9 @@ of double.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Construct a builder that builds a neural network classifier with a 299 x 299 x 3</span>
 <span class="c1"># dimensional input and 1000 dimensional output</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">((</span><span class="mi">299</span><span class="p">,</span> <span class="mi">299</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;probs&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">((</span><span class="mi">1000</span><span class="p">,)))]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;classifier&#39;</span><span class="p">)</span>
+<span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">((</span><span class="mi">299</span><span class="p">,</span> <span class="mi">299</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))]</span>
+<span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;probs&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">((</span><span class="mi">1000</span><span class="p">,)))]</span>
+<span class="n">builder</span> <span class="o">=</span> <span class="n">NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;classifier&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -5415,7 +5424,7 @@ is the same as <code class="docutils literal notranslate"><span class="pre">inpu
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the neural network spec inputs to be 3 dimensional vector data1 and</span>
 <span class="c1"># 4 dimensional vector data2.</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span><span class="o">.</span><span class="n">set_input</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;data1&#39;</span><span class="p">,</span> <span class="s1">&#39;data2&#39;</span><span class="p">],</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">[(</span><span class="mi">3</span><span class="p">,),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,)])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_input</span><span class="p">(</span><span class="n">input_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">],</span> <span class="n">input_dims</span><span class="o">=</span><span class="p">[(</span><span class="mi">3</span><span class="p">,),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,)])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -5432,9 +5441,7 @@ Both the name and the array’s shape must be provided in the tuple.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">feature</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;output_tensor&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">((</span><span class="mi">299</span><span class="p">,</span> <span class="mi">299</span><span class="p">,</span> <span class="mi">3</span><span class="p">)))]</span>
-</pre></div>
-</div>
+<p>feature = [(‘output_tensor’, datatypes.Array((299, 299, 3)))]</p>
 </dd></dl>
 
 <dl class="py method">
@@ -5481,7 +5488,7 @@ as <code class="docutils literal notranslate"><span class="pre">output_names</sp
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the neural network spec outputs to be 3 dimensional vector feature1 and</span>
 <span class="c1"># 4 dimensional vector feature2.</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;feature1&#39;</span><span class="p">,</span> <span class="s1">&#39;feature2&#39;</span><span class="p">],</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">[(</span><span class="mi">3</span><span class="p">,),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,)])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="n">output_names</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;feature1&quot;</span><span class="p">,</span> <span class="s2">&quot;feature2&quot;</span><span class="p">],</span> <span class="n">output_dims</span><span class="o">=</span><span class="p">[(</span><span class="mi">3</span><span class="p">,),</span> <span class="p">(</span><span class="mi">4</span><span class="p">,)])</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -5537,7 +5544,7 @@ provide a dictionary with input names as keys.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the neural network spec training inputs to be 3 dimensional vector for &#39;input&#39; and</span>
 <span class="c1"># Double for &#39;target&#39;.</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span><span class="o">.</span><span class="n">set_training_input</span><span class="p">([(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s1">&#39;target&#39;</span><span class="p">,</span> <span class="s1">&#39;Double&#39;</span><span class="p">)])</span>
+<span class="n">builder</span><span class="o">.</span><span class="n">set_training_input</span><span class="p">([(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="s2">&quot;Double&quot;</span><span class="p">)])</span>
 </pre></div>
 </div>
 </dd></dl>

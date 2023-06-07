@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -106,7 +107,7 @@
         <span class="n">axes</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
         <span class="n">keep_dims</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -154,7 +155,7 @@
         <span class="n">axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
         <span class="n">keep_dims</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -199,16 +200,7 @@
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
-
-        <span class="n">reduced_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
-        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">reduced_shape</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">keep_dims</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
-            <span class="n">reduced_shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">reduced_shape</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
-
+        <span class="n">reduced_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_reduced_shape</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">reduced_shape</span><span class="p">))</span>
 
 
@@ -291,32 +283,32 @@
 <span class="k">class</span> <span class="nc">reduce_l1_norm</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the L1 normalization of elements across given dimensions of the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    See `reduce_mean &lt;https://www.tensorflow.org/api_docs/python/tf/math/reduce_mean?version=stable&gt;`_.</span>
-<span class="sd">    </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -330,24 +322,24 @@
 <span class="k">class</span> <span class="nc">reduce_l2_norm</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the L2 normalization of elements across given dimensions of the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
@@ -365,24 +357,24 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the natural logarithm of the sum of all the elements across given dimensions</span>
 <span class="sd">    of the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
@@ -403,32 +395,32 @@
 <span class="sd">    function, more numerically stable than ``log(sum(exp(input)))``. It avoids</span>
 <span class="sd">    overflows caused by taking the ``exp`` of large inputs and underflows caused by</span>
 <span class="sd">    taking the ``log`` of small inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    See `tf.math.reduce_logsumexp &lt;https://www.tensorflow.org/api_docs/python/tf/math/reduce_logsumexp&gt;`_.</span>
-<span class="sd">    </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -450,29 +442,29 @@
 <span class="k">class</span> <span class="nc">reduce_max</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the maximum of elements across given dimensions of the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
@@ -484,28 +476,28 @@
 <span class="k">class</span> <span class="nc">reduce_mean</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the mean of elements across given dimensions of the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    For an example, see `tf.math.reduce_mean &lt;https://www.tensorflow.org/api_docs/python/tf/math/reduce_mean?version=stable&gt;`_.</span>
@@ -519,24 +511,24 @@
 <span class="k">class</span> <span class="nc">reduce_min</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the minimum of elements across given dimensions of the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Must be 1-dimensional or higher.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
 <span class="sd">        * Scalar or tensor: The reduced tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: i32, fp16, fp32</span>
