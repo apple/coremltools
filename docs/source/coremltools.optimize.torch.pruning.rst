@@ -1,12 +1,12 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
-#
-#  Use of this source code is governed by a BSD-3-clause license that can be
-#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+Training-Time Pruning
+=====================
 
-"""
+Pruning a model is the process of sparsifying the weight matrices of the
+model's layers, thereby reducing its storage size. You can also use pruning to reduce a
+model's inference latency and power consumption. 
 
-_`MagnitudePruner`
-==================
+Magnitude Pruning
+-----------------
 
 .. autoclass:: coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig
     :members: from_dict, as_dict, from_yaml
@@ -17,39 +17,23 @@ _`MagnitudePruner`
 .. autoclass:: coremltools.optimize.torch.pruning.MagnitudePruner
     :members: prepare, step, report, finalize
 
-Pruning scheduler
-=================
 
-:obj:`coremltools.optimize.torch.pruning.pruning_scheduler` submodule contains classes
+Pruning scheduler
+-----------------
+
+The :obj:`coremltools.optimize.torch.pruning.pruning_scheduler` submodule contains classes
 that implement pruning schedules, which can be used for changing the
 sparsity of pruning masks applied by various types of pruning algorithms
 to prune neural network parameters.
-
-
-Base class
-----------
 
 .. autoclass:: coremltools.optimize.torch.pruning.pruning_scheduler.PruningScheduler
     :show-inheritance:
     :no-members:
 
-
-PolynomialDecayScheduler
-------------------------
-
 .. autoclass:: coremltools.optimize.torch.pruning.pruning_scheduler.PolynomialDecayScheduler
     :show-inheritance:
     :members: compute_sparsity
 
-
-ConstantSparsityScheduler
--------------------------
-
 .. autoclass:: coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler
     :show-inheritance:
     :members: compute_sparsity
-"""
-
-
-from .magnitude_pruner import MagnitudePruner, MagnitudePrunerConfig, ModuleMagnitudePrunerConfig
-from .pruning_scheduler import ConstantSparsityScheduler, PolynomialDecayScheduler
