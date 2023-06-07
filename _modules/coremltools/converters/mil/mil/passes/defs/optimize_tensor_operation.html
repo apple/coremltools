@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -90,7 +91,10 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend._utils</span> <span class="kn">import</span> <span class="n">value_at</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.block</span> <span class="kn">import</span> <span class="n">is_current_opset_version_compatible_with</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_check_child_op_type</span><span class="p">,</span>
@@ -100,10 +104,11 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
 
+
 <div class="viewcode-block" id="expand_high_rank_reshape_and_transpose"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose">[docs]</a><span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">expand_high_rank_reshape_and_transpose</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Detect the pattern ``reshape_1--&gt;transpose--&gt;reshape_2``, where ``reshape_1`` has </span>
+<span class="sd">    Detect the pattern ``reshape_1--&gt;transpose--&gt;reshape_2``, where ``reshape_1`` has</span>
 <span class="sd">    a output tensor with rank &gt;= 6, and the reshape_2 produces a tensor with rank &lt;= 5.</span>
 
 <span class="sd">    In general, we can expand this pattern into a sequence of rank 4 ``reshape`` and ``transpose`` ops,</span>
@@ -133,7 +138,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_match_pattern</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
-        <span class="c1"># We are detecting the </span>
+        <span class="c1"># We are detecting the</span>
         <span class="c1"># reshape(&gt;= rank 6) -&gt; transpose -&gt; reshape(&lt;= rank 5) pattern</span>
         <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;reshape&quot;</span><span class="p">:</span>
@@ -174,7 +179,7 @@
         <span class="n">original_shape</span> <span class="o">=</span> <span class="n">reshape_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">original_perm</span> <span class="o">=</span> <span class="n">transpose_op</span><span class="o">.</span><span class="n">perm</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 
-        <span class="c1"># Group the consecutive axes in the perm, sometimes this could directly lower the </span>
+        <span class="c1"># Group the consecutive axes in the perm, sometimes this could directly lower the</span>
         <span class="c1"># rank under 6.</span>
         <span class="c1">#</span>
         <span class="c1"># For instance:</span>
@@ -195,7 +200,7 @@
         <span class="n">group_axes</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="n">res</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">original_perm</span><span class="p">)):</span>  
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">original_perm</span><span class="p">)):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">original_perm</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">==</span> <span class="n">original_perm</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span>
                 <span class="n">res</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">original_perm</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
             <span class="k">else</span><span class="p">:</span>
@@ -225,7 +230,7 @@
             <span class="c1"># we can directly use them to replace the original pattern</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">reshape_op</span><span class="p">)</span>
             <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="n">perm</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">reshape_op</span><span class="p">)</span>
-        
+
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Otherwise, we need to expand the rank-N tensor into N reshape, and N transpose ops.</span>
             <span class="c1"># Note that all intrermediate tensors have rank 4.</span>
@@ -251,9 +256,9 @@
                 <span class="n">dim</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span>
                 <span class="n">memo</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
                 <span class="n">reshape_shape</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">leading_dim</span><span class="p">,</span> 
-                    <span class="n">_get_prod</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">memo</span><span class="p">),</span> 
-                    <span class="n">dim</span><span class="p">,</span> 
+                    <span class="n">leading_dim</span><span class="p">,</span>
+                    <span class="n">_get_prod</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">memo</span><span class="p">),</span>
+                    <span class="n">dim</span><span class="p">,</span>
                     <span class="n">_get_prod</span><span class="p">(</span><span class="n">axis</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">rank</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">memo</span><span class="p">)</span>
                 <span class="p">]</span>
                 <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">reshape_shape</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">reshape_op</span><span class="p">)</span>
@@ -632,8 +637,21 @@
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="c1"># remove onehot and matmul and replace with gather op</span>
-        <span class="n">out_name</span> <span class="o">=</span> <span class="n">matmul_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
-        <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">W_var</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">out_name</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_current_opset_version_compatible_with</span><span class="p">(</span><span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS17</span><span class="p">):</span>
+            <span class="c1"># IOS17 `gather` requires non-negative indices.</span>
+            <span class="n">root_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+                <span class="n">cond</span><span class="o">=</span><span class="n">mb</span><span class="o">.</span><span class="n">greater_equal</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">),</span>
+                <span class="n">a</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span>
+                <span class="n">b</span><span class="o">=</span><span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span>
+                    <span class="n">x</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span>
+                    <span class="n">y</span><span class="o">=</span><span class="n">value_at</span><span class="p">(</span><span class="n">mb</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">W_var</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">),</span>
+                    <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">,</span>
+                <span class="p">),</span>
+                <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
+            <span class="n">x</span><span class="o">=</span><span class="n">W_var</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="n">root_var</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">matmul_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">matmul_op</span>
+        <span class="p">)</span>
 
         <span class="n">matmul_op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
             <span class="n">anchor_op</span><span class="o">=</span><span class="n">matmul_op</span><span class="p">,</span> <span class="n">old_var</span><span class="o">=</span><span class="n">matmul_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">new_var</span><span class="o">=</span><span class="n">x</span>
@@ -800,20 +818,20 @@
 <span class="k">class</span> <span class="nc">use_reflection_padding</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Identify a reflection padding layer composed out of `slices` and `concats`.</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. code-block::</span>
 
 <span class="sd">        Input graph:</span>
-<span class="sd">        </span>
+
 <span class="sd">                ------------------------------------------------------------------------------------- |</span>
 <span class="sd">                |                                                                                     v</span>
 <span class="sd">        input(1, 2, 6, 8) ------&gt; slice_by_index(begin=[0, 0, 0, 1], end=[0, 0, 0, 2]) -----&gt; concat(axis=3) ---&gt; out(1, 2, 6, 10)</span>
 <span class="sd">                |                                                                                     ^</span>
 <span class="sd">                ----------------&gt; slice_by_index(begin=[0, 0, 0, -2], end=[0, 0, 0, -1]) -------------|</span>
 
-<span class="sd">        </span>
+
 <span class="sd">        Output graph:</span>
-<span class="sd">        </span>
+
 <span class="sd">        input(1, 2, 6, 8) -----0&gt; pad(mode=reflect, size=[0, 0, 1, 1]) -----&gt; out(1, 2, 6, 10)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>

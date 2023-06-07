@@ -21,6 +21,7 @@ This document is the API Reference for coremltools. For guides, installation ins
    source/coremltools.converters.mil.input_types.rst
    source/coremltools.converters.mil.mil.ops.defs.rst
    source/coremltools.converters.mil.mil.passes.defs.rst
+   source/coremltools.optimize.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

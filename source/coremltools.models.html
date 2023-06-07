@@ -164,6 +164,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -341,32 +342,33 @@ loaded_model = MLModel(“my_model.mlpackage”)</p>
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.predict" title="Permalink to this definition"></a></dt>
 <dd><p>Return predictions for the model.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>data: dict[str, value]</strong></dt><dd><p>Dictionary of data to make predictions from where the keys are
-the names of the input features.
-If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.</p>
+<dd class="field-odd"><dl>
+<dt><strong>data: dict[str, value] or list[dict[str, value]]</strong></dt><dd><p>Dictionary of data to use for predictions, where the keys are the names of the input features.
+For batch predictons, use a list of such dictionaries.</p>
+<p>The following dictionary values types are acceptable: list, array, numpy.ndarray, tensorflow.Tensor
+and torch.Tensor.</p>
 </dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>dict[str, value]</dt><dd><p>Predictions as a dictionary where each key is the output feature
-name.</p>
+<dt>dict[str, value]</dt><dd><p>Predictions as a dictionary where each key is the output feature name.</p>
+</dd>
+<dt>list[dict[str, value]]</dt><dd><p>For batch prediction, returns a list of the above dictionaries.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
 <p>data = {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240}
-predictions = model.predict(data)
-data = {‘array’: numpy.array([[1.0, 2.0], [3.0, 4.0]])}
-predictions = model.predict(data)
-data = {‘array’: torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}
-predictions = model.predict(data)
-data = {‘array’: tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}
 predictions = model.predict(data)</p>
+<dl class="simple">
+<dt>data = [ {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240},</dt><dd><p>{‘bedroom’: 4.0, ‘bath’: 2.5, ‘size’: 2400} ]</p>
+</dd>
+</dl>
+<p>batch_predictions = model.predict(data)</p>
 </dd></dl>
 
 <dl class="py method">

@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -93,25 +94,13 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.backend.mil.load</span> <span class="kn">import</span> <span class="n">should_use_weight_file</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">constexpr_affine_dequantize</span><span class="p">,</span>
-    <span class="n">constexpr_lut_to_dense</span><span class="p">,</span>
-    <span class="n">constexpr_sparse_to_dense</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">is_builtin</span><span class="p">,</span>
-    <span class="n">nptype_from_builtin</span><span class="p">,</span>
-    <span class="n">numpy_type_to_builtin_type</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="n">_get_kmeans_lookup_table_and_weight</span>
 
 
 <span class="k">class</span> <span class="nc">ComputePrecision</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
@@ -223,6 +212,16 @@
 <span class="sd">    - For each output of dtype float16, inject a &quot;cast&quot; op to change it back to float32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
+    <span class="c1"># Activation related ops with alpha/beta parameters.</span>
+    <span class="n">_ACTIVATION_ALPHA_OPS</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;elu&quot;</span><span class="p">,</span> <span class="s2">&quot;leaky_relu&quot;</span><span class="p">,</span> <span class="s2">&quot;prelu&quot;</span><span class="p">,</span> <span class="s2">&quot;thresholded_relu&quot;</span><span class="p">}</span>
+    <span class="n">_ACTIVATION_ALPHA_BETA_OPS</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;clamped_relu&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;linear_activation&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;scaled_tanh&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;sigmoid_hard&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;softplus_parametric&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FP16ComputePrecision</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">target_dtype</span> <span class="o">=</span> <span class="s2">&quot;fp16&quot;</span>
@@ -231,8 +230,13 @@
         <span class="c1"># For reference: Checkout test_single_input_to_multiple_operations in `TestFP16CastTransform`.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">cache_vars</span> <span class="o">=</span> <span class="p">{}</span>
 
-    <span class="k">def</span> <span class="nf">fp16_overflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="c1"># Constants with values more than 65504 or less than -65504 overflows in FP16</span>
+    <span class="k">def</span> <span class="nf">fp16_overflow</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="c1"># This overflow check consists of two parts:</span>
+        <span class="c1"># 1. For valid fp32 numbers (abs &lt; 1e38), we want their exact values,</span>
+        <span class="c1">#    so we make sure they are within fp16 range [-65504, 65504]</span>
+        <span class="c1"># 2. For inifinities (abs &gt;= 1e38), their exact values does not matter,</span>
+        <span class="c1">#    so we can always downcast them to fp16 inf. For example, in attention mask</span>
+        <span class="c1">#    we just want -inf to make the masked entries have 0 probability after softmax</span>
         <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">is_list_input</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">is_list_input</span><span class="p">:</span>
@@ -243,15 +247,18 @@
                     <span class="ow">and</span> <span class="n">var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span>
                     <span class="ow">and</span> <span class="n">var</span><span class="o">.</span><span class="n">is_tensor_or_scalar_of</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span>
                 <span class="p">):</span>
-                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">),</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">65504</span><span class="p">:</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="n">abs_value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">abs_value</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">abs_value</span> <span class="o">&lt;</span> <span class="mf">1e38</span><span class="p">)],</span> <span class="n">initial</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">65504</span><span class="p">:</span>
                         <span class="k">return</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="kc">False</span>
 
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-
+    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determines if op is valid for fp16 casting.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;cast&quot;</span><span class="p">,</span> <span class="s2">&quot;while_loop&quot;</span><span class="p">,</span> <span class="s2">&quot;cond&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
+        <span class="c1"># TODO: Remove after supporting FP16 dynamic quantize transformation for list ops (rdar://74458192)</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="p">[</span>
             <span class="s2">&quot;make_list&quot;</span><span class="p">,</span>
             <span class="s2">&quot;list_gather&quot;</span><span class="p">,</span>
@@ -260,8 +267,9 @@
             <span class="s2">&quot;list_write&quot;</span><span class="p">,</span>
             <span class="s2">&quot;list_length&quot;</span><span class="p">,</span>
         <span class="p">]:</span>
-            <span class="k">return</span> <span class="kc">False</span>  <span class="c1">#  rdar://74458192</span>
+            <span class="k">return</span> <span class="kc">False</span>
 
+        <span class="c1"># TODO: Remove after supporting IOS17 FP16 RNN Ops (rdar://108143371)</span>
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;gru&quot;</span><span class="p">,</span> <span class="s2">&quot;rnn&quot;</span><span class="p">,</span> <span class="s2">&quot;lstm&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -270,12 +278,21 @@
 
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="k">def</span> <span class="nf">is_valid_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">param_name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">should_cast_parameter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">param_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Determines if a param of an op should be casted to fp16.&quot;&quot;&quot;</span>
+        <span class="c1"># Make sure the param is valid for fp16 when type domain is specified.</span>
         <span class="n">type_domain</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">input_spec</span><span class="o">.</span><span class="n">input_types</span><span class="p">[</span><span class="n">param_name</span><span class="p">],</span> <span class="s2">&quot;type_domain&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">type_domain</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">type_domain</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">True</span>
-            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span> <span class="ow">in</span> <span class="n">type_domain</span>
+        <span class="k">if</span> <span class="n">type_domain</span> <span class="ow">and</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">type_domain</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS17</span><span class="p">:</span>
+            <span class="c1"># In IOS17+ activation ops with alpha/beta support mixed precision, and we don&#39;t want to</span>
+            <span class="c1"># cast alpha/beta to fp16 for better numerical accuracy.</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ACTIVATION_ALPHA_OPS</span> <span class="ow">and</span> <span class="n">param_name</span> <span class="o">==</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ACTIVATION_ALPHA_BETA_OPS</span> <span class="ow">and</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">}:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
         <span class="k">return</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">_check_underflow_to_zero</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_var</span><span class="p">,</span> <span class="n">var</span><span class="p">):</span>
@@ -314,7 +331,7 @@
 
         <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">inputs</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="c1"># First loop, iterates over all the input parameters of an operation.</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_valid_parameter</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">should_cast_parameter</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
                 <span class="k">continue</span>
 
             <span class="n">is_list_input</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span>
@@ -386,14 +403,14 @@
 <span class="k">class</span> <span class="nc">add_fp16_cast</span><span class="p">(</span><span class="n">FP16ComputePrecision</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    For each input of dtype float32, inject a ``cast`` op to change it to float16 dtype.</span>
-<span class="sd">    </span>
+
 <span class="sd">    For each output of dtype float16, inject a ``cast`` op to change it back to float32.</span>
 
 <span class="sd">    This pass is the registered interface for FP16ComputePrecision, which makes it consistent with</span>
 <span class="sd">    other passes&#39; interfaces.</span>
 
 <span class="sd">    Support options:</span>
-<span class="sd">    </span>
+
 <span class="sd">    - ``skip_ops_by_type``: Skip op types specified by comma-separated string; for example, ``&quot;mul,const&quot;``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -406,540 +423,6 @@
     <span class="nd">@skip_ops_by_type</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span> <span class="nf">skip_ops_by_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">criteria</span><span class="p">:</span> <span class="n">Text</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_skip_ops_by_type</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">criteria</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">))</span></div>
-
-
-<span class="k">class</span> <span class="nc">SparseParams</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nonzero_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span> <span class="o">=</span> <span class="n">nonzero_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">mask</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
-
-
-<span class="k">class</span> <span class="nc">WeightSparsifier</span><span class="p">(</span><span class="n">AbstractQuantizationPass</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This transform does the following, for each const op and if the &quot;op_selector&quot; return True:</span>
-<span class="sd">    - (self.sparsity) fraction of values with the least absolute value are zeroed out.</span>
-<span class="sd">    - If fake_compression=False,  Zeroed-Out Value is encoded via constexpr_sparse_to_dense op</span>
-<span class="sd">    - If fake_compression=True,   Zeroed-Out Value is encoded via const op</span>
-<span class="sd">    - Old const is replaced by a new operation with zeroed-out value.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">WEIGHT_SPARSIFICATION_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;THRESHOLD_BASED&quot;</span><span class="p">,</span> <span class="s2">&quot;PERCENTILE_BASED&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span>
-        <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;threshold_based&quot;</span><span class="p">,</span>
-        <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span>
-        <span class="n">target_percentile</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-        <span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-        <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fake_compression</span> <span class="o">=</span> <span class="n">fake_compression</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">=</span> <span class="n">threshold</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">target_percentile</span> <span class="o">=</span> <span class="n">target_percentile</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightSparsifier</span><span class="o">.</span><span class="n">WEIGHT_SPARSIFICATION_MODES</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Only mode </span><span class="si">{}</span><span class="s2"> supported for weight sparsification. Got mode </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">WeightSparsifier</span><span class="o">.</span><span class="n">WEIGHT_SPARSIFICATION_MODES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;PERCENTILE_BASED&quot;</span> <span class="ow">and</span> <span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">target_percentile</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_percentile</span> <span class="o">&gt;</span> <span class="mi">1</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid value of target_percentile: </span><span class="si">{}</span><span class="s2">. Needs to be in [0, 1]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">target_percentile</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;THRESHOLD_BASED&quot;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid value of threshold: </span><span class="si">{}</span><span class="s2">. Needs to be in [0, inf)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span>
-            <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">and</span> <span class="n">should_use_weight_file</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">target_percentile</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-
-        <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-
-        <span class="k">def</span> <span class="nf">sparsify_with_percentile</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">target_percentile</span><span class="p">):</span>
-            <span class="n">q</span> <span class="o">=</span> <span class="n">target_percentile</span> <span class="o">*</span> <span class="mi">100</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">),</span> <span class="n">q</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">sparsify_with_thresohld</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">threshold</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only numpy arrays are supported&quot;</span><span class="p">)</span>
-
-        <span class="n">flattened_val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;PERCENTILE_BASED&quot;</span><span class="p">:</span>
-            <span class="n">flattened_val</span> <span class="o">=</span> <span class="n">sparsify_with_percentile</span><span class="p">(</span><span class="n">flattened_val</span><span class="p">,</span> <span class="n">target_percentile</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;THRESHOLD_BASED&quot;</span><span class="p">:</span>
-            <span class="n">flattened_val</span> <span class="o">=</span> <span class="n">sparsify_with_thresohld</span><span class="p">(</span><span class="n">flattened_val</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
-
-        <span class="n">params</span> <span class="o">=</span> <span class="n">SparseParams</span><span class="p">()</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">nonzero_data</span> <span class="o">=</span> <span class="n">flattened_val</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">flattened_val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)]</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">flattened_val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">shape</span>
-        <span class="k">return</span> <span class="n">params</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">SparseParams</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid type of params&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">constexpr_sparse_to_dense</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="n">block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
-        <span class="n">sparse_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_percentile</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_compression</span><span class="p">:</span>
-            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_sparse_to_dense</span><span class="p">(</span>
-                <span class="n">nonzero_data</span><span class="o">=</span><span class="n">sparse_params</span><span class="o">.</span><span class="n">nonzero_data</span><span class="p">,</span>
-                <span class="n">mask</span><span class="o">=</span><span class="n">sparse_params</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span>
-                <span class="n">shape</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">(</span><span class="n">sparse_params</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
-                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_sparsified&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">decompressed_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">sparse_params</span><span class="p">)</span>
-            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
-                <span class="n">val</span><span class="o">=</span><span class="n">decompressed_val</span><span class="p">,</span>
-                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_fake_sparsified&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
-            <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-            <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
-            <span class="n">no_check_var_types</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
-
-
-<span class="k">class</span> <span class="nc">LutParams</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lut</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lut</span> <span class="o">=</span> <span class="n">lut</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
-
-
-<span class="k">class</span> <span class="nc">WeightPalettizer</span><span class="p">(</span><span class="n">AbstractQuantizationPass</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This transform does the following, for each const op and if the &quot;op_selector&quot; return True:</span>
-<span class="sd">    - A linear look up table with 2**(nbits) entries is created and value is represented via indexing into this look up table.</span>
-<span class="sd">    - If fake_compression=False,  compressed value is encoded via constexpr_lut_to_dense op</span>
-<span class="sd">    - If fake_compression=True,   compressed value is decompressed and then encoded via const op</span>
-<span class="sd">    - Old const op is replaced by a newly created operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">WEIGHT_PALETTIZATION_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;KMEANS&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIFORM&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIQUE&quot;</span><span class="p">,</span> <span class="s2">&quot;CUSTOM&quot;</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
-        <span class="bp">self</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">lut_function</span><span class="o">=</span><span class="kc">None</span>
-    <span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fake_compression</span> <span class="o">=</span> <span class="n">fake_compression</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nbits</span> <span class="o">=</span> <span class="n">nbits</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">lut_function</span> <span class="o">=</span> <span class="n">lut_function</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightPalettizer</span><span class="o">.</span><span class="n">WEIGHT_PALETTIZATION_MODES</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Only mode </span><span class="si">{}</span><span class="s2"> supported for weight palettization. Got mode </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">WeightPalettizer</span><span class="o">.</span><span class="n">WEIGHT_PALETTIZATION_MODES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">nbits</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;KMEANS&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIFORM&quot;</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;nbits must be provided for mode </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">nbits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;UNIQUE&quot;</span><span class="p">,</span> <span class="s2">&quot;CUSTOM&quot;</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;nbits must NOT be provided for mode </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbits</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbits</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid value of nbits (</span><span class="si">{}</span><span class="s2">) for palettization. Supported bits are {{1, 2, 4, 6, 8}}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">nbits</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;CUSTOM&quot;</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">lut_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;lut_function must be None if mode is not custom, and that it cannot be None when the mode is custom.&quot;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;CUSTOM&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_function</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;A function object must be provided as lut_function. Got a lut_functions as type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_function</span><span class="p">)</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">and</span> <span class="n">should_use_weight_file</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lut_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-
-        <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-
-        <span class="k">def</span> <span class="nf">compress_kmeans</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
-            <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
-            <span class="n">lut</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span>
-
-        <span class="k">def</span> <span class="nf">compress_uniform</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-            <span class="n">val_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-            <span class="n">val_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">val_max</span> <span class="o">-</span> <span class="n">val_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(((</span><span class="n">val</span> <span class="o">-</span> <span class="n">val_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">val_max</span> <span class="o">-</span> <span class="n">val_min</span><span class="p">))</span> <span class="o">*</span> <span class="p">((</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">uint8</span>
-            <span class="p">)</span>
-            <span class="n">lut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span><span class="p">))</span> <span class="o">*</span> <span class="n">scale</span> <span class="o">+</span> <span class="n">val_min</span>
-            <span class="n">lut</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span>
-
-        <span class="k">def</span> <span class="nf">get_nbits_for_unique_mode</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-            <span class="n">unique_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="k">for</span> <span class="n">nbits</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_vals</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span><span class="p">:</span>
-                    <span class="k">return</span> <span class="n">nbits</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;weight value cannot be represented in an 8 bits palettization. Skipped.&quot;</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="k">return</span> <span class="kc">None</span>
-
-        <span class="k">def</span> <span class="nf">compress_unique</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-            <span class="n">unique_vals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_vals</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Too many unique values </span><span class="si">{}</span><span class="s2"> in the weight. Couldn&#39;t represented in </span><span class="si">{}</span><span class="s2"> bits.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="n">unique_vals</span><span class="p">),</span> <span class="n">nbits</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-            <span class="n">lut</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span><span class="p">)</span>
-            <span class="n">lut</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_vals</span><span class="p">)]</span> <span class="o">=</span> <span class="n">unique_vals</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">),))</span>
-            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lut</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_vals</span><span class="p">)]):</span>
-                <span class="n">indices</span> <span class="o">+=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">val</span> <span class="o">==</span> <span class="n">k</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span> <span class="o">-</span> <span class="mi">1</span>
-            <span class="k">assert</span> <span class="p">(</span>
-                <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">indices</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">0</span>
-            <span class="p">),</span> <span class="s2">&quot;weight must be corresponding to one existing indice&quot;</span>
-
-            <span class="n">lut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">lut</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span>
-
-        <span class="k">def</span> <span class="nf">pack_indices_into_bytes_array</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
-            <span class="n">bitarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="n">nbits</span><span class="p">]</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="n">bitarray</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">check_lut_parameters_are_valid</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;LUT and indices must be type of numpy array.&quot;</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">indices</span><span class="o">.</span><span class="n">size</span> <span class="o">!=</span> <span class="n">val</span><span class="o">.</span><span class="n">size</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Indices size (</span><span class="si">{}</span><span class="s2">) mismatched with the original weight(</span><span class="si">{}</span><span class="s2">).&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">indices</span><span class="o">.</span><span class="n">size</span><span class="p">,</span> <span class="n">val</span><span class="o">.</span><span class="n">size</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">indices</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Indices must be a numpy vector of type uint8. Found shape </span><span class="si">{}</span><span class="s2"> with type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">indices</span><span class="o">.</span><span class="n">dtype</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-            <span class="k">if</span> <span class="n">lut</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Dtype mismatched between LUT (</span><span class="si">{}</span><span class="s2">) and weight (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">lut</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">val</span><span class="o">.</span><span class="n">dtype</span>
-                <span class="p">)</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only numpy arrays are supported&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;KMEANS&quot;</span><span class="p">:</span>
-            <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">compress_kmeans</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">nbits</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;UNIFORM&quot;</span><span class="p">:</span>
-            <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">compress_uniform</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">nbits</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;UNIQUE&quot;</span><span class="p">:</span>
-            <span class="n">nbits</span> <span class="o">=</span> <span class="n">get_nbits_for_unique_mode</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">nbits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">None</span>
-            <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">compress_unique</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">nbits</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;CUSTOM&quot;</span><span class="p">:</span>
-            <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">lut_function</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
-
-        <span class="n">check_lut_parameters_are_valid</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">lut</span><span class="p">,</span> <span class="n">indices</span><span class="p">)</span>
-
-        <span class="n">params</span> <span class="o">=</span> <span class="n">LutParams</span><span class="p">()</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">lut</span> <span class="o">=</span> <span class="n">lut</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">indices</span> <span class="o">=</span> <span class="n">pack_indices_into_bytes_array</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">lut</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
-        <span class="k">return</span> <span class="n">params</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">LutParams</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid type of params&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">constexpr_lut_to_dense</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">lut</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="n">block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
-        <span class="n">lut_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nbits</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lut_function</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">lut_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_compression</span><span class="p">:</span>
-            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_lut_to_dense</span><span class="p">(</span>
-                <span class="n">indices</span><span class="o">=</span><span class="n">lut_params</span><span class="o">.</span><span class="n">indices</span><span class="p">,</span>
-                <span class="n">lut</span><span class="o">=</span><span class="n">lut_params</span><span class="o">.</span><span class="n">lut</span><span class="p">,</span>
-                <span class="n">shape</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">(</span><span class="n">lut_params</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span>
-                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_palettized&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">decompressed_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">lut_params</span><span class="p">)</span>
-            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
-                <span class="n">val</span><span class="o">=</span><span class="n">decompressed_val</span><span class="p">,</span>
-                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_fake_palettized&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
-            <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-            <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
-            <span class="n">no_check_var_types</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
-
-
-<span class="k">class</span> <span class="nc">AffineQuantParams</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantized_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">zero_point</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span> <span class="o">=</span> <span class="n">quantized_data</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="n">zero_point</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
-
-
-<span class="k">class</span> <span class="nc">WeightAffineQuantizer</span><span class="p">(</span><span class="n">AbstractQuantizationPass</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This transform does the following, for each const op and if the &quot;op_selector&quot; return True:</span>
-<span class="sd">    - Values are linearly quantized into unsigned 8-bits.</span>
-<span class="sd">    - If fake_compression=False,  compressed value is encoded via constexpr_affine_dequantize op</span>
-<span class="sd">    - If fake_compression=True,   compressed value is decompressed and then encoded via const op</span>
-<span class="sd">    - Old const is replaced by a newly created operation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">WEIGHT_AFFINE_QUANTIZATION_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span><span class="p">,</span> <span class="s2">&quot;LINEAR&quot;</span><span class="p">)</span>
-    <span class="n">WEIGHT_AFFINE_DTYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">fake_compression</span> <span class="o">=</span> <span class="n">fake_compression</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-
-        <span class="c1"># check mode</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightAffineQuantizer</span><span class="o">.</span><span class="n">WEIGHT_AFFINE_QUANTIZATION_MODES</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Only mode </span><span class="si">{}</span><span class="s2"> supported for weight affine quantization. Got mode </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">WeightAffineQuantizer</span><span class="o">.</span><span class="n">WEIGHT_AFFINE_QUANTIZATION_MODES</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="c1"># check dtype</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dtype=</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> is unsupported for affine_quantize_weights.&quot;</span>
-        <span class="k">if</span> <span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">WeightAffineQuantizer</span><span class="o">.</span><span class="n">WEIGHT_AFFINE_DTYPES</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">and</span> <span class="n">should_use_weight_file</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">return</span> <span class="kc">False</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_axis</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
-        <span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">var</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">var</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">var</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;conv_transpose&quot;</span><span class="p">:</span>
-            <span class="n">axis</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">return</span> <span class="n">axis</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-        <span class="k">def</span> <span class="nf">_ensure_numerical_range_and_cast</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">low</span><span class="p">,</span> <span class="n">high</span><span class="p">,</span> <span class="n">np_dtype</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">            For some cases, the computed quantized data might exceed the data range.</span>
-<span class="sd">            For instance, after rounding and addition, we might get `128` for the int8 quantization.</span>
-<span class="sd">            This utility function ensures the val in the data range before doing the cast.</span>
-<span class="sd">            &#39;&#39;&#39;</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
-            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">low</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np_dtype</span><span class="p">)</span>
-
-        <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
-        <span class="n">mode_dtype_to_range</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="s2">&quot;LINEAR&quot;</span><span class="p">):</span> <span class="p">(</span><span class="o">-</span><span class="mi">128</span><span class="p">,</span> <span class="mi">127</span><span class="p">),</span>
-            <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span><span class="p">):</span> <span class="p">(</span><span class="o">-</span><span class="mi">127</span><span class="p">,</span> <span class="mi">127</span><span class="p">),</span>
-            <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="s2">&quot;LINEAR&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
-            <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span><span class="p">):</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">254</span><span class="p">),</span>
-        <span class="p">}</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only numpy arrays are supported&quot;</span><span class="p">)</span>
-
-        <span class="n">params</span> <span class="o">=</span> <span class="n">AffineQuantParams</span><span class="p">()</span>
-        <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">])</span>
-        <span class="n">val_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">val_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axes</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span><span class="p">:</span>
-            <span class="c1"># For the linear_symmetric mode, the range is symmetrical to 0</span>
-            <span class="n">max_abs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_min</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val_max</span><span class="p">))</span>
-            <span class="n">val_min</span> <span class="o">=</span> <span class="o">-</span><span class="n">max_abs</span>
-            <span class="n">val_max</span> <span class="o">=</span> <span class="n">max_abs</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;LINEAR&quot;</span>
-            <span class="c1"># For the linear mode, we need to make sure the data range contains `0`</span>
-            <span class="n">val_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">minimum</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">val_min</span><span class="p">)</span>
-            <span class="n">val_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">val_max</span><span class="p">)</span>
-
-        <span class="n">q_val_min</span><span class="p">,</span> <span class="n">q_val_max</span> <span class="o">=</span> <span class="n">mode_dtype_to_range</span><span class="p">[(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">mode</span><span class="p">)]</span>
-
-        <span class="c1"># Set the zero point to symmetric mode</span>
-        <span class="n">np_dtype</span> <span class="o">=</span> <span class="n">nptype_from_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">:</span>
-                <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">val_min</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span>
-                <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="p">(</span><span class="mi">127</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">val_min</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;LINEAR&quot;</span>
-            <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="p">(</span><span class="n">q_val_min</span> <span class="o">*</span> <span class="n">val_max</span> <span class="o">-</span> <span class="n">q_val_max</span> <span class="o">*</span> <span class="n">val_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">val_max</span> <span class="o">-</span> <span class="n">val_min</span><span class="p">)</span>
-            <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">zero_point</span><span class="p">)</span>
-            <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="n">_ensure_numerical_range_and_cast</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="n">q_val_min</span><span class="p">,</span> <span class="n">q_val_max</span><span class="p">,</span> <span class="n">np_dtype</span><span class="p">)</span>
-
-        <span class="c1"># compute the params</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="p">(</span><span class="n">val_max</span> <span class="o">-</span> <span class="n">val_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">q_val_max</span> <span class="o">-</span> <span class="n">q_val_min</span><span class="p">)</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">val</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
-
-        <span class="n">params</span><span class="o">.</span><span class="n">quantized_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span>
-            <span class="n">val</span> <span class="o">*</span> <span class="p">(</span><span class="n">q_val_max</span> <span class="o">-</span> <span class="n">q_val_min</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">val_max</span> <span class="o">-</span> <span class="n">val_min</span><span class="p">)</span>
-        <span class="p">)</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">quantized_data</span> <span class="o">=</span> <span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">quantized_data</span> <span class="o">+</span> <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span><span class="p">)</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">quantized_data</span> <span class="o">=</span> <span class="n">_ensure_numerical_range_and_cast</span><span class="p">(</span><span class="n">params</span><span class="o">.</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">q_val_min</span><span class="p">,</span> <span class="n">q_val_max</span><span class="p">,</span> <span class="n">np_dtype</span><span class="p">)</span>
-
-        <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span> <span class="o">=</span> <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
-        <span class="n">params</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
-
-        <span class="k">return</span> <span class="n">params</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">params</span><span class="p">):</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">params</span><span class="p">,</span> <span class="n">AffineQuantParams</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid type of params&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">constexpr_affine_dequantize</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
-            <span class="n">params</span><span class="o">.</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">params</span><span class="o">.</span><span class="n">axis</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="n">block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
-        <span class="n">quant_params</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_axis</span><span class="p">(</span><span class="n">op</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">fake_compression</span><span class="p">:</span>
-            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">constexpr_affine_dequantize</span><span class="p">(</span>
-                <span class="n">quantized_data</span><span class="o">=</span><span class="n">quant_params</span><span class="o">.</span><span class="n">quantized_data</span><span class="p">,</span>
-                <span class="n">zero_point</span><span class="o">=</span><span class="n">quant_params</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span>
-                <span class="n">scale</span><span class="o">=</span><span class="n">quant_params</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span>
-                <span class="n">axis</span><span class="o">=</span><span class="n">quant_params</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
-                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_affine_quantized&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">decompressed_val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="n">quant_params</span><span class="p">)</span>
-            <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
-                <span class="n">val</span><span class="o">=</span><span class="n">decompressed_val</span><span class="p">,</span>
-                <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_fake_affine_quantized&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
-
-        <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
-            <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-            <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
-            <span class="n">no_check_var_types</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
-
-
-<span class="k">class</span> <span class="nc">WeightDecompressor</span><span class="p">(</span><span class="n">AbstractQuantizationPass</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    This graph pass transforms the constexpr ops back into mb.const op.</span>
-<span class="sd">    constexpr ops includes:</span>
-<span class="sd">    (1) constexpr_affine_dequantize</span>
-<span class="sd">    (2) constexpr_lut_to_dense</span>
-<span class="sd">    (3) constexpr_sparse_to_dense</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">is_valid_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="p">(</span>
-            <span class="s2">&quot;constexpr_affine_dequantize&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;constexpr_lut_to_dense&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;constexpr_sparse_to_dense&quot;</span><span class="p">,</span>
-        <span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">transform_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
-        <span class="n">block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
-
-        <span class="n">decompressed_val</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">value_inference</span><span class="p">()</span>
-        <span class="n">new_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
-            <span class="n">val</span><span class="o">=</span><span class="n">decompressed_val</span><span class="p">,</span>
-            <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
-            <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
-            <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
-            <span class="n">no_check_var_types</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="p">)</span>
-
-        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
 </pre></div>
 
            </div>

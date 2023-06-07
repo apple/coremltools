@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.coreml._post_training_quantization &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/norightmargin.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.coreml._post_training_quantization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.coreml._post_training_quantization</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">Operation</span> <span class="k">as</span> <span class="n">_Operation</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto.load</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AbstractQuantizationPass</span> <span class="k">as</span> <span class="n">_AbstractQuantizationPass</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">._quantization_passes</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">linear_quantize_weights</span> <span class="k">as</span> <span class="n">_linear_quantize_weights</span><span class="p">,</span>
+    <span class="n">palettize_weights</span> <span class="k">as</span> <span class="n">_palettize_weights</span><span class="p">,</span>
+    <span class="n">prune_weights</span> <span class="k">as</span> <span class="n">_prune_weights</span><span class="p">,</span>
+    <span class="n">WeightDecompressor</span> <span class="k">as</span> <span class="n">_WeightDecompressor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+
+<span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>
+
+<span class="k">def</span> <span class="nf">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">graph_pass</span><span class="p">):</span>
+    <span class="c1"># Utility function which compresses a coreml model</span>
+    <span class="c1"># convert the fully precision mlmodel into pymil program</span>
+    <span class="n">model_spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+    <span class="n">model_type</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;neuralNetwork&quot;</span><span class="p">,</span> <span class="s2">&quot;neuralNetworkClassifier&quot;</span><span class="p">,</span> <span class="s2">&quot;neuralNetworkRegressor&quot;</span><span class="p">,</span> <span class="s2">&quot;pipeline&quot;</span><span class="p">,</span> <span class="s2">&quot;PipelineClassifier&quot;</span><span class="p">,</span> <span class="s2">&quot;PipelineRegressor&quot;</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;coremltools.optimize.coreml are meant to be used only with mlprogram typed coreml models. &quot;</span>
+              <span class="s2">&quot;This model has type </span><span class="si">{}</span><span class="s2">. Please use coremltools.models.neural_network.quantization_utils.quantize_weights&quot;</span>
+              <span class="s2">&quot;instead to compress the weights of the model.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+       <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;weight compression not applicable for model type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
+
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">,</span> <span class="n">_AbstractQuantizationPass</span><span class="p">),</span> <span class="s2">&quot;compression pass must be an AbstractQuantizationPass instance&quot;</span>
+    <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span><span class="p">)</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="p">(</span>
+        <span class="n">model_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
+        <span class="n">file_weights_dir</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># apply compression graph pass</span>
+    <span class="n">graph_pass</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
+
+    <span class="c1"># convert the pymil program back to mlmodel</span>
+    <span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">_mil_convert</span><span class="p">(</span>
+        <span class="n">prog</span><span class="p">,</span>
+        <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+        <span class="n">convert_from</span><span class="o">=</span><span class="s2">&quot;milinternal&quot;</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
+        <span class="n">model_description</span><span class="o">=</span><span class="n">model_spec</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">compressed_mlmodel</span>
+
+<div class="viewcode-block" id="linear_quantize_weights"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights">[docs]</a><span class="k">def</span> <span class="nf">linear_quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram``, which uses</span>
+<span class="sd">    float-precision weights, into a compressed MLModel that uses 8-bit weights. This is</span>
+<span class="sd">    achieved by converting the float weight values that are stored in the ``const`` op</span>
+<span class="sd">    into the ``constexpr_affine_dequantize`` op.</span>
+
+<span class="sd">    This function uses linear quantization on the float weights, providing up to 2x</span>
+<span class="sd">    savings in storage compared to float 16, or up to 4x savings compared to float 32.</span>
+<span class="sd">    All computation at runtime uses float precision; the precision of the intermediate</span>
+<span class="sd">    tensors and the compute precision of the ops are not altered.</span>
+
+<span class="sd">    For each weight, this utility function converts the weight into the int8 or uint8 type using</span>
+<span class="sd">    either `linear interpolation` (``&quot;linear&quot;`` mode) or `linear symmetric</span>
+<span class="sd">    interpolation` (``&quot;linear_symmetric&quot;`` mode, the default).</span>
+
+<span class="sd">    **Linear interpolation**</span>
+
+<span class="sd">    Linear interpolation (``&quot;linear&quot;`` mode) maps the min/max of the float</span>
+<span class="sd">    range to the 8-bit integer range ``[low, high]`` using a zero point (also called quantization bias, or</span>
+<span class="sd">    offset) and a scale factor. For the int8 quantization, ``[low, high] = [-128, 127]``, while uint8</span>
+<span class="sd">    quantization uses range ``[0, 255]``.</span>
+
+<span class="sd">    ``&quot;linear&quot;`` mode uses the quantization formula:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       w_r = s * (w_q - z)</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">        * :math:`w_r` and  :math:`s` are of type float.</span>
+<span class="sd">        * :math:`w_r`` represents the float precision weight.</span>
+<span class="sd">        * :math:`s` represents the scale.</span>
+<span class="sd">        * :math:`w_q` and :math:`z` are of type 8-bit integer.</span>
+<span class="sd">        * :math:`w_q` represents quantized weight.</span>
+<span class="sd">        * :math:`z` represents the zero point.</span>
+
+<span class="sd">    Quantized weights are computed as follows:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))</span>
+
+<span class="sd">    Note: :math:`cast\_to\_8\_bit\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.</span>
+<span class="sd">    </span>
+<span class="sd">    In ``&quot;linear&quot;`` mode, ``s, z`` are computed by mapping the original float range</span>
+<span class="sd">    ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the</span>
+<span class="sd">    following linear equations:</span>
+
+<span class="sd">        * ``B = s * (high - z)``</span>
+<span class="sd">        * ``A = s * (low - z)``</span>
+
+<span class="sd">    The equations result in the following:</span>
+
+<span class="sd">        * ``s = (B - A) / (high - low)``</span>
+<span class="sd">        * ``z = cast_to_8_bit_integer((low * B - high * A) / (B - A))``</span>
+
+<span class="sd">    When the rank of weight ``w`` is 1, then ``s`` and ``z`` are both scalars. When the</span>
+<span class="sd">    rank of the weight is greater than 1, then ``s`` and ``z`` are both vectors. In that</span>
+<span class="sd">    case, scales are computed per `channel`, in which `channel` is the output dimension,</span>
+<span class="sd">    which corresponds to the first dimension for ops such as ``conv`` and ``linear``, and</span>
+<span class="sd">    the second dimension for the ``conv_transpose`` op.</span>
+<span class="sd">    </span>
+<span class="sd">    For ``&quot;linear&quot;`` mode, :math:`A = min(w_r)`, :math:`B = max(w_r)`.</span>
+<span class="sd">    </span>
+<span class="sd">    **Linear symmetric interpolation**</span>
+
+<span class="sd">    With linear symmetric interpolation (``&quot;linear_symmetric&quot;`` mode, the default), rather than</span>
+<span class="sd">    mapping the exact min/max of the float range to the quantized range, the function</span>
+<span class="sd">    chooses the maximum absolute value between the min/max, which results in a</span>
+<span class="sd">    floating-point range that is symmetric with respect to zero. This also makes the resulting zero</span>
+<span class="sd">    point ``0`` for int8 weight and ``127`` for uint8 weight.</span>
+<span class="sd">    </span>
+<span class="sd">    For ``&quot;linear_symmetric&quot;`` mode:</span>
+<span class="sd">    </span>
+<span class="sd">       * :math:`A = -R` and :math:`B = R`, where :math:`R = max(abs(w_r))`.</span>
+<span class="sd">       * This function maps to the range of ``[-127, 127]`` for int8 weight and ``[0, 254]`` for uint8 weight.</span>
+<span class="sd">       * The result is ``s=(B-A)/254`` -&gt; ``s=2R/254`` -&gt; ``s=R/127``.</span>
+<span class="sd">       * Solving for ``z``:</span>
+<span class="sd">            * int8:  ``z = (-127 * R + 127 * R)/2R`` -&gt; ``z=0``.</span>
+<span class="sd">            * uint8: ``z = (0 * R + 254 * R)/2R`` -&gt; ``z=127``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be quantized. This MLModel should be of type ``mlprogram``.</span>
+<span class="sd">        </span>
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for weight quantization.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The quantized MLModel instance.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+<span class="sd"> </span>
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+<span class="sd">        </span>
+<span class="sd">        model = ct.coreml.models.MLModel(&#39;my_model.mlpackage&#39;)</span>
+<span class="sd">        config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpLinearQuantizerConfig(mode=&quot;linear_symmetric&quot;)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model = cto.coreml.linear_quantize_weights(model, config)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">linear_weight_quantizer</span> <span class="o">=</span> <span class="n">_linear_quantize_weights</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">linear_weight_quantizer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="palettize_weights"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">[docs]</a><span class="k">def</span> <span class="nf">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
+<span class="sd">    compressed MLModel by reducing the overall number of weights using a lookup table</span>
+<span class="sd">    (LUT). A LUT contains a list of float values. An `nbit` LUT has 2\ :sup:`nbits` entries.</span>
+
+<span class="sd">    For example, a float weight vector such as ``{0.3, 0.3, 0.5, 0.5}`` can be compressed</span>
+<span class="sd">    using a 1-bit LUT: ``{0.3, 0.5}``. In this case the float vector can be replaced</span>
+<span class="sd">    with a 1-bit vector ``{0, 0, 1, 1}``.</span>
+
+<span class="sd">    This function iterates over all the weights in the ``mlprogram``, discretizes its values,</span>
+<span class="sd">    and constructs the LUT according to the algorithm specified in ``mode``. The float</span>
+<span class="sd">    values are then converted to the `nbit` values, and the LUT is saved alongside each</span>
+<span class="sd">    weight. The ``const`` ops storing weight values are replaced by</span>
+<span class="sd">    ``constexpr_lut_to_dense`` ops.</span>
+
+<span class="sd">    At runtime, the LUT and the `nbit` values are used to reconstruct the float weight</span>
+<span class="sd">    values, which are then used to perform the float operaton the weight is feeding into.</span>
+
+<span class="sd">    Consider the following example of ``&quot;uniform&quot;`` mode (a linear histogram):</span>
+
+<span class="sd">        * ``nbits = 4``</span>
+<span class="sd">        * ``mode = &quot;uniform&quot;``</span>
+<span class="sd">        * ``weight = [0.11, 0.19, 0.3, 0.08, 0.0, 0.02]``</span>
+
+<span class="sd">    The weight can be converted to a palette with indices ``[0, 1, 2, 3]`` (2 bits). The</span>
+<span class="sd">    indices are a byte array.</span>
+
+<span class="sd">    The data range ``[0.0, 0.3]`` is divided into 4 partitions linearly, which is</span>
+<span class="sd">    ``[0.0, 0.1, 0.2, 0.3]``.</span>
+
+<span class="sd">        * The LUT would be ``[0.0, 0.1, 0.2, 0.3]``.</span>
+
+<span class="sd">        * The weight is rounded to ``[0.1, 0.2, 0.3, 0.1, 0.0, 0.0]``, and represented in</span>
+<span class="sd">          the palette as indices ``[01b, 10b, 11b, 01b, 00b, 00b]``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be converted by a LUT. This MLModel should be of type ``mlprogram``.</span>
+<span class="sd">        </span>
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for weight palettization.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The palettized MLModel instance.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+<span class="sd">        </span>
+<span class="sd">        model = ct.models.MLModel(&#39;my_model.mlpackage&#39;)</span>
+<span class="sd">        config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpPalettizerConfig(mode=&quot;kmeans&quot;, nbits=4)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model = cto.coreml.palettize_weights(model, config)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">weight_palettizer</span> <span class="o">=</span> <span class="n">_palettize_weights</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_palettizer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="prune_weights"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.prune_weights">[docs]</a><span class="k">def</span> <span class="nf">prune_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
+<span class="sd">    compressed MLModel using sparse representation. The ``const`` ops storing weight</span>
+<span class="sd">    values are replaced by ``constexpr_sparse_to_dense`` ops.</span>
+
+<span class="sd">    This function is useful if the model is trained with pruning techniques so that</span>
+<span class="sd">    a lot of weights have zero values. If a large percentage of weight values are zero,</span>
+<span class="sd">    a sparse representation is more efficient than a dense one (the default).</span>
+
+<span class="sd">    The sparsified weights are stored in a bit mask. If the weight values are</span>
+<span class="sd">    ``{0, 0, 0, 0, 0, 0, 0, 56.3}``, its sparse representation contains a bit mask with</span>
+<span class="sd">    ones on locations where the value is non-zero: ``00000001b``. This is accompanied by</span>
+<span class="sd">    non-zero data, which is a size-1 vector of value ``{56.3}``.</span>
+
+<span class="sd">    For example, given the following:</span>
+
+<span class="sd">        * ``weight = [0.3, 0, 0, 0.5, 0, 0]``</span>
+<span class="sd">        * ``non_zero_data, bit_mask = sparsify(weight)``</span>
+
+<span class="sd">    The indices of the non-zero elements are:</span>
+
+<span class="sd">        * ``non_zero_data = [0.3, 0.5]``</span>
+<span class="sd">        * ``bit_mask = &quot;100100&quot;``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model to be sparsified. This MLModel should be of type ``mlprogram``.</span>
+
+<span class="sd">    config: OptimizationConfig</span>
+<span class="sd">        An :py:class:`OptimizationConfig` object that specifies the parameters for weight pruning.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The sparse MLModel instance.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+<span class="sd">        import coremltools.optimize as cto</span>
+<span class="sd">        </span>
+<span class="sd">        model = ct.models.MLModel(&#39;my_model.mlpackage&#39;)</span>
+<span class="sd">        config = cto.coreml.OptimizationConfig(</span>
+<span class="sd">            global_config=cto.coreml.OpThresholdPrunerConfig(threshold=1e-3)</span>
+<span class="sd">        )</span>
+<span class="sd">        compressed_model = cto.coreml.prune_weights(model, config)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">weight_pruner</span> <span class="o">=</span> <span class="n">_prune_weights</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_pruner</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="decompress_weights"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.decompress_weights">[docs]</a><span class="k">def</span> <span class="nf">decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert weights that are sparse or palettized or affine quantized, back to the float format.</span>
+<span class="sd">    That is, convert any of the following three ops to ``mb.const``:</span>
+
+<span class="sd">    (1) ``constexpr_affine_dequantize``</span>
+<span class="sd">    (2) ``constexpr_lut_to_dense``</span>
+<span class="sd">    (3) ``constexpr_sparse_to_dense``</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mlmodel: MLModel</span>
+<span class="sd">        Model which will be decompressed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The MLModel with no ``constexpr`` ops included.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+
+<span class="sd">        model = ct.models.MLModel(&quot;my_compressed_model.mlpackage&quot;)</span>
+<span class="sd">        decompressed_model = ct.optimize.coreml.decompress_weights(model)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">weight_decompressor</span> <span class="o">=</span> <span class="n">_WeightDecompressor</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_decompressor</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -89,14 +90,13 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">is_builtin</span><span class="p">,</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">)</span>
-
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="n">is_builtin</span><span class="p">,</span> <span class="n">numpy_type_to_builtin_type</span>
 
 
 <span class="k">class</span> <span class="nc">ColorLayout</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
@@ -191,7 +191,7 @@
 
 <span class="sd">        color_layout: string or enumeration of type ``ct.colorlayout``</span>
 <span class="sd">            Color layout of the image. Valid values are as follows:</span>
-<span class="sd">            </span>
+
 <span class="sd">            Enumeration (recommended):</span>
 <span class="sd">                * ``ct.colorlayout.RGB``</span>
 <span class="sd">                * ``ct.colorlayout.BGR``</span>
@@ -349,29 +349,36 @@
 
 
 <div class="viewcode-block" id="RangeDim"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim">[docs]</a><span class="k">class</span> <span class="nc">RangeDim</span><span class="p">:</span>
-<div class="viewcode-block" id="RangeDim.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeDim.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">lower_bound</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="n">upper_bound</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">default</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">symbol</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A class for providing a range of accepted shapes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        lower_bound: (int)</span>
+<span class="sd">        lower_bound:</span>
 <span class="sd">            The minimum valid value for the shape.</span>
 
-<span class="sd">        upper_bound: (int)</span>
+<span class="sd">        upper_bound:</span>
 <span class="sd">            The maximum valid value for the shape.</span>
 
-<span class="sd">            Set to ``-1`` if there is no upper limit.</span>
+<span class="sd">            Set to ``-1`` if there is no upper limit (only works if backend is set to &quot;neuralnetwork&quot;).</span>
+<span class="sd">            When backend is set to &quot;mlprogram&quot; during conversion, -1 is not allowed. A finite</span>
+<span class="sd">            positive upper bound must be provided.</span>
 
-<span class="sd">        default: (int) or None</span>
-<span class="sd">            The default value that is used for initiating the model, and set in the input shape field of the model file.</span>
+<span class="sd">        default:</span>
+<span class="sd">            The default value that is used for initiating the model, and set in the input shape</span>
+<span class="sd">            field of the model file.</span>
 
 <span class="sd">            If set to ``None``, ``lower_bound`` would be used as default.</span>
 
-<span class="sd">        symbol: (str)</span>
-<span class="sd">            Optional symbol name for the dim. Autogenerate a symbol name if</span>
-<span class="sd">            not specified.</span>
+<span class="sd">        symbol:</span>
+<span class="sd">            Optional symbol name for the dim. Autogenerate a symbol name if not specified.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">symbol</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>
@@ -381,20 +388,17 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span> <span class="o">=</span> <span class="n">lower_bound</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">=</span> <span class="n">upper_bound</span>
+
         <span class="k">if</span> <span class="n">default</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">lower_bound</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">default</span> <span class="o">&lt;</span> <span class="n">lower_bound</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Default value </span><span class="si">{}</span><span class="s2"> is less than minimum value (</span><span class="si">{}</span><span class="s2">) for range&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">default</span><span class="p">,</span> <span class="n">lower_bound</span>
-                    <span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;Default value </span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2"> is less than minimum value (</span><span class="si">{</span><span class="n">lower_bound</span><span class="si">}</span><span class="s2">) for range&quot;</span>
                 <span class="p">)</span>
-            <span class="k">if</span> <span class="n">upper_bound</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">default</span> <span class="o">&gt;</span> <span class="n">upper_bound</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">default</span> <span class="o">&gt;</span> <span class="n">upper_bound</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Default value </span><span class="si">{}</span><span class="s2"> is greater than maximum value (</span><span class="si">{}</span><span class="s2">) for range&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">default</span><span class="p">,</span> <span class="n">upper_bound</span>
-                    <span class="p">)</span>
+                    <span class="sa">f</span><span class="s2">&quot;Default value </span><span class="si">{</span><span class="n">default</span><span class="si">}</span><span class="s2"> is greater than maximum value (</span><span class="si">{</span><span class="n">upper_bound</span><span class="si">}</span><span class="s2">) for range&quot;</span>
                 <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">default</span> <span class="o">=</span> <span class="n">default</span></div>
 
@@ -415,11 +419,11 @@
 <span class="sd">        ----------</span>
 <span class="sd">        shape: list of (int), symbolic values, RangeDim object</span>
 <span class="sd">            The valid shape of the input.</span>
-<span class="sd">        </span>
+
 <span class="sd">        default: tuple of int or None</span>
 <span class="sd">            The default shape that is used for initiating the model, and set in</span>
 <span class="sd">            the metadata of the model file.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If None, then ``shape`` is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>

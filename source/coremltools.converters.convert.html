@@ -62,6 +62,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -447,7 +448,7 @@ PassPipeline (<code class="docutils literal notranslate"><span class="pre">corem
 as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="p">()</span>
 <span class="n">pipeline</span><span class="o">.</span><span class="n">remove_passes</span><span class="p">({</span><span class="s2">&quot;common::fuse_conv_batchnorm&quot;</span><span class="p">})</span>
-<span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">pipeline</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">pipeline</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -455,7 +456,31 @@ as shown in the following example:</p>
 as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="p">()</span>
 <span class="n">pipeline</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span><span class="s2">&quot;common::const_elimination&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;skip_const_by_size&quot;</span><span class="p">:</span> <span class="s2">&quot;1e6&quot;</span><span class="p">})</span>
-<span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">pipeline</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">pipeline</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>We also provide a set of predefined pass pipelines that you can directly call.</p>
+<ul>
+<li><p>To avoid running all graph pass, you can use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">EMPTY</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>To only run the cleanup graph passes, like constant_elimination, dead_code_elimination, etc.
+You can use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">CLEANUP</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>To convert a source model with sparse weights to a sparse format Core ML model, you can use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT_PRUNING</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>To convert a source model with palettized weights to a compressed format Core ML model, you can use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT_PALETTIZATION</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>

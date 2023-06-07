@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -105,11 +106,19 @@
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_ft</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">MIL_pb2</span> <span class="k">as</span> <span class="n">_MIL_pb2</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
-                    <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span> <span class="n">_create_mlpackage</span><span class="p">,</span>
-                    <span class="n">_has_custom_layer</span><span class="p">,</span> <span class="n">_is_macos</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">,</span>
-                    <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span><span class="p">,</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span><span class="p">,</span>
-                    <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span>
+    <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
+    <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span>
+    <span class="n">_MODEL_FILE_NAME</span><span class="p">,</span>
+    <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span>
+    <span class="n">_create_mlpackage</span><span class="p">,</span>
+    <span class="n">_has_custom_layer</span><span class="p">,</span>
+    <span class="n">_is_macos</span><span class="p">,</span>
+    <span class="n">_macos_version</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
@@ -398,6 +407,31 @@
             <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
                 <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
 
+        <span class="k">def</span> <span class="nf">does_model_contain_mlprogram</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Is this an mlprogram or is it a pipeline with at least one mlprogram?</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">elif</span> <span class="n">model_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;pipeline&quot;</span><span class="p">,</span> <span class="s2">&quot;pipelineClassifier&quot;</span><span class="p">,</span> <span class="s2">&quot;pipelineRegressor&quot;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="c1"># Does this pipeline contain an mlprogram?</span>
+            <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;pipeline&quot;</span><span class="p">:</span>
+                <span class="n">pipeline_models</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span>
+            <span class="k">elif</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;pipelineClassifier&quot;</span><span class="p">:</span>
+                <span class="n">pipeline_models</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">pipelineClassifier</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;pipelineRegressor&quot;</span>
+                <span class="n">pipeline_models</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">pipelineRegressor</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span>
+
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">pipeline_models</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">does_model_contain_mlprogram</span><span class="p">(</span><span class="n">m</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">_ComputeUnit</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;compute_units&quot; parameter must be of type: coremltools.ComputeUnit&#39;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">compute_units</span> <span class="o">==</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_AND_NE</span>
@@ -428,12 +462,13 @@
                 <span class="n">model</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
-            <span class="n">model_type</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">model_type</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;mlProgram&quot;</span><span class="p">,</span> <span class="s1">&#39;pipelineClassifier&#39;</span><span class="p">,</span> <span class="s1">&#39;pipelineRegressor&#39;</span><span class="p">,</span> <span class="s1">&#39;pipeline&#39;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="n">model_type</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span> <span class="ow">and</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;MLModel of type mlProgram cannot be loaded just from the model spec object. &#39;</span>
-                                    <span class="s1">&#39;It also needs the path to the weights file. Please provide that as well, &#39;</span>
-                                    <span class="s1">&#39;using the </span><span class="se">\&#39;</span><span class="s1">weights_dir</span><span class="se">\&#39;</span><span class="s1"> argument.&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">does_model_contain_mlprogram</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span> <span class="ow">and</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                        <span class="s2">&quot;MLModel of type mlProgram cannot be loaded just from the model spec object. &quot;</span>
+                        <span class="s2">&quot;It also needs the path to the weights file. Please provide that as well, &quot;</span>
+                        <span class="s2">&quot;using the &#39;weights_dir&#39; argument.&quot;</span>
+                    <span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="n">filename</span> <span class="o">=</span> <span class="n">_create_mlpackage</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weights_dir</span><span class="p">)</span>
@@ -545,6 +580,11 @@
             <span class="k">elif</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;For an ML Program, extension must be </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
             <span class="n">_shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span>
+
+            <span class="n">saved_spec_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="n">save_path</span><span class="p">,</span> <span class="s2">&quot;Data&quot;</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span> <span class="n">_MODEL_FILE_NAME</span>
+            <span class="p">)</span>
+            <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">saved_spec_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span></div>
 
@@ -570,40 +610,55 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        data: dict[str, value]</span>
-<span class="sd">            Dictionary of data to make predictions from where the keys are</span>
-<span class="sd">            the names of the input features.</span>
-<span class="sd">            If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.</span>
+<span class="sd">        data: dict[str, value] or list[dict[str, value]]</span>
+<span class="sd">            Dictionary of data to use for predictions, where the keys are the names of the input features.</span>
+<span class="sd">            For batch predictons, use a list of such dictionaries.</span>
+
+<span class="sd">            The following dictionary values types are acceptable: list, array, numpy.ndarray, tensorflow.Tensor</span>
+<span class="sd">            and torch.Tensor.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        dict[str, value]</span>
-<span class="sd">            Predictions as a dictionary where each key is the output feature</span>
-<span class="sd">            name.</span>
+<span class="sd">            Predictions as a dictionary where each key is the output feature name.</span>
+
+<span class="sd">        list[dict[str, value]]</span>
+<span class="sd">            For batch prediction, returns a list of the above dictionaries.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
 <span class="sd">        predictions = model.predict(data)</span>
-<span class="sd">        data = {&#39;array&#39;: numpy.array([[1.0, 2.0], [3.0, 4.0]])}</span>
-<span class="sd">        predictions = model.predict(data)</span>
-<span class="sd">        data = {&#39;array&#39;: torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
-<span class="sd">        predictions = model.predict(data)</span>
-<span class="sd">        data = {&#39;array&#39;: tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
-<span class="sd">        predictions = model.predict(data)</span>
+
+<span class="sd">        data = [ {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240},</span>
+<span class="sd">                 {&#39;bedroom&#39;: 4.0, &#39;bath&#39;: 2.5, &#39;size&#39;: 2400} ]</span>
+<span class="sd">        batch_predictions = model.predict(data)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_convert_tensor_to_numpy</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="c1"># TODO: remove the following call when this is fixed: rdar://92239209</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="n">_is_macos</span><span class="p">()</span> <span class="ow">and</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;predict() for .mlpackage is not supported in macOS version older than 12.0.&quot;</span>
             <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> parameter must be either a dict or list of dict.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">data</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> list must contain only dictionaries&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_convert_tensor_to_numpy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="c1"># TODO: remove the following call when this is fixed: rdar://92239209</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+                <span class="n">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                    <span class="n">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">batchPredict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>   <span class="c1"># Error case</span>
             <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                     <span class="s2">&quot;Model prediction is only supported on macOS version 10.13 or later.&quot;</span>
@@ -642,6 +697,13 @@
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to load CoreML.framework. Cannot make predictions.&quot;</span><span class="p">)</span></div>
 
+    <span class="k">def</span> <span class="nf">_input_has_infinite_upper_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any input has infinite upper bound (-1).&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">input_spec</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">input_description</span><span class="o">.</span><span class="n">_fd_spec</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">size_range</span> <span class="ow">in</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shapeRange</span><span class="o">.</span><span class="n">sizeRanges</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">size_range</span><span class="o">.</span><span class="n">upperBound</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
 
     <span class="k">def</span> <span class="nf">_set_build_info_mil_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metadata</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;mlProgram&quot;</span><span class="p">:</span>
@@ -686,6 +748,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span><span class="p">)</span>
 
+
     <span class="k">def</span> <span class="nf">_verify_input_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
         <span class="c1"># Check if the input name given by the user is valid.</span>
         <span class="c1"># Although this is checked during prediction inside CoreML Framework,</span>
@@ -695,6 +758,7 @@
 
         <span class="c1"># verify that the pillow image modes are correct, for image inputs</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_verify_pil_image_modes</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
 
     <span class="k">def</span> <span class="nf">_verify_pil_image_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_PIL</span><span class="p">:</span>

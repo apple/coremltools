@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Training-Time Palettization &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/norightmargin.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Training-Time Quantization" href="coremltools.optimize.torch.quantization.html" />
+    <link rel="prev" title="Training-Time Pruning" href="coremltools.optimize.torch.pruning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#post-training-compression">Post-Training Compression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#training-time-compression">Training-Time Compression</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Training-Time Pruning</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Training-Time Palettization</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#palettizer">Palettizer</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#palettization-layers">Palettization Layers</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Training-Time Quantization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="coremltools.optimize.html">Optimizers</a></li>
+      <li class="breadcrumb-item active">Training-Time Palettization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/source/coremltools.optimize.torch.palettization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="training-time-palettization">
+<h1>Training-Time Palettization<a class="headerlink" href="#training-time-palettization" title="Permalink to this heading"></a></h1>
+<p>Palettization is a mechanism for compressing a model by clustering the model’s float
+weights into a look-up table (LUT) of centroids and indices.</p>
+<p>Palettization is implemented as an extension of <a class="reference external" href="https://pytorch.org/docs/stable/quantization.html">PyTorch’s QAT</a>
+APIs. It works by inserting palettization layers in appropriate places inside a model.
+The model can then be fine-tuned to learn the new palettized layers’ weights in the form
+of a LUT and indices.</p>
+<section id="palettizer">
+<h2>Palettizer<a class="headerlink" href="#palettizer" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">ModuleDKMPalettizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_bits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">milestone</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quant_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quant_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">127</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">dtype</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">torch.qint8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'f32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize_activations</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">partition_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2000000000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_permute</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">tuple</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palett_max_mem</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmeans_max_iter</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prune_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmeans_init</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'cpu.kmeans++'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kmeans_opt1d_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1024</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enforce_zero</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palett_mode</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'dkm'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palett_tau</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palett_epsilon</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palett_lambda</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_extra_centroid</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">palett_cluster_tol</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.05</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettization_config.html#ModuleDKMPalettizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration class for specifying global and module-level options for palettization
+algorithm implemented in <a class="reference internal" href="#coremltools.optimize.torch.palettization.DKMPalettizer" title="coremltools.optimize.torch.palettization.DKMPalettizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DKMPalettizer</span></code></a>.</p>
+<p>The parameters specified in this config control the DKM algorithm, described in
+<a class="reference external" href="https://arxiv.org/abs/2108.12659">DKM: Differentiable K-Means Clustering Layer for Neural Network Compression</a>.</p>
+<p>For most use cases, the only parameters you need to specify are <code class="docutils literal notranslate"><span class="pre">n_bits</span></code>,  <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">milestone</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Most of the parameters in this class are meant for advanced use cases and for further fine-tuning the
+DKM algorithm. The default values usually work for a majority of tasks.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Change the following parameters only when you use activation quantization in conjunction with
+DKM weight palettization: <code class="docutils literal notranslate"><span class="pre">quant_min</span></code>, <code class="docutils literal notranslate"><span class="pre">quant_max</span></code>, <code class="docutils literal notranslate"><span class="pre">dtype</span></code>, and <code class="docutils literal notranslate"><span class="pre">quantize_activations</span></code>.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n_bits</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of clusters. The number of clusters used is <span class="math notranslate nohighlight">\(2^{n\_bits}\)</span>.
+Defaults to <code class="docutils literal notranslate"><span class="pre">4</span></code> for linear layers and <code class="docutils literal notranslate"><span class="pre">2</span></code> for all other layers.</p></li>
+<li><p><strong>weight_threshold</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – A module is only palettized if the number of elements in
+its weight matrix exceeds <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</p></li>
+<li><p><strong>milestone</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Step or epoch at which palettization begins. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – The dimension of each cluster. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><strong>quant_min</strong> – (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>): The minimum value for each element in the weight clusters if they are
+quantized. Defaults to <code class="docutils literal notranslate"><span class="pre">-128</span></code>.</p></li>
+<li><p><strong>quant_max</strong> – (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>): The maximum value for each element in the weight clusters if they are
+quantized. Defaults to <code class="docutils literal notranslate"><span class="pre">127</span></code></p></li>
+<li><p><strong>dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – The <code class="docutils literal notranslate"><span class="pre">dtype</span></code> to use for quantizing the activations. Only applies
+when <code class="docutils literal notranslate"><span class="pre">quantize_activations</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>. Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.qint8</span></code>.</p></li>
+<li><p><strong>cluster_dtype</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – <code class="docutils literal notranslate"><span class="pre">dtype</span></code> to use for quantizing the clusters. Allowed options are
+<code class="docutils literal notranslate"><span class="pre">'i8'</span></code>, <code class="docutils literal notranslate"><span class="pre">'u8'</span></code>, <code class="docutils literal notranslate"><span class="pre">'f16'</span></code>, <code class="docutils literal notranslate"><span class="pre">'bf16'</span></code>, <code class="docutils literal notranslate"><span class="pre">'f32'</span></code>.  Defaults to <code class="docutils literal notranslate"><span class="pre">'f32'</span></code>, i.e.,
+by default, the clusters aren’t quantized.</p></li>
+<li><p><strong>quantize_activations</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, the activation are quantized.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>partition_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – partition_size helps in per channel palettization.
+Defaults to <code class="docutils literal notranslate"><span class="pre">2000000000</span></code>.</p></li>
+<li><p><strong>cluster_permute</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Permutation order to apply to weight partitions.
+Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>palett_max_mem</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Proportion of available GPU memory that should be used for
+palettization. Defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
+<li><p><strong>kmeans_max_iter</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Maximum number of differentiable <code class="docutils literal notranslate"><span class="pre">k-means</span></code> iterations.
+Defaults to <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p></li>
+<li><p><strong>prune_threshold</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Hard-shrinks weights between [<code class="docutils literal notranslate"><span class="pre">-prune_threshold</span></code>,
+<code class="docutils literal notranslate"><span class="pre">prune_threshold</span></code>] to zero. Useful for joint pruning and palettization. Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
+<li><p><strong>kmeans_init</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – <code class="docutils literal notranslate"><span class="pre">k-means</span></code> algorithm to use. Allowed options are
+<code class="docutils literal notranslate"><span class="pre">efficient_kmeans</span></code>, <code class="docutils literal notranslate"><span class="pre">cpu.kmeans++</span></code> and <code class="docutils literal notranslate"><span class="pre">kmeans_pp</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">cpu.kmeans++</span></code>.</p></li>
+<li><p><strong>kmeans_opt1d_threshold</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Channel threshold to decide if <code class="docutils literal notranslate"><span class="pre">opt1d</span> <span class="pre">kmeans</span></code>
+should be used. Defaults to <code class="docutils literal notranslate"><span class="pre">1024</span></code>.</p></li>
+<li><p><strong>enforce_zero</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, enforces the LUT centroid which is closest to
+the origin to be fixed to zero. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>palett_mode</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Criteria to calculate attention during <code class="docutils literal notranslate"><span class="pre">k-means</span></code>. Allowed options are
+<code class="docutils literal notranslate"><span class="pre">gsm</span></code>, <code class="docutils literal notranslate"><span class="pre">dkm</span></code> and <code class="docutils literal notranslate"><span class="pre">hard</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">dkm</span></code>.</p></li>
+<li><p><strong>palett_tau</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Temperature factor for softmax used in DKM algorithm.
+Defaults to <code class="docutils literal notranslate"><span class="pre">0.0001</span></code>.</p></li>
+<li><p><strong>palett_epsilon</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Distance threshold for clusters between <code class="docutils literal notranslate"><span class="pre">k-means</span></code> iterations.
+Defaults to <code class="docutils literal notranslate"><span class="pre">0.0001</span></code>.</p></li>
+<li><p><strong>palett_lambda</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Reduces effects of outliers during centroid calculation.
+Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
+<li><p><strong>add_extra_centroid</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, adds an extra centroid to the LUT.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>palett_cluster_tol</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – Tolerance for non-unique centroids in the LUT.
+The higher the number, the more tolerance for non-unique centroids. Defaults to <code class="docutils literal notranslate"><span class="pre">0.05</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.as_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the config as a dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ModuleOptimizationConfig</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.from_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Create class from a dictionary of string keys and values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_dict</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> and values) – A nested dictionary of strings
+and values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">IO</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ModuleOptimizationConfig</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Create class from a yaml stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>yml</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code> stream containing yaml or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>
+path to the yaml file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">DKMPalettizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">GlobalConfigType</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleNameConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettization_config.html#DKMPalettizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration for specifying how different submodules of a model are palettized by
+<a class="reference internal" href="#coremltools.optimize.torch.palettization.DKMPalettizer" title="coremltools.optimize.torch.palettization.DKMPalettizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DKMPalettizer</span></code></a>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">module_type_configs</span></code> parameter can accept a list of <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleDKMPalettizerConfig</span></code></a>
+as values for a given module type. The list can specify
+different parameters for different <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> values. This is useful if
+you want to apply different configs to layers of the same type with weights of different sizes.</p>
+<p>For example, to use <code class="docutils literal notranslate"><span class="pre">4</span></code> -bit palettization for weights with more than <code class="docutils literal notranslate"><span class="pre">1000</span></code> elements and
+<code class="docutils literal notranslate"><span class="pre">2</span></code> -bit palettization for weights with more than <code class="docutils literal notranslate"><span class="pre">300</span></code> but less than <code class="docutils literal notranslate"><span class="pre">1000</span></code> elements,
+create a config as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">custom_config</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">{</span><span class="s2">&quot;n_bits&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;cluster_dim&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;weight_threshold&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">&quot;n_bits&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;cluster_dim&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;weight_threshold&quot;</span><span class="p">:</span> <span class="mi">300</span><span class="p">},</span>
+    <span class="p">]</span>
+<span class="p">}</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">DKMPalettizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">({</span><span class="s2">&quot;module_type_configs&quot;</span><span class="p">:</span> <span class="n">custom_config</span><span class="p">})</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>global_config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleDKMPalettizerConfig</span></code></a>) – Config to be applied globally
+to all supported modules. Missing values are chosen from the default config.</p></li>
+<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleDKMPalettizerConfig</span></code></a>) – Module type level configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
+The keys can be either strings or module classes. When <code class="docutils literal notranslate"><span class="pre">module_type_config</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code>
+for a module type, it is not palettized.</p></li>
+<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleDKMPalettizerConfig</span></code></a>) – Module level configs applied to specific modules.
+The name of the module must be a fully qualified name that can be used to fetch it
+from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method. When
+<code class="docutils literal notranslate"><span class="pre">module_name_config</span></code> is set to <code class="docutils literal notranslate"><span class="pre">None</span></code> for a module, it is not palettized.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig.as_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Returns the config as a dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig" title="coremltools.optimize.torch.palettization.palettization_config.DKMPalettizerConfig"><span class="pre">DKMPalettizerConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettization_config.html#DKMPalettizerConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Create class from a dictionary of string keys and values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_dict</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> and values) – A nested dictionary of strings
+and values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">IO</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_yaml" title="Permalink to this definition"></a></dt>
+<dd><p>Create class from a yaml stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>yml</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code> stream containing yaml or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>
+path to the yaml file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_global">
+<span class="sig-name descname"><span class="pre">set_global</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleOptimizationConfig</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_global" title="Permalink to this definition"></a></dt>
+<dd><p>Set the global config.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_module_name">
+<span class="sig-name descname"><span class="pre">set_module_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleOptimizationConfig</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_module_name" title="Permalink to this definition"></a></dt>
+<dd><p>Set the module level optimization config for a given module instance. If the module level optimization config
+for an existing module was already set, the new config will override the old one.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_module_type">
+<span class="sig-name descname"><span class="pre">set_module_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">Callable</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opt_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">ModuleOptimizationConfig</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">OptimizationConfig</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig.set_module_type" title="Permalink to this definition"></a></dt>
+<dd><p>Set the module level optimization config for a given module type. If the module level optimization config
+for an existing module type was already set, the new config will override the old one.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">DKMPalettizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig" title="coremltools.optimize.torch.palettization.palettization_config.DKMPalettizerConfig"><span class="pre">DKMPalettizerConfig</span></a><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettizer.html#DKMPalettizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizer" title="Permalink to this definition"></a></dt>
+<dd><p>A palettization algorithm based on <a class="reference external" href="https://arxiv.org/pdf/2108.12659.pdf">“DKM: Differentiable K-Means Clustering Layer for Neural Network
+Compression”</a>. It clusters the weights
+using a differentiable version of <code class="docutils literal notranslate"><span class="pre">k-means</span></code>, allowing the look-up-table (LUT)
+and indices of palettized weights to be learnt using a gradient-based optimization algorithm such as SGD.</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DKMPalettizer</span><span class="p">,</span>
+    <span class="n">DKMPalettizerConfig</span><span class="p">,</span>
+    <span class="n">ModuleDKMPalettizerConfig</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># code that defines the pytorch model, loss and optimizer.</span>
+<span class="n">model</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span> <span class="o">=</span> <span class="n">create_model_loss_and_optimizer</span><span class="p">()</span>
+
+<span class="c1"># initialize the palettizer</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">DKMPalettizerConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">ModuleDKMPalettizerConfig</span><span class="p">(</span><span class="n">n_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">))</span>
+
+<span class="n">palettizer</span> <span class="o">=</span> <span class="n">DKMPalettizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># prepare the model to insert FakePalettize layers for palettization</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># use palettizer in your PyTorch training loop</span>
+<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">palettizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="c1"># fold LUT and indices into weights</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>) – Model on which the palettizer will act.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig" title="coremltools.optimize.torch.palettization.DKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">DKMPalettizerConfig</span></code></a>) – Config which specifies how
+different submodules in the model will be configured for palettization.
+Default config is used when passed as <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizer.finalize">
+<span class="sig-name descname"><span class="pre">finalize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettizer.html#DKMPalettizer.finalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizer.finalize" title="Permalink to this definition"></a></dt>
+<dd><p>Removes <a class="reference internal" href="#coremltools.optimize.torch.palettization.FakePalettize" title="coremltools.optimize.torch.palettization.FakePalettize"><code class="xref py py-class docutils literal notranslate"><span class="pre">FakePalettize</span></code></a> layers from a model and creates new model weights from the <code class="docutils literal notranslate"><span class="pre">LUT</span></code> and
+<code class="docutils literal notranslate"><span class="pre">indices</span></code> buffers.</p>
+<p>This function is called to prepare a palettized model for export using
+<a class="reference external" href="https://coremltools.readme.io/docs">coremltools</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">nn.Module</span></code>) – model to finalize.</p></li>
+<li><p><strong>inplace</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, model transformations are carried out in-place and
+the original module is mutated; otherwise, a copy of the model is mutated and returned.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizer.prepare">
+<span class="sig-name descname"><span class="pre">prepare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettizer.html#DKMPalettizer.prepare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizer.prepare" title="Permalink to this definition"></a></dt>
+<dd><p>Prepares a model for palettization aware training by inserting <a class="reference internal" href="#coremltools.optimize.torch.palettization.FakePalettize" title="coremltools.optimize.torch.palettization.FakePalettize"><code class="xref py py-class docutils literal notranslate"><span class="pre">FakePalettize</span></code></a> layers in appropriate
+places as specified by the config.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inplace</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, model transformations are carried out in-place and
+the original module is mutated, otherwise a copy of the model is mutated and returned.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizer.report">
+<span class="sig-name descname"><span class="pre">report</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">_Report</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettizer.html#DKMPalettizer.report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizer.report" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a dictionary with important statistics related to current state of palettization.
+Each key in the dictionary corresponds to a module name, and the
+value is a dictionary containing the statistics, such as number of clusters and
+cluster dimension, number of parameters, and so on.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.DKMPalettizer.step">
+<span class="sig-name descname"><span class="pre">step</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettizer.html#DKMPalettizer.step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizer.step" title="Permalink to this definition"></a></dt>
+<dd><p>Step through the palettizer. When the number of times <code class="docutils literal notranslate"><span class="pre">step</span></code>
+is called is equal to <code class="docutils literal notranslate"><span class="pre">milestone</span></code>, palettization is enabled.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="palettization-layers">
+<h2>Palettization Layers<a class="headerlink" href="#palettization-layers" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.FakePalettize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">FakePalettize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">observer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ObserverBase</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_bits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quant_min</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">-128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quant_max</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">127</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'f32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">advanced_options</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">dict</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">observer_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/fake_palettize.html#FakePalettize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.FakePalettize" title="Permalink to this definition"></a></dt>
+<dd><p>A class that implements palettization algorithm described in
+<a class="reference external" href="https://arxiv.org/abs/2108.12659">DKM: Differentiable K-Means Clustering Layer for Neural Network Compression</a>. It clusters the weights
+using a differentiable version of <code class="docutils literal notranslate"><span class="pre">k-means</span></code>, allowing the look-up-table (LUT)
+and indices of palettized weights to be learnt using a gradient-based optimization
+algorithm such as SGD.</p>
+<p>Extends <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.quantization.FakeQuantize</span></code> to add support for
+palettization.</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="k">as</span> <span class="nn">palett</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">OrderedDict</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">(</span><span class="s2">&quot;linear1&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;sigmoid1&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">()),</span>
+            <span class="p">(</span><span class="s2">&quot;linear2&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span>
+            <span class="p">(</span><span class="s2">&quot;sigmoid2&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">fq_activation</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Identity</span>
+<span class="n">fq_weight</span> <span class="o">=</span> <span class="n">palett</span><span class="o">.</span><span class="n">FakePalettize</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
+    <span class="n">observer</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">MovingAveragePerChannelMinMaxObserver</span><span class="o">.</span><span class="n">with_args</span><span class="p">(</span>
+        <span class="n">quant_min</span><span class="o">=-</span><span class="mi">128</span><span class="p">,</span> <span class="n">quant_max</span><span class="o">=</span><span class="mi">127</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">qint8</span>
+    <span class="p">),</span>
+    <span class="n">n_bits</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="n">cluster_dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">linear2</span><span class="o">.</span><span class="n">qconfig</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">QConfig</span><span class="p">(</span>
+    <span class="n">activation</span><span class="o">=</span><span class="n">fq_activation</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">fq_weight</span>
+<span class="p">)</span>
+
+<span class="n">palettized_model</span> <span class="o">=</span> <span class="n">palett</span><span class="o">.</span><span class="n">prepare_palettizer</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="n">train_model</span><span class="p">(</span><span class="n">palettized_model</span><span class="p">)</span>
+
+<span class="n">palettized_converted_model</span> <span class="o">=</span> <span class="n">palett</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">palettized_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>observer</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.ao.quantization.observer.ObserverBase</span></code>) – Observer for quantizing the <code class="docutils literal notranslate"><span class="pre">LUT</span></code>.</p></li>
+<li><p><strong>n_bits</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of palettization bits. There would be <span class="math notranslate nohighlight">\(2^{n\_bits}\)</span> unique weights in the <code class="docutils literal notranslate"><span class="pre">LUT</span></code>.</p></li>
+<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Dimensionality of centroids to use for clustering.</p></li>
+<li><p><strong>quant_min</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The minimum allowable quantized value.</p></li>
+<li><p><strong>quant_max</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The maximum allowable quantized value.</p></li>
+<li><p><strong>cluster_dtype</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – String that decides whether to quantize the <code class="docutils literal notranslate"><span class="pre">LUT</span></code> or not. The following are the <code class="docutils literal notranslate"><span class="pre">str</span></code>
+LUT quantization combinations: (<code class="docutils literal notranslate"><span class="pre">u8</span></code>, <code class="docutils literal notranslate"><span class="pre">uint8</span></code>), (<code class="docutils literal notranslate"><span class="pre">i8</span></code>, <code class="docutils literal notranslate"><span class="pre">int8</span></code>), and (<code class="docutils literal notranslate"><span class="pre">f16</span></code>, <code class="docutils literal notranslate"><span class="pre">float16</span></code>).</p></li>
+<li><p><strong>advanced_options</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code>) – Advanced options to configure the palettization algorithm.</p></li>
+<li><p><strong>observer_kwargs</strong> (<em>optional</em>) – Arguments for the observer module.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Allowed keys for <code class="docutils literal notranslate"><span class="pre">advanced_options</span></code> are the parameters listed as <code class="docutils literal notranslate"><span class="pre">optional</span></code> in
+<a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleDKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleDKMPalettizerConfig</span></code></a>, besides the ones already covered by other parameters in this class.</p>
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="coremltools.optimize.torch.pruning.html" class="btn btn-neutral float-left" title="Training-Time Pruning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.optimize.torch.quantization.html" class="btn btn-neutral float-right" title="Training-Time Quantization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

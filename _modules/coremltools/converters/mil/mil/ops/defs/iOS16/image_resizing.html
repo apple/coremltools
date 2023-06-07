@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -106,10 +107,10 @@
 <div class="viewcode-block" id="resample"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.resample">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">resample</span><span class="p">(</span><span class="n">_resample_iOS15</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The iOS 16 version of ``resample`` supports float 16 coordinates.</span>
-<span class="sd">    </span>
-<span class="sd">    For the complete documentation, see the </span>
-<span class="sd">    `iOS 15 version &lt;#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing&gt;`_.</span>
+<span class="sd">    This version of ``resample`` supports float 16 coordinates.</span>
+
+<span class="sd">    For complete documentation, see the</span>
+<span class="sd">    iOS 15 :py:class:`~.iOS15.image_resizing.resample`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
@@ -129,15 +130,17 @@
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">type_inference</span><span class="p">()</span></div>
 
-<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<div class="viewcode-block" id="upsample_bilinear"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.upsample_bilinear">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">upsample_bilinear</span><span class="p">(</span><span class="n">_upsample_bilinear_iOS15</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    iOS16 version of upsample_bilinear supports half_pixel_centers</span>
+<span class="sd">    This version of ``upsample_bilinear`` supports ``half_pixel_centers``.</span>
+<span class="sd">    For complete documentation, see the</span>
+<span class="sd">    iOS 15 :py:class:`~.iOS15.image_resizing.upsample_bilinear`.</span>
 
-<span class="sd">    Additional Parameters</span>
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    half_pixel_centers: const&lt;bool&gt; (Optional)</span>
-<span class="sd">        * Default to !align_corners if not provided</span>
+<span class="sd">        * Defaults to ``!align_corners`` if not provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">_upsample_bilinear_iOS15</span><span class="o">.</span><span class="n">input_spec</span> <span class="o">+</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -145,19 +148,20 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> <span class="n">DefaultInputs</span><span class="p">(</span><span class="n">half_pixel_centers</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_corners</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> <span class="n">DefaultInputs</span><span class="p">(</span><span class="n">half_pixel_centers</span><span class="o">=</span><span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">align_corners</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
-<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<div class="viewcode-block" id="crop_resize"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.crop_resize">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">crop_resize</span><span class="p">(</span><span class="n">_crop_resize_iOS15</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    iOS16 version of crop_resize, which supports ``pad_value``</span>
-<span class="sd">    </span>
-<span class="sd">    Additional Parameters</span>
+<span class="sd">    This version differs from the iOS 15 :py:class:`~.iOS15.image_resizing.crop_resize`</span>
+<span class="sd">    by supporting ``pad_value`` as an additional parameter.</span>
+
+<span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    pad_value : const&lt;T&gt; (Optional, default=1.0)</span>
-<span class="sd">        * If the box indexes go beyond the input boundary, the input image is padded with pad_value.</span>
-<span class="sd">        * Defaults to 0.</span>
-<span class="sd">        * It is the same as extrapolation_value in tf.image.crop_and_resize.</span>
+<span class="sd">    pad_value : const&lt;T&gt; (Optional, default=0.0)</span>
+<span class="sd">        * If the box indexes go beyond the input boundary, the input image is padded with ``pad_value``.</span>
+<span class="sd">        * Defaults to ``0``.</span>
+<span class="sd">        * It is the same as ``extrapolation_value`` in `tf.image.crop_and_resize &lt;https://www.tensorflow.org/api_docs/python/tf/image/crop_and_resize&gt;`_.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -168,7 +172,7 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> <span class="n">DefaultInputs</span><span class="p">(</span><span class="n">pad_value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> <span class="n">DefaultInputs</span><span class="p">(</span><span class="n">pad_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span></div>
 </pre></div>
 
            </div>

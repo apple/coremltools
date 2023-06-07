@@ -50,6 +50,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -105,8 +106,18 @@
 <li><a href="coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation</a></li>
 <li><a href="coremltools/converters/mil/mil/ops/defs/iOS16/constexpr_ops.html">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</a></li>
 <li><a href="coremltools/converters/mil/mil/ops/defs/iOS16/image_resizing.html">coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS16/scatter_gather.html">coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather</a></li>
 <li><a href="coremltools/converters/mil/mil/ops/defs/iOS16/tensor_operation.html">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation</a></li>
 <li><a href="coremltools/converters/mil/mil/ops/defs/iOS16/tensor_transformation.html">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/activation.html">coremltools.converters.mil.mil.ops.defs.iOS17.activation</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/elementwise_unary.html">coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/image_resizing.html">coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/quantization_ops.html">coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/reduction.html">coremltools.converters.mil.mil.ops.defs.iOS17.reduction</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/scatter_gather.html">coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/tensor_operation.html">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation</a></li>
+<li><a href="coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation</a></li>
+<li><a href="coremltools/converters/mil/mil/passes/defs/cleanup/const_deduplication.html">coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/cleanup/const_elimination.html">coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/cleanup/dead_code_elimination.html">coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/cleanup/dedup_op_and_var_names.html">coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names</a></li>
@@ -121,6 +132,7 @@
 <li><a href="coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/optimize_linear.html">coremltools.converters.mil.mil.passes.defs.optimize_linear</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/optimize_normalization.html">coremltools.converters.mil.mil.passes.defs.optimize_normalization</a></li>
+<li><a href="coremltools/converters/mil/mil/passes/defs/optimize_quantization.html">coremltools.converters.mil.mil.passes.defs.optimize_quantization</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation</a></li>
 <li><a href="coremltools/converters/mil/mil/passes/defs/preprocess.html">coremltools.converters.mil.mil.passes.defs.preprocess</a></li>
@@ -139,6 +151,16 @@
 <li><a href="coremltools/models/pipeline.html">coremltools.models.pipeline</a></li>
 <li><a href="coremltools/models/tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
 <li><a href="coremltools/models/utils.html">coremltools.models.utils</a></li>
+<li><a href="coremltools/optimize/coreml/_config.html">coremltools.optimize.coreml._config</a></li>
+<li><a href="coremltools/optimize/coreml/_post_training_quantization.html">coremltools.optimize.coreml._post_training_quantization</a></li>
+<li><a href="coremltools/optimize/torch/optimization_config.html">coremltools.optimize.torch.optimization_config</a></li>
+<li><a href="coremltools/optimize/torch/palettization/fake_palettize.html">coremltools.optimize.torch.palettization.fake_palettize</a></li>
+<li><a href="coremltools/optimize/torch/palettization/palettization_config.html">coremltools.optimize.torch.palettization.palettization_config</a></li>
+<li><a href="coremltools/optimize/torch/palettization/palettizer.html">coremltools.optimize.torch.palettization.palettizer</a></li>
+<li><a href="coremltools/optimize/torch/pruning/magnitude_pruner.html">coremltools.optimize.torch.pruning.magnitude_pruner</a></li>
+<li><a href="coremltools/optimize/torch/pruning/pruning_scheduler.html">coremltools.optimize.torch.pruning.pruning_scheduler</a></li>
+<li><a href="coremltools/optimize/torch/quantization/quantization_config.html">coremltools.optimize.torch.quantization.quantization_config</a></li>
+<li><a href="coremltools/optimize/torch/quantization/quantizer.html">coremltools.optimize.torch.quantization.quantizer</a></li>
 </ul>
 
            </div>
