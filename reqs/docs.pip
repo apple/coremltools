@@ -20,6 +20,10 @@ six
 snowballstemmer
 sphinx-rtd-theme
 sphinxcontrib-websupport
+sphinx-gallery
+sphinx-code-tabs
 sympy
 typing
 urllib3
+torch==1.13.0
+pillow

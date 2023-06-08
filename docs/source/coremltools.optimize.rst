@@ -30,5 +30,5 @@ Training-time compression for PyTorch models:
    coremltools.optimize.torch.pruning.rst
    coremltools.optimize.torch.palettization.rst
    coremltools.optimize.torch.quantization.rst
-
+   coremltools.optimize.torch.examples.rst
 

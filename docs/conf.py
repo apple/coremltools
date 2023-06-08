@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
+import pathlib
 
 
 # -- Project information -----------------------------------------------------
@@ -36,7 +37,8 @@ extensions = [
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.autosummary",
     "sphinx.ext.viewcode",
-    "sphinx_rtd_theme"
+    "sphinx_rtd_theme",
+    "sphinx_gallery.gen_gallery",
 ]
 
 numpydoc_show_class_members = False
@@ -68,3 +70,18 @@ html_static_path = ['_static']
 html_css_files = [
     'css/norightmargin.css'
 ]
+
+# -- Sphinx Gallery settings --------------------------------------------------
+
+# Add tutorials here.
+examples_dir = (pathlib.Path(__file__).parent / ".." / "examples").resolve()
+examples = [
+    "pruning", "palettization", "quantization",
+]
+
+sphinx_gallery_conf = {
+    'examples_dirs': [os.path.join(examples_dir, e) for e in examples],
+    'gallery_dirs': ['_examples'] * len(examples),
+    'ignore_pattern': r'(__init__\.py)',
+    'backreferences_dir': None,
+}
