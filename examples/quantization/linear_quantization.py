@@ -11,7 +11,8 @@ Linear Quantization
 # In this tutorial, you learn how to train a simple convolutional neural network on
 # `MNIST <http://yann.lecun.com/exdb/mnist/>`_ using :py:class:`~.quantization.LinearQuantizer`.
 #
-# Learn more about other quantization in coremltools `Training-Time Linear Quantization Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-quantization>`_.
+# Learn more about other quantization in the coremltools 
+# `Training-Time Quantization Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-quantization>`_.
 #
 
 ########################################################################
@@ -53,7 +54,7 @@ import os
 from torchvision import datasets, transforms
 
 
-def mnist_dataset(data_dir="~/.mnist_data"):
+def mnist_dataset(data_dir="~/.mnist_qat_data"):
     transform = transforms.Compose(
         [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
     )
@@ -120,7 +121,7 @@ def eval_model(model, test_loader):
         accuracy = 100.0 * correct / len(test_loader.dataset)
 
         print(
-            "\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n".format(
+            "\nTest set: Average loss: {:.4f}, Accuracy: {:.1f}%\n".format(
                 test_loss, accuracy
             )
         )
@@ -137,7 +138,7 @@ for epoch in range(num_epochs):
     accuracy_unquantized = eval_model(model, test_loader)
 
 
-print("Accuracy of unquantized network: {:.0f}%\n".format(accuracy_unquantized))
+print("Accuracy of unquantized network: {:.1f}%\n".format(accuracy_unquantized))
 
 ########################################################################
 # Insert Quantization Layers in the Model
@@ -145,7 +146,7 @@ print("Accuracy of unquantized network: {:.0f}%\n".format(accuracy_unquantized))
 # Install :py:class:`~.quantization.LinearQuantizer` in the trained model.
 #
 # Create an instance of the :py:class:`~.quantization.LinearQuantizerConfig` class
-# to specify quantization parameters. milestones=[0, 1, 2, 1] refers to the following:
+# to specify quantization parameters. ``milestones=[0, 1, 2, 1]`` refers to the following:
 #
 # * *Index 0*: At 0th epoch, observers will start collecting statistics of values of tensors being quantized
 # * *Index 1*: At 1st epoch, quantization simulation will begin
@@ -160,8 +161,7 @@ from coremltools.optimize.torch.quantization import (
 )
 
 global_config = ModuleLinearQuantizerConfig(milestones=[0, 1, 2, 1])
-
-config = LinearQuantizerConfig().set_global(global_config)
+config = LinearQuantizerConfig(global_config=global_config)
 
 quantizer = LinearQuantizer(model, config)
 
@@ -200,8 +200,8 @@ for epoch in range(num_epochs):
 # less amenable to quantization.
 
 
-print("Accuracy of quantized network: {:.0f}%\n".format(accuracy_quantized))
-print("Accuracy of unquantized network: {:.0f}%\n".format(accuracy_unquantized))
+print("Accuracy of quantized network: {:.1f}%\n".format(accuracy_quantized))
+print("Accuracy of unquantized network: {:.1f}%\n".format(accuracy_unquantized))
 
 np.testing.assert_allclose(accuracy_quantized, accuracy_unquantized, atol=2)
 
@@ -223,8 +223,7 @@ quantized_model = quantizer.finalize()
 # Exporting the Model for On-Device Execution
 # -------------------------------------------
 #
-# In order to deploy the model, convert it to the `ML Package <https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package>`_
-# format, which can then be run with `Core ML <https://developer.apple.com/documentation/coreml>`_ APIs.
+# In order to deploy the model, convert it to a Core ML model.
 #
 # Follow the same steps in Core ML Tools for exporting a regular PyTorch model
 # (for details, see `Converting from PyTorch <https://coremltools.readme.io/docs/pytorch-conversion>`_).
@@ -238,7 +237,8 @@ traced_model = torch.jit.trace(quantized_model, example_input)
 
 coreml_model = ct.convert(
     traced_model,
-    convert_to="mlprogram",
     inputs=[ct.TensorType(shape=example_input.shape)],
     minimum_deployment_target=ct.target.iOS17,
 )
+
+coreml_model.save("~/.mnist_qat_data/quantized_model.mlpackage")

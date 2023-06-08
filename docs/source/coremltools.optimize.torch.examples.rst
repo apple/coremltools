@@ -2,7 +2,7 @@ Training-Time Compression Examples
 =====================
 
 .. toctree::
-    :glob:
+    :maxdepth: 1
 
     ../_examples/magnitude_pruning.rst
     ../_examples/linear_quantization.rst

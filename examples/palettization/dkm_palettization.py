@@ -12,7 +12,8 @@ Palettization Using Differentiable K-Means
 # network trained on `MNIST <http://yann.lecun.com/exdb/mnist/>`_ using
 # :py:class:`~.palettizer.DKMPalettizer`.
 #
-# Learn more about other palettization in the coremltools `Training-Time Palettization Documentation <https://coremltools.readme.io/v7.0/docs/training-time-palettization>`_.
+# Learn more about other palettization in the coremltools 
+# `Training-Time Palettization Documentation <https://coremltools.readme.io/v7.0/docs/training-time-palettization>`_.
 
 
 ########################################################################
@@ -52,22 +53,18 @@ def mnist_net(num_classes=10):
 
 import os
 
-from filelock import FileLock
 from torchvision import datasets, transforms
 
 
-def mnist_dataset(data_dir):
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
-    data_path = os.path.expanduser(data_dir)
-    os.makedirs(data_path, exist_ok=True)
-    with FileLock(os.path.join(data_path, 'data.lock')):
-        train = datasets.MNIST(data_path, train=True, download=True,
-                               transform=transform)
-        test = datasets.MNIST(data_path, train=False, download=True,
-                              transform=transform)
+def mnist_dataset(data_dir="~/.mnist_palettization_data"):
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+    )
+    data_path = os.path.expanduser(f"{data_dir}/mnist")
+    if not os.path.exists(data_path):
+        os.makedirs(data_path)
+    train = datasets.MNIST(data_path, train=True, download=True, transform=transform)
+    test = datasets.MNIST(data_path, train=False, transform=transform)
     return train, test
 
 
@@ -77,7 +74,7 @@ def mnist_dataset(data_dir):
 model = mnist_net()
 
 batch_size = 128
-train_dataset, test_dataset = mnist_dataset("~/.mnist_data/")
+train_dataset, test_dataset = mnist_dataset("~/.mnist_data/mnist_palettization")
 train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
@@ -120,8 +117,11 @@ def eval_model(model, test_loader):
         test_loss /= len(test_loader.dataset)
         accuracy = 100. * correct / len(test_loader.dataset)
 
-        print('\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n'.format(
-            test_loss, accuracy))
+        print(
+            "\nTest set: Average loss: {:.4f}, Accuracy: {:.1f}%\n".format(
+                test_loss, accuracy
+            )
+        )
     return accuracy
 
 
@@ -134,17 +134,16 @@ for epoch in range(num_epochs):
     # evaluate
     accuracy_unpalettized = eval_model(model, test_loader)
 
-print("Accuracy of unpalettized network: {:.0f}%\n".format(accuracy_unpalettized))
+print("Accuracy of unpalettized network: {:.1f}%\n".format(accuracy_unpalettized))
 
 ########################################################################
 # Configuring Palettization
 # -------------------------
 #
 # Insert palettization layers into the trained model.
-# As a rule of thumb, we recommend choosing layers with more than 10,000 weights to palettize.
-# For this example, choose the second convolutional layer, ``conv2``.
-# Apply a ``4-bit`` palettization to this layer. This would mean that for all the weights
-# that exist in this layer, you try to map each weight element to one of :math:`2^4`,
+# For this example, apply a ``4-bit`` palettization to the ``conv2`` layer. This
+# would mean that for all the weights that exist in this layer, you try to map
+# each weight element to one of :math:`2^4`,
 # that is, ``16`` clusters.
 #
 # Note that calling :py:meth:`~.palettization.DKMPalettizer.prepare` simply inserts palettization
@@ -183,8 +182,8 @@ for epoch in range(num_epochs):
 # The evaluation shows that you can train a palettized network without losing much accuracy
 # with the final model.
 
-print("Accuracy of unpalettized network: {:.0f}%\n".format(accuracy_unpalettized))
-print("Accuracy of palettized network: {:.0f}%\n".format(accuracy_palettized))
+print("Accuracy of unpalettized network: {:.1f}%\n".format(accuracy_unpalettized))
+print("Accuracy of palettized network: {:.1f}%\n".format(accuracy_palettized))
 
 ########################################################################
 # Restoring LUT and Indices as Weights
@@ -199,10 +198,7 @@ finalized_model = palettizer.finalize()
 # Exporting the Model for On-Device Execution
 # -------------------------------------------
 #
-# To deploy the model on device, convert it to the
-# `MLPackage <https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package>`_ format,
-# which can then be run with the
-# `CoreML <https://developer.apple.com/documentation/coreml>`_ APIs.
+# To deploy the model on device, convert it to a Core ML model.
 #
 # To export the model with Core ML Tools, first trace the model with an input, and then
 # use the Core ML Tools converter, as described in
@@ -221,8 +217,9 @@ traced_model = torch.jit.trace(finalized_model, example_input)
 
 coreml_model = ct.convert(
     traced_model,
-    convert_to="mlprogram",
     inputs=[ct.TensorType(shape=example_input.shape)],
     pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION,
     minimum_deployment_target=ct.target.iOS16,
 )
+
+coreml_model.save("~/.mnist_palettization_data/palettized_model.mlpackage")

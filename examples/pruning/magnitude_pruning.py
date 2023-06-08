@@ -13,7 +13,7 @@ Magnitude Pruning
 # The tutorial demonstrates how to achieve ~75% sparsity without incurring
 # significant loss in model accuracy.
 #
-# Learn more about other pruners and schedulers in the coremltools
+# Learn more about other pruners and schedulers in the coremltools 
 # `Training-Time Pruning Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-pruning>`_.
 #
 
@@ -54,22 +54,20 @@ import os
 from torchvision import datasets, transforms
 
 
-def mnist_dataset(data_dir="~/.mnist_data"):
-    transform=transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-        ])
+def mnist_dataset(data_dir="~/.mnist_pruning_data"):
+    transform = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+    )
     data_path = os.path.expanduser(f"{data_dir}/mnist")
     if not os.path.exists(data_path):
         os.makedirs(data_path)
-    train = datasets.MNIST(data_path, train=True, download=True,
-                           transform=transform)
-    test = datasets.MNIST(data_path, train=False,
-                          transform=transform)
+    train = datasets.MNIST(data_path, train=True, download=True, transform=transform)
+    test = datasets.MNIST(data_path, train=False, transform=transform)
     return train, test
 
 ########################################################################
 # Next, initialize the model and the dataset.
+
 
 model = mnist_net()
 
@@ -114,8 +112,11 @@ def eval_model(model, test_loader):
         test_loss /= len(test_loader.dataset)
         accuracy = 100. * correct / len(test_loader.dataset)
 
-        print('\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n'.format(
-            test_loss, accuracy))
+        print(
+            "\nTest set: Average loss: {:.4f}, Accuracy: {:.1f}%\n".format(
+                test_loss, accuracy
+            )
+        )
     return accuracy
 
 
@@ -129,7 +130,7 @@ for epoch in range(num_epochs):
     accuracy_unpruned = eval_model(model, test_loader)
 
 
-print("Accuracy of unpruned network: {:.0f}%\n".format(accuracy_unpruned))
+print("Accuracy of unpruned network: {:.1f}%\n".format(accuracy_unpruned))
 
 ########################################################################
 # Installing the Pruner in the Model
@@ -211,8 +212,8 @@ for epoch in range(num_epochs):
 # that can be achieved for the model. Finding the right sweet spot on this
 # trade-off curve depends on the model and task.
 
-print("Accuracy of pruned network: {:.0f}%\n".format(accuracy_pruned))
-print("Accuracy of unpruned network: {:.0f}%\n".format(accuracy_unpruned))
+print("Accuracy of pruned network: {:.1f}%\n".format(accuracy_pruned))
+print("Accuracy of unpruned network: {:.1f}%\n".format(accuracy_unpruned))
 
 np.testing.assert_allclose(accuracy_pruned, accuracy_unpruned, atol=2)
 
@@ -235,8 +236,7 @@ pruner.finalize(inplace=True)
 # Exporting the Model for On-Device Execution
 # -------------------------------------------
 #
-# In order to deploy the model, convert it to the `ML Package <https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package>`_
-# format, which can then be run with `Core ML <https://developer.apple.com/documentation/coreml>`_ APIs.
+# In order to deploy the model, convert it to a Core ML model.
 #
 # Follow the same steps in Core ML Tools for exporting a regular PyTorch model
 # (for details, see `Converting from PyTorch <https://coremltools.readme.io/docs/pytorch-conversion>`_).
@@ -251,8 +251,9 @@ traced_model = torch.jit.trace(model, example_input)
 
 coreml_model = ct.convert(
     traced_model,
-    convert_to="mlprogram",
     inputs=[ct.TensorType(shape=example_input.shape)],
     pass_pipeline=ct.PassPipeline.DEFAULT_PRUNING,
     minimum_deployment_target=ct.target.iOS16,
 )
+
+coreml_model.save("~/.mnist_pruning_data/pruned_model.mlpackage")
