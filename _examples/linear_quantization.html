@@ -116,7 +116,8 @@ to download the full example code</p>
 <span id="linear-quantization-tutorial"></span><span id="sphx-glr-examples-linear-quantization-py"></span><h1>Linear Quantization<a class="headerlink" href="#linear-quantization" title="Permalink to this heading"></a></h1>
 <p>In this tutorial, you learn how to train a simple convolutional neural network on
 <a class="reference external" href="http://yann.lecun.com/exdb/mnist/">MNIST</a> using <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
-<p>Learn more about other quantization in coremltools <a class="reference external" href="https://coremltools.readme.io/v7.0/docs/data-dependent-quantization">Training-Time Linear Quantization Documentation</a>.</p>
+<p>Learn more about other quantization in the coremltools
+<a class="reference external" href="https://coremltools.readme.io/v7.0/docs/data-dependent-quantization">Training-Time Quantization Documentation</a>.</p>
 <section id="network-and-dataset-definition">
 <h2>Network and Dataset Definition<a class="headerlink" href="#network-and-dataset-definition" title="Permalink to this heading"></a></h2>
 <p>First define your network, which consists of a single convolution layer
@@ -152,7 +153,7 @@ images to normalize them.</p>
 <span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
 
 
-<span class="k">def</span> <span class="nf">mnist_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;~/.mnist_data&quot;</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">mnist_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;~/.mnist_qat_data&quot;</span><span class="p">):</span>
     <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
         <span class="p">[</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.1307</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.3081</span><span class="p">,))]</span>
     <span class="p">)</span>
@@ -217,7 +218,7 @@ images to normalize them.</p>
         <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">correct</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
 
         <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Test set: Average loss: </span><span class="si">{:.4f}</span><span class="s2">, Accuracy: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Test set: Average loss: </span><span class="si">{:.4f}</span><span class="s2">, Accuracy: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                 <span class="n">test_loss</span><span class="p">,</span> <span class="n">accuracy</span>
             <span class="p">)</span>
         <span class="p">)</span>
@@ -234,7 +235,7 @@ images to normalize them.</p>
     <span class="n">accuracy_unquantized</span> <span class="o">=</span> <span class="n">eval_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
 
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unquantized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unquantized</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unquantized network: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unquantized</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -242,7 +243,7 @@ images to normalize them.</p>
 <h2>Insert Quantization Layers in the Model<a class="headerlink" href="#insert-quantization-layers-in-the-model" title="Permalink to this heading"></a></h2>
 <p>Install <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> in the trained model.</p>
 <p>Create an instance of the <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="coremltools.optimize.torch.quantization.LinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizerConfig</span></code></a> class
-to specify quantization parameters. milestones=[0, 1, 2, 1] refers to the following:</p>
+to specify quantization parameters. <code class="docutils literal notranslate"><span class="pre">milestones=[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">1]</span></code> refers to the following:</p>
 <ul class="simple">
 <li><p><em>Index 0</em>: At 0th epoch, observers will start collecting statistics of values of tensors being quantized</p></li>
 <li><p><em>Index 1</em>: At 1st epoch, quantization simulation will begin</p></li>
@@ -256,8 +257,7 @@ to specify quantization parameters. milestones=[0, 1, 2, 1] refers to the follow
 <span class="p">)</span>
 
 <span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleLinearQuantizerConfig</span><span class="p">(</span><span class="n">milestones</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
-
-<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_global</span><span class="p">(</span><span class="n">global_config</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">global_config</span><span class="p">)</span>
 
 <span class="n">quantizer</span> <span class="o">=</span> <span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 </pre></div>
@@ -293,8 +293,8 @@ in model accuracy. In practice, for more complex models,
 quantization can be lossy and lead to degradation in validation accuracy.
 In such cases, you can choose to not quantize certain layers which are
 less amenable to quantization.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of quantized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_quantized</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unquantized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unquantized</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of quantized network: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_quantized</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unquantized network: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unquantized</span><span class="p">))</span>
 
 <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">accuracy_quantized</span><span class="p">,</span> <span class="n">accuracy_unquantized</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
@@ -314,8 +314,7 @@ into the weights.</p>
 </section>
 <section id="exporting-the-model-for-on-device-execution">
 <h2>Exporting the Model for On-Device Execution<a class="headerlink" href="#exporting-the-model-for-on-device-execution" title="Permalink to this heading"></a></h2>
-<p>In order to deploy the model, convert it to the <a class="reference external" href="https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package">ML Package</a>
-format, which can then be run with <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a> APIs.</p>
+<p>In order to deploy the model, convert it to a Core ML model.</p>
 <p>Follow the same steps in Core ML Tools for exporting a regular PyTorch model
 (for details, see <a class="reference external" href="https://coremltools.readme.io/docs/pytorch-conversion">Converting from PyTorch</a>).
 The parameter <code class="docutils literal notranslate"><span class="pre">ct.target.iOS17</span></code> is necessary here because activation quantization
@@ -327,10 +326,11 @@ ops are only supported on iOS versions &gt;= 17.</p>
 
 <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">traced_model</span><span class="p">,</span>
-    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS17</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;~/.mnist_qat_data/quantized_model.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>

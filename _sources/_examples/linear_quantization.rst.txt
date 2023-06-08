@@ -23,22 +23,23 @@
 Linear Quantization
 ===================
 
-.. GENERATED FROM PYTHON SOURCE LINES 11-16
+.. GENERATED FROM PYTHON SOURCE LINES 11-17
 
 In this tutorial, you learn how to train a simple convolutional neural network on
 `MNIST <http://yann.lecun.com/exdb/mnist/>`_ using :py:class:`~.quantization.LinearQuantizer`.
 
-Learn more about other quantization in coremltools `Training-Time Linear Quantization Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-quantization>`_.
+Learn more about other quantization in the coremltools 
+`Training-Time Quantization Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-quantization>`_.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 18-22
+.. GENERATED FROM PYTHON SOURCE LINES 19-23
 
 Network and Dataset Definition
 ------------------------------
 First define your network, which consists of a single convolution layer
 followed by a dense (linear) layer.
 
-.. GENERATED FROM PYTHON SOURCE LINES 22-46
+.. GENERATED FROM PYTHON SOURCE LINES 23-47
 
 .. code-block:: default
 
@@ -67,13 +68,13 @@ followed by a dense (linear) layer.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 47-50
+.. GENERATED FROM PYTHON SOURCE LINES 48-51
 
 Use the `MNIST dataset provided by PyTorch <https://pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html#mnist>`_
 for training. Apply a very simple transformation to the input
 images to normalize them.
 
-.. GENERATED FROM PYTHON SOURCE LINES 50-68
+.. GENERATED FROM PYTHON SOURCE LINES 51-69
 
 .. code-block:: default
 
@@ -83,7 +84,7 @@ images to normalize them.
     from torchvision import datasets, transforms
 
 
-    def mnist_dataset(data_dir="~/.mnist_data"):
+    def mnist_dataset(data_dir="~/.mnist_qat_data"):
         transform = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
         )
@@ -96,11 +97,11 @@ images to normalize them.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-70
+.. GENERATED FROM PYTHON SOURCE LINES 70-71
 
 Next, initialize the model and the dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-80
+.. GENERATED FROM PYTHON SOURCE LINES 71-81
 
 .. code-block:: default
 
@@ -115,13 +116,13 @@ Next, initialize the model and the dataset.
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 81-84
+.. GENERATED FROM PYTHON SOURCE LINES 82-85
 
 Training the Model Without Quantization
 ---------------------------------------
 Train the model without any quantization applied.
 
-.. GENERATED FROM PYTHON SOURCE LINES 84-142
+.. GENERATED FROM PYTHON SOURCE LINES 85-143
 
 .. code-block:: default
 
@@ -164,7 +165,7 @@ Train the model without any quantization applied.
             accuracy = 100.0 * correct / len(test_loader.dataset)
 
             print(
-                "\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n".format(
+                "\nTest set: Average loss: {:.4f}, Accuracy: {:.1f}%\n".format(
                     test_loss, accuracy
                 )
             )
@@ -181,24 +182,24 @@ Train the model without any quantization applied.
         accuracy_unquantized = eval_model(model, test_loader)
 
 
-    print("Accuracy of unquantized network: {:.0f}%\n".format(accuracy_unquantized))
+    print("Accuracy of unquantized network: {:.1f}%\n".format(accuracy_unquantized))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 143-154
+.. GENERATED FROM PYTHON SOURCE LINES 144-155
 
 Insert Quantization Layers in the Model
 ---------------------------------------
 Install :py:class:`~.quantization.LinearQuantizer` in the trained model.
 
 Create an instance of the :py:class:`~.quantization.LinearQuantizerConfig` class
-to specify quantization parameters. milestones=[0, 1, 2, 1] refers to the following:
+to specify quantization parameters. ``milestones=[0, 1, 2, 1]`` refers to the following:
 
 * *Index 0*: At 0th epoch, observers will start collecting statistics of values of tensors being quantized
 * *Index 1*: At 1st epoch, quantization simulation will begin
 * *Index 2*: At 2nd epoch, observers will stop collecting and quantization parameters will be frozen
 * *Index 3*: At 1st epoch, batch normalization layers will stop collecting mean and variance, and will start running in inference mode
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-168
+.. GENERATED FROM PYTHON SOURCE LINES 155-168
 
 .. code-block:: default
 
@@ -211,8 +212,7 @@ to specify quantization parameters. milestones=[0, 1, 2, 1] refers to the follow
     )
 
     global_config = ModuleLinearQuantizerConfig(milestones=[0, 1, 2, 1])
-
-    config = LinearQuantizerConfig().set_global(global_config)
+    config = LinearQuantizerConfig(global_config=global_config)
 
     quantizer = LinearQuantizer(model, config)
 
@@ -272,8 +272,8 @@ less amenable to quantization.
 
 
 
-    print("Accuracy of quantized network: {:.0f}%\n".format(accuracy_quantized))
-    print("Accuracy of unquantized network: {:.0f}%\n".format(accuracy_unquantized))
+    print("Accuracy of quantized network: {:.1f}%\n".format(accuracy_quantized))
+    print("Accuracy of unquantized network: {:.1f}%\n".format(accuracy_unquantized))
 
     np.testing.assert_allclose(accuracy_quantized, accuracy_unquantized, atol=2)
 
@@ -299,20 +299,19 @@ into the weights.
     quantized_model = quantizer.finalize()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 223-233
+.. GENERATED FROM PYTHON SOURCE LINES 223-232
 
 Exporting the Model for On-Device Execution
 -------------------------------------------
 
-In order to deploy the model, convert it to the `ML Package <https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package>`_
-format, which can then be run with `Core ML <https://developer.apple.com/documentation/coreml>`_ APIs.
+In order to deploy the model, convert it to a Core ML model.
 
 Follow the same steps in Core ML Tools for exporting a regular PyTorch model
 (for details, see `Converting from PyTorch <https://coremltools.readme.io/docs/pytorch-conversion>`_).
 The parameter ``ct.target.iOS17`` is necessary here because activation quantization
 ops are only supported on iOS versions >= 17.
 
-.. GENERATED FROM PYTHON SOURCE LINES 233-245
+.. GENERATED FROM PYTHON SOURCE LINES 232-245
 
 .. code-block:: default
 
@@ -324,10 +323,11 @@ ops are only supported on iOS versions >= 17.
 
     coreml_model = ct.convert(
         traced_model,
-        convert_to="mlprogram",
         inputs=[ct.TensorType(shape=example_input.shape)],
         minimum_deployment_target=ct.target.iOS17,
     )
+
+    coreml_model.save("~/.mnist_qat_data/quantized_model.mlpackage")
 
 
 .. rst-class:: sphx-glr-timing

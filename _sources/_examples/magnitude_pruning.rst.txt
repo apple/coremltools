@@ -30,7 +30,7 @@ In this tutorial, you learn how to train a simple convolutional neural network o
 The tutorial demonstrates how to achieve ~75% sparsity without incurring
 significant loss in model accuracy.
 
-Learn more about other pruners and schedulers in the coremltools
+Learn more about other pruners and schedulers in the coremltools 
 `Training-Time Pruning Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-pruning>`_.
 
 
@@ -74,7 +74,7 @@ Use the `MNIST dataset provided by PyTorch <https://pytorch.org/vision/stable/ge
 for training. Apply a very simple transformation to the input
 images to normalize them.
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-71
+.. GENERATED FROM PYTHON SOURCE LINES 51-68
 
 .. code-block:: default
 
@@ -84,28 +84,26 @@ images to normalize them.
     from torchvision import datasets, transforms
 
 
-    def mnist_dataset(data_dir="~/.mnist_data"):
-        transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-            ])
+    def mnist_dataset(data_dir="~/.mnist_pruning_data"):
+        transform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+        )
         data_path = os.path.expanduser(f"{data_dir}/mnist")
         if not os.path.exists(data_path):
             os.makedirs(data_path)
-        train = datasets.MNIST(data_path, train=True, download=True,
-                               transform=transform)
-        test = datasets.MNIST(data_path, train=False,
-                              transform=transform)
+        train = datasets.MNIST(data_path, train=True, download=True, transform=transform)
+        test = datasets.MNIST(data_path, train=False, transform=transform)
         return train, test
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 72-73
+.. GENERATED FROM PYTHON SOURCE LINES 69-70
 
 Next, initialize the model and the dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 73-81
+.. GENERATED FROM PYTHON SOURCE LINES 70-79
 
 .. code-block:: default
+
 
 
     model = mnist_net()
@@ -116,13 +114,13 @@ Next, initialize the model and the dataset.
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 82-85
+.. GENERATED FROM PYTHON SOURCE LINES 80-83
 
 Training the Model Without Pruning
 ----------------------------------
 Train the model without any pruning applied.
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-134
+.. GENERATED FROM PYTHON SOURCE LINES 83-135
 
 .. code-block:: default
 
@@ -158,8 +156,11 @@ Train the model without any pruning applied.
             test_loss /= len(test_loader.dataset)
             accuracy = 100. * correct / len(test_loader.dataset)
 
-            print('\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n'.format(
-                test_loss, accuracy))
+            print(
+                "\nTest set: Average loss: {:.4f}, Accuracy: {:.1f}%\n".format(
+                    test_loss, accuracy
+                )
+            )
         return accuracy
 
 
@@ -173,10 +174,10 @@ Train the model without any pruning applied.
         accuracy_unpruned = eval_model(model, test_loader)
 
 
-    print("Accuracy of unpruned network: {:.0f}%\n".format(accuracy_unpruned))
+    print("Accuracy of unpruned network: {:.1f}%\n".format(accuracy_unpruned))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 135-147
+.. GENERATED FROM PYTHON SOURCE LINES 136-148
 
 Installing the Pruner in the Model
 ----------------------------------
@@ -191,7 +192,7 @@ Begin pruning from step ``0`` and prune every ``100`` steps for two epochs. As y
 step through this pruning scheduler, the sparsity of pruned modules will increase
 gradually from the initial value to the target value.
 
-.. GENERATED FROM PYTHON SOURCE LINES 147-152
+.. GENERATED FROM PYTHON SOURCE LINES 148-153
 
 .. code-block:: default
 
@@ -201,7 +202,7 @@ gradually from the initial value to the target value.
     scheduler = PolynomialDecayScheduler(update_steps=list(range(0, 900, 100)))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-160
+.. GENERATED FROM PYTHON SOURCE LINES 154-161
 
 Next, create an instance of the :py:class:`~.pruning.MagnitudePrunerConfig` class
 to specify how you want different submodules to be pruned.
@@ -211,7 +212,7 @@ different layers can be targeted at different sparsity levels. In practice, the 
 level of a layer is a hyperparameter, which needs to be tuned for your requirements and
 the amenability of the layer to sparsification.
 
-.. GENERATED FROM PYTHON SOURCE LINES 160-176
+.. GENERATED FROM PYTHON SOURCE LINES 161-177
 
 .. code-block:: default
 
@@ -232,7 +233,7 @@ the amenability of the layer to sparsification.
     pruner = MagnitudePruner(model, config)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 177-183
+.. GENERATED FROM PYTHON SOURCE LINES 178-184
 
 Next, call :py:meth:`~.pruning.MagnitudePruner.prepare` to insert pruning
 ``forward pre hooks`` on the modules configured previously.
@@ -241,7 +242,7 @@ method of the module. They multiply the parameter with a pruning mask, which
 is a tensor of the same shape as the parameter, in which each element has a value of
 either ``1`` or ``0``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-186
+.. GENERATED FROM PYTHON SOURCE LINES 184-187
 
 .. code-block:: default
 
@@ -249,7 +250,7 @@ either ``1`` or ``0``.
     pruner.prepare(inplace=True)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 187-192
+.. GENERATED FROM PYTHON SOURCE LINES 188-193
 
 Fine-Tuning the Pruned Model
 ----------------------------
@@ -257,7 +258,7 @@ The next step is to fine tune the model with pruning applied. In order to prune 
 call the :py:meth:`~.pruning.MagnitudePruner.step` method on the pruner
 after every call to ``optimizer.step()`` to step through the pruning schedule.
 
-.. GENERATED FROM PYTHON SOURCE LINES 192-207
+.. GENERATED FROM PYTHON SOURCE LINES 193-208
 
 .. code-block:: default
 
@@ -277,7 +278,7 @@ after every call to ``optimizer.step()`` to step through the pruning schedule.
         accuracy_pruned = eval_model(model, test_loader)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 208-213
+.. GENERATED FROM PYTHON SOURCE LINES 209-214
 
 The evaluation shows that you can train a pruned network without losing
 accuracy with the final model. In practice, for more complex models,
@@ -285,18 +286,18 @@ you have a trade-off between the sparsity and the validation accuracy
 that can be achieved for the model. Finding the right sweet spot on this
 trade-off curve depends on the model and task.
 
-.. GENERATED FROM PYTHON SOURCE LINES 213-219
+.. GENERATED FROM PYTHON SOURCE LINES 214-220
 
 .. code-block:: default
 
 
-    print("Accuracy of pruned network: {:.0f}%\n".format(accuracy_pruned))
-    print("Accuracy of unpruned network: {:.0f}%\n".format(accuracy_unpruned))
+    print("Accuracy of pruned network: {:.1f}%\n".format(accuracy_pruned))
+    print("Accuracy of unpruned network: {:.1f}%\n".format(accuracy_unpruned))
 
     np.testing.assert_allclose(accuracy_pruned, accuracy_unpruned, atol=2)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 220-230
+.. GENERATED FROM PYTHON SOURCE LINES 221-231
 
 Finalizing the Model for Export
 -------------------------------
@@ -309,7 +310,7 @@ on the pruner. This removes all the forward pre-hooks you had attached on the su
 It also freezes the state of the pruner and multiplies the pruning mask with the corresponding
 weight matrix.
 
-.. GENERATED FROM PYTHON SOURCE LINES 230-234
+.. GENERATED FROM PYTHON SOURCE LINES 231-235
 
 .. code-block:: default
 
@@ -318,13 +319,12 @@ weight matrix.
     pruner.finalize(inplace=True)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 235-246
+.. GENERATED FROM PYTHON SOURCE LINES 236-246
 
 Exporting the Model for On-Device Execution
 -------------------------------------------
 
-In order to deploy the model, convert it to the `ML Package <https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package>`_
-format, which can then be run with `Core ML <https://developer.apple.com/documentation/coreml>`_ APIs.
+In order to deploy the model, convert it to a Core ML model.
 
 Follow the same steps in Core ML Tools for exporting a regular PyTorch model
 (for details, see `Converting from PyTorch <https://coremltools.readme.io/docs/pytorch-conversion>`_).
@@ -332,7 +332,7 @@ The parameter ``ct.PassPipeline.DEFAULT_PRUNING`` signals to the converter that
 the model being converted is a pruned model, and allows the model weights to be represented as
 sparse matrices, which have a smaller memory footprint than dense matrices.
 
-.. GENERATED FROM PYTHON SOURCE LINES 246-259
+.. GENERATED FROM PYTHON SOURCE LINES 246-260
 
 .. code-block:: default
 
@@ -344,11 +344,12 @@ sparse matrices, which have a smaller memory footprint than dense matrices.
 
     coreml_model = ct.convert(
         traced_model,
-        convert_to="mlprogram",
         inputs=[ct.TensorType(shape=example_input.shape)],
         pass_pipeline=ct.PassPipeline.DEFAULT_PRUNING,
         minimum_deployment_target=ct.target.iOS16,
     )
+
+    coreml_model.save("~/.mnist_pruning_data/pruned_model.mlpackage")
 
 
 .. rst-class:: sphx-glr-timing

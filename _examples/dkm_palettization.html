@@ -117,7 +117,8 @@ to download the full example code</p>
 <p>In this tutorial, you learn how to palettize a
 network trained on <a class="reference external" href="http://yann.lecun.com/exdb/mnist/">MNIST</a> using
 <a class="reference internal" href="../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer" title="coremltools.optimize.torch.palettization.palettizer.DKMPalettizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">DKMPalettizer</span></code></a>.</p>
-<p>Learn more about other palettization in the coremltools <a class="reference external" href="https://coremltools.readme.io/v7.0/docs/training-time-palettization">Training-Time Palettization Documentation</a>.</p>
+<p>Learn more about other palettization in the coremltools
+<a class="reference external" href="https://coremltools.readme.io/v7.0/docs/training-time-palettization">Training-Time Palettization Documentation</a>.</p>
 <section id="defining-the-network-and-dataset">
 <h2>Defining the Network and Dataset<a class="headerlink" href="#defining-the-network-and-dataset" title="Permalink to this heading"></a></h2>
 <p>First, define your network:</p>
@@ -150,22 +151,18 @@ network trained on <a class="reference external" href="http://yann.lecun.com/exd
 Apply a very simple transformation to the input images to normalize them.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
 
-<span class="kn">from</span> <span class="nn">filelock</span> <span class="kn">import</span> <span class="n">FileLock</span>
 <span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
 
 
-<span class="k">def</span> <span class="nf">mnist_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="p">):</span>
-    <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
-        <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
-        <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.1307</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.3081</span><span class="p">,))</span>
-    <span class="p">])</span>
-    <span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">data_dir</span><span class="p">)</span>
-    <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">with</span> <span class="n">FileLock</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="s1">&#39;data.lock&#39;</span><span class="p">)):</span>
-        <span class="n">train</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                               <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
-        <span class="n">test</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                              <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">mnist_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;~/.mnist_palettization_data&quot;</span><span class="p">):</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.1307</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.3081</span><span class="p">,))]</span>
+    <span class="p">)</span>
+    <span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s2">/mnist&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">train</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">train</span><span class="p">,</span> <span class="n">test</span>
 </pre></div>
 </div>
@@ -173,7 +170,7 @@ Apply a very simple transformation to the input images to normalize them.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">mnist_net</span><span class="p">()</span>
 
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
-<span class="n">train_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">(</span><span class="s2">&quot;~/.mnist_data/&quot;</span><span class="p">)</span>
+<span class="n">train_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">(</span><span class="s2">&quot;~/.mnist_data/mnist_palettization&quot;</span><span class="p">)</span>
 <span class="n">train_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
 </pre></div>
@@ -215,8 +212,11 @@ Apply a very simple transformation to the input images to normalize them.</p>
         <span class="n">test_loss</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
         <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.</span> <span class="o">*</span> <span class="n">correct</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">Test set: Average loss: </span><span class="si">{:.4f}</span><span class="s1">, Accuracy: </span><span class="si">{:.0f}</span><span class="s1">%</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-            <span class="n">test_loss</span><span class="p">,</span> <span class="n">accuracy</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Test set: Average loss: </span><span class="si">{:.4f}</span><span class="s2">, Accuracy: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">test_loss</span><span class="p">,</span> <span class="n">accuracy</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
     <span class="k">return</span> <span class="n">accuracy</span>
 
 
@@ -229,17 +229,16 @@ Apply a very simple transformation to the input images to normalize them.</p>
     <span class="c1"># evaluate</span>
     <span class="n">accuracy_unpalettized</span> <span class="o">=</span> <span class="n">eval_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unpalettized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unpalettized</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unpalettized network: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unpalettized</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
 <section id="configuring-palettization">
 <h2>Configuring Palettization<a class="headerlink" href="#configuring-palettization" title="Permalink to this heading"></a></h2>
 <p>Insert palettization layers into the trained model.
-As a rule of thumb, we recommend choosing layers with more than 10,000 weights to palettize.
-For this example, choose the second convolutional layer, <code class="docutils literal notranslate"><span class="pre">conv2</span></code>.
-Apply a <code class="docutils literal notranslate"><span class="pre">4-bit</span></code> palettization to this layer. This would mean that for all the weights
-that exist in this layer, you try to map each weight element to one of <span class="math notranslate nohighlight">\(2^4\)</span>,
+For this example, apply a <code class="docutils literal notranslate"><span class="pre">4-bit</span></code> palettization to the <code class="docutils literal notranslate"><span class="pre">conv2</span></code> layer. This
+would mean that for all the weights that exist in this layer, you try to map
+each weight element to one of <span class="math notranslate nohighlight">\(2^4\)</span>,
 that is, <code class="docutils literal notranslate"><span class="pre">16</span></code> clusters.</p>
 <p>Note that calling <a class="reference internal" href="../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.prepare" title="coremltools.optimize.torch.palettization.DKMPalettizer.prepare"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare()</span></code></a> simply inserts palettization
 layers into the model. It doesn’t actually palettize the weights. You do that in the next step when
@@ -274,8 +273,8 @@ layers’ weights in the form of a LUT and indices.</p>
 </div>
 <p>The evaluation shows that you can train a palettized network without losing much accuracy
 with the final model.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unpalettized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unpalettized</span><span class="p">))</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of palettized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_palettized</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unpalettized network: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unpalettized</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of palettized network: </span><span class="si">{:.1f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_palettized</span><span class="p">))</span>
 </pre></div>
 </div>
 </section>
@@ -289,10 +288,7 @@ restore the LUT and indices of the palettized modules as weights in the model.</
 </section>
 <section id="exporting-the-model-for-on-device-execution">
 <h2>Exporting the Model for On-Device Execution<a class="headerlink" href="#exporting-the-model-for-on-device-execution" title="Permalink to this heading"></a></h2>
-<p>To deploy the model on device, convert it to the
-<a class="reference external" href="https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package">MLPackage</a> format,
-which can then be run with the
-<a class="reference external" href="https://developer.apple.com/documentation/coreml">CoreML</a> APIs.</p>
+<p>To deploy the model on device, convert it to a Core ML model.</p>
 <p>To export the model with Core ML Tools, first trace the model with an input, and then
 use the Core ML Tools converter, as described in
 <a class="reference external" href="https://coremltools.readme.io/docs/pytorch-conversion">Converting from PyTorch</a>.
@@ -309,11 +305,12 @@ footprint on disk as compared to the dense weights.</p>
 
 <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">traced_model</span><span class="p">,</span>
-    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
     <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT_PALETTIZATION</span><span class="p">,</span>
     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">,</span>
 <span class="p">)</span>
+
+<span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;~/.mnist_palettization_data/palettized_model.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>

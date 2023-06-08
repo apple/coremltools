@@ -23,22 +23,23 @@
 Palettization Using Differentiable K-Means
 ==========================================
 
-.. GENERATED FROM PYTHON SOURCE LINES 11-16
+.. GENERATED FROM PYTHON SOURCE LINES 11-17
 
 In this tutorial, you learn how to palettize a
 network trained on `MNIST <http://yann.lecun.com/exdb/mnist/>`_ using
 :py:class:`~.palettizer.DKMPalettizer`.
 
-Learn more about other palettization in the coremltools `Training-Time Palettization Documentation <https://coremltools.readme.io/v7.0/docs/training-time-palettization>`_.
+Learn more about other palettization in the coremltools 
+`Training-Time Palettization Documentation <https://coremltools.readme.io/v7.0/docs/training-time-palettization>`_.
 
-.. GENERATED FROM PYTHON SOURCE LINES 19-23
+.. GENERATED FROM PYTHON SOURCE LINES 20-24
 
 Defining the Network and Dataset
 --------------------------------
 
 First, define your network:
 
-.. GENERATED FROM PYTHON SOURCE LINES 23-48
+.. GENERATED FROM PYTHON SOURCE LINES 24-49
 
 .. code-block:: default
 
@@ -68,44 +69,40 @@ First, define your network:
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 49-52
+.. GENERATED FROM PYTHON SOURCE LINES 50-53
 
 For training, use the MNIST dataset provided by
 `PyTorch <https://pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html#mnist>`_.
 Apply a very simple transformation to the input images to normalize them.
 
-.. GENERATED FROM PYTHON SOURCE LINES 52-74
+.. GENERATED FROM PYTHON SOURCE LINES 53-71
 
 .. code-block:: default
 
 
     import os
 
-    from filelock import FileLock
     from torchvision import datasets, transforms
 
 
-    def mnist_dataset(data_dir):
-        transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
-        ])
-        data_path = os.path.expanduser(data_dir)
-        os.makedirs(data_path, exist_ok=True)
-        with FileLock(os.path.join(data_path, 'data.lock')):
-            train = datasets.MNIST(data_path, train=True, download=True,
-                                   transform=transform)
-            test = datasets.MNIST(data_path, train=False, download=True,
-                                  transform=transform)
+    def mnist_dataset(data_dir="~/.mnist_palettization_data"):
+        transform = transforms.Compose(
+            [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+        )
+        data_path = os.path.expanduser(f"{data_dir}/mnist")
+        if not os.path.exists(data_path):
+            os.makedirs(data_path)
+        train = datasets.MNIST(data_path, train=True, download=True, transform=transform)
+        test = datasets.MNIST(data_path, train=False, transform=transform)
         return train, test
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 75-76
+.. GENERATED FROM PYTHON SOURCE LINES 72-73
 
 Initialize the model and the dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 76-84
+.. GENERATED FROM PYTHON SOURCE LINES 73-81
 
 .. code-block:: default
 
@@ -113,19 +110,19 @@ Initialize the model and the dataset.
     model = mnist_net()
 
     batch_size = 128
-    train_dataset, test_dataset = mnist_dataset("~/.mnist_data/")
+    train_dataset, test_dataset = mnist_dataset("~/.mnist_data/mnist_palettization")
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 85-89
+.. GENERATED FROM PYTHON SOURCE LINES 82-86
 
 Training the Model Without Palettization
 ----------------------------------------
 
 Train the model without applying any palettization.
 
-.. GENERATED FROM PYTHON SOURCE LINES 89-139
+.. GENERATED FROM PYTHON SOURCE LINES 86-139
 
 .. code-block:: default
 
@@ -163,8 +160,11 @@ Train the model without applying any palettization.
             test_loss /= len(test_loader.dataset)
             accuracy = 100. * correct / len(test_loader.dataset)
 
-            print('\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n'.format(
-                test_loss, accuracy))
+            print(
+                "\nTest set: Average loss: {:.4f}, Accuracy: {:.1f}%\n".format(
+                    test_loss, accuracy
+                )
+            )
         return accuracy
 
 
@@ -177,26 +177,25 @@ Train the model without applying any palettization.
         # evaluate
         accuracy_unpalettized = eval_model(model, test_loader)
 
-    print("Accuracy of unpalettized network: {:.0f}%\n".format(accuracy_unpalettized))
+    print("Accuracy of unpalettized network: {:.1f}%\n".format(accuracy_unpalettized))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 140-153
+.. GENERATED FROM PYTHON SOURCE LINES 140-152
 
 Configuring Palettization
 -------------------------
 
 Insert palettization layers into the trained model.
-As a rule of thumb, we recommend choosing layers with more than 10,000 weights to palettize.
-For this example, choose the second convolutional layer, ``conv2``.
-Apply a ``4-bit`` palettization to this layer. This would mean that for all the weights
-that exist in this layer, you try to map each weight element to one of :math:`2^4`,
+For this example, apply a ``4-bit`` palettization to the ``conv2`` layer. This
+would mean that for all the weights that exist in this layer, you try to map
+each weight element to one of :math:`2^4`,
 that is, ``16`` clusters.
 
 Note that calling :py:meth:`~.palettization.DKMPalettizer.prepare` simply inserts palettization
 layers into the model. It doesn't actually palettize the weights. You do that in the next step when
 you fine-tune the model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 153-163
+.. GENERATED FROM PYTHON SOURCE LINES 152-162
 
 .. code-block:: default
 
@@ -211,7 +210,7 @@ you fine-tune the model.
     prepared_model = palettizer.prepare()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 164-169
+.. GENERATED FROM PYTHON SOURCE LINES 163-168
 
 Fine-Tuning the Palettized Model
 --------------------------------
@@ -219,7 +218,7 @@ Fine-Tuning the Palettized Model
 Fine-tune the model with palettization applied. This helps the model learn the new palettized
 layers' weights in the form of a LUT and indices.
 
-.. GENERATED FROM PYTHON SOURCE LINES 169-182
+.. GENERATED FROM PYTHON SOURCE LINES 168-181
 
 .. code-block:: default
 
@@ -237,21 +236,21 @@ layers' weights in the form of a LUT and indices.
         accuracy_palettized = eval_model(prepared_model, test_loader)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 183-185
+.. GENERATED FROM PYTHON SOURCE LINES 182-184
 
 The evaluation shows that you can train a palettized network without losing much accuracy
 with the final model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 185-189
+.. GENERATED FROM PYTHON SOURCE LINES 184-188
 
 .. code-block:: default
 
 
-    print("Accuracy of unpalettized network: {:.0f}%\n".format(accuracy_unpalettized))
-    print("Accuracy of palettized network: {:.0f}%\n".format(accuracy_palettized))
+    print("Accuracy of unpalettized network: {:.1f}%\n".format(accuracy_unpalettized))
+    print("Accuracy of palettized network: {:.1f}%\n".format(accuracy_palettized))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 190-195
+.. GENERATED FROM PYTHON SOURCE LINES 189-194
 
 Restoring LUT and Indices as Weights
 ------------------------------------
@@ -259,7 +258,7 @@ Restoring LUT and Indices as Weights
 Use :py:meth:`~.palettization.Palettizer.finalize` to
 restore the LUT and indices of the palettized modules as weights in the model.
 
-.. GENERATED FROM PYTHON SOURCE LINES 195-198
+.. GENERATED FROM PYTHON SOURCE LINES 194-197
 
 .. code-block:: default
 
@@ -267,15 +266,12 @@ restore the LUT and indices of the palettized modules as weights in the model.
     finalized_model = palettizer.finalize()
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 199-214
+.. GENERATED FROM PYTHON SOURCE LINES 198-210
 
 Exporting the Model for On-Device Execution
 -------------------------------------------
 
-To deploy the model on device, convert it to the
-`MLPackage <https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package>`_ format,
-which can then be run with the
-`CoreML <https://developer.apple.com/documentation/coreml>`_ APIs.
+To deploy the model on device, convert it to a Core ML model.
 
 To export the model with Core ML Tools, first trace the model with an input, and then
 use the Core ML Tools converter, as described in
@@ -285,7 +281,7 @@ converter a palettized model is being converted, and allows its weights to be
 represented using a look-up table (LUT) and indices, which have a much smaller
 footprint on disk as compared to the dense weights.
 
-.. GENERATED FROM PYTHON SOURCE LINES 214-229
+.. GENERATED FROM PYTHON SOURCE LINES 210-226
 
 .. code-block:: default
 
@@ -299,11 +295,12 @@ footprint on disk as compared to the dense weights.
 
     coreml_model = ct.convert(
         traced_model,
-        convert_to="mlprogram",
         inputs=[ct.TensorType(shape=example_input.shape)],
         pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION,
         minimum_deployment_target=ct.target.iOS16,
     )
+
+    coreml_model.save("~/.mnist_palettization_data/palettized_model.mlpackage")
 
 
 .. rst-class:: sphx-glr-timing
