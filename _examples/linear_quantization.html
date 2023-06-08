@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linear Quantization &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/norightmargin.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Palettization Using Differentiable K-Means" href="dkm_palettization.html" />
+    <link rel="prev" title="Magnitude Pruning" href="magnitude_pruning.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../source/coremltools.optimize.html">Optimizers</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../source/coremltools.optimize.html#post-training-compression">Post-Training Compression</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../source/coremltools.optimize.html#training-time-compression">Training-Time Compression</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../source/coremltools.optimize.torch.pruning.html">Training-Time Pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../source/coremltools.optimize.torch.palettization.html">Training-Time Palettization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html">Training-Time Quantization</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../source/coremltools.optimize.torch.examples.html">Training-Time Compression Examples</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="magnitude_pruning.html">Magnitude Pruning</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Linear Quantization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="dkm_palettization.html">Palettization Using Differentiable K-Means</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../source/coremltools.optimize.html">Optimizers</a></li>
+          <li class="breadcrumb-item"><a href="../source/coremltools.optimize.torch.examples.html">Training-Time Compression Examples</a></li>
+      <li class="breadcrumb-item active">Linear Quantization</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_examples/linear_quantization.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <div class="sphx-glr-download-link-note admonition note">
+<p class="admonition-title">Note</p>
+<p><a class="reference internal" href="#sphx-glr-download-examples-linear-quantization-py"><span class="std std-ref">Go to the end</span></a>
+to download the full example code</p>
+</div>
+<section class="sphx-glr-example-title" id="linear-quantization">
+<span id="linear-quantization-tutorial"></span><span id="sphx-glr-examples-linear-quantization-py"></span><h1>Linear Quantization<a class="headerlink" href="#linear-quantization" title="Permalink to this heading"></a></h1>
+<p>In this tutorial, you learn how to train a simple convolutional neural network on
+<a class="reference external" href="http://yann.lecun.com/exdb/mnist/">MNIST</a> using <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
+<p>Learn more about other quantization in coremltools <a class="reference external" href="https://coremltools.readme.io/v7.0/docs/data-dependent-quantization">Training-Time Linear Quantization Documentation</a>.</p>
+<section id="network-and-dataset-definition">
+<h2>Network and Dataset Definition<a class="headerlink" href="#network-and-dataset-definition" title="Permalink to this heading"></a></h2>
+<p>First define your network, which consists of a single convolution layer
+followed by a dense (linear) layer.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">import</span> <span class="nn">torch.nn.functional</span> <span class="k">as</span> <span class="nn">F</span>
+
+
+<span class="k">def</span> <span class="nf">mnist_net</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+        <span class="n">OrderedDict</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="p">(</span><span class="s2">&quot;conv&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">)),</span>
+                <span class="p">(</span><span class="s2">&quot;relu&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()),</span>
+                <span class="p">(</span><span class="s2">&quot;pool&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool2d</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">)),</span>
+                <span class="p">(</span><span class="s2">&quot;flatten&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Flatten</span><span class="p">()),</span>
+                <span class="p">(</span><span class="s2">&quot;dense&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">2352</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)),</span>
+                <span class="p">(</span><span class="s2">&quot;softmax&quot;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">LogSoftmax</span><span class="p">()),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+</pre></div>
+</div>
+<p>Use the <a class="reference external" href="https://pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html#mnist">MNIST dataset provided by PyTorch</a>
+for training. Apply a very simple transformation to the input
+images to normalize them.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">torchvision</span> <span class="kn">import</span> <span class="n">datasets</span><span class="p">,</span> <span class="n">transforms</span>
+
+
+<span class="k">def</span> <span class="nf">mnist_dataset</span><span class="p">(</span><span class="n">data_dir</span><span class="o">=</span><span class="s2">&quot;~/.mnist_data&quot;</span><span class="p">):</span>
+    <span class="n">transform</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">((</span><span class="mf">0.1307</span><span class="p">,),</span> <span class="p">(</span><span class="mf">0.3081</span><span class="p">,))]</span>
+    <span class="p">)</span>
+    <span class="n">data_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data_dir</span><span class="si">}</span><span class="s2">/mnist&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">data_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">data_path</span><span class="p">)</span>
+    <span class="n">train</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">download</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+    <span class="n">test</span> <span class="o">=</span> <span class="n">datasets</span><span class="o">.</span><span class="n">MNIST</span><span class="p">(</span><span class="n">data_path</span><span class="p">,</span> <span class="n">train</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">train</span><span class="p">,</span> <span class="n">test</span>
+</pre></div>
+</div>
+<p>Next, initialize the model and the dataset.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">mnist_net</span><span class="p">()</span>
+
+<span class="n">batch_size</span> <span class="o">=</span> <span class="mi">128</span>
+<span class="n">train_dataset</span><span class="p">,</span> <span class="n">test_dataset</span> <span class="o">=</span> <span class="n">mnist_dataset</span><span class="p">()</span>
+<span class="n">train_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span>
+    <span class="n">train_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">)</span>
+<span class="n">test_loader</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">DataLoader</span><span class="p">(</span><span class="n">test_dataset</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="n">batch_size</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="training-the-model-without-quantization">
+<h2>Training the Model Without Quantization<a class="headerlink" href="#training-the-model-without-quantization" title="Permalink to this heading"></a></h2>
+<p>Train the model without any quantization applied.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-07</span><span class="p">)</span>
+<span class="n">accuracy_unquantized</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">4</span>
+
+
+<span class="k">def</span> <span class="nf">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">nll_loss</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">batch_idx</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;Train Epoch: </span><span class="si">{}</span><span class="s2"> [</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2"> (</span><span class="si">{:.0f}</span><span class="s2">%)]</span><span class="se">\t</span><span class="s2">Loss: </span><span class="si">{:.6f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">epoch</span><span class="p">,</span>
+                <span class="n">batch_idx</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">),</span>
+                <span class="mf">100.0</span> <span class="o">*</span> <span class="n">batch_idx</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">train_loader</span><span class="p">),</span>
+                <span class="n">loss</span><span class="o">.</span><span class="n">item</span><span class="p">(),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">eval_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">):</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+    <span class="n">test_loss</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">correct</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">test_loader</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">test_loss</span> <span class="o">+=</span> <span class="n">F</span><span class="o">.</span><span class="n">nll_loss</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">reduction</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+            <span class="n">pred</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">correct</span> <span class="o">+=</span> <span class="n">pred</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">view_as</span><span class="p">(</span><span class="n">pred</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+        <span class="n">test_loss</span> <span class="o">/=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="n">accuracy</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="n">correct</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_loader</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Test set: Average loss: </span><span class="si">{:.4f}</span><span class="s2">, Accuracy: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">test_loss</span><span class="p">,</span> <span class="n">accuracy</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">accuracy</span>
+
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+    <span class="c1"># train one epoch</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader</span><span class="p">):</span>
+        <span class="n">train_step</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span>
+
+    <span class="c1"># evaluate</span>
+    <span class="n">accuracy_unquantized</span> <span class="o">=</span> <span class="n">eval_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
+
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unquantized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unquantized</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="insert-quantization-layers-in-the-model">
+<h2>Insert Quantization Layers in the Model<a class="headerlink" href="#insert-quantization-layers-in-the-model" title="Permalink to this heading"></a></h2>
+<p>Install <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> in the trained model.</p>
+<p>Create an instance of the <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="coremltools.optimize.torch.quantization.LinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizerConfig</span></code></a> class
+to specify quantization parameters. milestones=[0, 1, 2, 1] refers to the following:</p>
+<ul class="simple">
+<li><p><em>Index 0</em>: At 0th epoch, observers will start collecting statistics of values of tensors being quantized</p></li>
+<li><p><em>Index 1</em>: At 1st epoch, quantization simulation will begin</p></li>
+<li><p><em>Index 2</em>: At 2nd epoch, observers will stop collecting and quantization parameters will be frozen</p></li>
+<li><p><em>Index 3</em>: At 1st epoch, batch normalization layers will stop collecting mean and variance, and will start running in inference mode</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LinearQuantizer</span><span class="p">,</span>
+    <span class="n">LinearQuantizerConfig</span><span class="p">,</span>
+    <span class="n">ModuleLinearQuantizerConfig</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleLinearQuantizerConfig</span><span class="p">(</span><span class="n">milestones</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_global</span><span class="p">(</span><span class="n">global_config</span><span class="p">)</span>
+
+<span class="n">quantizer</span> <span class="o">=</span> <span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Next, call <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.prepare" title="coremltools.optimize.torch.quantization.LinearQuantizer.prepare"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare()</span></code></a> to insert fake quantization
+layers in the model.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qmodel</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="fine-tuning-the-model">
+<h2>Fine-Tuning the Model<a class="headerlink" href="#fine-tuning-the-model" title="Permalink to this heading"></a></h2>
+<p>The next step is to fine tune the model with quantization applied.
+Call <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.step" title="coremltools.optimize.torch.quantization.LinearQuantizer.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> to step through the
+quantization milestones.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">qmodel</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-07</span><span class="p">)</span>
+<span class="n">accuracy_quantized</span> <span class="o">=</span> <span class="mf">0.0</span>
+<span class="n">num_epochs</span> <span class="o">=</span> <span class="mi">4</span>
+
+<span class="k">for</span> <span class="n">epoch</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_epochs</span><span class="p">):</span>
+    <span class="c1"># train one epoch</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">train_loader</span><span class="p">):</span>
+        <span class="n">quantizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+        <span class="n">train_step</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">optimizer</span><span class="p">,</span> <span class="n">train_loader</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">batch_idx</span><span class="p">,</span> <span class="n">epoch</span><span class="p">)</span>
+
+    <span class="c1"># evaluate</span>
+    <span class="n">accuracy_quantized</span> <span class="o">=</span> <span class="n">eval_model</span><span class="p">(</span><span class="n">qmodel</span><span class="p">,</span> <span class="n">test_loader</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The evaluation shows that you can train a quantized network without a significant loss
+in model accuracy. In practice, for more complex models,
+quantization can be lossy and lead to degradation in validation accuracy.
+In such cases, you can choose to not quantize certain layers which are
+less amenable to quantization.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of quantized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_quantized</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Accuracy of unquantized network: </span><span class="si">{:.0f}</span><span class="s2">%</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">accuracy_unquantized</span><span class="p">))</span>
+
+<span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">accuracy_quantized</span><span class="p">,</span> <span class="n">accuracy_unquantized</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="finalizing-the-model-for-export">
+<h2>Finalizing the Model for Export<a class="headerlink" href="#finalizing-the-model-for-export" title="Permalink to this heading"></a></h2>
+<p>The example shows that you can quantize the model with a few code changes to your
+existing PyTorch training code. Now you can deploy this model on a device.</p>
+<p>To finalize the model for export, call <code class="xref py py-meth docutils literal notranslate"><span class="pre">finalize()</span></code>
+on the quantizer. This folds the quantization parameters like scale and zero point
+into the weights.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">qmodel</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="exporting-the-model-for-on-device-execution">
+<h2>Exporting the Model for On-Device Execution<a class="headerlink" href="#exporting-the-model-for-on-device-execution" title="Permalink to this heading"></a></h2>
+<p>In order to deploy the model, convert it to the <a class="reference external" href="https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package">ML Package</a>
+format, which can then be run with <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a> APIs.</p>
+<p>Follow the same steps in Core ML Tools for exporting a regular PyTorch model
+(for details, see <a class="reference external" href="https://coremltools.readme.io/docs/pytorch-conversion">Converting from PyTorch</a>).
+The parameter <code class="docutils literal notranslate"><span class="pre">ct.target.iOS17</span></code> is necessary here because activation quantization
+ops are only supported on iOS versions &gt;= 17.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">)</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">quantized_model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+
+<span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS17</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p class="sphx-glr-timing"><strong>Total running time of the script:</strong> ( 0 minutes  0.000 seconds)</p>
+<div class="sphx-glr-footer sphx-glr-footer-example docutils container" id="sphx-glr-download-examples-linear-quantization-py">
+<div class="sphx-glr-download sphx-glr-download-python docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/bc2a7018a863cd1cadb3fbeb26a90a66/linear_quantization.py"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Python</span> <span class="pre">source</span> <span class="pre">code:</span> <span class="pre">linear_quantization.py</span></code></a></p>
+</div>
+<div class="sphx-glr-download sphx-glr-download-jupyter docutils container">
+<p><a class="reference download internal" download="" href="../_downloads/c276a0975534ab93174d95e83f81c9e7/linear_quantization.ipynb"><code class="xref download docutils literal notranslate"><span class="pre">Download</span> <span class="pre">Jupyter</span> <span class="pre">notebook:</span> <span class="pre">linear_quantization.ipynb</span></code></a></p>
+</div>
+</div>
+<p class="sphx-glr-signature"><a class="reference external" href="https://sphinx-gallery.github.io">Gallery generated by Sphinx-Gallery</a></p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="magnitude_pruning.html" class="btn btn-neutral float-left" title="Magnitude Pruning" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dkm_palettization.html" class="btn btn-neutral float-right" title="Palettization Using Differentiable K-Means" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
