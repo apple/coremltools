@@ -74,9 +74,12 @@ html_css_files = [
 # -- Sphinx Gallery settings --------------------------------------------------
 
 # Add tutorials here.
-examples_dir = (pathlib.Path(__file__).parent / ".." / "examples").resolve()
+examples_dir = os.path.join(
+    pathlib.Path(__file__).parent, "examples")
 examples = [
-    "pruning", "palettization", "quantization",
+    "optimize/torch/pruning",
+    "optimize/torch/palettization",
+    "optimize/torch/quantization",
 ]
 
 sphinx_gallery_conf = {
