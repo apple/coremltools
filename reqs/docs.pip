@@ -25,5 +25,5 @@ sphinx-code-tabs
 sympy
 typing
 urllib3
-torch==1.13.0
+torch>=1.13.0
 pillow
