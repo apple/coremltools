@@ -118,13 +118,13 @@ def generate_tensor_assignment_ops(graph):
                 kind = "_internal_op_tensor_inplace_fill"
 
             nodes_to_fuse = tensor_to_node_sequence_mapping[node_input]
-            if tensor_to_node_sequence_mapping[node_input][0].kind in ["select", "slice"]:
+            if nodes_to_fuse[0].kind in ["select", "slice"]:
                 source_tensor = nodes_to_fuse[0].inputs[0]
                 origin_name = source_tensor.split(TENSOR_ASSIGMENT_PREFIX)[0]
                 updated_tensor_count[origin_name] += 1
                 outputs = [_get_updated_name(origin_name, updated_tensor_count)]
             else:
-                source_tensor = node.inputs[0]
+                source_tensor = nodes_to_fuse[0].outputs[0]
                 outputs = node.outputs
 
             update_value = node.inputs[1]
