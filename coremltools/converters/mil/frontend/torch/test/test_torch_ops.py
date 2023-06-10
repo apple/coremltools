@@ -4474,8 +4474,6 @@ class TestEinsum(TorchBaseTest):
         class TestUnaryEinsum(nn.Module):
             def forward(self, x):
                 return torch.einsum(equation, x)
-        if backend == ("mlprogram", "fp16") and dynamic:
-            pytest.xfail("rdar://106631543 ([Infra]Re-enable the unittests for torch einsum ops)")
 
         input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
         model = TestUnaryEinsum()
@@ -4501,8 +4499,6 @@ class TestEinsum(TorchBaseTest):
         class TestTernaryEinsum(nn.Module):
             def forward(self, x, y, z):
                 return torch.einsum(equation, x, y, z)
-        if backend == ("mlprogram", "fp16") and dynamic:
-            pytest.xfail("rdar://106631543 ([Infra]Re-enable the unittests for torch einsum ops)")
 
         input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
         model = TestTernaryEinsum()

@@ -296,7 +296,7 @@ def solve_sum_einsum(parsed_vectors, vars):
     return ret_parsed_vectors, vars
 
 
-def get_perm_transpose_einsum(src_axes, dst_axes):
+def get_perm_transpose_einsum(src_axes: List[int], dst_axes: List[int]) -> List[int]:
     """
     :param src_axes: list[int]
     :param dst_axes: list[int]
