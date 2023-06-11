@@ -70,13 +70,41 @@ def generate_tensor_assignment_ops(graph):
         def forward(self, x):    # x a tensor with shape [5, 4]
             x[2] = 9
             return x
+
+    In case:
+
+        def forward(self, x):    # x a tensor with shape [4,10]
+            y = torch.empty(*x.shape)
+            y.copy_(0)
+            return y
+
+    Input graph:
+
+        input -> %x
+        %y = empty[](x.shape)
+        %1 = copy_[](%y, %x)
+        return (%1)
+        output -> %1
+
+    In result of fuse
+
+        input -> %x
+        %y = [empty[](x.shape)]
+        %x_internal_tensor_assign_1 = _internal_op_tensor_inplace_copy(%y, %x)
+        output -> %x_internal_tensor_assign_1
+
+    As a result of side effects of fusing, output of `_internal_op_tensor_inplace_copy` will be renamed to `x_internal_tensor_assign_1`.
+    If `%1` should be renamed to `x_internal_tensor_assign_1` too, the graph will be invalid.
+    In this purpose out_alias was introduced.
     """
 
     TENSOR_ASSIGMENT_PREFIX = "_internal_tensor_assign_"
 
-    def _get_updated_name(name, updated_tensor_count):
+    def _get_updated_name(name, updated_tensor_count, out_alias):
         if name in updated_tensor_count:
             return name + TENSOR_ASSIGMENT_PREFIX + str(updated_tensor_count[name])
+        if name in out_alias:
+            return out_alias[name]
         return name
 
     def _construct_nodes_to_fuse_inputs(nodes_to_fuse):
@@ -90,13 +118,14 @@ def generate_tensor_assignment_ops(graph):
 
     tensor_to_node_sequence_mapping = {}
     updated_tensor_count = defaultdict(lambda: 0)
+    out_alias = {}
 
     for i in range(len(graph.nodes)):
         node = graph.nodes[i]
 
         for idx in range(len(node.inputs)):
             input_name = node.inputs[idx]
-            node.inputs[idx] = _get_updated_name(input_name, updated_tensor_count)
+            node.inputs[idx] = _get_updated_name(input_name, updated_tensor_count, out_alias)
 
         if node.kind in ("empty", "select", "slice"):
             node_input = node.inputs[0]
@@ -120,12 +149,13 @@ def generate_tensor_assignment_ops(graph):
             nodes_to_fuse = tensor_to_node_sequence_mapping[node_input]
             if nodes_to_fuse[0].kind in ["select", "slice"]:
                 source_tensor = nodes_to_fuse[0].inputs[0]
-                origin_name = source_tensor.split(TENSOR_ASSIGMENT_PREFIX)[0]
-                updated_tensor_count[origin_name] += 1
-                outputs = [_get_updated_name(origin_name, updated_tensor_count)]
             else:
                 source_tensor = nodes_to_fuse[0].outputs[0]
-                outputs = node.outputs
+
+            origin_name = source_tensor.split(TENSOR_ASSIGMENT_PREFIX)[0]
+            updated_tensor_count[origin_name] += 1
+            outputs = [_get_updated_name(origin_name, updated_tensor_count, out_alias)]
+            out_alias[node.outputs[0]] = outputs[0]
 
             update_value = node.inputs[1]
             nodes_to_fuse_inputs = _construct_nodes_to_fuse_inputs(nodes_to_fuse)
@@ -141,8 +171,7 @@ def generate_tensor_assignment_ops(graph):
     # modify the graph outputs if it is effected by this graph pass
     for idx in range(len(graph.outputs)):
         output = graph.outputs[idx]
-        if output in updated_tensor_count:
-            graph.outputs[idx] = _get_updated_name(output, updated_tensor_count)
+        graph.outputs[idx] = _get_updated_name(output, updated_tensor_count, out_alias)
 
 
 def remove_getattr_nodes(graph):

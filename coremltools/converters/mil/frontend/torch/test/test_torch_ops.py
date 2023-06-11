@@ -5638,11 +5638,76 @@ class TestFill(TorchBaseTest):
 
         class FillModel(nn.Module):
             def forward(self, x):
-                y = torch.empty(*input_shape)
+                y = torch.empty(x.shape)
                 y.fill_(0.2)
                 return y
 
         model = FillModel()
+        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 3],
+        ),
+    )
+    def test_fill__2(self, compute_unit, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        input_shape = tuple(input_shape)
+
+        class FillModel(nn.Module):
+            def forward(self, x):
+                y = torch.empty(x.shape)
+                y.fill_(0.2)
+                return y + 1
+
+        model = FillModel()
+        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+
+
+class TestCopy(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 3],
+        ),
+    )
+    def test_copy_(self, compute_unit, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        input_shape = tuple(input_shape)
+
+        class CopyModel(nn.Module):
+            def forward(self, x):
+                y = torch.empty(x.shape)
+                y.copy_(0.2)
+                return y
+
+        model = CopyModel()
+        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 3],
+        ),
+    )
+    def test_copy__2(self, compute_unit, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        input_shape = tuple(input_shape)
+
+        class CopyModel(nn.Module):
+            def forward(self, x):
+                y = torch.empty(x.shape)
+                y.copy_(0.2)
+                return y + 1
+
+        model = CopyModel()
         self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
 
 
@@ -6695,6 +6760,25 @@ class TestIndexPut(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
             input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_index_put_case_5(self, compute_unit, backend):
+        class IndexPutModel(torch.nn.Module):
+            def forward(self, x):
+                box_corner = x.new(x.shape)
+                box_corner[:, :, 0] = x[:, :, 0]
+                box_corner[:, :, 1] = x[:, :, 1]
+                return box_corner
+
+        self.run_compare_torch(
+            (2, 3, 4),
+            IndexPutModel(),
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
 
