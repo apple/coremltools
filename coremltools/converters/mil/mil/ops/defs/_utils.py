@@ -294,7 +294,7 @@ def spatial_dimensions_out_shape(
     return out_shape
 
 
-def parse_einsum_equation(equation: str) -> Tuple[List]:
+def parse_einsum_equation(equation: str) -> List[List[str]]:
     """
     Args
         equation : str
@@ -322,28 +322,26 @@ def parse_einsum_equation(equation: str) -> Tuple[List]:
     output_str = input_output_str[1]
 
     inputs = input_str.split(',')
-    assert len(inputs) == 2, "unsupported einsum equation {}".format(equation)
-    input1_str = inputs[0]
-    input2_str = inputs[1]
 
-    input1_vec = [-1 for i in range(len(input1_str))]
-    input2_vec = [-1 for i in range(len(input2_str))]
-    output_vec = [-1 for i in range(len(output_str))]
+    in_outs = inputs + [output_str]
     map_char_to_int = {}
 
-    def _update_vec(str, vec, map_char_to_int, index):
+    def _update_vec(str, map_char_to_int, index):
+        vec = []
         for i, s in enumerate(str):
             if s not in map_char_to_int:
                 map_char_to_int[s] = index
                 index += 1
-            vec[i] = map_char_to_int[s]
-        return index
+            vec.append(map_char_to_int[s])
+        return index, vec
 
-    index = _update_vec(input1_str, input1_vec, map_char_to_int, 0)
-    index = _update_vec(input2_str, input2_vec, map_char_to_int, index)
-    _update_vec(output_str, output_vec, map_char_to_int, index)
+    index = 0
+    in_outs_vec = []
+    for inout_str in in_outs:
+        index, vec = _update_vec(inout_str, map_char_to_int, index)
+        in_outs_vec.append(vec)
 
-    return input1_vec, input2_vec, output_vec
+    return in_outs_vec
 
 def compute_gather(params, indices, axis, batch_dims):
     """

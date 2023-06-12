@@ -4524,8 +4524,8 @@ class TestEinsum(TorchBaseTest):
             [False, True],
         ),
     )
-    def test_einsum(self, compute_unit, backend, equation, reverse_input_order, dynamic):
-        class TestEinsum(nn.Module):
+    def test_binary_einsum(self, compute_unit, backend, equation, reverse_input_order, dynamic):
+        class TestBinaryEinsum(nn.Module):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
@@ -4533,19 +4533,63 @@ class TestEinsum(TorchBaseTest):
 
         if reverse_input_order:
             input_output_strings = equation.split("->")
-            input_strings = input_output_strings[0].split(",")
-            equation = (
-                input_strings[1]
-                + ","
-                + input_strings[0]
-                + "->"
-                + input_output_strings[1]
-            )
-            input_shapes = [input_shapes[1], input_shapes[0]]
+            input_string = ",".join(reversed(input_output_strings[0].split(",")))
+            equation = input_string + "->" + input_output_strings[1]
+            input_shapes.reverse()
             if converter_input_type is not None:
-                converter_input_type = [converter_input_type[1], converter_input_type[0]]
+                converter_input_type.reverse()
 
-        model = TestEinsum()
+        model = TestBinaryEinsum()
+        self.run_compare_torch(
+            input_shapes,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=True,
+            converter_input_type=converter_input_type
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, equation, dynamic",
+        itertools.product(
+            compute_units,
+            backends,
+            ["ab->ba", "aa->a", "ab->b", "iijk->ji"],
+            [False, True],
+        ),
+    )
+    def test_unary_einsum(self, compute_unit, backend, equation, dynamic):
+        class TestUnaryEinsum(nn.Module):
+            def forward(self, x):
+                return torch.einsum(equation, x)
+
+        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
+        model = TestUnaryEinsum()
+        self.run_compare_torch(
+            input_shapes,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=True,
+            converter_input_type=converter_input_type
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, equation, dynamic",
+        itertools.product(
+            compute_units,
+            backends,
+            ["ab,bc,cd->ba", "abb,abc,a->ab"],
+            [False, True],
+        ),
+    )
+    def test_ternary_einsum(self, compute_unit, backend, equation, dynamic):
+        class TestTernaryEinsum(nn.Module):
+            def forward(self, x, y, z):
+                return torch.einsum(equation, x, y, z)
+
+        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
+        model = TestTernaryEinsum()
         self.run_compare_torch(
             input_shapes,
             model,
