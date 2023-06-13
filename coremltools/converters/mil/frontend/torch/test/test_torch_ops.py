@@ -5683,7 +5683,7 @@ class TestCopy(TorchBaseTest):
         class CopyModel(nn.Module):
             def forward(self, x):
                 y = torch.empty(x.shape)
-                y.copy_(0.2)
+                y.copy_(x)
                 return y
 
         model = CopyModel()
@@ -5704,7 +5704,7 @@ class TestCopy(TorchBaseTest):
         class CopyModel(nn.Module):
             def forward(self, x):
                 y = torch.empty(x.shape)
-                y.copy_(0.2)
+                y.copy_(x)
                 return y + 1
 
         model = CopyModel()
