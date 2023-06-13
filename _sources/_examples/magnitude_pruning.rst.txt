@@ -23,25 +23,23 @@
 Magnitude Pruning
 =================
 
-.. GENERATED FROM PYTHON SOURCE LINES 11-19
+.. GENERATED FROM PYTHON SOURCE LINES 11-17
 
 In this tutorial, you learn how to train a simple convolutional neural network on
 `MNIST <http://yann.lecun.com/exdb/mnist/>`_ using :py:class:`~.pruning.MagnitudePruner`.
-The tutorial demonstrates how to achieve ~75% sparsity without incurring
-significant loss in model accuracy.
 
 Learn more about other pruners and schedulers in the coremltools 
 `Training-Time Pruning Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-pruning>`_.
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 21-25
+.. GENERATED FROM PYTHON SOURCE LINES 19-23
 
 Network and Dataset Definition
 ------------------------------
 First define your network, which consists of a single convolution layer
 followed by a dense (linear) layer.
 
-.. GENERATED FROM PYTHON SOURCE LINES 25-47
+.. GENERATED FROM PYTHON SOURCE LINES 23-45
 
 .. code-block:: default
 
@@ -68,13 +66,13 @@ followed by a dense (linear) layer.
 
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 48-51
+.. GENERATED FROM PYTHON SOURCE LINES 46-49
 
 Use the `MNIST dataset provided by PyTorch <https://pytorch.org/vision/stable/generated/torchvision.datasets.MNIST.html#mnist>`_
 for training. Apply a very simple transformation to the input
 images to normalize them.
 
-.. GENERATED FROM PYTHON SOURCE LINES 51-68
+.. GENERATED FROM PYTHON SOURCE LINES 49-66
 
 .. code-block:: default
 
@@ -96,11 +94,11 @@ images to normalize them.
         return train, test
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 69-70
+.. GENERATED FROM PYTHON SOURCE LINES 67-68
 
 Next, initialize the model and the dataset.
 
-.. GENERATED FROM PYTHON SOURCE LINES 70-79
+.. GENERATED FROM PYTHON SOURCE LINES 68-77
 
 .. code-block:: default
 
@@ -114,13 +112,13 @@ Next, initialize the model and the dataset.
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 80-83
+.. GENERATED FROM PYTHON SOURCE LINES 78-81
 
 Training the Model Without Pruning
 ----------------------------------
 Train the model without any pruning applied.
 
-.. GENERATED FROM PYTHON SOURCE LINES 83-135
+.. GENERATED FROM PYTHON SOURCE LINES 81-133
 
 .. code-block:: default
 
@@ -177,7 +175,7 @@ Train the model without any pruning applied.
     print("Accuracy of unpruned network: {:.1f}%\n".format(accuracy_unpruned))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 136-148
+.. GENERATED FROM PYTHON SOURCE LINES 134-146
 
 Installing the Pruner in the Model
 ----------------------------------
@@ -192,7 +190,7 @@ Begin pruning from step ``0`` and prune every ``100`` steps for two epochs. As y
 step through this pruning scheduler, the sparsity of pruned modules will increase
 gradually from the initial value to the target value.
 
-.. GENERATED FROM PYTHON SOURCE LINES 148-153
+.. GENERATED FROM PYTHON SOURCE LINES 146-151
 
 .. code-block:: default
 
@@ -202,7 +200,7 @@ gradually from the initial value to the target value.
     scheduler = PolynomialDecayScheduler(update_steps=list(range(0, 900, 100)))
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 154-161
+.. GENERATED FROM PYTHON SOURCE LINES 152-159
 
 Next, create an instance of the :py:class:`~.pruning.MagnitudePrunerConfig` class
 to specify how you want different submodules to be pruned.
@@ -212,7 +210,7 @@ different layers can be targeted at different sparsity levels. In practice, the 
 level of a layer is a hyperparameter, which needs to be tuned for your requirements and
 the amenability of the layer to sparsification.
 
-.. GENERATED FROM PYTHON SOURCE LINES 161-177
+.. GENERATED FROM PYTHON SOURCE LINES 159-175
 
 .. code-block:: default
 
@@ -233,7 +231,7 @@ the amenability of the layer to sparsification.
     pruner = MagnitudePruner(model, config)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 178-184
+.. GENERATED FROM PYTHON SOURCE LINES 176-182
 
 Next, call :py:meth:`~.pruning.MagnitudePruner.prepare` to insert pruning
 ``forward pre hooks`` on the modules configured previously.
@@ -242,7 +240,7 @@ method of the module. They multiply the parameter with a pruning mask, which
 is a tensor of the same shape as the parameter, in which each element has a value of
 either ``1`` or ``0``.
 
-.. GENERATED FROM PYTHON SOURCE LINES 184-187
+.. GENERATED FROM PYTHON SOURCE LINES 182-185
 
 .. code-block:: default
 
@@ -250,7 +248,7 @@ either ``1`` or ``0``.
     pruner.prepare(inplace=True)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 188-193
+.. GENERATED FROM PYTHON SOURCE LINES 186-191
 
 Fine-Tuning the Pruned Model
 ----------------------------
@@ -258,7 +256,7 @@ The next step is to fine tune the model with pruning applied. In order to prune 
 call the :py:meth:`~.pruning.MagnitudePruner.step` method on the pruner
 after every call to ``optimizer.step()`` to step through the pruning schedule.
 
-.. GENERATED FROM PYTHON SOURCE LINES 193-208
+.. GENERATED FROM PYTHON SOURCE LINES 191-206
 
 .. code-block:: default
 
@@ -278,7 +276,7 @@ after every call to ``optimizer.step()`` to step through the pruning schedule.
         accuracy_pruned = eval_model(model, test_loader)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 209-214
+.. GENERATED FROM PYTHON SOURCE LINES 207-212
 
 The evaluation shows that you can train a pruned network without losing
 accuracy with the final model. In practice, for more complex models,
@@ -286,7 +284,7 @@ you have a trade-off between the sparsity and the validation accuracy
 that can be achieved for the model. Finding the right sweet spot on this
 trade-off curve depends on the model and task.
 
-.. GENERATED FROM PYTHON SOURCE LINES 214-220
+.. GENERATED FROM PYTHON SOURCE LINES 212-218
 
 .. code-block:: default
 
@@ -297,7 +295,7 @@ trade-off curve depends on the model and task.
     np.testing.assert_allclose(accuracy_pruned, accuracy_unpruned, atol=2)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 221-231
+.. GENERATED FROM PYTHON SOURCE LINES 219-229
 
 Finalizing the Model for Export
 -------------------------------
@@ -310,7 +308,7 @@ on the pruner. This removes all the forward pre-hooks you had attached on the su
 It also freezes the state of the pruner and multiplies the pruning mask with the corresponding
 weight matrix.
 
-.. GENERATED FROM PYTHON SOURCE LINES 231-235
+.. GENERATED FROM PYTHON SOURCE LINES 229-233
 
 .. code-block:: default
 
@@ -319,7 +317,7 @@ weight matrix.
     pruner.finalize(inplace=True)
 
 
-.. GENERATED FROM PYTHON SOURCE LINES 236-246
+.. GENERATED FROM PYTHON SOURCE LINES 234-244
 
 Exporting the Model for On-Device Execution
 -------------------------------------------
@@ -332,7 +330,7 @@ The parameter ``ct.PassPipeline.DEFAULT_PRUNING`` signals to the converter that
 the model being converted is a pruned model, and allows the model weights to be represented as
 sparse matrices, which have a smaller memory footprint than dense matrices.
 
-.. GENERATED FROM PYTHON SOURCE LINES 246-260
+.. GENERATED FROM PYTHON SOURCE LINES 244-258
 
 .. code-block:: default
 
