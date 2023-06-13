@@ -10,8 +10,6 @@ Magnitude Pruning
 ########################################################################
 # In this tutorial, you learn how to train a simple convolutional neural network on
 # `MNIST <http://yann.lecun.com/exdb/mnist/>`_ using :py:class:`~.pruning.MagnitudePruner`.
-# The tutorial demonstrates how to achieve ~75% sparsity without incurring
-# significant loss in model accuracy.
 #
 # Learn more about other pruners and schedulers in the coremltools 
 # `Training-Time Pruning Documentation <https://coremltools.readme.io/v7.0/docs/data-dependent-pruning>`_.
