@@ -6772,7 +6772,7 @@ class TestIndexPut(TorchBaseTest):
                 box_corner = x.new(x.shape)
                 box_corner[:, :, 0] = x[:, :, 0]
                 box_corner[:, :, 1] = x[:, :, 1]
-                return box_corner
+                return box_corner[:, :, :2]
 
         self.run_compare_torch(
             (2, 3, 4),
