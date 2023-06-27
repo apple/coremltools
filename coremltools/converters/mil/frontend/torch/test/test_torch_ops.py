@@ -4563,7 +4563,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x):
                 return torch.einsum(equation, x)
 
-        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
+        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic, backend)
         model = TestUnaryEinsum()
         self.run_compare_torch(
             input_shapes,
@@ -4588,7 +4588,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y, z):
                 return torch.einsum(equation, x, y, z)
 
-        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
+        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic, backend)
         model = TestTernaryEinsum()
         self.run_compare_torch(
             input_shapes,
