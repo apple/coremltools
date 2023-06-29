@@ -3354,7 +3354,7 @@ def _internal_op_tensor_inplace_fill(context, node):
     begin, end, stride, begin_mask, end_mask, squeeze_mask = _get_slice_params(
         context, data, node.inputs[2:]
     )
-    if begin.val is None or end.val is None:
+    if begin.val is None or end.val is None or any_symbolic(data.shape):
         raise ValueError("_internal_op_tensor_inplace_fill does not support dynamic index")
 
     fill_shape = solve_slice_by_index_shape(
