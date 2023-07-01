@@ -3351,7 +3351,7 @@ def _internal_op_tensor_inplace_fill(context, node):
     data = context[node.inputs[0]]
     fill_scalar = context[node.inputs[1]]
 
-    if any_symbolic(data.shape) and len(node.inputs) == 2:
+    if len(node.inputs) == 2 and not any_symbolic(fill_scalar.val):
         shape = mb.shape(x=data)
         if isinstance(fill_scalar.val, _np.ndarray):
             np_dtype = fill_scalar.val.dtype
