@@ -3351,6 +3351,20 @@ def _internal_op_tensor_inplace_fill(context, node):
     data = context[node.inputs[0]]
     fill_scalar = context[node.inputs[1]]
 
+    if any_symbolic(data.shape) and len(node.inputs) == 2:
+        shape = mb.shape(x=data)
+        if isinstance(fill_scalar.val, _np.ndarray):
+            np_dtype = fill_scalar.val.dtype
+            if _np.issubdtype(np_dtype, _np.integer):
+                fill_scalar = int(fill_scalar.val)
+            elif _np.issubdtype(np_dtype, _np.floating):
+                fill_scalar = float(fill_scalar.val)
+            else:
+                raise ValueError(f"Unsupported op {node} with target dtype {np_dtype}")
+        fill = mb.fill(shape=shape, value=fill_scalar, name=node.name)
+        context.add(fill)
+        return
+
     begin, end, stride, begin_mask, end_mask, squeeze_mask = _get_slice_params(
         context, data, node.inputs[2:]
     )
