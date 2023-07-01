@@ -38,7 +38,10 @@ def recurse_json(
     if "leaf" not in xgb_tree_json:
         branch_mode = "BranchOnValueLessThan"
         split_name = xgb_tree_json["split"]
-        feature_index = split_name if not feature_map else feature_map[split_name]
+        if split_name in feature_map:
+            feature_index = feature_map[split_name]
+        else:
+            feature_index = int(split_name)
 
         # xgboost internally uses float32, but the parsing from json pulls it out
         # as a 64bit double.  To trigger the internal float32 detection in the
@@ -156,7 +159,6 @@ def convert_tree_ensemble(
     import json
     import os
 
-    feature_map = None
     if isinstance(
         model, (_xgboost.core.Booster, _xgboost.XGBRegressor, _xgboost.XGBClassifier)
     ):
@@ -201,14 +203,12 @@ def convert_tree_ensemble(
             raise ValueError(
                 "The XGBoost model does not have feature names. They must be provided in convert method."
             )
-            feature_names = model.feature_names
+        # Use user given feature names if they exist
         if feature_names is None:
             feature_names = model.feature_names
-
+        feature_map = {f: i for i, f in enumerate(feature_names)}
+        
         xgb_model_str = model.get_dump(with_stats=True, dump_format="json")
-
-        if model.feature_names:
-            feature_map = {f: i for i, f in enumerate(model.feature_names)}
 
     # Path on the file system where the XGboost model exists.
     elif isinstance(model, str):
