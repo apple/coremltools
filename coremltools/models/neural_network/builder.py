@@ -232,8 +232,10 @@ class NeuralNetworkBuilder:
     --------
     .. sourcecode:: python
 
-        from coremltools.models.neural_network import datatypes, NeuralNetworkBuilder
+        from coremltools.models import datatypes
+        from coremltools.models.neural_network import NeuralNetworkBuilder
         from coremltools.models.utils import save_spec
+
 
         # Create a neural network binary classifier that classifies
         # 3-dimensional data points
