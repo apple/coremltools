@@ -236,7 +236,6 @@ class NeuralNetworkBuilder:
         from coremltools.models.neural_network import NeuralNetworkBuilder
         from coremltools.models.utils import save_spec
 
-
         # Create a neural network binary classifier that classifies
         # 3-dimensional data points
         # Specify input and output dimensions
