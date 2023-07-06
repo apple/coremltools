@@ -128,7 +128,7 @@ test_py39_mil_intel:
     WHEEL_PATH: build/dist/*cp39*10_15*
     REQUIREMENTS: reqs/test.pip
 
-test_py10_coremltools_test:
+test_py310_coremltools_test:
   <<: *test_macos_pkg
   tags:
     - macOS13_M1
