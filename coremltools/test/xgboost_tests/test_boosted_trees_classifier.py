@@ -264,6 +264,21 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         self.scikit_data = scikit_data
         self.n_classes = len(np.unique(self.target))
 
+        # train a booster with special characters in feature names
+        x = scikit_data['data']
+        # prepare feature names with special chars
+        self.feature_names_special_chars = [f'\t"{i}"\n' for i in
+                                            range(x.shape[1])]
+        # create training dmatrix
+        dm = xgboost.DMatrix(x, label=target,
+                             feature_names=self.feature_names_special_chars)
+        # train booster
+        self.xgb_model_special_chars = xgboost.train({}, dm)
+        # create XGBClassifier from a copy of trainer booster
+        self.xgb_classifier_special_chars = \
+            xgboost.XGBClassifier(xgb_model=self.xgb_model_special_chars.copy())
+        self.xgb_classifier_special_chars.fit(x, target)
+
     def test_conversion(self):
 
         input_names = self.scikit_data.feature_names
@@ -340,3 +355,42 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         # Test the linear regression parameters.
         tr = spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
+
+    def test_conversion_special_characters_in_feature_names(self):
+        # this test should fail if conversion function does not implement the
+        # special characters in feature names fix
+
+        # test both sklearn wrapper and raw booster
+        for model in [self.xgb_model_special_chars, self.xgb_classifier_special_chars]:
+
+            # process as usual
+            output_name = "target"
+            spec = xgb_converter.convert(
+                model,
+                self.feature_names_special_chars,
+                output_name,
+                mode="classifier",
+                n_classes=self.n_classes,
+            ).get_spec()
+            self.assertIsNotNone(spec)
+
+            # Test the model class
+            self.assertIsNotNone(spec.description)
+            self.assertEqual(spec.description.predictedFeatureName, output_name)
+
+            # Test the inputs and outputs
+            self.assertEqual(len(spec.description.output), 2)
+            self.assertEqual(spec.description.output[0].name, output_name)
+            self.assertEqual(
+                spec.description.output[0].type.WhichOneof("Type"), "int64Type"
+            )
+
+            for input_type in spec.description.input:
+                self.assertEqual(input_type.type.WhichOneof("Type"), "doubleType")
+            self.assertEqual(
+                sorted(self.feature_names_special_chars), sorted(map(lambda x: x.name, spec.description.input))
+            )
+
+            # Test the linear regression parameters.
+            tr = spec.treeEnsembleClassifier.treeEnsemble
+            self.assertIsNotNone(tr)
