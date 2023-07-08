@@ -231,8 +231,10 @@ class NeuralNetworkBuilder:
     Examples
     --------
     .. sourcecode:: python
+        import numpy as np
 
-        from coremltools.models.neural_network import datatypes, NeuralNetworkBuilder
+        from coremltools.models import datatypes
+        from coremltools.models.neural_network import NeuralNetworkBuilder
         from coremltools.models.utils import save_spec
 
         # Create a neural network binary classifier that classifies
@@ -244,6 +246,10 @@ class NeuralNetworkBuilder:
         # Specify input and output features
         input_features = [("data", datatypes.Array(*input_dim))]
         output_features = [("probs", datatypes.Array(*output_dim))]
+
+        # Create random weights and bias
+        weights = np.random.rand(2, 3)
+        bias = np.random.rand(2)
 
         # Build a simple neural network with 1 inner product layer
         builder = NeuralNetworkBuilder(input_features, output_features)
