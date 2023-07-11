@@ -3898,8 +3898,15 @@ def gelu(context, node):
     assert len(inputs) in (1, 2)
     if len(inputs) == 2:
         approximate = inputs[1].val
-        assert approximate == 'none'
-    res = mb.gelu(x=inputs[0], name=node.name)
+        if approximate == "tanh":
+            approximate = "TANH_APPROXIMATION"
+        elif approximate == "sigmoid":
+            approximate = "SIGMOID_APPROXIMATION"
+        elif approximate == "none":
+            approximate = "EXACT"
+    else:
+        approximate = None
+    res = mb.gelu(x=inputs[0], mode=approximate, name=node.name)
     context.add(res)
 
 
