@@ -3900,8 +3900,6 @@ def gelu(context, node):
         approximate = inputs[1].val
         if approximate == "tanh":
             approximate = "TANH_APPROXIMATION"
-        elif approximate == "sigmoid":
-            approximate = "SIGMOID_APPROXIMATION"
         elif approximate == "none":
             approximate = "EXACT"
     else:
