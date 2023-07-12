@@ -776,7 +776,10 @@ def add(context, node):
     if len(add_inputs) > 2 and add_inputs[2].val != 1:
         raise ValueError("ADD does not support scale factor param")
     x, y = promote_input_dtypes(add_inputs[:2])
-    add_node = mb.add(x=x, y=y, name=node.name)
+    if types.is_bool(x.dtype) and types.is_bool(y.dtype):
+        add_node = mb.logical_or(x=x, y=y, name=node.name)
+    else:
+        add_node = mb.add(x=x, y=y, name=node.name)
     context.add(add_node)
 
 
@@ -1403,7 +1406,10 @@ def true_divide(context, node):
 def mul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
-    res = mb.mul(x=x, y=y, name=node.name)
+    if types.is_bool(x.dtype) and types.is_bool(y.dtype):
+        res = mb.logical_and(x=x, y=y, name=node.name)
+    else:
+        res = mb.mul(x=x, y=y, name=node.name)
     context.add(res)
 
 

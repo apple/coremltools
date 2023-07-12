@@ -3558,6 +3558,66 @@ class TestBitwiseNot(TorchBaseTest):
         )
 
 
+class TestBoolOps(TorchBaseTest):
+    def _get_inputs(self, input_types):
+        x_type, y_type = input_types
+        if x_type == "int":
+            x = torch.tensor([1, 0, 1, 0], dtype=torch.int32)
+        elif x_type == "bool":
+            x = torch.tensor([1, 0, 1, 0], dtype=torch.bool)
+        if y_type == "int":
+            y = torch.tensor([0, 0, 1, 1], dtype=torch.int32)
+        elif y_type == "bool":
+            y = torch.tensor([0, 0, 1, 1], dtype=torch.bool)
+        return (x, y)
+    
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_types",
+        itertools.product(
+            compute_units,
+            backends,
+            [("int", "int"), ("int", "bool"), ("bool", "int"), ("bool", "bool")],
+        ),
+    )
+    def test_mul_int_or_bool(self, compute_unit, backend, input_types):
+        class TestMulWithBool(nn.Module):
+            def forward(self, x, y):
+                return x * y
+
+        x, y = self._get_inputs(input_types)
+        model = TestMulWithBool()
+        self.run_compare_torch(
+            (x, y),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_types",
+        itertools.product(
+            compute_units,
+            backends,
+            [("int", "int"), ("int", "bool"), ("bool", "int"), ("bool", "bool")],
+        ),
+    )
+    def test_add_int_or_bool(self, compute_unit, backend, input_types):
+        class TestAddWithBool(nn.Module):
+            def forward(self, x, y):
+                return x + y
+
+        x, y = self._get_inputs(input_types)
+        model = TestAddWithBool()
+        self.run_compare_torch(
+            (x, y),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+
 class TestFull(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
