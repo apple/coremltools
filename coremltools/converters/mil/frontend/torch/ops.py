@@ -3896,15 +3896,14 @@ def hardsigmoid(context, node):
 def gelu(context, node):
     inputs = _get_inputs(context, node)
     assert len(inputs) in (1, 2)
+    mode = None
     if len(inputs) == 2:
         approximate = inputs[1].val
         if approximate == "tanh":
-            approximate = "TANH_APPROXIMATION"
-        elif approximate == "none":
-            approximate = "EXACT"
-    else:
-        approximate = None
-    res = mb.gelu(x=inputs[0], mode=approximate, name=node.name)
+            mode = "TANH_APPROXIMATION"
+        else:
+            assert approximate == "none"
+    res = mb.gelu(x=inputs[0], mode=mode, name=node.name)
     context.add(res)
 
 
