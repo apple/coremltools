@@ -603,6 +603,25 @@ def reshape_as(context, node):
     context.add(result)
 
 
+@register_torch_op
+def unflatten(context, node):
+    x, dim_var, unflattened_size_var = _get_inputs(context, node, expected=3)
+    x_shape = x.shape
+    dim = dim_var.val
+    unflattened_size = tuple(unflattened_size_var.val)
+    assert x_shape is not None
+    assert dim is not None
+    assert unflattened_size is not None
+    assert x_shape[dim] == _np.prod(unflattened_size)
+
+    if dim < 0:
+        dim += x.rank
+
+    shape = x_shape[:dim] + unflattened_size + x_shape[dim + 1:]
+    y = mb.reshape(x=x, shape=shape, name=node.name)
+    context.add(y)
+
+
 def _array_construct(context, node, array_type):
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node)
