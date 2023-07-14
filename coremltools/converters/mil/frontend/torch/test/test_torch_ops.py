@@ -5075,11 +5075,12 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
-        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
+        "compute_unit, backend, shape, approximate",
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL, ["none", "tanh", None]),
     )
-    def test_gelu(self, compute_unit, backend, shape):
-        model = nn.GELU().eval()
+    def test_gelu(self, compute_unit, backend, shape, approximate):
+        model = nn.GELU() if approximate is None else nn.GELU(approximate=approximate)
+        model = model.eval()
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
