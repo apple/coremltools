@@ -7927,15 +7927,18 @@ class TestPad(TorchBaseTest):
 
 class TestMaskedFill(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(compute_units, backends),
+        "compute_unit, backend, value",
+        itertools.product(
+            compute_units,
+            backends,
+            [10.0, 0],
+        ),
     )
-    def test_masked_fill(self, compute_unit, backend):
+    def test_masked_fill(self, compute_unit, backend, value):
         SHAPE = (2, 3)
         MASK = torch.bernoulli(torch.rand(SHAPE[-1])).to(torch.bool)
-        VALUE = 10.0
 
-        model = ModuleWrapper(torch.masked_fill, {"mask": MASK, "value": VALUE})
+        model = ModuleWrapper(torch.masked_fill, {"mask": MASK, "value": value})
 
         TorchBaseTest.run_compare_torch(
             SHAPE,
