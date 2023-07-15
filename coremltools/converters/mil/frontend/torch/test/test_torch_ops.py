@@ -6005,22 +6005,26 @@ class TestOnesLike(TorchBaseTest):
 
 class TestFill(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank, dynamic, fill_scalar",
+        "compute_unit, backend, rank, dynamic, fill_scalar, src_dtype",
         itertools.product(
             compute_units,
             backends,
             [1, 3],
             [False, True],
             [0.2, torch.tensor(float("-inf")), torch.tensor(2)],
+            [torch.int32, torch.float32],
         ),
     )
-    def test_fill_(self, compute_unit, backend, rank, dynamic, fill_scalar):
+    def test_fill_(self, compute_unit, backend, rank, dynamic, fill_scalar, src_dtype):
+        if src_dtype == torch.int32 and fill_scalar == torch.tensor(float("-inf")):
+            pytest.skip("float(-inf) cannot be casted to int.")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         input_shape = tuple(input_shape)
 
         class FillModel(nn.Module):
             def forward(self, x):
-                y = torch.empty(x.shape)
+                y = torch.empty(x.shape, dtype=src_dtype)
                 y.fill_(fill_scalar)
                 return y
 
@@ -6057,22 +6061,26 @@ class TestFill(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank, dynamic, fill_scalar",
+        "compute_unit, backend, rank, dynamic, fill_scalar, src_dtype",
         itertools.product(
             compute_units,
             backends,
             [1, 3],
             [False, True],
             [0.2, torch.tensor(float("-inf")), torch.tensor(2)],
+            [torch.int32, torch.float32],
         ),
     )
-    def test_fill__2(self, compute_unit, backend, rank, dynamic, fill_scalar):
+    def test_fill__2(self, compute_unit, backend, rank, dynamic, fill_scalar, src_dtype):
+        if src_dtype == torch.int32 and fill_scalar == torch.tensor(float("-inf")):
+            pytest.skip("float(-inf) cannot be casted to int.")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         input_shape = tuple(input_shape)
 
         class FillModel(nn.Module):
             def forward(self, x):
-                y = torch.empty(x.shape)
+                y = torch.empty(x.shape, dtype=src_dtype)
                 y.fill_(fill_scalar)
                 return y + 1
 
