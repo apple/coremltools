@@ -1005,9 +1005,6 @@ class TestBatchNorm(TorchBaseTest):
         else:
             if dynamic_input == "Batch":
                 converter_input_type = [
-                    TensorType(shape=(6, num_features, 2, 3, 4), dtype=np.float32)
-                ]
-                converter_input_type = [
                     TensorType(
                         shape=(RangeDim(1, 10), num_features, 2, 3, 4), dtype=np.float32
                     )
@@ -1636,7 +1633,6 @@ class TestDynamicConv(TorchBaseTest):
                 "kernel_size",
                 "stride",
                 "padding",
-                "dilation",
             ]
         ),
         [
@@ -1645,14 +1641,14 @@ class TestDynamicConv(TorchBaseTest):
                 compute_units,
                 backends,
                 [
-                    (5, 3, 1, 1, 1, 2, 0, 1),
-                    (3, 3, 1, 1, 1, 2, 1, 3),
-                    (4, 3, 3, 3, 1, 2, 0, 1),
-                    (7, 3, 3, 3, 1, 3, 0, 1),
-                    (5, 5, 3, 3, 2, 1, 0, 1),
-                    (3, 5, 3, 3, 1, 3, 0, 1),
-                    (3, 5, 3, 3, 1, 3, 1, 3),
-                    (7, 5, 3, 3, 2, 3, 1, 3),
+                    (5, 3, 1, 1, 1, 2, 0),
+                    (3, 3, 1, 1, 1, 2, 1),
+                    (4, 3, 3, 3, 1, 2, 0),
+                    (7, 3, 3, 3, 1, 3, 0),
+                    (5, 5, 3, 3, 2, 1, 0),
+                    (3, 5, 3, 3, 1, 3, 0),
+                    (3, 5, 3, 3, 1, 3, 1),
+                    (7, 5, 3, 3, 2, 3, 1),
                 ],
             )
         ],
@@ -1668,7 +1664,6 @@ class TestDynamicConv(TorchBaseTest):
         kernel_size,
         stride,
         padding,
-        dilation,
         groups=1,
     ):
         class DynamicConv(nn.Module):
@@ -3563,6 +3558,66 @@ class TestBitwiseNot(TorchBaseTest):
         )
 
 
+class TestBoolOps(TorchBaseTest):
+    def _get_inputs(self, input_types):
+        x_type, y_type = input_types
+        if x_type == "int":
+            x = torch.tensor([1, 0, 1, 0], dtype=torch.int32)
+        elif x_type == "bool":
+            x = torch.tensor([1, 0, 1, 0], dtype=torch.bool)
+        if y_type == "int":
+            y = torch.tensor([0, 0, 1, 1], dtype=torch.int32)
+        elif y_type == "bool":
+            y = torch.tensor([0, 0, 1, 1], dtype=torch.bool)
+        return (x, y)
+    
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_types",
+        itertools.product(
+            compute_units,
+            backends,
+            [("int", "int"), ("int", "bool"), ("bool", "int"), ("bool", "bool")],
+        ),
+    )
+    def test_mul_int_or_bool(self, compute_unit, backend, input_types):
+        class TestMulWithBool(nn.Module):
+            def forward(self, x, y):
+                return x * y
+
+        x, y = self._get_inputs(input_types)
+        model = TestMulWithBool()
+        self.run_compare_torch(
+            (x, y),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_types",
+        itertools.product(
+            compute_units,
+            backends,
+            [("int", "int"), ("int", "bool"), ("bool", "int"), ("bool", "bool")],
+        ),
+    )
+    def test_add_int_or_bool(self, compute_unit, backend, input_types):
+        class TestAddWithBool(nn.Module):
+            def forward(self, x, y):
+                return x + y
+
+        x, y = self._get_inputs(input_types)
+        model = TestAddWithBool()
+        self.run_compare_torch(
+            (x, y),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+
 class TestFull(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
@@ -4767,6 +4822,44 @@ class TestFlatten(TorchBaseTest):
         )
 
 
+class TestUnflatten(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (0, 1, -1, -2),
+        ),
+    )
+    def test_unflatten(self, compute_unit, backend, dim):
+        class Head(nn.Module):
+            def __init__(self, nhead, batch_size, input_size, output_size):
+                super(Head, self).__init__()
+                self.linear = nn.Linear(nhead * input_size, nhead * output_size)
+                unflatten_size = batch_size if dim == 0 or dim == -2 else output_size
+                self.unflatten = nn.Unflatten(dim, (nhead, unflatten_size))
+
+            def forward(self, x):
+                y = self.linear(x)
+                y_heads = self.unflatten(y)
+                return y_heads
+
+        NHEAD = 2
+        BATCH_SIZE = 3
+        INPUT_SIZE = 5
+        OUTPUT_SIZE = 7
+
+        model = Head(NHEAD, BATCH_SIZE, INPUT_SIZE, OUTPUT_SIZE)
+        model.eval()
+
+        self.run_compare_torch(
+            (NHEAD * BATCH_SIZE, NHEAD * INPUT_SIZE),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestGather(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axis",
@@ -4982,11 +5075,12 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
-        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
+        "compute_unit, backend, shape, approximate",
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL, ["none", "tanh", None]),
     )
-    def test_gelu(self, compute_unit, backend, shape):
-        model = nn.GELU().eval()
+    def test_gelu(self, compute_unit, backend, shape, approximate):
+        model = nn.GELU() if approximate is None else nn.GELU(approximate=approximate)
+        model = model.eval()
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
@@ -9644,3 +9738,30 @@ class TestScaledDotProductAttention(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
+
+
+class TestTransformer(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_transformer_encoder(self, compute_unit, backend):
+        class TransformerEncoder(nn.Module):
+            def __init__(self, input_size, hidden_size, nhead=1, num_layers=1, dropout_rate=0.1):
+                super(TransformerEncoder, self).__init__()
+                encoder_layers = nn.TransformerEncoderLayer(
+                    d_model=input_size,
+                    nhead=nhead,
+                    dim_feedforward=hidden_size,
+                    dropout=dropout_rate,
+                )
+                self.transformer_encoder = nn.TransformerEncoder(encoder_layers, num_layers=num_layers)
+
+            def forward(self, x):
+                y = self.transformer_encoder(x)
+                return y
+
+        model = TransformerEncoder(32, 16, nhead=4, num_layers=2)
+        model.eval()
+
+        self.run_compare_torch((3, 32), model, backend=backend, compute_unit=compute_unit)
