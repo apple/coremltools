@@ -2572,27 +2572,34 @@ def ResizeNearestNeighbor(context, node):
     # "ResizeNearestNeighbor" op in TF is always in the channel last mode
     # instead of upsample factor, it uses output size, which is the second input
     x = context[node.inputs[0]]
+    output_shape = context[node.inputs[1]]
 
     input_shape = x.shape  # (N,Hin,Win,C)
     if len(input_shape) != 4:
         raise ValueError('"ResizeNearestNeighbor" op: input rank is not 4')
 
-    if len(context[node.inputs[1]].shape) != 1:
+    if len(output_shape.shape) != 1:
         raise ValueError('"ResizeNearestNeighbor" op: the second input, must have rank 1')
-
-    if context[node.inputs[1]].shape[0] != 2:
+    if output_shape.shape[0] != 2:
         raise ValueError(
             '"ResizeNearestNeighbor" op: the second input, which is the output size, must have 2 elements'
         )
+
     Hout, Wout = None, None
-    if context[node.inputs[1]].val is None:
-        # for the dynamic input shape case,
-        # context[node.inputs[1]] is a mul(x=input_shape, y=scaling_factor) op.
-        scaling_factor_h = context[node.inputs[1]].op.y.val[0]
-        scaling_factor_w = context[node.inputs[1]].op.y.val[1]
+    if output_shape.val is None:
+        # The only dynamic input shape case that can be converted to Core ML is when
+        # output_shape.op = mul(x=input_shape, y=scaling_factor) with const scaling factor
+        # because the resize-related Core ML ops either require const shape or const scaling factor
+        if output_shape.op.op_type != "mul":
+            raise ValueError(
+                "A dynamic input shape image resizing can be converted to Core ML "
+                "only if the `output shape / input shape` ratio is const"
+            )
+        scaling_factor_h = output_shape.op.y.val[0]
+        scaling_factor_w = output_shape.op.y.val[1]
     else:
         Hin, Win = input_shape[1], input_shape[2]
-        Hout, Wout = context[node.inputs[1]].val
+        Hout, Wout = output_shape.val
         scaling_factor_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
         scaling_factor_w = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
 
