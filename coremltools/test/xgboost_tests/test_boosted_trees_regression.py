@@ -122,6 +122,18 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
         self.xgb_model = xgb_model
         self.feature_names = self.scikit_data.feature_names
 
+        # train a booster with special characters in feature names
+        x = scikit_data['data']
+        # prepare feature names with special chars
+        self.feature_names_special_chars = [f'\t"{i}"\n' for i in range(x.shape[1])]
+        # create training dmatrix
+        dm = xgboost.DMatrix(x, label=scikit_data.target, feature_names=self.feature_names_special_chars)
+        # train booster
+        self.xgb_model_special_chars = xgboost.train({}, dm, 1)
+        # create XGBClassifier from a copy of trainer booster
+        self.xgb_regressor_special_chars = xgboost.XGBRegressor(xgb_model=self.xgb_model_special_chars.copy(), n_estimators=1)
+        self.xgb_regressor_special_chars.fit(x, scikit_data.target)
+
     def test_conversion(self):
 
         feature_names = self.scikit_data.feature_names
@@ -216,3 +228,44 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = xgb_converter.convert(model, "data", "out")
+
+    def test_conversion_special_characters_in_feature_names(self):
+        # this test should fail if conversion function does not implement the
+        # special characters in feature names fix
+
+        # test both sklearn wrapper and raw booster
+        for model in [self.xgb_model_special_chars, self.xgb_regressor_special_chars]:
+
+            # process as usual
+            output_name = "target"
+            spec = xgb_converter.convert(
+                model, self.feature_names_special_chars, "target")\
+                .get_spec()
+
+            self.assertIsNotNone(spec)
+
+            # Test the model class
+            self.assertIsNotNone(spec.description)
+            self.assertIsNotNone(spec.treeEnsembleRegressor)
+
+            # Test the interface class
+            self.assertEqual(spec.description.predictedFeatureName, "target")
+
+            # Test the inputs and outputs
+            self.assertEqual(len(spec.description.output), 1)
+            self.assertEqual(spec.description.output[0].name, "target")
+            self.assertEqual(
+                spec.description.output[0].type.WhichOneof("Type"), "doubleType"
+            )
+            for input_type in spec.description.input:
+                self.assertEqual(input_type.type.WhichOneof("Type"),
+                                 "doubleType")
+            self.assertEqual(
+                sorted(self.feature_names_special_chars),
+                sorted(map(lambda x: x.name, spec.description.input)),
+            )
+
+            # Test the linear regression parameters.
+            tr = spec.treeEnsembleRegressor.treeEnsemble
+            self.assertIsNotNone(tr)
+            self.assertEqual(len(tr.nodes), 23)
