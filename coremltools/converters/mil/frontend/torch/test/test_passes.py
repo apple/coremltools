@@ -276,8 +276,8 @@ class TestTorchPasses:
         np.testing.assert_equal(loop_node.outputs[0], graph.outputs[0])
 
 
-    @pytest.mark.xfail(reason="rdar://64235006")
     @staticmethod
+    @pytest.mark.xfail(reason="rdar://64235006")
     def test_transform_inplace_ops_if():
         # The test graph is:
         #    graph(
