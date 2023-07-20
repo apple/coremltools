@@ -39,6 +39,4 @@ This document is the API Reference for coremltools. For guides, installation ins
    :caption: Previous API Versions:
 
    v3.4 <https://apple.github.io/coremltools/docs-api-version3/>
-   v4.0 <https://apple.github.io/coremltools/docs-api-version4/>
-   v6.3 <https://apple.github.io/coremltools/docs-api-version6/>
 
