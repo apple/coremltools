@@ -6005,46 +6005,116 @@ class TestOnesLike(TorchBaseTest):
 
 class TestFill(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
+        "compute_unit, backend, rank, dynamic, fill_scalar, src_dtype",
         itertools.product(
             compute_units,
             backends,
             [1, 3],
+            [False, True],
+            [0.2, torch.tensor(float("-inf")), torch.tensor(2)],
+            [torch.int32, torch.float32],
         ),
     )
-    def test_fill_(self, compute_unit, backend, rank):
+    def test_fill_(self, compute_unit, backend, rank, dynamic, fill_scalar, src_dtype):
+        if src_dtype == torch.int32 and fill_scalar == torch.tensor(float("-inf")):
+            pytest.skip("float(-inf) cannot be casted to int.")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         input_shape = tuple(input_shape)
 
         class FillModel(nn.Module):
             def forward(self, x):
-                y = torch.empty(x.shape)
-                y.fill_(0.2)
+                y = torch.empty(x.shape, dtype=src_dtype)
+                y.fill_(fill_scalar)
                 return y
 
         model = FillModel()
-        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+        if dynamic:
+            upper_bound = 10 if backend[0] == "mlprogram" else -1
+            if rank == 1:
+                converter_input_type = [
+                    ct.TensorType(
+                        shape=(
+                            ct.RangeDim(upper_bound=upper_bound),
+                        )
+                    ),
+                ]
+            else:
+                converter_input_type = [
+                    ct.TensorType(
+                        shape=(
+                            ct.RangeDim(upper_bound=upper_bound),
+                            ct.RangeDim(upper_bound=upper_bound),
+                            ct.RangeDim(upper_bound=upper_bound),
+                        )
+                    ),
+                ]
+        else:
+            converter_input_type = None
+
+        self.run_compare_torch(
+            input_shape,
+            model,
+            converter_input_type=converter_input_type,
+            backend=backend,
+            compute_unit=compute_unit
+        )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
+        "compute_unit, backend, rank, dynamic, fill_scalar, src_dtype",
         itertools.product(
             compute_units,
             backends,
             [1, 3],
+            [False, True],
+            [0.2, torch.tensor(float("-inf")), torch.tensor(2)],
+            [torch.int32, torch.float32],
         ),
     )
-    def test_fill__2(self, compute_unit, backend, rank):
+    def test_fill__2(self, compute_unit, backend, rank, dynamic, fill_scalar, src_dtype):
+        if src_dtype == torch.int32 and fill_scalar == torch.tensor(float("-inf")):
+            pytest.skip("float(-inf) cannot be casted to int.")
+
         input_shape = np.random.randint(low=2, high=6, size=rank)
         input_shape = tuple(input_shape)
 
         class FillModel(nn.Module):
             def forward(self, x):
-                y = torch.empty(x.shape)
-                y.fill_(0.2)
+                y = torch.empty(x.shape, dtype=src_dtype)
+                y.fill_(fill_scalar)
                 return y + 1
 
         model = FillModel()
-        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+        if dynamic:
+            upper_bound = 10 if backend[0] == "mlprogram" else -1
+            if rank == 1:
+                converter_input_type = [
+                    ct.TensorType(
+                        shape=(
+                            ct.RangeDim(upper_bound=upper_bound),
+                        )
+                    ),
+                ]
+            else:
+                converter_input_type = [
+                    ct.TensorType(
+                        shape=(
+                            ct.RangeDim(upper_bound=upper_bound),
+                            ct.RangeDim(upper_bound=upper_bound),
+                            ct.RangeDim(upper_bound=upper_bound),
+                        )
+                    ),
+                ]
+        else:
+            converter_input_type = None
+
+        self.run_compare_torch(
+            input_shape,
+            model,
+            converter_input_type=converter_input_type,
+            backend=backend,
+            compute_unit=compute_unit
+        )
 
 
 class TestCopy(TorchBaseTest):

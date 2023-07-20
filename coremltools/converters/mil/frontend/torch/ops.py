@@ -3376,6 +3376,16 @@ def _internal_op_tensor_inplace_fill(context, node):
     data = context[node.inputs[0]]
     fill_scalar = context[node.inputs[1]]
 
+    if len(node.inputs) == 2 and fill_scalar.val is not None:
+        shape = mb.shape(x=data)
+        if isinstance(fill_scalar.val, _np.ndarray):
+            fill = mb.fill(shape=shape, value=fill_scalar.val.item())
+        else:
+            fill = mb.fill(shape=shape, value=fill_scalar)
+        casted = mb.cast(x=fill, dtype=TYPE_TO_DTYPE_STRING[data.dtype], name=node.name)
+        context.add(casted)
+        return
+
     begin, end, stride, begin_mask, end_mask, squeeze_mask = _get_slice_params(
         context, data, node.inputs[2:]
     )
