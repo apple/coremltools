@@ -22,7 +22,6 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -36,15 +35,11 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-
-          
-          
-          <a href="../index.html" class="icon icon-home">
-            coremltools API Reference
+            <a href="../index.html" class="icon icon-home"> coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -57,279 +52,35 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Ops</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.activation">activation (iOS 15+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.clamped_relu"><code class="docutils literal notranslate"><span class="pre">clamped_relu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.elu"><code class="docutils literal notranslate"><span class="pre">elu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.gelu"><code class="docutils literal notranslate"><span class="pre">gelu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.leaky_relu"><code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.linear_activation"><code class="docutils literal notranslate"><span class="pre">linear_activation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.prelu"><code class="docutils literal notranslate"><span class="pre">prelu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu"><code class="docutils literal notranslate"><span class="pre">relu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu6"><code class="docutils literal notranslate"><span class="pre">relu6</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.scaled_tanh"><code class="docutils literal notranslate"><span class="pre">scaled_tanh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid"><code class="docutils literal notranslate"><span class="pre">sigmoid</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid_hard"><code class="docutils literal notranslate"><span class="pre">sigmoid_hard</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.silu"><code class="docutils literal notranslate"><span class="pre">silu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus"><code class="docutils literal notranslate"><span class="pre">softplus</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus_parametric"><code class="docutils literal notranslate"><span class="pre">softplus_parametric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softmax"><code class="docutils literal notranslate"><span class="pre">softmax</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softsign"><code class="docutils literal notranslate"><span class="pre">softsign</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.thresholded_relu"><code class="docutils literal notranslate"><span class="pre">thresholded_relu</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.activation">activation (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.clamped_relu"><code class="docutils literal notranslate"><span class="pre">clamped_relu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.elu"><code class="docutils literal notranslate"><span class="pre">elu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.leaky_relu"><code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.linear_activation"><code class="docutils literal notranslate"><span class="pre">linear_activation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.prelu"><code class="docutils literal notranslate"><span class="pre">prelu</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.scaled_tanh"><code class="docutils literal notranslate"><span class="pre">scaled_tanh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.sigmoid_hard"><code class="docutils literal notranslate"><span class="pre">sigmoid_hard</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.softplus_parametric"><code class="docutils literal notranslate"><span class="pre">softplus_parametric</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.thresholded_relu"><code class="docutils literal notranslate"><span class="pre">thresholded_relu</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.classify">classify</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.classify.classify"><code class="docutils literal notranslate"><span class="pre">classify</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops">constexpr_ops</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize"><code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast"><code class="docutils literal notranslate"><span class="pre">constexpr_cast</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_lut_to_dense"><code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_sparse_to_dense"><code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.control_flow">control_flow</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.cond"><code class="docutils literal notranslate"><span class="pre">cond</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.Const"><code class="docutils literal notranslate"><span class="pre">Const</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select"><code class="docutils literal notranslate"><span class="pre">select</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.while_loop"><code class="docutils literal notranslate"><span class="pre">while_loop</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.make_list"><code class="docutils literal notranslate"><span class="pre">make_list</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_length"><code class="docutils literal notranslate"><span class="pre">list_length</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_write"><code class="docutils literal notranslate"><span class="pre">list_write</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_read"><code class="docutils literal notranslate"><span class="pre">list_read</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_gather"><code class="docutils literal notranslate"><span class="pre">list_gather</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_scatter"><code class="docutils literal notranslate"><span class="pre">list_scatter</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.conv">conv</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv"><code class="docutils literal notranslate"><span class="pre">conv</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv_transpose"><code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary">elementwise_binary</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.add"><code class="docutils literal notranslate"><span class="pre">add</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.equal"><code class="docutils literal notranslate"><span class="pre">equal</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.floor_div"><code class="docutils literal notranslate"><span class="pre">floor_div</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater"><code class="docutils literal notranslate"><span class="pre">greater</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater_equal"><code class="docutils literal notranslate"><span class="pre">greater_equal</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less"><code class="docutils literal notranslate"><span class="pre">less</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less_equal"><code class="docutils literal notranslate"><span class="pre">less_equal</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_and"><code class="docutils literal notranslate"><span class="pre">logical_and</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_or"><code class="docutils literal notranslate"><span class="pre">logical_or</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_xor"><code class="docutils literal notranslate"><span class="pre">logical_xor</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.maximum"><code class="docutils literal notranslate"><span class="pre">maximum</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.minimum"><code class="docutils literal notranslate"><span class="pre">minimum</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mod"><code class="docutils literal notranslate"><span class="pre">mod</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mul"><code class="docutils literal notranslate"><span class="pre">mul</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.not_equal"><code class="docutils literal notranslate"><span class="pre">not_equal</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.real_div"><code class="docutils literal notranslate"><span class="pre">real_div</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.pow"><code class="docutils literal notranslate"><span class="pre">pow</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.sub"><code class="docutils literal notranslate"><span class="pre">sub</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary">elementwise_unary (iOS 15+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.abs"><code class="docutils literal notranslate"><span class="pre">abs</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.acos"><code class="docutils literal notranslate"><span class="pre">acos</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.asin"><code class="docutils literal notranslate"><span class="pre">asin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.atan"><code class="docutils literal notranslate"><span class="pre">atan</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.atanh"><code class="docutils literal notranslate"><span class="pre">atanh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast"><code class="docutils literal notranslate"><span class="pre">cast</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.ceil"><code class="docutils literal notranslate"><span class="pre">ceil</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.clip"><code class="docutils literal notranslate"><span class="pre">clip</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cos"><code class="docutils literal notranslate"><span class="pre">cos</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cosh"><code class="docutils literal notranslate"><span class="pre">cosh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.erf"><code class="docutils literal notranslate"><span class="pre">erf</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.exp"><code class="docutils literal notranslate"><span class="pre">exp</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.exp2"><code class="docutils literal notranslate"><span class="pre">exp2</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.floor"><code class="docutils literal notranslate"><span class="pre">floor</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.inverse"><code class="docutils literal notranslate"><span class="pre">inverse</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.log"><code class="docutils literal notranslate"><span class="pre">log</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.logical_not"><code class="docutils literal notranslate"><span class="pre">logical_not</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.round"><code class="docutils literal notranslate"><span class="pre">round</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.rsqrt"><code class="docutils literal notranslate"><span class="pre">rsqrt</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sign"><code class="docutils literal notranslate"><span class="pre">sign</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sin"><code class="docutils literal notranslate"><span class="pre">sin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sinh"><code class="docutils literal notranslate"><span class="pre">sinh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sqrt"><code class="docutils literal notranslate"><span class="pre">sqrt</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.square"><code class="docutils literal notranslate"><span class="pre">square</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.tan"><code class="docutils literal notranslate"><span class="pre">tan</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.tanh"><code class="docutils literal notranslate"><span class="pre">tanh</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.threshold"><code class="docutils literal notranslate"><span class="pre">threshold</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary">elementwise_unary (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.cast"><code class="docutils literal notranslate"><span class="pre">cast</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.clip"><code class="docutils literal notranslate"><span class="pre">clip</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing">image_resizing (iOS 15+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine"><code class="docutils literal notranslate"><span class="pre">affine</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop"><code class="docutils literal notranslate"><span class="pre">crop</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample"><code class="docutils literal notranslate"><span class="pre">resample</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear"><code class="docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_nearest_neighbor"><code class="docutils literal notranslate"><span class="pre">resize_nearest_neighbor</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear"><code class="docutils literal notranslate"><span class="pre">upsample_bilinear</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_nearest_neighbor"><code class="docutils literal notranslate"><span class="pre">upsample_nearest_neighbor</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing">image_resizing (iOS 16+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.resample"><code class="docutils literal notranslate"><span class="pre">resample</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.upsample_bilinear"><code class="docutils literal notranslate"><span class="pre">upsample_bilinear</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing">image_resizing (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.linear">linear</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.einsum"><code class="docutils literal notranslate"><span class="pre">einsum</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.linear"><code class="docutils literal notranslate"><span class="pre">linear</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.matmul"><code class="docutils literal notranslate"><span class="pre">matmul</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization">normalization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.batch_norm"><code class="docutils literal notranslate"><span class="pre">batch_norm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.instance_norm"><code class="docutils literal notranslate"><span class="pre">instance_norm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.l2_norm"><code class="docutils literal notranslate"><span class="pre">l2_norm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.layer_norm"><code class="docutils literal notranslate"><span class="pre">layer_norm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.local_response_norm"><code class="docutils literal notranslate"><span class="pre">local_response_norm</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.pool">pool</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="docutils literal notranslate"><span class="pre">avg_pool</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.l2_pool"><code class="docutils literal notranslate"><span class="pre">l2_pool</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.max_pool"><code class="docutils literal notranslate"><span class="pre">max_pool</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops">quantization</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.quantize"><code class="docutils literal notranslate"><span class="pre">quantize</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.dequantize"><code class="docutils literal notranslate"><span class="pre">dequantize</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.random">random</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_bernoulli"><code class="docutils literal notranslate"><span class="pre">random_bernoulli</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_categorical"><code class="docutils literal notranslate"><span class="pre">random_categorical</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_normal"><code class="docutils literal notranslate"><span class="pre">random_normal</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_uniform"><code class="docutils literal notranslate"><span class="pre">random_uniform</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent">recurrent</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru"><code class="docutils literal notranslate"><span class="pre">gru</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn"><code class="docutils literal notranslate"><span class="pre">rnn</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.reduction">reduction (iOS 15+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax"><code class="docutils literal notranslate"><span class="pre">reduce_argmax</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin"><code class="docutils literal notranslate"><span class="pre">reduce_argmin</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l1_norm"><code class="docutils literal notranslate"><span class="pre">reduce_l1_norm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l2_norm"><code class="docutils literal notranslate"><span class="pre">reduce_l2_norm</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_log_sum"><code class="docutils literal notranslate"><span class="pre">reduce_log_sum</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_log_sum_exp"><code class="docutils literal notranslate"><span class="pre">reduce_log_sum_exp</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_max"><code class="docutils literal notranslate"><span class="pre">reduce_max</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_mean"><code class="docutils literal notranslate"><span class="pre">reduce_mean</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_min"><code class="docutils literal notranslate"><span class="pre">reduce_min</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_prod"><code class="docutils literal notranslate"><span class="pre">reduce_prod</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum"><code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum_square"><code class="docutils literal notranslate"><span class="pre">reduce_sum_square</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.reduction">reduction (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmax"><code class="docutils literal notranslate"><span class="pre">reduce_argmax</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmin"><code class="docutils literal notranslate"><span class="pre">reduce_argmin</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather">scatter_gather (iOS 15+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather"><code class="docutils literal notranslate"><span class="pre">gather</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_along_axis"><code class="docutils literal notranslate"><span class="pre">gather_along_axis</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_nd"><code class="docutils literal notranslate"><span class="pre">gather_nd</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter_along_axis"><code class="docutils literal notranslate"><span class="pre">scatter_along_axis</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter_nd"><code class="docutils literal notranslate"><span class="pre">scatter_nd</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather">scatter_gather (iOS 16+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather"><code class="docutils literal notranslate"><span class="pre">gather</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather_nd"><code class="docutils literal notranslate"><span class="pre">gather_nd</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather">scatter_gather (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather"><code class="docutils literal notranslate"><span class="pre">gather</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_along_axis"><code class="docutils literal notranslate"><span class="pre">gather_along_axis</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_nd"><code class="docutils literal notranslate"><span class="pre">gather_nd</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter_along_axis"><code class="docutils literal notranslate"><span class="pre">scatter_along_axis</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter_nd"><code class="docutils literal notranslate"><span class="pre">scatter_nd</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation">tensor_operation (iOS 15+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.argsort"><code class="docutils literal notranslate"><span class="pre">argsort</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.band_part"><code class="docutils literal notranslate"><span class="pre">band_part</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.concat"><code class="docutils literal notranslate"><span class="pre">concat</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.cumsum"><code class="docutils literal notranslate"><span class="pre">cumsum</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.fill"><code class="docutils literal notranslate"><span class="pre">fill</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.flatten2d"><code class="docutils literal notranslate"><span class="pre">flatten2d</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.identity"><code class="docutils literal notranslate"><span class="pre">identity</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_maximum_suppression"><code class="docutils literal notranslate"><span class="pre">non_maximum_suppression</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_zero"><code class="docutils literal notranslate"><span class="pre">non_zero</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.one_hot"><code class="docutils literal notranslate"><span class="pre">one_hot</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.pad"><code class="docutils literal notranslate"><span class="pre">pad</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.range_1d"><code class="docutils literal notranslate"><span class="pre">range_1d</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.shape"><code class="docutils literal notranslate"><span class="pre">shape</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.split"><code class="docutils literal notranslate"><span class="pre">split</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.stack"><code class="docutils literal notranslate"><span class="pre">stack</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.tile"><code class="docutils literal notranslate"><span class="pre">tile</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk"><code class="docutils literal notranslate"><span class="pre">topk</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation">tensor_operation (iOS 16+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.fill_like"><code class="docutils literal notranslate"><span class="pre">fill_like</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk"><code class="docutils literal notranslate"><span class="pre">topk</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation">tensor_operation (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.non_maximum_suppression"><code class="docutils literal notranslate"><span class="pre">non_maximum_suppression</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk"><code class="docutils literal notranslate"><span class="pre">topk</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation">tensor_transformation (iOS 15)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space"><code class="docutils literal notranslate"><span class="pre">depth_to_space</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims"><code class="docutils literal notranslate"><span class="pre">expand_dims</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle"><code class="docutils literal notranslate"><span class="pre">pixel_shuffle</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape"><code class="docutils literal notranslate"><span class="pre">reshape</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse"><code class="docutils literal notranslate"><span class="pre">reverse</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse_sequence"><code class="docutils literal notranslate"><span class="pre">reverse_sequence</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index"><code class="docutils literal notranslate"><span class="pre">slice_by_index</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size"><code class="docutils literal notranslate"><span class="pre">slice_by_size</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth"><code class="docutils literal notranslate"><span class="pre">space_to_depth</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze"><code class="docutils literal notranslate"><span class="pre">squeeze</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows"><code class="docutils literal notranslate"><span class="pre">sliding_windows</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose"><code class="docutils literal notranslate"><span class="pre">transpose</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">tensor_transformation (iOS 16+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.pixel_unshuffle"><code class="docutils literal notranslate"><span class="pre">pixel_unshuffle</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like"><code class="docutils literal notranslate"><span class="pre">reshape_like</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">tensor_transformation (iOS 17+)</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape"><code class="docutils literal notranslate"><span class="pre">reshape</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.activation">activation (iOS 15+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.activation">activation (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.classify">classify</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops">constexpr_ops</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.control_flow">control_flow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.conv">conv</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary">elementwise_binary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary">elementwise_unary (iOS 15+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary">elementwise_unary (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing">image_resizing (iOS 15+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing">image_resizing (iOS 16+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing">image_resizing (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.linear">linear</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization">normalization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.pool">pool</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops">quantization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.random">random</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent">recurrent</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.reduction">reduction (iOS 15+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.reduction">reduction (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather">scatter_gather (iOS 15+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather">scatter_gather (iOS 16+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather">scatter_gather (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation">tensor_operation (iOS 15+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation">tensor_operation (iOS 16+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation">tensor_operation (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation">tensor_transformation (iOS 15)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">tensor_transformation (iOS 16+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">tensor_transformation (iOS 17+)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
@@ -339,7 +90,11 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
 </ul>
 
         </div>
@@ -355,8 +110,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">MIL Ops</li>
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>MIL Ops</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.converters.mil.mil.ops.defs.rst.txt" rel="nofollow"> View page source</a>
       </li>
