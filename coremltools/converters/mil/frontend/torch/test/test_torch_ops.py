@@ -7945,14 +7945,17 @@ class TestMaskedFill(TorchBaseTest):
     def test_masked_fill(self, compute_unit, backend, dtype, value):
         SHAPE = (2, 3)
         MASK = torch.bernoulli(torch.rand(SHAPE[-1])).to(torch.bool)
+        inputs = self._get_inputs(SHAPE, dtype)
 
         model = ModuleWrapper(torch.masked_fill, {"mask": MASK, "value": value})
-        inputs = self._get_inputs(SHAPE, dtype)
+        expected_results = model(inputs)
+
         TorchBaseTest.run_compare_torch(
             inputs,
             model,
             backend=backend,
             compute_unit=compute_unit,
+            expected_results=expected_results,
             input_as_shape=False,
         )
 
