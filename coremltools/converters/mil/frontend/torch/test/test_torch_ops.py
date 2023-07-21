@@ -7926,25 +7926,34 @@ class TestPad(TorchBaseTest):
 
 
 class TestMaskedFill(TorchBaseTest):
+    def _get_inputs(self, shape, dtype):
+        inputs = torch.randn(shape)
+        if not dtype.is_floating_point:
+            # Scale before casting
+            inputs = inputs * torch.randint(10, 100, shape)
+        return inputs.to(dtype=dtype)
+
     @pytest.mark.parametrize(
-        "compute_unit, backend, value",
+        "compute_unit, backend, dtype, value",
         itertools.product(
             compute_units,
             backends,
-            [10.0, 0],
+            [torch.int, torch.float],
+            [10.3, 7, 0],
         ),
     )
-    def test_masked_fill(self, compute_unit, backend, value):
+    def test_masked_fill(self, compute_unit, backend, dtype, value):
         SHAPE = (2, 3)
         MASK = torch.bernoulli(torch.rand(SHAPE[-1])).to(torch.bool)
 
         model = ModuleWrapper(torch.masked_fill, {"mask": MASK, "value": value})
-
+        inputs = self._get_inputs(SHAPE, dtype)
         TorchBaseTest.run_compare_torch(
-            SHAPE,
+            inputs,
             model,
             backend=backend,
             compute_unit=compute_unit,
+            input_as_shape=False,
         )
 
 
