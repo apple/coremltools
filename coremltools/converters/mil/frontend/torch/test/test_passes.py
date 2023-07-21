@@ -2,6 +2,7 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 from collections import OrderedDict
 
 import numpy as np
@@ -18,6 +19,7 @@ from ..torchir_passes import (
     flatten_graph_output_values,
     transform_inplace_ops,
 )
+import coremltools as ct
 
 
 def _build_flattening_test_graph():
@@ -78,7 +80,8 @@ def _build_flattening_test_graph():
 
 
 class TestTorchPasses:
-    """Class containing tests for InternalTorchIR optimization passes.
+    """
+    Class containing tests for InternalTorchIR optimization passes.
     """
 
     @pytest.fixture
@@ -86,7 +89,9 @@ class TestTorchPasses:
         torch.manual_seed(1)
         np.random.seed(1)
 
-    def test_flatten_input_values(self):
+
+    @staticmethod
+    def test_flatten_input_values():
         graph = _build_flattening_test_graph()
 
         flatten_graph_input_values(graph)
@@ -107,7 +112,9 @@ class TestTorchPasses:
         # next op.
         np.testing.assert_equal(graph.nodes[1].outputs[0], graph.nodes[2].inputs[0])
 
-    def test_flatten_output_values(self):
+
+    @staticmethod
+    def test_flatten_output_values():
         graph = _build_flattening_test_graph()
 
         flatten_graph_output_values(graph)
@@ -119,7 +126,9 @@ class TestTorchPasses:
         np.testing.assert_equal(graph.outputs[1], graph.nodes[1].outputs[0])
         np.testing.assert_equal(graph.outputs[2], graph.nodes[1].outputs[1])
 
-    def test_transform_inplace_ops_graph(self):
+
+    @staticmethod
+    def test_transform_inplace_ops_graph():
         # The test graph is:
         #    graph(
         #        %x : Tensor[1],
@@ -171,7 +180,9 @@ class TestTorchPasses:
         np.testing.assert_equal(len(graph.outputs), 1)
         np.testing.assert_equal(graph.outputs[0], graph.nodes[-1].outputs[0])
 
-    def test_transform_inplace_ops_loop(self):
+
+    @staticmethod
+    def test_transform_inplace_ops_loop():
         # The test graph is:
         #    graph(
         #        %x : Tensor[1],
@@ -264,8 +275,10 @@ class TestTorchPasses:
         # That graph output should now be the output of the graph.
         np.testing.assert_equal(loop_node.outputs[0], graph.outputs[0])
 
+
+    @staticmethod
     @pytest.mark.xfail(reason="rdar://64235006")
-    def test_transform_inplace_ops_if(self):
+    def test_transform_inplace_ops_if():
         # The test graph is:
         #    graph(
         #        %x : Tensor[1],
@@ -369,3 +382,26 @@ class TestTorchPasses:
         np.testing.assert_equal(if_node.name, if_node.outputs[0])
         # The graph output should be the if op output.
         np.testing.assert_equal(if_node.outputs[0], graph.outputs[0])
+
+
+    @staticmethod
+    def test_inpace_op_from_cast():
+        class Net(torch.nn.Module):
+            def forward(self, x):
+                y = torch.empty(x.shape).to(torch.int32)
+                y.fill_(0.2)
+                return y
+
+        shape = (2, 3)
+        x = torch.rand(*shape)
+        traced_fn = torch.jit.trace(Net(), x).eval()
+
+        ct_model = ct.convert(
+            traced_fn,
+            inputs=[ct.TensorType(shape=shape)],
+            outputs=[ct.TensorType(name="y", dtype=np.int32)],
+            source="pytorch",
+        )
+        y_cm = ct_model.predict({'x': x})['y']
+
+        assert((y_cm == np.zeros(shape)).all())
