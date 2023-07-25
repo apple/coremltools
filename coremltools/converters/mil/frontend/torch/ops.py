@@ -27,6 +27,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import (
 )
 from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
+from coremltools.converters.mil.mil.types.type_mapping import builtin_to_string
 from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import build_einsum_mil, value_at
@@ -4250,6 +4251,9 @@ def masked_fill(context, node):
     if not types.is_bool(mask.dtype):
         # cond must be bool type
         mask = mb.cast(x=mask, dtype="bool")
+
+    if value.dtype != x.dtype:
+        value = mb.cast(x=value, dtype=builtin_to_string(x.dtype))
 
     res = mb.select(cond=mask, a=value, b=x, name=node.name)
     context.add(res)
