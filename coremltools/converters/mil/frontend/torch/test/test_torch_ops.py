@@ -9584,14 +9584,77 @@ class TestUnfold(TorchBaseTest):
         ),
     )
     def test_unfold(self, compute_unit, backend, input_shape, kernel_size, padding, stride):
-        class UnfoldModel(nn.Module):
-            def forward(self, x):
-                return torch.nn.functional.unfold(
-                    input=x, kernel_size=kernel_size, padding=padding, stride=stride
-                )
-
         self.run_compare_torch(
-            input_shape, UnfoldModel(), backend=backend, compute_unit=compute_unit
+            input_shape,
+            ModuleWrapper(
+                function=torch.nn.functional.unfold,
+                kwargs={
+                    "kernel_size": kernel_size,
+                    "padding": padding,
+                    "stride": stride,
+                }
+            ),
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+class TestFold(TorchBaseTest):
+    @staticmethod
+    def construct_block_count(
+        output_size: Tuple[int],
+        kernel_size: Tuple[int],
+        dilation=1,
+        padding=0,
+        stride=1,
+    ):
+        dim = len(kernel_size)
+
+        if not isinstance(dilation, tuple):
+            dilation = (dilation,) * dim
+        if not isinstance(padding, tuple):
+            padding = (padding,) * dim
+        if not isinstance(stride, tuple):
+            stride = (stride,) * dim
+
+        block_count = 1
+        for i in range(dim):
+            block_count *= np.floor(
+                (output_size[i] + 2 * padding[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
+                + 1
+            ).astype(np.int32)
+        return block_count
+
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, N, C, output_size, kernel_size",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 2],
+            [1, 3],
+            [(12, 12), (12, 24)],
+            [(2, 2), (2, 3)],
+        ),
+    )
+    def test_unfold(self, compute_unit, backend, N, C, output_size, kernel_size):
+        block_count = self.construct_block_count(
+            output_size,
+            kernel_size,
+            stride=kernel_size,
+        )
+        self.run_compare_torch(
+            (N, C * np.prod(kernel_size), block_count),
+            ModuleWrapper(
+                function=torch.nn.functional.fold,
+                kwargs={
+                    "output_size": output_size,
+                    "kernel_size": kernel_size,
+                    "stride": kernel_size,
+                }
+            ),
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
 
