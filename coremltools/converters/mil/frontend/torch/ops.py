@@ -1831,7 +1831,21 @@ def group_norm(context, node):
     input_shape = [*x.shape] # n, c, *
     num_groups = builtins.min(num_groups,c)
     new_shape = [n, num_groups, c//num_groups]
-    new_shape += [*x.shape[2:]] # adds remaining dims
+    if not any_symbolic(x.shape[2:]):
+        new_shape += [*x.shape[2:]] # adds remaining dims
+    else:
+        # Create the new_shape and input_shape to support dynamic sizes.
+        xshape = mb.shape(x=x)
+        for i, v in enumerate(x.shape[2:]):
+            if is_symbolic(v):
+                si = mb.gather(x=xshape, indices=i+2, axis=0)
+                new_shape.append(si)
+                input_shape[i+2] = si
+            else:
+                new_shape.append(v)
+        new_shape = mb.concat(values=new_shape, axis=0)
+        input_shape = mb.concat(values=input_shape, axis=0)
+
     num_extra_axes = len(x.shape[2:])
     axes_ = [int(i) for i in range(2, 2 + num_extra_axes + 1)]
     weight_shape, bias_shape = [1,c], [1,c]
