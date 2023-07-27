@@ -410,7 +410,7 @@ class TestTorchPasses:
     def test_inpace_op_from_add():
         class Net(torch.nn.Module):
             def forward(self, x):
-                y = torch.empty(x.shape).to(torch.int32)
+                y = torch.empty(x.shape) + 1
                 y.fill_(0)
                 return y
 
