@@ -405,3 +405,25 @@ class TestTorchPasses:
         y_cm = ct_model.predict({'x': x})['y']
 
         assert((y_cm == np.zeros(shape)).all())
+
+    @staticmethod
+    def test_inpace_op_from_add():
+        class Net(torch.nn.Module):
+            def forward(self, x):
+                y = torch.empty(x.shape).to(torch.int32)
+                y.fill_(0)
+                return y
+
+        shape = (2, 3)
+        x = torch.rand(*shape)
+        traced_fn = torch.jit.trace(Net(), x).eval()
+
+        ct_model = ct.convert(
+            traced_fn,
+            inputs=[ct.TensorType(shape=shape)],
+            outputs=[ct.TensorType(name="y", dtype=np.int32)],
+            source="pytorch",
+        )
+        y_cm = ct_model.predict({'x': x})['y']
+
+        assert((y_cm == np.zeros(shape)).all())
