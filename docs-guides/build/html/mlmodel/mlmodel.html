@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MLModel Overview &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Xcode Model Preview Types" href="xcode-model-preview-types.html" />
+    <link rel="prev" title="XGBoost" href="../other-converters/xgboost-conversion.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/api-overview/api-overview.html">Optimize API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MLModel Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#core-ml-specification">Core ML Specification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#examples">Examples</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#load-and-save-the-mlmodel">Load and Save the MLModel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#use-the-mlmodel-for-prediction">Use the MLModel for Prediction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#work-with-the-spec">Work With the Spec</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#update-the-metadata-and-input-output-descriptions">Update the Metadata and Input/Output Descriptions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>MLModel Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/mlmodel/mlmodel.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="mlmodel-overview">
+<h1>MLModel Overview<a class="headerlink" href="#mlmodel-overview" title="Permalink to this heading"></a></h1>
+<p>An MLModel encapsulates a <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a> model’s prediction methods, configuration, and model description. You can use the <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> package to convert trained models from a variety of training tools into Core ML models. For the full list of model types, see <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/Model.html">Core ML Model</a>.</p>
+<p>The converters in <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> return a converted model as an <code class="docutils literal notranslate"><span class="pre">MLModel</span></code> object. You can then save the <code class="docutils literal notranslate"><span class="pre">MLModel</span></code> as an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> file, use it to make predictions, modify the input and output descriptions, and set the model’s metadata. The <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model">MLModel class</a> defines the minimal interface to a Core ML model in Python.</p>
+<section id="core-ml-specification">
+<h2>Core ML Specification<a class="headerlink" href="#core-ml-specification" title="Permalink to this heading"></a></h2>
+<p>A key component of Core ML is the public specification for representing machine learning models. This specification is defined in the <a class="reference external" href="https://github.com/apple/coremltools/blob/master/mlmodel/format/Model.proto">Model.proto</a> protobuf (for a more readable version, see <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/Model.html">Core ML Model</a>), which can be created using any language supported by protobuf (such as Python, C++, Java, C#, and Perl).</p>
+<p>At a high level, the protobuf specification consists of the following:</p>
+<ul class="simple">
+<li><p><em>Model description:</em> The model name and and the types of input and output.</p></li>
+<li><p><em>Model parameters:</em> The set of parameters required to represent a specific instance of the model.</p></li>
+<li><p><em>Metadata:</em> Information about the origin, license, and author of the model.</p></li>
+</ul>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading"></a></h2>
+<p>The following code snippets demonstrate how to use an MLModel. To use these code snippets, first import <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+</pre></div>
+</div>
+<section id="load-and-save-the-mlmodel">
+<h3>Load and Save the MLModel<a class="headerlink" href="#load-and-save-the-mlmodel" title="Permalink to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the MLModel</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;path/to/the/model.mlmodel&#39;</span><span class="p">)</span>
+
+<span class="c1"># Save the MLModel</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;path/to/the/saved/model.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="use-the-mlmodel-for-prediction">
+<h3>Use the MLModel for Prediction<a class="headerlink" href="#use-the-mlmodel-for-prediction" title="Permalink to this heading"></a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Use the MLModel for prediction</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="work-with-the-spec">
+<h3>Work With the Spec<a class="headerlink" href="#work-with-the-spec" title="Permalink to this heading"></a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">spec</span></code> object is the parsed protobuf object of the Core ML model. The following code snippets show how you can get the spec from the MLModel, print its description, get the type of MLModel, and save the MLModel directly from the <code class="docutils literal notranslate"><span class="pre">spec</span></code>. It also shows how to convert the <code class="docutils literal notranslate"><span class="pre">spec</span></code> to MLModel and compile the model in one step:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the spec from the MLModel</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+
+<span class="c1"># Print the input/output description for the MLModel</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+
+<span class="c1"># Get the type of MLModel (NeuralNetwork, SupportVectorRegressor, Pipeline etc)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">))</span>
+
+<span class="c1"># Save out the MLModel directly from the spec</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;path/to/the/saved/model.mlmodel&#39;</span><span class="p">)</span>
+
+<span class="c1"># Convert spec to MLModel. This step also compiles the model.</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+<span class="c1"># Load the spec from the saved .mlmodel file directly</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;path/to/the/model.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="update-the-metadata-and-input-output-descriptions">
+<h3>Update the Metadata and Input/Output Descriptions<a class="headerlink" href="#update-the-metadata-and-input-output-descriptions" title="Permalink to this heading"></a></h3>
+<p>The following example converts a model from <a class="reference external" href="https://scikit-learn.org/stable/">Scikit-learn</a>. The model predicts the price of a house based on three features (bedroom, bath, size).</p>
+<p>The example shows how you can use the MLModel object returned by the conversion to update the metadata and input/output descriptions that are displayed in the Xcode preview. (For details about the Xcode preview, see <span class="xref myst">Xcode Model Preview Types</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="c1"># Load data</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;houses.csv&#39;</span><span class="p">)</span>
+
+<span class="c1"># Train a model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;bedroom&quot;</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">]],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">])</span>
+
+<span class="c1"># Convert and save the scikit-learn model</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">sklearn</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;bedroom&quot;</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">],</span> <span class="s2">&quot;price&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set model metadata</span>
+<span class="n">model</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="s1">&#39;John Smith&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="s1">&#39;BSD&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s1">&#39;Predicts the price of a house in the Seattle area.&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">version</span> <span class="o">=</span> <span class="s1">&#39;1&#39;</span>
+
+<span class="c1"># Set feature descriptions manually</span>
+<span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;bedroom&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Number of bedrooms&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;bathrooms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Number of bathrooms&#39;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Size (in square feet)&#39;</span>
+
+<span class="c1"># Set the output descriptions</span>
+<span class="n">model</span><span class="o">.</span><span class="n">output_description</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Price of the house&#39;</span>
+
+<span class="c1"># Save the model</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../other-converters/xgboost-conversion.html" class="btn btn-neutral float-left" title="XGBoost" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="xcode-model-preview-types.html" class="btn btn-neutral float-right" title="Xcode Model Preview Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

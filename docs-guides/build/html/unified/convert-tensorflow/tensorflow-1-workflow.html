@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TensorFlow 1 Workflow &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Converting a TensorFlow 1 Image Classifier" href="convert-a-tensorflow-1-image-classifier.html" />
+    <link rel="prev" title="Converting from TensorFlow" href="convert-tensorflow.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TensorFlow 1 Workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#export-as-a-frozen-graph-and-convert">Export as a Frozen Graph and Convert</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-a-pre-trained-model">Convert a Pre-trained Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#more-examples">More Examples</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/api-overview/api-overview.html">Optimize API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="convert-tensorflow.html">Converting from TensorFlow</a> &raquo;</li>
+      <li>TensorFlow 1 Workflow</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/unified/convert-tensorflow/tensorflow-1-workflow.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="tensorflow-1-workflow">
+<h1>TensorFlow 1 Workflow<a class="headerlink" href="#tensorflow-1-workflow" title="Permalink to this heading"></a></h1>
+<p>Use the frozen graph format for conversion from TensorFlow 1. After training, always export the model for inference to this format using the <code class="docutils literal notranslate"><span class="pre">tensorflow.python.tools.freeze_graph</span></code> method. TensorFlow 1 pre-trained models are also generally available in the frozen <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file format.</p>
+<section id="export-as-a-frozen-graph-and-convert">
+<h2>Export as a Frozen Graph and Convert<a class="headerlink" href="#export-as-a-frozen-graph-and-convert" title="Permalink to this heading"></a></h2>
+<p>The following example demonstrates how to export a model to the frozen graph format and convert it to a <span class="xref myst">Core ML program</span> model. Follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Define a simple model with random weights:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">graph</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+<span class="k">with</span> <span class="n">graph</span><span class="o">.</span><span class="n">as_default</span><span class="p">():</span>
+  <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="mi">20</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">)</span>
+  <span class="n">W</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">truncated_normal</span><span class="p">([</span><span class="mi">20</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="n">stddev</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+  <span class="n">b</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">Variable</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">ones</span><span class="p">([</span><span class="mi">10</span><span class="p">]))</span>
+  <span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span> <span class="o">+</span> <span class="n">b</span>
+  <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">y</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Export the graph as a frozen graph:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">os</span> 
+<span class="kn">from</span> <span class="nn">tensorflow.python.tools.freeze_graph</span> <span class="kn">import</span> <span class="n">freeze_graph</span>
+
+<span class="n">model_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">()</span>
+<span class="n">graph_def_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_dir</span><span class="p">,</span> <span class="s1">&#39;tf_graph.pb&#39;</span><span class="p">)</span>
+<span class="n">checkpoint_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_dir</span><span class="p">,</span> <span class="s1">&#39;tf_model.ckpt&#39;</span><span class="p">)</span>
+<span class="n">frozen_graph_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_dir</span><span class="p">,</span> <span class="s1">&#39;tf_frozen.pb&#39;</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">graph</span><span class="o">=</span><span class="n">graph</span><span class="p">)</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+  <span class="c1"># initialize variables</span>
+  <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">global_variables_initializer</span><span class="p">())</span>
+  <span class="c1"># save graph definition somewhere</span>
+  <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">write_graph</span><span class="p">(</span><span class="n">sess</span><span class="o">.</span><span class="n">graph</span><span class="p">,</span> <span class="n">model_dir</span><span class="p">,</span> <span class="n">graph_def_file</span><span class="p">,</span> <span class="n">as_text</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+  <span class="c1"># save the weights</span>
+  <span class="n">saver</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">Saver</span><span class="p">()</span>
+  <span class="n">saver</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">sess</span><span class="p">,</span> <span class="n">checkpoint_file</span><span class="p">)</span>
+
+  <span class="c1"># take the graph definition and weights </span>
+  <span class="c1"># and freeze into a single .pb frozen graph file</span>
+  <span class="n">freeze_graph</span><span class="p">(</span><span class="n">input_graph</span><span class="o">=</span><span class="n">graph_def_file</span><span class="p">,</span>
+               <span class="n">input_saver</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+               <span class="n">input_binary</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">input_checkpoint</span><span class="o">=</span><span class="n">checkpoint_file</span><span class="p">,</span>
+               <span class="n">output_node_names</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_names</span><span class="p">),</span>
+               <span class="n">restore_op_name</span><span class="o">=</span><span class="s2">&quot;save/restore_all&quot;</span><span class="p">,</span>
+               <span class="n">filename_tensor_name</span><span class="o">=</span><span class="s2">&quot;save/Const:0&quot;</span><span class="p">,</span>
+               <span class="n">output_graph</span><span class="o">=</span><span class="n">frozen_graph_file</span><span class="p">,</span>
+               <span class="n">clear_devices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+               <span class="n">initializer_nodes</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+  
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TensorFlow frozen graph saved at </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">frozen_graph_file</span><span class="p">))</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Convert the model to an <span class="xref myst">ML program</span> and save it as a <span class="xref myst">Core ML model package</span>:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">frozen_graph_file</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">frozen_graph_file</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;pb&quot;</span><span class="p">,</span><span class="s2">&quot;mlpackage&quot;</span><span class="p">)))</span>
+</pre></div>
+</div>
+</section>
+<section id="convert-a-pre-trained-model">
+<h2>Convert a Pre-trained Model<a class="headerlink" href="#convert-a-pre-trained-model" title="Permalink to this heading"></a></h2>
+<p>The following example demonstrates how to use a downloaded pre-trained model, load it as a <code class="docutils literal notranslate"><span class="pre">tf.Graph</span></code> object, and then convert and compare predictions with Core ML. This example also compares predictions after conversion to verify the numerical accuracy.</p>
+<ol class="arabic simple">
+<li><p>Download the <a class="reference external" href="https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.0_224.tgz"><code class="docutils literal notranslate"><span class="pre">float_v2_1.0_224</span></code> MobileNet V2 model</a> from <a class="reference external" href="https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet">TensorFlow models</a>.</p></li>
+<li><p>Load the model in TensorFlow as a <code class="docutils literal notranslate"><span class="pre">tf.graph</span></code> object.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;~/Downloads/mobilenet_v2_1.0_224/mobilenet_v2_1.0_224_frozen.pb&quot;</span>
+
+<span class="c1"># Load the protobuf file from the disk and parse it to retrieve the</span>
+<span class="c1"># graph_def</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">gfile</span><span class="o">.</span><span class="n">GFile</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">graph_def</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">GraphDef</span><span class="p">()</span>
+    <span class="n">graph_def</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+<span class="c1"># Import the graph_def into a new Graph</span>
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span><span class="o">.</span><span class="n">as_default</span><span class="p">()</span> <span class="k">as</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">tf</span><span class="o">.</span><span class="n">import_graph_def</span><span class="p">(</span><span class="n">graph_def</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Run the TensorFlow graph to get a prediction on a random input.</p></li>
+</ol>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>We recommend running the original TensorFlow model once to verify the model, before invoking the Core ML converter.</p>
+</div>
+<p>To run this TensorFlow graph, you need to know its input and output names. Since there is no simple TensorFlow API that can directly provide this information, inspect the operations in the graph:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">ops</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_operations</span><span class="p">()</span>
+<span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ops</span><span class="p">)</span>
+<span class="c1"># print all the placeholder ops, these would be the inputs</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Inputs ops: &quot;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s2">&quot;Placeholder&quot;</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;op name: </span><span class="si">{}</span><span class="s2">, output shape : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span>
+              <span class="nb">format</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()))</span>
+
+
+<span class="c1"># print all the tensors that are the first output of an op</span>
+<span class="c1"># and do not feed into any other op</span>
+<span class="c1"># these are prospective outputs</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Prospective output tensor(s): &quot;</span><span class="p">,</span> <span class="p">)</span>
+<span class="n">sink_ops</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">input_tensors</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+    <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">input_tensors</span><span class="p">:</span>
+            <span class="n">input_tensors</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">input_tensors</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;tensor name: </span><span class="si">{}</span><span class="s2">, tensor shape : </span><span class="si">{}</span><span class="s2">, parent op type: </span><span class="si">{}</span><span class="s2">&quot;</span>
+                  <span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">(),</span> <span class="n">op</span><span class="o">.</span><span class="n">type</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The following <strong>Out</strong> snippet shows what results are printed. Use this information to run the TensorFlow graph.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Inputs ops: 
+op name: input, output shape : &lt;unknown&gt;
+
+Prospective output tensor(s): 
+tensor name: MobilenetV2/Predictions/Reshape_1:0, tensor shape : (?, 1001), parent op type: Reshape
+</pre></div>
+</div>
+<p>In the above example, the input shape is missing from the TensorFlow graph. This means it can take a variety of shapes. For this example, use <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">224,</span> <span class="pre">224,</span> <span class="pre">3)</span></code>, since this is typically used with MobileNet models.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">x</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">graph</span> <span class="o">=</span> <span class="n">graph</span><span class="p">)</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
+    <span class="n">tf_out</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="s1">&#39;MobilenetV2/Predictions/Reshape_1:0&#39;</span><span class="p">,</span>
+                      <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;input:0&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">})</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Convert the model to a Core ML neural network, and compare predictions. Since the TensorFlow graph lacks shape information, provide it to the converter using the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> argument.</p></li>
+</ol>
+<p>The following example provides a fixed input shape, but you can use a flexible input shape to enable the generated Core ML model to work using different input shapes. For more information, see <span class="xref myst">Flexible Input Shapes</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)])</span>
+
+<span class="c1"># Core ML model prediction</span>
+<span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input&quot;</span> <span class="p">:</span> <span class="n">x</span><span class="p">},</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">coreml_out</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coreml_out_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">tf_out</span><span class="p">,</span> <span class="n">coreml_out</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-use-image-inputs admonition">
+<p class="admonition-title">Use Image Inputs</p>
+<p>The coremltools converter generates by default a model with a  <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a> as the input, which works for checking conversion and numerical accuracy. For the final export, the best practice is to use the image type. For details, see <span class="xref myst">Image Inputs</span>.</p>
+</div>
+</section>
+<section id="more-examples">
+<h2>More Examples<a class="headerlink" href="#more-examples" title="Permalink to this heading"></a></h2>
+<p>The following examples demonstrate some of the capabilities of the Core ML Tools converter for converting <a class="reference external" href="https://www.tensorflow.org/versions/r1.15/api_docs/python/tf">TensorFlow 1</a> models to <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a>:</p>
+<ul class="simple">
+<li><p><span class="xref myst">Converting a TensorFlow 1 Image Classifier</span>: Demonstrates the importance of setting the image preprocessing parameters correctly during conversion to get the right results.</p></li>
+<li><p><span class="xref myst">Converting a TensorFlow 1 DeepSpeech Model</span>: Demonstrates automatic handling of flexible shapes using automatic speech recognition.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="convert-tensorflow.html" class="btn btn-neutral float-left" title="Converting from TensorFlow" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="convert-a-tensorflow-1-image-classifier.html" class="btn btn-neutral float-right" title="Converting a TensorFlow 1 Image Classifier" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

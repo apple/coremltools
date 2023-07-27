@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Features &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Core ML Tools FAQs" href="faqs.html" />
+    <link rel="prev" title="What Is Core ML Tools?" href="overview-coremltools.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">New Features</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#new-in-core-ml-tools-7">New in Core ML Tools 7</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#previous-versions">Previous Versions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#core-ml-tools-6">Core ML Tools 6</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#release-notes">Release Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/api-overview/api-overview.html">Optimize API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>New Features</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/overview/new-features.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="new-features">
+<h1>New Features<a class="headerlink" href="#new-features" title="Permalink to this heading"></a></h1>
+<p>The following sections describe new features and improvements in the most recent versions of Core ML Tools.</p>
+<section id="new-in-core-ml-tools-7">
+<h2>New in Core ML Tools 7<a class="headerlink" href="#new-in-core-ml-tools-7" title="Permalink to this heading"></a></h2>
+<p>The <a class="reference external" href="https://github.com/apple/coremltools">coremltools 7</a> package now includes more APIs for optimizing the models to use less storage space, reduce power consumption, and reduce latency during inference. Key optimization techniques include pruning, quantization, and palettization.</p>
+<p>You can either directly compress a Core ML model, or compress a model in the source framework during training and then convert. While the former is quicker and can happen without needing data, the latter can preserve accuracy better by fine-tuning with data.</p>
+<p>For details, see <span class="xref myst">Optimizing Models</span>.</p>
+<p>For a full list of changes, see <span class="xref myst">Release Notes</span>.</p>
+<p>To install Core ML Tools version 7:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">coremltools</span><span class="o">==</span><span class="m">7</span>.0b1
+</pre></div>
+</div>
+</section>
+<section id="previous-versions">
+<h2>Previous Versions<a class="headerlink" href="#previous-versions" title="Permalink to this heading"></a></h2>
+<section id="core-ml-tools-6">
+<h3>Core ML Tools 6<a class="headerlink" href="#core-ml-tools-6" title="Permalink to this heading"></a></h3>
+<p>The <a class="reference external" href="https://github.com/apple/coremltools/releases/tag/6.3">coremltools 6</a> package offers the following features to optimize the model conversion process:</p>
+<ul class="simple">
+<li><p><span class="xref myst">Model compression utilities</span></p></li>
+<li><p><span class="xref myst">Float 16 input/output types including image</span></p></li>
+</ul>
+<p>For a full list of changes from <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> 5.2, see <span class="xref myst">Release Notes</span>.</p>
+</section>
+</section>
+<section id="release-notes">
+<h2>Release Notes<a class="headerlink" href="#release-notes" title="Permalink to this heading"></a></h2>
+<p>Learn about changes to the <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> package from the following release notes:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/">Release Notes (newest)</a></p></li>
+</ul>
+<p>For information about previous releases, see the following:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/tag/6.3">Release Notes for coremltools 6.3</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/tag/5.2">Release Notes for coremltools 5.2</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/tag/5.0">Release Notes for coremltools 5.0</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/tag/4.1">Release Notes for coremltools 4.1</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/tag/4.0">Release Notes for coremltools 4.0</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases/tag/3.4">Release Notes for coremltools 3.4</a></p></li>
+<li><p><a class="reference external" href="https://github.com/apple/coremltools/releases">All release notes</a></p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="overview-coremltools.html" class="btn btn-neutral float-left" title="What Is Core ML Tools?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="faqs.html" class="btn btn-neutral float-right" title="Core ML Tools FAQs" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

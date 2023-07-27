@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>New Conversion Options &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model Input and Output Types" href="model-input-and-output-types.html" />
+    <link rel="prev" title="Conversion Options" href="conversion-options.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="conversion-options.html">Conversion Options</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">New Conversion Options</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#convert-to-ml-program-or-neural-network">Convert to ML Program or Neural Network</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#set-the-compute-precision-for-an-ml-program">Set the Compute Precision for an ML Program</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pick-the-compute-units-for-execution">Pick the Compute Units for Execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#input-and-output-type-options">Input and Output Type Options</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/api-overview/api-overview.html">Optimize API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="conversion-options.html">Conversion Options</a> &raquo;</li>
+      <li>New Conversion Options</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/unified/conversion-options/new-conversion-options.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="new-conversion-options">
+<h1>New Conversion Options<a class="headerlink" href="#new-conversion-options" title="Permalink to this heading"></a></h1>
+<p>You can use the  <span class="xref myst">Unified Conversion API</span> to convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an <span class="xref myst">ML program</span>. The following are the newest conversion options.</p>
+<section id="convert-to-ml-program-or-neural-network">
+<h2>Convert to ML Program or Neural Network<a class="headerlink" href="#convert-to-ml-program-or-neural-network" title="Permalink to this heading"></a></h2>
+<p>To set the type of the model representation produced by the converter. use either the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> parameter or the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> parameter with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a>.</p>
+<p>The converter produces an ML program if the target is <code class="docutils literal notranslate"><span class="pre">&gt;=</span></code> <code class="docutils literal notranslate"><span class="pre">iOS15</span></code>, <code class="docutils literal notranslate"><span class="pre">macOS12</span></code>, <code class="docutils literal notranslate"><span class="pre">watchOS8</span></code>, or <code class="docutils literal notranslate"><span class="pre">tvOS15</span></code>, or if <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> is set to <code class="docutils literal notranslate"><span class="pre">‘mlprogram’</span></code>; otherwise it produces a neural network.</p>
+<p>If neither the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> nor the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> parameter is specified, the converter produces a neural network with as minimum of a deployment target as possible.</p>
+<p>To learn about the differences between neural networks and ML programs, see <span class="xref myst">ML Programs</span>.</p>
+</section>
+<section id="set-the-compute-precision-for-an-ml-program">
+<h2>Set the Compute Precision for an ML Program<a class="headerlink" href="#set-the-compute-precision-for-an-ml-program" title="Permalink to this heading"></a></h2>
+<p>For ML programs, coremltools produces a model with float 16 precision by default. You can override the default precision by using the <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> parameter. For details, see <span class="xref myst">Set the ML program precision</span>.</p>
+</section>
+<section id="pick-the-compute-units-for-execution">
+<h2>Pick the Compute Units for Execution<a class="headerlink" href="#pick-the-compute-units-for-execution" title="Permalink to this heading"></a></h2>
+<p>The converter picks the default optimized path for fast execution while loading the model. The default setting (<code class="docutils literal notranslate"><span class="pre">ComputeUnit.ALL</span></code>) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU).</p>
+<p>However, you may find it useful, especially for debugging, to specify the actual compute units when converting or loading a model by using the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter. For details, see <span class="xref myst">Set the compute units</span>.</p>
+</section>
+<section id="input-and-output-type-options">
+<h2>Input and Output Type Options<a class="headerlink" href="#input-and-output-type-options" title="Permalink to this heading"></a></h2>
+<p>Starting in iOS 16 and macOS 13, you can use float 16 <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiarrays</span></code></a> for model inputs and outputs, and if you are using grayscale image types, you can now specify a new grayscale float 16 type. You can also specify an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> for input <em>and</em> for output with <code class="docutils literal notranslate"><span class="pre">convert()</span></code>. The new float 16 types help eliminate extra casts at inputs and outputs for models that execute in float 16 precision.</p>
+<p>For details, see <span class="xref myst">Model Input and Output types</span>. For image-specific options see <span class="xref myst">Image Input and Output</span>.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="conversion-options.html" class="btn btn-neutral float-left" title="Conversion Options" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="model-input-and-output-types.html" class="btn btn-neutral float-right" title="Model Input and Output Types" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

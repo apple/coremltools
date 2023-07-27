@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Installing Core ML Tools &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/clipboard.min.js"></script>
+        <script src="../_static/copybutton.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Getting Started" href="introductory-quickstart.html" />
+    <link rel="prev" title="Contributing" href="../overview/contributing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installing Core ML Tools</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-or-build-core-ml-tools">Install or Build Core ML Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-up-conda">Set Up Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-up-a-new-virtual-environment">Set Up a New Virtual Environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-core-ml-tools">Install Core ML Tools</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-third-party-packages">Install Third-party Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-from-source">Install From Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#build-from-source">Build From Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#upgrade-core-ml-tools">Upgrade Core ML Tools</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../unified/model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/api-overview/api-overview.html">Optimize API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../optimization/quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Installing Core ML Tools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/essentials/installing-coremltools.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="installing-core-ml-tools">
+<h1>Installing Core ML Tools<a class="headerlink" href="#installing-core-ml-tools" title="Permalink to this heading"></a></h1>
+<p>This page describes how to install the <a class="reference external" href="https://github.com/apple/coremltools"><code class="docutils literal notranslate"><span class="pre">coremltools</span></code></a> Python package on macOS (10.13+) and Linux.</p>
+<div class="admonition-supported-python-and-macos-versions admonition">
+<p class="admonition-title">Supported Python and MacOS Versions</p>
+<p>Support for Python 2 has been deprecated since <a class="reference external" href="https://github.com/apple/coremltools/releases/tag/4.1">Core ML Tools 4.1</a>. The current version of coremltools includes wheels for Python 3.5, 3.6, 3.7, 3.8 and 3.9. The last stable release of coremltools to support Python 2 is version 4.0.</p>
+<p>The supported MacOS versions are as follows:</p>
+<ul class="simple">
+<li><p>Core ML Tools 4.1 supports macOS 10.13 and newer.</p></li>
+<li><p>Core ML Tools 5 and 6 support macOS 10.15 and newer.</p></li>
+</ul>
+</div>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading"></a></h2>
+<div class="admonition-for-beginners admonition">
+<p class="admonition-title">For Beginners</p>
+<p>If you are using macOS, you should already be familiar with the <a class="reference external" href="https://developer.apple.com/library/archive/documentation/OpenSource/Conceptual/ShellScripting/CommandLInePrimer/CommandLine.html#//apple_ref/doc/uid/TP40004268-CH271-BBCBEAJD">Mac Terminal app command line</a> to perform tasks such as installations and updates. If you are using Linux, you should already be familiar with <a class="reference external" href="https://www.geeksforgeeks.org/basic-shell-commands-in-linux/">basic Shell commands in Linux</a>.</p>
+</div>
+<p>Before installing coremltools, you need <a class="reference external" href="https://www.python.org/downloads/">Python</a> and the <a class="reference external" href="https://pip.pypa.io/en/stable/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a> installer.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> package supports <a class="reference external" href="https://www.python.org/download/releases/3.0/">Python 3</a>. We recommend that you install Python 3.6 or newer. Use a Python package manager such as <a class="reference external" href="https://docs.conda.io/en/latest/index.html">Conda</a> or <a class="reference external" href="https://docs.python.org/3/library/venv.html">venv</a> to install the newest version of Python and other dependencies. <a class="reference external" href="https://docs.conda.io/en/latest/index.html">Conda</a> is recommended because it is the most reliable way to install all required dependencies.</p>
+</section>
+<section id="install-or-build-core-ml-tools">
+<h2>Install or Build Core ML Tools<a class="headerlink" href="#install-or-build-core-ml-tools" title="Permalink to this heading"></a></h2>
+<p>To install Core ML Tools, use one of the following methods:</p>
+<ul class="simple">
+<li><p>The Conda package installer: Python is installed automatically. You can install <a class="reference external" href="https://pip.pypa.io/en/stable/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a> after setting up the Conda environment. Skip to <a class="reference internal" href="#set-up-conda"><span class="std std-doc">Set Up Conda</span></a>.</p></li>
+<li><p>A virtual environment: Install <a class="reference external" href="https://pip.pypa.io/en/stable/"><code class="docutils literal notranslate"><span class="pre">pip</span></code></a>, and then use <a class="reference external" href="https://docs.python.org/3/library/venv.html"><code class="docutils literal notranslate"><span class="pre">venv</span></code></a>, which also installs Python. Skip to <a class="reference internal" href="#set-up-a-new-virtual-environment"><span class="std std-doc">Set Up a New Virtual Environment</span></a>.</p></li>
+<li><p>Install a Python wheel: To download and install the most recent (or any available) Python wheel (<code class="docutils literal notranslate"><span class="pre">.whl</span></code> file) for Core ML Tools, see <a class="reference internal" href="#install-from-source"><span class="std std-doc">Install From Source</span></a>.</p></li>
+<li><p>Build from source: To build the most recent (or any available) version of Core ML Tools, see <a class="reference internal" href="#build-from-source"><span class="std std-doc">Build From Source</span></a>.</p></li>
+</ul>
+<p>To install third-party frameworks, libraries, or other software, see <a class="reference internal" href="#install-third-party-packages"><span class="std std-doc">Install Third-party Packages</span></a>.</p>
+</section>
+<section id="set-up-conda">
+<h2>Set Up Conda<a class="headerlink" href="#set-up-conda" title="Permalink to this heading"></a></h2>
+<p>Follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Use the appropriate <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda installer</a> for your operating system.</p></li>
+<li><p>Create a Conda environment for <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> using the following command:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>coremltools-env
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Activate your virtual environment using the following command:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>coremltools-env
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">pip</span></code> for this environment using the following command:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span>pip
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>Follow the instructions in <a class="reference internal" href="#install-core-ml-tools"><span class="std std-doc">Install Core ML Tools</span></a>.</p></li>
+</ol>
+</section>
+<section id="set-up-a-new-virtual-environment">
+<h2>Set Up a New Virtual Environment<a class="headerlink" href="#set-up-a-new-virtual-environment" title="Permalink to this heading"></a></h2>
+<p>Follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Install <code class="docutils literal notranslate"><span class="pre">pip</span></code> using the following command:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--user<span class="w"> </span>--upgrade<span class="w"> </span>pip
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Create a virtual environment using the following command:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>coremltools-venv
+</pre></div>
+</div>
+<ol class="arabic simple" start="3">
+<li><p>Activate the virtual environment:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span><span class="nb">source</span><span class="w"> </span>coremltools-venv/bin/activate
+</pre></div>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Follow the instructions in <a class="reference internal" href="#install-core-ml-tools"><span class="std std-doc">Install Core ML Tools</span></a>.</p></li>
+</ol>
+</section>
+<section id="install-core-ml-tools">
+<h2>Install Core ML Tools<a class="headerlink" href="#install-core-ml-tools" title="Permalink to this heading"></a></h2>
+<p>Use the following command to install or upgrade to <a class="reference external" href="https://github.com/apple/coremltools">beta version 7.0b1</a> of Core ML Tools:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">coremltools</span><span class="o">==</span><span class="m">7</span>.0b1
+</pre></div>
+</div>
+<p>Use the following command to install or upgrade to the released version (<a class="reference external" href="https://github.com/apple/coremltools/releases/tag/6.3">release v6.3</a>) of Core ML Tools:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>coremltools
+</pre></div>
+</div>
+</section>
+<section id="install-third-party-packages">
+<h2>Install Third-party Packages<a class="headerlink" href="#install-third-party-packages" title="Permalink to this heading"></a></h2>
+<p>Install the third-party source packages for your conversions (such as <a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> and <a class="reference external" href="https://pytorch.org">PyTorch</a>) using the package guides provided for them. The <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> package does <em>not</em> include the third-party source packages.</p>
+</section>
+<section id="install-from-source">
+<h2>Install From Source<a class="headerlink" href="#install-from-source" title="Permalink to this heading"></a></h2>
+<p>The continuous integration (CI) system linked to the <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> repo builds a <a class="reference external" href="https://pypi.org/project/wheel/">Python wheel</a> from the master branch whenever a commit is merged. To get the latest updates to the code base, you can get this wheel from the CI job and install it.</p>
+<p>To access the wheel for a particular <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> release, follow these steps:</p>
+<ol class="arabic">
+<li><p>Go to the <a class="reference external" href="https://github.com/apple/coremltools"><code class="docutils literal notranslate"><span class="pre">coremltools</span></code> repository</a> on GitHub, scroll down to the <strong>README.md</strong> heading, and click the <strong>build passing</strong> button. The <strong>Branches</strong> tab appears:</p>
+<p><img alt="Branches tab" src="../_images/repo-readme-build-passing-button-annot.png" /></p>
+<p><img alt="Branches passed" src="../_images/repo-branches-passed-button.png" /></p>
+</li>
+<li><p>Click the <strong>passed</strong> button to show the <strong>Pipeline</strong> tab:</p>
+<p><img alt="Pipeline tab" src="../_images/repo-build-wheel-selected.png" /></p>
+</li>
+<li><p>Click a wheel in the <strong>Build</strong> column. For example, in the previous figure, the <strong>build_wheel_macos_py38</strong> wheel is highlighted for clicking. After clicking a wheel, the raw job log appears, with the <strong>Download</strong> and <strong>Browse</strong> buttons in the right column:</p>
+<p><img alt="Download and Browse" src="../_images/repo-job-artifacts.png" /></p>
+</li>
+<li><p>Click the <strong>Download</strong> button to download the <code class="docutils literal notranslate"><span class="pre">dist</span></code> folder with the wheel files.</p></li>
+<li><p>Install a wheel file using <code class="docutils literal notranslate"><span class="pre">pip</span></code>. For example, use the following command to install the <code class="docutils literal notranslate"><span class="pre">coremltools-4.0-cp38-none-macosx_10_12_intel.whl</span></code> wheel file for the 4.0 version of Core ML Tools:</p></li>
+</ol>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>coremltools-4.0-cp38-none-macosx_10_12_intel.whl
+</pre></div>
+</div>
+</section>
+<section id="build-from-source">
+<h2>Build From Source<a class="headerlink" href="#build-from-source" title="Permalink to this heading"></a></h2>
+<p>To build Core ML Tools and its dependent libraries from source, you need to install <a class="reference external" href="https://cmake.org/">CMake</a> to configure the project.</p>
+<p>To perform the build, fork and clone the <a class="reference external" href="https://github.com/apple/coremltools"><code class="docutils literal notranslate"><span class="pre">coremltools</span></code> repository</a> and run the <a class="reference external" href="https://github.com/apple/coremltools/blob/master/scripts/build.sh"><code class="docutils literal notranslate"><span class="pre">build.sh</span></code></a> script:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>zsh<span class="w"> </span>-i<span class="w"> </span>scripts/build.sh
+</pre></div>
+</div>
+<p>The script creates a new <code class="docutils literal notranslate"><span class="pre">build</span></code> folder with the coremltools distribution, and a <code class="docutils literal notranslate"><span class="pre">dist</span></code> folder with Python wheel files.</p>
+<p>For more information about building Core ML Tools, see <a class="reference external" href="https://github.com/apple/coremltools/blob/master/BUILDING.md">Building From Source</a>.</p>
+</section>
+<section id="upgrade-core-ml-tools">
+<h2>Upgrade Core ML Tools<a class="headerlink" href="#upgrade-core-ml-tools" title="Permalink to this heading"></a></h2>
+<p>For either Conda or virtual environments, see <a class="reference internal" href="#install-core-ml-tools"><span class="std std-doc">Install Core ML Tools</span></a> for the command to upgrade Core ML Tools.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../overview/contributing.html" class="btn btn-neutral float-left" title="Contributing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="introductory-quickstart.html" class="btn btn-neutral float-right" title="Getting Started" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

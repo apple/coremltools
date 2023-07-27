@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>optimize.torch API Overview &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Converting Compressed Source Models" href="converting-compressed-source-models.html" />
+    <link rel="prev" title="optimize.coreml API Overview" href="optimizecoreml-api-overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="optimizecoreml-api-overview.html">optimize.coreml API Overview</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">optimize.torch API Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#api-format-and-interface">API Format and Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-configurations">Creating Configurations</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#create-a-yaml-file">Create a YAML File</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#initialize-programmatically">Initialize Programmatically</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#tutorials">Tutorials</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api-overview.html">Optimize API Overview</a> &raquo;</li>
+      <li>optimize.torch API Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/optimization/api-overview/optimizetorch-api-overview.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="optimize-torch-api-overview">
+<h1>optimize.torch API Overview<a class="headerlink" href="#optimize-torch-api-overview" title="Permalink to this heading"></a></h1>
+<p>Use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.html#training-time-compression"><code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code></a> (training-time compression) to train your model in a compression-aware fashion, or start from a pre-trained <code class="docutils literal notranslate"><span class="pre">float</span></code> precision model  and fine-tune it with training data.</p>
+<section id="api-format-and-interface">
+<h2>API Format and Interface<a class="headerlink" href="#api-format-and-interface" title="Permalink to this heading"></a></h2>
+<p>All model optimizers use a similar API format:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools.optimize.torch</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">pruner</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">pruning</span><span class="o">.</span><span class="n">MagnitudePruner</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="n">quantizer</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="n">palettizer</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">palettization</span><span class="o">.</span><span class="n">DKMPalettizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">model</span></code> is the <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> instance you want to optimize.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">config</span></code> specifies how the model will be configured for optimization. These configuration objects share the same API among different optimization techniques.</p></li>
+</ul>
+<p>All model optimizers also provide the same interface for optimizing the models:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prepare</span></code>: Insert model optimization layers in the  model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">step</span></code>: Step through the optimization schedule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">report</span></code>: Create a report with information about current state of the optimization such as the current sparsity of a layer.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">finalize</span></code>: Create model weights from learned optimization parameters, and make the model ready for export using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert"><code class="docutils literal notranslate"><span class="pre">coremltools.convert</span></code></a>.</p></li>
+</ul>
+<p>The following set of examples show how these optimizers can be created and integrated in PyTorch code.</p>
+</section>
+<section id="creating-configurations">
+<h2>Creating Configurations<a class="headerlink" href="#creating-configurations" title="Permalink to this heading"></a></h2>
+<p>To initialize a model optimizer such as <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner"><code class="docutils literal notranslate"><span class="pre">MagnitudePruner</span></code></a>, create it using a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file or programmatically.</p>
+<section id="create-a-yaml-file">
+<h3>Create a YAML File<a class="headerlink" href="#create-a-yaml-file" title="Permalink to this heading"></a></h3>
+<p>Create a YAML configuration file (<code class="docutils literal notranslate"><span class="pre">config.yaml</span></code>) describing how different modules are to be configured. The file can contain up to three sections:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">global_config</span></code>: Used to specify a configuration that is applied globally, on all supported module types (<code class="docutils literal notranslate"><span class="pre">torch.nn.Conv2d</span></code>, <code class="docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>, <code class="docutils literal notranslate"><span class="pre">torch.nn.ConvTranspose2d</span></code>, and so on).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">module_type_configs</span></code>: Used to specify a common configuration for all modules of the same type (e.g. <code class="docutils literal notranslate"><span class="pre">torch.nn.Conv2d</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">module_name_configs</span></code>: In a <code class="docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>, all submodules have a unique name. Using this option you can set a particular submodule’s configuration.</p></li>
+</ul>
+<p><strong>Example 1: Configure Globally</strong></p>
+<p>The following sample <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file configures parameters of the pruner globally. These parameters are used to configure all supported modules:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">global_config</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">scheduler</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">update_steps</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">200</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">300</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">target_sparsity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.8</span>
+</pre></div>
+</div>
+<p><strong>Example 2: Configure More Granularly</strong></p>
+<p>The following sample <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> file  configures parameters of the pruner on a more granular level, using different sparsity types (<code class="docutils literal notranslate"><span class="pre">block</span></code> and <code class="docutils literal notranslate"><span class="pre">n:m</span></code>) for convolution and linear layers, respectively. The configuration also sets <code class="docutils literal notranslate"><span class="pre">module2.linear</span></code> to <code class="docutils literal notranslate"><span class="pre">null</span></code> in order to leave it alone and not prune it.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">module_type_configs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">Linear</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scheduler</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">update_steps</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">200</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">300</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">n_m_ratio</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">3</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">4</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">Conv2d</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scheduler</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">update_steps</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">200</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">300</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">target_sparsity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">    </span><span class="nt">block_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+
+<span class="nt">module_name_configs</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">module2.conv1</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">scheduler</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">update_steps</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">100</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">200</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">300</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">500</span><span class="p p-Indicator">]</span>
+<span class="w">    </span><span class="nt">target_sparsity</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.75</span>
+<span class="w">  </span><span class="nt">module2.linear</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</pre></div>
+</div>
+<p><strong>Using the Configuration</strong></p>
+<p>The following example shows how to use the <code class="docutils literal notranslate"><span class="pre">config.yaml</span></code> configuration file with a <code class="docutils literal notranslate"><span class="pre">MagnitudePruner</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.pruning</span> <span class="kn">import</span> <span class="n">MagnitudePruner</span><span class="p">,</span> <span class="n">MagnitudePrunerConfig</span>
+
+<span class="n">model</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span> <span class="o">=</span> <span class="n">create_model_and_optimizer</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">create_data</span><span class="p">()</span>
+
+<span class="c1"># Initialize pruner and configure it</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">MagnitudePrunerConfig</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="s2">&quot;config.yaml&quot;</span><span class="p">)</span>
+<span class="n">pruner</span> <span class="o">=</span> <span class="n">MagnitudePruner</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Insert pruning layers in the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pruner</span><span class="o">.</span><span class="n">prepare</span><span class="p">()</span>
+
+<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">pruner</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="c1"># Commit pruning masks to model parameters</span>
+<span class="n">pruner</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Export</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+
+<span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+    <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT_PRUNING</span><span class="p">,</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;~/pruned_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="initialize-programmatically">
+<h3>Initialize Programmatically<a class="headerlink" href="#initialize-programmatically" title="Permalink to this heading"></a></h3>
+<p>You may prefer to configure a model optimizer programmatically, which is useful especially if you have complex conditions for configuring the optimizer that are hard to express in a YAML file.</p>
+<p><strong>Programmatic Example 1</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DKMPalettizer</span><span class="p">,</span>
+    <span class="n">DKMPalettizerConfig</span><span class="p">,</span>
+    <span class="n">ModuleDKMPalettizerConfig</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># code that defines the pytorch model, and optimizer</span>
+<span class="n">model</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span> <span class="o">=</span> <span class="n">create_model_and_optimizer</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">create_data</span><span class="p">()</span>
+
+<span class="c1"># Initialize the palettizer</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">DKMPalettizerConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">ModuleDKMPalettizerConfig</span><span class="p">(</span><span class="n">n_bits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">palettizer</span> <span class="o">=</span> <span class="n">DKMPalettizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Prepare the model to insert FakePalettize layers for palettization</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Use palettizer in the PyTorch training loop</span>
+<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">palettizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="c1"># Fold LUT and indices into weights</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Export</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+
+<span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+    <span class="n">pass_pipeline</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT_PALETTIZATION</span><span class="p">,</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;~/palettized_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Programmatic Example 2</strong></p>
+<p>If you want to quantize <em>only</em> the convolution modules that have a kernel size of 1, you can do so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LinearQuantizer</span><span class="p">,</span>
+    <span class="n">LinearQuantizerConfig</span><span class="p">,</span>
+    <span class="n">ModuleLinearQuantizerConfig</span><span class="p">,</span>
+    <span class="n">ObserverType</span><span class="p">,</span>
+    <span class="n">QuantizationScheme</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model</span><span class="p">,</span> <span class="n">loss_fn</span><span class="p">,</span> <span class="n">optimizer</span> <span class="o">=</span> <span class="n">create_model_and_optimizer</span><span class="p">()</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">create_data</span><span class="p">()</span>
+
+<span class="c1"># Initialize the quantizer</span>
+<span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleLinearQuantizerConfig</span><span class="p">(</span>
+    <span class="n">quantization_scheme</span><span class="o">=</span><span class="n">QuantizationScheme</span><span class="o">.</span><span class="n">symmetric</span>
+<span class="p">)</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">LinearQuantizerConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_global</span><span class="p">(</span><span class="n">global_config</span><span class="p">)</span>
+
+<span class="c1"># We only want to quantize convolution layers which have a kernel size of 1 or all linear layers.</span>
+<span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">set_module_name</span><span class="p">(</span>
+                <span class="n">name</span><span class="p">,</span>
+                <span class="n">ModuleLinearQuantizerConfig</span><span class="p">(</span>
+                    <span class="n">weight_observer</span><span class="o">=</span><span class="n">ObserverType</span><span class="o">.</span><span class="n">mix_max</span><span class="p">,</span> <span class="n">weight_per_channel</span><span class="o">=</span><span class="kc">True</span>
+                <span class="p">),</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">set_module_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+<span class="n">quantizer</span> <span class="o">=</span> <span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="c1"># Prepare the model to insert FakeQuantize layers for QAT</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">example_inputs</span><span class="o">=</span><span class="n">example_input</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># Use quantizer in your PyTorch training loop</span>
+<span class="k">for</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+    <span class="n">loss</span> <span class="o">=</span> <span class="n">loss_fn</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+    <span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+    <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+    <span class="n">quantizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+<span class="c1"># Convert operations to their quanitzed counterparts using parameters learnt via QAT</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+
+<span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS17</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;~/quantized_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="tutorials">
+<h2>Tutorials<a class="headerlink" href="#tutorials" title="Permalink to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">Magnitude Pruning Tutorial</a>: Learn how to train a simple convolutional neural network using <code class="docutils literal notranslate"><span class="pre">MagnitudePruner</span></code>.</p></li>
+<li><p><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Palettization Using Differentiable K-Means Tutorial</a>: Learn how to palettize a neural network using <code class="docutils literal notranslate"><span class="pre">DKMPalettizer</span></code>, which clusters the weights using a differentiable version of <code class="docutils literal notranslate"><span class="pre">k-means</span></code>, allowing the lookup table (LUT) and indices of palettized weights to be learned using a gradient-based optimization algorithm.</p></li>
+<li><p><a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">Linear Quantization Tutorial</a>: Learn how to train a simple convolutional neural network using <code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code>. This algorithm simulates the effects of quantization during training, by quantizing and dequantizing the weights and/or activations during the model’s forward pass.</p></li>
+</ul>
+<p>From each tutorial you can download a Jupyter Notebook version and the source code.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="optimizecoreml-api-overview.html" class="btn btn-neutral float-left" title="optimize.coreml API Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="converting-compressed-source-models.html" class="btn btn-neutral float-right" title="Converting Compressed Source Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

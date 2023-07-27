@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>optimize.coreml API Overview &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="optimize.torch API Overview" href="optimizetorch-api-overview.html" />
+    <link rel="prev" title="Optimize API Overview" href="api-overview.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/convert-pytorch/convert-pytorch.html">Converting from PyTorch</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../unified/model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">optimize.coreml API Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#steps-to-compress-a-model">Steps to Compress a Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#op-specific-configurations">Op-Specific Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#customizing-ops-to-compress">Customizing Ops to Compress</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#requirements-for-using-optimize-coreml">Requirements for Using optimize.coreml</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="optimizetorch-api-overview.html">optimize.torch API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="api-overview.html">Optimize API Overview</a> &raquo;</li>
+      <li>optimize.coreml API Overview</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/optimization/api-overview/optimizecoreml-api-overview.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="optimize-coreml-api-overview">
+<h1>optimize.coreml API Overview<a class="headerlink" href="#optimize-coreml-api-overview" title="Permalink to this heading"></a></h1>
+<p>Use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml"><code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml</span></code></a> (post-training compression) to compress weights in the model. Weight compression reduces the space occupied by the model. However, the precision of the intermediate tensors and the compute precision of the ops are not altered — at load time or prediction time, weights are decompressed into float precision, and all computations use float precision.</p>
+<section id="steps-to-compress-a-model">
+<h2>Steps to Compress a Model<a class="headerlink" href="#steps-to-compress-a-model" title="Permalink to this heading"></a></h2>
+<p>The steps to compress an <span class="xref myst">ML Program</span> (<code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>) model are as follows:</p>
+<ul class="simple">
+<li><p>Load the model from disk into memory, unless it is already in memory (the object returned by <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert"><code class="docutils literal notranslate"><span class="pre">ct.convert</span></code></a> ).</p></li>
+<li><p>Define an <a class="reference internal" href="#op-specific-configurations"><span class="std std-doc">op-specific configuration</span></a> for the compression technique.</p></li>
+<li><p>Initialize <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig"><code class="docutils literal notranslate"><span class="pre">ct.optimize.coreml.OptimizationConfig</span></code> </a>.</p></li>
+<li><p>Call the corresponding compress weights method (such as <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights"><code class="docutils literal notranslate"><span class="pre">cto.palettize_weights</span></code></a> in the following example) to get the updated compressed model.</p></li>
+</ul>
+<p>The following is an example of 6-bit palettization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="c1"># load model</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">uncompressed_model_path</span><span class="p">)</span>
+
+<span class="c1"># define op config </span>
+<span class="n">op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+
+<span class="c1"># define optimization config by applying the op config globally to all ops </span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">op_config</span><span class="p">)</span>
+
+<span class="c1"># palettize weights</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="op-specific-configurations">
+<h2>Op-Specific Configurations<a class="headerlink" href="#op-specific-configurations" title="Permalink to this heading"></a></h2>
+<p>For sparsity, the op-specific configs can be defined using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpThresholdPrunerConfig"><code class="docutils literal notranslate"><span class="pre">cto.OpThresholdPrunerConfig</span></code></a> or <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig"><code class="docutils literal notranslate"><span class="pre">cto.OpMagnitudePrunerConfig</span></code></a>, and the method to prune is <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.prune_weights"><code class="docutils literal notranslate"><span class="pre">cto.prune_weights</span></code></a>.</p>
+<p>For 8-bit linear quantization, the op-specific configs are defined using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpLinearQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">cto.OpLinearQuantizerConfig</span></code></a> and the method to quantize is <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights"><code class="docutils literal notranslate"><span class="pre">cto.linear_quantize_weights</span></code></a> .</p>
+<p>The <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig"><code class="docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> can also be initialized from a <a class="reference external" href="https://en.wikipedia.org/wiki/YAML">YAML</a> file. Example:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span># linear_config.yaml file
+
+config_type: &quot;OpLinearQuantizerConfig&quot;
+global_config:
+	mode: &quot;linear_symmetric&quot;
+	dtype: &quot;int8&quot;
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="o">.</span><span class="n">from_yaml</span><span class="p">(</span><span class="s2">&quot;linear_config.yaml&quot;</span><span class="p">)</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">linear_quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For details of key parameters to be set in each of the configs, see <span class="xref myst">Post-Training Pruning</span>, <span class="xref myst">Post-Training Palettization</span> and <span class="xref myst">Post-Training Quantization</span>.</p>
+</section>
+<section id="customizing-ops-to-compress">
+<h2>Customizing Ops to Compress<a class="headerlink" href="#customizing-ops-to-compress" title="Permalink to this heading"></a></h2>
+<p>Using the <code class="docutils literal notranslate"><span class="pre">global_config</span></code> flag in the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig"><code class="docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> class applies the same config to all the ops with weights in the model. More granular control can be achieved by using the <code class="docutils literal notranslate"><span class="pre">op_type_configs</span></code> and <code class="docutils literal notranslate"><span class="pre">op_name_configs</span></code> flags of <code class="docutils literal notranslate"><span class="pre">OptimizationConfig</span></code>.</p>
+<p>The following example shows 6-bit palettization applied to all ops, with the exception that all the <code class="docutils literal notranslate"><span class="pre">linear</span></code> ops are set to 8 bits, and two of the <code class="docutils literal notranslate"><span class="pre">conv</span></code> ops called <code class="docutils literal notranslate"><span class="pre">conv_1</span></code> and <code class="docutils literal notranslate"><span class="pre">conv_4</span></code> are omitted from palettization.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+
+<span class="n">global_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">)</span>
+<span class="n">linear_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+    <span class="n">global_config</span><span class="o">=</span><span class="n">global_config</span><span class="p">,</span>
+    <span class="n">op_type_configs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">linear_config</span><span class="p">},</span>
+    <span class="n">op_name_configs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;conv1&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;conv3&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
+<span class="p">)</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Using such customizations, different weights in a single model can be compressed with different techniques and configurations.</p>
+</section>
+<section id="requirements-for-using-optimize-coreml">
+<h2>Requirements for Using optimize.coreml<a class="headerlink" href="#requirements-for-using-optimize-coreml" title="Permalink to this heading"></a></h2>
+<p>Documented in the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml">Post-Training Compression</a> section of the API Reference, the <code class="docutils literal notranslate"><span class="pre">optimize</span></code> submodule is available in Core ML Tools 7.0 and newer versions. The methods in this submodule are  available only for the <span class="xref myst">ML Program</span> (<code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>) model type, which is the <span class="xref myst">recommended</span> Core ML model format.</p>
+<p>For the APIs to compress the weights of neural networks, see <span class="xref myst">Compressing Neural Network Weights</span>.</p>
+<div class="admonition-api-compatibility admonition">
+<p class="admonition-title">API Compatibility</p>
+<p>Note that coremltools 6.0 provided model <a class="reference external" href="https://coremltools.readme.io/v6.3/docs/compressing-ml-program-weights">compression APIs</a> under the <code class="docutils literal notranslate"><span class="pre">coremltools.compression_utils.*</span></code> submodule. Those functions are now available under <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml.*</span></code></p>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="api-overview.html" class="btn btn-neutral float-left" title="Optimize API Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="optimizetorch-api-overview.html" class="btn btn-neutral float-right" title="optimize.torch API Overview" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

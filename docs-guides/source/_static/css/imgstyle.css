@@ -1,0 +1,7 @@
+img {
+    border: 1px solid gray;
+}
+
+.imgnoborder {
+    border: 0;
+}

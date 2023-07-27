@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PyTorch Conversion Workflow &mdash; Core ML Tools Guide  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/copybutton.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/imgstyle.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/clipboard.min.js"></script>
+        <script src="../../_static/copybutton.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Model Tracing" href="model-tracing.html" />
+    <link rel="prev" title="Converting from PyTorch" href="convert-pytorch.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> Core ML Tools Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/contributing.html">Contributing</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../essentials/unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../convert-learning-models/convert-learning-models.html">Converting Deep Learning Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../ml-programs/ml-programs.html">ML Programs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert-tensorflow/convert-tensorflow.html">Converting from TensorFlow</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">PyTorch Conversion Workflow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#generate-a-torchscript-version">Generate a TorchScript Version</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#convert-to-core-ml">Convert to Core ML</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../conversion-options/conversion-options.html">Conversion Options</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/optimizing-models/optimizing-models.html">Optimizing Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/api-overview/api-overview.html">Optimize API Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/pruning/pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/palettization/palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/quantization-aware-training/quantization-aware-training.html">Linear 8-Bit Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../optimization/quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../other-converters/xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../mlmodel/updatable-model-examples/updatable-model-examples.html">Updatable Models</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Core ML Tools Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="convert-pytorch.html">Converting from PyTorch</a> &raquo;</li>
+      <li>PyTorch Conversion Workflow</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/unified/convert-pytorch/convert-pytorch-workflow.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="pytorch-conversion-workflow">
+<h1>PyTorch Conversion Workflow<a class="headerlink" href="#pytorch-conversion-workflow" title="Permalink to this heading"></a></h1>
+<div class="admonition-minimum-deployment-target admonition">
+<p class="admonition-title">Minimum Deployment Target</p>
+<p>The Core ML Tools <span class="xref myst">Unified Conversion API</span> produces Core ML models for iOS 13, macOS 10.15, watchOS 6, tvOS 13 or newer deployment targets. If your primary deployment target is iOS 12 or earlier, you can find limited conversion support for PyTorch models via the <a class="reference external" href="https://github.com/onnx/onnx">onnx-coreml</a> package.</p>
+</div>
+<section id="generate-a-torchscript-version">
+<h2>Generate a TorchScript Version<a class="headerlink" href="#generate-a-torchscript-version" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="https://pytorch.org/docs/stable/jit.html">TorchScript</a> is an intermediate representation of a PyTorch model. To generate a TorchScript representation from PyTorch code, use PyTorch’s JIT tracer (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html"><code class="docutils literal notranslate"><span class="pre">torch.jit.trace</span></code></a>) to <em>trace</em> the model, as shown in the following example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+
+<span class="c1"># Load a pre-trained version of MobileNetV2</span>
+<span class="n">torch_model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">mobilenet_v2</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Set the model in evaluation mode.</span>
+<span class="n">torch_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+<span class="c1"># Trace the model with random data.</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> 
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">traced_model</span><span class="p">(</span><span class="n">example_input</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The process of tracing takes an example input and traces its flow through the model. You can trace the model by creating an example image input, as shown in the above code using random data. To understand the reasons for tracing and how to trace a PyTorch model, see <span class="xref myst">Model Tracing</span>.</p>
+<blockquote>
+<div><p>📘 Set the Model to Evaluation Mode</p>
+<p>To ensure that operations such as dropout are disabled, it’s important to set the model to evaluation mode (<em>not</em> training mode) before tracing. This setting also results in a more optimized version of the model for conversion.</p>
+</div></blockquote>
+<p>If your model uses a data-dependent control flow, such as a loop or conditional, the traced model won’t generalize to other inputs. In such cases you can experiment with applying PyTorch’s JIT script (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.script.html"><code class="docutils literal notranslate"><span class="pre">torch.jit.script</span></code></a>) to your model as described in <span class="xref myst">Model Scripting</span>. You can also use a combination of tracing and scripting.</p>
+</section>
+<section id="convert-to-core-ml">
+<h2>Convert to Core ML<a class="headerlink" href="#convert-to-core-ml" title="Permalink to this heading"></a></h2>
+<p>Convert the traced or scripted model to Core ML using the Unified Conversion API <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. In the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter, you can use either <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype"><code class="docutils literal notranslate"><span class="pre">TensorType</span></code></a> or <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> as the input type.</p>
+<p>The following example uses <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> and converts the PyTorch traced model to a <span class="xref myst">Core ML program</span> model. For more about image input conversions, see <span class="xref myst">Image Inputs</span>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="c1"># Using image_input in the inputs parameter:</span>
+<span class="c1"># Convert to Core ML program using the Unified Conversion API.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)]</span>
+ <span class="p">)</span>
+</pre></div>
+</div>
+<p>With the converted ML model in memory, you can save it as a <span class="xref myst">Core ML model package</span>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;newmodel.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As an alternative, you can convert the model to a neural network by eliminating the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> parameter:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using image_input in the inputs parameter:</span>
+<span class="c1"># Convert to Core ML neural network using the Unified Conversion API.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)]</span>
+ <span class="p">)</span>
+</pre></div>
+</div>
+<p>With the converted neural network in memory, you can save it as an <code class="docutils literal notranslate"><span class="pre">mlmodel</span></code> file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;newmodel.mlmodel&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<hr class="docutils" />
+<div class="admonition-for-more-information admonition">
+<p class="admonition-title">For More Information</p>
+<ul class="simple">
+<li><p>To learn how TorchScript works, see the <a class="reference external" href="https://pytorch.org/tutorials/beginner/Intro_to_TorchScript_tutorial.html">Introduction to TorchScript</a>.</p></li>
+<li><p>To learn how to get better performance and more convenience when using images, see <span class="xref myst">Image Input and Output</span>.</p></li>
+<li><p>For the details of how to preprocess image input for models in PyTorch’s  <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a> library, see <span class="xref myst">Preprocessing for Torch</span>.</p></li>
+<li><p>For examples of converting PyTorch models, see the following:</p>
+<ul>
+<li><p><span class="xref myst">Converting a Natural Language Processing Model</span></p></li>
+<li><p><span class="xref myst">Converting a torchvision Model from PyTorch</span></p></li>
+<li><p><span class="xref myst">Converting a PyTorch Segmentation Model</span></p></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="convert-pytorch.html" class="btn btn-neutral float-left" title="Converting from PyTorch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="model-tracing.html" class="btn btn-neutral float-right" title="Model Tracing" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
