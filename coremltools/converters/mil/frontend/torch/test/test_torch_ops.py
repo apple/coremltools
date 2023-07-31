@@ -6905,6 +6905,8 @@ class TestTorchTensor(TorchBaseTest):
                 torch.exp,
                 torch.exp2,
                 torch.floor,
+                torch.log,
+                torch.log2,
                 torch.round,
                 torch.rsqrt,
                 torch.sign,

@@ -489,7 +489,8 @@ class log(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.log(self.x.val + self.epsilon.val)
+        result = np.log(self.x.val + self.epsilon.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op
