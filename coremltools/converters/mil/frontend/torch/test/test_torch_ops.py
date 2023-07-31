@@ -1285,6 +1285,36 @@ class TestGroupNorm(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, group_features, eps, affine",
+        itertools.product(
+            compute_units, backends, [(16, 32), (1, 1)], [0.1, 1e-05], [True, False]
+        ),
+    )
+    def test_groupnorm_dynamic(self, compute_unit, backend, group_features, eps, affine):
+        model = nn.GroupNorm(
+            group_features[0], group_features[1], eps=eps, affine=affine
+        )
+        dim_upper_bound = 30 if backend[0] == "mlprogram" else -1
+        converter_input_type = [
+            TensorType(
+                shape=(
+                    6,
+                    group_features[1],
+                    RangeDim(default=10, lower_bound=5, upper_bound=dim_upper_bound),
+                    RangeDim(default=10, lower_bound=5, upper_bound=dim_upper_bound),
+                ),
+                dtype=np.float32,
+            )
+        ]
+        self.run_compare_torch(
+            (6, group_features[1], 10, 10),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            converter_input_type=converter_input_type,
+        )
+
 
 class TestLinear(TorchBaseTest):
     @pytest.mark.parametrize(
