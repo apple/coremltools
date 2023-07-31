@@ -124,10 +124,10 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
         Protobuf representation of the model
 
     filename: str
-        File path  where the spec gets saved.
+        File path where the spec gets saved.
 
     auto_set_specification_version: bool
-        If true, will always try to set specification version automatically.
+        If True, will always try to set specification version automatically.
 
     weights_dir: str
         Path to the directory containing the weigths.bin file. This is required
