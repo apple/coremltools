@@ -28,7 +28,8 @@ def memoize(f):
 
 
 def canonical_shape(shape):
-    """ Return shape as tuple of int or Symbol.
+    """
+    Return shape as tuple of int or Symbol.
 
     This utility function ensures the shape tuple
     using a single integer type (to its best effort).
@@ -43,8 +44,8 @@ def canonical_shape(shape):
             # If we cast a long int whose value is out of the range of int,
             # the result is still long, avoiding overflow:
             #
-            #     `type(2<<64) == long        # true`
-            #     `type(int(2<<64)) == long   # true`
+            #     `type(2<<64) == long        # True`
+            #     `type(int(2<<64)) == long   # True`
             x = int(x)
         except TypeError:
             # ignore symbolic value (sm.Symbol or sm.Expr)
