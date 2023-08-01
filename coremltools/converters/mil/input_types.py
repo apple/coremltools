@@ -392,6 +392,10 @@ class Shape:
                     default.append(s)
         self.default = tuple(default)
 
+
+    def __str__(self):
+        return str(self.shape)
+
     @property
     def has_symbolic(self):
         return any(is_symbolic(s) for s in self.symbolic_shape)
