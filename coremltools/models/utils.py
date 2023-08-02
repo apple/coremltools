@@ -15,7 +15,7 @@ import shutil as _shutil
 import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
-from typing import Optional as _Optional
+from typing import Optional as _Optional, Union as _Union
 import warnings as _warnings
 
 import numpy as _np
@@ -1002,6 +1002,60 @@ def convert_double_to_float_multiarray_type(spec):
     if spec.WhichOneof("Type") == "pipeline":
         for model_spec in spec.pipeline.models:
             convert_double_to_float_multiarray_type(model_spec)
+
+
+def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]):
+    """
+    Compiles a Core ML model.
+
+    Parameters
+    ----------
+
+    model: str, Model_pb2 or MLModel
+
+        str - path to model to compile
+
+        Model_pb2 - spect to model to compile
+
+        MLModel - instantiated Core ML model to compile
+
+    Returns
+    -------
+
+    str : path to compiled model directory
+
+    See Also
+    --------
+    
+    ``coremltools.models.CompiledMLModel``
+    """
+    # Check environment
+    if _macos_version() < (10, 13):
+        raise Exception("Compiling a Core ML models is only support on macOS 10.13 or higher.")
+    try:
+        from ..libcoremlpython import _MLModelProxy
+    except:
+        raise Exception("Unable to compile any Core ML models.")
+
+    # Check parameter
+    if not isinstance(model, (str, _Model_pb2.Model, _ct.models.MLModel)):
+        raise Exception("Compiling a Core ML models is only support on macOS 10.13 or higher.")
+
+    # Compile model
+    if isinstance(model, (_Model_pb2.Model, _ct.models.MLModel)):
+        if isinstance(model, _ct.models.MLModel):
+            spec = model.get_spec()
+        else:
+            spec = model
+
+        with _tempfile.TemporaryDirectory() as save_dir:
+            spec_file_path = save_dir + '/spec.mlmodel'
+            save_spec(spec, spec_file_path)
+            return _MLModelProxy.compileModel(spec_file_path)
+    else:
+        assert isinstance(model, str)
+        model = _os.path.expanduser(model)
+        return _MLModelProxy.compileModel(model)
 
 
 def make_pipeline(*models):

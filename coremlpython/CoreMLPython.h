@@ -22,16 +22,19 @@ namespace CoreML {
             MLModel *m_model = nil;
             NSURL *compiledUrl = nil;
             bool m_deleteCompiledModelOnExit;
+
         public:
+            static py::bytes autoSetSpecificationVersion(const py::bytes& modelBytes);
+            static py::str compileModel(const std::string& urlStr);
+            static int32_t maximumSupportedSpecificationVersion();
+
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
             ~Model();
             explicit Model(const std::string& urlStr, const std::string& computeUnits);
+
             py::dict predict(const py::dict& input);
             py::list batchPredict(const py::list& batch);
-            static py::bytes autoSetSpecificationVersion(const py::bytes& modelBytes);
-            static int32_t maximumSupportedSpecificationVersion();
-            std::string toString() const;
         };
     }
 }

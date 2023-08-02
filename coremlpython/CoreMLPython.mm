@@ -170,6 +170,20 @@ py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
 
 }
 
+
+py::str Model::compileModel(const std::string& urlStr) {
+    @autoreleasepool {
+        NSError* error = nil;
+
+        NSURL* specUrl = Utils::stringToNSURL(urlStr);
+        NSURL* compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+
+        Utils::handleError(error);
+        return [compiledUrl.path UTF8String];
+    }
+}
+
+
 int32_t Model::maximumSupportedSpecificationVersion() {
     return CoreML::MLMODEL_SPECIFICATION_VERSION_NEWEST;
 }
@@ -189,7 +203,8 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
-        .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
+        .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion)
+        .def_static("compileModel", &Model::compileModel);
 
     return m.ptr();
 }
