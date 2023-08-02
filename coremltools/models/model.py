@@ -705,7 +705,8 @@ class MLModel:
                           "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
 
-    def _update_float16_multiarray_input_to_float32(self, input_data):
+    @staticmethod
+    def _update_float16_multiarray_input_to_float32(input_data: dict):
         for k, v in input_data.items():
             if isinstance(v, _np.ndarray) and v.dtype == _np.float16:
                 input_data[k] = v.astype(_np.float32)
