@@ -23,13 +23,20 @@ This document is the API Reference for coremltools. For guides, installation ins
    source/coremltools.converters.mil.mil.passes.defs.rst
    source/coremltools.optimize.rst
 
-* :ref:`genindex`
-* :ref:`modindex`
-
 .. toctree::
    :maxdepth: 1
    :caption: Resources
 
    Guides and examples <https://coremltools.readme.io/docs>
    Core ML Format Specification <https://apple.github.io/coremltools/mlmodel/index.html>
-   GitHub <https://github.com/apple/coremltools>
+   API GitHub <https://github.com/apple/coremltools>
+
+* :ref:`genindex`
+* :ref:`modindex`
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Previous API Versions:
+
+   v3.4 <https://apple.github.io/coremltools/docs-api-version3/>
+
