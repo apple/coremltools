@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from shutil import rmtree
+from shutil import copytree, rmtree
 from tempfile import TemporaryDirectory
 
 from unittest import TestCase
@@ -37,10 +37,7 @@ class TestCompiledModel(TestCase):
         self.spec = spec
 
 
-    def _test_compile_model_input(self, model_input, compute_units=ComputeUnit.ALL):
-        # Compile model
-        compiled_model_path = compile_model(model_input)
-
+    def _test_compile_model_path(self, compiled_model_path, compute_units=ComputeUnit.ALL):
         try:
             # Load compiled model
             model = CompiledMLModel(compiled_model_path, compute_units)
@@ -60,16 +57,30 @@ class TestCompiledModel(TestCase):
         with TemporaryDirectory() as save_dir:
             spec_file_path = save_dir + '/spec.mlmodel'
             save_spec(self.spec, spec_file_path)
-            self._test_compile_model_input(spec_file_path)
+            compiled_model_path = compile_model(spec_file_path)
+            self._test_compile_model_path(compiled_model_path)
 
 
     def test_spec_input(self):
-        self._test_compile_model_input(self.spec)
+        compiled_model_path = compile_model(self.spec)
+        self._test_compile_model_path(compiled_model_path)
 
 
     def test_mlmodel_input(self):
         ml_model = MLModel(self.spec)
-        self._test_compile_model_input(ml_model)
+        compiled_model_path = compile_model(ml_model)
+        self._test_compile_model_path(compiled_model_path)
+
+
+    def test_from_existing_mlmodel(self):
+        ml_model = MLModel(self.spec)
+        compiled_model_path = ml_model.get_compiled_model_path()
+
+        with TemporaryDirectory() as temp_dir:
+            dst_path = temp_dir + "/foo.mlmodelc"
+            copytree(compiled_model_path, dst_path)
+            del ml_model
+            self._test_compile_model_path(dst_path)
 
 
     def test_non_default_compute_units(self):
@@ -77,4 +88,5 @@ class TestCompiledModel(TestCase):
                                      ComputeUnit.CPU_AND_NE,
                                      ComputeUnit.CPU_ONLY)
         for cur_compute_unit in non_default_compute_units:
-            self._test_compile_model_input(self.spec, compute_units=cur_compute_unit)
+            compiled_model_path = compile_model(self.spec)
+            self._test_compile_model_path(compiled_model_path, compute_units=cur_compute_unit)

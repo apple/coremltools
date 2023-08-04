@@ -155,6 +155,11 @@ py::list Model::batchPredict(const py::list& batch) {
 }
 
 
+py::str Model::getCompiledModelPath() const {
+    return [this->compiledUrl.path UTF8String];
+}
+
+
 py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
 
     CoreML::Specification::Model model;
@@ -202,6 +207,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def(py::init<const std::string&, const std::string&>())
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
+        .def("get_compiled_model_path", &Model::getCompiledModelPath)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion)
         .def_static("compileModel", &Model::compileModel);

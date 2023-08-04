@@ -2,6 +2,7 @@
 //
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -35,6 +36,8 @@ namespace CoreML {
 
             py::dict predict(const py::dict& input);
             py::list batchPredict(const py::list& batch);
+
+            py::str getCompiledModelPath() const;
         };
     }
 }

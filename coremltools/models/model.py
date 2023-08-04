@@ -502,6 +502,17 @@ class MLModel:
         else:
             _save_spec(self._spec, save_path)
 
+
+    def get_compiled_model_path(self):
+        """
+        Returns the path for the underlying compiled ML Model.
+
+        IMPORTANT - This path is only available for the lifetime of this Python object. If you want
+        the compiled model to persist, you need to make a copy.
+        """
+        return self.__proxy__.get_compiled_model_path()
+
+
     def get_spec(self):
         """
         Get a deep copy of the protobuf specification of the model.
