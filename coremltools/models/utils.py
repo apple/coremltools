@@ -1026,7 +1026,7 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]):
 
     See Also
     --------
-    
+
     ``coremltools.models.CompiledMLModel``
     """
     # Check environment
