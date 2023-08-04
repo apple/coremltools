@@ -114,7 +114,7 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
     }
 }
 
-py::dict Model::predict(const py::dict& input) {
+py::dict Model::predict(const py::dict& input) const {
     @autoreleasepool {
         NSError *error = nil;
         MLDictionaryFeatureProvider *inFeatures = Utils::dictToFeatures(input, &error);
@@ -127,7 +127,7 @@ py::dict Model::predict(const py::dict& input) {
 }
 
 
-py::list Model::batchPredict(const py::list& batch) {
+py::list Model::batchPredict(const py::list& batch) const {
   @autoreleasepool {
       NSError* error = nil;
 

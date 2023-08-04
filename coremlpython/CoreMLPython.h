@@ -34,8 +34,8 @@ namespace CoreML {
             ~Model();
             explicit Model(const std::string& urlStr, const std::string& computeUnits);
 
-            py::dict predict(const py::dict& input);
-            py::list batchPredict(const py::list& batch);
+            py::dict predict(const py::dict& input) const;
+            py::list batchPredict(const py::list& batch) const;
 
             py::str getCompiledModelPath() const;
         };
