@@ -37,8 +37,8 @@ class CompiledMLModel:
                 - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
                   not the GPU. Available only for macOS >= 13.0.
 
-        Example
-        -------
+        Examples
+        --------
         .. sourcecode:: python
 
         >>> my_compiled_model = ct.models.CompiledMLModel("my_model_path.mlmodelc")
