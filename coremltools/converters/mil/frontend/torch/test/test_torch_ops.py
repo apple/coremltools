@@ -21,6 +21,7 @@ from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.torch.ops import (
     NUM_TO_TORCH_DTYPE,
     NUMPY_DTYPE_TO_TORCH_NUM,
+    TORCH_DTYPE_TO_NUM,
 )
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.var import Var
@@ -3994,6 +3995,32 @@ class TestRandint(TorchBaseTest):
             def forward(self, x):
                 y = torch.randint(low, high, x.shape)
                 return torch.Tensor([len(y)])
+
+        self.run_compare_torch(
+            shape, TestModel(), backend=backend, compute_unit=compute_unit
+        )
+
+class TestRand(TorchBaseTest):
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1,), (2, 3)],
+            [None, torch.float16, torch.float32, torch.float64],
+        ),
+    )
+    def test_rand(self, compute_unit, backend, shape, dtype):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                y = torch.rand(x.shape, dtype=dtype)
+                # can't compare directly (this is random)
+                return torch.stack([
+                    torch.ones_like(y, dtype=torch.float32),
+                    (y >= 0).to(torch.float32),
+                    (y < 1).to(torch.float32),
+                ])
 
         self.run_compare_torch(
             shape, TestModel(), backend=backend, compute_unit=compute_unit
