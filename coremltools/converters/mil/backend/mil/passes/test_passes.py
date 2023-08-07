@@ -942,3 +942,151 @@ class TestPassFuseActivationSiLU:
             backend=("mlprogram", "fp32"),
             expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
         )
+
+
+class TestPassFusePow2Sqrt:
+    """
+    Input graph:
+    input --> pow(2) --> sqrt --> output
+    Output graph:
+    input --> output
+    """
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    @pytest.mark.parametrize(
+        "reverse_order", itertools.product([True, False]),
+    )
+    def test_fuse(self, reverse_order):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            if not reverse_order:
+                x = mb.sqrt(x=mb.pow(x=x, y=2.0))
+            else:
+                x = mb.pow(x=mb.sqrt(x=x), y=2.0)
+            return x
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert set(get_op_types_in_program(prev_prog)) == set(("pow", "sqrt"))
+        assert get_op_types_in_program(program) == ["identity"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    @pytest.mark.parametrize(
+        "reverse_order", itertools.product([True, False]),
+    )
+    def test_illegal_pow(self, reverse_order):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            if not reverse_order:
+                x = mb.sqrt(x=mb.pow(x=x, y=3.0))
+            else:
+                x = mb.pow(x=mb.sqrt(x=x), y=3.0)
+            return x
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert set(get_op_types_in_program(prev_prog)) == set(("pow", "sqrt"))
+        assert set(get_op_types_in_program(program)) == set(("pow", "sqrt"))
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+    
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_no_pow(self):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.sqrt(x=x)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert get_op_types_in_program(prev_prog) == ["sqrt"]
+        assert get_op_types_in_program(program) == ["sqrt"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+    
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    def test_no_sqrt(self):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            return mb.pow(x=x, y=2.0)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert get_op_types_in_program(prev_prog) == ["pow"]
+        assert get_op_types_in_program(program) == ["pow"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+    
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
+    @pytest.mark.parametrize(
+        "reverse_order", itertools.product([True, False]),
+    )
+    def test_multiple_nodes(self, reverse_order):
+        x_shape = tuple(np.random.randint(low=1, high=4, size=5))
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            if not reverse_order:
+                x = mb.mul(x=x, y=x)
+                x = mb.pow(x=x, y=2.0)
+                x = mb.sqrt(x=x)
+                x = mb.reduce_argmax(x=x)
+                x = mb.reshape(x=x, shape=[*x_shape])
+            else:
+                x = mb.mul(x=x, y=x)
+                x = mb.sqrt(x=x)
+                x = mb.pow(x=x, y=2.0)
+                x = mb.reduce_argmax(x=x)
+                x = mb.reshape(x=x, shape=[*x_shape])
+            return x
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            program, "mil_backend::fuse_pow2_sqrt"
+        )
+
+        assert set(get_op_types_in_program(prev_prog)) == set(("mul", "pow", "sqrt", "reduce_argmax", "reshape"))
+        assert get_op_types_in_program(program) == ["mul", "identity", "reduce_argmax", "reshape"]
+
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
