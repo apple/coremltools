@@ -145,18 +145,7 @@ NUM_TO_TORCH_DTYPE = {
 }
 
 TORCH_DTYPE_TO_NUM = {
-    torch.uint8: 0,
-    torch.int8: 1,
-    torch.int16: 2,
-    torch.int32: 3,
-    torch.int64: 4,
-    torch.float16: 5,
-    torch.float32: 6,
-    torch.float64: 7,
-    torch.bool: 11,
-    torch.qint8: 12,
-    torch.quint8: 13,
-    torch.qint32: 14,
+    dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
 }
 
 NUMPY_DTYPE_TO_TORCH_NUM = {
