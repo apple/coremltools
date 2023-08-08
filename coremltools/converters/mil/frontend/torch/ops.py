@@ -3760,7 +3760,7 @@ def randint(context, node):
 
 @register_torch_op
 def rand(context, node):
-    shape, _, dtype, _, _ = _get_inputs(context, node, min_expected=1)
+    shape, _, dtype, _, _ = _get_inputs(context, node)
     dtype = NUM_TO_DTYPE_STRING[TORCH_DTYPE_TO_NUM[dtype.val]] if dtype else "fp32"
     low, high = mb.cast(x=0.0, dtype=dtype), mb.cast(x=1.0, dtype=dtype)
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
