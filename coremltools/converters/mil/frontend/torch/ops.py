@@ -5831,6 +5831,18 @@ def imag(context, node):
 
 
 @register_torch_op
+def view_as_real(context, node):
+    input_data = _get_inputs(context, node, expected=1)[0]
+    if not types.is_complex(input_data.dtype):
+        raise ValueError(f"view_as_real only supports complex input, but got {types.builtin_to_string(input_data.dtype)}")
+
+    real_part = mb.complex_real(data=input_data)
+    imag_part = mb.complex_imag(data=input_data)
+    result = mb.stack(values=[real_part, imag_part], axis=-1)
+    context.add(result, node.name)
+
+
+@register_torch_op
 def fft_fft(context, node):
     """Lowers torch.fft.fft by the dialect op `complex_fft` from complex_dialect_ops.py."""
     input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
