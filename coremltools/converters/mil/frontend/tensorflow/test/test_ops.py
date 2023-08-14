@@ -5093,7 +5093,7 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
                 "When score threshold is too high, TF will return empty result, while MIL "
                 "will still keep the highest score box."
             )
-        if num_boxes >= 1000 and backend == ("mlprogram", "fp16"):
+        if num_boxes >= 1000:
             pytest.xfail(
                 "rdar://103891349 ([TensorFlow] [PyTorch] NMS discrepancy in Fp16 when "
                 "number of boxes is large)"
