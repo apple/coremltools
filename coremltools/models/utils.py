@@ -1004,7 +1004,7 @@ def convert_double_to_float_multiarray_type(spec):
             convert_double_to_float_multiarray_type(model_spec)
 
 
-def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]):
+def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) -> str:
     """
     Compiles a Core ML model.
 
@@ -1015,7 +1015,7 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]):
 
         str - path to model to compile
 
-        Model_pb2 - spect to model to compile
+        Model_pb2 - spec to model to compile
 
         MLModel - instantiated Core ML model to compile
 

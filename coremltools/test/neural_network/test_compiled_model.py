@@ -6,18 +6,16 @@
 from shutil import copytree, rmtree
 from tempfile import TemporaryDirectory
 
-from unittest import TestCase
-
 from coremltools import ComputeUnit
 from coremltools.models import CompiledMLModel, MLModel
 from coremltools.models.utils import compile_model, save_spec
 from coremltools.proto import Model_pb2
 
 
-class TestCompiledModel(TestCase):
+class TestCompiledModel:
 
     @classmethod
-    def setUpClass(self):
+    def setup(self):
         spec = Model_pb2.Model()
         spec.specificationVersion = 1
         input_ = spec.description.input.add()
@@ -44,11 +42,11 @@ class TestCompiledModel(TestCase):
 
             # Single prediction
             y = model.predict({'x': 2})
-            self.assertEquals(y['y'], 4.1)
+            assert y['y'] == 4.1
 
             # Batch predictions
             y = model.predict([{'x': 2}, {'x': 4}])
-            self.assertEquals(y, [{'y': 4.1}, {'y': 8.1}])
+            assert y == [{'y': 4.1}, {'y': 8.1}]
         finally:
             rmtree(compiled_model_path)
 

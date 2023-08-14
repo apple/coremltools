@@ -51,7 +51,8 @@ class CompiledMLModel:
         if _macos_version() < (10, 13):
             raise Exception("Loading compiled Core ML models is only support on macOS 10.13 or higher.")
         if _MLModelProxy is None:
-            raise Exception("Unable to load any compiled models.")
+            raise Exception("Unable to load any compiled models. This is most likely because"
+                            " coremltools was installed from an egg rather than a wheel.")
 
         if not isinstance(path, str):
             raise TypeError('The "path" parameter must be of type "str".')
@@ -90,16 +91,10 @@ class CompiledMLModel:
                  {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
         batch_predictions = model.predict(data)
         """
-        if type(data) not in (list, dict):
-            raise TypeError("\"data\" parameter must be either a dict or list of dict.")
-        if type(data) == list and not all(map(lambda x: type(x) == dict, data)):
-            raise TypeError("\"data\" list must contain only dictionaries")
+        _MLModel._check_predict_data(data)
 
-        if type(data) == dict:
-            _MLModel._update_float16_multiarray_input_to_float32(data)
-            return self._proxy.predict(data)
-        else:
-            assert type(data) == list
-            for i in data:
-                _MLModel._update_float16_multiarray_input_to_float32(i)
-            return self._proxy.batchPredict(data)
+        return _MLModel._get_predictions(
+            self._proxy,
+            _MLModel._update_float16_multiarray_input_to_float32,
+            data
+        )
