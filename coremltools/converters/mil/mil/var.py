@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Optional
+from typing import Optional, Union
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import builtin_to_string
@@ -253,7 +253,9 @@ class Var:
     def set_name(self, name):
         self.name = name
 
-    def is_tensor_or_scalar_of(self, dtype: str):
+    def is_tensor_or_scalar_of(self, dtype: Union[str, type]):
+        if isinstance(dtype, type):
+            dtype = builtin_to_string(dtype)
         return (types.is_tensor(self.sym_type) or types.is_scalar(self.sym_type)) and builtin_to_string(self.dtype) == dtype
 
     def __str__(self):

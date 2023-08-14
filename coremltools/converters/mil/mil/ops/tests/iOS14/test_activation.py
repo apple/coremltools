@@ -10,21 +10,19 @@ import pytest
 import scipy
 
 import coremltools as ct
-from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import (
+    mark_api_breaking,
+    run_compare_builder,
+)
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
-
-from .testing_utils import run_compare_builder
-
-backends = testing_reqs.backends
-compute_units = testing_reqs.compute_units
 
 
 class TestClampedReLU:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -59,13 +57,7 @@ class TestClampedReLU:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, alpha, beta",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 4, 8],
-            [2.0, 3.0],
-            [4.0, 5.0]
-        ),
+        itertools.product(compute_units, backends, [2, 4, 8], [2.0, 3.0], [4.0, 5.0]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, dim, alpha, beta):
         shape_x = np.array([dim, dim])
@@ -94,9 +86,7 @@ class TestClampedReLU:
 
 
 class TestELU:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -134,9 +124,7 @@ class TestELU:
 
 
 class TestGeLU:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -230,9 +218,7 @@ class TestGeLU:
 
 
 class TestLeakyReLU:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -267,9 +253,7 @@ class TestLeakyReLU:
 
 
 class TestLinearActivation:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -330,16 +314,16 @@ class TestLinearActivation:
 
 class TestPReLU:
     @pytest.mark.parametrize(
-        "rank, alpha_values, compute_unit, backend",
+        "compute_unit, backend, rank, alpha_values",
         itertools.product(
-            [3, 4, 5],
-            [[1.0, 2.0, 3.0], [4.0, 4.0, 4.0]],
             compute_units,
             backends,
-        )
+            [3, 4, 5],
+            [[1.0, 2.0, 3.0], [4.0, 4.0, 4.0]],
+        ),
     )
-    def test_builder_to_backend_smoke(self, rank, alpha_values, compute_unit, backend):
-        if (backend[0] == "mlprogram" and backend[1] == "fp16"):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, rank, alpha_values):
+        if backend.backend == "mlprogram" and backend.precision == "fp16":
             pytest.xfail(
                 "rdar://92175249 ([MIL] TestActivation::test_prelu[backend=(mlprogram, fp16)] CI failure)"
             )
@@ -421,12 +405,7 @@ class TestPReLU:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, chan",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2, 4, 8],
-            [2, 3, 4]
-        ),
+        itertools.product(compute_units, backends, [1, 2, 4, 8], [2, 3, 4]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, dim, chan):
         shape = np.array([1, chan, dim, dim])
@@ -493,9 +472,7 @@ class TestReLU:
 
 
 class TestReLU6:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 7, -3], [4, -5, 8]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -527,9 +504,7 @@ class TestReLU6:
 
 
 class TestScaledTanh:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -562,13 +537,7 @@ class TestScaledTanh:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, alpha, beta",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 4, 8],
-            [2.0, 3.0],
-            [4.0, 5.0]
-        ),
+        itertools.product(compute_units, backends, [2, 4, 8], [2.0, 3.0], [4.0, 5.0]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, dim, alpha, beta):
         shape_x = np.array([dim, dim])
@@ -594,9 +563,7 @@ class TestScaledTanh:
 
 
 class TestSigmoid:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -632,9 +599,7 @@ class TestSigmoid:
 
 
 class TestSigmoidHard:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -644,9 +609,7 @@ class TestSigmoidHard:
             return mb.sigmoid_hard(x=x, alpha=1.0, beta=2.0)
 
         expected_output_types = (2, 3, types.fp32)
-        expected_outputs = np.array(
-            [[1.0, 1.0, 0.0], [1.0, 0.0, 1.0]], dtype=np.float32
-        )
+        expected_outputs = np.array([[1.0, 1.0, 0.0], [1.0, 0.0, 1.0]], dtype=np.float32)
 
         run_compare_builder(
             build,
@@ -673,13 +636,7 @@ class TestSigmoidHard:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, alpha, beta",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 4, 8],
-            [2.0, 3.0],
-            [4.0, 5.0]
-        ),
+        itertools.product(compute_units, backends, [2, 4, 8], [2.0, 3.0], [4.0, 5.0]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, dim, alpha, beta):
         shape_x = np.array([dim, dim])
@@ -705,9 +662,7 @@ class TestSigmoidHard:
 
 
 class TestSiLU:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([-1.1, 2.2, -3.3, 4.4], dtype=np.float32).reshape((1, 2, 1, 2))
 
@@ -720,9 +675,9 @@ class TestSiLU:
         def build(x):
             return mb.silu(x=x)
 
-        expected_output = np.array(
-            [-0.2747, 1.9805, -0.1174, 4.3466], dtype=np.float32
-        ).reshape(expected_output_type[:-1])
+        expected_output = np.array([-0.2747, 1.9805, -0.1174, 4.3466], dtype=np.float32).reshape(
+            expected_output_type[:-1]
+        )
 
         run_compare_builder(
             build,
@@ -736,9 +691,7 @@ class TestSiLU:
 
 
 class TestSoftplus:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -774,9 +727,7 @@ class TestSoftplus:
 
 # No torch test because there is no direct torch translation to this layer
 class TestSoftplusParametric:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -791,11 +742,13 @@ class TestSoftplusParametric:
 
         expected_output_types = (1, 3, 1, 3, types.fp32)
         expected_outputs = np.array(
-            [[
-                [[1.8142700e-02, 1.2000000e01, 2.4000000e01]],
-                [[1.3427734e-02, 2.0000000e01, 7.1525574e-07]],
-                [[7.2000000e01, 0.0000000e00, 1.0800000e02]],
-            ]],
+            [
+                [
+                    [[1.8142700e-02, 1.2000000e01, 2.4000000e01]],
+                    [[1.3427734e-02, 2.0000000e01, 7.1525574e-07]],
+                    [[7.2000000e01, 0.0000000e00, 1.0800000e02]],
+                ]
+            ],
             dtype=np.float32,
         )
 
@@ -879,12 +832,7 @@ class TestSoftplusParametric:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, chan",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2, 4, 8],
-            [1, 2, 3]
-        ),
+        itertools.product(compute_units, backends, [1, 2, 4, 8], [1, 2, 3]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, dim, chan):
         shape = np.array([1, chan, dim, dim])
@@ -918,9 +866,7 @@ class TestSoftplusParametric:
 
 
 class TestSoftmax:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_buidler_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -955,14 +901,13 @@ class TestSoftmax:
             scipy.special.softmax(x_val, axis=0), v.val, atol=1e-04, rtol=1e-05
         )
 
-    @pytest.mark.parametrize(
-        "input_size", [(1), (2), (1, 2), (2, 2), (2, 3, 4), (2, 3, 4, 10)]
-    )
+    @pytest.mark.parametrize("input_size", [(1), (2), (1, 2), (2, 2), (2, 3, 4), (2, 3, 4, 10)])
     def test_value_inference(self, input_size):
         rs = np.random.RandomState(1234)
         x = rs.random(input_size)
 
         for axis in range(-x.ndim, x.ndim - 1):
+
             @mb.program(input_specs=[])
             def prog():
                 return mb.softmax(x=x, axis=axis)
@@ -978,9 +923,7 @@ class TestSoftmax:
 
 
 class TestSoftsign:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -1013,9 +956,7 @@ class TestSoftsign:
 
 
 class TestThresholdedReLU:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
@@ -1047,12 +988,7 @@ class TestThresholdedReLU:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, dim, alpha",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 4, 8],
-            [2.0, 3.0]
-        ),
+        itertools.product(compute_units, backends, [2, 4, 8], [2.0, 3.0]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, dim, alpha):
         shape_x = np.array([dim, dim])
@@ -1079,21 +1015,22 @@ class TestThresholdedReLU:
         )
 
 
-class TestInputWeightDifferentDtypes:
+class TestInputWeightDifferentDtypesErrorOut:
     """
     Starting from IOS17 the alpha/beta can have different dtypes from the input/output, so this
-    test class is mainly to verify the behaviour of those alpha/beta related activations.
+    test class is mainly to verify the behaviour before iOS17, that the type inference should early error out.
     """
 
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS17)
     @pytest.mark.parametrize(
-        "opset_version, different_dtype, op_name",
+        "backend, different_dtype, op_name",
         itertools.product(
-            [None, ct.target.iOS17],
+            backends,
             [True, False],
             ["elu", "leaky_relu", "prelu", "thresholded_relu"],
         ),
     )
-    def test_builder_eval_alpha(self, opset_version, different_dtype, op_name):
+    def test_builder_eval_alpha(self, backend, different_dtype, op_name):
         x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
         alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
         if op_name == "prelu":
@@ -1102,17 +1039,18 @@ class TestInputWeightDifferentDtypes:
         def prog():
             return getattr(mb, op_name)(x=x, alpha=alpha)
 
-        if different_dtype and opset_version != ct.target.iOS17:
+        if different_dtype:
             # Before iOS17 it should raise error when alpha has different dtype than input/output.
             with pytest.raises(ValueError, match="must have the same data type"):
-                mb.program(input_specs=[], opset_version=opset_version)(prog)
+                mb.program(input_specs=[], opset_version=backend.opset_version)(prog)
         else:
-            mb.program(input_specs=[], opset_version=opset_version)(prog)
+            mb.program(input_specs=[], opset_version=backend.opset_version)(prog)
 
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS17)
     @pytest.mark.parametrize(
-        "opset_version, different_dtype, op_name",
+        "backend, different_dtype, op_name",
         itertools.product(
-            [None, ct.target.iOS17],
+            backends,
             [True, False],
             [
                 "clamped_relu",
@@ -1123,7 +1061,7 @@ class TestInputWeightDifferentDtypes:
             ],
         ),
     )
-    def test_builder_eval_alpha_beta(self, opset_version, different_dtype, op_name):
+    def test_builder_eval_alpha_beta(self, backend, different_dtype, op_name):
         x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
         alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
         beta = np.float16(1.0) if different_dtype else np.float32(1.0)
@@ -1134,116 +1072,8 @@ class TestInputWeightDifferentDtypes:
         def prog():
             return getattr(mb, op_name)(x=x, alpha=alpha, beta=beta)
 
-        if different_dtype and opset_version != ct.target.iOS17:
+        if different_dtype:
             with pytest.raises(ValueError, match="must have the same data type"):
-                mb.program(input_specs=[], opset_version=opset_version)(prog)
+                mb.program(input_specs=[], opset_version=backend.opset_version)(prog)
         else:
-            mb.program(input_specs=[], opset_version=opset_version)(prog)
-
-    @pytest.mark.parametrize(
-        "compute_unit, different_dtype, op_name",
-        itertools.product(
-            compute_units, [True, False], ["elu", "leaky_relu", "prelu", "thresholded_relu"]
-        ),
-    )
-    def test_builder_to_backend_numerical_alpha(self, compute_unit, different_dtype, op_name):
-        x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
-        alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
-        if op_name == "prelu":
-            alpha = np.array([2.0, 2.0], dtype=alpha.dtype)
-
-        def calculate_by_np():
-            if op_name == "elu":
-                res = np.copy(x)
-                res[res < 0] = alpha * (np.exp(res[res < 0]) - 1)
-                return res
-            elif op_name == "leaky_relu":
-                res = np.copy(x)
-                res[res < 0] *= 2.0
-                return res
-            elif op_name == "prelu":
-                alpha_br = np.copy(alpha)
-                for i in range(len(x.shape)):
-                    if i != 1:
-                        alpha_br = np.expand_dims(alpha_br, i)
-                res = np.maximum(x, 0) + np.minimum(x, 0) * alpha_br
-                return res
-            elif op_name == "thresholded_relu":
-                res = np.copy(x)
-                res[res < alpha] = 0.0
-                return res
-            else:
-                raise ValueError(f"Invalid op_name: {op_name}")
-
-        def build(x):
-            return getattr(mb, op_name)(x=x, alpha=alpha)
-
-        run_compare_builder(
-            build,
-            input_placeholders={"x": mb.placeholder(shape=x.shape)},
-            input_values={"x": x},
-            expected_output_types=x.shape + (types.fp32,),
-            expected_outputs=calculate_by_np(),
-            compute_unit=compute_unit,
-            backend=("mlprogram", "fp16"),
-            minimum_deployment_target=ct.target.iOS17,
-        )
-
-    @pytest.mark.parametrize(
-        "compute_unit, different_dtype, op_name",
-        itertools.product(
-            compute_units,
-            [True, False],
-            [
-                "clamped_relu",
-                "linear_activation",
-                "scaled_tanh",
-                "sigmoid_hard",
-                "softplus_parametric",
-            ],
-        ),
-    )
-    def test_builder_to_backend_numerical_alpha_beta(self, compute_unit, different_dtype, op_name):
-        x = np.array([[[-1, 2, -3], [4, -5, 6]]], dtype=np.float32)
-        alpha = np.float16(2.0) if different_dtype else np.float32(2.0)
-        beta = np.float16(1.0) if different_dtype else np.float32(1.0)
-        if op_name == "softplus_parametric":
-            alpha = np.array([2.0, 2.0], dtype=alpha.dtype)
-            beta = np.array([1.0, 1.0], dtype=beta.dtype)
-
-        def calculate_by_np():
-            if op_name == "clamped_relu":
-                return np.minimum(np.maximum(x, 0), beta) + np.minimum(
-                    np.minimum(x, 0) * alpha, beta
-                )
-            elif op_name == "linear_activation":
-                return x * alpha + beta
-            elif op_name == "scaled_tanh":
-                return alpha * np.tanh(x * beta)
-            elif op_name == "sigmoid_hard":
-                return np.minimum(np.maximum((alpha * x) + beta, 0), 1)
-            elif op_name == "softplus_parametric":
-                alpha_br = alpha
-                beta_br = beta
-                for i in range(len(x.shape)):
-                    if i != 1:
-                        alpha_br = np.expand_dims(alpha_br, i)
-                        beta_br = np.expand_dims(beta_br, i)
-                res = alpha_br * np.log(np.exp(x * beta_br) + 1)
-                return res
-            else:
-                raise ValueError(f"Invalid op_name: {op_name}")
-
-        def build(x):
-            return getattr(mb, op_name)(x=x, alpha=alpha, beta=beta)
-
-        run_compare_builder(
-            build,
-            input_placeholders={"x": mb.placeholder(shape=x.shape)},
-            input_values={"x": x},
-            expected_output_types=x.shape + (types.fp32,),
-            expected_outputs=calculate_by_np(),
-            compute_unit=compute_unit,
-            backend=("mlprogram", "fp16"),
-            minimum_deployment_target=ct.target.iOS17,
-        )
+            mb.program(input_specs=[], opset_version=backend.opset_version)(prog)

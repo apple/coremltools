@@ -13,20 +13,28 @@ import pytest
 
 import coremltools as ct
 from coremltools._deps import _HAS_TF_2, _HAS_TORCH, MSG_TF2_NOT_FOUND, MSG_TORCH_NOT_FOUND
+from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.testing_reqs import backends, compute_units
 
 if _HAS_TORCH:
     import torch
+
     torch.manual_seed(10)
 
     class TestConvModule(torch.nn.Module):
         def __init__(self, in_channels=3, out_channels=10, kernel_size=3):
             super(TestConvModule, self).__init__()
-            self.conv = torch.nn.Conv2d(in_channels, out_channels,
-                                        kernel_size)
+            self.conv = torch.nn.Conv2d(in_channels, out_channels, kernel_size)
 
         def forward(self, x):
             return self.conv(x)
+
+    class TestSimpleModule(torch.nn.Module):
+        def forward(self, x):
+            x = x + 1.0
+            y = x - 9.0
+            z = torch.sum(x)
+            return x, y, z
 
 
 if _HAS_TF_2:
@@ -39,8 +47,8 @@ def _numpy_array_to_pil_image(x):
     """
     assert len(x.shape) == 4
     assert list(x.shape[:2]) == [1, 3]
-    x = x[0, :, :, :] # (3, H, W)
-    x = _np.transpose(x, [1, 2, 0]) # (H, W, 3)
+    x = x[0, :, :, :]  # (3, H, W)
+    x = _np.transpose(x, [1, 2, 0])  # (H, W, 3)
     x = x.astype(_np.uint8)
     return PIL.Image.fromarray(x)
 
@@ -49,15 +57,17 @@ def _compute_snr(arr1, arr2):
     arr1 = arr1.flatten()
     arr2 = arr2.flatten()
     noise = arr1 - arr2
-    noise_var = _np.sum(noise ** 2) / len(noise) + 1e-7
-    signal_energy = _np.sum(arr2 ** 2) / len(arr2)
-    max_signal_energy = _np.amax(arr2 ** 2)
+    noise_var = _np.sum(noise**2) / len(noise) + 1e-7
+    signal_energy = _np.sum(arr2**2) / len(arr2)
+    max_signal_energy = _np.amax(arr2**2)
     snr = 10 * _np.log10(signal_energy / noise_var)
     psnr = 10 * _np.log10(max_signal_energy / noise_var)
     return snr, psnr
 
 
-def _assert_torch_coreml_output_shapes(coreml_model, spec, torch_model, torch_example_input, is_image_input=False):
+def _assert_torch_coreml_output_shapes(
+    coreml_model, spec, torch_model, torch_example_input, is_image_input=False
+):
     torch_out = torch_model(torch_example_input)
     input_name = spec.description.input[0].name
     output_name = spec.description.output[0].name
@@ -73,9 +83,66 @@ def _assert_torch_coreml_output_shapes(coreml_model, spec, torch_model, torch_ex
     _np.testing.assert_array_less(30, psnr)
 
 
+class TestOutputShapes:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_static_output_shapes(backend):
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(
+                    shape=(2, 3),
+                )
+            ]
+        )
+        def prog(x):
+            x = mb.add(x=x, y=1.0)
+            y = mb.sub(x=x, y=3.0)
+            z = mb.reduce_sum(x=x, axes=[0, 1], keep_dims=False)
+            return x, y, z
+
+        model = ct.convert(prog, convert_to=backend[0])
+        spec = model.get_spec()
+        expected_output_shape = [2, 3] if backend[0] == "mlprogram" else []
+        assert spec.description.output[0].type.multiArrayType.shape == expected_output_shape
+        assert spec.description.output[1].type.multiArrayType.shape == expected_output_shape
+        # scalar outputs have shape ()
+        assert spec.description.output[2].type.multiArrayType.shape == []
+
+        coreml_in = {"x": _np.random.rand(2, 3)}
+        model.predict(coreml_in)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_dynamic_output_shapes(backend):
+
+        example_input = torch.rand(2, 3)
+        traced_model = torch.jit.trace(TestSimpleModule().eval(), example_input)
+
+        input_shape = ct.Shape(shape=(2, ct.RangeDim(3, 5)))
+        model = ct.convert(
+            traced_model, inputs=[ct.TensorType(shape=input_shape)], convert_to=backend[0]
+        )
+
+        spec = model.get_spec()
+        # We don't put the shape information for dynamic output shapes,
+        # otherwise a runtime validation error would raise
+        assert spec.description.output[0].type.multiArrayType.shape == []
+        assert spec.description.output[1].type.multiArrayType.shape == []
+        # scalar outputs have shape ()
+        assert spec.description.output[2].type.multiArrayType.shape == []
+
+        coreml_in = {"x_1": _np.random.rand(2, 3)}
+        model.predict(coreml_in)
+
+
 @pytest.mark.skipif(not _HAS_TORCH or not ct.utils._is_macos(), reason=MSG_TORCH_NOT_FOUND)
 class TestFlexibleInputShapesTorch:
-
     @pytest.mark.parametrize(
         "backend, compute_unit",
         itertools.product(
@@ -103,8 +170,12 @@ class TestFlexibleInputShapesTorch:
 
         spec = model.get_spec()
         assert list(spec.description.input[0].type.multiArrayType.shape) == [1, 3, 45, 45]
-        assert spec.description.input[0].type.multiArrayType.shapeRange.sizeRanges[2].lowerBound == 25
-        assert spec.description.input[0].type.multiArrayType.shapeRange.sizeRanges[2].upperBound == 100
+        assert (
+            spec.description.input[0].type.multiArrayType.shapeRange.sizeRanges[2].lowerBound == 25
+        )
+        assert (
+            spec.description.input[0].type.multiArrayType.shapeRange.sizeRanges[2].upperBound == 100
+        )
         _assert_torch_coreml_output_shapes(model, spec, traced_model, example_input)
 
     @pytest.mark.parametrize(
@@ -183,11 +254,16 @@ class TestFlexibleInputShapesTorch:
 
         spec = model.get_spec()
         assert list(spec.description.input[0].type.multiArrayType.shape) == [1, 3, 67, 67]
-        assert list(spec.description.input[0].type.multiArrayType.enumeratedShapes.shapes[0].shape) == [1, 3, 67, 67]
+        assert list(
+            spec.description.input[0].type.multiArrayType.enumeratedShapes.shapes[0].shape
+        ) == [1, 3, 67, 67]
         assert len(spec.description.input[0].type.multiArrayType.enumeratedShapes.shapes) == 3
         _assert_torch_coreml_output_shapes(model, spec, traced_model, example_input)
 
-    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="Image input with RangeDim works correctly on macOS12+")
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (12, 0),
+        reason="Image input with RangeDim works correctly on macOS12+",
+    )
     @pytest.mark.parametrize(
         "backend, compute_unit",
         itertools.product(
@@ -215,7 +291,9 @@ class TestFlexibleInputShapesTorch:
         assert spec.description.input[0].type.imageType.height == 35
         assert spec.description.input[0].type.imageType.imageSizeRange.widthRange.lowerBound == 25
         assert spec.description.input[0].type.imageType.imageSizeRange.widthRange.upperBound == 100
-        _assert_torch_coreml_output_shapes(model, spec, traced_model, example_input, is_image_input=True)
+        _assert_torch_coreml_output_shapes(
+            model, spec, traced_model, example_input, is_image_input=True
+        )
 
     @pytest.mark.skipif(
         ct.utils._macos_version() < (12, 0),
@@ -301,7 +379,9 @@ class TestFlexibleInputShapesTorch:
         assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 3
         assert spec.description.input[0].type.imageType.enumeratedSizes.sizes[0].width == 25
         assert spec.description.input[0].type.imageType.enumeratedSizes.sizes[0].height == 25
-        _assert_torch_coreml_output_shapes(model, spec, traced_model, example_input, is_image_input=True)
+        _assert_torch_coreml_output_shapes(
+            model, spec, traced_model, example_input, is_image_input=True
+        )
 
 
 @pytest.mark.skipif(not _HAS_TF_2 or not ct.utils._is_macos(), reason=MSG_TF2_NOT_FOUND)

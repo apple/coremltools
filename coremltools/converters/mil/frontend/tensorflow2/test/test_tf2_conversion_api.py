@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
 import os
 import platform
 from os import chdir, getcwd
@@ -13,7 +14,19 @@ import numpy as np
 import pytest
 
 import coremltools as ct
+from coremltools.converters.mil.frontend.tensorflow.test.test_tf_conversion_api import (
+    TestInputOutputConversionAPI as TestTf2InputOutputConversionAPI,
+)
+from coremltools.converters.mil.frontend.tensorflow.test.test_tf_conversion_api import (
+    TestiOS16DefaultIODtype as TestTf2iOS16DefaultIODtype,
+)
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.testing_reqs import backends
+
+# We need to keep this, other the pre-commit hook is going to remove the TestInputOutputConversionAPI, TestiOS16DefaultIODtype
+assert TestTf2InputOutputConversionAPI is not None
+assert TestTf2iOS16DefaultIODtype is not None
+
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 
@@ -23,10 +36,55 @@ from tensorflow.keras import layers
 
 
 @pytest.fixture
+def uint8_input_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input", dtype=tf.uint8)
+    out = tf.add(x, tf.constant(5, dtype=tf.uint8), name="output")
+    return tf.keras.Model(inputs=x, outputs=out)
+
+
+@pytest.fixture
+def int8_input_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input", dtype=tf.int8)
+    out = tf.add(x, tf.constant(5, dtype=tf.int8), name="output")
+    return tf.keras.Model(inputs=x, outputs=out)
+
+@pytest.fixture
 def int32_input_model():
     x = tf.keras.Input(batch_input_shape=(10, 20), name="input", dtype=tf.int32)
     out = tf.add(x, tf.constant(5, dtype=tf.int32), name="output")
     return tf.keras.Model(inputs=x, outputs=out)
+
+@pytest.fixture
+def int32_two_input_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input1", dtype=tf.int32)
+    y = tf.keras.Input(batch_input_shape=(10, 20), name="input2", dtype=tf.int32)
+    out = tf.add(x, y, name="output")
+    return tf.keras.Model(inputs=[x, y], outputs=out)
+
+@pytest.fixture
+def int32_two_output_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input1", dtype=tf.int32)
+    y = tf.keras.Input(batch_input_shape=(10, 20), name="input2", dtype=tf.int32)
+    out1 = tf.add(x, 1, name="output1")
+    out2 = tf.add(y, 1, name="output2")
+    return tf.keras.Model(inputs=[x, y], outputs=[out1, out2])
+
+@pytest.fixture
+def int32_float32_two_output_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input1", dtype=tf.float32)
+    y = tf.keras.Input(batch_input_shape=(10, 20), name="input2", dtype=tf.float32)
+    x_add = tf.add(x, 1.0, name="output1")
+    y_add = tf.add(y, 1.0)
+    y_cast = tf.cast(y_add, dtype=tf.int32, name="output2")
+    return tf.keras.Model(inputs=[x, y], outputs=[x_add, y_cast])
+
+@pytest.fixture
+def int32_float32_two_input_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input1", dtype=tf.int32)
+    y = tf.keras.Input(batch_input_shape=(10, 20), name="input2", dtype=tf.float32)
+    x_cast = tf.cast(x, dtype=tf.float32)
+    out = tf.add(x_cast, y, name="output")
+    return tf.keras.Model(inputs=[x, y], outputs=out)
 
 @pytest.fixture
 def float32_input_model_add_op():
@@ -61,6 +119,13 @@ def float32_two_output_model():
     out2 = tf.nn.relu6(x, name="output2")
     out1 = tf.nn.relu(y, name="output1")
     return tf.keras.Model(inputs=x, outputs=[out1, out2])
+
+
+@pytest.fixture
+def float64_input_model():
+    x = tf.keras.Input(batch_input_shape=(10, 20), name="input", dtype=tf.float64)
+    out = tf.add(x, tf.constant(5, dtype=tf.float64), name="output")
+    return tf.keras.Model(inputs=x, outputs=out)
 
 @pytest.fixture
 def rank3_input_model():
@@ -139,7 +204,11 @@ class TestTensorFlow2ConverterExamples:
             rmtree(self._temp_dir)
 
     @staticmethod
-    def test_convert_tf_keras_h5_file():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_convert_tf_keras_h5_file(backend):
         if platform.machine() == "arm64":
             pytest.xfail("rdar://101162740 ([CI] [TF] The tf_keras_h5_file API testing is failing on M1 with new OS)")
 
@@ -151,25 +220,29 @@ class TestTensorFlow2ConverterExamples:
             save_dir = str(temp_dir)
             path = os.path.join(save_dir, "tf_keras_model." + file_extension)
             keras_model.save(path)
-            mlmodel = ct.convert(path)
+            mlmodel = ct.convert(path, convert_to=backend[0])
 
             test_input = np.random.rand(2, 32)
             expected_val = keras_model(test_input)
             results = mlmodel.predict({"input": test_input})
-            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-2, atol=1e-2)
 
     @staticmethod
-    def test_convert_tf_keras_model():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_convert_tf_keras_model(backend):
         x = tf.keras.Input(shape=(32,), name="input")
         y = tf.keras.layers.Dense(16, activation="softmax")(x)
         keras_model = tf.keras.Model(x, y)
 
-        mlmodel = ct.convert(keras_model)
+        mlmodel = ct.convert(keras_model, convert_to=backend[0])
 
         test_input = np.random.rand(2, 32)
         expected_val = keras_model(test_input)
         results = mlmodel.predict({"input": test_input})
-        np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+        np.testing.assert_allclose(results["Identity"], expected_val, rtol=0.005)
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -193,18 +266,23 @@ class TestTensorFlow2ConverterExamples:
         mlmodel = ct.convert(
             tf_keras_model,
             inputs=[ct.TensorType(shape=(1, 224, 224, 3), dtype=dtype)],
+            convert_to="neuralnetwork",
         )
         mlmodel.save("./mobilenet.mlmodel")
 
     @staticmethod
     def test_convert_from_saved_model_dir():
         # SavedModel directory generated by TensorFlow 2.x
-        mlmodel = ct.convert("./saved_model")
+        mlmodel = ct.convert("./saved_model", convert_to="neuralnetwork")
         mlmodel.save("./model.mlmodel")
 
 
     @staticmethod
-    def test_keras_custom_layer_model():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_keras_custom_layer_model(backend):
         # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
 
         class CustomDense(layers.Layer):
@@ -228,10 +306,14 @@ class TestTensorFlow2ConverterExamples:
         inputs = keras.Input((4,))
         outputs = CustomDense(10)(inputs)
         model = keras.Model(inputs, outputs)
-        ct.convert(model)
+        ct.convert(model, convert_to=backend[0])
 
     @staticmethod
-    def test_concrete_function_conversion():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_concrete_function_conversion(backend):
         # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
 
         @tf.function(input_signature=[tf.TensorSpec(shape=(6,), dtype=tf.float32)])
@@ -241,7 +323,7 @@ class TestTensorFlow2ConverterExamples:
             return x * y
 
         conc_func = gelu_tanh_activation.get_concrete_function()
-        mlmodel = ct.convert([conc_func])
+        mlmodel = ct.convert([conc_func], convert_to=backend[0])
 
     @staticmethod
     def test_convert_tf2_keras():
@@ -255,8 +337,14 @@ class TestTensorFlow2ConverterExamples:
 class TestTF2FlexibleInput:
     # Test examples in https://coremltools.readme.io/docs/flexible-inputs
     @staticmethod
-    @pytest.mark.parametrize("use_symbol", [True, False])
-    def test_tf2keras_shared_range_dim(use_symbol):
+    @pytest.mark.parametrize(
+        "use_symbol, backend",
+        itertools.product(
+            [True, False],
+            backends,
+        ),
+    )
+    def test_tf2keras_shared_range_dim(use_symbol, backend):
         input_dim = 3
         # None denotes seq_len dimension
         x1 = tf.keras.Input(shape=(None,input_dim), name="seq1")
@@ -265,16 +353,15 @@ class TestTF2FlexibleInput:
         keras_model = tf.keras.Model(inputs=[x1, x2], outputs=[y])
 
         # One RangeDim shared by two inputs
+        upper_bound = -1 if backend[0] == "neuralnetwork" else 5
         if use_symbol:
-            seq_len_dim = ct.RangeDim(symbol='seq_len')
+            seq_len_dim = ct.RangeDim(symbol="seq_len", upper_bound=upper_bound)
         else:
             # symbol is optional
-            seq_len_dim = ct.RangeDim()
+            seq_len_dim = ct.RangeDim(upper_bound=upper_bound)
         seq1_input = ct.TensorType(name="seq1", shape=(1, seq_len_dim, input_dim))
         seq2_input = ct.TensorType(name="seq2", shape=(1, seq_len_dim, input_dim))
-        mlmodel = ct.convert(keras_model,
-                inputs=[seq1_input, seq2_input])
-
+        mlmodel = ct.convert(keras_model, inputs=[seq1_input, seq2_input], convert_to=backend[0])
         batch = 1
         seq_len = 5
         test_input_x1 = np.random.rand(batch, seq_len, input_dim).astype(np.float32)
@@ -289,7 +376,11 @@ class TestTF2FlexibleInput:
 
 
     @staticmethod
-    def test_tf2keras_incorrect_range_dim():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_tf2keras_incorrect_range_dim(backend):
         input_dim = 3
         # None denotes seq_len dimension
         x1 = tf.keras.Input(shape=(None,input_dim), name="seq1")
@@ -301,11 +392,17 @@ class TestTF2FlexibleInput:
         with pytest.raises(ValueError,
             match=r"Can\'t convert to CoreML shaping"):
             seq1_input = ct.TensorType(name="seq1", shape=(1, -1, input_dim))
-            mlmodel = ct.convert(keras_model, inputs=[seq1_input])
+            mlmodel = ct.convert(keras_model, inputs=[seq1_input], convert_to=backend[0])
 
     @staticmethod
-    @pytest.mark.parametrize("use_symbol", [True, False])
-    def test_tf2keras_outofbound_range_dim(use_symbol):
+    @pytest.mark.parametrize(
+        "use_symbol, backend",
+        itertools.product(
+            [True, False],
+            backends,
+        ),
+    )
+    def test_tf2keras_outofbound_range_dim(use_symbol, backend):
         input_dim = 3
         # None denotes seq_len dimension
         x = tf.keras.Input(shape=(None,input_dim), name="seq")
@@ -318,7 +415,7 @@ class TestTF2FlexibleInput:
         else:
             seq_len_dim = ct.RangeDim(lower_bound=3, upper_bound=5)
         seq_input = ct.TensorType(name="seq", shape=(1, seq_len_dim, input_dim))
-        mlmodel = ct.convert(keras_model, inputs=[seq_input])
+        mlmodel = ct.convert(keras_model, inputs=[seq_input], convert_to=backend[0])
 
         # seq_len is within bound
         batch = 1
@@ -346,7 +443,11 @@ class TestTF2FlexibleInput:
                 results = mlmodel.predict({"seq": test_input_x})
 
     @staticmethod
-    def test_tf2_image_enumerated_shapes():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_tf2_image_enumerated_shapes(backend):
         keras_model = tf.keras.applications.MobileNetV2(
             input_shape=(None, None, 3,),
             classes=1000,
@@ -355,13 +456,17 @@ class TestTF2FlexibleInput:
         input_shapes = ct.EnumeratedShapes(shapes=[(1, 192, 192, 3), (1, 224, 224, 3)])
         image_input = ct.ImageType(shape=input_shapes,
                                    bias=[-1,-1,-1], scale=1/127)
-        model = ct.convert(keras_model, inputs=[image_input])
+        model = ct.convert(keras_model, inputs=[image_input], convert_to=backend[0])
         assert model is not None
         spec = model.get_spec()
         assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
 
     @staticmethod
-    def test_tf2keras_enumerated_shapes():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_tf2keras_enumerated_shapes(backend):
         input_shape = (28, 28, 3)
         # None denotes seq_len dimension
         x = tf.keras.Input(shape=input_shape, name="input")
@@ -375,7 +480,7 @@ class TestTF2FlexibleInput:
         shapes = [(1, 28, 28, 3), (1, 56, 56, 3)]
         enumerated_shapes = ct.EnumeratedShapes(shapes=shapes)
         tensor_input = ct.TensorType(name="input", shape=enumerated_shapes)
-        mlmodel = ct.convert(keras_model, inputs=[tensor_input])
+        mlmodel = ct.convert(keras_model, inputs=[tensor_input], convert_to=backend[0])
 
         # Test (1, 28, 28, 3) shape
         test_input_x = np.random.rand(*shapes[0]).astype(np.float32)
@@ -402,7 +507,11 @@ class TestTF2FlexibleInput:
                     "input": test_input_x})
 
     @staticmethod
-    def test_tf2keras_optional_input():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_tf2keras_optional_input(backend):
         input_dim = 3
         # None denotes seq_len dimension
         x1 = tf.keras.Input(shape=(None,input_dim), name="optional_input")
@@ -410,7 +519,8 @@ class TestTF2FlexibleInput:
         y = x1 + x2
         keras_model = tf.keras.Model(inputs=[x1, x2], outputs=[y])
 
-        seq_len_dim = ct.RangeDim()
+        upper_bound = -1 if backend[0] == "neuralnetwork" else 2
+        seq_len_dim = ct.RangeDim(upper_bound=upper_bound)
         default_value = np.ones((1, 2, input_dim)).astype(np.float32)
         optional_input = ct.TensorType(
             name="optional_input",
@@ -420,9 +530,10 @@ class TestTF2FlexibleInput:
         required_input = ct.TensorType(
             name="required_input",
             shape=(1, seq_len_dim, input_dim),
-          )
-        mlmodel = ct.convert(keras_model,
-                inputs=[optional_input, required_input])
+        )
+        mlmodel = ct.convert(
+            keras_model, inputs=[optional_input, required_input], convert_to=backend[0]
+        )
 
         batch = 1
         seq_len = 2

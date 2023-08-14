@@ -47,8 +47,6 @@ class tf_make_list(Operation):
                 dynamic_length=self.dynamic_length.val,
             )
         builtin_dtype = types.string_to_builtin(self.dtype.val)
-        if builtin_dtype is None:
-            raise ValueError("Unsupported dtype {}".format(self.dtype.val))
         elem_type = types.tensor(builtin_dtype, self.elem_shape.sym_val)
         return types.list(
             elem_type, init_length=init_length, dynamic_length=self.dynamic_length.val
@@ -75,7 +73,7 @@ class TfLSTMBase(Operation):
         weight_peep_o=TensorInputType(const=True, optional=True, type_domain="T"),  # [hidden_dim,]
         bias=TensorInputType(const=True, type_domain="T"),  # [4*hidden_dim] (icfo layout)
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -105,7 +103,7 @@ class tf_lstm_block_cell(TfLSTMBase):
     xh = [x, h_prev]
     [i, ci, f, o] = xh * w + b
     f = f + forget_bias
-    
+
     if not use_peephole:
         wci = wcf = wco = 0
         i = sigmoid(cs_prev .* wci + i)

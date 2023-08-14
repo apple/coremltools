@@ -9,18 +9,21 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools.converters.mil import testing_reqs
+from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
-from coremltools.models.utils import _macos_version
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_reqs import compute_units
+from coremltools.converters.mil.testing_utils import random_gen
 
-from .testing_utils import run_compare_builder
+if _HAS_TORCH:
+    import torch
+    import torch.nn as nn
 
 
 class TestConvTranspose:
-
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -28,53 +31,56 @@ class TestConvTranspose:
                 "backend",
                 "conv_dim",
                 "config",
+                "x_weight_dtype",
             ]
         ),
         itertools.product(
             compute_units,
             backends,
             ["conv1d", "conv2d", "conv3d"],
-            [{
-                "padding": (1, 2, 3),
-                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
-                "stride": (2, 1, 1),
-                "dilation": (1, 1, 1),
-                "has_bias": False,
-                "groups": 1,
-                "test_symbolic": False,
-                "test_output_shape": True,
-            },
-            {
-                "padding": (2, 2, 2),
-                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
-                "stride": (2, 2, 2),
-                "dilation": (2, 1, 1),
-                "has_bias": False,
-                "groups": 2,
-                "test_symbolic": True,
-                "test_output_shape": False,
-            },
-            {
-                "padding": (1, 2, 3),
-                "DHWKdKhKw": (7, 7, 7, 2, 2, 2),
-                "stride": (2, 2, 2),
-                "dilation": (2, 1, 1),
-                "has_bias": True,
-                "groups": 1,
-                "test_symbolic": True,
-                "test_output_shape": False,
-            },
-            {
-                "padding": (2, 2, 2),
-                "DHWKdKhKw": (7, 7, 7, 2, 2, 2),
-                "stride": (2, 1, 1),
-                "dilation": (1, 1, 1),
-                "has_bias": True,
-                "groups": 2,
-                "test_symbolic": False,
-                "test_output_shape": False,
-            },
+            [
+                {
+                    "padding": (1, 2, 3),
+                    "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                    "stride": (2, 1, 1),
+                    "dilation": (1, 1, 1),
+                    "has_bias": False,
+                    "groups": 1,
+                    "test_symbolic": False,
+                    "test_output_shape": True,
+                },
+                {
+                    "padding": (2, 2, 2),
+                    "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                    "stride": (2, 2, 2),
+                    "dilation": (2, 1, 1),
+                    "has_bias": False,
+                    "groups": 2,
+                    "test_symbolic": True,
+                    "test_output_shape": False,
+                },
+                {
+                    "padding": (1, 2, 3),
+                    "DHWKdKhKw": (7, 7, 7, 2, 2, 2),
+                    "stride": (2, 2, 2),
+                    "dilation": (2, 1, 1),
+                    "has_bias": True,
+                    "groups": 1,
+                    "test_symbolic": True,
+                    "test_output_shape": False,
+                },
+                {
+                    "padding": (2, 2, 2),
+                    "DHWKdKhKw": (7, 7, 7, 2, 2, 2),
+                    "stride": (2, 1, 1),
+                    "dilation": (1, 1, 1),
+                    "has_bias": True,
+                    "groups": 2,
+                    "test_symbolic": False,
+                    "test_output_shape": False,
+                },
             ],
+            [(np.float32, np.float32), (np.float16, np.float16)],
         ),
     )
     def test_builder_to_backend_stress(
@@ -83,6 +89,7 @@ class TestConvTranspose:
         backend,
         conv_dim,
         config,
+        x_weight_dtype,
     ):
         padding = config["padding"]
         DHWKdKhKw = config["DHWKdKhKw"]
@@ -96,8 +103,8 @@ class TestConvTranspose:
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
-        import torch
-        import torch.nn as nn
+        x_dtype, weight_bias_dtype = x_weight_dtype
+        x_builtin_dtype = types.numpy_type_to_builtin_type(x_dtype)
 
         isDeconv1d = conv_dim == "conv1d"
         isDeconv2d = conv_dim == "conv2d"
@@ -160,13 +167,13 @@ class TestConvTranspose:
             ]
 
         wts = m.state_dict()
-        weight = wts["weight"].detach().numpy()
-        bias = wts["bias"].detach().numpy() if has_bias else None
+        weight = wts["weight"].detach().numpy().astype(weight_bias_dtype)
+        bias = wts["bias"].detach().numpy().astype(weight_bias_dtype) if has_bias else None
 
         input = torch.randn(*input_shape)
         output = m(input)
-        output = output.detach().numpy()
-        input = input.detach().numpy()
+        output = output.detach().numpy().astype(x_dtype)
+        input = input.detach().numpy().astype(x_dtype)
 
         output_shape = list(output.shape)
         if test_symbolic:
@@ -179,7 +186,7 @@ class TestConvTranspose:
         expected_output_types = tuple(output_shape[:]) + (types.fp32,)
         expected_outputs = [output]
 
-        input_placeholders = {"x": mb.placeholder(shape=input_shape)}
+        input_placeholders = {"x": mb.placeholder(shape=input_shape, dtype=x_builtin_dtype)}
         input_values = {"x": input}
 
         def build(x):
@@ -206,12 +213,12 @@ class TestConvTranspose:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
+            atol=1e-3 if x_dtype == np.float16 and backend.backend == "neuralnetwork" else 1e-4,
         )
 
 
 class TestConv:
-
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         "compute_unit, backend, padding_mode, conv_dim",
         itertools.product(
@@ -222,7 +229,6 @@ class TestConv:
         ),
     )
     def test_padding_mode_stress(self, compute_unit, backend, padding_mode, conv_dim):
-        import torch
         def rotation_tensor(tensor):
             assert tensor.shape[0] == tensor.shape[1] == 1
             tensor = tensor[0][0]
@@ -231,18 +237,14 @@ class TestConv:
             return np.expand_dims(new_tensor, axis=(0, 1))
 
         if conv_dim == "conv3d" and padding_mode == "same_lower":
-            if backend[0] == "neuralnetwork":
+            if backend.backend == "neuralnetwork":
                 pytest.skip("same_lower mode not supported for conv3d in neuralnetwork backend")
 
-        if padding_mode == "same_lower" and backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
-            pytest.skip("same_lower pad_type not supported in macOS12 or older.")
-
-        minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
-        if _macos_version() < (13, 0) and minimum_deployment_target == ct.target.iOS16:
-            pytest.skip("iOS16 target not available on macOS 13")
+        if padding_mode == "same_lower" and backend.opset_version == ct.target.iOS15:
+            pytest.skip("same_lower pad_type not supported iOS15 opset")
 
         batch, in_channels, out_channels = 1, 1, 1
-        input_shape = (batch, in_channels, 4, 5, 6) # batch, channel, height, width
+        input_shape = (batch, in_channels, 4, 5, 6)  # batch, channel, height, width
         kernel_size = (2, 4, 3)
         torch_padding_mode = padding_mode if padding_mode != "same_lower" else "same"
 
@@ -296,9 +298,13 @@ class TestConv:
             # (1) Rotate the input value
             # (2) Rotate the kernel value
             # (3) Rotate the torch out
-            rotated_input = torch.tensor(rotation_tensor(input.detach().numpy()), dtype=torch.float32)
-            rotated_weight = torch.tensor(rotation_tensor(weight.detach().numpy()), dtype=torch.float32)
-            m.load_state_dict({'weight': rotated_weight}, strict=False)
+            rotated_input = torch.tensor(
+                rotation_tensor(input.detach().numpy()), dtype=torch.float32
+            )
+            rotated_weight = torch.tensor(
+                rotation_tensor(weight.detach().numpy()), dtype=torch.float32
+            )
+            m.load_state_dict({"weight": rotated_weight}, strict=False)
             output = m(rotated_input).detach().numpy()
             output = rotation_tensor(output)
         else:
@@ -326,11 +332,9 @@ class TestConv:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=minimum_deployment_target,
         )
 
-
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -338,49 +342,52 @@ class TestConv:
                 "backend",
                 "conv_dim",
                 "config",
+                "x_weight_dtype",
             ]
         ),
         itertools.product(
             compute_units,
             backends,
             ["conv1d", "conv2d", "conv3d"],
-            [{
-                "padding": (1, 1, 1),
-                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
-                "stride": (2, 1, 1),
-                "dilation": (1, 1, 1),
-                "has_bias": False,
-                "groups": 1,
-                "symbolic": False,
-             },
-             {
-                "padding": (2, 2, 2),
-                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
-                "stride": (2, 2, 2),
-                "dilation": (2, 1, 1),
-                "has_bias": False,
-                "groups": 2,
-                "symbolic": True,
-             },
-             {
-                "padding": (1, 1, 1),
-                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
-                "stride": (2, 2, 2),
-                "dilation": (2, 1, 1),
-                "has_bias": True,
-                "groups": 1,
-                "symbolic": True,
-             },
-             {
-                "padding": (2, 2, 2),
-                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
-                "stride": (2, 1, 1),
-                "dilation": (1, 1, 1),
-                "has_bias": True,
-                "groups": 2,
-                "symbolic": False,
-             },
-             ],
+            [
+                {
+                    "padding": (1, 1, 1),
+                    "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                    "stride": (2, 1, 1),
+                    "dilation": (1, 1, 1),
+                    "has_bias": False,
+                    "groups": 1,
+                    "symbolic": False,
+                },
+                {
+                    "padding": (2, 2, 2),
+                    "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                    "stride": (2, 2, 2),
+                    "dilation": (2, 1, 1),
+                    "has_bias": False,
+                    "groups": 2,
+                    "symbolic": True,
+                },
+                {
+                    "padding": (1, 1, 1),
+                    "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                    "stride": (2, 2, 2),
+                    "dilation": (2, 1, 1),
+                    "has_bias": True,
+                    "groups": 1,
+                    "symbolic": True,
+                },
+                {
+                    "padding": (2, 2, 2),
+                    "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                    "stride": (2, 1, 1),
+                    "dilation": (1, 1, 1),
+                    "has_bias": True,
+                    "groups": 2,
+                    "symbolic": False,
+                },
+            ],
+            [(np.float32, np.float32), (np.float16, np.float16)],
         ),
     )
     def test_builder_to_backend_stress(
@@ -389,6 +396,7 @@ class TestConv:
         backend,
         conv_dim,
         config,
+        x_weight_dtype,
     ):
         padding = config["padding"]
         DHWKdKhKw = config["DHWKdKhKw"]
@@ -401,8 +409,8 @@ class TestConv:
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
-        import torch
-        import torch.nn as nn
+        x_dtype, weight_bias_dtype = x_weight_dtype
+        x_builtin_dtype = types.numpy_type_to_builtin_type(x_dtype)
 
         isConv1d = conv_dim == "conv1d"
         isConv2d = conv_dim == "conv2d"
@@ -464,17 +472,18 @@ class TestConv:
             ]
 
         wts = m.state_dict()
-        weight = wts["weight"].detach().numpy()
-        bias = wts["bias"].detach().numpy() if has_bias else None
+        weight = wts["weight"].detach().numpy().astype(weight_bias_dtype)
+        bias = wts["bias"].detach().numpy().astype(weight_bias_dtype) if has_bias else None
 
         # PyTorch and CoreML weight format is same
         # PyTorch weight format: C_out, C_in, H, W
         # MIL weight format: C_out, C_in, H, W
 
-        input = torch.randn(*input_shape)
+        input = random_gen(input_shape)
+        input = torch.Tensor(input)
         output = m(input)
-        output = output.detach().numpy()
-        input = input.detach().numpy()
+        output = output.detach().numpy().astype(x_dtype)
+        input = input.detach().numpy().astype(x_dtype)
 
         output_shape = list(output.shape)
         if symbolic:
@@ -484,10 +493,10 @@ class TestConv:
             input_shape[0] = symbolic_batch_size
             output_shape[0] = symbolic_batch_size
 
-        expected_output_types = tuple(output_shape[:]) + (types.fp32,)
+        expected_output_types = tuple(output_shape[:]) + (x_builtin_dtype,)
         expected_outputs = [output]
 
-        input_placeholders = {"x": mb.placeholder(shape=input_shape)}
+        input_placeholders = {"x": mb.placeholder(shape=input_shape, dtype=x_builtin_dtype)}
         input_values = {"x": input}
 
         def build(x):
@@ -512,9 +521,10 @@ class TestConv:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
+            atol=1e-3 if x_dtype == np.float16 and backend.backend == "neuralnetwork" else 1e-4,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -529,42 +539,42 @@ class TestConv:
             backends,
             ["conv1d", "conv2d"],
             [
-            {
-                "padding": (1, 1, 1),
-                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
-                "stride": (2, 1, 1),
-                "dilation": (1, 1, 1),
-                "has_bias": False,
-                "groups": 1,
-                "symbolic": False,
-            },
-            {
-                "padding": (2, 2, 2),
-                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
-                "stride": (2, 2, 2),
-                "dilation": (2, 1, 1),
-                "has_bias": False,
-                "groups": 2,
-                "symbolic": True,
-            },
-            {
-                "padding": (1, 1, 1),
-                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
-                "stride": (2, 2, 2),
-                "dilation": (2, 1, 1),
-                "has_bias": True,
-                "groups": 1,
-                "symbolic": True,
-            },
-            {
-                "padding": (2, 2, 2),
-                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
-                "stride": (2, 1, 1),
-                "dilation": (1, 1, 1),
-                "has_bias": True,
-                "groups": 2,
-                "symbolic": False,
-            },
+                {
+                    "padding": (1, 1, 1),
+                    "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                    "stride": (2, 1, 1),
+                    "dilation": (1, 1, 1),
+                    "has_bias": False,
+                    "groups": 1,
+                    "symbolic": False,
+                },
+                {
+                    "padding": (2, 2, 2),
+                    "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                    "stride": (2, 2, 2),
+                    "dilation": (2, 1, 1),
+                    "has_bias": False,
+                    "groups": 2,
+                    "symbolic": True,
+                },
+                {
+                    "padding": (1, 1, 1),
+                    "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                    "stride": (2, 2, 2),
+                    "dilation": (2, 1, 1),
+                    "has_bias": True,
+                    "groups": 1,
+                    "symbolic": True,
+                },
+                {
+                    "padding": (2, 2, 2),
+                    "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                    "stride": (2, 1, 1),
+                    "dilation": (1, 1, 1),
+                    "has_bias": True,
+                    "groups": 2,
+                    "symbolic": False,
+                },
             ],
         ),
     )
@@ -582,17 +592,18 @@ class TestConv:
         groups = config["groups"]
         symbolic = config["symbolic"]
 
-        if backend[0] == "neuralnetwork" and groups > 1:
-            pytest.skip("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
+        if backend.backend == "neuralnetwork" and groups > 1:
+            pytest.skip(
+                "dynamic conv with groups > 1 is not supported on the neuralnetwork backend"
+            )
 
-        if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
-            pytest.xfail("rdar://97398343 (test_builder_to_backend_stress_weights_input is failing on mlprogram + GPU)")
+        if backend.backend == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
+            pytest.xfail(
+                "rdar://97398343 (test_builder_to_backend_stress_weights_input is failing on mlprogram + GPU)"
+            )
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
-
-        import torch
-        import torch.nn as nn
 
         isConv1d = conv_dim == "conv1d"
         isConv2d = conv_dim == "conv2d"
@@ -650,7 +661,10 @@ class TestConv:
         expected_output_types = tuple(output_shape[:]) + (types.fp32,)
         expected_outputs = [output]
 
-        input_placeholders = {"x": mb.placeholder(shape=input_shape), "input_weight":mb.placeholder(shape=weight.shape)}
+        input_placeholders = {
+            "x": mb.placeholder(shape=input_shape),
+            "input_weight": mb.placeholder(shape=weight.shape),
+        }
         input_values = {"x": input, "input_weight": weight}
 
         def build(x, input_weight):
@@ -676,9 +690,7 @@ class TestConv:
             backend=backend,
         )
 
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_conv_bias_fusion(self, compute_unit, backend):
         """
         Test conv bias fusion when const input.
@@ -697,7 +709,7 @@ class TestConv:
 
         def build(x):
             x = mb.conv(x=x, weight=weight)
-            bias = mb.const(val=[10.])
+            bias = mb.const(val=[10.0])
             return mb.add(x=x, y=bias)
 
         input = np.array([1, 2, 3, 4], dtype=np.float32).reshape((1, 1, 2, 2))
@@ -719,7 +731,6 @@ class TestConv:
 
 
 class TestInvalidConvConfig:
-
     @pytest.mark.parametrize(
         "compute_unit, backend, conv_dim",
         itertools.product(
@@ -740,14 +751,16 @@ class TestInvalidConvConfig:
         while C_in % groups != 0:
             groups = np.random.randint(low=1, high=C_in + 1)
 
-        weight = np.random.rand(C_out, C_in // groups + + np.random.randint(low=1, high=8), *K) * 2.0 - 1.0
+        weight = (
+            np.random.rand(C_out, C_in // groups + +np.random.randint(low=1, high=8), *K) * 2.0
+            - 1.0
+        )
 
         def build(x):
             return mb.conv(x=x, weight=weight, groups=groups)
 
         with pytest.raises(
-            ValueError,
-            match=r"C_in / groups = [0-9]+/[0-9]+ != weight\[1\] \([0-9]+\)"
+            ValueError, match=r"C_in / groups = [0-9]+/[0-9]+ != weight\[1\] \([0-9]+\)"
         ):
             run_compare_builder(
                 build,
@@ -782,8 +795,7 @@ class TestInvalidConvConfig:
             return mb.conv(x=x, weight=weight, bias=bias)
 
         with pytest.raises(
-            ValueError,
-            match=r"# of bias values [0-9]+ not equal to # output channels [0-9]+"
+            ValueError, match=r"# of bias values [0-9]+ not equal to # output channels [0-9]+"
         ):
             run_compare_builder(
                 build,
@@ -815,8 +827,7 @@ class TestInvalidConvConfig:
             return mb.conv(x=x, weight=weight)
 
         with pytest.raises(
-            ValueError,
-            match=r"spatial dimension [0-9]+ has invalid output size -?[0-9]+"
+            ValueError, match=r"spatial dimension [0-9]+ has invalid output size -?[0-9]+"
         ):
             run_compare_builder(
                 build,
@@ -849,8 +860,7 @@ class TestInvalidConvConfig:
             return mb.conv(x=x, weight=weight, dilations=dilations)
 
         with pytest.raises(
-            ValueError,
-            match=r"spatial dimension [0-9]+ has invalid output size -?[0-9]+"
+            ValueError, match=r"spatial dimension [0-9]+ has invalid output size -?[0-9]+"
         ):
             run_compare_builder(
                 build,
@@ -886,8 +896,7 @@ class TestInvalidConvConfig:
             return mb.conv(x=x, weight=weight, groups=groups)
 
         with pytest.raises(
-            ValueError,
-            match=r"# of input channels [0-9]+ not divisible by groups [0-9]+"
+            ValueError, match=r"# of input channels [0-9]+ not divisible by groups [0-9]+"
         ):
             run_compare_builder(
                 build,
@@ -920,16 +929,18 @@ class TestInvalidConvConfig:
         pad = tuple(np.random.randint(low=1, high=4, size=2 * conv_dim + 3))
 
         def build(x):
-            return mb.conv(x=x, weight=weight, strides=strides, dilations=dilations, pad_type="custom", pad=pad)
+            return mb.conv(
+                x=x, weight=weight, strides=strides, dilations=dilations, pad_type="custom", pad=pad
+            )
 
         with pytest.raises(
             ValueError,
             match=r"input_shape \(length [0-9]+\), "
-                  r"kernel_shape \(length [0-9]+\), "
-                  r"strides \(length [0-9]+\), "
-                  r"dilations \(length [0-9]+\), "
-                  r"and custom_pad \(length [0-9]+\) divided by two "
-                  r"must all be the same length",
+            r"kernel_shape \(length [0-9]+\), "
+            r"strides \(length [0-9]+\), "
+            r"dilations \(length [0-9]+\), "
+            r"and custom_pad \(length [0-9]+\) divided by two "
+            r"must all be the same length",
         ):
             run_compare_builder(
                 build,

@@ -179,6 +179,9 @@ class TestApiVisibilities:
             "palettize_weights",
             "prune_weights",
             "decompress_weights",
+            "get_weights_metadata",
+            "CoreMLWeightMetaData",
+            "CoreMLOpMetaData",
         ]
         _check_visible_modules(_get_visible_items(ct.optimize.coreml), expected)
 

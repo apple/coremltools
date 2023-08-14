@@ -155,8 +155,11 @@ class remove_redundant_ops(AbstractGraphPass):
         candidate_ops_lists = remove_redundant_ops._get_candidate_ops_lists_from_var(parent_var)
         block_changed = False
         for ops_list in candidate_ops_lists:
-            if remove_redundant_ops._try_to_remove_ops(ops_list):
-                block_changed = True
+            # Iterate through the child ops list, to make sure that we check all possible combinations.
+            for idx in range(len(ops_list)):
+                if remove_redundant_ops._try_to_remove_ops(ops_list[idx:]):
+                    block_changed = True
+                    break
         return block_changed
 
     @block_context_manager

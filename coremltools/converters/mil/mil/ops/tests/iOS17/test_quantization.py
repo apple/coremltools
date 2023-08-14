@@ -9,11 +9,12 @@ from typing import Tuple
 import numpy as np
 import pytest
 
-import coremltools as ct
 from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.ops.tests.iOS17 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.mil.types import builtin_to_string, numpy_type_to_builtin_type
+from coremltools.converters.mil.testing_reqs import BackendConfig, compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
 
 if _HAS_TORCH:
@@ -22,6 +23,13 @@ if _HAS_TORCH:
 torch.manual_seed(1042)
 np.random.seed(1042)
 
+
+def _set_backend_precision(backend, precision):
+    return BackendConfig(
+        backend=backend.backend,
+        precision=precision,
+        opset_version=backend.opset_version,
+    )
 
 class TestQuantizationBase:
     @staticmethod
@@ -163,7 +171,8 @@ class TestQuantize(TestQuantizationBase):
         )
         np.testing.assert_allclose(np.array([[0, 1, 2], [0, 1, 2]]).astype(np.int8), v.val)
 
-    def test_smoke_builder_to_backend_quantize_per_tensor(self):
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_smoke_builder_to_backend_quantize_per_tensor(self, compute_unit, backend):
         def build(x):
             x = mb.cast(x=x, dtype="fp16")
             quantized = mb.quantize(
@@ -190,12 +199,12 @@ class TestQuantize(TestQuantizationBase):
             input_values={"x": x},
             expected_output_types=[expected_output_type],
             expected_outputs=[expected_output],
-            compute_unit=ct.ComputeUnit.CPU_ONLY,
-            backend=("mlprogram", "fp16"),
-            minimum_deployment_target=ct.target.iOS17,
+            compute_unit=compute_unit,
+            backend=backend,
         )
 
-    def test_smoke_builder_to_backend_quantize_per_channel(self):
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_smoke_builder_to_backend_quantize_per_channel(self, compute_unit, backend):
         def build(x):
             x = mb.cast(x=x, dtype="fp16")
             quantized = mb.quantize(
@@ -223,15 +232,16 @@ class TestQuantize(TestQuantizationBase):
             input_values={"x": x},
             expected_output_types=[expected_output_type],
             expected_outputs=[expected_output],
-            compute_unit=ct.ComputeUnit.CPU_ONLY,
-            backend=("mlprogram", "fp16"),
-            minimum_deployment_target=ct.target.iOS17,
+            compute_unit=compute_unit,
+            backend=backend,
         )
 
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present",
+        "compute_unit, backend, float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present",
         itertools.product(
+            compute_units,
+            backends,
             (np.float32, np.float16),
             (np.int8, np.uint8),
             ("fp32", "fp16"),
@@ -240,7 +250,14 @@ class TestQuantize(TestQuantizationBase):
         ),
     )
     def test_stress_builder_to_backend_quantize_all_possibilities(
-        self, float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present
+        self,
+        compute_unit,
+        backend,
+        float_dtype,
+        quant_dtype,
+        compute_precision,
+        input_rank,
+        is_zp_present,
     ):
         def build(x):
             x = mb.cast(x=x, dtype=builtin_to_string(numpy_type_to_builtin_type(float_dtype)))
@@ -256,11 +273,7 @@ class TestQuantize(TestQuantizationBase):
                 input=quantized,
                 scale=float_dtype(1),
             )
-            # TODO(rdar://98013530): some fp16-output models fail
-            if float_dtype == np.float16:
-                return mb.cast(x=dequantized, dtype="fp32")
-            else:
-                return dequantized
+            return dequantized
 
         for axis in [None] + [i for i in range(-input_rank, input_rank)]:
             x_fp, scale, zero_point = self.get_random_quantization_params(
@@ -287,9 +300,8 @@ class TestQuantize(TestQuantizationBase):
                 input_values,
                 expected_output_types,
                 expected_outputs=expected_outputs,
-                compute_unit=ct.ComputeUnit.CPU_ONLY,
-                backend=("mlprogram", compute_precision),
-                minimum_deployment_target=ct.target.iOS17,
+                compute_unit=compute_unit,
+                backend=_set_backend_precision(backend, compute_precision),
             )
 
 
@@ -323,7 +335,8 @@ class TestDequantize(TestQuantizationBase):
         )
         np.testing.assert_allclose(np.float32([[0, 2, 4], [0, 2, 4]]), v.val)
 
-    def test_smoke_builder_to_backend_dequantize_per_tensor(self):
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_smoke_builder_to_backend_dequantize_per_tensor(self, compute_unit, backend):
         def build(x):
             x = mb.cast(x=x, dtype="fp32")
             # TODO(rdar://107430678): Replace scale=1 zero_point=0 quantize/dequantize with cast
@@ -350,14 +363,14 @@ class TestDequantize(TestQuantizationBase):
             input_values={"x": x},
             expected_output_types=[expected_output_type],
             expected_outputs=[expected_output],
-            compute_unit=ct.ComputeUnit.CPU_ONLY,
-            backend=("mlprogram", "fp32"),
-            minimum_deployment_target=ct.target.iOS17,
+            compute_unit=compute_unit,
+            backend=_set_backend_precision(backend, "fp32"),
             atol=1e-3,
             rtol=1e-3,
         )
 
-    def test_smoke_builder_to_backend_dequantize_per_channel(self):
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_smoke_builder_to_backend_dequantize_per_channel(self, compute_unit, backend):
         def build(x):
             x = mb.cast(x=x, dtype="fp32")
             # TODO(rdar://107430678): Replace scale=1 zero_point=0 quantize/dequantize with cast
@@ -385,17 +398,18 @@ class TestDequantize(TestQuantizationBase):
             input_values={"x": x},
             expected_output_types=[expected_output_type],
             expected_outputs=[expected_output],
-            compute_unit=ct.ComputeUnit.CPU_ONLY,
-            backend=("mlprogram", "fp32"),
-            minimum_deployment_target=ct.target.iOS17,
+            compute_unit=compute_unit,
+            backend=_set_backend_precision(backend, "fp32"),
             atol=1e-3,
             rtol=1e-3,
         )
 
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present",
+        "compute_unit, backend, float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present",
         itertools.product(
+            compute_units,
+            backends,
             (np.float32, np.float16),
             (np.int8, np.uint8),
             ("fp32", "fp16"),
@@ -404,7 +418,14 @@ class TestDequantize(TestQuantizationBase):
         ),
     )
     def test_stress_builder_to_backend_dequantize_all_possibilities(
-        self, float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present
+        self,
+        compute_unit,
+        backend,
+        float_dtype,
+        quant_dtype,
+        compute_precision,
+        input_rank,
+        is_zp_present,
     ):
         def build(x):
             x = mb.cast(x=x, dtype=builtin_to_string(numpy_type_to_builtin_type(float_dtype)))
@@ -420,11 +441,7 @@ class TestDequantize(TestQuantizationBase):
                 scale=scale,
                 axis=axis,
             )
-            # TODO(rdar://98013530): some fp16-output models fail
-            if float_dtype == np.float16:
-                return mb.cast(x=dequantized, dtype="fp32")
-            else:
-                return dequantized
+            return dequantized
 
         for axis in [None] + [i for i in range(-input_rank, input_rank)]:
             x_fp, scale, zero_point = self.get_random_quantization_params(
@@ -446,15 +463,13 @@ class TestDequantize(TestQuantizationBase):
 
             expected_outputs = [output_torch_val]
             expected_output_types = [output_type]
-
             run_compare_builder(
                 build,
                 input_placeholders,
                 input_values,
                 expected_output_types,
                 expected_outputs=expected_outputs,
-                compute_unit=ct.ComputeUnit.CPU_ONLY,
-                backend=("mlprogram", compute_precision),
-                minimum_deployment_target=ct.target.iOS17,
+                compute_unit=compute_unit,
+                backend=_set_backend_precision(backend, compute_precision),
                 rtol=1e-3,
             )

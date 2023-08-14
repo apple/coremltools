@@ -232,8 +232,10 @@ class reshape(Operation):
             ret_shape = self._infer_shape_dynamic()
 
         ret_val = None
-        if self.x.val is not None and all(isscalar(a) and not is_symbolic(a) for a in ret_shape):
-            ret_val = reshape_with_symbol(self.x.val, ret_shape)
+        if self.x.sym_val is not None and all(
+            isscalar(a) and not is_symbolic(a) for a in ret_shape
+        ):
+            ret_val = reshape_with_symbol(self.x.sym_val, ret_shape)
         return types.tensor(self.x.dtype, tuple(ret_shape)), ret_val
 
     @staticmethod

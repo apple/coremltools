@@ -61,9 +61,6 @@ class upsample_bilinear(_upsample_bilinear_iOS15):
         half_pixel_centers=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
 
-    def default_inputs(self):
-        return super().default_inputs() + DefaultInputs(half_pixel_centers=not self.align_corners.val)
-
 @register_op(opset_version=_IOS16_TARGET)
 class crop_resize(_crop_resize_iOS15):
     """

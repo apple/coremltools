@@ -8,34 +8,22 @@ import itertools
 import numpy as np
 import pytest
 
-import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.defs.iOS16 import constexpr_ops
-from coremltools.converters.mil.mil.ops.tests.testing_utils import \
-    run_compare_builder
-from coremltools.converters.mil.testing_utils import (get_op_types_in_program,
-                                                      ssa_fn)
+from coremltools.converters.mil.mil.ops.tests.iOS16 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_utils import get_op_types_in_program, ssa_fn
 
-backends = [("mlprogram", "fp32"), ("mlprogram", "fp16")]
 compute_units = testing_reqs.compute_units
 
-
-@pytest.mark.skipif(
-    ct.utils._macos_version() < (13, 0),
-    reason="ConstExpr ops available from macOS13 onwards.",
-)
 class TestConstexprAffineDequantize:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
         t = np.array(range(4)).reshape(1, 1, 2, 2).astype(np.float32)
-        decompressed_constant = (
-            np.array([1, 2, 3, 4]).reshape(1, 1, 2, 2).astype(np.float32)
-        )
+        decompressed_constant = np.array([1, 2, 3, 4]).reshape(1, 1, 2, 2).astype(np.float32)
         input_placeholders = {
             "x": mb.placeholder(shape=t.shape),
         }
@@ -65,7 +53,6 @@ class TestConstexprAffineDequantize:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
@@ -117,48 +104,44 @@ class TestConstexprAffineDequantize:
         for quant_dtype in [np.int8, np.uint8]:
             low = 0 if quant_dtype == np.uint8 else -128
             high = 255 if quant_dtype == np.uint8 else 127
-            for rank in range(1, 6):
-                shape = np.random.randint(low=2, high=5, size=rank)
-                quantized_data = np.random.randint(
-                    low=low, high=high, size=shape, dtype=quant_dtype
-                )
-                axis = np.random.choice(range(-rank, rank))
-                scalar_zp = np.random.choice([True, False])
-                scalar_sc = np.random.choice([True, False])
-                zero_point = (
-                    np.random.randint(
-                        low=low,
-                        high=high,
-                        size=quantized_data.shape[axis],
-                        dtype=quant_dtype,
+            for zp_dtype in [np.int8, np.uint8, np.float32]:
+                for rank in range(1, 6):
+                    shape = np.random.randint(low=2, high=5, size=rank)
+                    quantized_data = np.random.randint(
+                        low=low, high=high, size=shape, dtype=quant_dtype
                     )
-                    if not scalar_zp
-                    else np.random.choice(range(low, high)).astype(quant_dtype)
-                )
-                scale = (
-                    np.random.rand(quantized_data.shape[axis]).astype(np.float32)
-                    if not scalar_sc
-                    else np.float32(np.random.rand())
-                )  # fp16 is already covered under backends parameterization
+                    axis = np.random.choice(range(-rank, rank))
+                    scalar_zp = np.random.choice([True, False])
+                    scalar_sc = np.random.choice([True, False])
+                    zero_point = (
+                        np.random.randint(
+                            low=low,
+                            high=high,
+                            size=quantized_data.shape[axis],
+                            dtype=quant_dtype,
+                        ).astype(zp_dtype)
+                        if not scalar_zp
+                        else np.random.choice(range(low, high)).astype(zp_dtype)
+                    )
+                    scale = (
+                        np.random.rand(quantized_data.shape[axis]).astype(np.float32)
+                        if not scalar_sc
+                        else np.float32(np.random.rand())
+                    )  # fp16 is already covered under backends parameterization
 
-                params = {
-                    "quantized_data": quantized_data,
-                    "zp": zero_point,
-                    "sc": scale,
-                    "axis": axis,
-                }
-                yield params
+                    params = {
+                        "quantized_data": quantized_data,
+                        "zp": zero_point,
+                        "sc": scale,
+                        "axis": axis,
+                    }
+                    yield params
 
     @pytest.mark.parametrize(
         "compute_unit, backend, config",
-        itertools.product(
-            compute_units,
-            backends,
-            affine_dequant_config_generator.__func__()
-        ),
+        itertools.product(compute_units, backends, affine_dequant_config_generator.__func__()),
     )
     def test_builder_stress(self, compute_unit, backend, config):
-
         quantized_data, zero_point, scale, axis = (
             config["quantized_data"],
             config["zp"],
@@ -198,7 +181,6 @@ class TestConstexprAffineDequantize:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
@@ -206,15 +188,8 @@ class TestConstexprAffineDequantize:
         if "constexpr_affine_dequantize" not in get_op_types_in_program(prog):
             raise AssertionError("Invalidated: Test Failed")
 
-
-@pytest.mark.skipif(
-    ct.utils._macos_version() < (13, 0),
-    reason="ConstExpr ops available from macOS13 onwards.",
-)
 class TestConstexprCast:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
         t = np.array(range(4)).reshape(4, 1).astype(np.float32)
@@ -240,7 +215,6 @@ class TestConstexprCast:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
@@ -268,11 +242,7 @@ class TestConstexprCast:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, config",
-        itertools.product(
-            compute_units,
-            backends,
-            cast_config_generator.__func__()
-        ),
+        itertools.product(compute_units, backends, cast_config_generator.__func__()),
     )
     def test_builder_stress(self, compute_unit, backend, config):
 
@@ -293,9 +263,7 @@ class TestConstexprCast:
             types.string_to_builtin(output_dtype),
         )
 
-        output_np_type = types.nptype_from_builtin(
-            types.string_to_builtin(output_dtype)
-        )
+        output_np_type = types.nptype_from_builtin(types.string_to_builtin(output_dtype))
         t = np.random.rand(*source_val.shape).astype(output_np_type)
         decompressed_constant = source_val.astype(output_np_type)
         expected_outputs = t + decompressed_constant
@@ -312,22 +280,14 @@ class TestConstexprCast:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
         prog = mlmodel._mil_program
         assert "constexpr_cast" in get_op_types_in_program(prog)
 
-
-@pytest.mark.skipif(
-    ct.utils._macos_version() < (13, 0),
-    reason="ConstExpr ops available from macOS13 onwards.",
-)
 class TestConstexprLutToDense:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
         t = np.array(range(4)).reshape(4, 1).astype(np.float32)
@@ -374,7 +334,6 @@ class TestConstexprLutToDense:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
@@ -392,9 +351,7 @@ class TestConstexprLutToDense:
                 ]
             ).astype(np.uint32),
         )
-        np.testing.assert_allclose(
-            np.float32([3, 3, 1, 1, 1]).astype(np.float32), v.val
-        )
+        np.testing.assert_allclose(np.float32([3, 3, 1, 1, 1]).astype(np.float32), v.val)
 
     @staticmethod
     def lut_config_generator():
@@ -407,9 +364,7 @@ class TestConstexprLutToDense:
                 if lut_dtype == np.uint8:
                     lut = np.random.randint(low=255, size=lut_size, dtype=np.uint8)
                 elif lut_dtype == np.int8:
-                    lut = np.random.randint(
-                        low=-128, high=127, size=lut_size, dtype=np.int8
-                    )
+                    lut = np.random.randint(low=-128, high=127, size=lut_size, dtype=np.int8)
                 else:
                     lut = np.random.rand(lut_size).astype(lut_dtype)
                 for output_rank in range(1, 6):
@@ -418,16 +373,12 @@ class TestConstexprLutToDense:
                     indices = np.random.randint(
                         low=0, high=2**nbits, size=output_shape, dtype=np.uint8
                     )
-                    indices_bitarray = np.unpackbits(
-                        indices, bitorder="little"
-                    ).reshape(-1, 8)
-                    packed_indices = np.packbits(
-                        indices_bitarray[:, :nbits], bitorder="little"
-                    )
+                    indices_bitarray = np.unpackbits(indices, bitorder="little").reshape(-1, 8)
+                    packed_indices = np.packbits(indices_bitarray[:, :nbits], bitorder="little")
 
-                    assert packed_indices.size == np.ceil(
-                        nbits * np.prod(output_shape) / 8
-                    ).astype(np.int32)
+                    assert packed_indices.size == np.ceil(nbits * np.prod(output_shape) / 8).astype(
+                        np.int32
+                    )
                     params = {
                         "indices": packed_indices,
                         "shape": output_shape,
@@ -437,11 +388,7 @@ class TestConstexprLutToDense:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, config",
-        itertools.product(
-            compute_units,
-            backends,
-            lut_config_generator.__func__()
-        ),
+        itertools.product(compute_units, backends, lut_config_generator.__func__()),
     )
     def test_builder_stress(self, compute_unit, backend, config):
 
@@ -465,9 +412,7 @@ class TestConstexprLutToDense:
         )
 
         t = np.random.rand(*shape).astype(lut.dtype)
-        decompressed_constant = constexpr_ops.constexpr_lut_to_dense.decompress(
-            lut, indices, shape
-        )
+        decompressed_constant = constexpr_ops.constexpr_lut_to_dense.decompress(lut, indices, shape)
         expected_outputs = t + decompressed_constant
 
         input_placeholders = {
@@ -482,7 +427,6 @@ class TestConstexprLutToDense:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
@@ -490,15 +434,8 @@ class TestConstexprLutToDense:
         if "constexpr_lut_to_dense" not in get_op_types_in_program(prog):
             raise AssertionError("Invalidated: Test Failed")
 
-
-@pytest.mark.skipif(
-    ct.utils._macos_version() < (13, 0),
-    reason="ConstExpr ops available from macOS13 onwards.",
-)
 class TestConstexprSparseToDense:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
         t = np.array(range(4)).reshape(4, 1).astype(np.float32)
@@ -512,9 +449,7 @@ class TestConstexprSparseToDense:
             nonzero_data = np.array([1, 2, 4]).astype(np.float32)
             mask = np.array([11]).astype(np.uint8)
             shape = np.array([4, 1]).astype(np.uint32)
-            y = mb.constexpr_sparse_to_dense(
-                nonzero_data=nonzero_data, mask=mask, shape=shape
-            )
+            y = mb.constexpr_sparse_to_dense(nonzero_data=nonzero_data, mask=mask, shape=shape)
             return mb.add(x=x, y=y)
 
         expected_output_types = (4, 1, types.fp32)
@@ -528,7 +463,6 @@ class TestConstexprSparseToDense:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass
@@ -566,22 +500,16 @@ class TestConstexprSparseToDense:
                     mask = np.random.randint(low=255, size=nBytes, dtype=np.uint8)
                     bitarray = np.unpackbits(mask, bitorder="little")
 
-                nonzero_size = np.sum(
-                    np.where(np.unpackbits(mask, bitorder="little") != 0, 1, 0)
-                )
+                nonzero_size = np.sum(np.where(np.unpackbits(mask, bitorder="little") != 0, 1, 0))
 
                 if nonzero_data_dtype == np.uint8:
-                    nonzero_data = np.random.randint(
-                        low=255, size=nonzero_size, dtype=np.uint8
-                    )
+                    nonzero_data = np.random.randint(low=255, size=nonzero_size, dtype=np.uint8)
                 elif nonzero_data_dtype == np.int8:
                     nonzero_data = np.random.randint(
                         low=-128, high=127, size=nonzero_size, dtype=np.int8
                     )
                 else:
-                    nonzero_data = np.random.rand(nonzero_size).astype(
-                        nonzero_data_dtype
-                    )
+                    nonzero_data = np.random.rand(nonzero_size).astype(nonzero_data_dtype)
 
                 params = {
                     "nonzero_data": nonzero_data,
@@ -592,11 +520,7 @@ class TestConstexprSparseToDense:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, config",
-        itertools.product(
-            compute_units,
-            backends,
-            sparse_config_generator.__func__()
-        ),
+        itertools.product(compute_units, backends, sparse_config_generator.__func__()),
     )
     def test_builder_stress(self, compute_unit, backend, config):
 
@@ -637,7 +561,6 @@ class TestConstexprSparseToDense:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
         )
 
         # validate that the constexpr op is not removed by any graph pass

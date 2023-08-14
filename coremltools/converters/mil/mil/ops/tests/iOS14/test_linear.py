@@ -11,10 +11,10 @@ import pytest
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
-
-from .testing_utils import run_compare_builder
 
 
 class TestLinear:
@@ -34,9 +34,7 @@ class TestLinear:
 
         expected_output_types = [(2, 2, types.fp32)]
         expected_outputs = [
-            np.array(
-                [[-5.9438195, -1.8854373], [-4.054486, -1.3484411]], dtype=np.float32
-            )
+            np.array([[-5.9438195, -1.8854373], [-4.054486, -1.3484411]], dtype=np.float32)
         ]
 
         run_compare_builder(
@@ -55,19 +53,28 @@ class TestLinear:
         weight_val = random_gen(shape=(2, 2), rand_min=-91, rand_max=84)
         bias_val = random_gen(shape=(2,), rand_min=0.0, rand_max=9.0)
         v = mb.linear(x=x_val, weight=weight_val, bias=bias_val)
-        np.testing.assert_allclose(np.matmul(x_val, weight_val.T) + bias_val, v.val, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(
+            np.matmul(x_val, weight_val.T) + bias_val, v.val, atol=1e-04, rtol=1e-05
+        )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
         itertools.product(compute_units, backends, [2, 3, 5]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, rank):
-        if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
+        if backend.backend == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398733 (TestLinear failing on mlprogram + GPU)")
-            
-        if backend[0] == "neuralnetwork" and compute_unit != ct.ComputeUnit.CPU_ONLY and platform.machine() == "arm64" and rank == 5:
-            pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)")
-            
+
+        if (
+            backend.backend == "neuralnetwork"
+            and compute_unit != ct.ComputeUnit.CPU_ONLY
+            and platform.machine() == "arm64"
+            and rank == 5
+        ):
+            pytest.xfail(
+                "rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)"
+            )
+
         x_shape = np.random.randint(low=1, high=3, size=(rank,))
         x_val = np.random.rand(*x_shape)
         out_channels = 3
@@ -98,9 +105,7 @@ class TestLinear:
 
 
 class TestMatMul:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[-4.0, 13.0], [-3.0, 9.0]], dtype=np.float32)
         y_val = np.array([[1.0, -7.0], [-1.0, -8.0]], dtype=np.float32)
@@ -241,7 +246,11 @@ class TestMatMul:
 
 class TestEinsum:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         equation = "abcd,adce->abce"
@@ -279,7 +288,7 @@ class TestEinsum:
             [3, 4],
             [True, False],
             backends,
-        )
+        ),
     )
     def test_builder_to_backend_stress(self, compute_unit, rank, broadcast, backend):
         equation = "abcd,adce->abce" if rank == 4 else "vnm,mno->vno"
@@ -298,21 +307,28 @@ class TestEinsum:
         }
 
         input_value_dict = {"x": x_val, "y": y_val}
-        out_shape = [shape_y[-4], shape_x[-3], shape_x[-2], shape_y[-1]] if rank == 4 else \
-                    [shape_x[-3], shape_x[-2], shape_y[-1]]
+        out_shape = (
+            [shape_y[-4], shape_x[-3], shape_x[-2], shape_y[-1]]
+            if rank == 4
+            else [shape_x[-3], shape_x[-2], shape_y[-1]]
+        )
         expected_output_type = tuple(out_shape) + (types.fp32,)
 
         def build(x, y):
             return mb.einsum(values=(x, y), equation=equation)
 
         if rank == 3:
-            expected_output = np.einsum(equation,
-                                        np.broadcast_to(x_val, [shape_x[-3], shape_x[-2], shape_x[-1]]),
-                                        np.broadcast_to(y_val, [shape_y[-3], shape_x[-2], shape_y[-1]]))
+            expected_output = np.einsum(
+                equation,
+                np.broadcast_to(x_val, [shape_x[-3], shape_x[-2], shape_x[-1]]),
+                np.broadcast_to(y_val, [shape_y[-3], shape_x[-2], shape_y[-1]]),
+            )
         else:
-            expected_output = np.einsum(equation,
-                                        np.broadcast_to(x_val, [shape_y[-4], shape_x[-3], shape_x[-2], shape_x[-1]]),
-                                        np.broadcast_to(y_val, [shape_y[-4], shape_y[-3], shape_x[-2], shape_y[-1]]))
+            expected_output = np.einsum(
+                equation,
+                np.broadcast_to(x_val, [shape_y[-4], shape_x[-3], shape_x[-2], shape_x[-1]]),
+                np.broadcast_to(y_val, [shape_y[-4], shape_y[-3], shape_x[-2], shape_y[-1]]),
+            )
 
         run_compare_builder(
             build,

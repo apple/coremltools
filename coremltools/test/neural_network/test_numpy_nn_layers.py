@@ -2141,6 +2141,9 @@ class NewLayersSimpleTest(CorrectnessTest):
         self.test_slice_static_cpu(cpu_only=False)
 
     def test_slice_dynamic_cpu(self, cpu_only=True):
+        pytest.xfail(
+            "rdar://111134257 ([Bug][Regression] nnv1 slice_by_index unittests are failing)"
+        )
         for rank in range(1, 6):
             input_shape = np.array([5 for _ in range(rank)])
             objs, strides, begin_masks, end_ids, end_masks, begin_ids = (
@@ -2357,6 +2360,9 @@ class NewLayersSimpleTest(CorrectnessTest):
                 self.assertEqual(rank, builder._get_rank("output"))
 
     def test_slice_dynamic_gpu(self):
+        pytest.xfail(
+            "rdar://111134257 ([Bug][Regression] nnv1 slice_by_index unittests are failing)"
+        )
         self.test_slice_dynamic_cpu(cpu_only=False)
 
     def test_tile_cpu(self, cpu_only=True):
@@ -4246,6 +4252,10 @@ class NewLayersSimpleTest(CorrectnessTest):
                 self.assertEqual(target_rank, builder._get_rank("output"))
 
     def test_reshape_like_gpu(self):
+        if platform.machine() == "arm64":
+            pytest.xfail(
+                "rdar://111942798 ([Regression][Bug] Reshape model got stuck while loading in M1 machine for non-cpu compute unit)"
+            )
         self.test_reshape_like_cpu(cpu_only=False)
 
     def test_reshape_static_cpu(self, cpu_only=True):
@@ -4287,6 +4297,10 @@ class NewLayersSimpleTest(CorrectnessTest):
                 self.assertEqual(len(target_shape), builder._get_rank("output"))
 
     def test_reshape_static_gpu(self):
+        if platform.machine() == "arm64":
+            pytest.xfail(
+                "rdar://111942798 ([Regression][Bug] Reshape model got stuck while loading in M1 machine for non-cpu compute unit)"
+            )
         self.test_reshape_static_cpu(cpu_only=False)
 
     def test_reshape_dynamic_cpu(self, cpu_only=True):

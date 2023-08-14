@@ -333,7 +333,12 @@ class TestMLProgramVersionHandling:
                 res = mb.reshape(x=x, shape=(1, 1, 1, 1, 1, 1), name="reshape_0")
                 return res
 
-            ct.convert(prog, source="milinternal", compute_units=ct.ComputeUnit.CPU_ONLY)
+            ct.convert(
+                prog,
+                source="milinternal",
+                convert_to="neuralnetwork",
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+            )
 
     @staticmethod
     def test_rank5_list_early_error_out():

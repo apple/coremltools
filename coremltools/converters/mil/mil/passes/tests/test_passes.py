@@ -12,16 +12,20 @@ import pytest
 from mock import patch
 
 import coremltools as ct
+import coremltools.optimize as cto
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import (
     register_generic_pass,
 )
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, Symbol, get_new_symbol, types
+from coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary import cast as _cast_iOS14
+from coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary import cast as _cast_iOS17
 from coremltools.converters.mil.mil.passes.defs.cleanup import topological_reorder
 from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.mil.types import numpy_type_to_builtin_type
+from coremltools.converters.mil.mil.types.type_mapping import builtin_to_string
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
@@ -29,11 +33,10 @@ from coremltools.converters.mil.testing_utils import (
     assert_op_count_match,
     assert_same_output_names,
     get_op_names_in_program,
+    get_op_types_in_block,
     get_op_types_in_program,
 )
 from coremltools.models.utils import _macos_version
-
-import coremltools.optimize as cto
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
@@ -386,7 +389,7 @@ class TestDedupOpAndVarNames(unittest.TestCase):
             x = mb.cast(x=x, dtype="fp16", name="castop")
             x = mb.cast(x=x, dtype="fp16", name="castop")
             x = mb.cast(x=x, dtype="int32", name="castop_2")
-            x = mb.cast(x=x, dtype="int64", name="castop")
+            x = mb.cast(x=x, dtype="fp16", name="castop")
             x = mb.cast(x=x, dtype="fp32", name="castop_2")
             x = mb.square(x=x, name="square")
             return x
@@ -497,6 +500,44 @@ class TestAddConvTransposeOutputShape:
 
 
 class TestNoopElimination:
+    @pytest.mark.parametrize("is_block_output", ((True, False)))
+    def test_identity(self, is_block_output):
+        """
+        Input graph:
+
+            input -> identity -> (add 1.0 if not is_block_output) -> output
+
+        Output graph:
+
+            if is_block_output:
+                input -> identity -> output
+            else:
+                input -> add 1.0 -> output
+        """
+        SHAPE = (2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=SHAPE)])
+        def prog(x):
+            y = mb.identity(x=x)
+            if not is_block_output:
+                y = mb.add(x=y, y=1.0)
+            return y
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::noop_elimination")
+        if is_block_output:
+            assert get_op_types_in_program(prev_prog) == ["identity"]
+            assert get_op_types_in_program(prog) == ["identity"]
+        else:
+            assert get_op_types_in_program(prev_prog) == ["identity", "add"]
+            assert get_op_types_in_program(prog) == ["add"]
+
+        output_name = block.outputs[0].name
+        assert_model_is_valid(
+            prog,
+            {"x": SHAPE},
+            expected_output_shapes={output_name: SHAPE},
+        )
+
     @pytest.mark.parametrize(
         "op_type, pos, val",
         itertools.product(
@@ -1141,7 +1182,6 @@ class TestRemoveRedundantOps:
                                     |                    |
                                     |--------------------
         """
-
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
         def prog(x):
             x1 = mb.transpose(x=x, perm=[0, 2, 1])
@@ -1209,6 +1249,47 @@ class TestRemoveRedundantOps:
             {"x": (2, 3, 5)},
             expected_output_shapes={block.outputs[0].name: (2, 3, 5)},
         )
+
+    def test_redundant_ops_just_after_input_valid_pattern_3(self):
+        """
+        Input graph:
+        input----->leaky_relu(alpha=0.4)--->add---> add ---> out
+               |                             ^       ^
+               |                             |       |
+               |----->leaky_relu(alpha=0.3)---       |
+               |                                     |
+               |                                     |
+               |---->leaky_relu(alpha=0.3)------------
+
+        Output graph:
+        input----->leaky_relu(alpha=0.4)--->add---> add ---> out
+               |                             ^       ^
+               |                             |       |
+               |----->leaky_relu(alpha=0.3)----------
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.leaky_relu(x=x, alpha=0.4)
+            x2 = mb.leaky_relu(x=x, alpha=0.3)
+            x3 = mb.leaky_relu(x=x, alpha=0.3)
+            z = mb.add(x=x1, y=x2)
+            z = mb.add(x=z, y=x3)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+        assert get_op_types_in_program(prev_prog) == [
+            "leaky_relu",
+            "leaky_relu",
+            "leaky_relu",
+            "add",
+            "add",
+        ]
+        assert get_op_types_in_program(prog) == ["leaky_relu", "leaky_relu", "add", "add"]
+
+        leaky_relu_ops = block.find_ops(op_type="leaky_relu")
+        assert leaky_relu_ops[0].alpha.val == np.float32(0.4)
+        assert leaky_relu_ops[1].alpha.val == np.float32(0.3)
 
     def test_redundant_ops_just_after_input_invalid_pattern_1(self):
         """
@@ -3501,52 +3582,320 @@ class TestMergeConsecutiveReshapes:
             backend=backend,
         )
 
-
-class TestCastOptimization:
-    """Test the cast optimization pass."""
-
+class TestCastOptimizationReduendantCastRemoval:
     """
-    Input graph:
-    input -----> cast(dtype="fp32") -----> square -----> cast(dtype="fp32") ---> out
-
-    Output graph:
-    input -----> square -----> out
+    Test single cast op removal.
     """
+    def test_remove_redundant_cast_smoke(self):
+        """
+        Input graph:
+        input(fp32) -> cast(dtype=fp32) -> output
 
-    def test_remove_redundant_casts(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        Output graph:
+        input -> output
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
         def prog(x):
-            x = mb.cast(x=x, dtype="fp32")
-            x = mb.square(x=x)
             x = mb.cast(x=x, dtype="fp32")
             return x
 
-        assert get_op_types_in_program(prog) == ["cast", "square", "cast"]
+        assert get_op_types_in_program(prog) == ["cast"]
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+
+        assert len(block.find_ops(op_type="cast")) == 0
+        assert block.outputs[0].dtype == types.fp32
+
+    def test_remove_redundant_cast_negative_smoke(self):
+        """
+        Input graph:
+        input(fp32) -> cast(dtype=fp16) -> output
+
+        Output graph:
+        input -> cast -> output
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp16")
+            return x
+
+        assert get_op_types_in_program(prog) == ["cast"]
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+
+        assert len(block.find_ops(op_type="cast")) == 1
+        assert block.outputs[0].dtype == types.fp16
+
+    @pytest.mark.parametrize(
+        "opset_version",
+        [ct.target.iOS14, ct.target.iOS17],
+    )
+    def test_remove_redundant_cast_stress(self, opset_version):
+        """
+        Test all possible dtype combination for each iOS version of cast.
+
+        Input graph:
+        input(dtype=dtype_a) -> cast(dtype=dtype_b) -> out
+
+        Output graph:
+        if dtype_a == dtype_b, the cast op can be eliminated
+            input -> out
+
+        if dtype_a != dtype_b, the cast op should be preserved
+            input -> cast -> out
+        """
+
+        def _test_cast_op_cancellation(dtype_a, dtype_b):
+            @mb.program(
+                input_specs=[mb.TensorSpec(shape=(1,), dtype=dtype_a)], opset_version=opset_version
+            )
+            def prog(x):
+                x = mb.cast(x=x, dtype=builtin_to_string(dtype_b))
+                return x
+
+            assert get_op_types_in_program(prog) == ["cast"]
+
+            _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+            cast_ops = block.find_ops(op_type="cast")
+            if dtype_a == dtype_b:
+                assert len(cast_ops) == 0
+            else:
+                assert len(cast_ops) == 1
+            assert block.outputs[0].dtype == dtype_b
+
+        opset_version_to_cast_op = {
+            ct.target.iOS14: _cast_iOS14,
+            ct.target.iOS17: _cast_iOS17,
+        }
+        cast_op = opset_version_to_cast_op[opset_version]
+        for dtype_a in cast_op.type_domains["T"]:
+            for dtype_b in cast_op.type_domains["T"]:
+                _test_cast_op_cancellation(dtype_a, dtype_b)
+
+
+class TestCastOptimizationCastFusion:
+    """
+    Test consecutive cast ops funsion
+    """
+    def test_cast_ops_fusion_smoke(self):
+        """
+        Input graph:
+        input(fp16) --> cast(dtype="fp32") --> cast(dtype="fp16") --> out
+
+        Output graph:
+        input --> identity --> out
+
+        This pattern should be fused, since it doesn't affect the computation precision
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp16)])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp16")
+            return x
+
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prog) == ["identity"]
+        assert block.outputs[0].dtype == types.fp16
+
+    def test_cast_ops_fusion_smoke_2(self):
+        """
+        Input graph:
+        input(int8) --> cast(dtype="fp16") --> cast(dtype="fp32") --> out
+
+        Output graph:
+        input --> cast(dtype="fp32") --> out
+
+        This pattern should be fused, since it doesn't affect the computation precision, given that the precision is limited by the program int8 input.
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.int8)], opset_version=ct.target.iOS17
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.cast(x=x, dtype="fp32")
+            return x
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
-        assert get_op_types_in_program(prog) == ["square"]
+        assert get_op_types_in_program(prog) == ["cast"]
+        assert block.find_ops(op_type="cast")[0].outputs[0].dtype == types.fp32
+        assert block.outputs[0].dtype == types.fp32
 
-        assert_model_is_valid(
-            prog,
-            {"x": (10, 20)},
-            expected_output_shapes={block.outputs[0].name: (10, 20)},
+    def test_cast_ops_fusion_smoke_3(self):
+        """
+        Input graph:
+        input(fp32) --> cast(dtype="fp16") --> cast(dtype="fp16") --> out
+
+        Output graph:
+        input --> cast(dtype="fp16") --> out
+
+        Two identical cast ops can be fused into one.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.cast(x=x, dtype="fp16")
+            return x
+
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        assert get_op_types_in_program(prog) == ["cast"]
+        assert block.find_ops(op_type="cast")[0].outputs[0].dtype == types.fp16
+        assert block.outputs[0].dtype == types.fp16
+
+    def test_cast_ops_fusion_smoke_4(self):
+        """
+        Input graph:
+        input(int8) --> cast(dtype="fp32") --> cast(dtype="int8") --> out
+
+        Output graph:
+        input --> identity --> out
+
+        There will be two staged of optimization:
+        1. cast(dtype=fp32) + cast(dtype=int8) fused into a single cast(dtype=int8)
+        2. cast(dtype=int8) is further removed
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.int8)], opset_version=ct.target.iOS17
         )
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="int8")
+            return x
 
-    """
-    Input graph:
-    input -----> cast(dtype="fp16") -----> cast(dtype="fp32") ----> square ---> out
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
-    Output graph:
-    input -----> square -----> out
-    """
+        assert get_op_types_in_program(prog) == ["identity"]
+        assert block.outputs[0].dtype == types.int8
 
-    def test_linear_consecutive_cast_ops_cancellation(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+    def test_cast_ops_fusion_negative_smoke(self):
+        """
+        Input graph:
+        input(fp32) --> cast(dtype="fp16") --> cast(dtype="fp32") --> out
+
+        Output graph:
+        input --> cast --> cast --> out
+
+        This pattern should not be fused, since the precision is lowered.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
         def prog(x):
             x = mb.cast(x=x, dtype="fp16")
             x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        assert get_op_types_in_program(prog) == ["cast", "cast"]
+        cast_ops = block.find_ops(op_type="cast")
+        assert cast_ops[0].outputs[0].dtype == types.fp16
+        assert cast_ops[1].outputs[0].dtype == types.fp32
+        assert block.outputs[0].dtype == types.fp32
+
+    def test_cast_ops_fusion_negative_smoke_2(self):
+        """
+        Input graph:
+        input(int32) --> cast(dtype="uint8") --> cast(dtype="int8") --> out
+
+        Output graph:
+        input --> cast --> cast --> out
+
+        This pattern should not be fused, since the data range results from uint8 -> int8
+        is [0, 127], while a single cast(int8) produces [-128, 127]. The data point between [-128, 0] will have wrong numerical result.
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.int32)],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype="uint8")
+            x = mb.cast(x=x, dtype="int8")
+            return x
+
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        assert get_op_types_in_program(prog) == ["cast", "cast"]
+        cast_ops = block.find_ops(op_type="cast")
+        assert cast_ops[0].outputs[0].dtype == types.uint8
+        assert cast_ops[1].outputs[0].dtype == types.int8
+        assert block.outputs[0].dtype == types.int8
+
+    @pytest.mark.parametrize(
+        "opset_version",
+        [ct.target.iOS14, ct.target.iOS17],
+    )
+    def test_cast_ops_fusion_stress(self, opset_version):
+        """
+        Test all possible dtype combination for each iOS version of cast.
+
+        Input graph:
+        input(dtype=dtype_a) -> cast(dtype=dtype_b) -> cast(dtype=dtype_c) -> out
+
+        Output graph:
+        The output graph can have cast ops with number from 0 to 2
+        """
+
+        def _test_cast_op_fusion(dtype_a, dtype_b, dtype_c):
+            @mb.program(
+                input_specs=[mb.TensorSpec(shape=(1,), dtype=dtype_a)], opset_version=opset_version
+            )
+            def prog(x):
+                x = mb.cast(x=x, dtype=builtin_to_string(dtype_b))
+                x = mb.cast(x=x, dtype=builtin_to_string(dtype_c))
+                return x
+
+            _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+            assert block.outputs[0].dtype == dtype_c
+            return
+            cast_ops = block.find_ops(op_type="cast")
+            if dtype_a == dtype_b:
+                assert len(cast_ops) == 0
+            else:
+                assert len(cast_ops) == 1
+
+        opset_version_to_cast_op = {
+            ct.target.iOS14: _cast_iOS14,
+            ct.target.iOS17: _cast_iOS17,
+        }
+        cast_op = opset_version_to_cast_op[opset_version]
+        supported_dtypes = cast_op.type_domains["T"]
+        for dtype_a in supported_dtypes:
+            for dtype_b in supported_dtypes:
+                for dtype_c in supported_dtypes:
+                    _test_cast_op_fusion(dtype_a, dtype_b, dtype_c)
+
+class TestCastOptimizationComplexPatterns:
+    """
+    Test cast ops fusion / romoval in some complex graph examples.
+    """
+    def test_linear_consecutive_cast_ops_cancellation(self):
+        """Test the cast optimization pass with more complicated patterns."""
+
+        """
+        Input graph:
+        input(fp16) -----> cast(dtype="fp32") -----> cast(dtype="fp16") ----> square ---> out
+
+        Output graph:
+        input -----> square -----> out
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp16")
             x = mb.square(x=x)
             return x
 
@@ -3562,30 +3911,29 @@ class TestCastOptimization:
             {"x": (10, 20)},
             expected_output_shapes={block.outputs[0].name: (10, 20)},
         )
-
-    """
-    Input graph:
-    input---->cast(dtype="int32")---->cast(dtype="fp16")--->square--->out
-
-    Output graph:
-    input----->cast(dtype="fp16")----->square--->out
-    """
 
     def test_linear_consecutive_cast_ops_fusion(self):
+        """
+        Input graph:
+        input(fp32)---->cast(dtype="fp16")---->cast(dtype="bool")--->identity--->out
+
+        Output graph:
+        input(fp32)----->cast(dtype="bool")----->identity--->out
+        """
         @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
         def prog(x):
-            x = mb.cast(x=x, dtype="int32")
             x = mb.cast(x=x, dtype="fp16")
-            x = mb.square(x=x)
+            x = mb.cast(x=x, dtype="bool")
+            x = mb.identity(x=x)
             return x
 
-        assert get_op_types_in_program(prog) == ["cast", "cast", "square"]
+        assert get_op_types_in_program(prog) == ["cast", "cast", "identity"]
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
-        assert get_op_types_in_program(prog) == ["cast", "square"]
-        assert block.find_ops(op_type="cast")[0].dtype.val == "fp16"
+        assert get_op_types_in_program(prog) == ["cast", "identity"]
+        assert block.find_ops(op_type="cast")[0].dtype.val == "bool"
 
         assert_model_is_valid(
             prog,
@@ -3593,21 +3941,19 @@ class TestCastOptimization:
             expected_output_shapes={block.outputs[0].name: (10, 20)},
         )
 
-    """
-    Input graph:
-    input-->cast(dtype="fp16")-->cast(dtype="fp16")-->cast(dtype="int32")-->cast(dtype="int64")-->cast(dtype="fp32")-->cast(dtype="fp16")-->square->out
-
-    Output graph:
-    input---->cast(dtype="fp16")----->square--->out
-    """
-
     def test_linear_multiple_consecutive_cast_ops(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        """
+        Input graph:
+        input(fp16)-->cast(dtype="fp32")-->cast(dtype="fp32")-->cast(dtype="int32")-->cast(dtype="fp32")-->cast(dtype="fp16")-->square->out
+
+        Output graph:
+        input(fp16)-->cast(dtype="int32")-->cast(dtype="fp16")-->square--->out
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
         def prog(x):
-            x = mb.cast(x=x, dtype="fp16")
-            x = mb.cast(x=x, dtype="fp16")
+            x = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp32")
             x = mb.cast(x=x, dtype="int32")
-            x = mb.cast(x=x, dtype="int64")
             x = mb.cast(x=x, dtype="fp32")
             x = mb.cast(x=x, dtype="fp16")
             x = mb.square(x=x)
@@ -3619,15 +3965,14 @@ class TestCastOptimization:
             "cast",
             "cast",
             "cast",
-            "cast",
             "square",
         ]
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
-
-        assert get_op_types_in_program(prog) == ["cast", "square"]
-        assert block.find_ops(op_type="cast")[0].dtype.val == "fp16"
+        assert get_op_types_in_program(prog) == ["cast", "cast", "square"]
+        assert block.find_ops(op_type="cast")[0].dtype.val == "int32"
+        assert block.find_ops(op_type="cast")[1].dtype.val == "fp16"
 
         assert_model_is_valid(
             prog,
@@ -3635,30 +3980,29 @@ class TestCastOptimization:
             expected_output_shapes={block.outputs[0].name: (10, 20)},
         )
 
-    """
-    Input graph:
-                               |---->cast(dtype="fp32")---->square--->out_1
-                               |
-    input---->cast(dtype="fp16")---->cast(dtype="fp32")---->relu--->out_2
-                               |
-                               |---->cast(dtype="fp32")---->log--->out_3
-
-    Output graph:
-
-         |---->square--->out_1
-         |
-    input---->relu--->out_2
-         |
-         |---->log--->out_3
-    """
-
     def test_same_consecutive_cancelling_casts_on_all_branches(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        """
+        Input graph:
+                                      |---->cast(dtype="fp16")---->square--->out_1
+                                      |
+        input(fp16)---->cast(dtype="fp32")---->cast(dtype="fp16")---->relu--->out_2
+                                      |
+                                      |---->cast(dtype="fp16")---->log--->out_3
+
+        Output graph:
+
+             |---->square--->out_1
+             |
+        input---->relu--->out_2
+             |
+             |---->log--->out_3
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
         def prog(x):
-            x = mb.cast(x=x, dtype="fp16")
-            x1 = mb.cast(x=x, dtype="fp32")
-            x2 = mb.cast(x=x, dtype="fp32")
-            x3 = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp32")
+            x1 = mb.cast(x=x, dtype="fp16")
+            x2 = mb.cast(x=x, dtype="fp16")
+            x3 = mb.cast(x=x, dtype="fp16")
             x4 = mb.square(x=x1)
             x5 = mb.relu(x=x2)
             x6 = mb.log(x=x3)
@@ -3689,33 +4033,34 @@ class TestCastOptimization:
             },
         )
 
-    """
-    Input graph:
-                                |---->cast(dtype="fp16")---->square--->out_1
-                                |
-    input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
-                                |
-                                |---->cast(dtype="fp16")---->log--->out_3
-
-    Output graph:
-
-                                |---->square--->out_1
-                                |
-    input---->cast(dtype="fp16")---->relu--->out_2
-                                |
-                                |---->log--->out_3
-    """
-
     def test_consecutive_fusable_casts_on_all_branches(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        """
+        Input graph:
+                                         |---->cast(dtype="int32")---->square--->out_1
+                                         |
+        input(fp16)---->cast(dtype="fp32")---->cast(dtype="int32")---->abs--->out_2
+                                         |
+                                         |---->cast(dtype="int32")---->identity--->out_3
+
+        Output graph:
+
+                                          |-->square-->out_1
+                                          |
+        input(fp16)---->cast(dtype="int32")-->abs-->out_2
+                                          |
+                                          |-->identity->out_3
+
+        Note that, this result needs the assistant of another pass remove_redundant_ops
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
         def prog(x):
-            x = mb.cast(x=x, dtype="int32")
-            x1 = mb.cast(x=x, dtype="fp16")
-            x2 = mb.cast(x=x, dtype="fp16")
-            x3 = mb.cast(x=x, dtype="fp16")
+            x = mb.cast(x=x, dtype="fp32")
+            x1 = mb.cast(x=x, dtype="int32")
+            x2 = mb.cast(x=x, dtype="int32")
+            x3 = mb.cast(x=x, dtype="int32")
             x4 = mb.square(x=x1)
-            x5 = mb.relu(x=x2)
-            x6 = mb.log(x=x3)
+            x5 = mb.abs(x=x2)
+            x6 = mb.identity(x=x3)
             return x4, x5, x6
 
         assert get_op_types_in_program(prog) == [
@@ -3724,15 +4069,32 @@ class TestCastOptimization:
             "cast",
             "cast",
             "square",
-            "relu",
-            "log",
+            "abs",
+            "identity",
         ]
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "cast",
+            "cast",
+            "square",
+            "abs",
+            "identity",
+        ]
+        cast_ops = block.find_ops(op_type="cast")
+        assert all([v.dtype.val == "int32" for v in cast_ops])
 
-        assert get_op_types_in_program(prog) == ["cast", "square", "relu", "log"]
-        assert block.find_ops(op_type="cast")[0].dtype.val == "fp16"
+        apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "square",
+            "abs",
+            "identity",
+        ]
+        assert block.find_ops(op_type="cast")[0].dtype.val == "int32"
 
         assert_model_is_valid(
             prog,
@@ -3744,48 +4106,48 @@ class TestCastOptimization:
             },
         )
 
-    """
-    Input graph:
-
-                                |---->cast(dtype="fp32")---->square--->out_1
-                                |
-                                |---->cast(dtype="fp16")---->square--->out_2
-                                |
-    input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_3
-                                |
-                                |---->cast(dtype="fp16")---->log--->out_4
-                                |
-                                |---->cast(dtype="fp32")---->log--->out_5
-
-    Output graph:
-
-         |---->square--->out_1
-         |
-         |                      |---->square--->out_2
-         |                      |
-    input---->cast(dtype="fp16")---->relu--->out_3
-         |                      |
-         |                      |---->log--->out_4
-         |
-         |
-         |---->log--->out_5
-
-    """
-
     def test_mixed_consecutive_casts_on_different_branches(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        """
+        Input graph:
+
+                                    |---->cast(dtype="fp16")---->square--->out_1
+                                    |
+                                    |---->cast(dtype="int32")---->square--->out_2
+                                    |
+        input(fp16)---->cast(dtype="fp32")---->cast(dtype="int32")---->identity--->out_3
+                                    |
+                                    |---->cast(dtype="int32")---->abs--->out_4
+                                    |
+                                    |---->cast(dtype="fp16")---->abs--->out_5
+
+        Output graph:
+
+                 |---->square--->out_1
+                 |
+                 |                      |---->square--->out_2
+                 |                      |
+        input(fp16)---->cast(dtype="int32")---->identity--->out_3
+                 |                      |
+                 |                      |---->abs--->out_4
+                 |
+                 |
+                 |---->abs--->out_5
+
+        Note that, this result needs the assistant of another pass remove_redundant_ops
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
         def prog(x):
-            x = mb.cast(x=x, dtype="int32")
-            x1 = mb.cast(x=x, dtype="fp32")
-            x2 = mb.cast(x=x, dtype="fp16")
-            x3 = mb.cast(x=x, dtype="fp16")
-            x4 = mb.cast(x=x, dtype="fp16")
-            x5 = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp32")
+            x1 = mb.cast(x=x, dtype="fp16")
+            x2 = mb.cast(x=x, dtype="int32")
+            x3 = mb.cast(x=x, dtype="int32")
+            x4 = mb.cast(x=x, dtype="int32")
+            x5 = mb.cast(x=x, dtype="fp16")
             x6 = mb.square(x=x1)
             x7 = mb.square(x=x2)
-            x8 = mb.relu(x=x3)
-            x9 = mb.log(x=x4)
-            x10 = mb.log(x=x5)
+            x8 = mb.identity(x=x3)
+            x9 = mb.abs(x=x4)
+            x10 = mb.abs(x=x5)
             return x6, x7, x8, x9, x10
 
         assert get_op_types_in_program(prog) == [
@@ -3797,17 +4159,37 @@ class TestCastOptimization:
             "cast",
             "square",
             "square",
-            "relu",
-            "log",
-            "log",
+            "identity",
+            "abs",
+            "abs",
         ]
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "cast",
+            "cast",
+            "square",
+            "square",
+            "identity",
+            "abs",
+            "abs",
+        ]
+        cast_ops = block.find_ops(op_type="cast")
+        assert all([v.dtype.val == "int32" for v in cast_ops])
 
-        assert get_op_types_in_program(prog) == ["cast", "square", "square", "relu", "log", "log"]
-        assert block.find_ops(op_type="cast")[0].dtype.val == "fp16"
-
+        apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prog) == [
+            "cast",
+            "square",
+            "square",
+            "identity",
+            "abs",
+            "abs",
+        ]
+        assert block.find_ops(op_type="cast")[0].dtype.val == "int32"
         assert_model_is_valid(
             prog,
             {"x": (10, 20)},
@@ -3818,62 +4200,61 @@ class TestCastOptimization:
             },
         )
 
-    """
-    Input graph:
+    def test_different_consecutive_casts_config_on_different_branches(self):
+        """
+        Input graph:
 
-                                |---->cast(dtype="fp32")---->square--->out_1
-                                |
-    input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
-                                |
-                                |---->log--->out_3
+                                        |---->cast(dtype="fp16")---->square--->out_1
+                                        |
+        input(fp16)---->cast(dtype="fp32")---->cast(dtype="int32")---->exp2--->out_2
+                                        |
+                                        |---->abs--->out_3
 
 
-    Output graph:
+        Output graph:
 
-         |---->square--->out_1
-         |
-         |
-         |
-    input---->cast(dtype="fp16")---->relu--->out_2
-         |
-         |
-         |
-         |
-         |---->cast(dtype="int32")---->abs--->out_3
+                |---->square--->out_1
+                |
+                |
+                |
+        input(fp16)---->cast(dtype="int32")---->exp2--->out_2
+                |
+                |
+                |
+                |
+                |---->cast(dtype="fp32")---->abs--->out_3
 
-    """
-
-    def test_different_consecutive_casts__config_on_different_branches(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
         def prog(x):
-            x = mb.cast(x=x, dtype="int32")
-            x1 = mb.cast(x=x, dtype="fp32")
-            x2 = mb.cast(x=x, dtype="fp16")
+            x = mb.cast(x=x, dtype="fp32")
+            x1 = mb.cast(x=x, dtype="fp16")
+            x2 = mb.cast(x=x, dtype="int32")
             x3 = mb.square(x=x1)
-            x4 = mb.relu(x=x2)
+            x4 = mb.exp2(x=x2)
             x5 = mb.abs(x=x)
             return x3, x4, x5
 
-        assert get_op_types_in_program(prog) == ["cast", "cast", "cast", "square", "relu", "abs"]
+        assert get_op_types_in_program(prog) == ["cast", "cast", "cast", "square", "exp2", "abs"]
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
-        assert get_op_types_in_program(prog) == ["cast", "cast", "square", "relu", "abs"]
+        assert get_op_types_in_program(prog) == ["cast", "cast", "square", "exp2", "abs"]
 
         # Asserting first cast configuration
         cast_1 = block.find_ops(op_type="cast")[0]
-        assert cast_1.dtype.val == "int32"
+        assert cast_1.dtype.val == "fp32"
         assert len(cast_1.outputs) == 1
         assert len(cast_1.outputs[0].child_ops) == 1
         assert cast_1.outputs[0].child_ops[0].op_type == "abs"
 
         # Asserting second cast configuration
         cast_2 = block.find_ops(op_type="cast")[1]
-        assert cast_2.dtype.val == "fp16"
+        assert cast_2.dtype.val == "int32"
         assert len(cast_2.outputs) == 1
         assert len(cast_2.outputs[0].child_ops) == 1
-        assert cast_2.outputs[0].child_ops[0].op_type == "relu"
+        assert cast_2.outputs[0].child_ops[0].op_type == "exp2"
 
         assert_model_is_valid(
             prog,
@@ -3885,25 +4266,24 @@ class TestCastOptimization:
             },
         )
 
-    """
-    Input graph:
-    input(dtype="fp16")---->relu----->relu
-                                      |
-                              --------|
-                              |
-                              V
-                             cast(dtype="fp32")---->cast(dtype="fp16")
-                                                      |
-                                ----------------------|
-                                |
-                                V
-                             cast(dtype="fp32")---->cast(dtype="fp16")---->output(dtype="fp16")
-
-    Output graph:
-    input(dtype="fp16")---->relu----->relu---->output(dtype="fp16")
-    """
-
     def test_two_casts_at_the_end(self):
+        """
+        Input graph:
+        input(dtype="fp16")---->relu----->relu
+                                          |
+                                  --------|
+                                  |
+                                  V
+                                 cast(dtype="fp32")---->cast(dtype="fp16")
+                                                          |
+                                    ----------------------|
+                                    |
+                                    V
+                                 cast(dtype="fp32")---->cast(dtype="fp16")---->output(dtype="fp16")
+
+        Output graph:
+        input(dtype="fp16")---->relu----->relu---->output(dtype="fp16")
+        """
         @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
         def prog(x):
             x = mb.relu(x=x)
@@ -3922,6 +4302,242 @@ class TestCastOptimization:
         assert block.outputs[0].name == "original_output_name"
         assert block.outputs[0].dtype == types.fp16
 
+    def test_mixed_consecutive_casts_on_different_branches_complex(self):
+        """
+        Input graph:
+
+                                    |->cast(dtype="fp16")->cast(dtype="fp16")->out_1
+                                    |
+        input(fp16)---->cast(dtype="fp32")->cast(dtype="uint8")->cast(dtype="int8")->out_2
+                                    |
+                                    |->cast(dtype="int32")->out_3
+                                    |
+                                    |->cast(dtype="int32")->cast(dtype="float32")->out_4
+
+        Output graph:
+
+                    |-->out_1
+                    |
+        input(fp16)-->cast(dtype="uint8")-->cast(dtype="int8")-->out_2
+                    |
+                    .-->cast(dtype="int32")-->out_3
+                                           |
+                                           .-->cast(dtype="float32")-->out_4
+
+        Note that, this result needs the assistant of another pass remove_redundant_ops
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp16)], opset_version=ct.target.iOS17
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+            x1 = mb.cast(x=x, dtype="fp16")
+            x1 = mb.cast(x=x1, dtype="fp16")
+            x2 = mb.cast(x=x, dtype="uint8")
+            x2 = mb.cast(x=x2, dtype="int8")
+            x3 = mb.cast(x=x, dtype="int32")
+            x4 = mb.cast(x=x, dtype="int32")
+            x4 = mb.cast(x=x4, dtype="fp32")
+            return x2, x3, x4
+
+        assert get_op_types_in_program(prog) == ["cast"] * 8
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prog) == ["cast"] * 4
+
+        expected_cast_dtype = ["uint8", "int8", "int32", "fp32"]
+        cast_ops = block.find_ops(op_type="cast")
+        assert [v.dtype.val for v in cast_ops] == expected_cast_dtype
+
+
+class TestCastOptimizationAcrossBlocks:
+    """
+    Test the cast optmization for cast ops at the boundary of inner and outer block.
+    """
+    def test_cast_ops_fuse_across_block_smoke_1(self):
+        """
+        Input graph:
+        main[CoreML3](%x: (1,int32)(Tensor)) {
+        main[CoreML3](%x: (1,int32)(Tensor)) {
+          block0() {
+            %cast_0: (1,fp32)(Tensor) = cast(x=%x, dtype="fp32", name="cast_0")
+            %cond_0: (1,fp32)(Tensor) = cond(pred=True, name="cond_0")
+              cond_0_true() {
+                %cast_1: (1,fp32)(Tensor) = cast(x=%cast_0, dtype="fp32", name="cast_1")
+              } -> (%cast_1)
+              cond_0_false() {
+                %cast_2: (1,fp32)(Tensor) = cast(x=%cast_0, dtype="fp32", name="cast_2")
+              } -> (%cast_2)
+          } -> (%cond_0)
+        }
+
+        Output graph:
+        main[CoreML3](%x: (1,int32)(Tensor)) {
+          block0() {
+            %cast_0: (1,fp32)(Tensor) = cast(x=%x, dtype="fp32", name="cast_0")
+            %cond_0: (1,fp32)(Tensor) = cond(pred=True, name="cond_0")
+              cond_0_true() {
+              } -> (%cast_0)
+              cond_0_false() {
+              } -> (%const_0)
+          } -> (%cond_0)
+        }
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.int32)])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+            def _true_fn():
+                return mb.cast(x=x, dtype="fp32")
+
+            def _false_fn():
+                return mb.cast(x=x, dtype="fp32")
+
+            return mb.cond(pred=True, _true_fn=_true_fn, _false_fn=_false_fn)
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+        assert get_op_types_in_program(prog) == ["cast", "cond"]
+
+        cast_op = block.find_ops(op_type="cast")[0]
+        assert cast_op.dtype.val == "fp32"
+
+        cond_op = block.find_ops(op_type="cond")[0]
+        true_block, false_block = cond_op.blocks
+        assert get_op_types_in_block(true_block) == []
+        assert get_op_types_in_block(false_block) == []
+        assert true_block.outputs[0] == cast_op.outputs[0]
+        assert false_block.outputs[0] == cast_op.outputs[0]
+
+    def test_cast_ops_fuse_across_block_smoke_2(self):
+        """
+        Input graph:
+        main[CoreML3](%x: (1,fp32)(Tensor)) {
+          block0() {
+            %cast_0: (1,fp32)(Tensor) = cast(x=%x, dtype="fp32", name="cast_0")
+            %cond_0: (1,fp32)(Tensor) = cond(pred=True, name="cond_0")
+              cond_0_true() {
+                %cast_1: (1,fp32)(Tensor) = cast(x=%cast_0, dtype="fp32", name="cast_1")
+              } -> (%cast_1)
+              cond_0_false() {
+                %cast_2: (1,fp32)(Tensor) = cast(x=%cast_0, dtype="fp32", name="cast_2")
+              } -> (%cast_2)
+          } -> (%cond_0)
+        }
+
+        Output graph:
+        main[CoreML3](%x: (1,fp32)(Tensor)) {
+          block0() {
+            %cond_0: (1,fp32)(Tensor) = cond(pred=True, name="cond_0")
+              cond_0_true() {
+              } -> (%x)
+              cond_0_false() {
+              } -> (%x)
+          } -> (%cond_0)
+        }
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+
+            def _true_fn():
+                return mb.cast(x=x, dtype="fp32")
+
+            def _false_fn():
+                return mb.cast(x=x, dtype="fp32")
+
+            return mb.cond(pred=True, _true_fn=_true_fn, _false_fn=_false_fn)
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+        assert get_op_types_in_program(prog) == ["cond"]
+
+        cond_op = block.find_ops(op_type="cond")[0]
+        true_block, false_block = cond_op.blocks
+        assert get_op_types_in_block(true_block) == []
+        assert get_op_types_in_block(false_block) == []
+        assert true_block.outputs[0] == block.inputs["x"]
+        assert false_block.outputs[0] == block.inputs["x"]
+
+    def test_cast_ops_fuse_across_block_smoke_3(self):
+        """
+        Input graph:
+        main[CoreML7](%x: (1,int32)(Tensor)) {
+          block0() {
+            %cast_0: (1,fp32)(Tensor) = cast(x=%x, dtype="fp32", name="cast_0")
+            %cond_0: (1,uint8)(Tensor) = cond(pred=True, name="cond_0")
+              cond_0_true() {
+                %cast_1: (1,int32)(Tensor) = cast(x=%cast_0, dtype="int32", name="cast_1")
+                %cast_2: (1,uint8)(Tensor) = cast(x=%cast_1, dtype="uint8", name="cast_2")
+                %cast_3: (1,fp32)(Tensor) = cast(x=%cast_2, dtype="fp32", name="cast_3")
+                %cast_4: (1,uint8)(Tensor) = cast(x=%cast_3, dtype="uint8", name="cast_4")
+              } -> (%cast_4)
+              cond_0_false() {
+                %cast_5: (1,int8)(Tensor) = cast(x=%cast_0, dtype="int8", name="cast_5")
+                %cast_6: (1,bool)(Tensor) = cast(x=%cast_5, dtype="bool", name="cast_6")
+                %cast_7: (1,uint8)(Tensor) = cast(x=%cast_6, dtype="uint8", name="cast_7")
+              } -> (%cast_7)
+          } -> (%cond_0)
+        }
+
+        Output graph:
+        main[CoreML7](%x: (1,int32)(Tensor)) {
+          block0() {
+            %cond_0: (1,uint8)(Tensor) = cond(pred=True, name="cond_0")
+              cond_0_true() {
+                %x_to_uint8: (1,uint8)(Tensor) = cast(x=%x, dtype="uint8", name="x_to_uint8")
+              } -> (%x_to_uint8)
+              cond_0_false() {
+                %x_to_bool: (1,bool)(Tensor) = cast(x=%x, dtype="bool", name="x_to_bool")
+                %cast_7: (1,uint8)(Tensor) = cast(x=%x_to_bool, dtype="uint8", name="cast_7")
+              } -> (%cast_7)
+          } -> (%cond_0)
+        }
+
+        This is a more complex example:
+        First, in the true branch, 4 ``cast`` ops are optimized into a single ``cast(dtype="uint8")``. In the false branch, 3 ``cast`` ops are optimized to ``cast(dtype="bool")->cast(dtype="uint8")``
+        Second, the first ``cast`` op in each inner block is fused with the outer ``cast_0`` op, resulting in the above output graph.
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1,), dtype=types.int32)],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp32")
+
+            def _true_fn():
+                x1 = mb.cast(x=x, dtype="int32")
+                x1 = mb.cast(x=x1, dtype="uint8")
+                x1 = mb.cast(x=x1, dtype="fp32")
+                return mb.cast(x=x1, dtype="uint8")
+
+            def _false_fn():
+                x2 = mb.cast(x=x, dtype="int8")
+                x2 = mb.cast(x=x2, dtype="bool")
+                return mb.cast(x=x2, dtype="uint8")
+
+            return mb.cond(pred=True, _true_fn=_true_fn, _false_fn=_false_fn)
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        assert get_op_types_in_program(prog) == ["cond"]
+
+        cond_op = block.find_ops(op_type="cond")[0]
+        true_block, false_block = cond_op.blocks
+        assert get_op_types_in_block(true_block) == ["cast"]
+        assert get_op_types_in_block(false_block) == ["cast"] * 2
+
+        expected_true_branch_types = ["uint8"]
+        expected_false_branch_types = ["bool", "uint8"]
+
+        assert expected_true_branch_types == [
+            v.dtype.val for v in true_block.find_ops(op_type="cast")
+        ]
+        assert expected_false_branch_types == [
+            v.dtype.val for v in false_block.find_ops(op_type="cast")
+        ]
 
 class TestConv1dCompositionPasses:
     @pytest.mark.parametrize(
@@ -6474,6 +7090,188 @@ class TestDivideToMultiply:
             assert_model_is_valid(prog, {"x": (2, 4)})
 
 
+class TestSelectOptimization:
+    @pytest.mark.parametrize(
+        "cond_val, is_cond_scalar, need_broadcast, is_block_output",
+        itertools.product(
+            (True, False),
+            (True, False),
+            (True, False),
+            (True, False),
+        ),
+    )
+    def test_const_scalar_cond(self, cond_val, is_cond_scalar, need_broadcast, is_block_output):
+        """
+        Input graph:
+
+            const(cond) -|
+                         |
+            a -----------|-> select -> (add 1.0 if not is_block_output) -> output
+                         |
+            b -----------|
+
+        If a and b need broadcast, then nothing is changed; else output graph becomes:
+
+            if cond:
+                if is_block_output:
+                    a -> identity -> output
+                else:
+                    a -> add 1.0 -> output
+            else:
+                if is_block_output:
+                    b -> identity -> output
+                else:
+                    b -> add 1.0 -> output
+        """
+        SHAPE = (5, 2, 3)
+
+        if need_broadcast:
+            a_shape = (5, 2, 1)
+            b_shape = (5, 1, 3)
+        else:
+            a_shape = SHAPE
+            b_shape = SHAPE
+
+        if is_cond_scalar:
+            cond = cond_val
+        else:
+            cond_shape = (5, 1, 1)
+            cond = np.full(cond_shape, cond_val)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=a_shape),
+                mb.TensorSpec(shape=b_shape),
+            ]
+        )
+        def prog(a, b):
+            c = mb.select(cond=cond, a=a, b=b)
+            if not is_block_output:
+                c = mb.add(x=c, y=1.0)
+            return c
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::select_optimization")
+        apply_pass_and_basic_check(prog, "common::noop_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        # check previous program
+        if is_block_output:
+            assert get_op_types_in_program(prev_prog) == ["select"]
+        else:
+            assert get_op_types_in_program(prev_prog) == ["select", "add"]
+        # check passed program
+        if is_block_output:
+            if need_broadcast:
+                assert get_op_types_in_program(prog) == ["select"]
+            else:
+                assert get_op_types_in_program(prog) == ["identity"]
+        else:
+            if need_broadcast:
+                assert get_op_types_in_program(prog) == ["select", "add"]
+            else:
+                assert get_op_types_in_program(prog) == ["add"]
+
+        output_name = block.outputs[0].name
+        assert_model_is_valid(
+            prog,
+            {"a": a_shape, "b": b_shape},
+            expected_output_shapes={output_name: SHAPE},
+        )
+
+        prev_model = ct.convert(
+            prev_prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+        model = ct.convert(
+            prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+
+        a = np.random.rand(*a_shape)
+        b = np.random.rand(*b_shape)
+        input_dict = {"a": a, "b": b}
+        prev_output = prev_model.predict(input_dict)[output_name]
+        output = model.predict(input_dict)[output_name]
+        np.testing.assert_allclose(prev_output, output, rtol=0.0, atol=0.0)
+
+    @pytest.mark.parametrize(
+        "is_a_const, is_fill_scalar",
+        itertools.product((True, False), (True, False)),
+    )
+    def test_inf_const_selection(self, is_a_const, is_fill_scalar):
+        """
+        Input graph if is_a_const (else input and fill are swapped):
+
+            const(cond) ------|
+                              |
+            input ------------|-> select -> tanh -> output
+                              |
+            const(±inf fill) -|
+
+        Output graph:
+
+            input -> add -> tanh -> output
+        """
+        INPUT_SHAPE = (5, 2, 3)
+
+        cond_shape = (2, 3)
+
+        while True:
+            cond = np.random.randint(0, 2, size=cond_shape) == 0
+            if not np.all(cond) and not np.all(np.logical_not(cond)):
+                break
+
+        if is_fill_scalar:
+            fill = np.float16(-np.inf)
+        else:
+            fill_shape = (5, 2, 1)
+            fill = np.empty(fill_shape, dtype=np.float16)
+            neg_pos = np.random.randint(0, 2, size=fill_shape)
+            fill[np.where(neg_pos == 0)] = -np.inf
+            fill[np.where(neg_pos == 1)] = np.inf
+
+        output_shape = INPUT_SHAPE
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE, dtype=types.fp16)])
+        def prog(x):
+            if is_a_const:
+                y = mb.select(cond=cond, a=fill, b=x)
+            else:
+                y = mb.select(cond=cond, a=x, b=fill)
+            return mb.tanh(x=y)
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::select_optimization")
+        assert get_op_types_in_program(prev_prog) == ["select", "tanh"]
+        assert get_op_types_in_program(prog) == ["add", "tanh"]
+
+        output_name = block.outputs[0].name
+        assert_model_is_valid(
+            prog,
+            {"x": INPUT_SHAPE},
+            expected_output_shapes={output_name: output_shape},
+        )
+
+        prev_model = ct.convert(
+            prev_prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+        )
+        model = ct.convert(
+            prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+        )
+
+        a = 65500.0 * np.random.rand(*INPUT_SHAPE)
+        input_dict = {"x": a}
+        prev_output = prev_model.predict(input_dict)[output_name]
+        output = model.predict(input_dict)[output_name]
+        np.testing.assert_allclose(prev_output, output, rtol=0.0, atol=0.0)
+
+
 class TestFuseElementwiseToBatchNorm:
     """
     Input graph:
@@ -6685,7 +7483,10 @@ class TestSanitizeInputOutputNames:
         prog.add_function("main", ssa_fun)
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "common::sanitize_input_output_names", skip_output_name_check=True
+            prog,
+            "common::sanitize_input_output_names",
+            skip_output_name_check=True,
+            skip_input_name_check=True,
         )
 
         relu_op = prog.find_ops(op_type="relu", exactly_one=True)[0]
@@ -6694,7 +7495,7 @@ class TestSanitizeInputOutputNames:
         assert block.outputs[0].name == "out_1"  # output name: sanitized
 
         # convert prev_prog to NN backend
-        mlmodel = ct.convert(prev_prog)
+        mlmodel = ct.convert(prev_prog, convert_to="neuralnetwork")
         spec = mlmodel._spec
         assert spec.description.input[0].name == "x_0"
         assert spec.description.output[0].name == "out_1"
@@ -6734,7 +7535,7 @@ class TestUpdateOutputDtypes:
 
         prog.set_main_output_types([ct.TensorType(dtype=np.float16)])
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "common::update_output_dtypes"
+            prog, "common::update_output_dtypes", skip_output_type_check=True
         )
         assert get_op_types_in_program(prev_prog) == ["abs", "square"]
         assert prev_block.outputs[0].dtype == types.int32
@@ -6770,11 +7571,46 @@ class TestUpdateOutputDtypes:
             return x1, x2
 
         prog.set_main_output_types([ct.TensorType(), ct.TensorType(dtype=np.float16)])
-        _, _, block = apply_pass_and_basic_check(prog, "common::update_output_dtypes")
+        _, _, block = apply_pass_and_basic_check(
+            prog, "common::update_output_dtypes", skip_output_type_check=True
+        )
         assert get_op_types_in_program(prog) == ["split", "cast"]
         assert block.outputs[1].dtype == types.fp16
         assert block.outputs[1].name == "split_1"
 
+    def test_output_as_input(self, caplog):
+        """
+        Given:
+        -----
+        main(%input: (3, fp32)(Tensor)) {
+          block0() {
+          } -> (input)
+        }
+        prog.main_output_types = [ct.TensorType(dtype=np.float16)]
+
+        Result:
+        Since the output var is also an input var, the dtype is not changed, and a warning message is thrown
+        ------
+        main(%input: (3, fp32)(Tensor)) {
+          block0() {
+          } -> (input)
+        }
+
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,), dtype=types.fp32)])
+        def prog(input):
+            return input
+
+        prog.set_main_output_types([ct.TensorType(dtype=np.float16)])
+        _, _, block = apply_pass_and_basic_check(
+            prog,
+            "common::update_output_dtypes",
+        )
+        warning_msg = "Output var 'input' is also an input var, hence the dtype cannot be changed: output var 'input' remains dtype fp32"
+        assert any([warning_msg in rec.message for rec in caplog.records])
+        assert get_op_types_in_program(prog) == []
+        assert block.outputs[0].dtype == types.fp32
 
 class TestFuseLayerNormOrInstanceNorm:
     @pytest.mark.parametrize("axes_size", [1, 2, 3])

@@ -39,7 +39,7 @@ def _datadir(request):
     # is not happy with. Thus we should substitute these characters with a more universally accepted path character.
     safe_name = request.node.name.replace("[", "___").replace("]", "___")
 
-    dir = test_data_path() / safe_name   # noqa: F821
+    dir = test_data_path() / safe_name  # noqa: F821
     shutil.rmtree(str(dir), ignore_errors=True)
     os.makedirs(str(dir))
     return dir

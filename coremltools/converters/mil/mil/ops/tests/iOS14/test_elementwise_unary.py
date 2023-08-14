@@ -4,25 +4,18 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 import scipy
 
-import coremltools as ct
-from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, get_new_symbol, types
-from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
-from coremltools.converters.mil.mil.var import Var
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
-
-from .testing_utils import run_compare_builder
-
-backends = testing_reqs.backends
-compute_units = testing_reqs.compute_units
 
 
 class TestElementwiseUnary:
@@ -164,9 +157,7 @@ class TestElementwiseUnary:
             build = lambda x: mb.exp(x=x)
         elif mode == "exp2":
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-            expected_outputs = np.array(
-                [[0.5, 4.0, 0.125], [16, 0.03125, 64]], dtype=np.float32
-            )
+            expected_outputs = np.array([[0.5, 4.0, 0.125], [16, 0.03125, 64]], dtype=np.float32)
 
             build = lambda x: mb.exp2(x=x)
         elif mode == "floor":
@@ -236,7 +227,7 @@ class TestElementwiseUnary:
         elif mode == "square":
             val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
             expected_outputs = np.array(
-                [[1.0, 4.0, 9.0], [16.0, 25.0, 36.]],
+                [[1.0, 4.0, 9.0], [16.0, 25.0, 36.0]],
                 dtype=np.float32,
             )
 
@@ -261,17 +252,13 @@ class TestElementwiseUnary:
             build = lambda x: mb.tanh(x=x)
         elif mode == "threshold":
             val = np.array([[-1.2, 2, -3.4], [4.5, -5, 6.7]], dtype=np.float32)
-            expected_outputs = np.array(
-                [[1.0, 2, 1.0], [4.5, 1.0, 6.7]], dtype=np.float32
-            )
+            expected_outputs = np.array([[1.0, 2, 1.0], [4.5, 1.0, 6.7]], dtype=np.float32)
 
             build = lambda x: mb.threshold(x=x, alpha=1.0)
 
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
-        expected_output_types = (
-            (2, 3, types.int32) if mode == "cast" else (2, 3, types.fp32)
-        )
+        expected_output_types = (2, 3, types.int32) if mode == "cast" else (2, 3, types.fp32)
 
         run_compare_builder(
             build,
@@ -408,9 +395,7 @@ class TestElementwiseUnary:
     def test_builder_exp2_eval(self):
         val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = mb.exp2(x=val)
-        expected_outputs = np.array(
-            [[0.5, 4.0, 0.125], [16, 0.03125, 64]], dtype=np.float32
-        )
+        expected_outputs = np.array([[0.5, 4.0, 0.125], [16, 0.03125, 64]], dtype=np.float32)
 
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -543,97 +528,65 @@ class TestElementwiseUnary:
             output_vars = build(**ssa_func.inputs)
             assert is_compatible_symbolic_vector(output_vars.sym_val, [get_new_symbol(), 1])
 
-    @pytest.mark.parametrize(
-        "compute_unit, backend, epsilon",
-        itertools.product(
-            compute_units,
-            backends,
-            [1e-3, 1e-1, 1.0],
-        ),
-    )
-    def test_builder_to_backend_stress_inverse(
-        self, compute_unit, backend, epsilon
+    @staticmethod
+    def _test_builder_to_backend_stress_with_epsilon(
+        compute_unit,
+        backend,
+        op_name,
+        epsilon_val,
+        x_eps_dtype,
     ):
-        x = np.array([[1, -2, 3], [4, -5, 6]], dtype=np.float32)
-        numpy_pred = 1 / (x + epsilon)
+        x_dtype, epsilon_dtype = x_eps_dtype
 
-        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
-        input_value_dict = {"x": x}
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=x_dtype)
+        epsilon = epsilon_dtype(epsilon_val)
+
+        def _calculate_by_np():
+            if op_name == "inverse":
+                return 1 / (x + epsilon)
+            elif op_name == "log":
+                return np.log(x + epsilon)
+            elif op_name == "rsqrt":
+                return 1.0 / np.sqrt(x + epsilon)
+            else:
+                raise ValueError(f"Invalid op {op_name}")
 
         def build(x):
-            return mb.inverse(x=x, epsilon=epsilon)
+            return getattr(mb, op_name)(x=x, epsilon=epsilon)
 
-        expected_output_type = x.shape + (types.fp32,)
+        x_mb_dtype = types.numpy_type_to_builtin_type(x_dtype)
         run_compare_builder(
             build,
-            input_placeholder_dict,
-            input_value_dict,
-            expected_output_type,
-            numpy_pred,
+            input_placeholders={"x": mb.placeholder(shape=x.shape, dtype=x_mb_dtype)},
+            input_values={"x": x},
+            expected_output_types=x.shape + (x_mb_dtype,),
+            expected_outputs=_calculate_by_np(),
             compute_unit=compute_unit,
             backend=backend,
+            atol=1e-2 if x_dtype == np.float16 else 1e-4,
+            rtol=1e-3 if x_dtype == np.float16 else 1e-5,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, epsilon",
+        "compute_unit, backend, op_name, epsilon_val, x_eps_dtype",
         itertools.product(
             compute_units,
             backends,
+            ["inverse", "log", "rsqrt"],
             [1e-3, 1e-1, 1.0],
+            [(np.float32, np.float32), (np.float16, np.float16)],
         ),
     )
-    def test_builder_to_backend_stress_rsqrt(
-        self, compute_unit, backend, epsilon
+    def test_builder_to_backend_stress_with_epsilon(
+        self,
+        compute_unit,
+        backend,
+        op_name,
+        epsilon_val,
+        x_eps_dtype,
     ):
-        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        numpy_pred = 1.0 / np.sqrt(x + epsilon)
-
-        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
-        input_value_dict = {"x": x}
-
-        def build(x):
-            return mb.rsqrt(x=x, epsilon=epsilon)
-
-        expected_output_type = x.shape + (types.fp32,)
-        run_compare_builder(
-            build,
-            input_placeholder_dict,
-            input_value_dict,
-            expected_output_type,
-            numpy_pred,
-            compute_unit=compute_unit,
-            backend=backend,
-        )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend, epsilon",
-        itertools.product(
-            compute_units,
-            backends,
-            [1e-3, 1e-1, 1.0],
-        ),
-    )
-    def test_builder_to_backend_stress_log(
-            self, compute_unit, backend, epsilon
-    ):
-        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        numpy_pred = np.log(x + epsilon)
-
-        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
-        input_value_dict = {"x": x}
-
-        def build(x):
-            return mb.log(x=x, epsilon=epsilon)
-
-        expected_output_type = x.shape + (types.fp32,)
-        run_compare_builder(
-            build,
-            input_placeholder_dict,
-            input_value_dict,
-            expected_output_type,
-            numpy_pred,
-            compute_unit=compute_unit,
-            backend=backend,
+        self._test_builder_to_backend_stress_with_epsilon(
+            compute_unit, backend, op_name, epsilon_val, x_eps_dtype
         )
 
     @pytest.mark.parametrize(
@@ -644,9 +597,7 @@ class TestElementwiseUnary:
             [("fp16", "fp32"), ("fp32", "fp16")],
         ),
     )
-    def test_builder_to_backend_stress_cast(
-            self, compute_unit, backend, src_dst
-    ):
+    def test_builder_to_backend_stress_cast(self, compute_unit, backend, src_dst):
         src_dtype, dst_dtype = src_dst
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = x.astype(dtype=np.float16)
@@ -673,89 +624,8 @@ class TestElementwiseUnary:
             backend=backend,
         )
 
-    @pytest.mark.parametrize(
-        "compute_unit, backend, src_dtype, dst_dtype",
-        itertools.product(
-            compute_units,
-            [("mlprogram", "fp16")],
-            [np.float16, np.float32, np.float64, np.int64, np.int32, np.int16, np.uint16],
-            [np.float16, np.float32, np.float64, np.int64, np.int32, np.int16, np.uint16],
-        ),
-    )
-    def test_builder_eval_cast_ios17(self, compute_unit, backend, src_dtype, dst_dtype):
-        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=src_dtype)
-        dst_dtype_str = types.builtin_to_string(
-            types.type_mapping.numpy_type_to_builtin_type(dst_dtype)
-        )
-        expected_res = x.astype(dtype=np.float16)
-
-        @mb.program(input_specs=[], opset_version=ct.target.iOS17)
-        def prog():
-            return mb.cast(x=x, dtype=dst_dtype_str)
-
-        main_func = prog.functions["main"]
-        cast_op = main_func.find_ops(op_type="cast")[0]
-        np.testing.assert_allclose(expected_res, cast_op.outputs[0].val, atol=1e-04, rtol=1e-05)
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend, src_dtype, dst_dtype",
-        itertools.product(
-            compute_units,
-            [("mlprogram", "fp16")],
-            [np.float16, np.float32, np.int16, np.int32, np.uint16],
-            [np.float16, np.float32, np.int16, np.int32, np.uint16],
-        ),
-    )
-    def test_builder_to_backend_cast_ios17(self, compute_unit, backend, src_dtype, dst_dtype):
-        _SUPPORTED_IO_DTYPES = {types.fp16, types.fp32, types.int32}
-        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=src_dtype)
-        src_builtin_dtype = types.type_mapping.numpy_type_to_builtin_type(src_dtype)
-        dst_builtin_dtype = types.type_mapping.numpy_type_to_builtin_type(dst_dtype)
-        expected_res = x.astype(dtype=np.float16)
-
-        expected_cast_num = 1
-        if src_builtin_dtype not in _SUPPORTED_IO_DTYPES:
-            # A cast will be inserted for unsupported dtypes inputs.
-            expected_cast_num += 1
-
-        # As CoreML IO only allows fp16/32 and int32, the output will be further cast.
-        expected_res_builtin_dtype = dst_builtin_dtype
-        if dst_builtin_dtype not in _SUPPORTED_IO_DTYPES:
-            expected_res_builtin_dtype = (
-                types.int32 if types.is_int(dst_builtin_dtype) else types.fp32
-            )
-            expected_cast_num += 1
-
-        def build(x):
-            return mb.cast(x=x, dtype=types.builtin_to_string(dst_builtin_dtype))
-
-        with patch.object(Var, "_is_nonreplaceable_var") as mocked_is_nonreplaceable_var:
-            # Mock that the cast is non-replaceable, to make sure it's kept in the graph.
-            mocked_is_nonreplaceable_var.side_effect = (
-                lambda var: var.op and var.op.op_type == "cast"
-            )
-            # Remove the cast optimization pass to make sure all cast are kept in the graph.
-            pass_pipeline: PassPipeline = PassPipeline.DEFAULT
-            pass_pipeline.remove_passes(
-                ["common::cast_optimization", "common::topological_reorder"]
-            )
-            mlmodel = run_compare_builder(
-                build,
-                {"x": mb.placeholder(shape=x.shape, dtype=src_builtin_dtype)},
-                input_values={"x": x},
-                expected_output_types=x.shape + (expected_res_builtin_dtype,),
-                expected_outputs=expected_res,
-                compute_unit=compute_unit,
-                backend=backend,
-                minimum_deployment_target=ct.target.iOS17,
-                pass_pipeline=pass_pipeline,
-            )
-            prog = mlmodel._mil_program
-            cast_ops = prog["main"].find_ops(op_type="cast")
-            assert len(cast_ops) == expected_cast_num
-
     def test_erf_value_inference(self):
-        INPUT_SIZE=(2, 3, 4)
+        INPUT_SIZE = (2, 3, 4)
         rs = np.random.RandomState(1234)
         x = rs.random(INPUT_SIZE)
 
@@ -765,7 +635,9 @@ class TestElementwiseUnary:
 
         ops = list(prog.functions.values())[0].operations
         assert len(ops) == 2
-        assert ops[0].op_type == 'const'
+        assert ops[0].op_type == "const"
         erf_op = ops[1]
-        assert erf_op.op_type == 'erf'
-        np.testing.assert_allclose(erf_op.value_inference(), scipy.special.erf(x), atol=1e-04, rtol=1e-05)
+        assert erf_op.op_type == "erf"
+        np.testing.assert_allclose(
+            erf_op.value_inference(), scipy.special.erf(x), atol=1e-04, rtol=1e-05
+        )

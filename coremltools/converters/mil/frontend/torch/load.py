@@ -13,9 +13,16 @@ from coremltools.converters.mil.input_types import InputType, TensorType
 from .converter import TorchConverter, torch_to_mil_types
 
 
-def load(model_spec, inputs, specification_version,
-         debug=False, outputs=None, cut_at_symbols=None,
-         **kwargs):
+def load(
+    model_spec,
+    inputs,
+    specification_version,
+    debug=False,
+    outputs=None,
+    cut_at_symbols=None,
+    use_default_fp16_io=False,
+    **kwargs
+):
     """
     Convert PyTorch model to mil CoreML format.
 
@@ -42,6 +49,10 @@ def load(model_spec, inputs, specification_version,
     cut_at_symbols (optional): List of internal symbol name strings. Graph conversion will
         terminate once these symbols have been generated. For debugging use
         only.
+    use_default_fp16_io (optional): bool. Defaults to False.
+        When minimum_deployment_target set >= ct.target.iOS16 (the same as ct.target.macOS13),
+        and the compute precision set to fp16, this flag is True.
+        When True, fp32 i/o defaults to fp16.
     """
     torchscript = _torchscript_from_model(model_spec)
 
@@ -59,6 +70,7 @@ def load(model_spec, inputs, specification_version,
         outputs,
         cut_at_symbols,
         specification_version,
+        use_default_fp16_io,
     )
     return _perform_torch_convert(converter, debug)
 

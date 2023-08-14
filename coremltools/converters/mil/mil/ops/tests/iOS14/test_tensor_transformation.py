@@ -13,16 +13,15 @@ from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
-from coremltools.converters.mil.mil.types import nptype_from_builtin
-from coremltools.converters.mil.testing_reqs import backends, compute_units
-from coremltools.converters.mil.testing_utils import ssa_fn
-
-from .testing_utils import (
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import (
     UNK_SYM,
     UNK_VARIADIC,
     construct_inputs_from_placeholders,
     run_compare_builder,
 )
+from coremltools.converters.mil.testing_reqs import compute_units
+from coremltools.converters.mil.testing_utils import ssa_fn
 
 if _HAS_TORCH:
     import torch
@@ -30,7 +29,11 @@ if _HAS_TORCH:
 
 class TestDepthToSpace:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (1, 4, 1, 1, fp32)
@@ -57,14 +60,18 @@ class TestDepthToSpace:
 
 class TestSpaceToBatch:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (2, 1, 2, 4, fp32)
-        val = np.array([[[[ 1,  2,  3,  4],
-                          [ 5,  6,  7,  8]]],
-                        [[[ 9, 10, 11, 12],
-                          [13, 14, 15, 16]]]], dtype=np.float32)
+        val = np.array(
+            [[[[1, 2, 3, 4], [5, 6, 7, 8]]], [[[9, 10, 11, 12], [13, 14, 15, 16]]]],
+            dtype=np.float32,
+        )
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
 
@@ -72,14 +79,19 @@ class TestSpaceToBatch:
             return [mb.space_to_batch(x=x, block_shape=[2, 2], paddings=[[0, 0], [2, 0]])]
 
         expected_output_types = (8, 1, 1, 3, types.fp32)
-        expected_outputs = np.array([[[[ 0,  1,  3]]],
-                                     [[[ 0,  9, 11]]],
-                                     [[[ 0,  2,  4]]],
-                                     [[[ 0, 10, 12]]],
-                                     [[[ 0,  5,  7]]],
-                                     [[[ 0, 13, 15]]],
-                                     [[[ 0,  6,  8]]],
-                                     [[[ 0, 14, 16]]]], dtype=np.float32)
+        expected_outputs = np.array(
+            [
+                [[[0, 1, 3]]],
+                [[[0, 9, 11]]],
+                [[[0, 2, 4]]],
+                [[[0, 10, 12]]],
+                [[[0, 5, 7]]],
+                [[[0, 13, 15]]],
+                [[[0, 6, 8]]],
+                [[[0, 14, 16]]],
+            ],
+            dtype=np.float32,
+        )
 
         run_compare_builder(
             build,
@@ -94,18 +106,27 @@ class TestSpaceToBatch:
 
 class TestBatchToSpace:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (8, 1, 1, 3, fp32)
-        val = np.array([[[[ 0,  1,  3]]],
-                       [[[ 0,  9, 11]]],
-                       [[[ 0,  2,  4]]],
-                       [[[ 0, 10, 12]]],
-                       [[[ 0,  5,  7]]],
-                       [[[ 0, 13, 15]]],
-                       [[[ 0,  6,  8]]],
-                       [[[ 0, 14, 16]]]], dtype=np.float32)
+        val = np.array(
+            [
+                [[[0, 1, 3]]],
+                [[[0, 9, 11]]],
+                [[[0, 2, 4]]],
+                [[[0, 10, 12]]],
+                [[[0, 5, 7]]],
+                [[[0, 13, 15]]],
+                [[[0, 6, 8]]],
+                [[[0, 14, 16]]],
+            ],
+            dtype=np.float32,
+        )
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
 
@@ -113,10 +134,10 @@ class TestBatchToSpace:
             return [mb.batch_to_space(x=x, block_shape=[2, 2], crops=[[0, 0], [2, 0]])]
 
         expected_output_types = (2, 1, 2, 4, types.fp32)
-        expected_outputs = np.array([[[[ 1,  2,  3,  4],
-                                       [ 5,  6,  7,  8]]],
-                                     [[[ 9, 10, 11, 12],
-                                       [13, 14, 15, 16]]]], dtype=np.float32)
+        expected_outputs = np.array(
+            [[[[1, 2, 3, 4], [5, 6, 7, 8]]], [[[9, 10, 11, 12], [13, 14, 15, 16]]]],
+            dtype=np.float32,
+        )
 
         run_compare_builder(
             build,
@@ -131,7 +152,11 @@ class TestBatchToSpace:
 
 class TestExpandDims:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -176,7 +201,11 @@ class TestExpandDims:
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
@@ -210,7 +239,7 @@ class TestExpandDims:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -230,23 +259,19 @@ class TestExpandDims:
         np.testing.assert_allclose(ref, v3.val, atol=1e-04, rtol=1e-05)
 
         v4 = mb.expand_dims(x=x_val, axes=[0, -1, -2])
-        np.testing.assert_allclose(np.reshape(x_val, (1, 1, 6, 1, 1)), v4.val, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(
+            np.reshape(x_val, (1, 1, 6, 1, 1)), v4.val, atol=1e-04, rtol=1e-05
+        )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axis",
         itertools.product(
             compute_units,
             backends,
-            [
-                (rank, axis)
-                for rank in range(1, 5)
-                for axis in range(-rank - 1, rank + 1)
-            ],
+            [(rank, axis) for rank in range(1, 5) for axis in range(-rank - 1, rank + 1)],
         ),
     )
-    def test_builder_to_backend_programmatic_one_axis(
-        self, compute_unit, backend, rank_and_axis
-    ):
+    def test_builder_to_backend_programmatic_one_axis(self, compute_unit, backend, rank_and_axis):
         rank, axis = rank_and_axis
         x_shape = np.random.randint(low=2, high=6, size=rank)
         input_placeholders = {"x": mb.placeholder(shape=x_shape)}
@@ -320,92 +345,13 @@ class TestExpandDims:
         )
 
 
-class TestReshapeLike:
+class TestReshape:
     @pytest.mark.parametrize(
-        "compute_unit, backend, InputShape_RefShapes_Begins_Ends_EndMasks, InputType_RefType",
+        "compute_unit, backend",
         itertools.product(
             compute_units,
             backends,
-            [
-                [(4, 3), ((2, 2, 3), (1, 3)), (0, 1), (2, 2), (False, False)],
-                [(32,), ((1, 2, 2, 2), (3, 2, 2)), (1, 1), (0, 0), (True, True)],
-                [(72, 1), ((1, 2, 3, 4, 1), (3,)), (1, 0), (0, 1), (True, False)],
-            ],
-            [(types.bool, types.fp32), (types.fp32, types.bool)],
-        )
-    )
-    def test_builder_to_backend_smoke(
-            self,
-            compute_unit,
-            backend,
-            InputShape_RefShapes_Begins_Ends_EndMasks,
-            InputType_RefType,
-        ):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("reshape_like not supoprted in neuralnetwork backend.")
-
-        if ct.utils._macos_version() < (13, 0):
-            pytest.skip("reshape_like not supported in macOS12 or older.")
-
-        input_shape, ref_shapes, begins, ends, end_masks = InputShape_RefShapes_Begins_Ends_EndMasks
-        ref_shape_1, ref_shape_2 = ref_shapes
-        input_type, ref_type = InputType_RefType
-
-        t = np.random.rand(*input_shape).astype(np.float32)
-        ref_tensor_1 = np.random.rand(*ref_shape_1).astype(np.float32)
-        ref_tensor_2 = np.random.rand(*ref_shape_2).astype(np.float32)
-
-        input_placeholders = {
-            "x": mb.placeholder(shape=t.shape),
-            "ref_tensor_1": mb.placeholder(shape=ref_shape_1),
-            "ref_tensor_2": mb.placeholder(shape=ref_shape_2),
-        }
-        input_values = {
-            "x": t,
-            "ref_tensor_1": ref_tensor_1,
-            "ref_tensor_2": ref_tensor_2,
-        }
-
-        def build(x, ref_tensor_1, ref_tensor_2):
-            if input_type == types.bool:
-                x = mb.cast(x=x, dtype="bool")
-
-            if ref_type == types.bool:
-                ref_tensor_1 = mb.cast(x=ref_tensor_1, dtype="bool")
-                ref_tensor_2 = mb.cast(x=ref_tensor_2, dtype="bool")
-
-            ref_tensors = (ref_tensor_1, ref_tensor_2)
-            return mb.reshape_like(x=x, ref_tensors=ref_tensors, begins=begins, ends=ends, end_masks=end_masks)
-
-        output_shape = ()
-        for ref_shape, begin, end, end_mask in zip((ref_shape_1, ref_shape_2), begins, ends, end_masks):
-            if end_mask:
-                output_shape += tuple(ref_shape[begin:])
-            else:
-                output_shape += tuple(ref_shape[begin:end])
-
-        expected_output_types = [
-            output_shape + (input_type,),
-        ]
-        expected_outputs = [
-            np.reshape(t, output_shape).astype(nptype_from_builtin(input_type)),
-        ]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS16
-        )
-
-
-class TestReshape:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -451,7 +397,11 @@ class TestReshape:
         np.testing.assert_allclose(expected_r2, r2.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
@@ -500,7 +450,7 @@ class TestReshape:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -524,170 +474,30 @@ class TestReshape:
         with pytest.raises(ValueError, match="Invalid target shape in `reshape` op"):
             mb.reshape(x=x, shape=[0, 7])
 
-    @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        ),
-    )
-    def test_reshape_with_zero(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
-
-        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return [
-                mb.reshape(x=x, shape=[0, -1]),
-                mb.reshape(x=x, shape=[0, 3]),
-                mb.reshape(x=x, shape=[-1, 0]),
+    @staticmethod
+    def test_value_inference_with_symbolic_values():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(get_new_symbol(), get_new_symbol()), dtype=types.fp32)
             ]
-
-        expected_output_types = [
-            (2, 3, types.fp32),
-            (2, 3, types.fp32),
-            (2, 3, types.fp32),
-        ]
-        expected_outputs = [
-            np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
-            np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
-            np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
-        ]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
         )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        ),
-    )
-    def test_reshape_with_zero_different_len(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
-
-        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return [
-                mb.reshape(x=x, shape=[1, 0, -1, 0]),
-            ]
-
-        expected_output_types = [
-            (1, 1, 2, 3, types.fp32),
-        ]
-        expected_outputs = [
-            np.array([[[[1, 2, 3], [4, 5, 6]]]], dtype=np.float32),
-        ]
-
-        with pytest.raises(
-            ValueError,
-            match="When there is 0 in shape, the rank of x .* must "
-            "equal to the target shape len",
-        ):
-            run_compare_builder(
-                build,
-                input_placeholders,
-                input_values,
-                expected_output_types,
-                expected_outputs,
-                compute_unit=compute_unit,
-                backend=backend,
-            )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        ),
-    )
-    def test_reshape_with_zero_different_len(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
-
-        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return [mb.reshape(x=x, shape=[1, 0, -1, 0])]
-
-        # In IOS15/16 it will error out because rank of x needs to have same length as shape.
-        with pytest.raises(
-            ValueError,
-            match="When there is 0 in shape, the rank of x .* must "
-            "equal to the target shape len",
-        ):
-            run_compare_builder(
-                build,
-                input_placeholders,
-                input_values,
-                compute_unit=compute_unit,
-                backend=backend,
-            )
-
-        # In IOS17 it accepts different length.
-        expected_output_types = [(1, 1, 2, 3, types.fp32)]
-        expected_outputs = [np.array([[[[1, 2, 3], [4, 5, 6]]]], dtype=np.float32)]
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS17,
-        )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(
-            compute_units,
-            backends,
-        ),
-    )
-    def test_reshape_invalid_with_zero(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("Reshape with 0 is not supported in neuralnetwork.")
-
-        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
-        input_values = {"x": t}
-
-        def build(x):
-            return [mb.reshape(x=x, shape=[4, 0, -1, 0])]
-
-        with pytest.raises(ValueError, match="Invalid target shape in `reshape` op"):
-            run_compare_builder(
-                build,
-                input_placeholders,
-                input_values,
-                compute_unit=compute_unit,
-                backend=backend,
-                minimum_deployment_target=ct.target.iOS17,
-            )
-
-
+        def prog(x):
+            shape = mb.shape(x=x)
+            res = mb.reshape(x=shape, shape=(1, 2))
+            res_sym_val = res.sym_val
+            assert res_sym_val is not None
+            assert res_sym_val.shape == (1, 2)
+            assert res_sym_val[0][0] == shape.sym_val[0]
+            assert res_sym_val[0][1] == shape.sym_val[1]
+            return res
 
 class TestReverse:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
@@ -720,7 +530,11 @@ class TestReverse:
         np.testing.assert_allclose(np.flip(val, axis=0), res.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
@@ -757,7 +571,11 @@ class TestReverse:
 
 class TestReverseSequence:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array(
@@ -774,9 +592,7 @@ class TestReverseSequence:
 
         def build(x):
             return [
-                mb.reverse_sequence(
-                    x=x, lengths=[7, 2, 3, 5], seq_axis=1, batch_axis=0
-                ),
+                mb.reverse_sequence(x=x, lengths=[7, 2, 3, 5], seq_axis=1, batch_axis=0),
             ]
 
         expected_output_types = [
@@ -805,7 +621,11 @@ class TestReverseSequence:
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
@@ -824,9 +644,7 @@ class TestReverseSequence:
 
         def build(x):
             return [
-                mb.reverse_sequence(
-                    x=x, lengths=[7, 2, 3, 5], seq_axis=1, batch_axis=0
-                ),
+                mb.reverse_sequence(x=x, lengths=[7, 2, 3, 5], seq_axis=1, batch_axis=0),
             ]
 
         expected_output_types = [
@@ -851,40 +669,49 @@ class TestReverseSequence:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
         )
 
 
-class TestSliceBySize:
+class TestSliceByIndex:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend, x_dtype, idx_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            (np.float16, np.float32, np.int32),
+            (np.int32,),
+        ),
     )
-    def test_builder_to_backend_smoke(self, compute_unit, backend):
-        x_val = np.array(list(range(24))).reshape((2, 3, 4)).astype(np.float32)
-        begin_val = np.array([1, 1, 1], dtype=np.int32)
+    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, idx_dtype):
+        x_builtin_dtype = types.numpy_type_to_builtin_type(x_dtype)
+        idx_builtin_dtype = types.numpy_type_to_builtin_type(idx_dtype)
+
+        x_val = np.array(list(range(24))).reshape((2, 3, 4)).astype(x_dtype)
+        begin_val = np.array([1, 1, 1], dtype=idx_dtype)
+        end_val = np.array([2, 3, 3], dtype=idx_dtype)
         input_placeholders = {
-            "x": mb.placeholder(shape=x_val.shape),
-            "begin": mb.placeholder(shape=begin_val.shape, dtype=types.int32),
+            "x": mb.placeholder(shape=x_val.shape, dtype=x_builtin_dtype),
+            "begin": mb.placeholder(shape=begin_val.shape, dtype=idx_builtin_dtype),
+            "end": mb.placeholder(shape=end_val.shape, dtype=idx_builtin_dtype),
         }
-        input_values = {"x": x_val, "begin": begin_val}
+        input_values = {"x": x_val, "begin": begin_val, "end": end_val}
 
-        def build_non_single(x, begin):
+        def build(x, begin, end):
+            begin_c = mb.const(val=begin_val)
+            end_c = mb.const(val=end_val)
             return [
-                mb.slice_by_size(x=x, begin=begin, size=[1, 2, 3]),
+                mb.slice_by_index(x=x, begin=begin, end=end),
+                mb.slice_by_index(x=x, begin=begin_c, end=end_c),
             ]
 
-        def build_single(x, begin):
-            return [
-                mb.slice_by_size(x=x, begin=begin, size=[-1, 2, -1]),
-            ]
-
-        expected_output_types = [(1, 2, 3, types.fp32)]
-        expected_outputs = [np.array([[[17, 18, 19], [21, 22, 23]]], dtype=np.float32)]
+        expected_output_types = [(UNK_SYM, UNK_SYM, UNK_SYM, x_builtin_dtype)] * 2
+        expected_outputs = [np.array([[[17, 18], [21, 22]]], dtype=x_dtype)] * 2
         run_compare_builder(
-            build_non_single,
+            build,
             input_placeholders,
             input_values,
             expected_output_types,
@@ -893,9 +720,413 @@ class TestSliceBySize:
             backend=backend,
         )
 
-        expected_output_types = [(UNK_SYM, 2, UNK_SYM, types.fp32)]
+    def test_type_inference(self):
+        s0 = get_new_symbol()
+        s1 = get_new_symbol()
+        s2 = get_new_symbol()
+
+        input_placeholders = {
+            "x": mb.placeholder(shape=(10, s0, s1, s2)),
+        }
+
+        def build(x):
+            return [
+                mb.slice_by_index(
+                    x=x, begin=[2, 5, 6, 12], end=[6, 9, 20, -9], stride=[2, 1, 2, 1]
+                ),
+                mb.slice_by_index(
+                    x=x,
+                    begin=[-2, -5, -3, 9],
+                    end=[-6, -9, -6, -7],
+                    stride=[-2, -1, -2, 1],
+                ),
+                mb.slice_by_index(
+                    x=x,
+                    begin=[0, 0, 0, 0],
+                    end=[-6, -9, 3, -2],
+                    stride=[-2, -3, 1, 2],
+                    begin_mask=[True, True, True, True],
+                    end_mask=[False, False, False, False],
+                ),
+                mb.slice_by_index(
+                    x=x,
+                    begin=[-2, 5, -1, -7],
+                    end=[0, 0, 0, 0],
+                    stride=[-2, -3, 1, -2],
+                    begin_mask=[False, False, False, False],
+                    end_mask=[True, True, True, True],
+                ),
+                mb.slice_by_index(
+                    x=x, begin=[4, -1, 0, -5], end=[4, -1, 0, -5], stride=[1, -1, 2, -2]
+                ),
+                mb.slice_by_index(
+                    x=x,
+                    begin=[0, -1, 0, 2],
+                    end=[2, 0, 0, 2],
+                    begin_mask=[False, False, False, False],
+                    end_mask=[False, True, True, False],
+                    stride=[1, 2, -2, 1],
+                ),
+                mb.slice_by_index(
+                    x=x,
+                    begin=[0, 2, -3, 0],
+                    end=[1, 3, -4, 4],
+                    begin_mask=[False, False, False, False],
+                    end_mask=[False, False, False, False],
+                    stride=[1, 1, -1, 1],
+                ),
+            ]
+
+        expected_output_types = [
+            (2, UNK_SYM, UNK_SYM, UNK_SYM, types.fp32),
+            (2, UNK_SYM, UNK_SYM, UNK_SYM, types.fp32),
+            (3, UNK_SYM, UNK_SYM, UNK_SYM, types.fp32),
+            (5, UNK_SYM, 1, UNK_SYM, types.fp32),
+            (0, 0, 0, 0, types.fp32),
+            (2, 1, 1, 0, types.fp32),
+            (1, 1, 1, UNK_SYM, types.fp32),
+        ]
+
         run_compare_builder(
-            build_single,
+            build,
+            input_placeholders,
+            expected_output_types=expected_output_types,
+            frontend_only=True,
+        )
+
+    @pytest.mark.xfail(reason="rdar://99664032")
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_single_element_edge_case(self, compute_unit, backend):
+        x_val = np.array(list(range(6))).reshape((1, 3, 2)).astype(np.float32)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x_val.shape),
+        }
+        input_values = {"x": x_val}
+
+        def build(x):
+            return mb.slice_by_index(
+                x=x,
+                begin=[-1, 0, 0],
+                end=[-2, 0, 0],
+                stride=[-1, 1, 1],
+                begin_mask=[False, True, True],
+                end_mask=[False, True, True],
+            )
+
+        expected_output_types = [(1, 3, 2, types.fp32)]
+        expected_outputs = [np.array([[[0, 1], [2, 3], [4, 5]]], dtype=np.float32)]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    @ssa_fn
+    def test_builder_eval_scalar_output_corner_cases(self):
+        x1 = np.array([2.0])
+        x2 = np.array([[[[1.0], [3.0]]]])
+        v = [
+            mb.slice_by_index(
+                x=x1,
+                begin=[
+                    0,
+                ],
+                end=[0],
+                squeeze_mask=[True],
+            ),
+            mb.slice_by_index(
+                x=x2,
+                begin=[0, 0, 0, 0],
+                end=[0, 0, 0, 0],
+                squeeze_mask=[True, True, True, True],
+            ),
+        ]
+        assert v[0].val.shape == ()
+        assert v[0].val == 2
+        assert v[1].val.shape == ()
+        assert v[1].val == 1
+
+    @ssa_fn
+    def test_builder_eval(self):
+        x_val = np.array(list(range(24))).reshape((2, 3, 4))
+        v = [
+            mb.slice_by_index(x=x_val, begin=[1, 1, 1], end=[2, 2, 2]),  # x_val[1:2, 1:2, 1:2]
+            mb.slice_by_index(
+                x=x_val, begin=[1, 1, 1], end=[2, 3, 4], stride=[1, 1, 2]
+            ),  #  x_val[1:2, 1:3, 1:4:2]
+            mb.slice_by_index(
+                x=x_val, begin=[-3, -3, -3], end=[-1, -1, -1]
+            ),  # x_val[-3:-1, -3:-1, -3:-1]
+            mb.slice_by_index(
+                x=x_val, begin=[0, 0, -3], end=[-1, -2, -2]
+            ),  # x_val[0:-1, 0:-2, -3:-2]
+            mb.slice_by_index(
+                x=x_val, begin=[-1, -1, -1], end=[0, 1, -3], stride=[-2, -1, -3]
+            ),  # x_val[-1:0:-2, -1:1:-1, -1:-3:-3]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 1, 1],
+                end=[2, 3, 4],
+                stride=[1, 1, 2],
+                begin_mask=[True, False, True],
+            ),  # x_val[:2, 1:3, :4:2]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 1, 1],
+                end=[2, 3, 4],
+                stride=[1, 1, 2],
+                begin_mask=[True, False, True],
+                end_mask=[True, True, False],
+            ),  # x_val[:, 1:, :4:2]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 1, 1],
+                end=[2, 3, 4],
+                stride=[1, 1, 2],
+                begin_mask=[False, False, True],
+                end_mask=[True, False, False],
+                squeeze_mask=[False, True, False],
+            ),  # x_val[1::1, 1, :3:2]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[0, 0, 0],
+                end=[0, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[True, True, True],
+                end_mask=[True, True, True],
+            ),  # x_val[:, :, :]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 1, 1],
+                end=[2, 2, 0],
+                stride=[1, 1, 1],
+                squeeze_mask=[False, False, True],
+            ),  # x_val[1:2, 1:2, 1]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 0, 0],
+                end=[2, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[False, True, True],
+                end_mask=[False, True, True],
+            ),  # x_val[1:2, ...]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[0, 0, 0],
+                end=[0, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[True, True, True],
+                end_mask=[True, True, True],
+            ),  # x_val[...]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 0, 1],
+                end=[2, 0, 2],
+                stride=[1, 1, 1],
+                begin_mask=[False, True, False],
+                end_mask=[False, True, False],
+            ),  # x_val[1:2, ..., 1:2]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[0, 0, 1],
+                end=[0, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[True, True, False],
+                end_mask=[True, True, False],
+                squeeze_mask=[False, False, True],
+            ),  # x_val[..., 1]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[0, 0, 0],
+                end=[0, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[False, False, True],
+                end_mask=[False, False, True],
+                squeeze_mask=[True, True, False],
+            ),  # x_val[0, 0, :]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 0, 0],
+                end=[2, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[False, True, True],
+                end_mask=[False, True, True],
+            ),  # x_val[1:2]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 1, 0],
+                end=[2, 2, 0],
+                stride=[1, 1, 1],
+                begin_mask=[False, False, True],
+                end_mask=[False, False, True],
+            ),  # x_val[1:2, 1:2]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[1, 0, 0],
+                end=[0, 0, 0],
+                stride=[1, 1, 1],
+                begin_mask=[False, True, True],
+                end_mask=[False, True, True],
+                squeeze_mask=[True, False, False],
+            ),  # x_val[1]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[0, 0, 0],
+                end=[0, 0, 0],
+                begin_mask=[True, True, True],
+                end_mask=[True, True, True],
+            ),  # x_val[:]
+            mb.slice_by_index(
+                x=x_val,
+                begin=[0, 0, 0],
+                end=[0, 0, 0],
+                stride=[1, 1, -1],
+                begin_mask=[True, True, True],
+                end_mask=[True, True, True],
+            ),  # x_val[..., ::-1]
+        ]
+        ans = [
+            x_val[1:2, 1:2, 1:2],
+            x_val[1:2, 1:3, 1:4:2],
+            x_val[-3:-1, -3:-1, -3:-1],
+            x_val[0:-1, 0:-2, -3:-2],
+            x_val[-1:0:-2, -1:1:-1, -1:-3:-3],
+            x_val[:2, 1:3, :4:2],
+            x_val[:, 1:, :4:2],
+            x_val[1::1, 1, :3:2],
+            x_val[:, :, :],
+            x_val[1:2, 1:2, 1],
+            x_val[1:2, ...],
+            x_val[...],
+            x_val[1:2, ..., 1:2],
+            x_val[..., 1],
+            x_val[0, 0, :],
+            x_val[1:2],
+            x_val[1:2, 1:2],
+            x_val[1],
+            x_val[:],
+            x_val[..., ::-1],
+        ]
+        for idx in range(len(v)):
+            assert ans[idx].shape == v[idx].shape
+            np.testing.assert_allclose(ans[idx], v[idx].val, atol=1e-04, rtol=1e-05)
+
+    @staticmethod
+    def test_slice_by_index():
+        INPUT_SHAPE = (1, 2, 8, 16)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            x = mb.slice_by_index(
+                x=x,
+                begin=[0, 0, 0, 0],
+                end=[1, 2, 8, 12],
+                stride=[1, 1, 2, 2],
+                begin_mask=None,
+                end_mask=None,
+                squeeze_mask=None,
+            )
+            return x
+
+        x = np.random.rand(*INPUT_SHAPE)
+
+        # slice by index is x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]
+        y_numpy = x[0:1:1, 0:2:1, 0:8:2, 0:12:2]
+
+        model = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        y_neuralnetwork = list(model.predict({"x": x}).values())[0]
+        np.testing.assert_allclose(y_numpy, y_neuralnetwork)
+
+        model = ct.convert(
+            prog,
+            source="milinternal",
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
+
+        y_mlprogram = list(model.predict({"x": x}).values())[0]
+        assert y_numpy.shape == y_mlprogram.shape
+        np.testing.assert_allclose(y_numpy, y_mlprogram)
+
+    @staticmethod
+    def test_slice_by_index_slice_squeeze_separate():
+        INPUT_SHAPE = (1, 2, 8, 16)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            x = mb.slice_by_index(
+                x=x,
+                begin=[0, 0, 0, 0],
+                end=[1, 2, 8, 12],
+                stride=[1, 1, 1, 2],
+                begin_mask=None,
+                end_mask=None,
+                squeeze_mask=[True, False, False, False],
+            )
+            return x
+
+        x = np.random.rand(*INPUT_SHAPE)
+
+        # slice by index is x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]
+        # and squeeze dim 0
+        y_numpy = x[0:1:1, 0:2:1, 0:8:1, 0:12:2]
+        y_numpy = np.squeeze(y_numpy, axis=0)
+
+        model = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        y_neuralnetwork = list(model.predict({"x": x}).values())[0]
+
+        assert y_numpy.shape == y_neuralnetwork.shape
+        np.testing.assert_allclose(y_numpy, y_neuralnetwork)
+
+        model = ct.convert(prog, source="milinternal", convert_to="mlprogram")
+        y_mlprogram = list(model.predict({"x": x}).values())[0]
+        # TODO: rdar://103365766 MLProgram does not apply squeeze_mask.
+        # np.testing.assert_allclose(y_numpy, y_mlprogram)
+
+
+class TestSliceBySize:
+    @pytest.mark.parametrize(
+        "compute_unit, backend, size_val, x_dtype, idx_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            ([1, 2, 3], [-1, 2, -1]),
+            (np.float16, np.float32, np.int32),
+            (np.int32,),
+        ),
+    )
+    def test_builder_to_backend_smoke(self, compute_unit, backend, size_val, x_dtype, idx_dtype):
+        def build(x, begin):
+            return mb.slice_by_size(x=x, begin=begin, size=np.array(size_val, dtype=idx_dtype))
+
+        x_builtin_dtype = types.numpy_type_to_builtin_type(x_dtype)
+        idx_builtin_dtype = types.numpy_type_to_builtin_type(idx_dtype)
+
+        x_val = np.array(list(range(24))).reshape((2, 3, 4)).astype(x_dtype)
+        begin_val = np.array([1, 1, 1], dtype=idx_dtype)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x_val.shape, dtype=x_builtin_dtype),
+            "begin": mb.placeholder(shape=begin_val.shape, dtype=idx_builtin_dtype),
+        }
+        input_values = {"x": x_val, "begin": begin_val}
+
+        expected_outputs = np.array([[[17, 18, 19], [21, 22, 23]]], dtype=x_dtype)
+        expected_output_types = tuple([dim if dim != -1 else UNK_SYM for dim in size_val]) + (
+            x_builtin_dtype,
+        )
+
+        run_compare_builder(
+            build,
             input_placeholders,
             input_values,
             expected_output_types,
@@ -917,7 +1148,11 @@ class TestSliceBySize:
 
 class TestSpaceToDepth:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (1, 1, 2, 2, fp32)
@@ -929,9 +1164,7 @@ class TestSpaceToDepth:
             return [mb.space_to_depth(x=x, block_size=2)]
 
         expected_output_types = (1, 4, 1, 1, types.fp32)
-        expected_outputs = np.array(
-            [[[[7.0]], [[9.0]], [[4.0]], [[6.0]]]], dtype=np.float32
-        )
+        expected_outputs = np.array([[[[7.0]], [[9.0]], [[4.0]], [[6.0]]]], dtype=np.float32)
 
         run_compare_builder(
             build,
@@ -946,7 +1179,11 @@ class TestSpaceToDepth:
 
 class TestSqueeze:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[[[1], [2], [3]]]], dtype=np.float32)
@@ -1004,7 +1241,11 @@ class TestSqueeze:
 class TestTranspose:
     @pytest.mark.parametrize(
         "compute_unit, backend, is_symbolic",
-        itertools.product(compute_units, backends, [True, False],),
+        itertools.product(
+            compute_units,
+            backends,
+            [True, False],
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend, is_symbolic):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -1043,7 +1284,7 @@ class TestTranspose:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -1056,7 +1297,11 @@ class TestTranspose:
         np.testing.assert_allclose(x.T, v.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
@@ -1088,7 +1333,7 @@ class TestTranspose:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -1097,7 +1342,11 @@ class TestTranspose:
 
 class TestPixelShuffle:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (1, 4, 1, 1, fp32)
@@ -1131,9 +1380,7 @@ class TestPixelShuffle:
             [2, 4],
         ),
     )
-    def test_builder_to_backend_stress(
-        self, compute_unit, backend, shape, upscale_factor
-    ):
+    def test_builder_to_backend_stress(self, compute_unit, backend, shape, upscale_factor):
         val = np.random.rand(*shape)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
@@ -1155,77 +1402,13 @@ class TestPixelShuffle:
         )
 
 
-@pytest.mark.skipif(ct.utils._macos_version() < (13, 0), reason="New functionality in macOS13/iOS16")
-class TestPixelUnshuffle:
+class TestSlidingWindows:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
-    )
-    def test_builder_to_backend_smoke(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("nn backend not supported")
-
-        val = np.array([[[[9.0, 5.0], [1.0, 3.0]]]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
-        input_values = {"x": val}
-
-        def build(x):
-            return [mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(2))]
-
-        expected_output_types = (1, 4, 1, 1, types.fp32)
-        expected_outputs = np.array([[[[9.0]], [[5.0]], [[1.0]], [[3.0]]]], dtype=np.float32)
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
-        )
-
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
-    @pytest.mark.parametrize(
-        "compute_unit, backend, shape, downscale_factor",
+        "compute_unit, backend",
         itertools.product(
             compute_units,
             backends,
-            [(1, 2, 4, 4), (2, 1, 8, 4)],
-            [2, 4],
         ),
-    )
-    def test_builder_to_backend_stress(
-        self, compute_unit, backend, shape, downscale_factor,
-    ):
-        if backend[0] == "neuralnetwork":
-            pytest.skip("nn backend not supported")
-
-        val = np.random.rand(*shape)
-        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
-        input_values = {"x": val}
-
-        def build(x):
-            return [mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(downscale_factor))]
-
-        torch_pixel_unshuffle = torch.nn.PixelUnshuffle(downscale_factor)
-        expected_outputs = [torch_pixel_unshuffle(torch.Tensor(val)).numpy()]
-        expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
-        )
-
-
-class TestSlidingWindows:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         # original input type is (1, 4, 1, 1, fp32)
@@ -1262,9 +1445,7 @@ class TestSlidingWindows:
             [1, 2],
         ),
     )
-    def test_builder_to_backend_stress(
-        self, compute_unit, backend, rank_and_axis, size, stride
-    ):
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank_and_axis, size, stride):
         def np_sliding_windows(a, np_axis, np_size, np_stride):
             n = (a.shape[np_axis] - np_size) // np_stride + 1
             x_shape = list(a.shape)
@@ -1286,9 +1467,7 @@ class TestSlidingWindows:
         def build(x):
             return [mb.sliding_windows(x=x, axis=axis, size=size, stride=stride)]
 
-        expected_outputs = [
-            np_sliding_windows(val, np_axis=axis, np_size=size, np_stride=stride)
-        ]
+        expected_outputs = [np_sliding_windows(val, np_axis=axis, np_size=size, np_stride=stride)]
         expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
         run_compare_builder(
             build,
@@ -1303,7 +1482,11 @@ class TestSlidingWindows:
 
 class TestConcat:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends, )
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t1 = np.array([[1, 2], [4, 5]], dtype=np.float32)
@@ -1343,11 +1526,11 @@ class TestConcat:
             [1, 2, 3, 4, 5],
             [2, 3],
             [False, True],
-        )
+        ),
     )
-    def test_builder_to_backend_stress_interleave(self, compute_unit, backend,
-                                                  rank, n_inputs, negative_index):
-
+    def test_builder_to_backend_stress_interleave(
+        self, compute_unit, backend, rank, n_inputs, negative_index
+    ):
         def np_concat_interleave(arrays, axis):
             step = len(arrays)
             in_shape = arrays[0].shape
@@ -1453,7 +1636,11 @@ class TestConcat:
 
 class TestSplit:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends, )
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
@@ -1464,9 +1651,7 @@ class TestSplit:
         input_values = {"x": t}
 
         def build(x):
-            return mb.split(x=x, num_splits=2, axis=1) + mb.split(
-                x=x, split_sizes=[1, 2], axis=0
-            )
+            return mb.split(x=x, num_splits=2, axis=1) + mb.split(x=x, split_sizes=[1, 2], axis=0)
 
         expected_output_types = [
             (3, 1, types.fp32),
@@ -1502,7 +1687,11 @@ class TestSplit:
 
 class TestStack:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends, )
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         t1 = np.array([1, 2, 3], dtype=np.float32)
@@ -1515,7 +1704,11 @@ class TestStack:
         input_values = {"x": t1, "y": t2}
 
         def build(x, y):
-            return [mb.stack(values=(x, y), axis=0), mb.stack(values=(x, y), axis=1), mb.stack(values=(x, y), axis=-1)]
+            return [
+                mb.stack(values=(x, y), axis=0),
+                mb.stack(values=(x, y), axis=1),
+                mb.stack(values=(x, y), axis=-1),
+            ]
 
         expected_output_types = [
             (2, 3, types.fp32),

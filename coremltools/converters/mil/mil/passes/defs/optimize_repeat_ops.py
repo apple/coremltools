@@ -5,16 +5,24 @@
 
 import copy
 from collections import defaultdict
-from typing import List, Text
+from typing import List, Text, Tuple
 
 import numpy as np
 
 from coremltools import _logger as logger
+from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Function, Operation
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import _check_child_op_type, block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
+from coremltools.converters.mil.mil.types.type_mapping import (
+    RangeTuple,
+    builtin_to_range,
+    builtin_to_resolution,
+    string_to_builtin,
+)
 from coremltools.converters.mil.mil.var import Var
 
 
@@ -22,7 +30,7 @@ from coremltools.converters.mil.mil.var import Var
 class merge_consecutive_paddings(AbstractGraphPass):
     """
     Identify two consecutive ``pad`` layers which could be merged into a single ``pad`` layer.
-    
+
     This is possible only if one of the following conditions is satisfied:
 
     - The paddings are "constant" and have the same ``constant_val``.
@@ -285,19 +293,18 @@ class merge_consecutive_reshapes(AbstractGraphPass):
         while block_changed:
             block_changed = help_merge_consecutive_reshapes_block(block)
 
-
 class CastOptimizationNode:
     def __init__(self, op_type, match_criterion=None):
         """
         Parameters
         ----------
-        
+
         param op_type : Type of an operation.
         param match_criterion : A callable function that matches a MIL op and returns a boolean.
 
         Examples
         --------
-        
+
         .. sourcecode:: python
 
             CastOptimizationNode("mul"),
@@ -315,227 +322,254 @@ class CastOptimizationNode:
 
         self.match_criterion = match_criterion
 
-
 @register_pass(namespace="common")
 class cast_optimization(AbstractGraphPass):
     """
     This optimization pass performs the following:
 
     - Removes redundant ``cast`` op; that is, ``cast`` where source and destination tensors have same dtypes.
-    - Either cancels or fuses any two consecutive `cast` ops, repeatedly.
+    - Fuses two consecutive `cast` ops if applicable, repeatedly.
 
-    After this pass, there can't be any consecutive `cast` ops present in the program.
-    For examples, see ``TestCastOptimization``.
     This is a non-algebraic translation which assumes that the upcasting doesn't change the user's intent.
-    
-    For example:
 
-    .. code-block::
+    (1) Example for redundant ``cast`` op removal:
+        .. code-block::
 
-        Input graph:
-        input -----> cast(dtype="fp16") -----> cast(dtype="fp32") ----> square ---> out
+            Input graph:
+            input(fp16) -> cast(dtype="fp16") -> relu -> out
 
-        Output graph:
-        input -----> square -----> out
+            Output graph:
+            input -> relu -> out
 
-    The input graph has a maximum precision of fp16 while the output graph has fp32 precision.
+        The input and output tensors for the ``cast`` op are both with type of ``fp16``. Hence, it can be removed.
 
+    (2) Example for two ``cast`` ops fusion:
+        .. code-block::
+
+            Input graph:
+            input(int8) -> cast(dtype="fp16") -> cast(dtype="fp32") -> out
+
+            Output graph:
+            input(int8) -> cast(dtype="fp32") -> out
+
+        The data range and resolution of the above graph are limited by the int8 input, so the fusion is allowed.
+
+    (3) Negative example for two ``cast`` ops fusion:
+        .. code-block::
+            Input graph:
+            input(fp32) -> cast(dtype="bool") -> cast(dtype="fp16") -> out
+
+            Output graph:
+            Same as input graph.
+
+        The above two ``cast`` ops cannot be merged, since after the first cast, the resolution of the numerical output
+        is downcasted to binary (``0, 1``). If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
+
+    (3) Another Negative example for two ``cast`` ops fusion:
+        .. code-block::
+            Input graph:
+            input(int32) -> cast(dtype="int8") -> cast(dtype="uint8") -> out
+
+            Output graph:
+            Same as input graph.
+
+        The above two ``cast`` ops cannot be merged, since in the original graph, by going through two casts,
+        the output numerical range is capped to ``[0, 127]``.
+
+        However, if two ``cast`` ops are reduced to 1 ``cast(dtype="uint8")``, the output numerical would in the range of ``[0, 255]``.
+        The fusion would cause numerical issue for the numbers between ``[128, 255]``, which is prohibited.
+
+    In general, two ``cast`` ops can be merged if the output data range and resolution is not affected.
+
+    For more examples, please see the unittests start with prefix "TestCastOptimization" in test_passes.py
     """
 
     def apply(self, prog):
         for f in prog.functions.values():
-            self._fuse_or_cancel_consecutive_casts_block_wrapper(f, {})
+            self._fuse_or_cancel_consecutive_casts_block_wrapper(f)
 
-        # main function's output_vars are treated differently, which are not handled by the method
-        # above, "_fuse_or_cancel_consecutive_casts_block".
-        # For that, we invoke another method
-        block_changed = True
-        while block_changed:
-            block_changed = self._cancel_consecutive_casts_connected_to_outputs(
-                prog.functions["main"]
+    def _propagate_range_resolution(self, in_dtype: type, dtype_chain: Tuple[type]):
+        """
+        Given an input type ``in_dtype``, and a chain of casting, return the resulting output data range and resolution.
+
+        For example, ``in_dtype = fp32`` and ``dtype_chain = [int8, int32]``. This means an input data with type ``fp32``,
+        is propagated through ``cast(dtype="int8")`` and ``cast(dtype="int32")`` in order.
+
+        1. The input fp32 data range is ``[-3.4e+38, 3.4e+38]`` with resolution ``1e-06``.
+        2. After the first ``cast(dtype="int8")`` downcast, the range becomes ``[-128, 127]`` with resolution ``1``.
+        3. Even the ``int32`` has a larger range, the resulting range is still capped to ``[-128, 127]``.
+
+        For the above example, this function returns range of ``[-128, 127]`` and resolution ``1``.
+        """
+        assert isinstance(dtype_chain, tuple)
+        cur_range, cur_resolution = builtin_to_range(in_dtype), builtin_to_resolution(in_dtype)
+        for v in dtype_chain:
+            tmp_range, tmp_resolution = builtin_to_range(v), builtin_to_resolution(v)
+            cur_range = RangeTuple(
+                max(cur_range.low, tmp_range.low), min(cur_range.high, tmp_range.high)
             )
+            cur_resolution = max(cur_resolution, tmp_resolution)
+        return cur_range, cur_resolution
 
-    def _match_linear_pattern(self, root, pattern):
+    def _is_cast_ops_fusable(self, cast_1: Operation, cast_2: Operation):
         """
-        Use Depth First Search to match the pattern
+        Check if two cast ops can be fused by verifying the consistency between the range and resolution before and after fusion.
 
-        :param root: operation
-        :param pattern: List[CastOptimizationNode]
-        :return: Return List[operation] if pattern matches entirely else []
+        Take the same example shown in ``_propagate_range_resolution``:
+
+            input(fp32) -> cast(dtype="int8") -> cast(dtype="int32")
+
+        The original pattern has output range and resolution ``[-128, 127]``, ``1``.
+
+        However, if the two ``cast`` ops are fused:
+
+            input(fp32) -> cast(dtype="int32")
+
+        The output range becomes the range of int32, which is not ``[-128, 127]``.
+        As the result, the fusion is prohibited.
         """
-        op = root
-        if not pattern or len(op.outputs) != 1:
-            return []
+        x_dtype, cast_1_dtype, cast_2_dtype = (
+            cast_1.x.dtype,
+            string_to_builtin(cast_1.dtype.val),
+            string_to_builtin(cast_2.dtype.val),
+        )
 
-        node = pattern[0]
-        if op.op_type != node.op_type:
-            return []
+        ref_range, ref_resolution = self._propagate_range_resolution(
+            x_dtype, (cast_1_dtype, cast_2_dtype)
+        )
+        out_range, out_resolution = self._propagate_range_resolution(x_dtype, (cast_2_dtype,))
 
-        if not node.match_criterion(op):
-            return []
+        return out_range == ref_range and out_resolution == ref_resolution
 
-        for child in op.outputs[0].child_ops:
-            op_list = [op] + self._match_linear_pattern(child, pattern[1:])
-            if len(op_list) == len(pattern):
-                return op_list
+    def _dup_if_affect_io(self, new_var: Var, old_var: Var, before_op: Operation):
+        """
+        We cannot replace old_var with new_var, if:
+        1. old_var is a function output
+        2. new_var is a function input
+        Since the name of the function is going to be changed and become invalid.
 
-        return []
+        For this special corner case, we use an identity op to duplicate the new_var.
+        """
+        block_1 = before_op.enclosing_block
+        is_new_var_function_input = (
+            isinstance(block_1, Function) and new_var in block_1.inputs.values()
+        )
+        block_2 = old_var.op.enclosing_block
+        is_old_var_function_output = isinstance(block_2, Function) and old_var in block_2.outputs
 
-    def _try_to_transform(self, root_op, cached_vars):
+        if is_new_var_function_input and is_old_var_function_output:
+            return mb.identity(x=new_var, before_op=before_op)
+        return new_var
+
+    def _fuse_cast_ops(self, cast_ops: List[Operation], reuse_input_var: bool = False):
+        """
+        Fuse the pattern of:
+            input -> cast_1(dtype=dtype_1) -> cast_2(dtype=dtype_2) -> out
+
+        If ``reuse_input_var = True``, the pattern is reduced to:
+            input -> out
+
+        otherwise, a new ``cast`` op with the same ``dtype`` as ``cast_2`` is created:
+            input -> cast_3(dtype=dtype_2) -> out
+        """
+        if not isinstance(cast_ops[0], tuple):
+            cast_ops = tuple((cast_ops,))
+
+        ops_to_remove = []
+
+        for cast_1, cast_2 in cast_ops:
+            if reuse_input_var:
+                new_output_var = self._dup_if_affect_io(cast_1.x, cast_2.outputs[0], cast_1)
+            else:
+                fused_output_var_name = cast_1.x.name + "_to_{}".format(cast_2.dtype.val)
+                new_output_var = mb.cast(
+                    x=cast_1.x,
+                    dtype=cast_2.dtype,
+                    name=fused_output_var_name,
+                    before_op=cast_2,
+                )
+            # It's important to use `cast_2.enclosing_block` since `cast_2` might be present in a block nested under `cast_1.enclosing_block`
+            cast_2.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=cast_2,
+                old_var=cast_2.outputs[0],
+                new_var=new_output_var,
+            )
+            # Remove just the last cast op and let dce eliminate the rest of the ops if needed,
+            # The reason is that first cast op could be feeding into other non-cast ops.
+            ops_to_remove.append(cast_2)
+
+        ops_to_remove[0].enclosing_block.remove_ops(ops_to_remove)
+
+    def _try_to_transform(self, root_op, cast_ops_across_blocks):
         block = root_op.enclosing_block
 
         # Scenario: Redundant cast when source and destination dtype are same.
         if root_op.op_type == "cast" and root_op.x.is_tensor_or_scalar_of(dtype=root_op.dtype.val):
+            new_var = root_op.x
+            old_var = root_op.outputs[0]
+            new_var = self._dup_if_affect_io(root_op.x, old_var, root_op)
             block.replace_uses_of_var_after_op(
                 anchor_op=root_op,
-                old_var=root_op.outputs[0],
-                new_var=root_op.x,
+                old_var=old_var,
+                new_var=new_var,
             )
             block.remove_ops([root_op])
             return True
 
         # Scenario: Consecutive casts
-        list_of_ops_in_pattern = self._match_linear_pattern(
-            root_op,
-            [
-                CastOptimizationNode("cast"),
-                CastOptimizationNode("cast"),
-            ],
-        )
+        candidate_child_ops = []
+        for op in root_op.outputs[0].child_ops:
+            if op.op_type == "cast":
+                candidate_child_ops.append(op)
 
-        if not list_of_ops_in_pattern:
-            return False
+        fusion_happens = False
+        for child_op in candidate_child_ops:
+            if not self._is_cast_ops_fusable(root_op, child_op):
+                continue
 
-        cast_1, cast_2 = list_of_ops_in_pattern
-
-        fused_output_var_name = cast_1.x.name + "_to_{}".format(cast_2.dtype.val)
-
-        if cast_1.x.is_tensor_or_scalar_of(dtype=cast_2.dtype.val):
-            # when consecutive casts cancel each other
-            # Please check out: test_linear_consecutive_cast_ops_cancellation in TestCastOptimization
-            new_output_var = cast_1.x
-        elif fused_output_var_name in cached_vars:
-            # When the output of 1 cast goes into multiple casts of same configuration
-            # Please check out: test_consecutive_fusable_casts_on_all_branches in TestCastOptimization
-            new_output_var = cached_vars[fused_output_var_name]
-        else:
-            new_output_var = mb.cast(
-                x=cast_1.x,
-                dtype=cast_2.dtype,
-                name=fused_output_var_name,
-                before_op=cast_2,
-            )
-            cached_vars[fused_output_var_name] = new_output_var
-
-        # It's important to use `cast_2.enclosing_block` over `block` since `cast_2` might be present in
-        # a block nested under `block`
-        cast_2.enclosing_block.replace_uses_of_var_after_op(
-            anchor_op=cast_2,
-            old_var=cast_2.outputs[0],
-            new_var=new_output_var,
-        )
-
-        # Remove just the last cast op and let dce eliminate the rest of the ops if needed,
-        # The reason is that first cast op could be feeding into other non-cast ops.
-        cast_2.enclosing_block.remove_ops([cast_2])
-        return True
+            if root_op.x.is_tensor_or_scalar_of(dtype=child_op.dtype.val):
+                # when consecutive casts cancel each other
+                # Please check out: test_linear_consecutive_cast_ops_cancellation in TestCastOptimization
+                self._fuse_cast_ops((root_op, child_op), reuse_input_var=True)
+                fusion_happens = True
+            else:
+                if child_op.enclosing_block != block:
+                    # If cast_2 is in an inner block, we handle it at once in a seperated function `_fuse_casts_ops_across_blocks`
+                    cast_ops_across_blocks[child_op.enclosing_block].add((root_op, child_op))
+                    continue
+                self._fuse_cast_ops((root_op, child_op))
+                fusion_happens = True
+        return fusion_happens
 
     @block_context_manager
-    def _fuse_or_cancel_consecutive_casts_block_wrapper(self, block, cached_vars):
-        def _fuse_or_cancel_consecutive_casts_block(block, cached_vars):
-            block_changed = False
+    def _fuse_casts_ops_across_blocks(self, block: Block, ops_to_fused: Tuple[Operation]):
+        self._fuse_cast_ops(ops_to_fused)
+
+    @block_context_manager
+    def _fuse_or_cancel_consecutive_casts_block_wrapper(self, block):
+        def _fuse_or_cancel_consecutive_casts_block(block, cast_ops_across_blocks):
+            # We first make sure all the inner blocks are optimized
+            # It is important to do it seperately in the very beginning, to ensure the last step of optimization cast ops across the block boundary is correct.
             for i, op in enumerate(list(block.operations)):
                 for b in op.blocks:
-                    nested_block_changed = True
-                    nested_block_cached_vars = {}
-                    nested_block_cached_vars.update(cached_vars)
-                    self._fuse_or_cancel_consecutive_casts_block_wrapper(
-                        b, nested_block_cached_vars
-                    )
+                    self._fuse_or_cancel_consecutive_casts_block_wrapper(b)
 
-                if len(op.blocks) > 0:
-                    continue
-
+            for i, op in enumerate(list(block.operations)):
                 # start pattern match if cast op is encountered
                 if op.op_type == "cast":
-                    block_changed = self._try_to_transform(op, cached_vars)
-                    # has to break as the downstream iterator is affected.
-                    if block_changed:
-                        return block_changed
-            return block_changed
+                    if self._try_to_transform(op, cast_ops_across_blocks):
+                        # has to break as the downstream iterator is affected.
+                        return True
+            return False
 
         block_changed = True
-        """
-        Cached vars are used when `all` of the following conditions are met:
-        
-        1. The output of a ``cast`` is fed into multiple ``cast`` ops of same configuration.
-        2. These 2 consecutive ``cast`` ops can be fused into a single ``cast``.
-        
-        When these conditions are satisfied, we create a `new` fused ``cast`` op `only` once, and
-        the output of all these consecutive ``cast`` ops are replaced with the ouptut of this fused ``cast``.
-
-        .. code-block::
-
-            Input graph:
-                                        |---->cast(dtype="fp16")---->square--->out_1
-                                        |
-            input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
-                                        |
-                                        |---->cast(dtype="fp16")---->log--->out_3
-            
-            Output graph:
-                                                 |---->square--->out_1
-                                                 |
-            input---->new_fused_cast(dtype="fp16")---->relu--->out_2
-                                                 |
-                                                 |---->log--->out_3
-
-        """
+        cast_ops_across_blocks = defaultdict(set)
         while block_changed:
-            block_changed = _fuse_or_cancel_consecutive_casts_block(block, cached_vars)
+            block_changed = _fuse_or_cancel_consecutive_casts_block(block, cast_ops_across_blocks)
 
-    @staticmethod
-    def _cancel_consecutive_casts_connected_to_outputs(block):
-        """
-        Lets say the ops in the block have the following pattern
-        "some_op"---->{var1}---->"cast_op1"---->"cast_op2"--->{var2}
-        , where var2 is one of the outputs in block.outputs
-
-        If cast_op1 and cast_op2 can be cancelled, this means, var1 and var2 are duplicates
-        of each other. The program can then be updated to
-        "some_op"---->{var1}
-        where var1 replaces var2 in block.outputs
-        This also requires replacing var1's name with var2's so that the model output names remain unchanged
-        """
-        new_output_vars = []
-        block_changed = False
-        for output_var in block.outputs:
-            cast_op2 = output_var.op
-            if cast_op2 is None:
-                continue
-            if cast_op2.op_type != "cast":
-                new_output_vars.append(output_var)
-                continue
-            cast_op1 = cast_op2.x.op
-            if cast_op1 is None:
-                new_output_vars.append(output_var)
-                continue
-            if cast_op1.op_type != "cast":
-                new_output_vars.append(output_var)
-                continue
-            var1 = cast_op1.x
-            if var1.op is None or var1.dtype != output_var.dtype:
-                new_output_vars.append(output_var)
-                continue
-            var1.set_name(output_var.name)
-            new_output_vars.append(var1)
-            block_changed = True
-
-        if block_changed:
-            block.set_outputs(new_output_vars)
-
-        return block_changed
-
+        # fuse the cast ops across the inner / outer block boundary
+        for k, v in cast_ops_across_blocks.items():
+            self._fuse_casts_ops_across_blocks(k, tuple(v))
 
 class TransformAxisUpdateOps:
     """
@@ -1628,21 +1662,21 @@ class reduce_transposes(AbstractGraphPass):
 
             Output graph:
             input -----> identity -----> out
-        
+
         # Example 2
             Input graph:
             input---->transpose(axis=[0,3,1,2])---->relu---->transpose(axis=[0,2,3,1])--->out
 
             Output graph:
             input----->relu----->out
-        
+
         # Example 3
             Input graph:
             input(shape=10,2,3,5)--->transpose(axis=[0,2,3,1])----->relu---->pool----->out1
                                                                |
                                                                |
                                                                --->relu----->log---->transpose(axis=[0,3,1,2])---->out2
-            
+
             Output graph:
             input(shape=10,2,3,5)----->relu---->transpose(axis=[0,2,3,1])---->pool----->out1
                                    |
@@ -1707,7 +1741,7 @@ class reduce_transposes(AbstractGraphPass):
     To resolve this, we recognize that nodes consisting of sets ``(a)`` and ``(b)`` form a bipartitle graph, where,
     ``(a) ==`` starting ``transpose`` ops (originators of ``_LazyTransposeHypotheticalValue``)
     and ``(b) ==`` set of ``transpose`` ``cancel`` ops and ``materialize`` ops.
-    
+
     - In this bipartite graph, we find all the connected components for each connected component.
       Either the entire set of ``transpose`` ops in it are removed/materialized, or none
       of them are touched.

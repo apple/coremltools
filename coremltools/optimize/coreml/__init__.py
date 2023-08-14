@@ -4,16 +4,18 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ._config import (
-	OpLinearQuantizerConfig,
+    OpLinearQuantizerConfig,
     OpMagnitudePrunerConfig,
-	OpPalettizerConfig,
+    OpPalettizerConfig,
     OpThresholdPrunerConfig,
-	OptimizationConfig,
+    OptimizationConfig,
 )
-
 from ._post_training_quantization import (
+    CoreMLOpMetaData,
+    CoreMLWeightMetaData,
     decompress_weights,
-	linear_quantize_weights,
-	palettize_weights,
-	prune_weights,
+    get_weights_metadata,
+    linear_quantize_weights,
+    palettize_weights,
+    prune_weights,
 )
