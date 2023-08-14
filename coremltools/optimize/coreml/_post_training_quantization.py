@@ -481,8 +481,8 @@ def get_weights_metadata(mlmodel: _MLModel, weight_threshold: int = 2048):
 
         for op in tqdm(
             candidate_ops,
-            desc=f"Getting Core ML weights meta data",
-            unit=f" ops",
+            desc="Getting Core ML weights meta data",
+            unit=" ops",
         ):
             res[op.name] = _get_weight_metadata(op)
 
@@ -607,9 +607,9 @@ class CoreMLWeightMetaData:
         res += f"  sparsity: {self.sparsity}\n"
         res += f"  unique_values: {self.unique_values}\n"
         if self.child_ops is not None:
-            res += f"  child_ops: [\n"
+            res += "  child_ops: [\n"
             for child_op in self.child_ops:
                 res += f"    {child_op}\n"
             res += "  ]\n"
-        res += f"]"
+        res += "]"
         return res

@@ -169,7 +169,7 @@ class topk(_topk_iOS16):
     def type_inference(self):
         if not self.return_indices.val and self.output_indices_dtype is not None:
             raise ValueError(
-                f'In iOS17 topk op, "output_indices_dtype" can only be set when "return_indices=True".'
+                'In iOS17 topk op, "output_indices_dtype" can only be set when "return_indices=True".'
             )
 
         if self.return_indices.val:
