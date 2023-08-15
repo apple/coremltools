@@ -506,6 +506,17 @@ class MLModel:
         else:
             _save_spec(self._spec, save_path)
 
+
+    def get_compiled_model_path(self):
+        """
+        Returns the path for the underlying compiled ML Model.
+
+        IMPORTANT - This path is only available for the lifetime of this Python object. If you want
+        the compiled model to persist, you need to make a copy.
+        """
+        return self.__proxy__.get_compiled_model_path()
+
+
     def get_spec(self):
         """
         Get a deep copy of the protobuf specification of the model.
@@ -562,20 +573,10 @@ class MLModel:
             raise Exception(
                 "predict() for .mlpackage is not supported in macOS version older than 12.0."
             )
-        if type(data) not in (list, dict):
-            raise TypeError("\"data\" parameter must be either a dict or list of dict.")
-        if type(data) == list and not all(map(lambda x: type(x) == dict, data)):
-            raise TypeError("\"data\" list must contain only dictionaries")
+        MLModel._check_predict_data(data)
 
         if self.__proxy__:
-            if type(data) == dict:
-                verify_and_convert_input_dict(data)
-                return self.__proxy__.predict(data)
-            else:
-                assert type(data) == list
-                for i in data:
-                    verify_and_convert_input_dict(i)
-                return self.__proxy__.batchPredict(data)
+            return MLModel._get_predictions(self.__proxy__, verify_and_convert_input_dict, data)
         else:   # Error case
             if _macos_version() < (10, 13):
                 raise Exception(
@@ -614,6 +615,26 @@ class MLModel:
                     raise self._framework_error
                 else:
                     raise Exception("Unable to load CoreML.framework. Cannot make predictions.")
+
+    @staticmethod
+    def _check_predict_data(data):
+        if type(data) not in (list, dict):
+            raise TypeError("\"data\" parameter must be either a dict or list of dict.")
+        if type(data) == list and not all(map(lambda x: type(x) == dict, data)):
+            raise TypeError("\"data\" list must contain only dictionaries")
+
+
+    @staticmethod
+    def _get_predictions(proxy, preprocess_method, data):
+        if type(data) == dict:
+            preprocess_method(data)
+            return proxy.predict(data)
+        else:
+            assert type(data) == list
+            for i in data:
+                preprocess_method(i)
+            return proxy.batchPredict(data)
+
 
     def _input_has_infinite_upper_bound(self) -> bool:
         """Check if any input has infinite upper bound (-1)."""
@@ -709,7 +730,8 @@ class MLModel:
                           "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
 
-    def _update_float16_multiarray_input_to_float32(self, input_data):
+    @staticmethod
+    def _update_float16_multiarray_input_to_float32(input_data: dict):
         for k, v in input_data.items():
             if isinstance(v, _np.ndarray) and v.dtype == _np.float16:
                 input_data[k] = v.astype(_np.float32)
