@@ -9,10 +9,10 @@ import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
-
-from .testing_utils import run_compare_builder
 
 
 class TestElementwiseBinary:
@@ -75,9 +75,7 @@ class TestElementwiseBinary:
         elif mode == "pow":
             x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
             y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-            expected_outputs = np.array(
-                [[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32
-            )
+            expected_outputs = np.array([[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32)
 
             build = lambda x, y: mb.pow(x=x, y=y)
         elif mode == "real_div":
@@ -185,9 +183,7 @@ class TestElementwiseBinary:
     def test_builder_pow(self):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array(
-            [[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32
-        )
+        expected_outputs = np.array([[1, 4, 0.037], [256, 0.00032, 46656]], dtype=np.float32)
         v = mb.pow(x=x, y=y)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -238,7 +234,7 @@ class TestElementwiseBinary:
         x = np.array([[10, 20, 30], [40, 50, 60]], dtype=np.float32)
         y = np.array([[11, 12, 13], [14, 15, 16]], dtype=np.float32)
 
-        if backend[0] == "neuralnetwork":
+        if backend.backend == "neuralnetwork":
             dtype = np.float32
         else:
             dtype = np.int32
@@ -281,7 +277,7 @@ class TestEqual:
         input_values = {"x": x, "y": y}
 
         def build(x, y):
-            return mb.equal(x=x, y=y), mb.equal(x=-3., y=y)
+            return mb.equal(x=x, y=y), mb.equal(x=-3.0, y=y)
 
         expected_output_types = [
             (2, 3, types.bool),

@@ -56,12 +56,15 @@ class QuantizedLayerSelector:
 
             def do_quantize(self, layer, **kwargs):
                 ret = super().do_quantize(layer)
-                if not ret or layer.name == 'dense_2':
+                if not ret or layer.name == "dense_2":
                     return False
                 return True
 
+
         selector = MyLayerSelector()
-        quantized_model = quantize_weights(mlmodel, 8, quantization_mode='linear', selector=selector)
+        quantized_model = quantize_weights(
+            mlmodel, 8, quantization_mode="linear", selector=selector
+        )
 
     """
 
@@ -90,7 +93,7 @@ class QuantizedLayerSelector:
 
 
 class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
-    """ Quantized layer selector allowing the user to specify some types of
+    """Quantized layer selector allowing the user to specify some types of
     layers to skip during quantization process and the minimum size parameters
     in quantized convolution layers.
 
@@ -99,11 +102,15 @@ class AdvancedQuantizedLayerSelector(QuantizedLayerSelector):
     .. highlight:: python
     .. code-block:: python
 
-        from coremltools.models.neural_network.quantization_utils import AdvancedQuantizedLayerSelector
+        from coremltools.models.neural_network.quantization_utils import (
+            AdvancedQuantizedLayerSelector,
+        )
+
         selector = AdvancedQuantizedLayerSelector(
-                skip_layer_types=['batchnorm', 'bias', 'depthwiseConv'],
-                minimum_conv_kernel_channels=4,
-                minimum_conv_weight_count=4096)
+            skip_layer_types=["batchnorm", "bias", "depthwiseConv"],
+            minimum_conv_kernel_channels=4,
+            minimum_conv_weight_count=4096,
+        )
         quantized_model = quantize_weights(model, 8, selector=selector)
 
     """
@@ -1169,7 +1176,7 @@ def _load_and_resize_image(image_path, size):
     from PIL import Image
 
     img = Image.open(image_path)
-    return img.resize(size, Image.ANTIALIAS)
+    return img.resize(size, Image.LANCZOS)
 
 
 class TopKMetrics:
@@ -1641,10 +1648,11 @@ def quantize_weights(
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import quantization_utils
-        >>> model = coremltools.models.MLModel('my_model.mlmodel')
-        >>> quantized_model = quantization_utils.quantize_weights(model, 8, "linear")
+        import coremltools
+        from coremltools.models.neural_network import quantization_utils
+
+        model = coremltools.models.MLModel("my_model.mlmodel")
+        quantized_model = quantization_utils.quantize_weights(model, 8, "linear")
     """
 
     qmode_mapping = {

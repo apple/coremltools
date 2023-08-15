@@ -81,7 +81,7 @@ setup(
         "sympy",
         "tqdm",
         "packaging",
-        "attrs",
+        "attrs>=21.3.0",
         "cattrs",
         "pyaml",
     ],

@@ -11,9 +11,9 @@ import pytest
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
-
-from .testing_utils import run_compare_builder
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_reqs import compute_units
 
 
 class TestAvgPool:
@@ -26,7 +26,7 @@ class TestAvgPool:
                 [(1, 1, 2), (2,)],
                 [(1, 1, 2, 2), (2, 2)],
                 [(1, 1, 2, 2, 2), (2, 2, 2)],
-            ]
+            ],
         ),
     )
     def test_avgpool_builder_to_backend_smoke_samelower_padtype(
@@ -35,19 +35,17 @@ class TestAvgPool:
         input_shape, kernel_shape = inputshape_kernelshape
         rank = len(input_shape) - 2
 
-        if backend[0] == "neuralnetwork" and rank == 3:
+        if backend.backend == "neuralnetwork" and rank == 3:
             pytest.skip(
                 "pad_type `same_lower` not supported for 3d pooling in neuralnetwork backend"
             )
-        if backend[0] == "mlprogram" and rank == 1:
+        if backend.backend == "mlprogram" and rank == 1:
             pytest.xfail(
                 "rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type "
                 "same_lower)"
             )
-        if backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
-            pytest.skip("same_lower pad_type not supported in macOS12 or older.")
-
-        minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
+        if backend.opset_version == ct.target.iOS15:
+            pytest.skip("same_lower pad_type not supported in iOS15 opset.")
 
         x_val = np.arange(1, np.prod(input_shape) + 1).reshape(*input_shape).astype(np.float32)
 
@@ -78,16 +76,11 @@ class TestAvgPool:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, num_dims",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2, 3]
-        ),
+        itertools.product(compute_units, backends, [1, 2, 3]),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend, num_dims):
         kernel_sizes = [1, 2, 3]
@@ -201,7 +194,6 @@ class TestAvgPool:
 
 
 class TestMaxPool:
-
     @pytest.mark.parametrize(
         "compute_unit, backend, inputshape_kernelshape",
         itertools.product(
@@ -211,7 +203,7 @@ class TestMaxPool:
                 [(1, 1, 2), (2,)],
                 [(1, 1, 2, 2), (2, 2)],
                 [(1, 1, 2, 2, 2), (2, 2, 2)],
-            ]
+            ],
         ),
     )
     def test_maxpool_builder_to_backend_smoke_samelower_padtype(
@@ -220,19 +212,17 @@ class TestMaxPool:
         input_shape, kernel_shape = inputshape_kernelshape
         rank = len(input_shape) - 2
 
-        if backend[0] == "neuralnetwork" and rank == 3:
+        if backend.backend == "neuralnetwork" and rank == 3:
             pytest.skip(
                 "pad_type `same_lower` not supported for 3d pooling in neuralnetwork backend"
             )
-        if backend[0] == "mlprogram" and rank == 1:
+        if backend.backend == "mlprogram" and rank == 1:
             pytest.xfail(
                 "rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type "
                 "same_lower)"
             )
-        if backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
-            pytest.skip("same_lower pad_type not supported in macOS12 or older.")
-
-        minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
+        if backend.opset_version == ct.target.iOS15:
+            pytest.skip("same_lower pad_type not supported in iOS15 opset.")
 
         x_val = np.arange(1, np.prod(input_shape) + 1).reshape(*input_shape).astype(np.float32)
 
@@ -263,16 +253,11 @@ class TestMaxPool:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, num_dims",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2, 3]
-        ),
+        itertools.product(compute_units, backends, [1, 2, 3]),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend, num_dims):
         kernel_sizes = [1, 2, 3]
@@ -375,7 +360,6 @@ class TestMaxPool:
 
 
 class TestL2Pool:
-
     @pytest.mark.parametrize(
         "compute_unit, backend, inputshape_kernelshape",
         itertools.product(
@@ -384,7 +368,7 @@ class TestL2Pool:
             [
                 [(1, 1, 2), (2,)],
                 [(1, 1, 2, 2), (2, 2)],
-            ]
+            ],
         ),
     )
     def test_l2pool_builder_to_backend_smoke_samelower_padtype(
@@ -393,15 +377,13 @@ class TestL2Pool:
         input_shape, kernel_shape = inputshape_kernelshape
         rank = len(input_shape) - 2
 
-        if backend[0] == "mlprogram" and rank == 1:
+        if backend.backend == "mlprogram" and rank == 1:
             pytest.xfail(
                 "rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type "
                 "same_lower)"
             )
-        if backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
-            pytest.skip("same_lower pad_type not supported in macOS12 or older.")
-
-        minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
+        if backend.opset_version == ct.target.iOS15:
+            pytest.skip("same_lower pad_type not supported in iOS15 opset.")
 
         x_val = np.arange(1, np.prod(input_shape) + 1).reshape(*input_shape).astype(np.float32)
 
@@ -430,7 +412,6 @@ class TestL2Pool:
             expected_outputs,
             compute_unit=compute_unit,
             backend=backend,
-            minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(

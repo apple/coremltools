@@ -32,6 +32,7 @@ class noop_elimination(AbstractGraphPass):
     """
 
     _SUPPORTED_OPS = {
+        "identity",
         "add",
         "mul",
         "floor_div",
@@ -57,7 +58,17 @@ class noop_elimination(AbstractGraphPass):
             self._noop_elimination_block_wrapper(f)
 
     @staticmethod
-    def _match_pattern(op, block):
+    def _match_pattern(op):
+        def remove_identity(op):
+            if op.enclosing_block.try_replace_uses_of_var_after_op(
+                anchor_op=op,
+                old_var=op.outputs[0],
+                new_var=op.x,
+            ):
+                op.enclosing_block.remove_ops([op])
+                return True
+            return False
+
         def _remove_elementwise_binary(op, x, y):
             # We remove the ops that has op.x == x or op.y == y
             def has_all_elements_equal_to(var, value):
@@ -97,7 +108,7 @@ class noop_elimination(AbstractGraphPass):
                 return True
             return False
 
-        def remove_elementwise(op, block):
+        def remove_elementwise(op):
             if op.op_type in {"add"}:
                 return _remove_elementwise_binary(op, 0, 0)
             elif op.op_type in {"mul"}:
@@ -109,7 +120,7 @@ class noop_elimination(AbstractGraphPass):
             else:
                 return False
 
-        def remove_slice_by_index(op, block):
+        def remove_slice_by_index(op):
             input_shape = op.x.sym_type
             output_shape = op.outputs[0].sym_type
 
@@ -133,7 +144,7 @@ class noop_elimination(AbstractGraphPass):
                 return True
             return False
 
-        def remove_same_shape(op, block):
+        def remove_same_shape(op):
             input_shape = op.x.sym_type
             output_shape = op.outputs[0].sym_type
 
@@ -152,7 +163,7 @@ class noop_elimination(AbstractGraphPass):
                 return True
             return False
 
-        def remove_linear(op, block):
+        def remove_linear(op):
             if op.alpha.val != 1 or op.beta.val != 0:
                 return False
 
@@ -168,7 +179,7 @@ class noop_elimination(AbstractGraphPass):
                 return True
             return False
 
-        def remove_transpose(op, block):
+        def remove_transpose(op):
             perm = np.array([p if p >= 0 else p + len(op.perm.val) for p in op.perm.val])
             sorted_perm = np.sort(perm)
             if (perm != sorted_perm).any():
@@ -187,6 +198,7 @@ class noop_elimination(AbstractGraphPass):
             return False
 
         op_to_removal_fn = {
+            "identity": remove_identity,
             "add": remove_elementwise,
             "mul": remove_elementwise,
             "floor_div": remove_elementwise,
@@ -230,9 +242,9 @@ class noop_elimination(AbstractGraphPass):
                 if len(op.blocks) > 0:
                     continue
 
-                remove_fn = noop_elimination._match_pattern(op, block)
+                remove_fn = noop_elimination._match_pattern(op)
                 if remove_fn is not None:
-                    status = remove_fn(op, block)
+                    status = remove_fn(op)
                     # has to break as the downstream iterator is affected.
                     if status:
                         return status

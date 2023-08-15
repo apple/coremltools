@@ -18,9 +18,13 @@ from .activation import (
     softplus_parametric,
     thresholded_relu,
 )
-from .elementwise_unary import cast, clip
-from .image_resizing import crop_resize
+from .conv import conv, conv_transpose
+from .elementwise_unary import cast, clip, inverse, log, rsqrt
+from .image_resizing import crop_resize, resample, resize
+from .linear import linear, matmul
+from .normalization import batch_norm, instance_norm, l2_norm, layer_norm, local_response_norm
 from .quantization_ops import dequantize, quantize
+from .recurrent import gru, lstm, rnn
 from .reduction import reduce_argmax, reduce_argmin
 from .scatter_gather import (
     gather,
@@ -31,4 +35,13 @@ from .scatter_gather import (
     scatter_nd,
 )
 from .tensor_operation import non_maximum_suppression, topk
-from .tensor_transformation import reshape
+from .tensor_transformation import (
+    expand_dims,
+    reshape,
+    reshape_like,
+    reverse,
+    reverse_sequence,
+    sliding_windows,
+    squeeze,
+    transpose,
+)

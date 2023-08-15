@@ -2,6 +2,9 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
+from collections import namedtuple
+
 import numpy as _np
 import numpy as np
 import sympy as sm
@@ -14,6 +17,7 @@ from .type_bool import is_bool
 from .type_complex import complex64 as types_complex64
 from .type_complex import complex128 as types_complex128
 from .type_complex import is_complex
+from .type_dict import is_dict
 from .type_double import fp16 as types_fp16
 from .type_double import fp32 as types_fp32
 from .type_double import fp64 as types_fp64
@@ -31,7 +35,7 @@ from .type_list import is_list
 from .type_str import str as types_str
 from .type_unknown import unknown
 
-_types_TO_NPTYPES = {
+_TYPES_TO_NPTYPES = {
     types_bool: np.bool_,
     types_int8: np.int8,
     types_int16: np.int16,
@@ -49,7 +53,25 @@ _types_TO_NPTYPES = {
     types_str: np.str_,
 }
 
-_types_TO_STRINGS = {
+_NPTYPES_TO_STRINGS = {
+    np.bool_: "bool",
+    np.int8: "int8",
+    np.int16: "int16",
+    np.int32: "int32",
+    np.int64: "int64",
+    np.uint8: "uint8",
+    np.uint16: "uint16",
+    np.uint32: "uint32",
+    np.uint64: "uint64",
+    np.float16: "fp16",
+    np.float32: "fp32",
+    np.float64: "fp64",
+    np.complex64: "complex64",
+    np.complex128: "complex128",
+    np.str_: "string",
+}
+
+_TYPES_TO_STRINGS = {
     types_bool: "bool",
     types_int8: "int8",
     types_int16: "int16",
@@ -67,7 +89,35 @@ _types_TO_STRINGS = {
     types_str: "string",
 }
 
-builtin_to_proto_types = {
+_TYPES_TO_RESOLUTION = {
+    types_bool: 1,
+    types_int8: 1,
+    types_uint8: 1,
+    types_int16: 1,
+    types_uint16: 1,
+    types_int32: 1,
+    types_int64: 1,
+    types_fp16: np.finfo(np.float16).resolution,
+    types_fp32: np.finfo(np.float32).resolution,
+    types_fp64: np.finfo(np.float64).resolution,
+}
+
+RangeTuple = namedtuple("RangeTuple", "low high")
+
+_TYPES_TO_RANGE = {
+    types_bool: RangeTuple(0, 1),
+    types_int8: RangeTuple(np.iinfo(np.int8).min, np.iinfo(np.int8).max),
+    types_uint8: RangeTuple(np.iinfo(np.uint8).min, np.iinfo(np.uint8).max),
+    types_int16: RangeTuple(np.iinfo(np.int16).min, np.iinfo(np.int16).max),
+    types_uint16: RangeTuple(np.iinfo(np.uint16).min, np.iinfo(np.uint16).max),
+    types_int32: RangeTuple(np.iinfo(np.int32).min, np.iinfo(np.int32).max),
+    types_int64: RangeTuple(np.iinfo(np.int64).min, np.iinfo(np.int64).max),
+    types_fp16: RangeTuple(np.finfo(np.float16).min, np.finfo(np.float16).max),
+    types_fp32: RangeTuple(np.finfo(np.float32).min, np.finfo(np.float32).max),
+    types_fp64: RangeTuple(np.finfo(np.float64).min, np.finfo(np.float64).max),
+}
+
+BUILTIN_TO_PROTO_TYPES = {
     # bool:
     types_bool: _mil_pm.BOOL,
 
@@ -93,9 +143,6 @@ builtin_to_proto_types = {
     types_str: _mil_pm.STRING,
 }
 
-proto_to_builtin_types = {v: k for k, v in builtin_to_proto_types.items()}
-
-
 def np_dtype_to_py_type(np_dtype):
     # Can't use dict, as hash(np.int32) != hash(val.dtype)
     if np_dtype in [np.int32, np.int64]:
@@ -108,30 +155,52 @@ def np_dtype_to_py_type(np_dtype):
         return complex
     raise NotImplementedError('{} is not supported'.format(np_dtype))
 
-
-_STRINGS_TO_types = {v: k for k, v in _types_TO_STRINGS.items()}
-
+PROTO_TO_BUILTIN_TYPE = {v: k for k, v in BUILTIN_TO_PROTO_TYPES.items()}
+_STRINGS_TO_TYPES = {v: k for k, v in _TYPES_TO_STRINGS.items()}
+_STRINGS_TO_NPTYPES = {v: k for k, v in _NPTYPES_TO_STRINGS.items()}
 
 def string_to_builtin(s):
     """
     Given a str, return its corresponding builtin type.
     """
-    return _STRINGS_TO_types.get(s, None)
+    return _STRINGS_TO_TYPES[s]
 
 
 def builtin_to_string(builtin_type):
     """
     Given a builtin type, return its corresponding string representation.
     """
-    return _types_TO_STRINGS.get(builtin_type, None)
+    if is_dict(builtin_type):
+        return "dict"
+    return _TYPES_TO_STRINGS[builtin_type]
+
+
+def string_to_nptype(s: str):
+    """
+    Given a str, return its corresponding numpy type.
+    """
+    return _STRINGS_TO_NPTYPES[s]
 
 
 def nptype_from_builtin(btype):
     """
     Given a builtin type, return its corresponding Numpy dtype.
     """
-    return _types_TO_NPTYPES.get(btype, None)
+    return _TYPES_TO_NPTYPES[btype]
 
+
+def builtin_to_resolution(builtin_type: type):
+    """
+    Given a builtin type, return its corrsponding resolution.
+    """
+    return _TYPES_TO_RESOLUTION[builtin_type]
+
+
+def builtin_to_range(builtin_type: type):
+    """
+    Given a builtin type, return its corresponding range.
+    """
+    return _TYPES_TO_RANGE[builtin_type]
 
 def promote_types(dtype1, dtype2):
     """
@@ -416,10 +485,13 @@ def np_val_to_py_type(val):
     if not isinstance(val, (_np.ndarray, _np.generic)):
         return val
 
-    if val.dtype in (_np.float16, _np.uint8, _np.int8, _np.uint16, _np.int16, _np.uint32):
+    if val.dtype in (_np.float16, _np.uint8, _np.int8, _np.uint32):
+        # Serialize to bytes because MIL read them from bytes field (see TensorValue in MIL.proto).
         return val.tobytes()
     else:
-        # val is np.ndarray or np.generic
+        if val.dtype in (_np.uint16, _np.int16):
+            # TODO (rdar://111797203): Serialize to byte after MIL changes to read from byte field.
+            val = val.astype(np.int32)
         is_np_scalar = isinstance(val, _np.generic) or val.shape == ()
         py_type = np_dtype_to_py_type(val.dtype)
         return py_type(val) if is_np_scalar else tuple(py_type(v) for v in val.flatten())

@@ -24,9 +24,9 @@ scipy==1.9.2; python_version == '3.11'
 six
 sympy > 1.6
 gast==0.4.0
-torch==2.0.0
-torchaudio==2.0.1
-torchvision==0.15.1
+torch==2.0.1
+torchaudio==2.0.2
+torchvision==0.15.2
 xgboost==1.4.2; platform_machine != "arm64"
 mock
 wrapt

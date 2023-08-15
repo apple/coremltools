@@ -31,8 +31,11 @@ class TestAdjustToSupportedTypes:
         prog.functions['not_main'] = copy.deepcopy(prog.functions['main'])
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "mil_backend::adjust_io_to_supported_types"
-        )
+            prog,
+            "mil_backend::adjust_io_to_supported_types",
+            skip_output_type_check=True,
+            skip_input_type_check=True,
+        )  # output dtype is modified
 
         """
         Input graph:
@@ -109,8 +112,11 @@ class TestAdjustToSupportedTypes:
             return x
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "mil_backend::adjust_io_to_supported_types"
-        )
+            prog,
+            "mil_backend::adjust_io_to_supported_types",
+            skip_output_type_check=True,
+            skip_input_type_check=True,
+        )  # output dtype is modified
 
         prev_inputs = list(prev_prog.functions['main'].inputs.items())
         inputs = list(prog.functions['main'].inputs.items())
@@ -134,8 +140,11 @@ class TestAdjustToSupportedTypes:
             return x
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "mil_backend::adjust_io_to_supported_types"
-        )
+            prog,
+            "mil_backend::adjust_io_to_supported_types",
+            skip_output_type_check=True,
+            skip_input_type_check=True,
+        )  # output dtype is modified
 
         prev_inputs = list(prev_prog.functions['main'].inputs.items())
         inputs = list(prog.functions['main'].inputs.items())
@@ -173,8 +182,12 @@ class TestAdjustToSupportedTypes:
         def prog(x):
             return mb.relu(x=x)
 
+        skip_type_check = opset_version in [None, ct.target.iOS13]
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "mil_backend::adjust_io_to_supported_types"
+            prog,
+            "mil_backend::adjust_io_to_supported_types",
+            skip_output_type_check=skip_type_check,
+            skip_input_type_check=skip_type_check,
         )
 
         prev_inputs = list(prev_block.inputs.items())
@@ -240,8 +253,11 @@ class TestAdjustToSupportedTypes:
             return x
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "mil_backend::adjust_io_to_supported_types"
-        )
+            prog,
+            "mil_backend::adjust_io_to_supported_types",
+            skip_output_type_check=True,
+            skip_input_type_check=True,
+        )  # output dtype is modified
 
         prev_inputs = list(prev_prog.functions['main'].inputs.items())
         inputs = list(prog.functions['main'].inputs.items())
@@ -280,9 +296,13 @@ class TestAdjustToSupportedTypes:
         def prog(x):
             return x
 
+        skip_type_check = opset_version is None
         prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "mil_backend::adjust_io_to_supported_types"
-        )
+            prog,
+            "mil_backend::adjust_io_to_supported_types",
+            skip_output_type_check=True,
+            skip_input_type_check=True,
+        )  # output dtype id modified
 
         prev_inputs = list(prev_block.inputs.items())
         inputs = list(block.inputs.items())

@@ -1,28 +1,6 @@
 ItemSimilarityRecommender
 =========================
 
-Each tree is a collection of nodes,
-each of which is identified by a unique identifier.
-
-Each node is either a branch or a leaf node.
-A branch node evaluates a value according to a behavior;
-if true, the node identified by ``true_child_node_id`` is evaluated next,
-if false, the node identified by ``false_child_node_id`` is evaluated next.
-A leaf node adds the evaluation value to the base prediction value
-to get the final prediction.
-
-A tree must have exactly one root node,
-which has no parent node.
-A tree must not terminate on a branch node.
-All leaf nodes must be accessible
-by evaluating one or more branch nodes in sequence,
-starting from the root node.
-
-
-
-ItemSimilarityRecommender
---------------------------------------------------------------------------------
-
 The Item Similarity recommender takes as input a list of items and scores,
 then uses that information and a table of item similarities to predict similarity
 scores for all items.  By default, the items predicted are most similar to the given

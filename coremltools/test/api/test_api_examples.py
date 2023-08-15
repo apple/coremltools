@@ -49,7 +49,11 @@ class TestMILExamples:
 class TestInputs:
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_unsanitized_input_name_during_prediction():
+    @pytest.mark.parametrize(
+        "convert_to",
+        ["mlprogram", "neuralnetwork"],
+    )
+    def test_unsanitized_input_name_during_prediction(convert_to):
         '''
         input name : "x/0" becomes "x_0" due to name sanitization applied during conversion
         '''
@@ -63,7 +67,7 @@ class TestInputs:
             ssa_fun.set_outputs([z])
         prog.add_function("main", ssa_fun)
 
-        mlmodel = ct.convert(prog)
+        mlmodel = ct.convert(prog, convert_to=convert_to)
 
         with pytest.raises(KeyError) as error_info:
             mlmodel.predict(
@@ -74,7 +78,7 @@ class TestInputs:
         assert "does not match any of the model input" in error_str
 
     @staticmethod
-    def _test_variant_input_type_prediction(to_tensor):
+    def _test_variant_input_type_prediction(to_tensor, convert_to):
         prog = Program()
         func_inputs = {"x": mb.placeholder(shape=[2, 3]),
                        "y": mb.placeholder(shape=[2, 3])}
@@ -85,7 +89,7 @@ class TestInputs:
             ssa_fun.set_outputs([z])
         prog.add_function("main", ssa_fun)
 
-        mlmodel = ct.convert(prog)
+        mlmodel = ct.convert(prog, convert_to=convert_to)
         x_numpy = np.random.rand(2, 3)
         y_numpy = np.random.rand(2, 3)
         out_by_numpy = mlmodel.predict(
@@ -100,8 +104,12 @@ class TestInputs:
 
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
-    def test_list_predict_input():
-        TestInputs._test_variant_input_type_prediction(lambda x: x.tolist())
+    @pytest.mark.parametrize(
+        "convert_to",
+        ["mlprogram", "neuralnetwork"],
+    )
+    def test_list_predict_input(convert_to):
+        TestInputs._test_variant_input_type_prediction(lambda x: x.tolist(), convert_to)
 
     @staticmethod
     def test_rank0_inputs_mil():
@@ -133,7 +141,7 @@ class TestMLProgramConverterExamples:
 
         # save neuralnetwork model without extension and check that it is saved with
         # mlmodel extension
-        mlmodel = ct.convert(prog)
+        mlmodel = ct.convert(prog, convert_to="neuralnetwork")
         mlmodel_path = os.path.join(save_path_dir, "model_nn")
         mlmodel.save(mlmodel_path)
         assert os.path.exists(mlmodel_path + ".mlmodel")
@@ -152,10 +160,9 @@ class TestMLProgramConverterExamples:
 
         # check error if mlprogram is saved with mlmodel extension
         mlmodel_path = os.path.join(save_path_dir, "model_mlprogram.mlmodel")
-        with pytest.raises(Exception) as e:
+        expected_pattern = "For an ML Program\, extension must be \.mlpackage \(not \.mlmodel\)\. Please see .* to see the difference between neuralnetwork and mlprogram model types\."
+        with pytest.raises(Exception, match=expected_pattern):
             mlmodel.save(mlmodel_path)
-        expected_error = "For an ML Program, extension must be .mlpackage (not .mlmodel)"
-        assert expected_error == str(e.value)
 
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
@@ -183,8 +190,7 @@ class TestMLProgramConverterExamples:
             # converting to mlprogram, on macOS < 12
             # should raise a runtime error when skip_model_load is False
             with pytest.warns(RuntimeWarning):
-                model = ct.convert(prog, convert_to='mlprogram',
-                                   skip_model_load=skip_model_load)
+                model = ct.convert(prog, convert_to="mlprogram", skip_model_load=skip_model_load)
         else:
             model = ct.convert(prog, convert_to="mlprogram", skip_model_load=skip_model_load)
 
@@ -238,7 +244,9 @@ class TestMLProgramFP16Transform:
 
         expected_pattern = "compute_precision .* supported .* mlprogram .* None .* target=='neuralnetwork'.*minimum_deployment_target.*"
         with pytest.raises(ValueError, match=expected_pattern) as e:
-            mlmodel = ct.convert(copy.deepcopy(prog), compute_precision='fp16')
+            mlmodel = ct.convert(
+                copy.deepcopy(prog), convert_to="neuralnetwork", compute_precision="fp16"
+            )
 
     @staticmethod
     def test_invalid_argument_nn_backend():
@@ -254,9 +262,13 @@ class TestMLProgramFP16Transform:
 
         expected_err_str = "compute_precision is only supported for mlprogram target and must be None if target.*"
         with pytest.raises(ValueError, match=expected_err_str):
-            mlmodel = ct.convert(prog, compute_precision=ct.precision.FLOAT16)
+            mlmodel = ct.convert(
+                prog, convert_to="neuralnetwork", compute_precision=ct.precision.FLOAT16
+            )
         with pytest.raises(ValueError, match=expected_err_str):
-            mlmodel = ct.convert(prog, compute_precision=ct.precision.FLOAT32)
+            mlmodel = ct.convert(
+                prog, convert_to="neuralnetwork", compute_precision=ct.precision.FLOAT32
+            )
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason="PyTorch not found")

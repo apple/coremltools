@@ -33,7 +33,7 @@ class constexpr_affine_dequantize(Operation):
     ----------
     quantized_data: const tensor<SrcT, [1..]> (Required)
 
-    zero_point: const tensor<SrcT, [0..1]> (Required)
+    zero_point: const tensor<ZeroPointT, [0..1]> (Required)
  	   * ``zero_point`` can be either a scalar or a vector. 
  	   * ``zero_point`` follows similar broadcasting rules and size constraints as ``scale``.
 
@@ -57,6 +57,7 @@ class constexpr_affine_dequantize(Operation):
     Attributes
     ----------
     SrcT: uint8, int8
+    ZeroPointT: uint8, int8, fp32
     DstT: fp16, fp32
     """
 
@@ -66,11 +67,11 @@ class constexpr_affine_dequantize(Operation):
         scale=TensorInputType(const=True, type_domain="DstT"),
         axis=TensorInputType(const=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
-        "DstT": (types.fp16, types.fp32),
         "SrcT": (types.uint8, types.int8),
-        "ZeroPointT": (types.uint8, types.int8),
+        "ZeroPointT": (types.uint8, types.int8, types.fp32),
+        "DstT": (types.fp16, types.fp32),
     }
 
     def type_inference(self):
@@ -87,11 +88,6 @@ class constexpr_affine_dequantize(Operation):
                         name
                     )
                 )
-
-        if self.zero_point.dtype != self.quantized_data.dtype:
-            raise ValueError(
-                "Parameters quantized_data and zero_point needs to be of the same dtype"
-            )
 
         rank = self.quantized_data.rank
         if self.axis.val < -rank or self.axis.val >= rank:

@@ -5,32 +5,30 @@
 
 import itertools
 import platform
-from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 import coremltools as ct
 from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
-from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, get_new_symbol, types
-from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
-from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.testing_utils import get_op_types_in_program, random_gen, ssa_fn
-
-from .testing_utils import (
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import (
     UNK_SYM,
     UNK_VARIADIC,
     construct_inputs_from_placeholders,
+    mark_api_breaking,
     run_compare_builder,
 )
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
+from coremltools.converters.mil.testing_reqs import compute_units
+from coremltools.converters.mil.testing_utils import get_op_types_in_program, random_gen, ssa_fn
 
 if _HAS_TF_2:
     import tensorflow as tf
 
-backends = testing_reqs.backends
-compute_units = testing_reqs.compute_units
 
 class TestBandPart:
     @pytest.mark.parametrize(
@@ -118,9 +116,13 @@ class TestBandPart:
         )
 
     def get_output_from_mlmodel(
-        self, x_val: np.ndarray, num_lower: int, num_upper: int
+        self,
+        x_val: np.ndarray,
+        num_lower: int,
+        num_upper: int,
+        dtype: type,
     ) -> np.ndarray:
-        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 4))])
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 4), dtype=dtype)])
         def prog(x):
             return mb.band_part(x=x, lower=num_lower, upper=num_upper, name="out")
 
@@ -134,9 +136,13 @@ class TestBandPart:
         return out
 
     def get_value_inference_output(
-        self, x_val: np.ndarray, num_lower: int, num_upper: int
+        self,
+        x_val: np.ndarray,
+        num_lower: int,
+        num_upper: int,
+        dtype: type,
     ) -> np.ndarray:
-        func_inputs = {"x": mb.placeholder(shape=[3, 4])}
+        func_inputs = {"x": mb.placeholder(shape=[3, 4], dtype=dtype)}
         with Function(func_inputs) as ssa_fun:
             x = ssa_fun.inputs["x"]
             v = mb.band_part(x=x_val, lower=num_lower, upper=num_upper)
@@ -146,14 +152,23 @@ class TestBandPart:
         ct.utils._macos_version() < (10, 15), reason="needs mlprogram, skip on macos < 10.15"
     )
     @pytest.mark.parametrize(
-        "lower_upper",
-        [(0, -1), (-1, 0), (0, 0), (1, 1), (1, 2), (2, 1)],
+        "lower_upper, dtype",
+        itertools.product(
+            [(0, -1), (-1, 0), (0, 0), (1, 1), (1, 2), (2, 1)],
+            [types.int32, types.fp32],
+        ),
     )
-    def test_value_inference(self, lower_upper):
+    def test_value_inference(self, lower_upper, dtype):
         num_lower, num_upper = lower_upper
-        test_input = np.random.rand(3, 4).astype(np.float32)
-        out_value_inference = self.get_value_inference_output(test_input, num_lower, num_upper)
-        out_from_model_prediction = self.get_output_from_mlmodel(test_input, num_lower, num_upper)
+        np_type = nptype_from_builtin(dtype)
+        test_input = np.random.rand(3, 4).astype(np_type)
+        out_value_inference = self.get_value_inference_output(
+            test_input, num_lower, num_upper, dtype
+        )
+        out_from_model_prediction = self.get_output_from_mlmodel(
+            test_input, num_lower, num_upper, dtype
+        )
+        assert out_value_inference.dtype == test_input.dtype
         np.testing.assert_allclose(
             out_value_inference, out_from_model_prediction, atol=1e-3, rtol=1e-3
         )
@@ -267,45 +282,8 @@ class TestCumSum:
             mb.cumsum(x=x_val)
 
 
-class TestFillLike:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
-    def test_builder_to_backend_smoke(self, compute_unit, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
-
-        if ct.utils._macos_version() < (13, 0):
-            pytest.skip("fill_like not supported in macOS12 or older.")
-
-        shape = (2, 1, 3)
-        x_val = np.zeros(shape=shape, dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=x_val.shape, dtype=types.int32)}
-
-        input_values = {"x": x_val}
-
-        def build(x):
-            return mb.fill_like(ref_tensor=x, value=1.0)
-
-        expected_output_types = [(2, 1, 3, types.fp32)]
-        expected_outputs = [np.full(shape=shape, fill_value=1.0)]
-
-        mlmodel = run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
-        )
-
-
 class TestFill:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         shape = (2, 1, 3)
         x_val = np.zeros(shape=shape, dtype=np.float32)
@@ -393,7 +371,7 @@ class TestFill:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 3)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -402,6 +380,7 @@ class TestFill:
 
 @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
 class TestNonMaximumSuppression:
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS17)
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
@@ -502,9 +481,7 @@ class TestNonMaximumSuppression:
         score_threshold = score_threshold.astype(np.float32)
 
         # convert box ids to TF style
-        center_w, center_h, width, height = np.split(
-            boxes, 4, axis=-1
-        )  # (n_batch,n_box,1)
+        center_w, center_h, width, height = np.split(boxes, 4, axis=-1)  # (n_batch,n_box,1)
         y1 = center_h - 0.5 * height
         y2 = center_h + 0.5 * height
         x1 = center_w - 0.5 * width
@@ -575,6 +552,7 @@ class TestNonMaximumSuppression:
 
         return out1, out2, out3, out4
 
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS17)
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -610,18 +588,22 @@ class TestNonMaximumSuppression:
         n_score,
         per_class_suppression,
     ):
-        if backend[0] == "mlprogram" and iou_threshold_percentile == 0:
+        if backend.backend == "mlprogram" and iou_threshold_percentile == 0:
             pytest.xfail("rdar://78080118")
 
-        if backend[0] == "neuralnetwork" and n_boxes == (10, 7) and platform.machine() == "x86_64":
+        if (
+            backend.backend == "neuralnetwork"
+            and n_boxes == (10, 7)
+            and platform.machine() == "x86_64"
+        ):
             pytest.xfail("rdar://78080118 (Investigate failing tests for NMS in coremltools)")
 
-        if backend == ("mlprogram", "fp16"):
+        if backend.backend == "mlprogram" and backend.precision == "fp16":
             pytest.xfail("CPU: rdar://80662705 and GPU: rdar://80661262")
 
         n_boxes_in, n_boxes_out = n_boxes
         boxes_val = random_gen((n_batch, n_boxes_in, 4), 0, 100)
-        scores_val = random_gen((n_batch, n_boxes_in, n_score), -100, 100)
+        scores_val = random_gen((n_batch, n_boxes_in, n_score), -100, 100, allow_duplicate=False)
 
         iou_matrix = self._compute_iou_matrix(boxes_val[0, :, :])
         iou_matrix = iou_matrix[~np.eye(iou_matrix.shape[0], dtype=bool)].reshape(
@@ -633,9 +615,7 @@ class TestNonMaximumSuppression:
         elif score_threshold_percentile == 100:
             score_threshold = np.max(scores_val) + 1
         else:
-            score_threshold = (
-                np.percentile(scores_val, score_threshold_percentile) + 0.01
-            )
+            score_threshold = np.percentile(scores_val, score_threshold_percentile) + 0.01
 
         if iou_threshold_percentile == 0:
             iou_threshold = np.maximum(np.min(iou_matrix) - 0.01, 0.0)
@@ -643,12 +623,7 @@ class TestNonMaximumSuppression:
             iou_threshold = np.percentile(iou_matrix, iou_threshold_percentile) + 0.01
         iou_threshold = np.maximum(iou_threshold, 1e-8)
 
-        (
-            tf_boxes,
-            tf_scores,
-            tf_indices,
-            tf_num_boxes,
-        ) = self._ref_non_maximum_suppression(
+        (tf_boxes, tf_scores, tf_indices, tf_num_boxes,) = self._ref_non_maximum_suppression(
             boxes_val,
             scores_val,
             iou_threshold,
@@ -692,9 +667,7 @@ class TestNonMaximumSuppression:
 
 
 class TestNonZero:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
@@ -729,6 +702,7 @@ class TestNonZero:
         res = mb.non_zero(x=x_val)
         assert res.shape == (3, 2)
 
+
 class TestOneHot:
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -752,12 +726,8 @@ class TestOneHot:
             return [
                 mb.one_hot(indices=x, one_hot_vector_size=4),
                 mb.one_hot(indices=x, one_hot_vector_size=4, axis=0),
-                mb.one_hot(
-                    indices=x, one_hot_vector_size=4, on_value=1.0, off_value=0.1
-                ),
-                mb.one_hot(
-                    indices=x, one_hot_vector_size=mb.squeeze(x=y), on_value=1, off_value=9
-                ),
+                mb.one_hot(indices=x, one_hot_vector_size=4, on_value=1.0, off_value=0.1),
+                mb.one_hot(indices=x, one_hot_vector_size=mb.squeeze(x=y), on_value=1, off_value=9),
             ]
 
         expected_output_types = [
@@ -921,9 +891,7 @@ class TestPad:
             input_values = {"x": t}
 
             def build(x):
-                return mb.pad(
-                    x=x, pad=pad.reshape(-1), mode="constant", constant_val=0.0
-                )
+                return mb.pad(x=x, pad=pad.reshape(-1), mode="constant", constant_val=0.0)
 
             expected_output_types = (4, 6, 5, types.fp32)
             expected_outputs = np.pad(t, pad, mode="constant")
@@ -968,9 +936,7 @@ class TestPad:
 
         def test_reflect_mode():
             x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-            v = mb.pad(
-                x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="reflect"
-            )
+            v = mb.pad(x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="reflect")
             expected_outputs = np.array(
                 [
                     [6.0, 5.0, 4.0, 5.0, 6.0, 5.0, 4.0],
@@ -984,9 +950,7 @@ class TestPad:
 
         def test_replicate_mode():
             x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-            v = mb.pad(
-                x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="replicate"
-            )
+            v = mb.pad(x=x_val, pad=np.array([1, 1, 2, 2], dtype=np.int32), mode="replicate")
             expected_outputs = np.array(
                 [
                     [1.0, 1.0, 1.0, 2.0, 3.0, 3.0, 3.0],
@@ -1010,6 +974,37 @@ class TestPad:
         test_reflect_mode()
         test_replicate_mode()
         test_constant_general()
+
+    @staticmethod
+    def test_value_inference_with_symbolic_padding():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(get_new_symbol(), get_new_symbol(), 1, 3), dtype=types.fp32)
+            ]
+        )
+        def prog(x):
+            paddings = mb.shape(x=x)
+            res = mb.pad(x=np.random.rand(1, 1), pad=paddings)
+            shape = res.shape
+            assert is_symbolic(shape[0])
+            assert shape[1] == 5
+            return res
+
+    @staticmethod
+    def test_error_out_with_dynamic_paddings_with_invaid_shape():
+        with pytest.raises(
+            ValueError, match="Non-constant 'pad' must have shape \(8,\). Got \(4,\)"
+        ):
+
+            @mb.program(
+                input_specs=[
+                    mb.TensorSpec(shape=(1, 1, 3, 4)),
+                    mb.TensorSpec(shape=(2, 2), dtype=types.int32),
+                ]
+            )
+            def prog(x, y):
+                pad = mb.reshape(x=y, shape=[-1])
+                res = mb.pad(x=x, pad=pad)
 
 
 class TestRange1d:
@@ -1089,9 +1084,7 @@ class TestRange1d:
         def build(x):
             return [mb.range_1d(start=0.0, end=2000000.0, step=1.0)]
 
-        expected_output_types = [
-            (2000000, types.fp32)
-        ]
+        expected_output_types = [(2000000, types.fp32)]
 
         expected_outputs = [
             np.arange(0.0, 2000000.0, 1.0),
@@ -1260,102 +1253,6 @@ class TestTopK:
             backend=backend,
         )
 
-    @pytest.mark.parametrize(
-        "compute_unit, backend, return_indices, sort",
-        itertools.product(
-            compute_units,
-            backends,
-            [True, False],
-            [True, False],
-        )
-    )
-    def test_builder_to_backend_smoke_iOS16(self, compute_unit, backend, return_indices, sort):
-        val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
-        input_values = {"x": val}
-
-        def build(x):
-            return mb.topk(x=x, k=2, axis=1, return_indices=return_indices, sort=sort)
-
-        expected_output_types = [
-            (2, 2, types.fp32),
-            (2, 2, types.int32),
-        ]
-        expected_outputs = [
-            np.array([[2.0, -1.0], [6.0, 4.0]], dtype=np.float32),
-            np.array([[1, 0], [2, 0]], dtype=np.float32),
-        ]
-
-        if not return_indices:
-            expected_output_types = expected_output_types[:1]
-            expected_outputs = expected_outputs[:1]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS16,
-        )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend, x_dtype, k_dtype",
-        itertools.product(
-            compute_units,
-            [("mlprogram", "fp16")],
-            [np.float32, np.float16, np.int32, np.int16, np.uint16],
-            [np.int32, np.int16],
-        ),
-    )
-    def test_ios17_different_dtypes(self, compute_unit, backend, x_dtype, k_dtype):
-        def build(x):
-            return mb.topk(x=x, k=k_dtype(2), axis=1)
-
-        if k_dtype == np.int16:
-            pytest.xfail("k with dtype int16 will trigger backend error.")
-
-        val = np.array([[2, 3, 1], [5, 4, 6]], dtype=x_dtype)
-        x_mb_dtype = types.type_mapping.numpy_type_to_builtin_type(x_dtype)
-        input_placeholders = {"x": mb.placeholder(shape=val.shape, dtype=x_mb_dtype)}
-        input_values = {"x": val}
-        # As int16 is not in CoreML I/O supported dtypes, it will be cast to int32.
-        expected_output_types = [(2, 2, x_mb_dtype), (2, 2, types.int32)]
-        expected_outputs = [
-            np.array([[3, 2], [6, 5]], dtype=x_dtype),
-            np.array([[1, 0], [2, 0]], dtype=np.int32),
-        ]
-
-        with patch.object(Var, "_is_nonreplaceable_var") as mocked_is_nonreplaceable_var:
-            # Mock that the cast is non-replaceable, to make sure it's kept in the graph.
-            mocked_is_nonreplaceable_var.side_effect = (
-                lambda var: var.op and var.op.op_type == "cast"
-            )
-            # Remove the cast optimization pass to make sure all cast are kept in the graph.
-            pass_pipeline: PassPipeline = PassPipeline.DEFAULT
-            pass_pipeline.remove_passes(
-                ["common::cast_optimization", "common::topological_reorder"]
-            )
-            mlmodel = run_compare_builder(
-                build,
-                input_placeholders,
-                input_values,
-                expected_output_types,
-                expected_outputs,
-                compute_unit=compute_unit,
-                backend=backend,
-                minimum_deployment_target=ct.target.iOS17,
-                pass_pipeline=pass_pipeline,
-            )
-        prog = mlmodel._mil_program
-        topk_op = prog["main"].find_ops(op_type="topk")[0]
-        expected_x_dtype = x_mb_dtype
-        if backend[1] == "fp16" and types.is_float(x_mb_dtype):
-            expected_x_dtype = types.fp16
-        assert types.builtin_to_string(topk_op.x.dtype) == types.builtin_to_string(expected_x_dtype)
-
     @ssa_fn
     def test_builder_eval(self):
         def np_topk(x, k, axis, ascending=False):
@@ -1424,9 +1321,7 @@ class TestFlatten2d:
         ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
-        t = np.array(
-            [[[1, 2, 3], [4, 5, 6]], [[-1, -2, -3], [-4, -5, -6]]], dtype=np.float32
-        )
+        t = np.array([[[1, 2, 3], [4, 5, 6]], [[-1, -2, -3], [-4, -5, -6]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
         input_values = {"x": t}
 
@@ -1535,7 +1430,7 @@ class TestFlatten2d:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -1545,11 +1440,7 @@ class TestFlatten2d:
 class TestShape:
     @pytest.mark.parametrize(
         "compute_unit, backend, input_type",
-        itertools.product(
-            compute_units,
-            backends,
-            ["int32", "float32"]
-        )
+        itertools.product(compute_units, backends, ["int32", "float32"]),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend, input_type):
         np_type = np.int32 if input_type == "int32" else np.float32
@@ -1586,11 +1477,7 @@ class TestShape:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, input_type",
-        itertools.product(
-            compute_units,
-            backends,
-            ["int32", "float32"]
-        )
+        itertools.product(compute_units, backends, ["int32", "float32"]),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend, input_type):
         np_type = np.int32 if input_type == "int32" else np.float32
@@ -1620,7 +1507,7 @@ class TestShape:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, 10)
-            if backend[0] == "mlprogram"
+            if backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -1630,11 +1517,7 @@ class TestShape:
 class TestIdentity:
     @pytest.mark.parametrize(
         "compute_unit, backend, input_type",
-        itertools.product(
-            compute_units,
-            backends,
-            ["int32", "float32"]
-        )
+        itertools.product(compute_units, backends, ["int32", "float32"]),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend, input_type):
         np_type = np.int32 if input_type == "int32" else np.float32

@@ -5,6 +5,7 @@
 
 import sys
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 from typing import IO, Any, Callable, Dict, Optional, Tuple, Union
 
 import cattrs
@@ -143,7 +144,7 @@ class OpThresholdPrunerConfig(OpCompressorConfig):
     threshold: float
         All weight values above this threshold are set to ``0``.
 
-        * Default value is ``1e-3``.
+        * Default value is ``1e-12``.
 
     minimum_sparsity_percentile: float
         The sparsity level must be above this value for the weight representation to be stored in the sparse format rather than the dense format.
@@ -164,7 +165,8 @@ class OpThresholdPrunerConfig(OpCompressorConfig):
 
         * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are compressed.
     """
-    threshold: float = field(default=1e-3, validator=validators.instance_of(float))
+
+    threshold: float = field(default=1e-12, validator=validators.instance_of(float))
     minimum_sparsity_percentile: float = field(default=0.5, validator=validators.instance_of(float))
     weight_threshold: Optional[int] = field(
                                         default=2048,
@@ -582,7 +584,7 @@ class OptimizationConfig:
 
     1. ``global_config``: The default configuration applied to all ops / consts.
     2. ``op_type_configs``: Configurations applied to specific op type. It overrides ``global_config``.
-    3. ``op_name_configs``: Confgurations applied to specific op instance. It overrides ``global_config`` and ``op_type_configs``.
+    3. ``op_name_configs``: Confgurations applied to specific constant or op instance. It overrides ``global_config`` and ``op_type_configs``.
 
     The following is an example that constructs an optimization config for weight palettization.
 
@@ -625,10 +627,11 @@ class OptimizationConfig:
         * An op type will not be compressed if the value is set to ``None``.
 
     op_name_configs: dict[str, OpCompressorConfig]
-        Op instance level configs applied to a specific op or constant.
+        Op instance level configs applied to a specific constant or op.
 
-        * The keys of the dictionary are the name of an op instance, and the values are the corresponding :py:class:`OpCompressorConfig`.
+        * The keys of the dictionary are the name of a constant or an op instance, and the values are the corresponding :py:class:`OpCompressorConfig`.
         * An op instance will not be compressed if the value is set to ``None``.
+        * You can use ``coremltools.optimize.coreml.get_weights_metadata`` to get the name of the constants / op instances in the model.
     """
     global_config: Optional[OpCompressorConfig] = field(default=None)
     op_type_configs: Optional[OpCompressorConfig] = field(default=None)
@@ -705,7 +708,7 @@ class OptimizationConfig:
         op_config: OpCompressorConfig,
     ):
         """
-        Sets the compression config at the level of op instance by name.
+        Sets the compression config at the level of constant / op instance by name.
 
         .. code-block:: python
 
@@ -715,14 +718,16 @@ class OptimizationConfig:
             op_config = OpPalettizerConfig(mode="kmeans", nbits=2)
             config.set_op_name("conv_1", op_config)
 
+        Note that, in order to get the name of a constant or an op instance, please refer to the ``coremltools.optimize.coreml.get_weights_metadata`` API.
+
         Parameters
         ----------
 
         op_name: str
-            The name of the op instance.
+            The name of a constant or an op instance.
 
         op_config: OpCompressorConfig
-            Op instance level config applied to a specific op or constant with name ``op_name``.
+            Op instance level config applied to a specific constant or op with name ``op_name``.
         """
         if self._is_deprecated:
             raise ValueError("set_op_name is not exposed through the coremltools.compression_utils API.")
@@ -969,3 +974,19 @@ class OptimizationConfig:
         else:
             config_dict = yaml.safe_load(yml)
         return cls.from_dict(config_dict)
+
+class _MetaDataDict(OrderedDict):
+    """
+    A dictionary class with nice print out str
+    """
+
+    def __init__(self, mapping=None, str_prefix=""):
+        super().__init__(mapping)
+        self._str_prefix = str_prefix
+
+    def __str__(self):
+        res = ""
+        for k, v in self.items():
+            res += f"{self._str_prefix}{k}\n"
+            res += f"{v}\n"
+        return res

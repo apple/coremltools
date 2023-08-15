@@ -444,6 +444,13 @@ py::object Utils::convertArrayValueToPython(MLMultiArray *value) {
         return py::none();
     }
     MLMultiArrayDataType type = value.dataType;
+    if (type == MLMultiArrayDataTypeFloat16) {
+        // Cast to fp32 because py:array doesn't support fp16.
+        // TODO: rdar://92239209 : return np.float16 instead of np.float32 when multiarray type is Float16
+        value = [MLMultiArray multiArrayByConcatenatingMultiArrays:@[value] alongAxis:0 dataType:MLMultiArrayDataTypeFloat32];
+        type = value.dataType;
+    }
+
     std::vector<size_t> shape = Utils::convertNSArrayToCpp(value.shape);
     std::vector<size_t> strides = Utils::convertNSArrayToCpp(value.strides);
 
@@ -451,28 +458,26 @@ py::object Utils::convertArrayValueToPython(MLMultiArray *value) {
     for (size_t& stride : strides) {
         stride *= sizeOfArrayElement(type);
     }
-    
-    switch (type) {
-        case MLMultiArrayDataTypeInt32:
-            return py::array(shape, strides, static_cast<const int32_t*>(value.dataPointer));
-        case MLMultiArrayDataTypeFloat32:
-            return py::array(shape, strides, static_cast<const float*>(value.dataPointer));
-        case MLMultiArrayDataTypeFloat16:
-        {
-            // create a float32 array, cast float16 values and copy into it
-            // TODO: rdar://92239209 : return np.float16 instead of np.float32 when multiarray type is Float16
-            std::vector<float> value_fp32(value.count, 0.0);
-            for (size_t i=0; i<value.count; i++) {
-                value_fp32[i] = [value[i] floatValue];
-            }
-            return py::array(shape, strides, value_fp32.data());
+
+    __block py::object array;
+    [value getBytesWithHandler:^(const void *bytes, NSInteger size) {
+        switch (type) {
+            case MLMultiArrayDataTypeInt32:
+                array = py::array(shape, strides, reinterpret_cast<const int32_t *>(bytes));
+                break;
+            case MLMultiArrayDataTypeFloat32:
+                array = py::array(shape, strides, reinterpret_cast<const float *>(bytes));
+                break;
+            case MLMultiArrayDataTypeFloat64:
+                array = py::array(shape, strides, reinterpret_cast<const double *>(bytes));
+                break;
+            default:
+                assert(false);
+                array = py::object();
         }
-        case MLMultiArrayDataTypeDouble:
-            return py::array(shape, strides, static_cast<const double*>(value.dataPointer));
-        default:
-            assert(false);
-            return py::object();
-    }
+    }];
+
+    return array;
 }
 
 py::object Utils::convertDictionaryValueToPython(NSDictionary<NSObject *,NSNumber *> * dict) {

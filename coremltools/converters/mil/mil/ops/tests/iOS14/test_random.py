@@ -10,16 +10,20 @@ import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import UNK_SYM, run_compare_builder
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import get_core_ml_prediction
 from coremltools.models.utils import _macos_version
-
-from .testing_utils import UNK_SYM, run_compare_builder
 
 
 class TestRandomBernoulli:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
@@ -62,9 +66,7 @@ class TestRandomBernoulli:
             [True, False],
         ),
     )
-    def test_builder_to_backend_stress(
-        self, compute_unit, backend, rank, prob, dynamic
-    ):
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank, prob, dynamic):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.0], dtype=np.float32)
         if dynamic:
@@ -90,13 +92,10 @@ class TestRandomBernoulli:
 
         if dynamic:
             expected_output_types = [
-                tuple([UNK_SYM for _ in o.shape]) + (types.fp32,)
-                for o in expected_outputs
+                tuple([UNK_SYM for _ in o.shape]) + (types.fp32,) for o in expected_outputs
             ]
         else:
-            expected_output_types = [
-                o.shape[:] + (types.fp32,) for o in expected_outputs
-            ]
+            expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
         builder = build_dyn if dynamic else build
 
@@ -117,7 +116,11 @@ class TestRandomCategorical:
         return e_data / e_data.sum()
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([1], dtype=np.int32)
@@ -147,15 +150,12 @@ class TestRandomCategorical:
             backend=backend,
         )
 
-    @pytest.mark.skipif(_macos_version() < (12, 0), reason="Can only get predictions for ml program on macOS 12+")
+    @pytest.mark.skipif(
+        _macos_version() < (12, 0), reason="Can only get predictions for ml program on macOS 12+"
+    )
     @pytest.mark.parametrize(
         "compute_unit, backend, n_sample, n_class",
-        itertools.product(
-            compute_units,
-            backends,
-            [50000],
-            [2, 10, 20]
-        ),
+        itertools.product(compute_units, backends, [50000], [2, 10, 20]),
     )
     def test_builder_to_backend_stress(self, compute_unit, backend, n_sample, n_class):
         output_name = "random_categorical"
@@ -167,14 +167,14 @@ class TestRandomCategorical:
         input_values = {"x": logits}
 
         def build(x):
-            return [
-                mb.random_categorical(
-                    x=x, size=n_sample, mode="logits", name=output_name
-                )
-            ]
+            return [mb.random_categorical(x=x, size=n_sample, mode="logits", name=output_name)]
 
         prediction = get_core_ml_prediction(
-            build, input_placeholders, input_values, backend=backend, compute_unit=compute_unit,
+            build,
+            input_placeholders,
+            input_values,
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
         ref0 = np.random.multinomial(n_sample, probs[0])
@@ -206,11 +206,7 @@ class TestRandomCategorical:
         input_values = {"x": np.array(probs)}
 
         def build(x):
-            return [
-                mb.random_categorical(
-                    x=x, size=n_sample, mode="probs", name=output_name
-                )
-            ]
+            return [mb.random_categorical(x=x, size=n_sample, mode="probs", name=output_name)]
 
         prediction = get_core_ml_prediction(
             build, input_placeholders, input_values, backend=backend, compute_unit=compute_unit
@@ -240,7 +236,11 @@ class TestRandomCategorical:
 
 class TestRandomNormal:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([0.0], dtype=np.float32)
@@ -250,12 +250,8 @@ class TestRandomNormal:
         def build(x):
             return [
                 mb.add(x=x, y=x),
-                mb.random_normal(
-                    shape=np.array([2, 1, 3], np.int32), mean=1.0, stddev=0.0
-                ),
-                mb.random_normal(
-                    shape=np.array([3, 1, 2], np.int32), mean=0.0, stddev=0.0
-                ),
+                mb.random_normal(shape=np.array([2, 1, 3], np.int32), mean=1.0, stddev=0.0),
+                mb.random_normal(shape=np.array([3, 1, 2], np.int32), mean=0.0, stddev=0.0),
             ]
 
         expected_outputs = [
@@ -286,9 +282,7 @@ class TestRandomNormal:
             [True, False],
         ),
     )
-    def test_builder_to_backend_stress(
-        self, compute_unit, backend, rank, mean, dynamic
-    ):
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank, mean, dynamic):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.0], dtype=np.float32)
         if dynamic:
@@ -320,13 +314,10 @@ class TestRandomNormal:
 
         if dynamic:
             expected_output_types = [
-                tuple([UNK_SYM for _ in o.shape]) + (types.fp32,)
-                for o in expected_outputs
+                tuple([UNK_SYM for _ in o.shape]) + (types.fp32,) for o in expected_outputs
             ]
         else:
-            expected_output_types = [
-                o.shape[:] + (types.fp32,) for o in expected_outputs
-            ]
+            expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
         builder = build_dyn if dynamic else build
         run_compare_builder(
@@ -342,7 +333,11 @@ class TestRandomNormal:
 
 class TestRandomUniform:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([0.0], dtype=np.float32)
@@ -352,12 +347,8 @@ class TestRandomUniform:
         def build(x):
             return [
                 mb.add(x=x, y=x),
-                mb.random_uniform(
-                    shape=np.array([2, 1, 3], np.int32), low=0.0, high=0.0
-                ),
-                mb.random_uniform(
-                    shape=np.array([3, 1, 2], np.int32), low=1.0, high=1.0
-                ),
+                mb.random_uniform(shape=np.array([2, 1, 3], np.int32), low=0.0, high=0.0),
+                mb.random_uniform(shape=np.array([3, 1, 2], np.int32), low=1.0, high=1.0),
             ]
 
         expected_outputs = [
@@ -389,9 +380,7 @@ class TestRandomUniform:
             [True, False],
         ),
     )
-    def test_builder_to_backend_stress(
-        self, compute_unit, backend, rank, low, high, dynamic
-    ):
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank, low, high, dynamic):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.0], dtype=np.float32)
         if dynamic:
@@ -423,13 +412,10 @@ class TestRandomUniform:
 
         if dynamic:
             expected_output_types = [
-                tuple([UNK_SYM for _ in o.shape]) + (types.fp32,)
-                for o in expected_outputs
+                tuple([UNK_SYM for _ in o.shape]) + (types.fp32,) for o in expected_outputs
             ]
         else:
-            expected_output_types = [
-                o.shape[:] + (types.fp32,) for o in expected_outputs
-            ]
+            expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
         builder = build_dyn if dynamic else build
         run_compare_builder(

@@ -5,8 +5,11 @@
 
 import numpy as np
 
+from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Operation, Var
 from coremltools.converters.mil.mil import types as _types
+from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -49,9 +52,172 @@ class divide_to_multiply(AbstractGraphPass):
 
 
 @register_pass(namespace="common")
+class select_optimization(AbstractGraphPass):
+    """
+    For ``select(cond, a, b)``, there are 2 cases where we can replace it with a single simpler op
+
+    1. If ``cond`` is a const scalar (or a const tensor but all elements are the same, which is
+       equivalent to a scalar), then we replace ``select(cond, a, b)`` with simply ``a`` or ``b``
+
+       .. code-block::
+
+            Input graph:
+
+                const(scalar cond) -|
+                                    |
+                a ------------------|-> select -> output
+                                    |
+                b ------------------|
+
+            Output graph:
+
+                if cond:
+                    a -> output
+                else:
+                    b -> output
+
+    2. If ``cond`` is a more complicated const, and ``a`` is an inf const,
+       then we replace ``a`` with ``select(cond, a, 0)``, then return ``a + b``
+
+        .. code-block::
+
+            Input graph:
+
+                const(cond) -|
+                             |
+                const(±inf) -|-> select -> output
+                             |
+                b -----------|
+
+            Output graph:
+
+                select(cond, ±inf, 0) -|
+                                       |-> add -> output
+                b ---------------------|
+
+        Note that ``select(cond, ±inf, 0))`` will further get eliminated by
+        ``const_elimination``, so in the end the op in graph is simply ``add``
+
+        This replacement is based on floating-point arithmetic
+
+        .. code-block::
+
+            inf + b = inf
+            -inf + b = -inf
+            0 + b = b
+
+        PS: if ``a`` is not inf const but ``b`` is, then we would swap ``a`` and ``b``
+    """
+
+    def apply(self, prog):
+        @block_context_manager
+        def apply_block(block: Block):
+            for op in list(block.operations):
+                for b in op.blocks:
+                    apply_block(b)
+
+                if op.op_type == "select":
+                    self.try_to_transform_select(op)
+
+        for f in prog.functions.values():
+            apply_block(f)
+
+    def try_to_transform_select(self, select_op: Operation) -> bool:
+        assert select_op.op_type == "select"
+
+        cond_val = select_op.cond.val
+        # this pass only handles const cond
+        if cond_val is None:
+            return False
+
+        a_val = select_op.a.val
+        b_val = select_op.b.val
+        # if everything is const, then let const_elimination do its job
+        if a_val is not None and b_val is not None:
+            return False
+
+        # try case 1: const scalar cond
+        # (or const tensor cond but all elements are the same, which is equivalent to a scalar)
+        result_candidate = self.try_to_transform_const_scalar_cond(select_op, cond_val)
+        if result_candidate is not None and self.try_to_modify_block(select_op, result_candidate):
+            return True
+
+        # try case 2: complicated const cond + inf const a or b
+        result_candidate = self.try_to_transform_inf_const_selection(
+            select_op, cond_val, a_val, b_val
+        )
+        if result_candidate is not None and self.try_to_modify_block(select_op, result_candidate):
+            return True
+
+        return False
+
+    @staticmethod
+    def try_to_transform_const_scalar_cond(select_op: Operation, cond_val: np.ndarray) -> Var:
+        assert select_op.op_type == "select"
+        assert cond_val is not None
+
+        a = select_op.a
+        b = select_op.b
+
+        x: Var = None
+        if np.all(cond_val):
+            x = mb.identity(x=a, before_op=select_op)
+        elif np.all(np.logical_not(cond_val)):
+            x = mb.identity(x=b, before_op=select_op)
+        else:
+            return None
+
+        result_shape = broadcast_shapes(a.shape, b.shape)
+        # cannot simply replace with a or b if broadcasting
+        if x.shape != result_shape:
+            return None
+
+        return x
+
+    @staticmethod
+    def try_to_transform_inf_const_selection(
+        select_op: Operation, cond_val: np.ndarray, a_val: np.ndarray, b_val: np.ndarray
+    ) -> Var:
+        assert select_op.op_type == "select"
+        assert cond_val is not None
+
+        # check if a or b is inf const
+        # if a is not but b is, then swap a and b
+        a: np.ndarray = None
+        b: Var = None
+        if a_val is not None and np.all(np.abs(a_val) > 1e38):
+            a = a_val
+            b = select_op.b
+        elif b_val is not None and np.all(np.abs(b_val) > 1e38):
+            a = b_val
+            b = select_op.a
+            cond_val = np.logical_not(cond_val)
+        else:
+            return None
+
+        # build add
+        cond_val, a = np.broadcast_arrays(cond_val, a)
+        a = a.copy()
+        a[np.where(np.logical_not(cond_val))] = 0.0
+        return mb.add(x=a, y=b, before_op=select_op, name=select_op.outputs[0].name)
+
+    @staticmethod
+    def try_to_modify_block(select_op: Operation, new_var: Var) -> bool:
+        block: Block = select_op.enclosing_block
+        if not block.try_replace_uses_of_var_after_op(
+            anchor_op=select_op,
+            old_var=select_op.outputs[0],
+            new_var=new_var,
+        ):
+            return False
+        block.remove_ops([select_op])
+        return True
+
+
+@register_pass(namespace="common")
 class fuse_elementwise_to_batchnorm(AbstractGraphPass):
     """
-    Fold ``mul`` + ``add`` into a ``batchnorm`` 
+    Fold ``mul`` + ``add`` into a ``batchnorm``
     if the ``const`` feeding into the ``mul``/``add`` is of shape ``(1,C,1,1)`` or ``(C,1,1)``
     and input to ``mul`` is of rank 4.
 
@@ -193,7 +359,7 @@ class rank0_expand_dims_swap(AbstractGraphPass):
     should be added after both of the ``rank-0`` tensors, and the final ``expand_dims`` should be removed.
     If the output var of the binary elementwise op is consumed by more than one op, a ``squeeze`` op
     is inserted.
-    
+
     `Input`
 
     .. code-block::

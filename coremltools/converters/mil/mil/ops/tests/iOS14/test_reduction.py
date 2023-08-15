@@ -9,15 +9,12 @@ import numpy as np
 import pytest
 import scipy
 
-import coremltools as ct
-from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
-
-backends = testing_reqs.backends
-compute_units = testing_reqs.compute_units
 
 
 class TestReduction:
@@ -104,11 +101,7 @@ class TestReduction:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, mode",
-        itertools.product(
-            compute_units,
-            backends,
-            ["max", "mean"]
-        ),
+        itertools.product(compute_units, backends, ["max", "mean"]),
     )
     def test_builder_to_backend_global_pool_2d(self, compute_unit, backend, mode):
         # test lowering to spatial reduction to global_pool path
@@ -137,15 +130,14 @@ class TestReduction:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, mode",
-        itertools.product(
-            compute_units,
-            backends,
-            ["max", "mean"]
-        ),
+        itertools.product(compute_units, backends, ["max", "mean"]),
     )
     def test_builder_to_backend_global_pool_none(self, compute_unit, backend, mode):
         # test lowering to spatial reduction to global_pool path for axis = None
-        val = np.array([[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]], dtype=np.float32)
+        val = np.array(
+            [[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]],
+            dtype=np.float32,
+        )
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
 
@@ -170,11 +162,7 @@ class TestReduction:
 
     @pytest.mark.parametrize(
         "compute_unit, backend, mode",
-        itertools.product(
-            compute_units,
-            backends,
-            ["max", "mean"]
-        ),
+        itertools.product(compute_units, backends, ["max", "mean"]),
     )
     def test_builder_to_backend_global_pool_3d(self, compute_unit, backend, mode):
         # test lowering to spatial reduction to global_pool path
@@ -201,14 +189,7 @@ class TestReduction:
             backend=backend,
         )
 
-
-    @pytest.mark.parametrize(
-        ["axis", "keep_dims"],
-        itertools.product(
-            [1, -3],
-            [True, False]
-        )
-    )
+    @pytest.mark.parametrize(["axis", "keep_dims"], itertools.product([1, -3], [True, False]))
     def test_builder_eval(self, axis, keep_dims):
         x_val = random_gen(shape=(1, 3, 4, 4), rand_min=-100.0, rand_max=100.0)
 
@@ -303,7 +284,11 @@ class TestReduction:
         test_reduce_sum_square()
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
@@ -334,67 +319,19 @@ class TestReduction:
             backend=backend,
         )
 
-    @pytest.mark.parametrize(
-        "input_size", [(1), (2), (1,2), (2,2), (2,3,4), (2,3,4,10)]
-    )
+    @pytest.mark.parametrize("input_size", [(1), (2), (1, 2), (2, 2), (2, 3, 4), (2, 3, 4, 10)])
     def test_reduce_log_sum_exp_value_inference(self, input_size):
         rs = np.random.RandomState(1234)
         x = rs.random(input_size)
 
         for axis in range(-x.ndim, x.ndim - 1):
+
             @mb.program(input_specs=[])
             def prog():
-                return  mb.reduce_log_sum_exp(x=x, axes=(axis,))
+                return mb.reduce_log_sum_exp(x=x, axes=(axis,))
 
             op = list(prog.functions.values())[0].operations[3]
-            assert op.op_type == 'reduce_log_sum_exp'
+            assert op.op_type == "reduce_log_sum_exp"
             np.testing.assert_allclose(
-                op.value_inference(),
-                scipy.special.logsumexp(x, axis=axis),
-                atol=1e-04,
-                rtol=1e-05
+                op.value_inference(), scipy.special.logsumexp(x, axis=axis), atol=1e-04, rtol=1e-05
             )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend, op_name, output_dtype",
-        itertools.product(
-            compute_units, backends, ["reduce_argmax", "reduce_argmin"], ["int32", "uint16", None]
-        ),
-    )
-    def test_reduce_arg_ios17_output_dtype(self, compute_unit, backend, op_name, output_dtype):
-        def build(x):
-            return getattr(mb, op_name)(x=x, axis=1, keep_dims=False, output_dtype=output_dtype)
-
-        val = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
-        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
-        input_values = {"x": val}
-        output_np_type = np.uint16 if output_dtype == "uint16" else np.int32
-        output_type = types.uint16 if output_dtype == "uint16" else types.int32
-        expected_output_types = (2, output_type)
-        expected_outputs = np.array(
-            [2, 2] if op_name == "reduce_argmax" else [0, 0], dtype=output_np_type
-        )
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            compute_unit=compute_unit,
-            backend=backend,
-            minimum_deployment_target=ct.target.iOS17,
-        )
-
-    @pytest.mark.parametrize(
-        "op_name",
-        ["reduce_argmax", "reduce_argmin"],
-    )
-    def test_reduce_arg_ios17_output_dtype_invalid(self, op_name):
-        x = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
-
-        def prog():
-            return getattr(mb, op_name)(x=x, axis=1, keep_dims=False, output_dtype="dummy")
-
-        with pytest.raises(ValueError, match='Invalid "output_dtype" dummy'):
-            mb.program(input_specs=[], opset_version=ct.target.iOS17)(prog)

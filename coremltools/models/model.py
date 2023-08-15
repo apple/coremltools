@@ -492,7 +492,11 @@ class MLModel:
             if not ext:
                 save_path = "{}{}".format(save_path, _MLPACKAGE_EXTENSION)
             elif ext != _MLPACKAGE_EXTENSION:
-                raise Exception("For an ML Program, extension must be {} (not {})".format(_MLPACKAGE_EXTENSION, ext))
+                raise Exception(
+                    "For an ML Program, extension must be {} (not {}). Please see https://coremltools.readme.io/docs/unified-conversion-api#target-conversion-formats to see the difference between neuralnetwork and mlprogram model types.".format(
+                        _MLPACKAGE_EXTENSION, ext
+                    )
+                )
             _shutil.copytree(self.package_path, save_path)
 
             saved_spec_path = _os.path.join(

@@ -10,16 +10,18 @@ import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import get_new_symbol, types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import (
+    UNK_SYM,
+    construct_inputs_from_placeholders,
+    run_compare_builder,
+)
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
-
-from .testing_utils import UNK_SYM, construct_inputs_from_placeholders, run_compare_builder
 
 
 class TestSelect:
-    @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends)
-    )
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         cond_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
         a_val = np.array([[3, 1, 1], [1, 4, 1], [5, 6, 1]], dtype=np.float32)
@@ -38,9 +40,7 @@ class TestSelect:
 
         expected_output_types = [(3, 3, types.fp32)]
         expected_outputs = [
-            np.array(
-                [[3.0, 2.0, 2.0], [2.0, 4.0, 2.0], [5.0, 6.0, 2.0]], dtype=np.float32
-            )
+            np.array([[3.0, 2.0, 2.0], [2.0, 4.0, 2.0], [5.0, 6.0, 2.0]], dtype=np.float32)
         ]
 
         run_compare_builder(
@@ -138,13 +138,16 @@ class TestSelect:
         shape = tuple(np.random.randint(1, 5, size=len(SYMBOLIC_SHAPE)))
         a = np.random.rand(*shape)
         input_values = {"a": a}
+        expected_outputs = [
+            VALUE * np.ones(shape),
+        ]
 
         run_compare_builder(
             build,
             input_placeholders,
             input_values,
             expected_output_types=[SYMBOLIC_SHAPE + (types.fp32,)],
-            expected_outputs=[VALUE],
+            expected_outputs=expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=10),
             compute_unit=compute_unit,
             backend=backend,
@@ -174,9 +177,14 @@ class TestSelect:
         assert isinstance(res.val, np.float32)
         np.testing.assert_allclose(np.float32(1), res.val)
 
+
 class TestCond:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         input_placeholders = {
@@ -186,10 +194,10 @@ class TestCond:
 
         def build(a, b):
             def true_fn():
-                return mb.add(x=b, y=1.), mb.mul(x=b, y=2.)
+                return mb.add(x=b, y=1.0), mb.mul(x=b, y=2.0)
 
             def false_fn():
-                return mb.add(x=b, y=-1.), mb.mul(x=b, y=-2.)
+                return mb.add(x=b, y=-1.0), mb.mul(x=b, y=-2.0)
 
             pred = mb.squeeze(x=a)
             return mb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn)
@@ -221,7 +229,11 @@ class TestCond:
 
 class TestWhileLoop:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         def body(a, b):
@@ -263,7 +275,11 @@ class TestWhileLoop:
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_power(self, compute_unit, backend):
 
@@ -280,8 +296,7 @@ class TestWhileLoop:
             def cond(res, bx):
                 return mb.less(x=bx, y=b)
 
-            res, ignored = mb.while_loop(_cond=cond, _body=body,
-                                         loop_vars=([1.], [0.]))
+            res, ignored = mb.while_loop(_cond=cond, _body=body, loop_vars=([1.0], [0.0]))
             return res
 
         input_values = {
@@ -307,11 +322,17 @@ class TestWhileLoop:
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_nested(self, compute_unit, backend):
-        if backend[0] == 'neuralnetwork':
-            pytest.xfail("rdar://96862073 (test_control_folw::TestWhileLoop::test_builder_to_backend_nested failing on nnv1)")
+        if backend.backend == "neuralnetwork":
+            pytest.xfail(
+                "rdar://96862073 (test_control_folw::TestWhileLoop::test_builder_to_backend_nested failing on nnv1)"
+            )
 
         input_placeholders = {
             "x": mb.placeholder(shape=(1,)),
@@ -327,8 +348,8 @@ class TestWhileLoop:
             # return i, j
 
             # Create const outside of while loop for testing purpose
-            two = mb.const(val=[2.], name='const_two')
-            one = mb.const(val=[1.], name='const_one')
+            two = mb.const(val=[2.0], name="const_two")
+            one = mb.const(val=[1.0], name="const_one")
 
             def cond2(i):
                 return mb.less(x=mb.mul(x=two, y=i), y=mb.add(x=i, y=two))
@@ -340,12 +361,10 @@ class TestWhileLoop:
                 return mb.less(x=i, y=j)
 
             def body1(i, j):
-                new_i = mb.while_loop(_cond=cond2, _body=body2,
-                                      loop_vars=(i,))
+                new_i = mb.while_loop(_cond=cond2, _body=body2, loop_vars=(i,))
                 return mb.add(x=new_i, y=two), j
 
-            return mb.while_loop(_cond=cond1, _body=body1,
-                                 loop_vars=(x, y))
+            return mb.while_loop(_cond=cond1, _body=body1, loop_vars=(x, y))
 
         input_values = {
             "x": np.array([0], dtype=np.float32),
@@ -374,7 +393,11 @@ class TestWhileLoop:
 
 class TestList:
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_smoke(self, compute_unit, backend):
         elem_shape = (2,)
@@ -428,7 +451,11 @@ class TestList:
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend", itertools.product(compute_units, backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
     def test_builder_to_backend_while(self, compute_unit, backend):
         # The while_loop appends [1, 2]*i to `ls` for each iteration
@@ -485,3 +512,79 @@ class TestList:
             compute_unit=compute_unit,
             backend=backend,
         )
+
+
+class TestConst:
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                np.int32,
+                np.int64,
+                np.float16,
+                np.float32,
+                np.float64,
+            ],
+        ),
+    )
+    def test_builder_to_backend_smoke(self, compute_unit, backend, dtype):
+        t = np.random.randint(0, 5, (4, 2)).astype(np.float32)
+        constant = np.random.randint(0, 5, (4, 2)).astype(dtype)
+        input_placeholders = {
+            "x": mb.placeholder(shape=t.shape),
+        }
+        input_values = {"x": t}
+
+        def build(x):
+            y = mb.const(val=constant)
+            y = mb.cast(x=y, dtype="fp32")
+            return mb.add(x=x, y=y)
+
+        expected_output_types = (4, 2, types.fp32)
+        expected_outputs = t + constant.astype(np.float32)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            (
+                np.int8,
+                np.uint8,
+                np.int16,
+                np.uint16,
+                np.int32,
+                np.int64,
+                np.float16,
+                np.float32,
+                np.float64,
+            ),
+        ),
+    )
+    def test_const_type(self, compute_unit, backend, dtype):
+        """Makes sure the ndarray in const has the correct type."""
+        @mb.program(input_specs=[], opset_version=backend.opset_version)
+        def prog():
+            return mb.const(val=np.random.randint(0, 5, (4, 2)).astype(dtype))
+
+        const_op = prog.functions["main"].find_ops(op_type="const")[0]
+
+        if dtype == np.int64:
+            target_dtype = np.int32
+        elif dtype == np.float64:
+            target_dtype = np.float32
+        else:
+            target_dtype = dtype
+        assert const_op.outputs[0].dtype == types.numpy_type_to_builtin_type(target_dtype)

@@ -11,14 +11,24 @@ import pytest
 import coremltools as ct
 from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import get_new_symbol, types
-from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
+from coremltools.converters.mil.mil.ops.tests.testing_utils import (
+    construct_inputs_from_placeholders,
+    run_compare_builder,
+)
+from coremltools.converters.mil.mil.types.type_mapping import numpy_type_to_builtin_type
+from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
-
-from .testing_utils import construct_inputs_from_placeholders, run_compare_builder
 
 if _HAS_TORCH:
     import torch
+
+new_backends = []
+for v in backends:
+    if v.opset_version <= ct.target.iOS15:
+        new_backends.append(v)
+backends = new_backends
 
 
 class TestGRU:
@@ -35,6 +45,7 @@ class TestGRU:
             "direction",
             "activation_functions",
             "symbolic",
+            "dtype",
         ],
         argvalues=itertools.product(
             compute_units,
@@ -52,6 +63,7 @@ class TestGRU:
                 ["sigmoid", "tanh"],
             ],
             [True, False],
+            [np.float32],
         ),
     )
     def test_builder_to_backend_smoke(
@@ -67,6 +79,7 @@ class TestGRU:
         direction,
         activation_functions,
         symbolic,
+        dtype,
     ):
         torch.manual_seed(5)
 
@@ -144,8 +157,8 @@ class TestGRU:
 
             return np_out_final
 
-        x = np.random.rand(batch_size, seq_len, input_size)
-        h = np.random.rand(batch_size, hidden_size)
+        x = np.random.rand(batch_size, seq_len, input_size).astype(dtype)
+        h = np.random.rand(batch_size, hidden_size).astype(dtype)
 
         activation, inner_activation = activation_functions
         output, state = get_numpy_prediction_gru(
@@ -157,24 +170,25 @@ class TestGRU:
             batch_size = get_new_symbol()
             seq_len = get_new_symbol()
 
-        hh_wt = np.concatenate([R_r, R_o, R_z], axis=0)
-        ih_wt = np.concatenate([W_r, W_o, W_z], axis=0)
-        b = np.concatenate([b_r, b_o, b_z], axis=0)
+        hh_wt = np.concatenate([R_r, R_o, R_z], axis=0).astype(dtype)
+        ih_wt = np.concatenate([W_r, W_o, W_z], axis=0).astype(dtype)
+        b = np.concatenate([b_r, b_o, b_z], axis=0).astype(dtype)
 
         input_shape = [seq_len, batch_size, input_size]
         h_shape = [batch_size, hidden_size]
 
+        builtin_dtype = numpy_type_to_builtin_type(dtype)
         input_placeholders = {
-            "x": mb.placeholder(shape=input_shape),
-            "initial_h": mb.placeholder(shape=h_shape),
+            "x": mb.placeholder(shape=input_shape, dtype=builtin_dtype),
+            "initial_h": mb.placeholder(shape=h_shape, dtype=builtin_dtype),
         }
 
         coreml_x = np.transpose(x, (1, 0, 2))
         input_values = {"x": coreml_x, "initial_h": h}
 
         expected_output_types = [
-            (seq_len if output_sequence else 1, batch_size, hidden_size, types.fp32),
-            (batch_size, hidden_size, types.fp32),
+            (seq_len if output_sequence else 1, batch_size, hidden_size, builtin_dtype),
+            (batch_size, hidden_size, builtin_dtype),
         ]
 
         def build(x, initial_h):
@@ -200,7 +214,7 @@ class TestGRU:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=10)
-            if symbolic and backend[0] == "mlprogram"
+            if symbolic and backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -224,6 +238,7 @@ class TestLSTM:
                 "has_peephole",
                 "coupled_input_forget",
                 "clip",
+                "dtype",
             ]
         ),
         itertools.product(
@@ -240,6 +255,7 @@ class TestLSTM:
             [True, False],
             [False],  # We have not exposed this option yet!
             [50.0, 0.2, 0.01],
+            [np.float32],  # Only support fp32 before iOS17.
         ),
     )
     def test_numpy_numerical(
@@ -257,6 +273,7 @@ class TestLSTM:
         has_peephole,
         coupled_input_forget,
         clip,
+        dtype,
     ):
         def _apply_act(x, option):
             # All activation functions use their standard default values.
@@ -328,14 +345,12 @@ class TestLSTM:
                 np_out_final = np_out[-1:, :]
             return np_out_final
 
-        batch = input_dims[0]
-        seq_len = input_dims[1]
-        input_size = input_dims[2]
+        batch, seq_len, input_size = input_dims
         hidden_size = output_dim
 
         # define random weights
-        W_x = np.random.rand(4 * hidden_size, input_size)
-        W_h = np.random.rand(4 * hidden_size, hidden_size)
+        W_x = np.random.rand(4 * hidden_size, input_size).astype(dtype)
+        W_h = np.random.rand(4 * hidden_size, hidden_size).astype(dtype)
 
         if has_bias:
             b = np.random.rand(4 * hidden_size) - 0.5
@@ -343,31 +358,32 @@ class TestLSTM:
                 b = b + 1
         else:
             b = np.zeros((4 * hidden_size))
+        b = b.astype(dtype)
 
         if has_peephole:
             p = np.random.rand(3 * hidden_size) - 0.5
         else:
             p = np.zeros((3 * hidden_size))
+        p = p.astype(dtype)
 
-        Weights = {}
-        Weights["W_x"] = W_x
-        Weights["W_h"] = W_h
-        Weights["b"] = b
-        Weights["p"] = p
+        weights = {"W_x": W_x, "W_h": W_h, "b": b, "p": p}
 
-        input_data = np.random.rand(batch, seq_len, input_size)
-        numpy_preds = _get_numpy_prediction_lstm(Weights, input_data)
+        input_data = np.random.rand(batch, seq_len, input_size).astype(dtype)
+        numpy_preds = _get_numpy_prediction_lstm(weights, input_data)
         numpy_preds = np.transpose(numpy_preds, [1, 0, 2])
 
         coreml_input_data = np.transpose(input_data, [1, 0, 2])
-        input_placeholders = {"x": mb.placeholder(shape=coreml_input_data.shape)}
+        builtin_dtype = numpy_type_to_builtin_type(dtype)
+        input_placeholders = {
+            "x": mb.placeholder(shape=coreml_input_data.shape, dtype=builtin_dtype)
+        }
         input_values = {"x": coreml_input_data}
 
         def build(x):
             h_all, ht, ct = mb.lstm(
                 x=x,
-                initial_h=np.zeros((batch, hidden_size)).astype(np.float32),
-                initial_c=np.zeros((batch, hidden_size)).astype(np.float32),
+                initial_h=np.zeros((batch, hidden_size)).astype(dtype),
+                initial_c=np.zeros((batch, hidden_size)).astype(dtype),
                 weight_ih=W_x,
                 weight_hh=W_h,
                 peephole=p,
@@ -377,7 +393,7 @@ class TestLSTM:
                 recurrent_activation=activation,
                 cell_activation=inner_activation,
                 activation=outer_activation,
-                clip=clip,
+                clip=dtype(clip),
             )
             return h_all
 
@@ -385,7 +401,7 @@ class TestLSTM:
             seq_len if return_seq else 1,
             batch,
             hidden_size,
-            types.fp32,
+            builtin_dtype,
         )
         expected_outputs = numpy_preds
 
@@ -414,6 +430,7 @@ class TestLSTM:
             "output_sequence",
             "direction",
             "symbolic",
+            "dtype",
         ],
         argvalues=itertools.product(
             compute_units,
@@ -426,6 +443,7 @@ class TestLSTM:
             [True, False],
             ["forward", "reverse"],
             [True, False],
+            [np.float32],  # Only support fp32 before iOS17.
         ),
     )
     def test_builder_to_backend_smoke_unilstm(
@@ -440,6 +458,7 @@ class TestLSTM:
         output_sequence,
         direction,
         symbolic,
+        dtype,
     ):
 
         torch.manual_seed(50)
@@ -452,7 +471,7 @@ class TestLSTM:
         # Make weight compatible to CoreML format
         def ifzo_to_ifoz(x):
             i, f, z, o = np.split(x, 4)
-            return np.concatenate([i, f, o, z], axis=0)
+            return np.concatenate([i, f, o, z], axis=0).astype(dtype)
 
         w_x = ifzo_to_ifoz(ih_wt)
         w_h = ifzo_to_ifoz(hh_wt)
@@ -493,19 +512,24 @@ class TestLSTM:
         h_shape = [batch_size, hidden_size]
         c_shape = [batch_size, hidden_size]
 
+        builtin_dtype = numpy_type_to_builtin_type(dtype)
         expected_output_types = [
-            (seq_len if output_sequence else 1, batch_size, hidden_size, types.fp32),
-            (batch_size, hidden_size, types.fp32),
-            (batch_size, hidden_size, types.fp32),
+            (seq_len if output_sequence else 1, batch_size, hidden_size, builtin_dtype),
+            (batch_size, hidden_size, builtin_dtype),
+            (batch_size, hidden_size, builtin_dtype),
         ]
         expected_outputs = [output, hn, cn]
 
         input_placeholders = {
-            "x": mb.placeholder(shape=input_shape),
-            "initial_h": mb.placeholder(shape=h_shape),
-            "initial_c": mb.placeholder(shape=c_shape),
+            "x": mb.placeholder(shape=input_shape, dtype=builtin_dtype),
+            "initial_h": mb.placeholder(shape=h_shape, dtype=builtin_dtype),
+            "initial_c": mb.placeholder(shape=c_shape, dtype=builtin_dtype),
         }
-        input_values = {"x": t, "initial_h": h, "initial_c": c}
+        input_values = {
+            "x": t.astype(dtype),
+            "initial_h": h.astype(dtype),
+            "initial_c": c.astype(dtype),
+        }
 
         def build(x, initial_h, initial_c):
             arguments = {
@@ -529,7 +553,7 @@ class TestLSTM:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=64)
-            if symbolic and backend[0] == "mlprogram"
+            if symbolic and backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -547,6 +571,7 @@ class TestLSTM:
             "has_bias",
             "output_sequence",
             "symbolic",
+            "dtype",
         ],
         argvalues=itertools.product(
             compute_units,
@@ -558,6 +583,7 @@ class TestLSTM:
             [True, False],
             [True, False],
             [True, False],
+            [np.float32],
         ),
     )
     def test_builder_to_backend_smoke_bidirlstm(
@@ -571,6 +597,7 @@ class TestLSTM:
         has_bias,
         output_sequence,
         symbolic,
+        dtype,
     ):
         def _pytorch_hidden_to_coreml(x):
             x = x.detach().numpy()
@@ -583,9 +610,7 @@ class TestLSTM:
 
         direction = "bidirectional"
         torch.manual_seed(20)
-        rnn = torch.nn.LSTM(
-            input_size, hidden_size, 1, bidirectional=True, bias=has_bias
-        )
+        rnn = torch.nn.LSTM(input_size, hidden_size, 1, bidirectional=True, bias=has_bias)
         state_dict = rnn.state_dict()
 
         ih_wt = state_dict["weight_ih_l0"].detach().numpy()
@@ -595,7 +620,7 @@ class TestLSTM:
 
         def ifzo_to_ifoz(x):
             i, f, z, o = np.split(x, 4)
-            return np.concatenate([i, f, o, z], axis=0)
+            return np.concatenate([i, f, o, z], axis=0).astype(dtype)
 
         wx = ifzo_to_ifoz(ih_wt)
         wh = ifzo_to_ifoz(hh_wt)
@@ -625,9 +650,9 @@ class TestLSTM:
             output_r = output[0].unsqueeze(0)[:, :, hidden_size:]
             output = torch.cat([output_f, output_r], dim=2)
 
-        output = output.detach().numpy()
-        hn = _pytorch_hidden_to_coreml(hn)
-        cn = _pytorch_hidden_to_coreml(cn)
+        output = output.detach().numpy().astype(dtype)
+        hn = _pytorch_hidden_to_coreml(hn).astype(dtype)
+        cn = _pytorch_hidden_to_coreml(cn).astype(dtype)
 
         if symbolic:
             batch_size = get_new_symbol()
@@ -637,15 +662,16 @@ class TestLSTM:
         h_shape = [batch_size, 2 * hidden_size]
         c_shape = [batch_size, 2 * hidden_size]
 
+        builtin_dtype = numpy_type_to_builtin_type(dtype)
         expected_output_types = [
             (
                 seq_len if output_sequence else 1,
                 batch_size,
                 2 * hidden_size,
-                types.fp32,
+                builtin_dtype,
             ),
-            (batch_size, 2 * hidden_size, types.fp32),
-            (batch_size, 2 * hidden_size, types.fp32),
+            (batch_size, 2 * hidden_size, builtin_dtype),
+            (batch_size, 2 * hidden_size, builtin_dtype),
         ]
         expected_outputs = [output, hn, cn]
 
@@ -654,11 +680,15 @@ class TestLSTM:
         c = _pytorch_hidden_to_coreml(c0)
 
         input_placeholders = {
-            "x": mb.placeholder(shape=input_shape),
-            "initial_h": mb.placeholder(shape=h_shape),
-            "initial_c": mb.placeholder(shape=c_shape),
+            "x": mb.placeholder(shape=input_shape, dtype=builtin_dtype),
+            "initial_h": mb.placeholder(shape=h_shape, dtype=builtin_dtype),
+            "initial_c": mb.placeholder(shape=c_shape, dtype=builtin_dtype),
         }
-        input_values = {"x": t, "initial_h": h, "initial_c": c}
+        input_values = {
+            "x": t.astype(dtype),
+            "initial_h": h.astype(dtype),
+            "initial_c": c.astype(dtype),
+        }
 
         def build(x, initial_h, initial_c):
             arguments = {
@@ -685,7 +715,7 @@ class TestLSTM:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=64)
-            if symbolic and backend[0] == "mlprogram"
+            if symbolic and backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
@@ -750,6 +780,7 @@ class TestRNN:
             "output_sequence",
             "direction",
             "symbolic",
+            "dtype",
         ],
         argvalues=itertools.product(
             compute_units,
@@ -762,6 +793,7 @@ class TestRNN:
             [True, False],
             ["forward", "reverse"],
             [True, False],
+            [np.float32],
         ),
     )
     def test_builder_to_backend_smoke(
@@ -776,18 +808,19 @@ class TestRNN:
         output_sequence,
         direction,
         symbolic,
+        dtype,
     ):
         torch.manual_seed(50)
         rnn = torch.nn.RNN(input_size, hidden_size, 1, bias=has_bias)
         state_dict = rnn.state_dict()
 
-        ih_wt = state_dict["weight_ih_l0"].detach().numpy()
-        hh_wt = state_dict["weight_hh_l0"].detach().numpy()
+        ih_wt = state_dict["weight_ih_l0"].detach().numpy().astype(dtype)
+        hh_wt = state_dict["weight_hh_l0"].detach().numpy().astype(dtype)
 
         b = None
         if has_bias:
-            ih_b = state_dict["bias_ih_l0"].detach().numpy()
-            hh_b = state_dict["bias_hh_l0"].detach().numpy()
+            ih_b = state_dict["bias_ih_l0"].detach().numpy().astype(dtype)
+            hh_b = state_dict["bias_hh_l0"].detach().numpy().astype(dtype)
             b = ih_b + hh_b
 
         t = torch.randn(seq_len, batch_size, input_size)
@@ -814,17 +847,18 @@ class TestRNN:
         input_shape = [seq_len, batch_size, input_size]
         h_shape = [batch_size, hidden_size]
 
+        builtin_dtype = numpy_type_to_builtin_type(dtype)
         expected_output_types = [
-            (seq_len if output_sequence else 1, batch_size, hidden_size, types.fp32),
-            (batch_size, hidden_size, types.fp32),
+            (seq_len if output_sequence else 1, batch_size, hidden_size, builtin_dtype),
+            (batch_size, hidden_size, builtin_dtype),
         ]
         expected_outputs = [output, hn]
 
         input_placeholders = {
-            "x": mb.placeholder(shape=input_shape),
-            "initial_h": mb.placeholder(shape=h_shape),
+            "x": mb.placeholder(shape=input_shape, dtype=builtin_dtype),
+            "initial_h": mb.placeholder(shape=h_shape, dtype=builtin_dtype),
         }
-        input_values = {"x": t, "initial_h": h}
+        input_values = {"x": t.astype(dtype), "initial_h": h.astype(dtype)}
 
         def build(x, initial_h):
             arguments = {
@@ -847,7 +881,7 @@ class TestRNN:
             expected_output_types,
             expected_outputs,
             inputs=construct_inputs_from_placeholders(input_placeholders, upper_bound=64)
-            if symbolic and backend[0] == "mlprogram"
+            if symbolic and backend.backend == "mlprogram"
             else None,
             compute_unit=compute_unit,
             backend=backend,
