@@ -230,7 +230,9 @@ class NeuralNetworkBuilder:
 
     Examples
     --------
+
     .. sourcecode:: python
+
         import numpy as np
 
         from coremltools.models import datatypes
