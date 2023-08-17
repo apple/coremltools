@@ -8,7 +8,7 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
-from coremltools.converters.mil.mil import Block, Var, types
+from coremltools.converters.mil.mil import Block, Var, ListVar, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -102,6 +102,8 @@ class const_deduplication(AbstractGraphPass):
             op_type = op.op_type
             if op_type == "const" or op_type in self.CONSTEXPR_OPS:
                 constant_var = op.outputs[0]
+                if isinstance(constant_var, ListVar):
+                    continue
                 shape = constant_var.shape
 
                 numel = np.prod(shape)
