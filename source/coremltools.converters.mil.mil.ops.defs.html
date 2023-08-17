@@ -22,6 +22,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -35,11 +36,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -52,35 +57,317 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Ops</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.activation">activation (iOS 15+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.activation">activation (iOS 17+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.classify">classify</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops">constexpr_ops</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.control_flow">control_flow</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.conv">conv</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary">elementwise_binary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary">elementwise_unary (iOS 15+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary">elementwise_unary (iOS 17+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing">image_resizing (iOS 15+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing">image_resizing (iOS 16+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing">image_resizing (iOS 17+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.linear">linear</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization">normalization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.pool">pool</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops">quantization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.random">random</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent">recurrent</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.reduction">reduction (iOS 15+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.reduction">reduction (iOS 17+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather">scatter_gather (iOS 15+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather">scatter_gather (iOS 16+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather">scatter_gather (iOS 17+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation">tensor_operation (iOS 15+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation">tensor_operation (iOS 16+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation">tensor_operation (iOS 17+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation">tensor_transformation (iOS 15)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">tensor_transformation (iOS 16+)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">tensor_transformation (iOS 17+)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.activation">activation (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.clamped_relu"><code class="docutils literal notranslate"><span class="pre">clamped_relu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.elu"><code class="docutils literal notranslate"><span class="pre">elu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.gelu"><code class="docutils literal notranslate"><span class="pre">gelu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.leaky_relu"><code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.linear_activation"><code class="docutils literal notranslate"><span class="pre">linear_activation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.prelu"><code class="docutils literal notranslate"><span class="pre">prelu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu"><code class="docutils literal notranslate"><span class="pre">relu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu6"><code class="docutils literal notranslate"><span class="pre">relu6</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.scaled_tanh"><code class="docutils literal notranslate"><span class="pre">scaled_tanh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid"><code class="docutils literal notranslate"><span class="pre">sigmoid</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid_hard"><code class="docutils literal notranslate"><span class="pre">sigmoid_hard</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.silu"><code class="docutils literal notranslate"><span class="pre">silu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus"><code class="docutils literal notranslate"><span class="pre">softplus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus_parametric"><code class="docutils literal notranslate"><span class="pre">softplus_parametric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softmax"><code class="docutils literal notranslate"><span class="pre">softmax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softsign"><code class="docutils literal notranslate"><span class="pre">softsign</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.thresholded_relu"><code class="docutils literal notranslate"><span class="pre">thresholded_relu</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.activation">activation (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.clamped_relu"><code class="docutils literal notranslate"><span class="pre">clamped_relu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.elu"><code class="docutils literal notranslate"><span class="pre">elu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.leaky_relu"><code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.linear_activation"><code class="docutils literal notranslate"><span class="pre">linear_activation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.prelu"><code class="docutils literal notranslate"><span class="pre">prelu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.scaled_tanh"><code class="docutils literal notranslate"><span class="pre">scaled_tanh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.sigmoid_hard"><code class="docutils literal notranslate"><span class="pre">sigmoid_hard</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.softplus_parametric"><code class="docutils literal notranslate"><span class="pre">softplus_parametric</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.activation.thresholded_relu"><code class="docutils literal notranslate"><span class="pre">thresholded_relu</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.classify">classify</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.classify.classify"><code class="docutils literal notranslate"><span class="pre">classify</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops">constexpr_ops</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize"><code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast"><code class="docutils literal notranslate"><span class="pre">constexpr_cast</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_lut_to_dense"><code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_sparse_to_dense"><code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.control_flow">control_flow</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.cond"><code class="docutils literal notranslate"><span class="pre">cond</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.Const"><code class="docutils literal notranslate"><span class="pre">Const</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select"><code class="docutils literal notranslate"><span class="pre">select</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.while_loop"><code class="docutils literal notranslate"><span class="pre">while_loop</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.make_list"><code class="docutils literal notranslate"><span class="pre">make_list</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_length"><code class="docutils literal notranslate"><span class="pre">list_length</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_write"><code class="docutils literal notranslate"><span class="pre">list_write</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_read"><code class="docutils literal notranslate"><span class="pre">list_read</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_gather"><code class="docutils literal notranslate"><span class="pre">list_gather</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_scatter"><code class="docutils literal notranslate"><span class="pre">list_scatter</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.conv">conv (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv"><code class="docutils literal notranslate"><span class="pre">conv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv_transpose"><code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.conv">conv (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.conv.conv"><code class="docutils literal notranslate"><span class="pre">conv</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.conv.conv_transpose"><code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary">elementwise_binary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.add"><code class="docutils literal notranslate"><span class="pre">add</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.equal"><code class="docutils literal notranslate"><span class="pre">equal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.floor_div"><code class="docutils literal notranslate"><span class="pre">floor_div</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater"><code class="docutils literal notranslate"><span class="pre">greater</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater_equal"><code class="docutils literal notranslate"><span class="pre">greater_equal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less"><code class="docutils literal notranslate"><span class="pre">less</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less_equal"><code class="docutils literal notranslate"><span class="pre">less_equal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_and"><code class="docutils literal notranslate"><span class="pre">logical_and</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_or"><code class="docutils literal notranslate"><span class="pre">logical_or</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_xor"><code class="docutils literal notranslate"><span class="pre">logical_xor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.maximum"><code class="docutils literal notranslate"><span class="pre">maximum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.minimum"><code class="docutils literal notranslate"><span class="pre">minimum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mod"><code class="docutils literal notranslate"><span class="pre">mod</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mul"><code class="docutils literal notranslate"><span class="pre">mul</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.not_equal"><code class="docutils literal notranslate"><span class="pre">not_equal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.real_div"><code class="docutils literal notranslate"><span class="pre">real_div</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.pow"><code class="docutils literal notranslate"><span class="pre">pow</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.sub"><code class="docutils literal notranslate"><span class="pre">sub</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary">elementwise_unary (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.abs"><code class="docutils literal notranslate"><span class="pre">abs</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.acos"><code class="docutils literal notranslate"><span class="pre">acos</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.asin"><code class="docutils literal notranslate"><span class="pre">asin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.atan"><code class="docutils literal notranslate"><span class="pre">atan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.atanh"><code class="docutils literal notranslate"><span class="pre">atanh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast"><code class="docutils literal notranslate"><span class="pre">cast</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.ceil"><code class="docutils literal notranslate"><span class="pre">ceil</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.clip"><code class="docutils literal notranslate"><span class="pre">clip</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cos"><code class="docutils literal notranslate"><span class="pre">cos</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cosh"><code class="docutils literal notranslate"><span class="pre">cosh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.erf"><code class="docutils literal notranslate"><span class="pre">erf</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.exp"><code class="docutils literal notranslate"><span class="pre">exp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.exp2"><code class="docutils literal notranslate"><span class="pre">exp2</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.floor"><code class="docutils literal notranslate"><span class="pre">floor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.inverse"><code class="docutils literal notranslate"><span class="pre">inverse</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.log"><code class="docutils literal notranslate"><span class="pre">log</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.logical_not"><code class="docutils literal notranslate"><span class="pre">logical_not</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.round"><code class="docutils literal notranslate"><span class="pre">round</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.rsqrt"><code class="docutils literal notranslate"><span class="pre">rsqrt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sign"><code class="docutils literal notranslate"><span class="pre">sign</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sin"><code class="docutils literal notranslate"><span class="pre">sin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sinh"><code class="docutils literal notranslate"><span class="pre">sinh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sqrt"><code class="docutils literal notranslate"><span class="pre">sqrt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.square"><code class="docutils literal notranslate"><span class="pre">square</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.tan"><code class="docutils literal notranslate"><span class="pre">tan</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.tanh"><code class="docutils literal notranslate"><span class="pre">tanh</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.threshold"><code class="docutils literal notranslate"><span class="pre">threshold</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary">elementwise_unary (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.cast"><code class="docutils literal notranslate"><span class="pre">cast</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.clip"><code class="docutils literal notranslate"><span class="pre">clip</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.inverse"><code class="docutils literal notranslate"><span class="pre">inverse</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.log"><code class="docutils literal notranslate"><span class="pre">log</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.rsqrt"><code class="docutils literal notranslate"><span class="pre">rsqrt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing">image_resizing (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine"><code class="docutils literal notranslate"><span class="pre">affine</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop"><code class="docutils literal notranslate"><span class="pre">crop</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample"><code class="docutils literal notranslate"><span class="pre">resample</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear"><code class="docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_nearest_neighbor"><code class="docutils literal notranslate"><span class="pre">resize_nearest_neighbor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear"><code class="docutils literal notranslate"><span class="pre">upsample_bilinear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_nearest_neighbor"><code class="docutils literal notranslate"><span class="pre">upsample_nearest_neighbor</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing">image_resizing (iOS 16+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.resample"><code class="docutils literal notranslate"><span class="pre">resample</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.upsample_bilinear"><code class="docutils literal notranslate"><span class="pre">upsample_bilinear</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing">image_resizing (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.crop_resize"><code class="docutils literal notranslate"><span class="pre">crop_resize</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resample"><code class="docutils literal notranslate"><span class="pre">resample</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resize"><code class="docutils literal notranslate"><span class="pre">resize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.linear">linear (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.einsum"><code class="docutils literal notranslate"><span class="pre">einsum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.linear"><code class="docutils literal notranslate"><span class="pre">linear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.matmul"><code class="docutils literal notranslate"><span class="pre">matmul</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.linear">linear (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.linear.linear"><code class="docutils literal notranslate"><span class="pre">linear</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.linear.matmul"><code class="docutils literal notranslate"><span class="pre">matmul</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization">normalization (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.batch_norm"><code class="docutils literal notranslate"><span class="pre">batch_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.instance_norm"><code class="docutils literal notranslate"><span class="pre">instance_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.l2_norm"><code class="docutils literal notranslate"><span class="pre">l2_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.layer_norm"><code class="docutils literal notranslate"><span class="pre">layer_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.local_response_norm"><code class="docutils literal notranslate"><span class="pre">local_response_norm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.normalization">normalization (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.batch_norm"><code class="docutils literal notranslate"><span class="pre">batch_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.instance_norm"><code class="docutils literal notranslate"><span class="pre">instance_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.l2_norm"><code class="docutils literal notranslate"><span class="pre">l2_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.layer_norm"><code class="docutils literal notranslate"><span class="pre">layer_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.local_response_norm"><code class="docutils literal notranslate"><span class="pre">local_response_norm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.pool">pool</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="docutils literal notranslate"><span class="pre">avg_pool</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.l2_pool"><code class="docutils literal notranslate"><span class="pre">l2_pool</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.max_pool"><code class="docutils literal notranslate"><span class="pre">max_pool</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops">quantization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.quantize"><code class="docutils literal notranslate"><span class="pre">quantize</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.dequantize"><code class="docutils literal notranslate"><span class="pre">dequantize</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.random">random</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_bernoulli"><code class="docutils literal notranslate"><span class="pre">random_bernoulli</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_categorical"><code class="docutils literal notranslate"><span class="pre">random_categorical</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_normal"><code class="docutils literal notranslate"><span class="pre">random_normal</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.random.random_uniform"><code class="docutils literal notranslate"><span class="pre">random_uniform</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent">recurrent (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru"><code class="docutils literal notranslate"><span class="pre">gru</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn"><code class="docutils literal notranslate"><span class="pre">rnn</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.recurrent">recurrent (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru"><code class="docutils literal notranslate"><span class="pre">gru</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.lstm"><code class="docutils literal notranslate"><span class="pre">lstm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.rnn"><code class="docutils literal notranslate"><span class="pre">rnn</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.reduction">reduction (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax"><code class="docutils literal notranslate"><span class="pre">reduce_argmax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin"><code class="docutils literal notranslate"><span class="pre">reduce_argmin</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l1_norm"><code class="docutils literal notranslate"><span class="pre">reduce_l1_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l2_norm"><code class="docutils literal notranslate"><span class="pre">reduce_l2_norm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_log_sum"><code class="docutils literal notranslate"><span class="pre">reduce_log_sum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_log_sum_exp"><code class="docutils literal notranslate"><span class="pre">reduce_log_sum_exp</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_max"><code class="docutils literal notranslate"><span class="pre">reduce_max</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_mean"><code class="docutils literal notranslate"><span class="pre">reduce_mean</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_min"><code class="docutils literal notranslate"><span class="pre">reduce_min</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_prod"><code class="docutils literal notranslate"><span class="pre">reduce_prod</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum"><code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum_square"><code class="docutils literal notranslate"><span class="pre">reduce_sum_square</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.reduction">reduction (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmax"><code class="docutils literal notranslate"><span class="pre">reduce_argmax</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmin"><code class="docutils literal notranslate"><span class="pre">reduce_argmin</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather">scatter_gather (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather"><code class="docutils literal notranslate"><span class="pre">gather</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_along_axis"><code class="docutils literal notranslate"><span class="pre">gather_along_axis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_nd"><code class="docutils literal notranslate"><span class="pre">gather_nd</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter_along_axis"><code class="docutils literal notranslate"><span class="pre">scatter_along_axis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.scatter_nd"><code class="docutils literal notranslate"><span class="pre">scatter_nd</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather">scatter_gather (iOS 16+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather"><code class="docutils literal notranslate"><span class="pre">gather</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather_nd"><code class="docutils literal notranslate"><span class="pre">gather_nd</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather">scatter_gather (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather"><code class="docutils literal notranslate"><span class="pre">gather</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_along_axis"><code class="docutils literal notranslate"><span class="pre">gather_along_axis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_nd"><code class="docutils literal notranslate"><span class="pre">gather_nd</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter"><code class="docutils literal notranslate"><span class="pre">scatter</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter_along_axis"><code class="docutils literal notranslate"><span class="pre">scatter_along_axis</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.scatter_nd"><code class="docutils literal notranslate"><span class="pre">scatter_nd</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation">tensor_operation (iOS 15+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.argsort"><code class="docutils literal notranslate"><span class="pre">argsort</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.band_part"><code class="docutils literal notranslate"><span class="pre">band_part</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.concat"><code class="docutils literal notranslate"><span class="pre">concat</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.cumsum"><code class="docutils literal notranslate"><span class="pre">cumsum</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.fill"><code class="docutils literal notranslate"><span class="pre">fill</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.flatten2d"><code class="docutils literal notranslate"><span class="pre">flatten2d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.identity"><code class="docutils literal notranslate"><span class="pre">identity</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_maximum_suppression"><code class="docutils literal notranslate"><span class="pre">non_maximum_suppression</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_zero"><code class="docutils literal notranslate"><span class="pre">non_zero</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.one_hot"><code class="docutils literal notranslate"><span class="pre">one_hot</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.pad"><code class="docutils literal notranslate"><span class="pre">pad</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.range_1d"><code class="docutils literal notranslate"><span class="pre">range_1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.shape"><code class="docutils literal notranslate"><span class="pre">shape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.split"><code class="docutils literal notranslate"><span class="pre">split</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.stack"><code class="docutils literal notranslate"><span class="pre">stack</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.tile"><code class="docutils literal notranslate"><span class="pre">tile</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk"><code class="docutils literal notranslate"><span class="pre">topk</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation">tensor_operation (iOS 16+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.fill_like"><code class="docutils literal notranslate"><span class="pre">fill_like</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk"><code class="docutils literal notranslate"><span class="pre">topk</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation">tensor_operation (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.non_maximum_suppression"><code class="docutils literal notranslate"><span class="pre">non_maximum_suppression</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk"><code class="docutils literal notranslate"><span class="pre">topk</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation">tensor_transformation (iOS 15)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space"><code class="docutils literal notranslate"><span class="pre">depth_to_space</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims"><code class="docutils literal notranslate"><span class="pre">expand_dims</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle"><code class="docutils literal notranslate"><span class="pre">pixel_shuffle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape"><code class="docutils literal notranslate"><span class="pre">reshape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse"><code class="docutils literal notranslate"><span class="pre">reverse</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse_sequence"><code class="docutils literal notranslate"><span class="pre">reverse_sequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index"><code class="docutils literal notranslate"><span class="pre">slice_by_index</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size"><code class="docutils literal notranslate"><span class="pre">slice_by_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows"><code class="docutils literal notranslate"><span class="pre">sliding_windows</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth"><code class="docutils literal notranslate"><span class="pre">space_to_depth</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze"><code class="docutils literal notranslate"><span class="pre">squeeze</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose"><code class="docutils literal notranslate"><span class="pre">transpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">tensor_transformation (iOS 16+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.pixel_unshuffle"><code class="docutils literal notranslate"><span class="pre">pixel_unshuffle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like"><code class="docutils literal notranslate"><span class="pre">reshape_like</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">tensor_transformation (iOS 17+)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.expand_dims"><code class="docutils literal notranslate"><span class="pre">expand_dims</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape"><code class="docutils literal notranslate"><span class="pre">reshape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape_like"><code class="docutils literal notranslate"><span class="pre">reshape_like</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reverse"><code class="docutils literal notranslate"><span class="pre">reverse</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reverse_sequence"><code class="docutils literal notranslate"><span class="pre">reverse_sequence</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.slice_by_index"><code class="docutils literal notranslate"><span class="pre">slice_by_index</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.slice_by_size"><code class="docutils literal notranslate"><span class="pre">slice_by_size</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.sliding_windows"><code class="docutils literal notranslate"><span class="pre">sliding_windows</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.squeeze"><code class="docutils literal notranslate"><span class="pre">squeeze</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.transpose"><code class="docutils literal notranslate"><span class="pre">transpose</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
@@ -90,11 +377,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -110,8 +393,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>MIL Ops</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">MIL Ops</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.converters.mil.mil.ops.defs.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -962,7 +1245,7 @@ be decompressed later, based on the implementation detail (either at model load 
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>quantized_data: const tensor&lt;SrcT, [1..]&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>zero_point: const tensor&lt;SrcT, [0..1]&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>zero_point: const tensor&lt;ZeroPointT, [0..1]&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">zero_point</span></code> can be either a scalar or a vector.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">zero_point</span></code> follows similar broadcasting rules and size constraints as <code class="docutils literal notranslate"><span class="pre">scale</span></code>.</p></li>
 </ul>
@@ -995,6 +1278,7 @@ If <code class="docutils literal notranslate"><span class="pre">scale</span></co
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>SrcT: uint8, int8</strong></dt><dd></dd>
+<dt><strong>ZeroPointT: uint8, int8, fp32</strong></dt><dd></dd>
 <dt><strong>DstT: fp16, fp32</strong></dt><dd></dd>
 </dl>
 </dd>
@@ -1501,7 +1785,7 @@ dynamically resized.</p></li>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS15.conv">
-<span id="conv"></span><h2>conv<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.conv" title="Permalink to this heading"></a></h2>
+<span id="conv-ios-15"></span><h2>conv (iOS 15+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.conv" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.conv.</span></span><span class="sig-name descname"><span class="pre">conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/conv.html#conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv" title="Permalink to this definition"></a></dt>
@@ -1733,6 +2017,28 @@ See <code class="docutils literal notranslate"><span class="pre">conv</span></co
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="module-coremltools.converters.mil.mil.ops.defs.iOS17.conv">
+<span id="conv-ios-17"></span><h2>conv (iOS 17+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.conv" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.conv.conv">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.conv.</span></span><span class="sig-name descname"><span class="pre">conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/conv.html#conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.conv.conv" title="Permalink to this definition"></a></dt>
+<dd><p>Perform convolution over input. Supports 1-D, 2-D, and 3-D convolution.</p>
+<p>The difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv" title="coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv"><code class="xref py py-class docutils literal notranslate"><span class="pre">conv</span></code></a> is that the
+<code class="docutils literal notranslate"><span class="pre">weight</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> may have a different dtype than the input/output.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.conv.conv_transpose">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.conv.</span></span><span class="sig-name descname"><span class="pre">conv_transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/conv.html#conv_transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.conv.conv_transpose" title="Permalink to this definition"></a></dt>
+<dd><p>Perform transposed convolution (also known as deconvolution and fractionally
+stride convolution) over input. <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> can also be used to compute
+the gradient of conv. Supports 1-D, 2-D, and 3-D convolution.</p>
+<p>The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv_transpose" title="coremltools.converters.mil.mil.ops.defs.iOS15.conv.conv_transpose"><code class="xref py py-class docutils literal notranslate"><span class="pre">conv_transpose</span></code></a> are:
+- <code class="docutils literal notranslate"><span class="pre">weight</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> may have a different dtype than the input/output.
+- <code class="docutils literal notranslate"><span class="pre">weight</span></code> doesn’t have to be const.</p>
 </dd></dl>
 
 </section>
@@ -2492,14 +2798,12 @@ rounded towards negative infinity.</p>
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/elementwise_unary.html#cast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast" title="Permalink to this definition"></a></dt>
 <dd><p>Cast the input <code class="docutils literal notranslate"><span class="pre">x</span></code> to the new type <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.</p>
-<p>Notice that the underlying Core MIL op doesn’t support int64 and fp64. We support them in PyMIL
-by mapping int64 to int32, and mapping fp64 to fp32.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>dtype: const str (Required)</strong></dt><dd><ul class="simple">
-<li><p>Can be one of the following types: <code class="docutils literal notranslate"><span class="pre">int32</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">fp64</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p></li>
+<li><p>Can be one of the following types: <code class="docutils literal notranslate"><span class="pre">int32</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2514,7 +2818,7 @@ by mapping int64 to int32, and mapping fp64 to fp32.</p>
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: i32, i64, fp16, fp32, fp64, bool.</strong></dt><dd></dd>
+<dt><strong>T: i32, fp16, fp32, bool.</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -2885,7 +3189,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sign">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">sign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/elementwise_unary.html#sign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sign" title="Permalink to this definition"></a></dt>
 <dd><p>Return the sign value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.</p>
-<p>All elements in the output will be either <code class="docutils literal notranslate"><span class="pre">-1</span></code>. or <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<p>All elements in the output will be either <code class="docutils literal notranslate"><span class="pre">-1</span></code> or <code class="docutils literal notranslate"><span class="pre">1</span></code>, or zero if the input <code class="docutils literal notranslate"><span class="pre">x</span></code> is zero.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -3102,15 +3406,14 @@ Any values less than <code class="docutils literal notranslate"><span class="pre
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/elementwise_unary.html#cast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.cast" title="Permalink to this definition"></a></dt>
 <dd><p>Cast the input <code class="docutils literal notranslate"><span class="pre">x</span></code> to the new type <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.
 The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast" title="coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.cast"><code class="xref py py-class docutils literal notranslate"><span class="pre">cast</span></code></a>
-is that it supports int16 and uint16.</p>
-<dl class="field-list">
+is that it supports int8, uint8, int16, and uint16.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>dtype: const str (Required)</strong></dt><dd><ul class="simple">
-<li><p>Can be one of the following types: <code class="docutils literal notranslate"><span class="pre">int16</span></code>, <code class="docutils literal notranslate"><span class="pre">uint16</span></code>, <code class="docutils literal notranslate"><span class="pre">int32</span></code>, <code class="docutils literal notranslate"><span class="pre">int64</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code>,</p></li>
+<li><p>Can be one of the following types: <code class="docutils literal notranslate"><span class="pre">int8</span></code>, <code class="docutils literal notranslate"><span class="pre">uint8</span></code>, <code class="docutils literal notranslate"><span class="pre">int16</span></code>, <code class="docutils literal notranslate"><span class="pre">uint16</span></code>, <code class="docutils literal notranslate"><span class="pre">int32</span></code>, <code class="docutils literal notranslate"><span class="pre">fp16</span></code>, <code class="docutils literal notranslate"><span class="pre">fp32</span></code>, or <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">fp32</span></code>, <code class="docutils literal notranslate"><span class="pre">fp64</span></code>, or <code class="docutils literal notranslate"><span class="pre">bool</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -3124,7 +3427,7 @@ is that it supports int16 and uint16.</p>
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: i16, ui16, i32, i64, fp16, fp32, fp64, bool.</strong></dt><dd></dd>
+<dt><strong>T: i8, ui8, i16, ui16, i32, fp16, fp32, bool.</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -3157,6 +3460,110 @@ is that it uses strict validation to ensure that <code class="docutils literal n
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.inverse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">inverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/elementwise_unary.html#inverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.inverse" title="Permalink to this definition"></a></dt>
+<dd><p>Return the reciprocal value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.
+The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.inverse" title="coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.inverse"><code class="xref py py-class docutils literal notranslate"><span class="pre">inverse</span></code></a>
+is <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> may have different dtypes than the inputs/outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>epsilon: const U (Optional, default=1e-4)</strong></dt><dd><ul class="simple">
+<li><p>This is a small constant that is added to the input, before taking its
+inverse, for stability.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">(x</span> <span class="pre">+</span> <span class="pre">epsilon)</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.log">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/elementwise_unary.html#log"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.log" title="Permalink to this definition"></a></dt>
+<dd><p>Return the natural logarithm value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.
+The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.log" title="coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.log"><code class="xref py py-class docutils literal notranslate"><span class="pre">log</span></code></a>
+is <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> may have different dtypes than the inputs/outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>epsilon: const U (Optional, default=1e-45)</strong></dt><dd><ul class="simple">
+<li><p>This is a small constant that is added to the input, before taking log.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">log(x</span> <span class="pre">+</span> <span class="pre">epsilon)</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.rsqrt">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">rsqrt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/elementwise_unary.html#rsqrt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.elementwise_unary.rsqrt" title="Permalink to this definition"></a></dt>
+<dd><p>Return the reciprocal value of the square root of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.
+The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.rsqrt" title="coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.rsqrt"><code class="xref py py-class docutils literal notranslate"><span class="pre">rsqrt</span></code></a>
+is <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> may have different dtypes than the inputs/outputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>epsilon: const U (Optional, default=1e-12)</strong></dt><dd><ul class="simple">
+<li><p>This is a small constant that is added to the input, before applying the
+<code class="docutils literal notranslate"><span class="pre">rsqrt</span></code> function, for stability.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">sqrt(x</span> <span class="pre">+</span> <span class="pre">epsilon)</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -3980,9 +4387,86 @@ coordinate corresponds to the top-left corner of the image.</p></li>
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resample">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/image_resizing.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resample" title="Permalink to this definition"></a></dt>
+<dd><p>Resample the input image tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> at the <code class="docutils literal notranslate"><span class="pre">coordinates</span></code>.</p>
+<p>The major difference between this version and the iOS 16 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.resample" title="coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing.resample"><code class="xref py py-class docutils literal notranslate"><span class="pre">resample</span></code></a>
+is that <cite>coordinates</cite> supports int8, uint8, int16, uint16.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resize">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.</span></span><span class="sig-name descname"><span class="pre">resize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/image_resizing.html#resize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing.resize" title="Permalink to this definition"></a></dt>
+<dd><p>Resizes the input tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> by choosing the right-most <code class="docutils literal notranslate"><span class="pre">resized_dims</span></code> dimensions from
+the input shape <code class="docutils literal notranslate"><span class="pre">shape</span></code>, and by choosing the rest from <code class="docutils literal notranslate"><span class="pre">x</span></code> ‘s shape.</p>
+<p>This iOS17 <code class="docutils literal notranslate"><span class="pre">resize</span></code> is a superset of iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear" title="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a>
+and <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_nearest_neighbor" title="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_nearest_neighbor"><code class="xref py py-class docutils literal notranslate"><span class="pre">resize_nearest_neighbor</span></code></a>.
+The main benefit is that this resize op allows a use-case in dynamic tensor shapes where
+a tensor needs to be resized to a dynamic shape as specified by another tensor.</p>
+<p>To illustrate how output shape is inferred, the following are two examples:</p>
+<ul>
+<li><p>Example #1:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
+<span class="n">shape</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">]</span>
+<span class="n">resized_dims</span><span class="p">:</span> <span class="mi">2</span>
+<span class="n">The</span> <span class="n">output</span><span class="s1">&#39;s shape will be [1, 2, 6, 8]</span>
+</pre></div>
+</div>
+</li>
+<li><p>Example #2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">is0</span><span class="p">]</span>
+<span class="n">shape</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+<span class="n">resized_dims</span><span class="p">:</span> <span class="mi">2</span>
+<span class="n">The</span> <span class="n">output</span><span class="s1">&#39;s shape will be [1, 2, 3, is0]</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>x: tensor&lt;[…], T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>shape: tensor&lt;[K], U&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Restriction: <code class="docutils literal notranslate"><span class="pre">size(shape)</span></code> &lt;= <code class="docutils literal notranslate"><span class="pre">rank(x)</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">shape[i]==0</span></code>, the dimension in the output tensor will instead be inferred from the
+corresponding element of <code class="docutils literal notranslate"><span class="pre">x.shape()</span></code>.  Note this might not be <code class="docutils literal notranslate"><span class="pre">x.shape()[i]</span></code>, as <code class="docutils literal notranslate"><span class="pre">size(shape)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">resized_dims</span></code>, and <code class="docutils literal notranslate"><span class="pre">size(x)</span></code> may all be different sizes.</p></li>
+</ul>
+</dd>
+<dt><strong>resized_dims: const tensor&lt;[], uint32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Restriction: <code class="docutils literal notranslate"><span class="pre">resized_dims</span></code> &lt;= <code class="docutils literal notranslate"><span class="pre">size(shape)</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>interpolation_mode: const&lt;str&gt; (Optional, default=”LINEAR”)</strong></dt><dd><ul class="simple">
+<li><p>Available mode: <code class="docutils literal notranslate"><span class="pre">LINEAR</span></code>, <code class="docutils literal notranslate"><span class="pre">NEAREST_NEIGHBOR</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>sampling_mode: const&lt;str&gt; (Optional, default=”DEFAULT”)</strong></dt><dd><ul class="simple">
+<li><p>Available mode: <code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code>, <code class="docutils literal notranslate"><span class="pre">STRICT_ALIGN_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">ALIGN_CORNERS</span></code>,</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">OFFSET_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">UNALIGN_CORNERS</span></code>.
+* For details about different sampling modes, see iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear" title="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[…], T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int32</strong></dt><dd></dd>
+<dt><strong>U: int32, int16, uint16, uint32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS15.linear">
-<span id="linear"></span><h2>linear<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.linear" title="Permalink to this heading"></a></h2>
+<span id="linear-ios-15"></span><h2>linear (iOS 15+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.linear" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.linear.einsum">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.linear.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/linear.html#einsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.einsum" title="Permalink to this definition"></a></dt>
@@ -4180,8 +4664,100 @@ It has no effect when <code class="docutils literal notranslate"><span class="pr
 </dd></dl>
 
 </section>
+<section id="module-coremltools.converters.mil.mil.ops.defs.iOS17.linear">
+<span id="linear-ios-17"></span><h2>linear (iOS 17+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.linear" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.linear.linear">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.linear.</span></span><span class="sig-name descname"><span class="pre">linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/linear.html#linear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.linear.linear" title="Permalink to this definition"></a></dt>
+<dd><p>A version of <code class="docutils literal notranslate"><span class="pre">linear</span></code> for iOS 17+. The only difference between this version and the
+iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.linear" title="coremltools.converters.mil.mil.ops.defs.iOS15.linear.linear"><code class="xref py py-class docutils literal notranslate"><span class="pre">linear</span></code></a> is that the <code class="docutils literal notranslate"><span class="pre">weight</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> may have a
+different dtype than the input/output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*D, D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">rank</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">0</span> <span class="pre">&lt;=</span> <span class="pre">rank(*D)</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>weight: const tensor&lt;[D_out, D_in], U&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>bias: const tensor&lt;[D_out], U&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*D, D_out], T&gt;</dt><dd><ul class="simple">
+<li><p>Same rank as the input <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.linear.matmul">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.linear.</span></span><span class="sig-name descname"><span class="pre">matmul</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/linear.html#matmul"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.linear.matmul" title="Permalink to this definition"></a></dt>
+<dd><p>A version of <code class="docutils literal notranslate"><span class="pre">matmul</span></code> for iOS 17+. The only difference between this version and the
+iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.linear.matmul" title="coremltools.converters.mil.mil.ops.defs.iOS15.linear.matmul"><code class="xref py py-class docutils literal notranslate"><span class="pre">matmul</span></code></a> is that the <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> can have a different
+dtypes when one of them is const.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*, K1], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">x</span></code> must be 1-D or higher.</p></li>
+</ul>
+</dd>
+<dt><strong>y: tensor&lt;[*, K2], U&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">y</span></code> must be 1-D or higher.</p></li>
+</ul>
+</dd>
+<dt><strong>transpose_x: const bool (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">True</span></code> to transpose the last two dimensions of <code class="docutils literal notranslate"><span class="pre">x</span></code> before multiplication.
+It has no effect when <code class="docutils literal notranslate"><span class="pre">x</span></code> is 1-D.</p></li>
+</ul>
+</dd>
+<dt><strong>transpose_y: const bool (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">True</span></code> to transpose the last two dimensions of <code class="docutils literal notranslate"><span class="pre">y</span></code> before multiplication.
+It has no effect when <code class="docutils literal notranslate"><span class="pre">y</span></code> is 1-D.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*, V&gt;</dt><dd><ul class="simple">
+<li><p>Scalar or tensor output.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">y</span></code> are both const or both non-const, it should follow ios15 behavior
+that <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">y</span></code>, and <code class="docutils literal notranslate"><span class="pre">output</span></code> all have the same dtype.
+When one of x and y is const, the output dtype should be the same as the non-const one.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization">
-<span id="normalization"></span><h2>normalization<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization" title="Permalink to this heading"></a></h2>
+<span id="normalization-ios-15"></span><h2>normalization (iOS 15+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.normalization" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.normalization.batch_norm">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.normalization.</span></span><span class="sig-name descname"><span class="pre">batch_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/normalization.html#batch_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.batch_norm" title="Permalink to this definition"></a></dt>
@@ -4427,6 +5003,59 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="module-coremltools.converters.mil.mil.ops.defs.iOS17.normalization">
+<span id="normalization-ios-17"></span><h2>normalization (iOS 17+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.normalization" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.normalization.batch_norm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.normalization.</span></span><span class="sig-name descname"><span class="pre">batch_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/normalization.html#batch_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.batch_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Normalize input tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> by <code class="docutils literal notranslate"><span class="pre">mean</span></code> and <code class="docutils literal notranslate"><span class="pre">variance</span></code>, and optionally apply a
+scale <code class="docutils literal notranslate"><span class="pre">gamma</span></code> and an offset <code class="docutils literal notranslate"><span class="pre">beta</span></code>:</p>
+<div class="math notranslate nohighlight">
+\[y_i = \gamma_i \dfrac{ (x_i - mean_i)}{\sqrt{variance_i + epsilon}} + beta_i \;,\;i=1,....,C\]</div>
+<p>The difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.batch_norm" title="coremltools.converters.mil.mil.ops.defs.iOS15.normalization.batch_norm"><code class="xref py py-class docutils literal notranslate"><span class="pre">batch_norm</span></code></a>
+is that input/output can have different dtypes from other parameters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.normalization.instance_norm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.normalization.</span></span><span class="sig-name descname"><span class="pre">instance_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/normalization.html#instance_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.instance_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Apply instance normalization to the n-dimensional input tensor.</p>
+<p>The difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.instance_norm" title="coremltools.converters.mil.mil.ops.defs.iOS15.normalization.instance_norm"><code class="xref py py-class docutils literal notranslate"><span class="pre">instance_norm</span></code></a>
+is that input/output can have different dtypes from other parameters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.normalization.l2_norm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.normalization.</span></span><span class="sig-name descname"><span class="pre">l2_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/normalization.html#l2_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.l2_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Apply L2 normalization to the n-dimensional input tensor. That is, divide the input
+tensor by the square root of the sum of squares of all elements of the input.</p>
+<div class="math notranslate nohighlight">
+\[x_i \leftarrow \dfrac{x_i}{\sqrt{\sum{x_i^2} + \epsilon}}\]</div>
+<p>The difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.l2_norm" title="coremltools.converters.mil.mil.ops.defs.iOS15.normalization.l2_norm"><code class="xref py py-class docutils literal notranslate"><span class="pre">l2_norm</span></code></a>
+is that input/output and <code class="docutils literal notranslate"><span class="pre">epsilon</span></code> can have different dtypes.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.normalization.layer_norm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.normalization.</span></span><span class="sig-name descname"><span class="pre">layer_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/normalization.html#layer_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.layer_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Apply layer normalization to the n-dimensional input tensor:</p>
+<div class="math notranslate nohighlight">
+\[out = gamma * (input - E[x]) / sqrt(Var[x] + epsilon) + beta\]</div>
+<p>The difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.layer_norm" title="coremltools.converters.mil.mil.ops.defs.iOS15.normalization.layer_norm"><code class="xref py py-class docutils literal notranslate"><span class="pre">layer_norm</span></code></a>
+is that input/output can have different dtypes from other parameters.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.normalization.local_response_norm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.normalization.</span></span><span class="sig-name descname"><span class="pre">local_response_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/normalization.html#local_response_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.normalization.local_response_norm" title="Permalink to this definition"></a></dt>
+<dd><p>Apply local response normalization to the n-dimensional input tensor:</p>
+<div class="math notranslate nohighlight">
+\[x_i \leftarrow \dfrac{x_i}{\left ( k + \dfrac{\alpha}{\text{size}} \sum_j x_j^2 \right )^\beta}\]</div>
+<p>The difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.normalization.local_response_norm" title="coremltools.converters.mil.mil.ops.defs.iOS15.normalization.local_response_norm"><code class="xref py py-class docutils literal notranslate"><span class="pre">local_response_norm</span></code></a>
+is that input/output can have different dtypes from other parameters.</p>
 </dd></dl>
 
 </section>
@@ -5002,7 +5631,7 @@ the results are officially undefined and may eventually raise an error.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent">
-<span id="recurrent"></span><h2>recurrent<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent" title="Permalink to this heading"></a></h2>
+<span id="recurrent-ios-15"></span><h2>recurrent (iOS 15+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.recurrent" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.</span></span><span class="sig-name descname"><span class="pre">gru</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/recurrent.html#gru"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru" title="Permalink to this definition"></a></dt>
@@ -5342,6 +5971,33 @@ input dimension.</p></li>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+</section>
+<section id="module-coremltools.converters.mil.mil.ops.defs.iOS17.recurrent">
+<span id="recurrent-ios-17"></span><h2>recurrent (iOS 17+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.recurrent" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.</span></span><span class="sig-name descname"><span class="pre">gru</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/recurrent.html#gru"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.gru" title="Permalink to this definition"></a></dt>
+<dd><p>Gated Recurrent Unit (GRU)</p>
+<p>The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru" title="coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.gru"><code class="xref py py-class docutils literal notranslate"><span class="pre">gru</span></code></a> is
+adding the support for fp16.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.lstm">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.</span></span><span class="sig-name descname"><span class="pre">lstm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/recurrent.html#lstm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.lstm" title="Permalink to this definition"></a></dt>
+<dd><p>Long Short-Term Memory (LSTM)</p>
+<p>The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm" title="coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm"><code class="xref py py-class docutils literal notranslate"><span class="pre">lstm</span></code></a> is
+adding the support for fp16.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.rnn">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.</span></span><span class="sig-name descname"><span class="pre">rnn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/recurrent.html#rnn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.recurrent.rnn" title="Permalink to this definition"></a></dt>
+<dd><p>Recurrent Neural Network (RNN)</p>
+<p>The only difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn" title="coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn"><code class="xref py py-class docutils literal notranslate"><span class="pre">rnn</span></code></a> is
+adding the support for fp16.</p>
 </dd></dl>
 
 </section>
@@ -7187,6 +7843,8 @@ while other locations take the <code class="docutils literal notranslate"><span 
 most <code class="docutils literal notranslate"><span class="pre">D[i]-1</span></code>.</p></li>
 <li><p>If mode is “replicate” then <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> and <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> can be
 at most <code class="docutils literal notranslate"><span class="pre">D[i]</span></code>.</p></li>
+<li><p>If pad is not a constant, it must be a vector of length <code class="docutils literal notranslate"><span class="pre">2</span> <span class="pre">*</span> <span class="pre">rank(x)</span></code>,
+that is, <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">==</span> <span class="pre">D_in</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>mode: const&lt;str&gt; (Optional)</strong></dt><dd><ul class="simple">
@@ -7611,11 +8269,19 @@ less, the output is padded up to this number.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_operation.html#topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk" title="Permalink to this definition"></a></dt>
-<dd><p>A version of <code class="docutils literal notranslate"><span class="pre">topk</span></code> for iOS 17+. The only difference between this version and the
-iOS 16 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk" title="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk"><code class="xref py py-class docutils literal notranslate"><span class="pre">topk</span></code></a> is the data type support.
-The newly added data type is:
-- int16, unint16 for <code class="docutils literal notranslate"><span class="pre">x</span></code> and output.
-- int16 for <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p>
+<dd><p>A version of <code class="docutils literal notranslate"><span class="pre">topk</span></code> for iOS 17+. The differences between this version and the
+iOS 16 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk" title="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk"><code class="xref py py-class docutils literal notranslate"><span class="pre">topk</span></code></a> are:
+- New data type support. The newly added data type is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>int8, uint8, int16, unint16 for <code class="docutils literal notranslate"><span class="pre">x</span></code> and output.</p></li>
+<li><p>int8, int16 for <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>Validation restrictions on the optional <code class="docutils literal notranslate"><span class="pre">indices</span></code> output: must be either uint16 or int32. Also
+a new input parameter <code class="docutils literal notranslate"><span class="pre">output_indices_dtype</span></code> is added to set the dtype of output <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
+</ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -7650,6 +8316,11 @@ Otherwise, no particular ordering is guaranteed.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, returns both values and indices. Otherwise, returns only the <code class="docutils literal notranslate"><span class="pre">top-k</span></code> values.</p></li>
 </ul>
 </dd>
+<dt><strong>output_indices_dtype: const&lt;str&gt; (Optional, default=”int32”)</strong></dt><dd><ul class="simple">
+<li><p>It can only be set when <code class="docutils literal notranslate"><span class="pre">return_indices</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>This parameter can take <code class="docutils literal notranslate"><span class="pre">&quot;int32&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;uint16&quot;</span></code> as values.</p></li>
+</ul>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -7658,17 +8329,18 @@ Otherwise, no particular ordering is guaranteed.</p></li>
 <li><p>Values of top/bottom <code class="docutils literal notranslate"><span class="pre">k</span></code> elements.</p></li>
 </ul>
 </dd>
-<dt>tensor&lt;*?, int32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, U&gt;</dt><dd><ul class="simple">
 <li><p>Only returned when <code class="docutils literal notranslate"><span class="pre">return_indices</span> <span class="pre">=</span> <span class="pre">True</span></code></p></li>
 <li><p>Indices of the top/bottom <code class="docutils literal notranslate"><span class="pre">k</span></code> elements along axis.</p></li>
+<li><p>U is int32 or uint16 determined by <code class="docutils literal notranslate"><span class="pre">output_indices_dtype</span></code> (int32 by default).</p></li>
 </ul>
 </dd>
 </dl>
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, int16, int32, uint16</strong></dt><dd></dd>
-<dt><strong>K: int16, int32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16</strong></dt><dd></dd>
+<dt><strong>K: int8, int16, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -8026,6 +8698,50 @@ all the remaining elements starting with “begin” are sliced.</p></li>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">sliding_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html#sliding_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows" title="Permalink to this definition"></a></dt>
+<dd><p>Return a tensor containing all windows of <code class="docutils literal notranslate"><span class="pre">size</span></code>, separated by stride along the
+given <code class="docutils literal notranslate"><span class="pre">axis</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*d0, d_axis, *dn], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Input tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>axis: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Axis to perform the operation.</p></li>
+</ul>
+</dd>
+<dt><strong>size: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Number of elements in the sliding window.</p></li>
+</ul>
+</dd>
+<dt><strong>stride: const&lt;i32&gt; Optional</strong></dt><dd><ul class="simple">
+<li><p>Default to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>The stride of the input elements in the sliding window.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*d0, d_axis - size // stride + 1, size, *dn], T&gt;</dt><dd><ul class="simple">
+<li><p>The output will be a tensor of rank <code class="docutils literal notranslate"><span class="pre">N+1</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the input tensor
+rank.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">space_to_depth</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html#space_to_depth"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth" title="Permalink to this definition"></a></dt>
 <dd><p>Rearrange elements in a tensor from spatial into depth (channel) dimension.</p>
@@ -8088,50 +8804,6 @@ by spatial dimensions <code class="docutils literal notranslate"><span class="pr
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32, i32, bool</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">sliding_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html#sliding_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows" title="Permalink to this definition"></a></dt>
-<dd><p>Return a tensor containing all windows of <code class="docutils literal notranslate"><span class="pre">size</span></code>, separated by stride along the
-given <code class="docutils literal notranslate"><span class="pre">axis</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*d0, d_axis, *dn], T&gt;</strong></dt><dd><ul class="simple">
-<li><p>Input tensor.</p></li>
-</ul>
-</dd>
-<dt><strong>axis: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
-<li><p>Axis to perform the operation.</p></li>
-</ul>
-</dd>
-<dt><strong>size: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
-<li><p>Number of elements in the sliding window.</p></li>
-</ul>
-</dd>
-<dt><strong>stride: const&lt;i32&gt; Optional</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-<li><p>The stride of the input elements in the sliding window.</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d0, d_axis - size // stride + 1, size, *dn], T&gt;</dt><dd><ul class="simple">
-<li><p>The output will be a tensor of rank <code class="docutils literal notranslate"><span class="pre">N+1</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the input tensor
-rank.</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -8290,12 +8962,51 @@ Equivalent to <a class="reference external" href="https://pytorch.org/docs/stabl
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation">
 <span id="tensor-transformation-ios-17"></span><h2>tensor_transformation (iOS 17+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.expand_dims">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">expand_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#expand_dims"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.expand_dims" title="Permalink to this definition"></a></dt>
+<dd><p>Insert a single-dimension in a 1-D or higher tensor at each axis in axes.</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims"><code class="xref py py-class docutils literal notranslate"><span class="pre">expand_dims</span></code></a>
+is that input <code class="docutils literal notranslate"><span class="pre">x</span></code> supports more data types: int8, uint8, int16, uint16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Scalar or tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>axes: const tensor&lt;[K], int32&gt; Required</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">K</span></code> is the number of dimensions expanded.</p></li>
+<li><p>Insert single dimension at dimension index at each axes.</p></li>
+<li><p>Negative value to index from the end. <code class="docutils literal notranslate"><span class="pre">-d-1</span> <span class="pre">&lt;=</span> <span class="pre">axis</span> <span class="pre">&lt;=</span> <span class="pre">d</span></code>
+where <code class="docutils literal notranslate"><span class="pre">d</span></code> is the rank of <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*(rank(x)+K), T&gt;</dt><dd><ul class="simple">
+<li><p>Same type as the input <code class="docutils literal notranslate"><span class="pre">x</span></code> with rank <code class="docutils literal notranslate"><span class="pre">rank(x)+K</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape" title="Permalink to this definition"></a></dt>
 <dd><p>Return a tensor that has the same values as <code class="docutils literal notranslate"><span class="pre">x</span></code> with shape <code class="docutils literal notranslate"><span class="pre">shape</span></code>.
 <code class="docutils literal notranslate"><span class="pre">shape</span></code> must have the same volume (number of elements) as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p>
-<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape"><code class="xref py py-class docutils literal notranslate"><span class="pre">reshape</span></code></a> is as follows:</p>
-<p>When the <code class="docutils literal notranslate"><span class="pre">shape</span></code> contains <code class="docutils literal notranslate"><span class="pre">0</span></code>,
+<p>The major differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape"><code class="xref py py-class docutils literal notranslate"><span class="pre">reshape</span></code></a> are as follows:</p>
+<ul>
+<li><p>When the <code class="docutils literal notranslate"><span class="pre">shape</span></code> contains <code class="docutils literal notranslate"><span class="pre">0</span></code>,
 the restriction about <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">==</span> <span class="pre">rank(x)</span></code> is no longer enforced. Each <code class="docutils literal notranslate"><span class="pre">0</span></code> in <code class="docutils literal notranslate"><span class="pre">shape</span></code> will match the
 corresponding dimension in <code class="docutils literal notranslate"><span class="pre">x.shape</span></code>, counting from the rightmost element. So <code class="docutils literal notranslate"><span class="pre">shape[i]</span></code>
 matches <code class="docutils literal notranslate"><span class="pre">input[j]</span></code> if <code class="docutils literal notranslate"><span class="pre">length(shape)-i</span> <span class="pre">==</span> <span class="pre">rank(input)-j</span></code>. If a <code class="docutils literal notranslate"><span class="pre">0</span></code> is out of range, assign <code class="docutils literal notranslate"><span class="pre">1</span></code>
@@ -8305,6 +9016,10 @@ in iOS 15 or iOS 16 because <code class="docutils literal notranslate"><span cla
 have <code class="docutils literal notranslate"><span class="pre">shape</span></code> <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">50]</span></code>, because the rightmost <code class="docutils literal notranslate"><span class="pre">0</span></code> will be changed to the rightmost dim of
 <code class="docutils literal notranslate"><span class="pre">x.shape</span></code>, which is <code class="docutils literal notranslate"><span class="pre">50</span></code>. There is no other <code class="docutils literal notranslate"><span class="pre">0</span></code> that has a corresponding dim in <code class="docutils literal notranslate"><span class="pre">x.shape</span></code>, so it is set
 as <code class="docutils literal notranslate"><span class="pre">1</span></code>. Finally, the <code class="docutils literal notranslate"><span class="pre">-1</span></code> is calculated based on knowing dimensions that produce <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+</li>
+<li><p>Support more data types, including int8, uint8, int16, uint16 for <code class="docutils literal notranslate"><span class="pre">x</span></code> and int8, int16 for
+<code class="docutils literal notranslate"><span class="pre">shape</span></code>.</p></li>
+</ul>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -8315,7 +9030,7 @@ as <code class="docutils literal notranslate"><span class="pre">1</span></code>.
 <li><p>If <code class="docutils literal notranslate"><span class="pre">x</span></code> has a variadic rank, <code class="docutils literal notranslate"><span class="pre">shape</span></code> can only contain positive integers.</p></li>
 </ul>
 </dd>
-<dt><strong>shape: tensor&lt;[K], i32&gt; (Required)</strong></dt><dd><p>A 1-D tensor, with elements from the following:</p>
+<dt><strong>shape: tensor&lt;[K], U&gt; (Required)</strong></dt><dd><p>A 1-D tensor, with elements from the following:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>Positive integers.</p></li>
@@ -8343,7 +9058,370 @@ description of different behaviors with iOS 17.</p></li>
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, i32, bool</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, int8, uint8, int16, uint16, int32, bool</strong></dt><dd></dd>
+<dt><strong>U: int8, int16, int32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape_like">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">reshape_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#reshape_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reshape_like" title="Permalink to this definition"></a></dt>
+<dd><p>Reshape a tensor to an output shape specified by some or all dimensions of a tuple of reference tensors <code class="docutils literal notranslate"><span class="pre">ref_tensors</span></code>.</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like" title="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like"><code class="xref py py-class docutils literal notranslate"><span class="pre">reshape_like</span></code></a>
+is that input <code class="docutils literal notranslate"><span class="pre">x</span></code> and <code class="docutils literal notranslate"><span class="pre">ref_tensors</span></code> supports more data types: int8, uint8, int16, uint16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>The input tensor to be reshaped.</p></li>
+</ul>
+</dd>
+<dt><strong>ref_tensors: Tuple[tensor&lt;*?, R&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>A tuple of tensors that define the output shape.</p></li>
+</ul>
+</dd>
+<dt><strong>begins: Tuple[const&lt;int32&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>A tuple of integers specifying the begin index into the shape vector of the corresponding <code class="docutils literal notranslate"><span class="pre">ref_tensor</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>ends: Tuple[const&lt;int32&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>A tuple of integers specifying the end index into the shape vector of the corresponding <code class="docutils literal notranslate"><span class="pre">ref_tensor</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>end_masks: Tuple[const&lt;bool&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, select all axes from the begin index until the end of the corresponding <code class="docutils literal notranslate"><span class="pre">ref_tensor</span></code>, as in
+<code class="docutils literal notranslate"><span class="pre">ref_tensors[i].shape[begins[i]:]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Same type as input tensor <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+<li><p>Output shape is computed by <code class="docutils literal notranslate"><span class="pre">ref_tensors</span></code>, <code class="docutils literal notranslate"><span class="pre">begins</span></code>, <code class="docutils literal notranslate"><span class="pre">ends</span></code>, and <code class="docutils literal notranslate"><span class="pre">end_masks</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+<dt><strong>R: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reverse">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">reverse</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#reverse"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reverse" title="Permalink to this definition"></a></dt>
+<dd><p>Reverse the order of the input tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> along specified <code class="docutils literal notranslate"><span class="pre">axes</span></code> (dimensions).</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse"><code class="xref py py-class docutils literal notranslate"><span class="pre">reverse</span></code></a>
+is that input <code class="docutils literal notranslate"><span class="pre">x</span></code> supports more data types: int8, uint8, int16, uint16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>axes: const&lt;D, int32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Dimension(s) to reverse. Each axis must be in the range <code class="docutils literal notranslate"><span class="pre">[-rank(x),</span> <span class="pre">rank(x))</span></code>.</p></li>
+<li><p>Defaults to None (reverse on all dimensions).</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Same type and shape as the input tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reverse_sequence">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">reverse_sequence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#reverse_sequence"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.reverse_sequence" title="Permalink to this definition"></a></dt>
+<dd><p>Reverse variable length slices for specified axes / dimensions of the input
+tensor. This op first slices input tensor along the <code class="docutils literal notranslate"><span class="pre">batch_axis</span></code> dimension, then
+partially reverses the elements along the <code class="docutils literal notranslate"><span class="pre">seq_axis</span></code> for the first <code class="docutils literal notranslate"><span class="pre">lengths[i]</span></code>
+elements.</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse_sequence" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse_sequence"><code class="xref py py-class docutils literal notranslate"><span class="pre">reverse_sequence</span></code></a>
+is that input supports more data types:
+- <code class="docutils literal notranslate"><span class="pre">x</span></code> additionally supports int8, uint8, int16, uint16
+- <code class="docutils literal notranslate"><span class="pre">lengths</span></code> additionally supports int8, int16</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>lengths: tensor&lt;L, U&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>1-dimensional tensor of length <code class="docutils literal notranslate"><span class="pre">x.shape[batch_axis]</span></code> specifying the length
+of the sequence to reverse.</p></li>
+<li><p>Values must be in range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">x.shape[seq_axis]]</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>seq_axis: const&lt;int32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>The dimension to reverse.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>batch_axis: const&lt;int32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Dimension for slicing.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Same type and shape as the input tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+<dt><strong>U: int8, int16, int32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.slice_by_index">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">slice_by_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#slice_by_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.slice_by_index" title="Permalink to this definition"></a></dt>
+<dd><p>Method for numpy style indexing and slicing.
+With a tensor <code class="docutils literal notranslate"><span class="pre">x</span></code>, this method achieves the following:</p>
+<p><code class="docutils literal notranslate"><span class="pre">result</span> <span class="pre">=</span> <span class="pre">x[begin[0]:</span> <span class="pre">end[0]:</span> <span class="pre">stride[0],</span> <span class="pre">begin[1]:</span> <span class="pre">end[1]:</span> <span class="pre">stride[1],</span> <span class="pre">...]</span></code></p>
+<p>The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index"><code class="xref py py-class docutils literal notranslate"><span class="pre">slice_by_index</span></code></a>
+is that additional data types are supported for <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">begin</span></code>, <code class="docutils literal notranslate"><span class="pre">end</span></code>, and <code class="docutils literal notranslate"><span class="pre">stride</span></code>.
+See Parameters and Attributes sections for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor</p></li>
+</ul>
+</dd>
+<dt><strong>begin: tensor&lt;[rank(x)], U&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Starting index for the dimension of slicing.</p></li>
+</ul>
+</dd>
+<dt><strong>end: tensor&lt;[rank(x)], U&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Ending index for the dimension of slicing.</p></li>
+</ul>
+</dd>
+<dt><strong>stride: tensor&lt;[rank(x)], U&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default is all <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>Stride for the dimension of slicing.</p></li>
+</ul>
+</dd>
+<dt><strong>begin_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default to all <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">begin_mask[i]==True</span></code>, ignores <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code>, and set <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>end_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default to all <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">end_mask[i]==True</span></code>, ignores <code class="docutils literal notranslate"><span class="pre">end[i]</span></code>, and set <code class="docutils literal notranslate"><span class="pre">end[i]</span></code> to <code class="docutils literal notranslate"><span class="pre">x.shape[i]</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>squeeze_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default to all <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">squeeze_mask[i]==True</span></code>, ignores <code class="docutils literal notranslate"><span class="pre">end[i]</span></code>, and do the pure index at <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Scalar or tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: bool, fp16, fp32, int8, int16, int32, uint8, uint16</strong></dt><dd></dd>
+<dt><strong>U: int8, int16, int32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.slice_by_size">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">slice_by_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#slice_by_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.slice_by_size" title="Permalink to this definition"></a></dt>
+<dd><p>Slice input tensor starting from the given <code class="docutils literal notranslate"><span class="pre">begin</span></code> index and by
+the amount specified by the <code class="docutils literal notranslate"><span class="pre">size</span></code> input, for each dimension.</p>
+<p>The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size"><code class="xref py py-class docutils literal notranslate"><span class="pre">slice_by_size</span></code></a>
+is that additional data types are supported for <code class="docutils literal notranslate"><span class="pre">x</span></code>, <code class="docutils literal notranslate"><span class="pre">begin</span></code>, and <code class="docutils literal notranslate"><span class="pre">size</span></code>.
+See Parameters and Attributes sections for details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>begin: tensor&lt;[rank(x)], U&gt; Required</strong></dt><dd><ul class="simple">
+<li><p>The begin index for slice.</p></li>
+</ul>
+</dd>
+<dt><strong>size: tensor&lt;[rank(x)], U&gt; Required</strong></dt><dd><ul class="simple">
+<li><p>The size that is to be sliced. If <code class="docutils literal notranslate"><span class="pre">size</span></code> is <code class="docutils literal notranslate"><span class="pre">-1</span></code>,
+all the remaining elements starting with “begin” are sliced.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Scalar or tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: bool, fp16, fp32, int8, int16, int32, uint8, uint16</strong></dt><dd></dd>
+<dt><strong>U: int8, int16, int32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.sliding_windows">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">sliding_windows</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#sliding_windows"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.sliding_windows" title="Permalink to this definition"></a></dt>
+<dd><p>Return a tensor containing all windows of <code class="docutils literal notranslate"><span class="pre">size</span></code>, separated by stride along the
+given <code class="docutils literal notranslate"><span class="pre">axis</span></code>.</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows"><code class="xref py py-class docutils literal notranslate"><span class="pre">sliding_windows</span></code></a>
+is that input <code class="docutils literal notranslate"><span class="pre">x</span></code> supports more data types: int8, uint8, int16, uint16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*d0, d_axis, *dn], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Input tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>axis: const&lt;int32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Axis to perform the operation.</p></li>
+</ul>
+</dd>
+<dt><strong>size: const&lt;int32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Number of elements in the sliding window.</p></li>
+</ul>
+</dd>
+<dt><strong>stride: const&lt;int32&gt; Optional</strong></dt><dd><ul class="simple">
+<li><p>Default to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>The stride of the input elements in the sliding window.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*d0, d_axis - size // stride + 1, size, *dn], T&gt;</dt><dd><ul class="simple">
+<li><p>The output will be a tensor of rank <code class="docutils literal notranslate"><span class="pre">N+1</span></code> where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the input tensor
+rank.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.squeeze">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">squeeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#squeeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.squeeze" title="Permalink to this definition"></a></dt>
+<dd><p>Remove single-dimension dimensions in a 1-D or higher tensor.</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze"><code class="xref py py-class docutils literal notranslate"><span class="pre">squeeze</span></code></a>
+is that input <code class="docutils literal notranslate"><span class="pre">x</span></code> supports more data types: int8, uint8, int16, uint16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Must be at least 1-D.</p></li>
+</ul>
+</dd>
+<dt><strong>axes: const&lt;K,int32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Axes to squeeze out.</p></li>
+<li><p>Default to remove all single-dimensions.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*(rank(x)-K),T&gt;</dt><dd><ul class="simple">
+<li><p>Tensor with same type as input <code class="docutils literal notranslate"><span class="pre">x</span></code> and rank <code class="docutils literal notranslate"><span class="pre">rank(x)-K</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.transpose">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_transformation.html#transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation.transpose" title="Permalink to this definition"></a></dt>
+<dd><p>Permute tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> dimensions according to <code class="docutils literal notranslate"><span class="pre">perm</span></code>.</p>
+<p>The major difference between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose" title="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose"><code class="xref py py-class docutils literal notranslate"><span class="pre">transpose</span></code></a>
+is that input <code class="docutils literal notranslate"><span class="pre">x</span></code> supports more data types: int8, uint8, int16, uint16.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Must be at least 1-D. <code class="docutils literal notranslate"><span class="pre">x</span></code> may have a symbolic shape.</p></li>
+</ul>
+</dd>
+<dt><strong>perm: const&lt;[rank(x)], i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Permutation order. -rank(x) &lt;= perm[I] &lt; rank(x) for all perm entries.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?,T&gt;</dt><dd><ul class="simple">
+<li><p>Tensor with same rank and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int8, int16, int32, uint8, uint16, bool</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>

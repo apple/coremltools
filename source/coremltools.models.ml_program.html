@@ -22,6 +22,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -34,11 +35,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -50,9 +55,18 @@
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.models.html">Model APIs</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.model">MLModel</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="coremltools.models.html#compression-utils">compression_utils</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">affine_quantize_weights</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-0">palettize_weights</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-1">sparsify_weights</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">affine_quantize_weights</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.ml_program.compression_utils.affine_quantize_weights"><code class="docutils literal notranslate"><span class="pre">affine_quantize_weights()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-0">palettize_weights</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.ml_program.compression_utils.palettize_weights"><code class="docutils literal notranslate"><span class="pre">palettize_weights()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-1">sparsify_weights</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.ml_program.compression_utils.sparsify_weights"><code class="docutils literal notranslate"><span class="pre">sparsify_weights()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
@@ -75,11 +89,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -95,9 +105,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="coremltools.models.html">Model APIs</a> &raquo;</li>
-      <li>affine_quantize_weights</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="coremltools.models.html">Model APIs</a></li>
+      <li class="breadcrumb-item active">affine_quantize_weights</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.models.ml_program.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -131,7 +141,7 @@ Please use <code class="docutils literal notranslate"><span class="pre">coremlto
 <span id="sparsify-weights"></span><h1>sparsify_weights<a class="headerlink" href="#module-1" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.ml_program.compression_utils.sparsify_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.ml_program.compression_utils.</span></span><span class="sig-name descname"><span class="pre">sparsify_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'threshold_based'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/ml_program/compression_utils.html#sparsify_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.ml_program.compression_utils.sparsify_weights" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.ml_program.compression_utils.</span></span><span class="sig-name descname"><span class="pre">sparsify_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'threshold_based'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_percentile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/ml_program/compression_utils.html#sparsify_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.ml_program.compression_utils.sparsify_weights" title="Permalink to this definition"></a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">coremltools.compression_utils.sparsify_weights</span></code> is deprecated and will be removed in the future.
 Please use <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml.prune_weights</span></code>.</p>
 </dd></dl>

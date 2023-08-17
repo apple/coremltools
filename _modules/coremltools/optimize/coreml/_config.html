@@ -21,6 +21,7 @@
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.optimize.coreml._config</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.coreml._config</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -94,6 +95,7 @@
 
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">cattrs</span>
@@ -232,7 +234,7 @@
 <span class="sd">    threshold: float</span>
 <span class="sd">        All weight values above this threshold are set to ``0``.</span>
 
-<span class="sd">        * Default value is ``1e-3``.</span>
+<span class="sd">        * Default value is ``1e-12``.</span>
 
 <span class="sd">    minimum_sparsity_percentile: float</span>
 <span class="sd">        The sparsity level must be above this value for the weight representation to be stored in the sparse format rather than the dense format.</span>
@@ -253,7 +255,8 @@
 
 <span class="sd">        * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are compressed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
+
+    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
     <span class="n">minimum_sparsity_percentile</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">float</span><span class="p">))</span>
     <span class="n">weight_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
                                         <span class="n">default</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span>
@@ -671,7 +674,7 @@
 
 <span class="sd">    1. ``global_config``: The default configuration applied to all ops / consts.</span>
 <span class="sd">    2. ``op_type_configs``: Configurations applied to specific op type. It overrides ``global_config``.</span>
-<span class="sd">    3. ``op_name_configs``: Confgurations applied to specific op instance. It overrides ``global_config`` and ``op_type_configs``.</span>
+<span class="sd">    3. ``op_name_configs``: Confgurations applied to specific constant or op instance. It overrides ``global_config`` and ``op_type_configs``.</span>
 
 <span class="sd">    The following is an example that constructs an optimization config for weight palettization.</span>
 
@@ -714,10 +717,11 @@
 <span class="sd">        * An op type will not be compressed if the value is set to ``None``.</span>
 
 <span class="sd">    op_name_configs: dict[str, OpCompressorConfig]</span>
-<span class="sd">        Op instance level configs applied to a specific op or constant.</span>
+<span class="sd">        Op instance level configs applied to a specific constant or op.</span>
 
-<span class="sd">        * The keys of the dictionary are the name of an op instance, and the values are the corresponding :py:class:`OpCompressorConfig`.</span>
+<span class="sd">        * The keys of the dictionary are the name of a constant or an op instance, and the values are the corresponding :py:class:`OpCompressorConfig`.</span>
 <span class="sd">        * An op instance will not be compressed if the value is set to ``None``.</span>
+<span class="sd">        * You can use ``coremltools.optimize.coreml.get_weights_metadata`` to get the name of the constants / op instances in the model.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">global_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OpCompressorConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">op_type_configs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">OpCompressorConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
@@ -794,7 +798,7 @@
         <span class="n">op_config</span><span class="p">:</span> <span class="n">OpCompressorConfig</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Sets the compression config at the level of op instance by name.</span>
+<span class="sd">        Sets the compression config at the level of constant / op instance by name.</span>
 
 <span class="sd">        .. code-block:: python</span>
 
@@ -804,14 +808,16 @@
 <span class="sd">            op_config = OpPalettizerConfig(mode=&quot;kmeans&quot;, nbits=2)</span>
 <span class="sd">            config.set_op_name(&quot;conv_1&quot;, op_config)</span>
 
+<span class="sd">        Note that, in order to get the name of a constant or an op instance, please refer to the ``coremltools.optimize.coreml.get_weights_metadata`` API.</span>
+
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 
 <span class="sd">        op_name: str</span>
-<span class="sd">            The name of the op instance.</span>
+<span class="sd">            The name of a constant or an op instance.</span>
 
 <span class="sd">        op_config: OpCompressorConfig</span>
-<span class="sd">            Op instance level config applied to a specific op or constant with name ``op_name``.</span>
+<span class="sd">            Op instance level config applied to a specific constant or op with name ``op_name``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_deprecated</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;set_op_name is not exposed through the coremltools.compression_utils API.&quot;</span><span class="p">)</span>
@@ -1058,6 +1064,22 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">config_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yml</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span></div></div>
+
+<span class="k">class</span> <span class="nc">_MetaDataDict</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dictionary class with nice print out str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mapping</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">str_prefix</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_str_prefix</span> <span class="o">=</span> <span class="n">str_prefix</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_str_prefix</span><span class="si">}{</span><span class="n">k</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="n">res</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">v</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">res</span>
 </pre></div>
 
            </div>

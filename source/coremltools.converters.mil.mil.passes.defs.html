@@ -22,6 +22,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -34,11 +35,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -52,17 +57,88 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Graph Passes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.cleanup">cleanup</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_activation">optimize_activation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_conv">optimize_conv</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary">optimize_elementwise_binary</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_linear">optimize_linear</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization">optimize_normalization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">optimize_quantization</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops">optimize_repeat_ops</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation">optimize_tensor_operation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.preprocess">preprocess</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.quantization">quantization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.cleanup">cleanup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication"><code class="docutils literal notranslate"><span class="pre">const_deduplication</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination"><code class="docutils literal notranslate"><span class="pre">const_elimination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination"><code class="docutils literal notranslate"><span class="pre">dead_code_elimination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names"><code class="docutils literal notranslate"><span class="pre">dedup_op_and_var_names</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.fuse_reduce_mean"><code class="docutils literal notranslate"><span class="pre">fuse_reduce_mean</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination"><code class="docutils literal notranslate"><span class="pre">loop_invariant_elimination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination"><code class="docutils literal notranslate"><span class="pre">noop_elimination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops"><code class="docutils literal notranslate"><span class="pre">remove_redundant_ops</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.remove_symbolic_reshape"><code class="docutils literal notranslate"><span class="pre">remove_symbolic_reshape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder"><code class="docutils literal notranslate"><span class="pre">topological_reorder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_activation">optimize_activation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_exact"><code class="docutils literal notranslate"><span class="pre">fuse_gelu_exact</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_tanh_approximation"><code class="docutils literal notranslate"><span class="pre">fuse_gelu_tanh_approximation</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_leaky_relu"><code class="docutils literal notranslate"><span class="pre">fuse_leaky_relu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_prelu"><code class="docutils literal notranslate"><span class="pre">fuse_prelu</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.prelu_to_lrelu"><code class="docutils literal notranslate"><span class="pre">prelu_to_lrelu</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_conv">optimize_conv</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.add_conv_transpose_output_shape"><code class="docutils literal notranslate"><span class="pre">add_conv_transpose_output_shape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.compose_conv1d"><code class="docutils literal notranslate"><span class="pre">compose_conv1d</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_batchnorm"><code class="docutils literal notranslate"><span class="pre">fuse_conv_batchnorm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_bias"><code class="docutils literal notranslate"><span class="pre">fuse_conv_bias</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_scale"><code class="docutils literal notranslate"><span class="pre">fuse_conv_scale</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_pad_conv"><code class="docutils literal notranslate"><span class="pre">fuse_pad_conv</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary">optimize_elementwise_binary</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.divide_to_multiply"><code class="docutils literal notranslate"><span class="pre">divide_to_multiply</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.select_optimization"><code class="docutils literal notranslate"><span class="pre">select_optimization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm"><code class="docutils literal notranslate"><span class="pre">fuse_elementwise_to_batchnorm</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.rank0_expand_dims_swap"><code class="docutils literal notranslate"><span class="pre">rank0_expand_dims_swap</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_linear">optimize_linear</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_linear_bias"><code class="docutils literal notranslate"><span class="pre">fuse_linear_bias</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_matmul_weight_bias"><code class="docutils literal notranslate"><span class="pre">fuse_matmul_weight_bias</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization">optimize_normalization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm"><code class="docutils literal notranslate"><span class="pre">fuse_layernorm_or_instancenorm</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">optimize_quantization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization"><code class="docutils literal notranslate"><span class="pre">int_op_canonicalization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point"><code class="docutils literal notranslate"><span class="pre">nullify_redundant_quantization_zero_point</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination"><code class="docutils literal notranslate"><span class="pre">dequantize_quantize_pair_elimination</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization"><code class="docutils literal notranslate"><span class="pre">distributive_quantized_binary_op_scale_normalization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr"><code class="docutils literal notranslate"><span class="pre">dequantize_to_constexpr</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops">optimize_repeat_ops</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization"><code class="docutils literal notranslate"><span class="pre">cast_optimization</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_paddings"><code class="docutils literal notranslate"><span class="pre">merge_consecutive_paddings</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_relus"><code class="docutils literal notranslate"><span class="pre">merge_consecutive_relus</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_reshapes"><code class="docutils literal notranslate"><span class="pre">merge_consecutive_reshapes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_transposes"><code class="docutils literal notranslate"><span class="pre">merge_consecutive_transposes</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes"><code class="docutils literal notranslate"><span class="pre">reduce_transposes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation">optimize_tensor_operation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle"><code class="docutils literal notranslate"><span class="pre">concat_to_pixel_shuffle</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave"><code class="docutils literal notranslate"><span class="pre">detect_concat_interleave</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose"><code class="docutils literal notranslate"><span class="pre">expand_high_rank_reshape_and_transpose</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather"><code class="docutils literal notranslate"><span class="pre">fuse_onehot_matmul_to_gather</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.replace_stack_reshape"><code class="docutils literal notranslate"><span class="pre">replace_stack_reshape</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.use_reflection_padding"><code class="docutils literal notranslate"><span class="pre">use_reflection_padding</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.preprocess">preprocess</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.preprocess.image_input_preprocess"><code class="docutils literal notranslate"><span class="pre">image_input_preprocess</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.preprocess.sanitize_input_output_names"><code class="docutils literal notranslate"><span class="pre">sanitize_input_output_names</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.preprocess.update_output_dtypes"><code class="docutils literal notranslate"><span class="pre">update_output_dtypes</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.quantization">quantization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.quantization.add_fp16_cast"><code class="docutils literal notranslate"><span class="pre">add_fp16_cast</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
@@ -71,11 +147,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -91,8 +163,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>MIL Graph Passes</li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">MIL Graph Passes</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.converters.mil.mil.passes.defs.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -702,6 +774,62 @@ Result:
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.select_optimization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">select_optimization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#select_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.select_optimization" title="Permalink to this definition"></a></dt>
+<dd><p>For <code class="docutils literal notranslate"><span class="pre">select(cond,</span> <span class="pre">a,</span> <span class="pre">b)</span></code>, there are 2 cases where we can replace it with a single simpler op</p>
+<ol class="arabic">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">cond</span></code> is a const scalar (or a const tensor but all elements are the same, which is
+equivalent to a scalar), then we replace <code class="docutils literal notranslate"><span class="pre">select(cond,</span> <span class="pre">a,</span> <span class="pre">b)</span></code> with simply <code class="docutils literal notranslate"><span class="pre">a</span></code> or <code class="docutils literal notranslate"><span class="pre">b</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+
+    <span class="n">const</span><span class="p">(</span><span class="n">scalar</span> <span class="n">cond</span><span class="p">)</span> <span class="o">-|</span>
+                        <span class="o">|</span>
+    <span class="n">a</span> <span class="o">------------------|-&gt;</span> <span class="n">select</span> <span class="o">-&gt;</span> <span class="n">output</span>
+                        <span class="o">|</span>
+    <span class="n">b</span> <span class="o">------------------|</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+
+    <span class="k">if</span> <span class="n">cond</span><span class="p">:</span>
+        <span class="n">a</span> <span class="o">-&gt;</span> <span class="n">output</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">b</span> <span class="o">-&gt;</span> <span class="n">output</span>
+</pre></div>
+</div>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">cond</span></code> is a more complicated const, and <code class="docutils literal notranslate"><span class="pre">a</span></code> is an inf const,
+then we replace <code class="docutils literal notranslate"><span class="pre">a</span></code> with <code class="docutils literal notranslate"><span class="pre">select(cond,</span> <span class="pre">a,</span> <span class="pre">0)</span></code>, then return <code class="docutils literal notranslate"><span class="pre">a</span> <span class="pre">+</span> <span class="pre">b</span></code></p>
+<blockquote>
+<div><div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Input graph:
+
+    const(cond) -|
+                 |
+    const(±inf) -|-&gt; select -&gt; output
+                 |
+    b -----------|
+
+Output graph:
+
+    select(cond, ±inf, 0) -|
+                           |-&gt; add -&gt; output
+    b ---------------------|
+</pre></div>
+</div>
+<p>Note that <code class="docutils literal notranslate"><span class="pre">select(cond,</span> <span class="pre">±inf,</span> <span class="pre">0))</span></code> will further get eliminated by
+<code class="docutils literal notranslate"><span class="pre">const_elimination</span></code>, so in the end the op in graph is simply <code class="docutils literal notranslate"><span class="pre">add</span></code></p>
+<p>This replacement is based on floating-point arithmetic</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">inf</span> <span class="o">+</span> <span class="n">b</span> <span class="o">=</span> <span class="n">inf</span>
+<span class="o">-</span><span class="n">inf</span> <span class="o">+</span> <span class="n">b</span> <span class="o">=</span> <span class="o">-</span><span class="n">inf</span>
+<span class="mi">0</span> <span class="o">+</span> <span class="n">b</span> <span class="o">=</span> <span class="n">b</span>
+</pre></div>
+</div>
+<p>PS: if <code class="docutils literal notranslate"><span class="pre">a</span></code> is not inf const but <code class="docutils literal notranslate"><span class="pre">b</span></code> is, then we would swap <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code></p>
+</div></blockquote>
+</li>
+</ol>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">fuse_elementwise_to_batchnorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#fuse_elementwise_to_batchnorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm" title="Permalink to this definition"></a></dt>
 <dd><p>Fold <code class="docutils literal notranslate"><span class="pre">mul</span></code> + <code class="docutils literal notranslate"><span class="pre">add</span></code> into a <code class="docutils literal notranslate"><span class="pre">batchnorm</span></code>
@@ -833,6 +961,21 @@ To quickly view the source code, click the <strong>[source]</strong> button at t
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">
 <span id="optimize-quantization"></span><h2>optimize_quantization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">int_op_canonicalization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#int_op_canonicalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization" title="Permalink to this definition"></a></dt>
+<dd><p>For general quantized operators, in Core ML, we represent them as
+<code class="docutils literal notranslate"><span class="pre">dequantize</span> <span class="pre">-&gt;</span> <span class="pre">the</span> <span class="pre">floating-point</span> <span class="pre">version</span> <span class="pre">of</span> <span class="pre">this</span> <span class="pre">operator</span> <span class="pre">-&gt;</span> <span class="pre">quantize</span></code>,
+because mathematically it is the floating-point tensor rather than
+its quantized integer representation that gets operated upon.</p>
+<p>For some quantized operators that do not involve floating-point arithmetic,
+however, it is unnecessary to prepend <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> and append <code class="docutils literal notranslate"><span class="pre">quantize</span></code>.
+Examples are:</p>
+<ul class="simple">
+<li><p>reshape</p></li>
+</ul>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">nullify_redundant_quantization_zero_point</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#nullify_redundant_quantization_zero_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point" title="Permalink to this definition"></a></dt>
@@ -1020,20 +1163,63 @@ constant weights/tensors remain compressed at serialization.</p>
 <dd><p>This optimization pass performs the following:</p>
 <ul class="simple">
 <li><p>Removes redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op; that is, <code class="docutils literal notranslate"><span class="pre">cast</span></code> where source and destination tensors have same dtypes.</p></li>
-<li><p>Either cancels or fuses any two consecutive <cite>cast</cite> ops, repeatedly.</p></li>
+<li><p>Fuses two consecutive <cite>cast</cite> ops if applicable, repeatedly.</p></li>
 </ul>
-<p>After this pass, there can’t be any consecutive <cite>cast</cite> ops present in the program.
-For examples, see <code class="docutils literal notranslate"><span class="pre">TestCastOptimization</span></code>.
-This is a non-algebraic translation which assumes that the upcasting doesn’t change the user’s intent.</p>
-<p>For example:</p>
+<p>This is a non-algebraic translation which assumes that the upcasting doesn’t change the user’s intent.</p>
+<ol class="arabic">
+<li><p>Example for redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op removal:
+.. code-block:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span> <span class="o">-----&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-----&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">----&gt;</span> <span class="n">square</span> <span class="o">---&gt;</span> <span class="n">out</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">fp16</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
 <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span> <span class="o">-----&gt;</span> <span class="n">square</span> <span class="o">-----&gt;</span> <span class="n">out</span>
+<span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
 </pre></div>
 </div>
-<p>The input graph has a maximum precision of fp16 while the output graph has fp32 precision.</p>
+<p>The input and output tensors for the <code class="docutils literal notranslate"><span class="pre">cast</span></code> op are both with type of <code class="docutils literal notranslate"><span class="pre">fp16</span></code>. Hence, it can be removed.</p>
+</li>
+<li><p>Example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+</pre></div>
+</div>
+<p>The data range and resolution of the above graph are limited by the int8 input, so the fusion is allowed.</p>
+</li>
+<li><p>Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">fp32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since after the first cast, the resolution of the numerical output
+is downcasted to binary (<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1</span></code>). If we fuse them, the output would be in the range and resolution of <code class="docutils literal notranslate"><span class="pre">fp16</span></code> instead.</p>
+</li>
+</ol>
+<ol class="arabic" start="3">
+<li><p>Another Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<span class="nb">input</span><span class="p">(</span><span class="n">int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+<span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since in the original graph, by going through two casts,
+the output numerical range is capped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">127]</span></code>.</p>
+<p>However, if two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops are reduced to 1 <code class="docutils literal notranslate"><span class="pre">cast(dtype=&quot;uint8&quot;)</span></code>, the output numerical would in the range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>.
+The fusion would cause numerical issue for the numbers between <code class="docutils literal notranslate"><span class="pre">[128,</span> <span class="pre">255]</span></code>, which is prohibited.</p>
+</li>
+</ol>
+<p>In general, two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops can be merged if the output data range and resolution is not affected.</p>
+<p>For more examples, please see the unittests start with prefix “TestCastOptimization” in test_passes.py</p>
 </dd></dl>
 
 <dl class="py class">

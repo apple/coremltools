@@ -74,10 +74,18 @@ control\_flow
    .. autoclass:: list_gather
    .. autoclass:: list_scatter
 
-conv
+conv (iOS 15+)
 ---------------------------------------------------
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.conv
+
+   .. autoclass:: conv
+   .. autoclass:: conv_transpose
+
+conv (iOS 17+)
+---------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS17.conv
 
    .. autoclass:: conv
    .. autoclass:: conv_transpose
@@ -146,6 +154,9 @@ elementwise\_unary (iOS 17+)
 
    .. autoclass:: cast
    .. autoclass:: clip
+   .. autoclass:: inverse
+   .. autoclass:: log
+   .. autoclass:: rsqrt
 
 image\_resizing (iOS 15+)
 --------------------------------------------------------------
@@ -176,8 +187,10 @@ image\_resizing (iOS 17+)
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS17.image_resizing
 
    .. autoclass:: crop_resize
+   .. autoclass:: resample
+   .. autoclass:: resize
 
-linear
+linear (iOS 15+)
 -----------------------------------------------------
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.linear
@@ -186,10 +199,29 @@ linear
    .. autoclass:: linear
    .. autoclass:: matmul
 
-normalization
+linear (iOS 17+)
+-----------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS17.linear
+
+   .. autoclass:: linear
+   .. autoclass:: matmul
+
+normalization (iOS 15+)
 ------------------------------------------------------------
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.normalization
+
+   .. autoclass:: batch_norm
+   .. autoclass:: instance_norm
+   .. autoclass:: l2_norm
+   .. autoclass:: layer_norm
+   .. autoclass:: local_response_norm
+
+normalization (iOS 17+)
+------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS17.normalization
 
    .. autoclass:: batch_norm
    .. autoclass:: instance_norm
@@ -224,10 +256,19 @@ random
    .. autoclass:: random_normal
    .. autoclass:: random_uniform
 
-recurrent
+recurrent (iOS 15+)
 --------------------------------------------------------
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.recurrent
+
+   .. autoclass:: gru
+   .. autoclass:: lstm
+   .. autoclass:: rnn
+
+recurrent (iOS 17+)
+--------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS17.recurrent
 
    .. autoclass:: gru
    .. autoclass:: lstm
@@ -343,9 +384,9 @@ tensor\_transformation (iOS 15)
    .. autoclass:: reverse_sequence
    .. autoclass:: slice_by_index
    .. autoclass:: slice_by_size
+   .. autoclass:: sliding_windows
    .. autoclass:: space_to_depth
    .. autoclass:: squeeze
-   .. autoclass:: sliding_windows
    .. autoclass:: transpose
 
 tensor\_transformation (iOS 16+)
@@ -361,5 +402,14 @@ tensor\_transformation (iOS 17+)
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS17.tensor_transformation
 
+   .. autoclass:: expand_dims
    .. autoclass:: reshape
+   .. autoclass:: reshape_like
+   .. autoclass:: reverse
+   .. autoclass:: reverse_sequence
+   .. autoclass:: slice_by_index
+   .. autoclass:: slice_by_size
+   .. autoclass:: sliding_windows
+   .. autoclass:: squeeze
+   .. autoclass:: transpose
 

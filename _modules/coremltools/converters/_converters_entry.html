@@ -21,6 +21,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters._converters_entry</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters._converters_entry</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -103,6 +104,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters._profile_utils</span> <span class="kn">import</span> <span class="n">_profile</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="p">(</span>
@@ -245,6 +247,8 @@
 <span class="sd">              ``ct.utils.rename_feature`` API.</span>
 <span class="sd">            - If ``dtype`` is not specified, it defaults to the ``dtype`` of the</span>
 <span class="sd">              inputs in the TF model.</span>
+<span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">              When ``inputs`` not provided or ``dtype`` not specified. The float 32 inputs defaults to float 16.</span>
 
 <span class="sd">        * PyTorch:</span>
 <span class="sd">            - The ``inputs`` parameter is required.</span>
@@ -255,7 +259,10 @@
 <span class="sd">            - If the ``name`` argument is specified with ``TensorType`` or</span>
 <span class="sd">              ``ImageType``, the converted Core ML model will have inputs with</span>
 <span class="sd">              the same name.</span>
-<span class="sd">            - If ``dtype`` is missing, it defaults to float 32.</span>
+<span class="sd">            - If ``dtype`` is missing:</span>
+<span class="sd">              * For ``minimum_deployment_target &lt;= ct.target.macOS12``, it defaults to float 32.</span>
+<span class="sd">              * For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">                It defaults to float 16.</span>
 
 <span class="sd">    outputs : list of ``TensorType`` or ``ImageType`` (optional)</span>
 
@@ -295,6 +302,9 @@
 <span class="sd">            - If specified, the ``name`` with ``TensorType`` or ``ImageType``</span>
 <span class="sd">              must correspond to a node in the TF graph. In this case, the model</span>
 <span class="sd">              will be converted up to that node.</span>
+<span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">              If ``dtype`` not specified, the outputs inferred of type float 32</span>
+<span class="sd">              defaults to float 16.</span>
 
 <span class="sd">        * PyTorch:</span>
 
@@ -302,6 +312,10 @@
 <span class="sd">              outputs returned by the PyTorch model.</span>
 <span class="sd">            - If ``name`` is specified, it is applied to the output names of the</span>
 <span class="sd">              converted Core ML model.</span>
+<span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">              If ``dtype`` not specified, the outputs inferred of type float 32</span>
+<span class="sd">              defaults to float 16.</span>
+
 
 <span class="sd">    classifier_config : ClassifierConfig class (optional)</span>
 <span class="sd">        The configuration if the MLModel is intended to be a classifier.</span>
@@ -310,7 +324,7 @@
 <span class="sd">        A member of the ``coremltools.target`` enum.</span>
 <span class="sd">        The value of this parameter determines the type of the model</span>
 <span class="sd">        representation produced by the converter. To learn about the differences</span>
-<span class="sd">        between neural networks and ML programs, see</span>
+<span class="sd">        between ML programs and neural networks, see</span>
 <span class="sd">        `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
 
 <span class="sd">        - The converter produces a neural network (``neuralnetwork``) if:</span>
@@ -328,33 +342,34 @@
 <span class="sd">                                           coremltools.target.tvOS15:</span>
 
 <span class="sd">        - If neither the ``minimum_deployment_target`` nor the ``convert_to``</span>
-<span class="sd">          parameter is specified, the converter produces the neural network</span>
+<span class="sd">          parameter is specified, the converter produces an ML program</span>
 <span class="sd">          model type with as minimum of a deployment target as possible.</span>
 <span class="sd">        - If this parameter is specified and ``convert_to`` is also specified,</span>
 <span class="sd">          they must be compatible. The following are examples of invalid values:</span>
 <span class="sd">          ::</span>
 <span class="sd">            # Invalid:</span>
-<span class="sd">            convert_to=&quot;neuralnetwork&quot;, minimum_deployment_target=coremltools.target.iOS15</span>
-<span class="sd">            # Invalid:</span>
 <span class="sd">            convert_to=&quot;mlprogram&quot;, minimum_deployment_target=coremltools.target.iOS14</span>
 
+<span class="sd">            # Invalid:</span>
+<span class="sd">            convert_to=&quot;neuralnetwork&quot;, minimum_deployment_target=coremltools.target.iOS15</span>
+
 <span class="sd">    convert_to : str (optional)</span>
-<span class="sd">        Must be one of [``&#39;neuralnetwork&#39;``, ``&#39;mlprogram&#39;``, ``&#39;milinternal&#39;``].</span>
+<span class="sd">        Must be one of [``&#39;mlprogram&#39;``, ``&#39;neuralnetwork&#39;``, ``&#39;milinternal&#39;``].</span>
 <span class="sd">        The value of this parameter determines the type of the model</span>
 <span class="sd">        representation produced by the converter. To learn about the</span>
-<span class="sd">        differences between neural networks and ML programs, see</span>
+<span class="sd">        differences between ML programs and neural networks, see</span>
 <span class="sd">        `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
 
+<span class="sd">        - ``&#39;mlprogram&#39;`` : Returns an MLModel (``coremltools.models.MLModel``)</span>
+<span class="sd">          containing a MILSpec.Program proto, which is the Core ML program format.</span>
+<span class="sd">          The model saved from this returned object is executable on iOS15,</span>
+<span class="sd">          macOS12, watchOS8, and tvOS15.</span>
 <span class="sd">        - ``&#39;neuralnetwork&#39;``: Returns an MLModel (``coremltools.models.MLModel``)</span>
 <span class="sd">          containing a NeuralNetwork proto, which is the original Core ML format.</span>
 <span class="sd">          The model saved from this returned object is executable either on</span>
 <span class="sd">          iOS13/macOS10.15/watchOS6/tvOS13 and newer, or on</span>
 <span class="sd">          iOS14/macOS11/watchOS7/tvOS14 and newer, depending on the layers used</span>
 <span class="sd">          in the model.</span>
-<span class="sd">        - ``&#39;mlprogram&#39;`` : Returns an MLModel (``coremltools.models.MLModel``)</span>
-<span class="sd">          containing a MILSpec.Program proto, which is the Core ML program format.</span>
-<span class="sd">          The model saved from this returned object is executable on iOS15,</span>
-<span class="sd">          macOS12, watchOS8, and tvOS15.</span>
 <span class="sd">        - ``&#39;milinternal&#39;``: Returns an MIL program object</span>
 <span class="sd">          (``coremltools.converters.mil.Program``). An MIL program is primarily</span>
 <span class="sd">          used for debugging and inspection. It can be converted to an MLModel for</span>
@@ -364,7 +379,7 @@
 <span class="sd">             ct.convert(mil_program, convert_to=&quot;mlprogram&quot;)</span>
 
 <span class="sd">        - If neither the ``minimum_deployment_target`` nor the ``convert_to``</span>
-<span class="sd">          parameter is specified, the converter produces the neural network</span>
+<span class="sd">          parameter is specified, the converter produces the ML programs</span>
 <span class="sd">          model type with as minimum of a deployment target as possible.</span>
 
 <span class="sd">    compute_precision : coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)</span>
@@ -593,10 +608,11 @@
         <span class="n">exact_target</span><span class="p">,</span>
         <span class="n">minimum_deployment_target</span><span class="p">,</span>
     <span class="p">)</span>
+    <span class="n">need_fp16_cast_pass</span> <span class="o">=</span> <span class="n">_need_fp16_cast_pass</span><span class="p">(</span><span class="n">compute_precision</span><span class="p">,</span> <span class="n">exact_target</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">pass_pipeline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pass_pipeline</span> <span class="o">=</span> <span class="n">PassPipeline</span><span class="p">()</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_need_fp16_cast_pass</span><span class="p">(</span><span class="n">compute_precision</span><span class="p">,</span> <span class="n">exact_target</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">need_fp16_cast_pass</span><span class="p">:</span>
         <span class="n">pass_pipeline</span><span class="o">.</span><span class="n">remove_passes</span><span class="p">({</span><span class="s2">&quot;common::add_fp16_cast&quot;</span><span class="p">})</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_precision</span><span class="p">,</span> <span class="n">FP16ComputePrecision</span><span class="p">):</span>
         <span class="c1"># For backward compatibility with the `op_selector` param in FP16ComputePrecision.</span>
@@ -616,6 +632,12 @@
     <span class="k">if</span> <span class="n">specification_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">specification_version</span> <span class="o">=</span> <span class="n">_set_default_specification_version</span><span class="p">(</span><span class="n">exact_target</span><span class="p">)</span>
 
+    <span class="n">use_default_fp16_io</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">specification_version</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="ow">and</span> <span class="n">specification_version</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS16</span>
+        <span class="ow">and</span> <span class="n">need_fp16_cast_pass</span>
+    <span class="p">)</span>
+
     <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">mil_convert</span><span class="p">(</span>
         <span class="n">model</span><span class="p">,</span>
         <span class="n">convert_from</span><span class="o">=</span><span class="n">exact_source</span><span class="p">,</span>
@@ -629,6 +651,7 @@
         <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span>
         <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">main_pipeline</span><span class="o">=</span><span class="n">pass_pipeline</span><span class="p">,</span>
+        <span class="n">use_default_fp16_io</span><span class="o">=</span><span class="n">use_default_fp16_io</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="ow">and</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">_input_has_infinite_upper_bound</span><span class="p">():</span>
@@ -979,6 +1002,15 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">convert_to</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;When both &#39;convert_to&#39; and &#39;minimum_deployment_target&#39; not specified, &quot;</span>
+            <span class="s2">&quot;&#39;convert_to&#39; is set to </span><span class="se">\&quot;</span><span class="s2">mlprogram</span><span class="se">\&quot;</span><span class="s2"> and &#39;minimum_deployment_targer&#39; is set to &quot;</span>
+            <span class="s2">&quot;ct.target.iOS15 (which is same as ct.target.macOS12). &quot;</span>
+            <span class="s2">&quot;Note: the model will not run on systems older than iOS15/macOS12/watchOS8/tvOS15. &quot;</span>
+            <span class="s2">&quot;In order to make your model run on older system, please set the &#39;minimum_deployment_target&#39; to iOS14/iOS13. &quot;</span>
+            <span class="s2">&quot;Details please see the link: https://coremltools.readme.io/docs/unified-conversion-api#target-conversion-formats&quot;</span>
+        <span class="p">)</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">convert_to</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="ow">and</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS15</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
@@ -997,7 +1029,7 @@
         <span class="k">return</span> <span class="n">convert_to</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="s2">&quot;neuralnetwork&quot;</span>
+            <span class="k">return</span> <span class="s2">&quot;mlprogram&quot;</span>
         <span class="k">elif</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS14</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;neuralnetwork&quot;</span>
         <span class="k">else</span><span class="p">:</span>

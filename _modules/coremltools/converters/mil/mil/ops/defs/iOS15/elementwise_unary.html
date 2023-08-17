@@ -21,6 +21,7 @@
         <script src="../../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../../../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../../../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary</li>
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -97,14 +98,16 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DefaultInputs</span><span class="p">,</span>
-                                                       <span class="n">InputSpec</span><span class="p">,</span>
-                                                       <span class="n">TensorInputType</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="p">(</span><span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span>
-                                                      <span class="n">precondition</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">DefaultInputs</span><span class="p">,</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">precondition</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types</span> <span class="kn">import</span> <span class="n">nptype_from_builtin</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">builtin_to_string</span><span class="p">,</span>
+    <span class="n">string_to_builtin</span><span class="p">,</span>
+    <span class="n">string_to_nptype</span><span class="p">,</span>
+<span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_maintain_shape</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
@@ -578,7 +581,8 @@
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_maintain_shape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="logical_not"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.logical_not">[docs]</a><span class="nd">@register_op</span>
@@ -691,7 +695,7 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the sign value of the input ``x``, element-wise.</span>
 
-<span class="sd">    All elements in the output will be either ``-1``. or ``1``.</span>
+<span class="sd">    All elements in the output will be either ``-1`` or ``1``, or zero if the input ``x`` is zero.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -907,14 +911,11 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Cast the input ``x`` to the new type ``dtype``.</span>
 
-<span class="sd">    Notice that the underlying Core MIL op doesn&#39;t support int64 and fp64. We support them in PyMIL</span>
-<span class="sd">    by mapping int64 to int32, and mapping fp64 to fp32.</span>
-
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
 <span class="sd">    dtype: const str (Required)</span>
-<span class="sd">        * Can be one of the following types: ``int32``, ``int64``, ``fp32``, ``fp64``, ``bool``.</span>
+<span class="sd">        * Can be one of the following types: ``int32``, ``fp16``, ``fp32``, ``bool``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -923,7 +924,7 @@
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    T: i32, i64, fp16, fp32, fp64, bool.</span>
+<span class="sd">    T: i32, fp16, fp32, bool.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -932,39 +933,25 @@
     <span class="p">)</span>
 
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp64</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
     <span class="p">}</span>
 
-    <span class="n">str_to_types_map</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;int32&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
-        <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
-        <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span>
-        <span class="s2">&quot;fp32&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
-        <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
-        <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
-    <span class="p">}</span>
-
-    <span class="n">str_to_numpy_type_map</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;int32&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
-        <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
-        <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
-        <span class="s2">&quot;fp32&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-        <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-        <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
-    <span class="p">}</span>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">supported_dtypes</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">type_domains</span><span class="p">[</span><span class="s2">&quot;T&quot;</span><span class="p">])</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">str_to_types_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">supported_dtypes</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Parameter dtype of the cast operation can be one of the </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                <span class="s2">&quot;Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">str_to_types_map</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+                <span class="s2">&quot;Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">supported_dtypes</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">str_to_types_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">string_to_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
 
         <span class="n">ret_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
-        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">str_to_types_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">],</span> <span class="n">ret_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">string_to_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">),</span> <span class="n">ret_shape</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -972,10 +959,10 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_cast_value</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_var</span><span class="p">,</span> <span class="n">dtype_val</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">dtype_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">str_to_numpy_type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">dtype_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">supported_dtypes</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Parameter dtype of the cast operation can be one of the </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                <span class="s2">&quot;Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">str_to_numpy_type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">dtype_val</span><span class="p">)</span>
+                <span class="s2">&quot;Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">supported_dtypes</span><span class="p">(),</span> <span class="n">dtype_val</span><span class="p">)</span>
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">input_var</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -985,7 +972,7 @@
                 <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">sym_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
             <span class="p">):</span>
                 <span class="n">result</span> <span class="o">=</span> <span class="p">[</span>
-                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">str_to_numpy_type_map</span><span class="p">[</span><span class="n">dtype_val</span><span class="p">])</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">string_to_nptype</span><span class="p">(</span><span class="n">dtype_val</span><span class="p">))</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
                     <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
                     <span class="k">else</span> <span class="n">val</span>
                     <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">input_var</span><span class="o">.</span><span class="n">sym_val</span>
@@ -994,9 +981,9 @@
             <span class="k">return</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">input_var</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">str_to_numpy_type_map</span><span class="p">[</span><span class="n">dtype_val</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">input_var</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">string_to_nptype</span><span class="p">(</span><span class="n">dtype_val</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">str_to_numpy_type_map</span><span class="p">[</span><span class="n">dtype_val</span><span class="p">])</span></div>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">string_to_nptype</span><span class="p">(</span><span class="n">dtype_val</span><span class="p">))</span></div>
 </pre></div>
 
            </div>

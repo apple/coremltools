@@ -7,3 +7,6 @@ Post-Training Compression
     .. autofunction:: prune_weights
     .. autofunction:: palettize_weights
     .. autofunction:: decompress_weights
+    .. autofunction:: get_weights_metadata
+    .. autoclass:: CoreMLWeightMetaData
+    .. autoclass:: CoreMLOpMetaData
