@@ -144,6 +144,10 @@ NUM_TO_TORCH_DTYPE = {
     14: torch.qint32,
 }
 
+TORCH_DTYPE_TO_NUM = {
+    dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
+}
+
 NUMPY_DTYPE_TO_TORCH_NUM = {
     _np.uint8: 0,
     _np.int8: 1,
@@ -3753,6 +3757,14 @@ def randint(context, node):
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
     rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
     context.add(rand_int)
+
+@register_torch_op
+def rand(context, node):
+    shape, _, dtype, _, _ = _get_inputs(context, node)
+    dtype = NUM_TO_DTYPE_STRING[TORCH_DTYPE_TO_NUM[dtype.val]] if dtype else "fp32"
+    low, high = mb.cast(x=0.0, dtype=dtype), mb.cast(x=1.0, dtype=dtype)
+    rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
+    context.add(rand_uniform, node.name)
 
 @register_torch_op
 def randn(context, node):
