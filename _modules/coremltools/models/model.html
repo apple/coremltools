@@ -21,6 +21,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.model</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.model</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -581,7 +582,11 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span>
                 <span class="n">save_path</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;For an ML Program, extension must be </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                    <span class="s2">&quot;For an ML Program, extension must be </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">). Please see https://coremltools.readme.io/docs/unified-conversion-api#target-conversion-formats to see the difference between neuralnetwork and mlprogram model types.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
             <span class="n">_shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span>
 
             <span class="n">saved_spec_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -590,6 +595,17 @@
             <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">saved_spec_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MLModel.get_compiled_model_path"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_compiled_model_path">[docs]</a>    <span class="k">def</span> <span class="nf">get_compiled_model_path</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the path for the underlying compiled ML Model.</span>
+
+<span class="sd">        IMPORTANT - This path is only available for the lifetime of this Python object. If you want</span>
+<span class="sd">        the compiled model to persist, you need to make a copy.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span></div>
+
 
 <div class="viewcode-block" id="MLModel.get_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">[docs]</a>    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -647,20 +663,10 @@
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;predict() for .mlpackage is not supported in macOS version older than 12.0.&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> parameter must be either a dict or list of dict.&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">data</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> list must contain only dictionaries&quot;</span><span class="p">)</span>
+        <span class="n">MLModel</span><span class="o">.</span><span class="n">_check_predict_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
-                <span class="n">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-                    <span class="n">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">batchPredict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">MLModel</span><span class="o">.</span><span class="n">_get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">,</span> <span class="n">verify_and_convert_input_dict</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>   <span class="c1"># Error case</span>
             <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -699,6 +705,26 @@
                     <span class="k">raise</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framework_error</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to load CoreML.framework. Cannot make predictions.&quot;</span><span class="p">)</span></div>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_predict_data</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> parameter must be either a dict or list of dict.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">data</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">data</span><span class="se">\&quot;</span><span class="s2"> list must contain only dictionaries&quot;</span><span class="p">)</span>
+
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_get_predictions</span><span class="p">(</span><span class="n">proxy</span><span class="p">,</span> <span class="n">preprocess_method</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="n">preprocess_method</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">proxy</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">==</span> <span class="nb">list</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+                <span class="n">preprocess_method</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">proxy</span><span class="o">.</span><span class="n">batchPredict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
 
     <span class="k">def</span> <span class="nf">_input_has_infinite_upper_bound</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Check if any input has infinite upper bound (-1).&quot;&quot;&quot;</span>
@@ -794,7 +820,8 @@
                           <span class="s2">&quot;does not match any of the model input name(s), which are: </span><span class="si">{}</span><span class="s2">&quot;</span>
                 <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_input_names</span><span class="p">)))</span>
 
-    <span class="k">def</span> <span class="nf">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">input_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">input_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
                 <span class="n">input_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>

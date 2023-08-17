@@ -21,6 +21,7 @@
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.neural_network.quantization_utils</li>
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.neural_network.quantization_utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -145,12 +146,15 @@
 
 <span class="sd">            def do_quantize(self, layer, **kwargs):</span>
 <span class="sd">                ret = super().do_quantize(layer)</span>
-<span class="sd">                if not ret or layer.name == &#39;dense_2&#39;:</span>
+<span class="sd">                if not ret or layer.name == &quot;dense_2&quot;:</span>
 <span class="sd">                    return False</span>
 <span class="sd">                return True</span>
 
+
 <span class="sd">        selector = MyLayerSelector()</span>
-<span class="sd">        quantized_model = quantize_weights(mlmodel, 8, quantization_mode=&#39;linear&#39;, selector=selector)</span>
+<span class="sd">        quantized_model = quantize_weights(</span>
+<span class="sd">            mlmodel, 8, quantization_mode=&quot;linear&quot;, selector=selector</span>
+<span class="sd">        )</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -179,7 +183,7 @@
 
 
 <div class="viewcode-block" id="AdvancedQuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">AdvancedQuantizedLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot; Quantized layer selector allowing the user to specify some types of</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized layer selector allowing the user to specify some types of</span>
 <span class="sd">    layers to skip during quantization process and the minimum size parameters</span>
 <span class="sd">    in quantized convolution layers.</span>
 
@@ -188,11 +192,15 @@
 <span class="sd">    .. highlight:: python</span>
 <span class="sd">    .. code-block:: python</span>
 
-<span class="sd">        from coremltools.models.neural_network.quantization_utils import AdvancedQuantizedLayerSelector</span>
+<span class="sd">        from coremltools.models.neural_network.quantization_utils import (</span>
+<span class="sd">            AdvancedQuantizedLayerSelector,</span>
+<span class="sd">        )</span>
+
 <span class="sd">        selector = AdvancedQuantizedLayerSelector(</span>
-<span class="sd">                skip_layer_types=[&#39;batchnorm&#39;, &#39;bias&#39;, &#39;depthwiseConv&#39;],</span>
-<span class="sd">                minimum_conv_kernel_channels=4,</span>
-<span class="sd">                minimum_conv_weight_count=4096)</span>
+<span class="sd">            skip_layer_types=[&quot;batchnorm&quot;, &quot;bias&quot;, &quot;depthwiseConv&quot;],</span>
+<span class="sd">            minimum_conv_kernel_channels=4,</span>
+<span class="sd">            minimum_conv_weight_count=4096,</span>
+<span class="sd">        )</span>
 <span class="sd">        quantized_model = quantize_weights(model, 8, selector=selector)</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1258,7 +1266,7 @@
     <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 
     <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">image_path</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">Image</span><span class="o">.</span><span class="n">LANCZOS</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">TopKMetrics</span><span class="p">:</span>
@@ -1730,10 +1738,11 @@
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; import coremltools</span>
-<span class="sd">        &gt;&gt;&gt; from coremltools.models.neural_network import quantization_utils</span>
-<span class="sd">        &gt;&gt;&gt; model = coremltools.models.MLModel(&#39;my_model.mlmodel&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; quantized_model = quantization_utils.quantize_weights(model, 8, &quot;linear&quot;)</span>
+<span class="sd">        import coremltools</span>
+<span class="sd">        from coremltools.models.neural_network import quantization_utils</span>
+
+<span class="sd">        model = coremltools.models.MLModel(&quot;my_model.mlmodel&quot;)</span>
+<span class="sd">        quantized_model = quantization_utils.quantize_weights(model, 8, &quot;linear&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">qmode_mapping</span> <span class="o">=</span> <span class="p">{</span>

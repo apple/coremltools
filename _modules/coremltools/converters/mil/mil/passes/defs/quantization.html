@@ -21,6 +21,7 @@
         <script src="../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../../../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.mil.passes.defs.quantization</li>
+      <li><a href="../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.quantization</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -224,6 +225,7 @@
         <span class="s2">&quot;sigmoid_hard&quot;</span><span class="p">,</span>
         <span class="s2">&quot;softplus_parametric&quot;</span><span class="p">,</span>
     <span class="p">}</span>
+    <span class="n">_ELEMENTWISE_UNARY_EPSILON_OPS</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;inverse&quot;</span><span class="p">,</span> <span class="s2">&quot;log&quot;</span><span class="p">,</span> <span class="s2">&quot;rsqrt&quot;</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">FP16ComputePrecision</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
@@ -272,10 +274,6 @@
         <span class="p">]:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="c1"># TODO: Remove after supporting IOS17 FP16 RNN Ops (rdar://108143371)</span>
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;gru&quot;</span><span class="p">,</span> <span class="s2">&quot;rnn&quot;</span><span class="p">,</span> <span class="s2">&quot;lstm&quot;</span><span class="p">]:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fp16_overflow</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -294,6 +292,10 @@
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ACTIVATION_ALPHA_OPS</span> <span class="ow">and</span> <span class="n">param_name</span> <span class="o">==</span> <span class="s2">&quot;alpha&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ACTIVATION_ALPHA_BETA_OPS</span> <span class="ow">and</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;alpha&quot;</span><span class="p">,</span> <span class="s2">&quot;beta&quot;</span><span class="p">}:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="c1"># Element-wise unary ops with epsilon also support mixed precision.</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ELEMENTWISE_UNARY_EPSILON_OPS</span> <span class="ow">and</span> <span class="n">param_name</span> <span class="o">==</span> <span class="s2">&quot;epsilon&quot;</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">return</span> <span class="kc">True</span>

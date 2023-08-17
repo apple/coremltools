@@ -21,6 +21,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -31,11 +32,15 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../../index.html" class="icon icon-home"> coremltools API Reference
+
+          
+          
+          <a href="../../../index.html" class="icon icon-home">
+            coremltools API Reference
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
@@ -55,11 +60,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
-</ul>
-<p class="caption" role="heading"><span class="caption-text">Previous API Versions:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3/">v3.4</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
         </div>
@@ -75,9 +76,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.utils</li>
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -104,7 +105,7 @@
 <span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">_subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span><span class="p">,</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
@@ -213,10 +214,10 @@
 <span class="sd">        Protobuf representation of the model</span>
 
 <span class="sd">    filename: str</span>
-<span class="sd">        File path  where the spec gets saved.</span>
+<span class="sd">        File path where the spec gets saved.</span>
 
 <span class="sd">    auto_set_specification_version: bool</span>
-<span class="sd">        If true, will always try to set specification version automatically.</span>
+<span class="sd">        If True, will always try to set specification version automatically.</span>
 
 <span class="sd">    weights_dir: str</span>
 <span class="sd">        Path to the directory containing the weigths.bin file. This is required</span>
@@ -1091,6 +1092,60 @@
     <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;pipeline&quot;</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">model_spec</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
             <span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="s1">&#39;_ct.models.MLModel&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compiles a Core ML model.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    model: str, Model_pb2 or MLModel</span>
+
+<span class="sd">        str - path to model to compile</span>
+
+<span class="sd">        Model_pb2 - spec to model to compile</span>
+
+<span class="sd">        MLModel - instantiated Core ML model to compile</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    str : path to compiled model directory</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    ``coremltools.models.CompiledMLModel``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Check environment</span>
+    <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Compiling a Core ML models is only support on macOS 10.13 or higher.&quot;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to compile any Core ML models.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check parameter</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Compiling a Core ML models is only support on macOS 10.13 or higher.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Compile model</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="k">with</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">save_dir</span><span class="p">:</span>
+            <span class="n">spec_file_path</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">+</span> <span class="s1">&#39;/spec.mlmodel&#39;</span>
+            <span class="n">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">spec_file_path</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">spec_file_path</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="make_pipeline"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.make_pipeline">[docs]</a><span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="o">*</span><span class="n">models</span><span class="p">):</span>
