@@ -605,7 +605,7 @@ class sign(elementwise_unary_with_int):
     """
     Return the sign value of the input ``x``, element-wise.
 
-    All elements in the output will be either ``-1``. or ``1``.
+    All elements in the output will be either ``-1`` or ``1``, or zero if the input ``x`` is zero.
 
     Parameters
     ----------

@@ -223,19 +223,24 @@ class resample(_resample_iOS16):
 class resize(Operation):
     """
     Resizes the input tensor ``x`` by choosing the right-most ``resized_dims`` dimensions from
-    the input shape ``shape``, and by choosing the rest from ``x``'s shape.
+    the input shape ``shape``, and by choosing the rest from ``x`` 's shape.
 
-    This iOS17 ``resize`` is a superset of ``resize_bilinear`` and ``resize_nearest_neighbor`` in
-    iOS15. The main benefit is that this resize op allows a use-case in dynamic tensor shapes where
+    This iOS17 ``resize`` is a superset of iOS 15 :py:class:`~.iOS15.image_resizing.resize_bilinear`
+    and :py:class:`~.iOS15.image_resizing.resize_nearest_neighbor`.
+    The main benefit is that this resize op allows a use-case in dynamic tensor shapes where
     a tensor needs to be resized to a dynamic shape as specified by another tensor.
 
-    To illustrate how output shape is inferred, here are two examples.
-    - Example #1
+    To illustrate how output shape is inferred, the following are two examples:
+
+    - Example #1::
+
         x.shape: [1, 2, 3, 4]
         shape: [1, 6, 8]
         resized_dims: 2
         The output's shape will be [1, 2, 6, 8]
-    - Example #2
+
+    - Example #2::
+
         x.shape: [1, 2, 3, is0]
         shape: [1, 0, 0]
         resized_dims: 2
@@ -246,13 +251,13 @@ class resize(Operation):
     x: tensor<[...], T> (Required)
 
     shape: tensor<[K], U> (Required)
-        * Restriction: ``size(shape)`` <= ``rank(x)``
-        * If shape[i]==0, the dimension in the output tensor will instead be inferred from the
-          corresponding element of x.shape().  Note this might not be x.shape()[i], as size(shape),
-          resized_dims, and size(x) may all be different sizes.
+        * Restriction: ``size(shape)`` <= ``rank(x)``.
+        * If ``shape[i]==0``, the dimension in the output tensor will instead be inferred from the
+          corresponding element of ``x.shape()``.  Note this might not be ``x.shape()[i]``, as ``size(shape)``,
+          ``resized_dims``, and ``size(x)`` may all be different sizes.
 
     resized_dims: const tensor<[], uint32> (Required)
-        * Restriction: ``resized_dims`` <= ``size(shape)``
+        * Restriction: ``resized_dims`` <= ``size(shape)``.
 
     interpolation_mode: const<str> (Optional, default="LINEAR")
         * Available mode: ``LINEAR``, ``NEAREST_NEIGHBOR``.

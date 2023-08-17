@@ -252,7 +252,7 @@ def convert(
                                            coremltools.target.tvOS15:
 
         - If neither the ``minimum_deployment_target`` nor the ``convert_to``
-          parameter is specified, the converter produces the ML programs
+          parameter is specified, the converter produces an ML program
           model type with as minimum of a deployment target as possible.
         - If this parameter is specified and ``convert_to`` is also specified,
           they must be compatible. The following are examples of invalid values:

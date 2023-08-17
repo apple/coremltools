@@ -96,7 +96,8 @@ class clip(_clip_iOS15):
 class inverse(_inverse_iOS15):
     """
     Return the reciprocal value of the input ``x``, element-wise.
-    The only difference from IOS15 is epsilon may have different dtypes than the inputs/outputs.
+    The only difference between this version and the iOS 15 :py:class:`~.iOS15.elementwise_unary.inverse`
+    is ``epsilon`` may have different dtypes than the inputs/outputs.
 
     Parameters
     ----------
@@ -132,7 +133,8 @@ class inverse(_inverse_iOS15):
 class log(_log_iOS15):
     """
     Return the natural logarithm value of the input ``x``, element-wise.
-    The only difference from IOS15 is epsilon may have different dtypes than the inputs/outputs.
+    The only difference between this version and the iOS 15 :py:class:`~.iOS15.elementwise_unary.log`
+    is ``epsilon`` may have different dtypes than the inputs/outputs.
 
     Parameters
     ----------
@@ -167,7 +169,8 @@ class log(_log_iOS15):
 class rsqrt(_rsqrt_iOS15):
     """
     Return the reciprocal value of the square root of the input ``x``, element-wise.
-    The only difference from IOS15 is epsilon may have different dtypes than the inputs/outputs.
+    The only difference between this version and the iOS 15 :py:class:`~.iOS15.elementwise_unary.rsqrt`
+    is ``epsilon`` may have different dtypes than the inputs/outputs.
 
     Parameters
     ----------

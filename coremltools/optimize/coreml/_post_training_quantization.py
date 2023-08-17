@@ -354,26 +354,24 @@ def decompress_weights(mlmodel: _MLModel):
 
 def get_weights_metadata(mlmodel: _MLModel, weight_threshold: int = 2048):
     """
-    Utility function to get the weights metadata as a dictionary, which map the weight's name to its corresponding CoreMLWeightMetaData.
+    Utility function to get the weights metadata as a dictionary, which maps the weight's name to its corresponding CoreMLWeightMetaData.
 
     CoreMLWeightMetaData contains the following attributes:
 
-    1. val: The weight data.
-    2. sparsity: the percentile of the element whose absolute value ``<= 1e-12``.
-    3. unique_values: number of unique values in the weight.
-    4. child_ops: meta information of the child ops in which the weight is feeding into.
+    1. ``val``: The weight data.
+    2. ``sparsity``: the percentile of the element whose absolute value ``<= 1e-12``.
+    3. ``unique_values``: number of unique values in the weight.
+    4. ``child_ops``: meta information of the child ops in which the weight is feeding into.
 
     Parameters
     ----------
     mlmodel: MLModel
-        Model in which the weight meta data retrieved from.
+        Model in which the weight metadata is retrieved from.
 
     weight_threshold: int
-        The size threshold, above which weights are returned.
-        That is, a weight tensor is included in the resulting dictionary only if its total number of elements are greater than ``weight_threshold``.
-
-        For example, if ``weight_threshold = 1024`` and a weight tensor is of shape ``[10, 20, 1, 1]``, hence ``200``
-        elements, it will not be returned by the ``get_weights_metadata`` API.
+        * The size threshold, above which weights are returned. That is, a weight tensor is included in the resulting dictionary only if its total number of elements are greater than ``weight_threshold``.
+          For example, if ``weight_threshold = 1024`` and a weight tensor is of shape ``[10, 20, 1, 1]``, hence ``200``
+          elements, it will not be returned by the ``get_weights_metadata`` API.
 
         * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are returned.
 
@@ -384,10 +382,10 @@ def get_weights_metadata(mlmodel: _MLModel, weight_threshold: int = 2048):
 
     Examples
     --------
-    In this example, there are two weights whose size is greater than ``2048``.
+    In this example, there are two weights whose sizes are greater than ``2048``.
     A weight named ``conv_1_weight`` is feeding into a ``conv`` op named ``conv_1``,
     while another weight named ``linear_1_weight`` is feeding into a ``linear`` op named ``linear_1``.
-    You can access the metadata by ``weight_metadata_dict["conv_1_weight"]``, etc.
+    You can access the metadata by ``weight_metadata_dict["conv_1_weight"]``, and so on.
 
     .. sourcecode:: python
 
@@ -502,7 +500,7 @@ class CoreMLOpMetaData:
     Parameters
     ----------
     op_type: str
-        The type of the op. For instance: ``conv``, ``linear``, etc.
+        The type of the op. For instance: ``conv``, ``linear``, and so on.
 
     name: str
         The name of the op.
@@ -547,19 +545,19 @@ class CoreMLWeightMetaData:
         The weight data.
 
     sparsity: float
-        the percentile of the element whose absolute value ``<= 1e-12``
+        The percentile of the element whose absolute value ``<= 1e-12``.
 
     unique_values: int
-        number of unique values in the weight
+        Number of unique values in the weight.
 
     child_ops: list[CoreMLOpMetaData]
-        A list of of ``CoreMLOpMetaData`` which contains information of child ops in which the weight is feeding into.
+        A list of ``CoreMLOpMetaData`` which contains information of child ops in which the weight is feeding into.
 
         The attributes can be accessed by:
-        ``child_ops[idx].op_type``: The operation type of the ``idx``th child op.
-        ``child_ops[idx].name``: The name of the ``idx``th child op.
+        ``child_ops[idx].op_type``: The operation type of the ``idx`` 'th child op.
+        ``child_ops[idx].name``: The name of the ``idx`` 'th child op.
 
-        Other op-dependant attributes also can be accessed. For instance, if ``idx``th child op is a ``conv`` layer,
+        Other op-dependant attributes also can be accessed. For instance, if ``idx`` 'th child op is a ``conv`` layer,
         ``child_ops[idx].weight`` will return its weight name.
 
         For more details, please refer to the ``CoreMLOpMetaData`` doc string.
