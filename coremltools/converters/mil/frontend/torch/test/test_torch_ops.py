@@ -9049,6 +9049,24 @@ class TestImag(TorchBaseTest):
         )
 
 
+class TestViewAsReal(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_view_as_real(self, compute_unit: ct.ComputeUnit, backend):
+        class RealModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.view_as_real(torch.complex(x, 2 * x))
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), RealModel(), backend=backend, compute_unit=compute_unit
+        )
+
+
 class TestFft(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend",
