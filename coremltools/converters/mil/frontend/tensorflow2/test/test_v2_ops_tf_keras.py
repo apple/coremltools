@@ -867,6 +867,36 @@ class TestFlatten(TensorFlowBaseTest):
             backend=backend,
         )
 
+class TestMasking(TensorFlowBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, mask_value, is_masked",
+        itertools.product(
+            compute_units,
+            backends,
+            [2, 5],
+            [0, 0.4],
+            [False, True],
+        ),
+    )
+    def test(self, compute_unit, backend, rank, mask_value, is_masked):
+        shape = np.random.randint(low=2, high=4, size=rank)
+        model = tf.keras.Sequential(
+            [
+                tf.keras.layers.Masking(
+                    batch_input_shape=shape,
+                    mask_value=mask_value,
+                )
+            ]
+        )
+        input_value = random_gen(shape, -10, 10)
+        if is_masked:
+            input_value[:, 1] = mask_value
+        TensorFlowBaseTest.run_compare_tf_keras(
+            model,
+            [input_value],
+            compute_unit=compute_unit,
+            backend=backend,
+        )
 
 class TestLambda(TensorFlowBaseTest):
     @pytest.mark.parametrize(

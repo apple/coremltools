@@ -429,7 +429,12 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
                     # Classifier outputs are set up separately, so default to fp32 for now.
                     dataType = ft.ArrayFeatureType.ArrayDataType.FLOAT32
 
-                array_type = ft.ArrayFeatureType(shape=None, dataType=dataType)
+                output_shape = (
+                    None
+                    if any_symbolic(var.shape) or types.is_primitive(var.sym_type)
+                    else var.shape
+                )
+                array_type = ft.ArrayFeatureType(shape=output_shape, dataType=dataType)
                 output_feature_type.multiArrayType.CopyFrom(array_type)
                 output_features.append(ml.FeatureDescription(name=var.name, type=output_feature_type))
         elif (types.is_dict(var.sym_type)):

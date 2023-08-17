@@ -10,11 +10,14 @@ import pytest
 import torch
 
 import coremltools as ct
+import coremltools.optimize as cto
 from coremltools._deps import _HAS_SKLEARN
+from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
-import coremltools.optimize as cto
+from coremltools.optimize.coreml._post_training_quantization import CoreMLWeightMetaData
 from coremltools.test.ml_program.test_compression import get_test_model_and_data
+
 
 # Wrapper functions that create the optimization config and call ct.optimize.coreml APIs
 def linear_quantize_weights(mlmodel, mode="linear", dtype=np.int8):
@@ -106,7 +109,7 @@ def create_unique_weight(weight, nbits):
 def create_sparse_weight(weight, target_sparsity):
     shape = list(weight.shape)
     size = np.prod(shape)
-    weight = 3 * np.ones(size)
+    weight = 100 * np.random.rand(size)
     num_of_zeros = int(size * target_sparsity)
     weight[:num_of_zeros] = 0
     return np.reshape(weight, shape).astype(np.float32)
@@ -661,10 +664,10 @@ class TestPruneWeights:
 
         pipeline = ct.PassPipeline.DEFAULT_PRUNING
         config = cto.coreml.OptimizationConfig(
-            global_config=cto.coreml.OpThresholdPrunerConfig(threshold=1e-3, minimum_sparsity_percentile=0.05),
-            op_type_configs={
-                "conv": None
-            }
+            global_config=cto.coreml.OpThresholdPrunerConfig(
+                threshold=1e-12, minimum_sparsity_percentile=0.05
+            ),
+            op_type_configs={"conv": None},
         )
         pipeline.set_options("compression::prune_weights", {"config": config})
         mlmodel = ct.convert(
@@ -757,7 +760,9 @@ class TestConvertMixedCompression:
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
 
         weight_1_sparse = create_sparse_weight(model.conv_1.weight, 0.5)
-        weight_2_sparse = create_sparse_weight(model.conv_2.weight, 0.1)
+        weight_2_sparse = create_sparse_weight(
+            model.conv_2.weight, 0.1
+        )  # the sparsity of 0.1 is filtered out by the minimum_sparsity_percentile
         linear_1_unique = create_unique_weight(model.linear_1.weight, nbits=4)
 
         with torch.no_grad():
@@ -788,7 +793,6 @@ class TestConvertMixedCompression:
         expected_ops = [
             "constexpr_sparse_to_dense",
             "constexpr_lut_to_dense",
-            "constexpr_lut_to_dense",
             "conv",
             "conv",
             "reshape",
@@ -804,7 +808,7 @@ class TestConvertMixedCompression:
 
         conv_ops = prog.find_ops(op_type="conv")
         assert conv_ops[0].weight.op.op_type == "constexpr_sparse_to_dense"
-        assert conv_ops[1].weight.op.op_type == "constexpr_lut_to_dense"
+        assert conv_ops[1].weight.op.op_type == "const"
 
         linear_ops = prog.find_ops(op_type="linear")
         assert linear_ops[0].weight.op.op_type == "constexpr_lut_to_dense"
@@ -872,3 +876,178 @@ class TestErrorHandling:
         expected_err_str = "A function object must be provided as \"lut_function\""
         with pytest.raises(ValueError, match=expected_err_str):
             palettize_weights(mlmodel, mode="custom", lut_function=1)
+
+
+class TestCoreMLWeightMetaData:
+    """
+    This test includes unit tests for:
+    1. CoreMLWeightMetaData
+    2. coremltools.optimize.coreml.get_weights_metadata
+    """
+    @staticmethod
+    def test_coreml_weight_metadata_api():
+        """
+        Test the example in the CoreMLWeightMetaData api doc string.
+        """
+        data = np.array([[1.0, 0.0], [0.0, 6.0]], dtype=np.float32)
+        meta_data = CoreMLWeightMetaData(data)
+        assert meta_data.val is data
+        assert meta_data.sparsity == 0.5
+        assert meta_data.unique_values == 3
+
+    @staticmethod
+    def test_get_weights_metadata():
+        """
+        Test the example in the get_weights_metadata functionality with op_type is None.
+        """
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
+
+        weight_1_sparse = create_sparse_weight(model.conv_1.weight, 0.5)
+        weight_2_sparse = create_sparse_weight(model.conv_2.weight, 0.8)
+        linear_1_palettized = create_unique_weight(model.linear_1.weight, 2)
+        linear_2_palettized = create_unique_weight(model.linear_2.weight, 4)
+
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(torch.Tensor(weight_1_sparse))
+            model.conv_2.weight = torch.nn.Parameter(torch.Tensor(weight_2_sparse))
+            model.linear_1.weight = torch.nn.Parameter(torch.Tensor(linear_1_palettized))
+            model.linear_2.weight = torch.nn.Parameter(torch.Tensor(linear_2_palettized))
+
+        torchmodel = torch.jit.trace(model, torch_input_values)
+
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
+        # test the weight_threshold can filter out weights with size
+        weight_threshold = 10
+        weight_metadata_dict = ct.optimize.coreml.get_weights_metadata(
+            mlmodel, weight_threshold=weight_threshold
+        )
+        for v in weight_metadata_dict.values():
+            assert v.val.size >= weight_threshold
+
+        # test the functionality of using the returned meta data
+        weight_metadata_dict = ct.optimize.coreml.get_weights_metadata(mlmodel)
+
+        # get the weight names with size > 25600
+        large_weights = []
+        for k, v in weight_metadata_dict.items():
+            if v.val.size >= 25600:
+                large_weights.append(k)
+
+        # get the weight names with sparsity >= 50%
+        sparse_weights = []
+        for k, v in weight_metadata_dict.items():
+            if v.sparsity >= 0.5:
+                sparse_weights.append(k)
+
+        # get the weight names with unique elements <= 16
+        palettized_weights = []
+        for k, v in weight_metadata_dict.items():
+            if v.unique_values <= 16:
+                palettized_weights.append(k)
+
+        meta_data_1 = weight_metadata_dict["conv_1_weight"]
+
+        # testing
+        expected_large_weights = [
+            "linear_2_weight",
+            "concat_1",
+            "concat_2",
+        ]
+        assert large_weights == expected_large_weights
+
+        expected_sparse_weights = [
+            "conv_1_weight",
+            "conv_2_weight",
+            "op_59_lstm_h0_squeeze",
+        ]
+        assert sparse_weights == expected_sparse_weights
+
+        expected_palettized_weights = [
+            "linear_1_weight",
+            "linear_2_weight",
+            "op_59_lstm_h0_squeeze",
+        ]
+        assert palettized_weights == expected_palettized_weights
+
+    @staticmethod
+    def test_get_weights_metadata_shared_weight():
+        """
+        Test the get_weights_metadata functionality for models with weight-sharing layers.
+        """
+        def _test_child_ops(child_ops):
+            assert len(child_ops) == 2
+
+            assert child_ops[0].name == "add_1"
+            assert child_ops[0].op_type == "add"
+            assert child_ops[0].params_name_mapping["y"] == "w_1"
+
+            assert child_ops[1].name == "add_2"
+            assert child_ops[1].op_type == "add"
+            assert child_ops[1].params_name_mapping["y"] == "w_1"
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 30, 10, 10)),
+                mb.TensorSpec(shape=(1, 30, 10, 10)),
+            ],
+        )
+        def prog(x, y):
+            shared_weight = mb.const(
+                val=np.random.rand(1, 30, 10, 10).astype(np.float32), name="w_1"
+            )
+            x = mb.add(x=x, y=shared_weight, name="add_1")
+            y = mb.add(x=y, y=shared_weight, name="add_2")
+            return x, y
+
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+        )
+
+        ops_metadata_dict = ct.optimize.coreml.get_weights_metadata(
+            mlmodel,
+            weight_threshold=100,
+        )
+        assert len(ops_metadata_dict) == 1
+        child_ops = ops_metadata_dict["w_1"].child_ops
+        _test_child_ops(child_ops)
+
+    @staticmethod
+    def test_get_weights_metadata_op_var_different_name():
+        """
+        For several rare corner cases, the const var and op have different names.
+        Test that the API is correctly using the op's name.
+        """
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 30, 10, 10)),
+            ],
+        )
+        def prog(x):
+            shared_weight = mb.const(
+                val=np.random.rand(1, 30, 10, 10).astype(np.float32), name="w_1"
+            )
+            shared_weight.name = "w_1_new"
+            x = mb.add(x=x, y=shared_weight, name="add_1")
+            return x
+
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+        )
+
+        ops_metadata_dict = ct.optimize.coreml.get_weights_metadata(
+            mlmodel,
+            weight_threshold=100,
+        )
+        assert "w_1" in ops_metadata_dict
+        assert ops_metadata_dict["w_1"].child_ops[0].params_name_mapping["y"] == "w_1"

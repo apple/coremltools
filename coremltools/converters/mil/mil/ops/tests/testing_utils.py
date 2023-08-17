@@ -3,7 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import functools
 from typing import Dict, List, Optional
+
+import pytest
 
 import coremltools as ct
 from coremltools import _logger as logger
@@ -11,6 +14,7 @@ from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.mil import Function, Placeholder, Program
 from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.testing_reqs import BackendConfig
 from coremltools.converters.mil.testing_utils import (
     compare_backend,
     ct_convert,
@@ -21,6 +25,33 @@ UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
 
 
+def mark_api_breaking(breaking_opset_version: ct.target):
+    """
+    The function is used to mark api breaking for MIL op unittests.
+    For instance, if `test_op_1` is supposed to pass from iOS14 -> iOS16 and breaks starting from iOS17,
+    we can use the following syntax:
+
+    @makr_api_breaking(breaking_opsey_version=ct.target.iOS17)
+    def test_op_1(self, backend, ...):
+        pass
+
+    Note that the test function must take `backend` with type of `BackendConfig` as an input.
+    """
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            backend = kwargs.get("backend", None)
+            if backend is None:
+                raise ValueError(
+                    f'Function {func} decorated with mark_api_breaking must takes "backend" as an input.'
+                )
+            if backend.opset_version >= breaking_opset_version:
+                pytest.skip(f"The test is breaking at opset version {breaking_opset_version}.")
+            return func(*args, **kwargs)
+        return wrapper
+
+    return decorator
+
 def run_compare_builder(
     build,
     input_placeholders,
@@ -29,13 +60,12 @@ def run_compare_builder(
     expected_outputs=None,
     compute_unit=ct.ComputeUnit.CPU_ONLY,
     frontend_only=False,
-    backend=("neuralnetwork", "fp32"),
+    backend: Optional[BackendConfig] = None,
     atol=1e-04,
     rtol=1e-05,
     inputs=None,
-    also_compare_shapes=False,
+    also_compare_shapes=True,
     converter=ct.convert,
-    minimum_deployment_target=None,
     pass_pipeline: Optional[PassPipeline] = None,
 ):
     """
@@ -67,14 +97,21 @@ def run_compare_builder(
             Reference to convert function to be used.
             Default: ct.convert
 
-        - minimum_deployment_target : coremltools.target enumeration (optional)
-            A member of the ``coremltools.target`` enum.
+        - backend: A BackendConfig that specifies the compute backend, precision and minimum_deployment_target
 
     Returns:
         The converted mlmodel
     """
-    if minimum_deployment_target is not None:
-        validate_minimum_deployment_target(minimum_deployment_target, backend)
+    if backend is None:
+        backend = BackendConfig(
+            backend="neuralnetwork",
+            precision="fp32",
+            opset_version=ct.target.iOS14,
+        )
+    minimum_deployment_target = backend.opset_version
+    backend = (backend.backend, backend.precision)
+
+    validate_minimum_deployment_target(minimum_deployment_target, backend)
 
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]

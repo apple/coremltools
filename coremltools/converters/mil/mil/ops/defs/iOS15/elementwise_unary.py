@@ -8,14 +8,16 @@ import math
 import numpy as np
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.input_type import (DefaultInputs,
-                                                       InputSpec,
-                                                       TensorInputType)
-from coremltools.converters.mil.mil.operation import (SYMBOL, VALUE, Operation,
-                                                      precondition)
+from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
+from coremltools.converters.mil.mil.operation import SYMBOL, VALUE, Operation, precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types import nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.types.type_mapping import (
+    builtin_to_string,
+    string_to_builtin,
+    string_to_nptype,
+)
 
 
 def _maintain_shape(x, y):
@@ -819,14 +821,11 @@ class cast(Operation):
     """
     Cast the input ``x`` to the new type ``dtype``.
 
-    Notice that the underlying Core MIL op doesn't support int64 and fp64. We support them in PyMIL
-    by mapping int64 to int32, and mapping fp64 to fp32.
-
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
     dtype: const str (Required)
-        * Can be one of the following types: ``int32``, ``int64``, ``fp32``, ``fp64``, ``bool``.
+        * Can be one of the following types: ``int32``, ``fp16``, ``fp32``, ``bool``.
 
     Returns
     -------
@@ -835,7 +834,7 @@ class cast(Operation):
 
     Attributes
     ----------
-    T: i32, i64, fp16, fp32, fp64, bool.
+    T: i32, fp16, fp32, bool.
     """
 
     input_spec = InputSpec(
@@ -844,39 +843,25 @@ class cast(Operation):
     )
 
     type_domains = {
-        "T": (types.fp16, types.fp32, types.fp64, types.int32, types.int64, types.bool),
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
 
-    str_to_types_map = {
-        "int32": types.int32,
-        "int64": types.int32,
-        "fp16": types.fp16,
-        "fp32": types.fp32,
-        "fp64": types.fp32,
-        "bool": types.bool,
-    }
-
-    str_to_numpy_type_map = {
-        "int32": np.int32,
-        "int64": np.int32,
-        "fp16": np.float16,
-        "fp32": np.float32,
-        "fp64": np.float32,
-        "bool": bool,
-    }
+    @classmethod
+    def supported_dtypes(cls):
+        return (builtin_to_string(v) for v in cls.type_domains["T"])
 
     def type_inference(self):
-        if self.dtype.val not in self.str_to_types_map.keys():
+        if self.dtype.val not in self.supported_dtypes():
             raise NotImplementedError(
                 "Parameter dtype of the cast operation can be one of the {}. "
-                "Provided {}".format(self.str_to_types_map.keys(), self.dtype.val)
+                "Provided {}".format(self.supported_dtypes(), self.dtype.val)
             )
 
         if not types.is_tensor(self.x.sym_type):
-            return self.str_to_types_map[self.dtype.val]
+            return string_to_builtin(self.dtype.val)
 
         ret_shape = self.x.shape
-        return types.tensor(self.str_to_types_map[self.dtype.val], ret_shape)
+        return types.tensor(string_to_builtin(self.dtype.val), ret_shape)
 
     @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
@@ -884,10 +869,10 @@ class cast(Operation):
 
     @classmethod
     def get_cast_value(cls, input_var, dtype_val):
-        if dtype_val not in cls.str_to_numpy_type_map.keys():
+        if dtype_val not in cls.supported_dtypes():
             raise NotImplementedError(
                 "Parameter dtype of the cast operation can be one of the {}. "
-                "Provided {}".format(cls.str_to_numpy_type_map.keys(), dtype_val)
+                "Provided {}".format(cls.supported_dtypes(), dtype_val)
             )
 
         if input_var.val is None:
@@ -897,7 +882,7 @@ class cast(Operation):
                 and len(input_var.sym_val.shape) == 1
             ):
                 result = [
-                    np.array(val).astype(dtype=cls.str_to_numpy_type_map[dtype_val]).item()
+                    np.array(val).astype(dtype=string_to_nptype(dtype_val)).item()
                     if not is_symbolic(val)
                     else val
                     for val in input_var.sym_val
@@ -906,6 +891,6 @@ class cast(Operation):
             return None
 
         if not types.is_tensor(input_var.sym_type):
-            return input_var.val.astype(dtype=cls.str_to_numpy_type_map[dtype_val])
+            return input_var.val.astype(dtype=string_to_nptype(dtype_val))
         else:
-            return np.array(input_var.val).astype(dtype=cls.str_to_numpy_type_map[dtype_val])
+            return np.array(input_var.val).astype(dtype=string_to_nptype(dtype_val))

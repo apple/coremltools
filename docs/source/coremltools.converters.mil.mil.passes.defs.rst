@@ -51,6 +51,7 @@ optimize_elementwise_binary
 .. automodule:: coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary
 
     .. autoclass:: divide_to_multiply
+    .. autoclass:: select_optimization
     .. autoclass:: fuse_elementwise_to_batchnorm
     .. autoclass:: rank0_expand_dims_swap
 
@@ -77,6 +78,7 @@ optimize_quantization
 
 .. automodule:: coremltools.converters.mil.mil.passes.defs.optimize_quantization
 
+    .. autoclass:: int_op_canonicalization
     .. autoclass:: nullify_redundant_quantization_zero_point
     .. autoclass:: dequantize_quantize_pair_elimination
     .. autoclass:: distributive_quantized_binary_op_scale_normalization

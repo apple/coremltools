@@ -205,6 +205,7 @@ class TF2Loader(TFLoader):
             inputs=self.kwargs["inputs"],
             outputs=self.kwargs["outputs"],
             opset_version=self.kwargs["specification_version"],
+            use_default_fp16_io=self.kwargs["use_default_fp16_io"],
         )
         return converter.convert()
 

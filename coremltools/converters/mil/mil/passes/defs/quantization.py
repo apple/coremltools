@@ -135,6 +135,7 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         "sigmoid_hard",
         "softplus_parametric",
     }
+    _ELEMENTWISE_UNARY_EPSILON_OPS: Set[str] = {"inverse", "log", "rsqrt"}
 
     def __init__(self, op_selector=None):
         super(FP16ComputePrecision, self).__init__(op_selector=op_selector)
@@ -183,10 +184,6 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         ]:
             return False
 
-        # TODO: Remove after supporting IOS17 FP16 RNN Ops (rdar://108143371)
-        if op.op_type in ["gru", "rnn", "lstm"]:
-            return False
-
         if self.fp16_overflow(op):
             return False
 
@@ -205,6 +202,10 @@ class FP16ComputePrecision(AbstractQuantizationPass):
             if op.op_type in self._ACTIVATION_ALPHA_OPS and param_name == "alpha":
                 return False
             if op.op_type in self._ACTIVATION_ALPHA_BETA_OPS and param_name in {"alpha", "beta"}:
+                return False
+
+            # Element-wise unary ops with epsilon also support mixed precision.
+            if op.op_type in self._ELEMENTWISE_UNARY_EPSILON_OPS and param_name == "epsilon":
                 return False
 
         return True

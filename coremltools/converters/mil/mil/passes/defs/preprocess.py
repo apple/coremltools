@@ -7,6 +7,7 @@ import re
 import warnings
 from collections import OrderedDict
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import EnumeratedShapes, ImageType, Shape
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, types
@@ -117,6 +118,10 @@ class NameSanitizer:
         self.all_names = set()
         self.prefix = "_" if prefix is None else prefix
 
+    @staticmethod
+    def _replace_invalid_char_with_underscore(name):
+        return re.sub("[^a-zA-Z0-9_]", "_", name)
+
     def sanitize_name(self, name):
         """
         Sanitize the input string and return it back.
@@ -136,7 +141,7 @@ class NameSanitizer:
         """
 
         # replace any character that is not [a-zA-Z0-9_] with an underscore
-        new_name = re.sub("[^a-zA-Z0-9_]", "_", name)
+        new_name = self._replace_invalid_char_with_underscore(name)
 
         # now check if the name starts with anything but [A-Za-z_]
         # if so, then add the prefix
@@ -325,6 +330,7 @@ class update_output_dtypes(AbstractGraphPass):
         user_provided_output_types = prog.main_output_types
         main_func = prog.functions["main"]
         output_vars = main_func.outputs
+        input_vars = list(main_func.inputs.values())
         if user_provided_output_types is None or len(user_provided_output_types) == 0:
             return
         if len(output_vars) != len(user_provided_output_types):
@@ -347,6 +353,15 @@ class update_output_dtypes(AbstractGraphPass):
             ):
                 # no need to update the output var's dtype in this case
                 new_outputs.append(output_var)
+            elif output_var in input_vars:
+                # Here is this rare special case, that the program input is also an output
+                # For this case, we don't do anything, and throw a warning message
+                new_outputs.append(output_var)
+                logger.warning(
+                    f"Output var '{output_var.name}' is also an input var, hence the "
+                    f"dtype cannot be changed: output var '{output_var.name}' remains "
+                    f"dtype {types.builtin_to_string(output_var.dtype)}"
+                )
             else:
                 output_var_name = output_var.name
                 output_var.set_name(

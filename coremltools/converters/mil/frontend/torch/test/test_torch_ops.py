@@ -25,7 +25,12 @@ from coremltools.converters.mil.frontend.torch.ops import (
 )
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.testing_utils import einsum_equations, gen_input_shapes_einsum
+from coremltools.converters.mil.testing_utils import (
+    einsum_equations,
+    gen_input_shapes_einsum,
+    get_op_types_in_program,
+    hardcoded_einsum_equations,
+)
 from coremltools.models.utils import _macos_version, _python_version
 
 from .testing_utils import ModuleWrapper, TorchBaseTest, contains_op, generate_input_data
@@ -464,7 +469,7 @@ class TestNLLLoss(TorchBaseTest):
         model = NLLLossModel()
         expected_results = model(*inputs)
 
-        self.run_compare_torch(
+        res = self.run_compare_torch(
             inputs,
             model,
             expected_results,
@@ -472,6 +477,12 @@ class TestNLLLoss(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
+
+        # verify that the translation function is using one_hot instead of gather
+        prog = res[1]._mil_program
+        ops = get_op_types_in_program(prog)
+        assert "gather" not in ops and "gather_nd" not in ops
+        assert "one_hot" in ops
 
 
 class TestArgSort(TorchBaseTest):
@@ -3283,10 +3294,6 @@ class TestLSTMWithPackedSequence(TorchBaseTest):
         LSTM_batch_first,
         pad_value,
     ):
-        if backend[0] == "mlprogram":
-            pytest.xfail(
-                "rdar://109081548 ([Bug] TestLSTMWithPackedSequence is failing through E5ML)"
-            )
         from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
         input_size = 4
@@ -3601,7 +3608,7 @@ class TestBoolOps(TorchBaseTest):
         elif y_type == "bool":
             y = torch.tensor([0, 0, 1, 1], dtype=torch.bool)
         return (x, y)
-    
+
     @pytest.mark.parametrize(
         "compute_unit, backend, input_types",
         itertools.product(
@@ -4652,7 +4659,7 @@ class TestEinsum(TorchBaseTest):
                 converter_input_type.reverse()
 
         model = TestBinaryEinsum()
-        self.run_compare_torch(
+        res = self.run_compare_torch(
             input_shapes,
             model,
             backend=backend,
@@ -4660,6 +4667,23 @@ class TestEinsum(TorchBaseTest):
             input_as_shape=True,
             converter_input_type=converter_input_type
         )
+
+        # Verify the pattern of the hardcode einsum cases
+        traced_model = res[0]
+        mlprogram = ct.convert(
+            traced_model,
+            inputs=converter_input_type,
+            convert_to="milinternal",
+            pass_pipeline=ct.PassPipeline.EMPTY,
+        )
+        ops_in_prog = get_op_types_in_program(mlprogram)
+
+        if (equation in hardcoded_einsum_equations) and not (
+            equation in ["abcd,cde->abe", "abc,cde->abde"] and dynamic
+        ):
+            assert "reduce_prod" not in ops_in_prog
+            assert "concat" not in ops_in_prog
+            assert "shape" not in ops_in_prog
 
     @pytest.mark.parametrize(
         "compute_unit, backend, equation, dynamic",
@@ -5959,6 +5983,48 @@ class TestRepeat(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
+
+
+class TestRepeatInterleave(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, repeat, dim",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 3, 5),
+            (2, torch.tensor(3), torch.tensor([4])),
+            (None, 0),
+        ),
+    )
+    def test_scalar_repeat_and_dim_None_or_0(self, compute_unit, backend, rank, repeat, dim):
+        input_shape = tuple(np.random.randint(low=1, high=6, size=rank))
+        model = ModuleWrapper(function=lambda x: x.repeat_interleave(repeat, dim=dim))
+        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+
+    def test_single_fill_tensor_repeat(self):
+        input_shape = (2, 3)
+        model = ModuleWrapper(function=lambda x: x.repeat_interleave(torch.tensor([2, 2]), dim=0))
+        self.run_compare_torch(input_shape, model)
+
+    def test_unsupported_tensor_repeat(self):
+        input_shape = (3, 1)
+        model = ModuleWrapper(
+            function=lambda x: x.repeat_interleave(torch.tensor([1, 2, 3]), dim=0)
+        )
+        with pytest.raises(
+            NotImplementedError,
+            match=r"Conversion for torch.repeat_interleave with Tensor repeats has not been implemented",
+        ):
+            self.run_compare_torch(input_shape, model)
+
+    def test_unsupported_dim1(self):
+        input_shape = (2, 1, 2, 1, 2)
+        model = ModuleWrapper(function=lambda x: x.repeat_interleave(2, dim=1))
+        with pytest.raises(
+            NotImplementedError,
+            match=r"Conversion for torch.repeat_interleave with non-zero dim has not been implemented",
+        ):
+            self.run_compare_torch(input_shape, model)
 
 
 class TestStd(TorchBaseTest):
@@ -9231,6 +9297,7 @@ class TestSpectrogram(TorchBaseTest):
                     x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
 
+        np.random.seed(1024)
         TorchBaseTest.run_compare_torch(
             input_shape,
             SpectrogramModel(),
@@ -9404,6 +9471,7 @@ class TestNms(TorchBaseTest):
             backend=backend,
             converter_input_type=converter_input_type,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
         )
 
         # Change the last input box to make IOU slightly smaller than 0.2, the output of CoreML will match PyTorch.
@@ -9417,6 +9485,7 @@ class TestNms(TorchBaseTest):
             backend=backend,
             converter_input_type=converter_input_type,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
         )
 
 
@@ -9692,6 +9761,10 @@ class TestScaledDotProductAttention(TorchBaseTest):
         ),
     )
     def test_attn_mask(self, compute_unit, backend, seq_lengths, bool_mask):
+        if bool_mask:
+            pytest.xfail(
+                "rdar://110499660 ([CI][Bug] test_attn_mask is occasionally failing when bool_mask = True)"
+            )
         source_seq_len, target_seq_len = seq_lengths
         query_shape = (2, 3, target_seq_len, 7)
         key_shape = (2, 3, source_seq_len, 7)

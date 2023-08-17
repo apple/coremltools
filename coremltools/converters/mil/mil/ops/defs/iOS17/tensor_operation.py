@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.input_type import InputSpec, TensorInputType
+from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation import (
     non_maximum_suppression as _nms_iOS15,
@@ -20,7 +20,7 @@ class non_maximum_suppression(_nms_iOS15):
 
     NMS iteratively removes lower-scoring boxes which have an IoU greater than ``iou_threshold`` with
     another (higher-scoring) box.
-    
+
     The major differences between this version and the iOS 15 :py:class:`~.iOS15.tensor_operation.non_maximum_suppression`
     are as follows:
 
@@ -84,11 +84,13 @@ class non_maximum_suppression(_nms_iOS15):
 @register_op(opset_version=_IOS17_TARGET)
 class topk(_topk_iOS16):
     """
-    A version of ``topk`` for iOS 17+. The only difference between this version and the
-    iOS 16 :py:class:`~.iOS16.tensor_operation.topk` is the data type support.
-    The newly added data type is:
-    - int16, unint16 for ``x`` and output.
-    - int16 for ``k``.
+    A version of ``topk`` for iOS 17+. The differences between this version and the
+    iOS 16 :py:class:`~.iOS16.tensor_operation.topk` are:
+    - New data type support. The newly added data type is:
+        - int8, uint8, int16, unint16 for ``x`` and output.
+        - int8, int16 for ``k``.
+    - Validation restrictions on the optional ``indices`` output: must be either uint16 or int32. Also
+      a new input parameter ``output_indices_dtype`` is added to set the dtype of output ``indices``.
 
     Parameters
     ----------
@@ -111,20 +113,24 @@ class topk(_topk_iOS16):
     return_indices: const<bool> (Optional)
         * Defaults to ``True``.
         * If ``True``, returns both values and indices. Otherwise, returns only the ``top-k`` values.
+    output_indices_dtype: const<str> (Optional, default="int32")
+        * It can only be set when ``return_indices`` is ``True``.
+        * This parameter can take ``"int32"`` or ``"uint16"`` as values.
 
     Returns
     -------
     tensor<\*?, T>
         * Values of top/bottom ``k`` elements.
 
-    tensor<\*?, int32>
+    tensor<\*?, U>
         * Only returned when ``return_indices = True``
         * Indices of the top/bottom ``k`` elements along axis.
+        * U is int32 or uint16 determined by ``output_indices_dtype`` (int32 by default).
 
     Attributes
     ----------
-    T: fp16, fp32, int16, int32, uint16
-    K: int16, int32
+    T: fp16, fp32, int8, int16, int32, uint8, uint16
+    K: int8, int16, int32
     """
 
     input_spec = InputSpec(
@@ -134,15 +140,49 @@ class topk(_topk_iOS16):
         ascending=TensorInputType(const=True, optional=True, type_domain=types.bool),
         sort=TensorInputType(const=True, optional=True, type_domain=types.bool),
         return_indices=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        output_indices_dtype=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
 
     type_domains = {
         "T": (
             types.fp16,
             types.fp32,
+            types.int8,
             types.int16,
             types.int32,
+            types.uint8,
             types.uint16,
         ),
-        "K": (types.int16, types.int32),
+        "K": (types.int8, types.int16, types.int32),
     }
+
+    _ALLOWED_OUTPUT_INDICES_DTYPES = {"int32", "uint16"}
+
+    def default_inputs(self):
+        parent_default_inputs = super().default_inputs()
+        # If return_indices is not set, it is default to True.
+        # output_indices_dtype can only be set when return_indices = True
+        if self.return_indices is None or self.return_indices.val:
+            return parent_default_inputs + DefaultInputs(output_indices_dtype="int32")
+        return parent_default_inputs
+
+    def type_inference(self):
+        if not self.return_indices.val and self.output_indices_dtype is not None:
+            raise ValueError(
+                'In iOS17 topk op, "output_indices_dtype" can only be set when "return_indices=True".'
+            )
+
+        if self.return_indices.val:
+            if self.output_indices_dtype.val not in self._ALLOWED_OUTPUT_INDICES_DTYPES:
+                raise ValueError(
+                    f'"topk" op invalid output_indices_dtype: "{self.output_indices_dtype.val}". '
+                    f"Valid options are: {self._ALLOWED_OUTPUT_INDICES_DTYPES}"
+                )
+
+            value_type, indices_type = super().type_inference()
+            indices_type = types.tensor(
+                types.string_to_builtin(self.output_indices_dtype.val), indices_type.get_shape()
+            )
+            return value_type, indices_type
+        else:
+            return super().type_inference()

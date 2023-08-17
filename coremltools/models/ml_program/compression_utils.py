@@ -67,7 +67,9 @@ def palettize_weights(mlmodel, nbits=None, mode="kmeans", op_selector=None, lut_
     version="7.0",
     obj_prefix="coremltools.compression_utils.",
 )
-def sparsify_weights(mlmodel, mode="threshold_based", threshold=1e-3, target_percentile=1.0, op_selector=None):
+def sparsify_weights(
+    mlmodel, mode="threshold_based", threshold=1e-12, target_percentile=1.0, op_selector=None
+):
     """
     ``coremltools.compression_utils.sparsify_weights`` is deprecated and will be removed in the future.
     Please use ``coremltools.optimize.coreml.prune_weights``.

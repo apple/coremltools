@@ -93,7 +93,7 @@ class band_part(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         M, N = self.x.val.shape[-2:]
-        band = np.zeros((M, N), dtype=types.nptype_from_builtin(self.x.sym_type))
+        band = np.zeros((M, N), dtype=types.nptype_from_builtin(self.x.dtype))
         num_lower = self.lower.val
         num_upper = self.upper.val
         for m in range(M):
@@ -462,6 +462,9 @@ class pad(Operation):
         * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
           at most ``D[i]``.
 
+        * If pad is not a constant, it must be a vector of length ``2 * rank(x)``,
+          that is, ``N == D_in``.
+
     mode: const<str> (Optional)
         * Defaults to ``constant``.
         * Must be one of the following values:
@@ -506,12 +509,16 @@ class pad(Operation):
             raise ValueError("Pad should be a 1D tensor!")
         if self.mode and self.mode.val not in {"constant", "reflect", "replicate"}:
             raise ValueError("Pad mode should be one of {'constant', 'reflect', 'replicate'}")
+        if pad.val is None and pad.shape[0] != self.x.rank * 2:
+            raise ValueError(
+                f"Non-constant 'pad' must have shape ({2*self.x.rank},). Got {pad.shape}"
+            )
 
-        if pad.val is None:
+        if pad.sym_val is None:
             for i in range(self.pad.shape[0] // 2):
                 ret_shape[-self.pad.shape[0] // 2 + i] = get_new_symbol()
         else:
-            pad = pad.val
+            pad = pad.sym_val
             pad = pad.copy()
 
             if len(pad) % 2 != 0:

@@ -60,3 +60,9 @@ def dict(keytype, valuetype):
 
     dict.__template_name__ = "dict[" + keytype.__name__ + "," + valuetype.__name__ + "]"
     return dict
+
+
+def is_dict(t):
+    if t is None:
+        return False
+    return get_type_info(t).name == "dict"

@@ -114,7 +114,7 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
     }
 }
 
-py::dict Model::predict(const py::dict& input) {
+py::dict Model::predict(const py::dict& input) const {
     @autoreleasepool {
         NSError *error = nil;
         MLDictionaryFeatureProvider *inFeatures = Utils::dictToFeatures(input, &error);
@@ -127,7 +127,7 @@ py::dict Model::predict(const py::dict& input) {
 }
 
 
-py::list Model::batchPredict(const py::list& batch) {
+py::list Model::batchPredict(const py::list& batch) const {
   @autoreleasepool {
       NSError* error = nil;
 
@@ -155,6 +155,11 @@ py::list Model::batchPredict(const py::list& batch) {
 }
 
 
+py::str Model::getCompiledModelPath() const {
+    return [this->compiledUrl.path UTF8String];
+}
+
+
 py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
 
     CoreML::Specification::Model model;
@@ -169,6 +174,20 @@ py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
     return static_cast<py::bytes>(modelOut.str());
 
 }
+
+
+py::str Model::compileModel(const std::string& urlStr) {
+    @autoreleasepool {
+        NSError* error = nil;
+
+        NSURL* specUrl = Utils::stringToNSURL(urlStr);
+        NSURL* compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+
+        Utils::handleError(error);
+        return [compiledUrl.path UTF8String];
+    }
+}
+
 
 int32_t Model::maximumSupportedSpecificationVersion() {
     return CoreML::MLMODEL_SPECIFICATION_VERSION_NEWEST;
@@ -188,8 +207,10 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def(py::init<const std::string&, const std::string&>())
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
+        .def("get_compiled_model_path", &Model::getCompiledModelPath)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
-        .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
+        .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion)
+        .def_static("compileModel", &Model::compileModel);
 
     return m.ptr();
 }

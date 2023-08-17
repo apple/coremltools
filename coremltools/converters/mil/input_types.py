@@ -210,8 +210,19 @@ class TensorType(InputType):
         if dtype is not None:
             if is_builtin(dtype):
                 self.dtype = dtype
-                if dtype not in (types.fp16, types.fp32, types.fp64, types.int32, types.int64, types.bool):
-                    raise TypeError("dtype={} is unsupported for inputs/outputs of the model".format(dtype))
+                if dtype not in (
+                    types.int8,
+                    types.uint8,
+                    types.fp16,
+                    types.fp32,
+                    types.fp64,
+                    types.int32,
+                    types.int64,
+                    types.bool,
+                ):
+                    raise TypeError(
+                        "dtype={} is unsupported for inputs/outputs of the model".format(dtype)
+                    )
             else:
                 # Assume dtype is numpy type
                 try:
