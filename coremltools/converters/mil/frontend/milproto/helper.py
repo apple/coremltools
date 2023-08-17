@@ -23,7 +23,7 @@ def proto_to_types(valuetype):
     """
     if valuetype.WhichOneof("type") == "tensorType":
         tensortype = valuetype.tensorType
-        dtype = types.proto_to_builtin_types[tensortype.dataType]
+        dtype = types.PROTO_TO_BUILTIN_TYPE[tensortype.dataType]
 
         if tensortype.rank < 0:
             raise ValueError("Negative or Dynamic ranks not supported")
@@ -39,13 +39,13 @@ def proto_to_types(valuetype):
         # For the zero rank tensor, we always convert it back to scalar in PyMIL first
         if tensortype.rank == 0:
             return dtype
-            
+
         return types.tensor(dtype, shape)
 
     elif valuetype.WhichOneof("type") == "listType":
         listtype = valuetype.listType
         elem_type = proto_to_types(listtype.type)
-        
+
         if listtype.length.unknown:
             init_length = None
         else:
@@ -59,7 +59,7 @@ def proto_to_types(valuetype):
         dicttype = valuetype.dictionaryType
         keytype = proto_to_types(dicttype.keyType)
         valuetype = proto_to_types(dicttype.valueType)
-        
+
         return types.dict(keytype, valuetype)
     else:
         raise NotImplementedError("Types {} not yet implemented".format(valuetype.WhichOneof("type")))

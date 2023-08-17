@@ -57,6 +57,7 @@ class TestApiVisibilities:
 
     def test_utils(self):
         expected = [
+            "compile_model",
             "convert_double_to_float_multiarray_type",
             "evaluate_classifier",
             "evaluate_classifier_with_probabilities",
@@ -71,6 +72,7 @@ class TestApiVisibilities:
 
     def test_models(self):
         expected = [
+            "CompiledMLModel",
             "MLModel",
             "datatypes",
             "feature_vectorizer",
@@ -87,6 +89,7 @@ class TestApiVisibilities:
     def test_models_mlmodel(self):
         expected = [
             "author",
+            "get_compiled_model_path",
             "get_spec",
             "input_description",
             "license",
@@ -179,6 +182,9 @@ class TestApiVisibilities:
             "palettize_weights",
             "prune_weights",
             "decompress_weights",
+            "get_weights_metadata",
+            "CoreMLWeightMetaData",
+            "CoreMLOpMetaData",
         ]
         _check_visible_modules(_get_visible_items(ct.optimize.coreml), expected)
 

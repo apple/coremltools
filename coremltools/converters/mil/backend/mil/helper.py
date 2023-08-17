@@ -10,10 +10,12 @@ import numpy as np
 import coremltools.proto.FeatureTypes_pb2 as ft
 import coremltools.proto.MIL_pb2 as pm
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types import (builtin_to_proto_types,
-                                                  builtin_to_string,
-                                                  numpy_type_to_builtin_type,
-                                                  type_to_builtin_type)
+from coremltools.converters.mil.mil.types import (
+    BUILTIN_TO_PROTO_TYPES,
+    builtin_to_string,
+    numpy_type_to_builtin_type,
+    type_to_builtin_type,
+)
 from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
 from coremltools.models.utils import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 
@@ -91,20 +93,30 @@ def update_tensortype(t_type, shape, data_type):
         set_proto_dim(t_dim, s)
 
 def _tensor_field_by_type(tensor_val, builtin_type):
+    """
+    Pick the field based on the builtin_type.
+
+    The field is defined in TensorValue in ``mlmodel/format/MIL.proto``.
+    The picked field need to be consistent with how it will be read by MIL.
+    For example, int8 is serialized to ``bytes`` field while int16 is serialized to ``ints`` field.
+    """
     if builtin_type == types.bool:
         return tensor_val.bools.values
     elif types.is_int(builtin_type):
-        if (builtin_type == types.int64 or builtin_type == types.uint64):
+        if builtin_type == types.int64 or builtin_type == types.uint64:
             return tensor_val.longInts.values
         if builtin_type in (types.int8, types.uint8, types.uint32):
             return tensor_val.bytes.values
+        if builtin_type == types.int16 or builtin_type == types.uint16:
+            # TODO (rdar://111797203): Serialize to byte after MIL changes to read from byte field.
+            return tensor_val.ints.values
         return tensor_val.ints.values
     elif types.is_float(builtin_type):
-        if (builtin_type == types.fp64):
+        if builtin_type == types.fp64:
             return tensor_val.doubles.values
-        elif (builtin_type == types.fp32):
+        elif builtin_type == types.fp32:
             return tensor_val.floats.values
-        elif (builtin_type == types.fp16):
+        elif builtin_type == types.fp16:
             return tensor_val.bytes.values
         else:
             raise TypeError(
@@ -177,14 +189,8 @@ def create_scalar_value(py_scalar):
 
     # Set the tensor value
     t_field = _tensor_field_by_type(t_val, builtin_type)
-    if builtin_type in (
-        types.fp16,
-        types.int8,
-        types.uint8,
-        types.int16,
-        types.uint16,
-        types.uint32,
-    ):
+    if builtin_type in (types.fp16, types.int8, types.uint8, types.uint32):
+        # Serialize to bytes because MIL read them from the "bytes" field in TensorValue.
         val.immediateValue.tensor.bytes.values = np_val_to_py_type(py_scalar)
     else:
         if builtin_type == types.str:
@@ -243,7 +249,7 @@ def create_file_value_tensor(file_name, offset, dim, data_type):
 
 
 def types_to_proto_primitive(valuetype):
-    if valuetype not in builtin_to_proto_types:
+    if valuetype not in BUILTIN_TO_PROTO_TYPES:
         additional_error_msg = ""
         if valuetype in (types.complex64, types.complex128):
             additional_error_msg = (
@@ -253,7 +259,7 @@ def types_to_proto_primitive(valuetype):
         raise ValueError(
             f"Unknown map from SSA type {valuetype} to Proto type. {additional_error_msg}"
         )
-    return builtin_to_proto_types[valuetype]
+    return BUILTIN_TO_PROTO_TYPES[valuetype]
 
 
 def types_to_proto(valuetype):

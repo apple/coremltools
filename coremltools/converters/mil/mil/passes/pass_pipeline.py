@@ -21,9 +21,10 @@ _COMMON_PASSES: List[Text] = [
     "common::update_output_dtypes",
     "common::cast_optimization",
     "common::noop_elimination",
-    # quantization pass 1: canonicalize zero point
+    # quantization pass 1: canonicalizations
     # always start quantization passes with canonicalizations
-    "common::nullify_redundant_quantization_zero_point",
+    "common::int_op_canonicalization",  # ops that support int do not need dequantize -> op -> quantize sandwich
+    "common::nullify_redundant_quantization_zero_point",  # canonicalize zero point
     # quantization pass 2: remove redundancy
     # remove redundancy after canonicalization but before anything else
     "common::dequantize_quantize_pair_elimination",
@@ -36,6 +37,7 @@ _COMMON_PASSES: List[Text] = [
     "common::const_elimination",
     "common::sanitize_input_output_names",
     "common::divide_to_multiply",
+    "common::select_optimization",
     "common::add_conv_transpose_output_shape",
     "common::const_elimination",
     "common::const_deduplication",  # after all consts have been settled
@@ -356,18 +358,18 @@ class PassPipeline:
                     f"pipeline: {self._pass_names}"
                 )
 
-    @staticmethod
-    def get_pipeline(pipeline_name: Text) -> PassPipeline:
+    @classmethod
+    def get_pipeline(cls, pipeline_name: Text) -> PassPipeline:
         """
         Gets a pipeline based on the name. Raises an error if no pipeline is found.
         Available Pipelines are defined in _PIPELINE_NAME_TO_PASSES
         """
-        if pipeline_name not in PassPipeline._PIPELINE_NAME_TO_PASSES:
+        if pipeline_name not in cls._PIPELINE_NAME_TO_PASSES:
             raise ValueError(
                 f"There is no pipeline for `{pipeline_name}`. "
-                f"Available pipelines: {PassPipeline._PIPELINE_NAME_TO_PASSES.keys()}"
+                f"Available pipelines: {cls._PIPELINE_NAME_TO_PASSES.keys()}"
             )
-        return PassPipeline(PassPipeline._PIPELINE_NAME_TO_PASSES[pipeline_name], pipeline_name)
+        return PassPipeline(cls._PIPELINE_NAME_TO_PASSES[pipeline_name], pipeline_name)
 
     """
     =======================================
@@ -382,19 +384,19 @@ class PassPipeline:
     @_classproperty
     def DEFAULT(cls) -> PassPipeline:
         """Creates a pipeline that the converter uses by default."""
-        return PassPipeline.get_pipeline("default")
+        return cls.get_pipeline("default")
 
     @_classproperty
     def CLEANUP(cls) -> PassPipeline:
         """Create a pipeline that contains cleanup passes."""
-        return PassPipeline.get_pipeline("cleanup")
+        return cls.get_pipeline("cleanup")
 
     @_classproperty
     def DEFAULT_PALETTIZATION(cls) -> PassPipeline:
         """Create a default palettization pipeline to convert a compressed source model"""
         # We use delayed import to avoid circular import
         from coremltools.optimize.coreml import OpPalettizerConfig, OptimizationConfig
-        pipeline = PassPipeline.get_pipeline("default_palettization")
+        pipeline = cls.get_pipeline("default_palettization")
 
         # set default palettization
         config = OptimizationConfig(global_config=OpPalettizerConfig(mode="unique"))
@@ -406,12 +408,12 @@ class PassPipeline:
         """Create a default sparsification pipeline to convert a compressed source model"""
         # We use delayed import to avoid circular import
         from coremltools.optimize.coreml import OpThresholdPrunerConfig, OptimizationConfig
-        pipeline = PassPipeline.get_pipeline("default_sparsification")
+        pipeline = cls.get_pipeline("default_sparsification")
 
         # set default sparsification
         config = OptimizationConfig(
             global_config=OpThresholdPrunerConfig(
-                threshold=1e-3,
+                threshold=1e-12,
             )
         )
         pipeline.set_options("compression::prune_weights", {"config": config})

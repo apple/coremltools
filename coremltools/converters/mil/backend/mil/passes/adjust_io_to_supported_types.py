@@ -79,7 +79,7 @@ def _adjust_var_dtype_helper(var, dtype):
 def _get_io_supported_types(opset_version: target) -> Set[type]:
     """Get Core ML I/O supported data types based on opset version."""
     supported_types = {types.fp32, types.int32}
-    if opset_version >= target.iOS16:
+    if opset_version is not None and opset_version >= target.iOS16:
         supported_types.add(types.fp16)
     return supported_types
 
@@ -88,7 +88,7 @@ def _get_runtime_supported_types(opset_version: target) -> Set[type]:
     """Get Core ML Runtime supported data types based on opset version."""
     supported_types = {types.fp16, types.fp32, types.int32, types.str, types.bool}
     if opset_version >= target.iOS17:
-        supported_types.update({types.int16, types.uint16})
+        supported_types.update({types.int8, types.uint8, types.int16, types.uint16})
     return supported_types
 
 

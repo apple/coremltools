@@ -73,7 +73,7 @@ def build_einsum_mil(vars: List[Var], equation: str, name: str) -> Var:
     parsed_vectors = parse_einsum_equation(equation)
 
     if len(vars) != 2:
-        return solve_generic_einsum(parsed_vectors, vars, name)
+        return solve_generic_einsum(list(parsed_vectors), vars, name)
 
     equation_rev = _reverse_input_einsum_eq(equation)
     parsed_vectors_rev = parse_einsum_equation(equation_rev)
@@ -82,7 +82,7 @@ def build_einsum_mil(vars: List[Var], equation: str, name: str) -> Var:
         return b, a
 
     a_var, b_var = vars
-    is_dynamic = any([is_symbolic(var) for var in vars])
+    is_dynamic = any([any_symbolic(var.shape) for var in vars])
     # list of equations supported for explicit mil translations
     vec_bnqd_bnkd_bnqk = (
         [0, 1, 2, 3],
@@ -173,7 +173,7 @@ def build_einsum_mil(vars: List[Var], equation: str, name: str) -> Var:
         else:
             x = mb.einsum(values=(b_var, a_var), equation=equation_rev, name=name)
     else:
-        x = solve_generic_einsum(parsed_vectors, [a_var, b_var], name)
+        x = solve_generic_einsum(list(parsed_vectors), [a_var, b_var], name)
 
     return x
 

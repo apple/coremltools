@@ -276,10 +276,7 @@ def spatial_dimensions_out_shape(
         # * `effective_ks` (effective kernel size, determined from kernel size + dilations) cannot be symbolic
         # * strides cannot be symbolic
         if is_symbolic(input_shape[r]):
-            if not is_symbolic(pad[r]) and pad[r] - effective_ks[r] == -1 and strides[r] == 1:
-                out_shape.append(input_shape[r])
-            else:
-                out_shape.append(get_new_symbol())
+            out_shape.append(get_new_symbol())
         else:
             out_dim = 0
             if not ceil_mode:
@@ -294,7 +291,7 @@ def spatial_dimensions_out_shape(
     return out_shape
 
 
-def parse_einsum_equation(equation: str) -> List[List[str]]:
+def parse_einsum_equation(equation: str) -> Tuple[List[str]]:
     """
     Args
         equation : str
@@ -341,7 +338,7 @@ def parse_einsum_equation(equation: str) -> List[List[str]]:
         index, vec = _update_vec(inout_str, map_char_to_int, index)
         in_outs_vec.append(vec)
 
-    return in_outs_vec
+    return tuple(in_outs_vec)
 
 def compute_gather(params, indices, axis, batch_dims):
     """
@@ -459,6 +456,13 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
         """
         We first deal with those cases, where the output size is a deterministic number, even if the input dimension
         is unknown (i.e. symbolic)
+        - No begin_mask and no end_mask:
+          - begin == end. output shape = 0.
+          - begin == end - 1, stride > 0. output shape = 1
+          - begin == end + 1, stride < 0. output shape = 1
+        - begin_mask is false and end_mask is true:
+          - begin == -1, stride > 0. output shape = 1
+          - begin == 0, stride < 0. output shape = 1
         """
         if (
             not begin_mask[idx]
@@ -466,9 +470,7 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
             and begin[idx] is not None
             and end[idx] is not None
         ):
-            # in this case the slice is from "begin" to "end", where both these boundary points are known
-            # we can find the size of the slice in this case, unless one of them is positive and other is negative
-            # as in that case, we would need to know the size of the full input dimension
+            out_shape = None
             if begin[idx] >= 0 and end[idx] >= 0 and stride[idx] > 0:
                 if end[idx] < begin[idx]:
                     raise ValueError(
@@ -477,12 +479,10 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
                             idx, begin[idx], end[idx], stride[idx]
                         )
                     )
-                ret_shape.append(
-                    np.arange(end[idx] - begin[idx])[
-                        slice(0, end[idx] - begin[idx], stride[idx])
-                    ].size
-                )
-                continue
+                out_shape = np.arange(end[idx] - begin[idx])[
+                    slice(0, end[idx] - begin[idx], stride[idx])
+                ].size
+
             if begin[idx] < 0 and end[idx] < 0 and stride[idx] < 0:
                 if begin[idx] < end[idx]:
                     raise ValueError(
@@ -491,41 +491,17 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
                             idx, begin[idx], end[idx], stride[idx]
                         )
                     )
-                ret_shape.append(
-                    np.arange(begin[idx] - end[idx])[
-                        slice(-1, end[idx] - begin[idx] - 1, stride[idx])
-                    ].size
-                )
-                continue
+                out_shape = np.arange(begin[idx] - end[idx])[
+                    slice(-1, end[idx] - begin[idx] - 1, stride[idx])
+                ].size
 
-        if begin_mask[idx] and not end_mask[idx] and end[idx] is not None:
-            # in this case we know that the slice is [0, end] or [-1, end], depending on the sign of stride,
-            #  and the value of end is known
-            if end[idx] > 0 and stride[idx] > 0:
-                ret_shape.append(
-                    np.arange(end[idx])[slice(None, end[idx], stride[idx])].size
-                )
-                continue
-            if end[idx] < 0 and stride[idx] < 0:
-                ret_shape.append(
-                    np.arange(abs(end[idx]))[slice(None, end[idx], stride[idx])].size
-                )
+            if out_shape in (0, 1):
+                ret_shape.append(out_shape)
                 continue
 
         if not begin_mask[idx] and end_mask[idx] and begin[idx] is not None:
-            # in this case we know the value of begin, and since end_mask is True, we know that the slice
-            # is till the right most edge
-            if begin[idx] > 0 and stride[idx] < 0:
-                ret_shape.append(
-                    np.arange(begin[idx] + 1)[slice(begin[idx], None, stride[idx])].size
-                )
-                continue
-            if begin[idx] < 0 and stride[idx] > 0:
-                ret_shape.append(
-                    np.arange(abs(begin[idx]))[
-                        slice(begin[idx], None, stride[idx])
-                    ].size
-                )
+            if (begin[idx] == 0 and stride[idx] < 0) or (begin[idx] == -1 and stride[idx] > 0):
+                ret_shape.append(1)
                 continue
 
         # for symbolic case

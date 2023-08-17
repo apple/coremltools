@@ -144,6 +144,10 @@ NUM_TO_TORCH_DTYPE = {
     14: torch.qint32,
 }
 
+TORCH_DTYPE_TO_NUM = {
+    dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
+}
+
 NUMPY_DTYPE_TO_TORCH_NUM = {
     _np.uint8: 0,
     _np.int8: 1,
@@ -1581,7 +1585,7 @@ def view(context, node):
         view = mb.complex(real_data=real, imag_data=imag, name=node.name)
     else:
         view = mb.reshape(x=x, shape=shape, name=node.name)
-        
+
     context.add(view)
 
 
@@ -3755,6 +3759,14 @@ def randint(context, node):
     context.add(rand_int)
 
 @register_torch_op
+def rand(context, node):
+    shape, _, dtype, _, _ = _get_inputs(context, node)
+    dtype = NUM_TO_DTYPE_STRING[TORCH_DTYPE_TO_NUM[dtype.val]] if dtype else "fp32"
+    low, high = mb.cast(x=0.0, dtype=dtype), mb.cast(x=1.0, dtype=dtype)
+    rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
+    context.add(rand_uniform, node.name)
+
+@register_torch_op
 def randn(context, node):
     inputs = _get_inputs(context, node, expected=5)
     shape = inputs[0]
@@ -3892,6 +3904,7 @@ def nll_loss(context, node):
 
     # compute the weights loss
     batch_size = x.shape[0]
+    class_num = x.shape[1]
 
     # only support weight and ignore_index both None
     if weight is not None:
@@ -3901,9 +3914,12 @@ def nll_loss(context, node):
 
     x = mb.cast(x=x, dtype="fp32")
     x = mb.mul(x=x, y=-1.)
-    range_indices = mb.range_1d(end=batch_size, start=0, step=1)
-    total_indices = mb.stack(values=[range_indices, target], axis=1)
-    loss = mb.gather_nd(x=x, indices=total_indices)
+
+    target = mb.cast(x=target, dtype="int32")
+    labels = mb.one_hot(indices=target, one_hot_vector_size=class_num)
+    labels = mb.cast(x=labels, dtype="fp32")
+    loss = mb.mul(x=x, y=labels)
+    loss = mb.reduce_sum(x=loss, axes=[1])
 
     # reduction type
     if reduction == "none":
@@ -4327,13 +4343,14 @@ def meshgrid(context, node):
 # Defines all the nodes that are noOps
 @register_torch_op(
     torch_alias=[
+        "clone",
+        "contiguous",
+        "detach",
+        "device",
         "dropout",
         "dropout_",
         "feature_dropout",
-        "contiguous",
-        "device",
-        "detach",
-        "clone",
+        "lift_fresh",
     ]
 )
 def noop(context, node):
@@ -4579,6 +4596,69 @@ def repeat(context, node):
     if reps.shape[0] > len(x.shape):
         x = mb.expand_dims(x=x, axes=list(range(reps.shape[0] - x.rank)))
     context.add(mb.tile(x=x, reps=reps, name=node.name))
+
+
+@register_torch_op
+def repeat_interleave(context, node):
+    """
+    For now, we only support scalar repeats + None or 0 dim
+    """
+    x, repeats, dim, _ = _get_inputs(context, node, expected=4)
+
+    repeats_val = repeats.val
+    if isinstance(repeats_val, np.ndarray):
+        repeats_val0 = np.expand_dims(repeats_val, 0).reshape(-1)[0]
+        if np.any(repeats_val != repeats_val0):
+            raise NotImplementedError(
+                "Conversion for torch.repeat_interleave with Tensor repeats has not been implemented"
+            )
+        repeats_val = repeats_val0
+
+    # This would operate on the flattened input tensor
+    if dim is None:
+        x = mb.reshape(x=x, shape=(-1,))
+    else:
+        if dim.val != 0:
+            raise NotImplementedError(
+                "Conversion for torch.repeat_interleave with non-zero dim has not been implemented"
+            )
+
+    """
+    on a high level:
+         x
+         | tile in dim 0
+         v
+        [x, x, ...]
+         | reshape to split the repeats
+         v
+        [[x],
+         [x],
+         ...]
+         | transpose(1, 0)
+         V
+        [x^T, x^T, ...]
+         | flatten
+         V
+        result
+    """
+
+    reps = [1] * x.rank
+    reps[0] = repeats_val
+    x_tiled = mb.tile(x=x, reps=reps)
+
+    split_reps = [repeats_val] + list(x.shape)
+    x_reshaped = mb.reshape(x=x_tiled, shape=list(split_reps))
+
+    perm = [*range(x.rank + 1)]
+    perm[0] = 1
+    perm[1] = 0
+    x_transposed = mb.transpose(x=x_reshaped, perm=perm)
+
+    result_shape = list(x.shape)
+    result_shape[0] = -1
+    result = mb.reshape(x=x_transposed, shape=result_shape, name=node.name)
+
+    context.add(result)
 
 
 @register_torch_op
@@ -5763,6 +5843,18 @@ def imag(context, node):
 
 
 @register_torch_op
+def view_as_real(context, node):
+    input_data = _get_inputs(context, node, expected=1)[0]
+    if not types.is_complex(input_data.dtype):
+        raise ValueError(f"view_as_real only supports complex input, but got {types.builtin_to_string(input_data.dtype)}")
+
+    real_part = mb.complex_real(data=input_data)
+    imag_part = mb.complex_imag(data=input_data)
+    result = mb.stack(values=[real_part, imag_part], axis=-1)
+    context.add(result, node.name)
+
+
+@register_torch_op
 def fft_fft(context, node):
     """Lowers torch.fft.fft by the dialect op `complex_fft` from complex_dialect_ops.py."""
     input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
@@ -5834,12 +5926,12 @@ def stft(context, node):
     if types.is_complex(input_data.dtype):
         onesided = False # pytorch defaults onesided to False for complex inputs
     stft_res = mb.complex_stft(
-        input=input_data, 
-        n_fft=n_fft, 
-        hop_length=hop_length, 
-        win_length=win_length, 
-        window=window, 
-        normalized=normalized, 
+        input=input_data,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+        window=window,
+        normalized=normalized,
         onesided=onesided)
     context.add(stft_res, node.name)
 

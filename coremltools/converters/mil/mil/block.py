@@ -445,6 +445,8 @@ class Block:
             old_var.consuming_blocks.remove(self)
             # Ensure output name is consistent
             if isinstance(self, Function):
+                if new_var in self.inputs.values() and new_var.name != old_var.name:
+                    raise ValueError("It is not allowed to modify function inputs name.")
                 new_var.name = old_var.name
 
     def try_replace_uses_of_var_after_op(

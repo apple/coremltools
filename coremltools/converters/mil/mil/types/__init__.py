@@ -11,20 +11,36 @@ from .type_complex import complex, complex64, complex128, is_complex
 from .type_dict import dict, empty_dict
 from .type_double import double, float, fp16, fp32, fp64, is_float
 from .type_globals_pseudo_type import globals_pseudo_type
-from .type_int import (int8, int16, int32, int64, is_int, uint, uint8,
-                       uint16, uint32, uint64)
+from .type_int import int8, int16, int32, int64, is_int, uint, uint8, uint16, uint32, uint64
 from .type_list import empty_list, is_list, list
-from .type_mapping import (builtin_to_proto_types, builtin_to_string,
-                           is_builtin, is_dict, is_primitive, is_scalar,
-                           is_str, is_subtype, is_tensor, is_tuple,
-                           np_dtype_to_py_type, nptype_from_builtin,
-                           numpy_type_to_builtin_type,
-                           numpy_val_to_builtin_val, promote_dtypes,
-                           promote_types, proto_to_builtin_types,
-                           string_to_builtin, type_to_builtin_type)
+from .type_mapping import (
+    BUILTIN_TO_PROTO_TYPES,
+    PROTO_TO_BUILTIN_TYPE,
+    builtin_to_string,
+    is_builtin,
+    is_dict,
+    is_primitive,
+    is_scalar,
+    is_str,
+    is_subtype,
+    is_tensor,
+    is_tuple,
+    np_dtype_to_py_type,
+    nptype_from_builtin,
+    numpy_type_to_builtin_type,
+    numpy_val_to_builtin_val,
+    promote_dtypes,
+    promote_types,
+    string_to_builtin,
+    type_to_builtin_type,
+)
 from .type_str import str
-from .type_tensor import (is_compatible_type, is_tensor_and_is_compatible,
-                          tensor, tensor_has_complete_shape)
+from .type_tensor import (
+    is_compatible_type,
+    is_tensor_and_is_compatible,
+    tensor,
+    tensor_has_complete_shape,
+)
 from .type_tuple import tuple
 from .type_unknown import unknown
 from .type_void import void

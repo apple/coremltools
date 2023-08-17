@@ -5,12 +5,13 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import Operation, get_new_symbol, types
 from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing import (
     crop_resize as _crop_resize_iOS16,
 )
+from coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing import resample as _resample_iOS16
 from coremltools.converters.mil.mil.ops.defs.iOS17 import _IOS17_TARGET
 
 
@@ -182,4 +183,160 @@ class crop_resize(_crop_resize_iOS16):
             self.target_height.val,
             self.target_width.val,
         ]
+        return types.tensor(self.x.dtype, ret_shape)
+
+
+@register_op(opset_version=_IOS17_TARGET)
+class resample(_resample_iOS16):
+    """
+    Resample the input image tensor ``x`` at the ``coordinates``.
+
+    The major difference between this version and the iOS 16 :py:class:`~.iOS16.image_resizing.resample`
+    is that `coordinates` supports int8, uint8, int16, uint16.
+    """
+
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        coordinates=TensorInputType(type_domain="U"),
+        sampling_mode=TensorInputType(const=True, type_domain=types.str),
+        padding_mode=TensorInputType(const=True, type_domain=types.str),
+        padding_value=TensorInputType(const=True, type_domain="T"),
+        coordinates_mode=TensorInputType(const=True, type_domain=types.str),
+        align_corners=TensorInputType(const=True, type_domain=types.bool),
+    )
+
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+        "U": (
+            types.int8,
+            types.uint8,
+            types.int16,
+            types.uint16,
+            types.int32,
+            types.fp16,
+            types.fp32,
+        ),
+    }
+
+
+@register_op(opset_version=_IOS17_TARGET)
+class resize(Operation):
+    """
+    Resizes the input tensor ``x`` by choosing the right-most ``resized_dims`` dimensions from
+    the input shape ``shape``, and by choosing the rest from ``x``'s shape.
+
+    This iOS17 ``resize`` is a superset of ``resize_bilinear`` and ``resize_nearest_neighbor`` in
+    iOS15. The main benefit is that this resize op allows a use-case in dynamic tensor shapes where
+    a tensor needs to be resized to a dynamic shape as specified by another tensor.
+
+    To illustrate how output shape is inferred, here are two examples.
+    - Example #1
+        x.shape: [1, 2, 3, 4]
+        shape: [1, 6, 8]
+        resized_dims: 2
+        The output's shape will be [1, 2, 6, 8]
+    - Example #2
+        x.shape: [1, 2, 3, is0]
+        shape: [1, 0, 0]
+        resized_dims: 2
+        The output's shape will be [1, 2, 3, is0]
+
+    Parameters
+    ----------
+    x: tensor<[...], T> (Required)
+
+    shape: tensor<[K], U> (Required)
+        * Restriction: ``size(shape)`` <= ``rank(x)``
+        * If shape[i]==0, the dimension in the output tensor will instead be inferred from the
+          corresponding element of x.shape().  Note this might not be x.shape()[i], as size(shape),
+          resized_dims, and size(x) may all be different sizes.
+
+    resized_dims: const tensor<[], uint32> (Required)
+        * Restriction: ``resized_dims`` <= ``size(shape)``
+
+    interpolation_mode: const<str> (Optional, default="LINEAR")
+        * Available mode: ``LINEAR``, ``NEAREST_NEIGHBOR``.
+
+    sampling_mode: const<str> (Optional, default="DEFAULT")
+        * Available mode: ``DEFAULT``, ``STRICT_ALIGN_CORNERS``, ``ALIGN_CORNERS``,
+        ``OFFSET_CORNERS``, ``UNALIGN_CORNERS``.
+        * For details about different sampling modes, see iOS 15 :py:class:`~.iOS15.image_resizing.resize_bilinear`.
+
+    Returns
+    -------
+    tensor<[...], T>
+
+    Attributes
+    ----------
+    T: fp16, fp32, int32
+    U: int32, int16, uint16, uint32
+    """
+
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        shape=TensorInputType(type_domain="U"),
+        resized_dims=TensorInputType(const=True, type_domain=types.uint32),
+        interpolation_mode=TensorInputType(const=True, optional=True, type_domain=types.str),
+        sampling_mode=TensorInputType(const=True, optional=True, type_domain=types.str),
+    )
+
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+        "U": (types.int32, types.int16, types.uint16, types.uint32),
+    }
+
+    _VALID_INTERPOLATION_MODES = {"LINEAR", "NEAREST_NEIGHBOR"}
+    _VALID_SAMPLING_MODE = {
+        "DEFAULT",
+        "STRICT_ALIGN_CORNERS",
+        "ALIGN_CORNERS",
+        "OFFSET_CORNERS",
+        "UNALIGN_CORNERS",
+    }
+
+    def default_inputs(self):
+        return DefaultInputs(
+            interpolation_mode="LINEAR",
+            sampling_mode="DEFAULT",
+        )
+
+    def _validate_input(self):
+        if self.shape.val is not None:
+            shape_element_num = self.shape.val.size
+            if self.resized_dims.val > shape_element_num:
+                raise ValueError(
+                    f"The resized_dims ({self.resized_dims.val}) must <= shape's size ({shape_element_num})"
+                )
+            if shape_element_num > self.x.rank:
+                raise ValueError(
+                    f"The shape's size ({shape_element_num}) must <= x's rank ({self.x.rank})"
+                )
+        if self.shape.rank != 1:
+            raise ValueError(f"The shape's rank must be 1, but got {self.shape.rank}")
+        if self.interpolation_mode.val not in self._VALID_INTERPOLATION_MODES:
+            raise ValueError(
+                f"Invalid interpolation_mode {self.interpolation_mode.val}. Supported modes are: {self._VALID_INTERPOLATION_MODES}"
+            )
+        if self.sampling_mode.val not in self._VALID_SAMPLING_MODE:
+            raise ValueError(
+                f"Invalid sampling_mode {self.sampling_mode.val}. Supported modes are: {self._VALID_SAMPLING_MODE}"
+            )
+
+    def type_inference(self):
+        self._validate_input()
+
+        # The output tensor will have the same rank as the input tensor. The rightmost resized_dims
+        # dimensions of the output_shape will be taken from the input "shape".
+        ret_shape = list(self.x.shape)
+
+        start_idx = self.shape.shape[0] - self.resized_dims.val
+        for i in range(self.resized_dims.val):
+            target_shape = (
+                get_new_symbol() if self.shape.val is None else self.shape.val[start_idx + i]
+            )
+            if target_shape == 0:
+                # The 0 in `shape` means inheriting from x's shape.
+                target_shape = self.x.shape[self.x.rank - self.resized_dims.val + i]
+            ret_shape[self.x.rank - self.resized_dims.val + i] = target_shape
+
         return types.tensor(self.x.dtype, ret_shape)

@@ -227,12 +227,12 @@ class TF1Loader(TFLoader):
             graphviz.Source(dot_string).view(
                 filename="/tmp/ssa_after_tf_passes", cleanup=True
             )
-
         converter = TFConverter(
             tfssa=self._tf_ssa,
             inputs=self.kwargs["inputs"],
             outputs=self.kwargs["outputs"],
             opset_version=self.kwargs["specification_version"],
+            use_default_fp16_io=self.kwargs["use_default_fp16_io"],
         )
         return converter.convert()
 

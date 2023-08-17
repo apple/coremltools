@@ -172,7 +172,6 @@ class Const(Operation):
         return val
 
     def _get_type_val(self, value):
-
         if isinstance(value, (float, np.float64)):
             value = np.float32(value)
         elif isinstance(value, bool):
@@ -181,24 +180,17 @@ class Const(Operation):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value) if isinstance(value, (tuple, list)) else value
-
-            # For the int type, we use int32 by default
-            if value.dtype in [np.uint16, np.int16, np.uint64, np.int64]:
-                if value.dtype in [np.uint64, np.int64]:
-                    msg = "Downcast const op {} data".format(self.name) + builtin_to_string(numpy_type_to_builtin_type(value.dtype)) + " as int32"
-                    logger.debug(msg)
+            if value.dtype in [np.uint64, np.int64]:
+                logger.debug(
+                    f"Downcast const op {self.name} data {builtin_to_string(numpy_type_to_builtin_type(value.dtype))} as int32"
+                )
                 value = value.astype(np.int32)
-
-
-            # For the float type, we use float32 by default
-            elif value.dtype == np.float64:
-                msg = "Downcast const op {} data fp64 as fp32".format(self.name)
-                logger.debug(msg)
+            if value.dtype == np.float64:
+                logger.debug(f"Downcast const op {self.name} data fp64 as fp32")
                 value = value.astype(np.float32)
-
         elif isinstance(value, mil_list):
-            # if val that was passed in is of type mil_list, which is just a wrapper on top of python list
-            # then construct the list type
+            # If val that was passed in is of type mil_list, which is just a wrapper on top of
+            # python list, then construct the list type.
             list_value = value.ls
             if len(list_value) == 0:
                 raise ValueError("'mil_list' points to an empty list")
@@ -209,9 +201,8 @@ class Const(Operation):
             builtin_type = types_list(builtin_elem_type, init_length=len(list_value), dynamic_length=False)
             return builtin_type, value
 
-
         if not isinstance(value, (np.generic, np.ndarray, str, bool, mil_list)):
-            raise ValueError("Unknown value for constant: {}".format(value))
+            raise ValueError(f"Unknown value for constant: {value}")
 
         _, builtin_type = numpy_val_to_builtin_val(value)
         return builtin_type, value

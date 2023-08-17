@@ -21,6 +21,7 @@ from coremltools._deps import _HAS_TF_1, _HAS_TF_2, MSG_TF1_NOT_FOUND, _get_vers
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     TensorFlowBaseTest,
     freeze_g,
+    get_tf_node_names,
     layer_counts,
     load_tf_pb,
     make_tf_graph,
@@ -665,6 +666,44 @@ class Testlog1p(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, minimum_deployment_target",
+        itertools.product(
+            compute_units,
+            [None, ct.target.iOS17],
+        ),
+    )
+    def test_ios17_mixed_precision(self, compute_unit, minimum_deployment_target):
+        input_shape = np.random.randint(low=1, high=4, size=2)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.log1p(x)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, 0.0, 2.0)]
+        input_dict = dict(zip(inputs, input_values))
+        results = TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=("mlprogram", "fp16"),
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+        prog: Program = results[1]._mil_program
+        log_op: Operation = prog.find_ops(op_type="log", exactly_one=True)[0]
+        assert log_op.x.dtype == types.fp16
+
+        # Before IOS17, the epsilon param is converted to fp16.
+        # After IOS17, the epsilon param is kept as fp32 because it supports mixed precision.
+        if minimum_deployment_target is not None and minimum_deployment_target >= ct.target.iOS17:
+            expected_epsilon_dtype = "fp32"
+        else:
+            expected_epsilon_dtype = "fp16"
+        assert types.builtin_to_string(log_op.epsilon.dtype) == expected_epsilon_dtype
 
 
 class TestSelect(TensorFlowBaseTest):
@@ -2520,7 +2559,7 @@ class TestImageResizing(TensorFlowBaseTest):
             [True, False],
         ),
     )
-    def test_resize_bilinear_dynamic_shape(
+    def test_ios16_resize_bilinear_dynamic_shape_by_upsample_bilinear(
         self,
         compute_unit,
         backend,
@@ -2529,6 +2568,10 @@ class TestImageResizing(TensorFlowBaseTest):
         align_corners,
         half_pixel_centers,
     ):
+        """
+        Since iOS16, dynamic shape is supported only if the output_shape comes from a pattern of
+        ``input_shape * (h_scale, w_scale)``, which will be lowered to `upsample_bilinear` MIL op.
+        """
         if backend[0] == "neuralnetwork" or ct.utils._macos_version() < (13, 0):
             pytest.skip("half_pixel_centers only support for iOS16 upsample_bilinear layer")
 
@@ -2559,6 +2602,66 @@ class TestImageResizing(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, target_shape, align_corners",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1, 10, 20, 1), (2, 5, 2, 3)],
+            [(20, 60)],
+            [True, False],
+        ),
+    )
+    def test_ios17_resize_bilinear_dynamic_shape(
+        self,
+        compute_unit,
+        backend,
+        input_shape,
+        target_shape,
+        align_corners,
+    ):
+        """
+        Since iOS17, dynamic shape is supported by lowering to `resize` MIL op.
+        """
+        batch_dim, _, _, channel = input_shape
+
+        @make_tf_graph([(batch_dim, None, None, channel, tf.float32), (2, tf.int32)])
+        def build_model(x, size):
+            return tf.raw_ops.ResizeBilinear(
+                images=x,
+                size=size,
+                half_pixel_centers=False,
+                align_corners=align_corners,
+            )
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, -1, 1), np.array(target_shape, dtype=np.int32)]
+        input_dict = dict(zip(inputs, input_values))
+
+        # Before iOS17, the dynamic shape will error out.
+        with pytest.raises(
+            ValueError,
+            match="the second input, which is the output size, must be known statically. "
+            "Consider setting minimum_deployment_target to iOS17 during conversion.",
+        ):
+            TensorFlowBaseTest.run_compare_tf(
+                model,
+                input_dict,
+                outputs,
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+        # Since iOS17, the dynamic shape will be handled correctly.
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS17,
         )
 
     @pytest.mark.parametrize(
@@ -2603,6 +2706,65 @@ class TestImageResizing(TensorFlowBaseTest):
             for layer in spec.neuralNetwork.layers:
                 if layer.WhichOneof('layer') == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, target_shape",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1, 10, 20, 1), (2, 5, 2, 3)],
+            [(20, 60)],
+        ),
+    )
+    def test_ios17_resize_nearest_neighbor_dynamic_shape(
+        self,
+        compute_unit,
+        backend,
+        input_shape,
+        target_shape,
+    ):
+        """
+        Since iOS17, dynamic shape is supported by lowering to `resize` MIL op.
+        """
+        batch_dim, _, _, channel = input_shape
+
+        @make_tf_graph([(batch_dim, None, None, channel, tf.float32), (2, tf.int32)])
+        def build_model(x, size):
+            return tf.raw_ops.ResizeNearestNeighbor(
+                images=x,
+                size=size,
+                half_pixel_centers=True,
+                align_corners=False,
+            )
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, -1, 1), np.array(target_shape, dtype=np.int32)]
+        input_dict = dict(zip(inputs, input_values))
+
+        # Before iOS17, the dynamic shape will error out.
+        with pytest.raises(
+            ValueError,
+            match="Cannot determine the scale factor for the resize layer. "
+            "Please make sure the target size is known statically, or "
+            "use mul op to get the target size. If the target size has to be dynamic, please"
+            "set minimum_deployment_target to iOS17 during conversion.",
+        ):
+            TensorFlowBaseTest.run_compare_tf(
+                model,
+                input_dict,
+                outputs,
+                compute_unit=compute_unit,
+                backend=backend,
+            )
+
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS17,
+        )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, num_of_crops, crop_size, method, dynamic, "
@@ -4216,6 +4378,11 @@ class TestSliceByIndex(TensorFlowBaseTest):
             pytest.xfail(
                 "rdar://109854221 ([Bug][Regression] slice_by_index is throwing expection through E5ML - Follow up radar)"
             )
+
+        if backend[0] == "neuralnetwork":
+            pytest.xfail(
+                "rdar://111134257 ([Bug][Regression] nnv1 slice_by_index unittests are failing)"
+            )
         input_shape = np.random.randint(low=2, high=4, size=rank)
         begin_val = np.array(
             [
@@ -4926,7 +5093,7 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
                 "When score threshold is too high, TF will return empty result, while MIL "
                 "will still keep the highest score box."
             )
-        if num_boxes >= 1000 and backend == ("mlprogram", "fp16"):
+        if num_boxes >= 1000:
             pytest.xfail(
                 "rdar://103891349 ([TensorFlow] [PyTorch] NMS discrepancy in Fp16 when "
                 "number of boxes is large)"
@@ -4936,6 +5103,11 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
             # force we are using fp16 for mlprogram, until this radar is fix:
             # rdar://109871491 ([Bug][CI][Regression] Numerical regression on E5ML for nms layers)
             backend = ("mlprogram", "fp32")
+
+        if _HAS_TF_1 and score_threshold == -200 and backend[0] == "mlprogram":
+            pytest.xfail(
+                "rdar://111714405 ([Bug][Regression] Tensorflow nms layer unitests are failing)"
+            )
 
         boxes_val = random_gen(shape=(num_boxes, 4), rand_min=0, rand_max=32)
         # When the input score is too close, the returned index order is not guaranteed.
@@ -6341,24 +6513,44 @@ class TestTranspose(TensorFlowBaseTest):
 class TestSpaceToBatchND(TensorFlowBaseTest):
     # No direct mil smoke test since it's a TF op which is a composite of several ops.
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, block_shape, paddings",
+        "compute_unit, backend, input_shape, block_shape, paddings, dynamic_paddings",
         itertools.product(
             compute_units,
             backends,
             [(1, 4, 4, 1), (1, 4, 4, 3), (2, 4, 6, 1)],
             [[2, 2]],
             [[[0, 0], [0, 0]], [[1, 1], [0, 2]], [[4, 2], [4, 2]]],
+            [True, False],
         ),
     )
-    def test_smoke(self, compute_unit, backend, input_shape, block_shape, paddings):
-        @make_tf_graph([input_shape])
-        def build_model(x):
-            return tf.raw_ops.SpaceToBatchND(
-                input=x, block_shape=block_shape, paddings=paddings
-            )
+    def test_smoke(
+        self, compute_unit, backend, input_shape, block_shape, paddings, dynamic_paddings
+    ):
+        paddings = np.array(paddings, dtype=np.int32)
+
+        if dynamic_paddings:
+
+            @make_tf_graph([input_shape, (2, 2, tf.int32)])
+            def build_model(x, paddings):
+                return tf.raw_ops.SpaceToBatchND(
+                    input=x, block_shape=block_shape, paddings=paddings
+                )
+
+        else:
+
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.SpaceToBatchND(
+                    input=x, block_shape=block_shape, paddings=paddings
+                )
 
         model, inputs, outputs = build_model
-        input_values = [random_gen(input_shape)]
+
+        if dynamic_paddings:
+            input_values = [random_gen(input_shape), paddings]
+        else:
+            input_values = [random_gen(input_shape)]
+
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
             model,
@@ -6369,7 +6561,7 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape_block_paddings, dynamic",
+        "compute_unit, backend, shape_block_paddings, dynamic_input, dynamic_paddings",
         itertools.product(
             compute_units,
             backends,
@@ -6380,24 +6572,43 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
                 [(2, 4, 6, 1, 2), [2], [[0, 0]]],
             ],
             [True, False],
+            [True, False],
         ),
     )
-    def test_smoke_new_op(self, compute_unit, backend, shape_block_paddings, dynamic):
+    def test_smoke_new_op(
+        self, compute_unit, backend, shape_block_paddings, dynamic_input, dynamic_paddings
+    ):
         input_shape, block_shape, paddings = shape_block_paddings
+        paddings = np.array(paddings, dtype=np.int32)
 
         # The neuralnetwork backend doesn't support these tests
         if backend[0] == "neuralnetwork":
             return
 
-        tf_input_shape = input_shape if not dynamic else [None] * len(input_shape)
-        @make_tf_graph([tf_input_shape])
-        def build_model(x):
-            return tf.raw_ops.SpaceToBatchND(
-                input=x, block_shape=block_shape, paddings=paddings
-            )
+        tf_input_shape = input_shape if not dynamic_input else [None] * len(input_shape)
+        if dynamic_paddings:
+
+            @make_tf_graph([tf_input_shape, (*paddings.shape, tf.int32)])
+            def build_model(x, paddings):
+                return tf.raw_ops.SpaceToBatchND(
+                    input=x, block_shape=block_shape, paddings=paddings
+                )
+
+        else:
+
+            @make_tf_graph([tf_input_shape])
+            def build_model(x):
+                return tf.raw_ops.SpaceToBatchND(
+                    input=x, block_shape=block_shape, paddings=paddings
+                )
 
         model, inputs, outputs = build_model
-        input_values = [random_gen(input_shape)]
+
+        if dynamic_paddings:
+            input_values = [random_gen(input_shape), paddings]
+        else:
+            input_values = [random_gen(input_shape)]
+
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
             model,
@@ -6408,16 +6619,17 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_block_rank, dynamic",
+        "compute_unit, backend, input_block_rank, dynamic_input, dynamic_paddings",
         itertools.product(
             compute_units,
             backends,
             [(3, 1), (3, 2), (4, 1)],
             [True, False],
+            [True, False],
         ),
     )
     def test_programmatic(
-        self, compute_unit, backend, input_block_rank, dynamic
+        self, compute_unit, backend, input_block_rank, dynamic_input, dynamic_paddings
     ):
 
         input_rank, block_rank = input_block_rank
@@ -6439,26 +6651,31 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
                 if (np.sum(temp) + input_shape[i + 1]) % block_shape[i] == 0:
                     paddings.append(temp)
                     break
-        paddings = np.array(paddings)
+        paddings = np.array(paddings, dtype=np.int32)
 
-        if not dynamic:
+        tf_input_shape = input_shape if not dynamic_input else [None] * len(input_shape)
+        if dynamic_paddings:
 
-            @make_tf_graph([input_shape])
-            def build_model(x):
+            @make_tf_graph([tf_input_shape, (*paddings.shape, tf.int32)])
+            def build_model(x, paddings):
                 return tf.raw_ops.SpaceToBatchND(
                     input=x, block_shape=block_shape, paddings=paddings
                 )
-
         else:
 
-            @make_tf_graph([[None] * input_rank])
+            @make_tf_graph([tf_input_shape])
             def build_model(x):
                 return tf.raw_ops.SpaceToBatchND(
                     input=x, block_shape=block_shape, paddings=paddings
                 )
 
         model, inputs, outputs = build_model
-        input_values = [random_gen(input_shape)]
+
+        if dynamic_paddings:
+            input_values = [random_gen(input_shape), paddings]
+        else:
+            input_values = [random_gen(input_shape)]
+
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
             model,
@@ -6472,24 +6689,37 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
 class TestBatchToSpaceND(TensorFlowBaseTest):
     # No direct mil smoke test since it's a TF op which is a composite of several ops.
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, block_size, crops",
+        "compute_unit, backend, input_shape, block_size, crops, dynamic_crops",
         itertools.product(
             compute_units,
             backends,
             [(4, 4, 4, 1), (4, 4, 4, 3), (4, 4, 6, 1)],
             [[2, 2]],
             [[[0, 0], [0, 0]], [[1, 1], [0, 2]], [[4, 2], [4, 2]]],
+            [True, False],
         ),
     )
-    def test_smoke(self, compute_unit, backend, input_shape, block_size, crops):
-        @make_tf_graph([input_shape])
-        def build_model(x):
-            return tf.raw_ops.BatchToSpaceND(
-                input=x, block_shape=block_size, crops=crops
-            )
+    def test_smoke(self, compute_unit, backend, input_shape, block_size, crops, dynamic_crops):
+
+        if dynamic_crops:
+
+            @make_tf_graph([input_shape, (2, 2, tf.int32)])
+            def build_model(x, y):
+                return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_size, crops=y)
+
+        else:
+
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_size, crops=crops)
 
         model, inputs, outputs = build_model
-        input_values = [random_gen(input_shape)]
+
+        if dynamic_crops:
+            input_values = [random_gen(input_shape), np.array(crops, np.int32)]
+        else:
+            input_values = [random_gen(input_shape)]
+
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
             model,
@@ -6500,16 +6730,18 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_block_rank, dynamic",
+        "compute_unit, backend, input_block_rank, dynamic_input, dynamic_crops",
         itertools.product(
             compute_units,
             backends,
             [(3, 1), (3, 2), (4, 1)],
-            [True, False]
+            [True, False],
+            [True, False],
         ),
     )
     def test_programmatic(
-        self, compute_unit, backend, input_block_rank, dynamic):
+        self, compute_unit, backend, input_block_rank, dynamic_input, dynamic_crops
+    ):
 
         input_rank, block_rank = input_block_rank
 
@@ -6531,40 +6763,53 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
                 if np.sum(temp) < input_shape[i + 1] * block_shape[i]:
                     crops.append(temp)
                     break
-        crops = np.array(crops)
+        crops = np.array(crops, dtype=np.int32)
 
-        if not dynamic:
+        tf_input_shape = [None] * input_rank if dynamic_input else input_shape
 
-            @make_tf_graph([input_shape])
-            def build_model(x):
+        if dynamic_crops:
+
+            @make_tf_graph([tf_input_shape, (*crops.shape, tf.int32)])
+            def build_model(x, crops):
                 return tf.raw_ops.BatchToSpaceND(
                     input=x, block_shape=block_shape, crops=crops
                 )
-
         else:
 
-            @make_tf_graph([[None] * input_rank])
+            @make_tf_graph([tf_input_shape])
             def build_model(x):
                 return tf.raw_ops.BatchToSpaceND(
                     input=x, block_shape=block_shape, crops=crops
                 )
 
         model, inputs, outputs = build_model
-        input_values = [random_gen(input_shape)]
+
+        if dynamic_crops:
+            input_values = [random_gen(input_shape), crops]
+        else:
+            input_values = [random_gen(input_shape)]
         input_dict = dict(zip(inputs, input_values))
 
         # Before rdar://93071454 (batch_to_space is error out in espresso for dynamic inputs cormel model) is fixed,
         # we need to specify the default shape for the dynamic model by setting inputs_for_conversion
-        if dynamic:
+        input_names = get_tf_node_names(inputs, mode="inputs")
+        if dynamic_input:
             shape = tuple(
                 [
                     RangeDim(default=dim, upper_bound=dim if backend[0] == "mlprogram" else -1)
                     for dim in input_shape
                 ]
             )
-            inputs_for_conversion = [TensorType(shape=shape, dtype=np.float32)]
+            inputs_for_conversion = [TensorType(shape=shape, name=input_names[0], dtype=np.float32)]
         else:
-            inputs_for_conversion = None
+            inputs_for_conversion = [
+                TensorType(shape=tuple(input_shape), name=input_names[0], dtype=np.float32)
+            ]
+
+        if dynamic_crops:
+            inputs_for_conversion += [
+                TensorType(shape=crops.shape, name=input_names[1], dtype=np.int32)
+            ]
 
         TensorFlowBaseTest.run_compare_tf(
             model,
@@ -6576,7 +6821,7 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape_block_crops, dynamic",
+        "compute_unit, backend, shape_block_crops, dynamic_input, dynamic_crops",
         itertools.product(
             compute_units,
             backends,
@@ -6587,38 +6832,60 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
                 [(4, 4, 6, 1, 2), [2], [[0, 0]]],
             ],
             [True, False],
+            [True, False],
         ),
     )
-    def test_smoke_new_op(self, compute_unit, backend, shape_block_crops, dynamic):
+    def test_smoke_new_op(
+        self, compute_unit, backend, shape_block_crops, dynamic_input, dynamic_crops
+    ):
         input_shape, block_shape, crops = shape_block_crops
+        crops = np.array(crops, dtype=np.int32)
 
         # The neuralnetwork backend doesn't support these tests
         if backend[0] == "neuralnetwork":
             return
 
-        tf_input_shape = input_shape if not dynamic else [None] * len(input_shape)
-        @make_tf_graph([tf_input_shape])
-        def build_model(x):
-            return tf.raw_ops.BatchToSpaceND(
-                input=x, block_shape=block_shape, crops=crops
-            )
+        tf_input_shape = input_shape if not dynamic_input else [None] * len(input_shape)
+        if dynamic_crops:
+
+            @make_tf_graph([tf_input_shape, (*crops.shape, tf.int32)])
+            def build_model(x, crops):
+                return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_shape, crops=crops)
+
+        else:
+
+            @make_tf_graph([tf_input_shape])
+            def build_model(x):
+                return tf.raw_ops.BatchToSpaceND(input=x, block_shape=block_shape, crops=crops)
+
+        model, inputs, outputs = build_model
 
         # Before rdar://93071454 (batch_to_space is error out in espresso for dynamic inputs cormel model) is fixed,
         # we need to specify the default shape for the dynamic model by setting inputs_for_conversion
-        if dynamic:
+        input_names = get_tf_node_names(inputs, mode="inputs")
+        if dynamic_input:
             shape = tuple(
                 [
                     RangeDim(default=dim, upper_bound=dim if backend[0] == "mlprogram" else -1)
                     for dim in input_shape
                 ]
             )
-            inputs_for_conversion = [TensorType(shape=shape, dtype=np.float32)]
+            inputs_for_conversion = [TensorType(shape=shape, name=input_names[0], dtype=np.float32)]
         else:
-                        inputs_for_conversion = None
+            inputs_for_conversion = [
+                TensorType(shape=tuple(input_shape), name=input_names[0], dtype=np.float32)
+            ]
 
-        model, inputs, outputs = build_model
-        input_values = [random_gen(input_shape)]
+        if dynamic_crops:
+            inputs_for_conversion += [
+                TensorType(shape=crops.shape, name=input_names[1], dtype=np.int32)
+            ]
+            input_values = [random_gen(input_shape), crops]
+        else:
+            input_values = [random_gen(input_shape)]
+
         input_dict = dict(zip(inputs, input_values))
+
         TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,

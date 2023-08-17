@@ -30,7 +30,7 @@ In addition to the using default setting, you can:
 
 * Decide which passes and the order of passes to run (see
 [Specify Passes To Run](#specify-passes-to-run)). For example,
-   - Switching off certain fusions to correctly export Phoenix optimized models for palettization.
+   - Switching off certain fusions to correctly export optimized models from coremltools.optimize.torch for palettization.
    - Skipping all passes to keep the MIL Program untouched.
 
 * Set options for a specific pass to control the behaviour (see [Set Pass Option](#set-pass-option)). For example,
@@ -128,7 +128,7 @@ ct.convert(model, pass_pipeline=pipeline)
 
 ## Define Custom Graph Pass
 
-If the currently available 
+If the currently available
 [MIL Graph Passes in the coremltools API Reference](https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#mil-graph-passes) do not meet your goal, you can  define custom graph passes.
 
 To illustrate how to define a custom graph pass, the following example demonstrates merging consecutive `relu` ops using a PyTorch model with 2 `relu` layers. You can directly convert this model using the following script:
@@ -306,5 +306,3 @@ Using the `block_context_manager` decorator is highly recommended, especially wh
 original function involves calling `with block` multiple times. However, you may want to avoid recursively calling the function decorated with `block_context_manager`, since it involves expensive `_propagate_nonreplaceable_vars()`.
 
 For details about how to use a `_noop_elimination_block_wrapper` to avoid that recursive calling, see  [noop_elimination](https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination).
-
-

@@ -6,21 +6,23 @@
 import pytest
 
 import coremltools
-from coremltools._deps import (
-    _HAS_TORCH,
-    MSG_TORCH_NOT_FOUND,
-)
+from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
+from coremltools.converters.mil.testing_reqs import backends
 
 if _HAS_TORCH:
     import torch
-    from torch import nn
     import torch.nn.functional as F
+    from torch import nn
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestModelScripting:
     @staticmethod
-    def test():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test(backend):
         # Example code from https://coremltools.readme.io/docs/model-scripting
 
         class _LoopBody(nn.Module):
@@ -61,4 +63,5 @@ class TestModelScripting:
         mlmodel = coremltools.converters.convert(
             scripted_model,
             inputs=[coremltools.TensorType(shape=(1, 3, 64, 64))],
+            convert_to=backend[0],
         )

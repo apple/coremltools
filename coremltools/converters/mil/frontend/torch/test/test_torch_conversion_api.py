@@ -13,6 +13,7 @@ from PIL import Image
 import coremltools as ct
 from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
+from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import (
     assert_cast_ops_count,
     assert_input_dtype,
@@ -43,7 +44,11 @@ if _HAS_TORCH:
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestPyTorchConverterExamples:
     @staticmethod
-    def test_convert_torch_vision_mobilenet_v2(tmpdir):
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_convert_torch_vision_mobilenet_v2(tmpdir, backend):
         """
         In this example, we'll instantiate a PyTorch classification model and convert
         it to Core ML.
@@ -92,12 +97,14 @@ class TestPyTorchConverterExamples:
         mlmodel = ct.convert(
             traced_model,
             inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            convert_to=backend[0],
         )
 
         """
         Now with a conversion complete, we can save the MLModel and run inference.
         """
-        save_path = os.path.join(str(tmpdir), "mobilenet_v2.mlmodel")
+        suffix = ".mlmodel" if backend == "neuralnetwork" else ".mlpackage"
+        save_path = os.path.join(str(tmpdir), "mobilenet_v2" + suffix)
         mlmodel.save(save_path)
 
         """
@@ -188,8 +195,8 @@ class TestPyTorchConverterExamples:
                 _test_classifier(traced_model, example_input, class_type, "mlprogram")
 
     @staticmethod
-    @pytest.mark.parametrize("convert_to", ['neuralnetwork', 'mlprogram'])
-    def test_convert_to_argument_with_torch_model(tmpdir, convert_to):
+    @pytest.mark.parametrize("backend", backends)
+    def test_convert_to_argument_with_torch_model(tmpdir, backend):
         class Network(torch.nn.Module):
             def __init__(self):
                 super(Network, self).__init__()
@@ -207,11 +214,11 @@ class TestPyTorchConverterExamples:
         model = ct.convert(
             traced_model,
             inputs=[ct.TensorType(name="input", shape=example_input.shape)],
-            convert_to=convert_to
+            convert_to=backend[0],
         )
         assert isinstance(model, ct.models.MLModel)
         spec = model.get_spec()
-        if convert_to == "mlprogram":
+        if backend[0] == "mlprogram":
             assert spec.WhichOneof('Type') == 'mlProgram'
         else:
             assert spec.WhichOneof('Type') == 'neuralNetwork'
@@ -302,13 +309,13 @@ class TestPyTorchConverterExamples:
     @staticmethod
     @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason='Model produces specification 6.')
     @pytest.mark.parametrize(
-        "convert_to, provide_prob_output_argument",
+        "backend, provide_prob_output_argument",
         itertools.product(
-            ["neuralnetwork", "mlprogram"],
+            backends,
             [False, True],
         )
     )
-    def test_classifier_from_torch_model(convert_to, provide_prob_output_argument):
+    def test_classifier_from_torch_model(backend, provide_prob_output_argument):
         torch_model = torch.nn.ReLU().eval()
         traced_model = torch.jit.trace(torch_model, torch.rand(3,))
         variable_name = "var_2"
@@ -323,7 +330,7 @@ class TestPyTorchConverterExamples:
             traced_model,
             inputs=[ct.TensorType(shape=(3,))],
             classifier_config = classifier_config,
-            convert_to=convert_to,
+            convert_to=backend[0],
         )
         spec = model.get_spec()
         input_name = spec.description.input[0].name
@@ -331,7 +338,7 @@ class TestPyTorchConverterExamples:
 
         assert class_label_name in out_dict
         assert out_dict[class_label_name] == 'c'
-        if convert_to == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             assert variable_name in out_dict
             assert isinstance(out_dict[variable_name], dict)
         else:
@@ -348,11 +355,19 @@ class TestPyTorchConverterExamples:
 class TestTorchInputs(_TestInputs):
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
-    def test_torch_predict_input():
-        TestTorchInputs._test_variant_input_type_prediction(torch.tensor)
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_torch_predict_input(backend):
+        TestTorchInputs._test_variant_input_type_prediction(torch.tensor, backend[0])
 
     @staticmethod
-    def test_int64_inputs():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_int64_inputs(backend):
 
         num_tokens = 3
         embedding_size = 5
@@ -380,6 +395,7 @@ class TestTorchInputs(_TestInputs):
                     dtype=example_input.numpy().dtype,
                 )
             ],
+            convert_to=backend[0],
         )
 
         # running predict() is supported on macOS
@@ -391,7 +407,11 @@ class TestTorchInputs(_TestInputs):
             # Verify outputs
             expected = model(example_input)
             name = list(result.keys())[0]
-            np.testing.assert_allclose(result[name], expected.detach().numpy())
+            rtol = 1e-03 if backend[0] == "mlprogram" else 1e-07
+            atol = 1e-04 if backend[0] == "mlprogram" else 0
+            np.testing.assert_allclose(
+                result[name], expected.detach().numpy(), rtol=rtol, atol=atol
+            )
 
         # Duplicated inputs are invalid
         with pytest.raises(ValueError, match=r"Duplicated inputs"):
@@ -409,6 +429,7 @@ class TestTorchInputs(_TestInputs):
                         dtype=example_input.numpy().dtype,
                     ),
                 ],
+                convert_to=backend[0],
             )
 
         # Outputs must be of type ct.ImageType or ct.TensorType
@@ -423,10 +444,15 @@ class TestTorchInputs(_TestInputs):
                     ),
                 ],
                 outputs=["output"],
+                convert_to=backend[0],
             )
 
     @staticmethod
-    def test_fully_dynamic_inputs():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_fully_dynamic_inputs(backend):
         """
         All dims of the inputs are dynamic, and write to slice to one of the
         inputs.
@@ -445,12 +471,15 @@ class TestTorchInputs(_TestInputs):
         model = Model(torch.tensor(3))
         scripted_model = torch.jit.script(model)
 
+        a, b = (-1, -1) if backend[0] == "neuralnetwork" else (6, 6)
+
         mlmodel = ct.convert(
             scripted_model,
             inputs=[
-                ct.TensorType("x", shape=(ct.RangeDim(), ct.RangeDim())),
-                ct.TensorType("y", shape=(ct.RangeDim(), ct.RangeDim())),
+                ct.TensorType("x", shape=(ct.RangeDim(upper_bound=a), ct.RangeDim(upper_bound=b))),
+                ct.TensorType("y", shape=(ct.RangeDim(upper_bound=a), ct.RangeDim(upper_bound=b))),
             ],
+            convert_to=backend[0],
         )
 
         # running predict() is supported on macOS
@@ -460,8 +489,11 @@ class TestTorchInputs(_TestInputs):
             torch_res = model(*torch_input)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
+
+            rtol = 1e-03 if backend[0] == "mlprogram" else 1e-07
+            atol = 1e-04 if backend[0] == "mlprogram" else 0
             for i, name in enumerate(mlmodel.output_description):
-                np.testing.assert_allclose(torch_res[i], results[name])
+                np.testing.assert_allclose(torch_res[i], results[name], rtol=rtol, atol=atol)
 
             x, y = torch.rand(1, 6), torch.rand(2, 3)
             torch_input = _copy_input_data([x, y])
@@ -469,10 +501,14 @@ class TestTorchInputs(_TestInputs):
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
             for i, name in enumerate(mlmodel.output_description):
-                np.testing.assert_allclose(torch_res[i], results[name])
+                np.testing.assert_allclose(torch_res[i], results[name], rtol=rtol, atol=atol)
 
     @staticmethod
-    def test_rank0_inputs_torch():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_rank0_inputs_torch(backend):
         """Similar to TestPyTorchConverterExamples::test_int64_inputs but
         using rank-0 int input.
         """
@@ -504,11 +540,15 @@ class TestTorchInputs(_TestInputs):
                         dtype=example_input.numpy().dtype,
                     )
                 ],
+                convert_to=backend[0],
             )
 
     @staticmethod
-    @pytest.mark.parametrize("variable_length", [True, False])
-    def test_torch_range_dim_lstm(variable_length):
+    @pytest.mark.parametrize(
+        "variable_length, backend",
+        itertools.product([True, False], backends),
+    )
+    def test_torch_range_dim_lstm(variable_length, backend):
         """
         This example shows how to run LSTM with previous hidden / cell states
         """
@@ -547,7 +587,8 @@ class TestTorchInputs(_TestInputs):
         # each inference example (aka "runtime-determined"). If the sequence
         # length is always the same (e.g., 2 step LSTM would have seq_len == 2)
         # Note that fixed-length models usually run slightly faster than variable length models.
-        ct_seq_len = ct.RangeDim() if variable_length else seq_len
+        upper_bound = -1 if backend[0] == "neuralnetwork" else 10
+        ct_seq_len = ct.RangeDim(upper_bound=upper_bound) if variable_length else seq_len
         seq_input = ct.TensorType(shape=(ct_seq_len, batch, input_size),
             name="seq_input")
         h_input = ct.TensorType(shape=h_shape, name="h_input")
@@ -556,6 +597,7 @@ class TestTorchInputs(_TestInputs):
         mlmodel = ct.convert(
             traced_model,
             inputs=[seq_input, h_input, c_input],
+            convert_to=backend[0],
         )
 
         if ct.utils._is_macos():
@@ -570,12 +612,17 @@ class TestTorchInputs(_TestInputs):
             expected = model(rand_input, rand_h0, rand_c0)
             names = list(result.keys())
             names.sort()
-            np.testing.assert_allclose(result[names[0]],
-                expected[0].detach().numpy(), atol=1e-4)
-            np.testing.assert_allclose(result[names[1]],
-                expected[1].detach().numpy(), atol=1e-4)
-            np.testing.assert_allclose(result[names[2]],
-                expected[2].detach().numpy(), atol=1e-4)
+            atol = 1e-03 if backend[0] == "mlprogram" else 1e-04
+            rtol = 1e-03 if backend[0] == "mlprogram" else 1e-07
+            np.testing.assert_allclose(
+                result[names[0]], expected[0].detach().numpy(), atol=atol, rtol=rtol
+            )
+            np.testing.assert_allclose(
+                result[names[1]], expected[1].detach().numpy(), atol=atol, rtol=rtol
+            )
+            np.testing.assert_allclose(
+                result[names[2]], expected[2].detach().numpy(), atol=atol, rtol=rtol
+            )
 
             # Try example of different length
             if variable_length:
@@ -592,16 +639,25 @@ class TestTorchInputs(_TestInputs):
                 expected = model(rand_input, rand_h0, rand_c0)
                 names = list(result.keys())
                 names.sort()
-                np.testing.assert_allclose(result[names[0]],
-                    expected[0].detach().numpy(), atol=1e-4)
-                np.testing.assert_allclose(result[names[1]],
-                    expected[1].detach().numpy(), atol=1e-4)
-                np.testing.assert_allclose(result[names[2]],
-                    expected[2].detach().numpy(), atol=1e-4)
+                np.testing.assert_allclose(
+                    result[names[0]], expected[0].detach().numpy(), atol=atol, rtol=rtol
+                )
+                np.testing.assert_allclose(
+                    result[names[1]], expected[1].detach().numpy(), atol=atol, rtol=rtol
+                )
+                np.testing.assert_allclose(
+                    result[names[2]], expected[2].detach().numpy(), atol=atol, rtol=rtol
+                )
 
     @staticmethod
-    @pytest.mark.parametrize("use_symbol", [True, False])
-    def test_torch_outofbound_range_dim(use_symbol):
+    @pytest.mark.parametrize(
+        "use_symbol, backend",
+        itertools.product(
+            [True, False],
+            backends,
+        ),
+    )
+    def test_torch_outofbound_range_dim(use_symbol, backend):
 
         num_tokens = 3
         embedding_size = 5
@@ -632,6 +688,7 @@ class TestTorchInputs(_TestInputs):
         mlmodel = ct.convert(
             traced_model,
             inputs=[seq_input],
+            convert_to=backend[0],
         )
 
         if ct.utils._is_macos():
@@ -640,9 +697,13 @@ class TestTorchInputs(_TestInputs):
             )
 
             # Verify outputs
+            rtol = 1e-03 if backend[0] == "mlprogram" else 1e-07
+            atol = 1e-04 if backend[0] == "mlprogram" else 0
             expected = model(example_input)
             name = list(result.keys())[0]
-            np.testing.assert_allclose(result[name], expected.detach().numpy())
+            np.testing.assert_allclose(
+                result[name], expected.detach().numpy(), rtol=rtol, atol=atol
+            )
 
             # seq_len below/above lower_bound/upper_bound
             with pytest.raises(RuntimeError,
@@ -662,7 +723,11 @@ class TestTorchInputs(_TestInputs):
                 )
 
     @staticmethod
-    def test_torch_enumerated_shapes():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_torch_enumerated_shapes(backend):
 
         in_channels = 3
         out_channels = 2
@@ -690,7 +755,8 @@ class TestTorchInputs(_TestInputs):
         mlmodel = ct.convert(
             traced_model,
             inputs=[tensor_input],
-            compute_units=ct.ComputeUnit.CPU_ONLY
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            convert_to=backend[0],
         )
 
         if ct.utils._is_macos():
@@ -699,10 +765,13 @@ class TestTorchInputs(_TestInputs):
             )
 
             # Verify outputs
+            rtol = 1 if backend[0] == "mlprogram" else 1e-03
+            atol = 1e-02 if backend[0] == "mlprogram" else 1e-04
             expected = model(example_input)
             name = list(result.keys())[0]
-            np.testing.assert_allclose(result[name], expected.detach().numpy(),
-                    rtol=1e-3, atol=1e-4)
+            np.testing.assert_allclose(
+                result[name], expected.detach().numpy(), rtol=rtol, atol=atol
+            )
 
             # Test (1, 3, 56, 56) shape (can't verify numerical parity with Torch
             # which doesn't support enumerated shape)
@@ -716,7 +785,11 @@ class TestTorchInputs(_TestInputs):
                 mlmodel.predict({"input": test_input_x})
 
     @staticmethod
-    def test_torch_image_enumerated_shapes():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_torch_image_enumerated_shapes(backend):
         import torchvision
         torch_model = torchvision.models.mobilenet_v2().features
         torch_model.eval()
@@ -725,13 +798,17 @@ class TestTorchInputs(_TestInputs):
         input_shapes = ct.EnumeratedShapes(shapes=[(1, 3, 256, 256), (1, 3, 224, 224)])
         image_input = ct.ImageType(shape=input_shapes,
                                    bias=[-1, -1, -1], scale=1 / 127)
-        model = ct.convert(traced_model, inputs=[image_input])
+        model = ct.convert(traced_model, inputs=[image_input], convert_to=backend[0])
         assert model is not None
         spec = model.get_spec()
         assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
 
     @staticmethod
-    def test_torch_optional_input():
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_torch_optional_input(backend):
 
         num_tokens = 3
         embedding_size = 5
@@ -753,8 +830,9 @@ class TestTorchInputs(_TestInputs):
             ]
         traced_model = torch.jit.trace(model, example_input)
 
+        upper_bound = -1 if backend[0] == "neuralnetwork" else 2
         required_input = ct.TensorType(
-            name="required_input", shape=(ct.RangeDim(),), dtype=np.int64
+            name="required_input", shape=(ct.RangeDim(upper_bound=upper_bound),), dtype=np.int64
         )
         default_value = np.array([3]).astype(np.float32)
         optional_input = ct.TensorType(name="optional_input", shape=(1,),
@@ -768,6 +846,7 @@ class TestTorchInputs(_TestInputs):
                 traced_model,
                 inputs=[required_input, optional_input],
                 compute_units=compute_units,
+                convert_to=backend[0],
             )
 
             assert(mlmodel.compute_unit == compute_units)
@@ -779,10 +858,14 @@ class TestTorchInputs(_TestInputs):
                 )
 
                 # Verify outputs
+                rtol = 1e-03 if backend[0] == "mlprogram" else 1e-07
+                atol = 1e-03 if backend[0] == "mlprogram" else 0
                 torch_default_value = torch.tensor([3])
                 expected = model(example_input[0].detach(), torch_default_value)
                 name = list(result.keys())[0]
-                np.testing.assert_allclose(result[name], expected.detach().numpy())
+                np.testing.assert_allclose(
+                    result[name], expected.detach().numpy(), rtol=rtol, atol=atol
+                )
 
 
 @pytest.fixture
@@ -793,7 +876,6 @@ def int32_input_model():
     example_input = torch.randint(0, 100, (10, 20), dtype=torch.int32)
     return torch.jit.trace(Model().eval(), example_input)
 
-@pytest.fixture
 def int64_input_model():
     class Model(torch.nn.Module):
         def forward(self, x):
@@ -836,6 +918,28 @@ def float32_two_output_model():
             return out1, out2
     example_input = torch.randint(0, 100, (10, 20), dtype=torch.float32)
     return torch.jit.trace(Model().eval(), example_input)
+
+@pytest.fixture
+def int32_float32_two_output_model():
+    class Model(torch.nn.Module):
+        def forward(self, x, y):
+            out1 = x + 1
+            out2 = y + 1
+            return out1, out2
+
+    input_1 = torch.randint(0, 100, (10, 20), dtype=torch.int32)
+    input_2 = torch.randint(0, 100, (10, 20), dtype=torch.float32)
+    return torch.jit.trace(Model().eval(), [input_1, input_2])
+
+
+def float64_input_model():
+    class Model(torch.nn.Module):
+        def forward(self, x):
+            return x + 5.1
+
+    example_input = torch.randint(0, 100, (10, 20), dtype=torch.float64)
+    return torch.jit.trace(Model().eval(), example_input)
+
 
 @pytest.fixture
 def rank3_input_model():
@@ -897,14 +1001,35 @@ class TestInputOutputConversionAPI:
                                  inputs=[ct.TensorType(dtype=np.int32)],
                                  minimum_deployment_target=ct.target.macOS12)
 
-    def test_unsupported_input_dtype_in_torch_model(self, int64_input_model):
-        # test that no error is raised when no dtype is provided by the user,
-        # and the Torch model's input dtype is not supported.
-        # In this case, it will be mapped to the default dtype which is float32
-        mlmodel = ct.convert(int64_input_model,
-                             inputs=[ct.TensorType(shape=(10, 20))],
-                             minimum_deployment_target=ct.target.macOS12)
-        assert_input_dtype(mlmodel, expected_type_str="fp32")
+    @pytest.mark.parametrize(
+        "default_input_dtype, model",
+        itertools.product(
+            [True, False],
+            [int64_input_model, float64_input_model],
+        ),
+    )
+    def test_unsupported_input_dtype_torch_model(self, default_input_dtype, model):
+        # test that no error is raised when the Torch model's input dtype is not supported.
+        # If users don't provide the input type, it will be mapped to the default dtype which is float32.
+        # If the input type is provided, it will be mapped to the most compatible dtype:
+        # fp64 -> fp32, int64 -> int32
+        if default_input_dtype:
+            dtype = None
+            expected_type_str = "fp32"
+        else:
+            if model == int64_input_model:
+                dtype = np.int64
+                expected_type_str = "int32"
+            elif model == float64_input_model:
+                dtype = np.float64
+                expected_type_str = "fp32"
+
+        mlmodel = ct.convert(
+            model(),
+            inputs=[ct.TensorType(shape=(10, 20), dtype=dtype)],
+            minimum_deployment_target=ct.target.macOS12,
+        )
+        assert_input_dtype(mlmodel, expected_type_str=expected_type_str)
         verify_prediction(mlmodel)
 
     def test_input_dtype_user_provided(self, float32_input_model_add_op):
@@ -935,29 +1060,35 @@ class TestInputOutputConversionAPI:
         """
         Test that providing fp16 input dtype works with macOS13.
         """
-        mlmodel = ct.convert(float32_input_model_add_op,
-                             inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16)],
-                             minimum_deployment_target=ct.target.macOS13
-                             )
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "cast"])
         assert_input_dtype(mlmodel, expected_type_str="fp16")
         assert_output_dtype(mlmodel, expected_type_str="fp32")
         verify_prediction(mlmodel)
 
-        mlmodel = ct.convert(float32_input_model_relu_ops,
-                             inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16)],
-                             minimum_deployment_target=ct.target.macOS13
-                             )
+        mlmodel = ct.convert(
+            float32_input_model_relu_ops,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         # Two consecutive relus are merged in the `merge_consecutive_relus` pass.
         assert_ops_in_mil_program(mlmodel, expected_op_list=["relu", "cast"])
         assert_input_dtype(mlmodel, expected_type_str="fp16")
         assert_output_dtype(mlmodel, expected_type_str="fp32")
         verify_prediction(mlmodel)
 
-        mlmodel = ct.convert(int32_input_model,
-                             inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16)],
-                             minimum_deployment_target=ct.target.macOS13,
-                             )
+        mlmodel = ct.convert(
+            int32_input_model,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "cast"])
         assert_input_dtype(mlmodel, expected_type_str="fp16")
         assert_output_dtype(mlmodel, expected_type_str="fp32")
@@ -1032,11 +1163,17 @@ class TestInputOutputConversionAPI:
         assert_output_dtype(mlmodel, expected_type_str="int32")
 
         # test forcing both inputs to be float16
-        mlmodel = ct.convert(float32_two_input_model,
-                             inputs=[ct.TensorType(shape=(10, 20), dtype=np.float16),
-                                     ct.TensorType(shape=(10, 20), dtype=np.float16),
-                                     ],
-                             minimum_deployment_target=ct.target.macOS13)
+        mlmodel = ct.convert(
+            float32_two_input_model,
+            inputs=[
+                ct.TensorType(shape=(10, 20), dtype=np.float16),
+                ct.TensorType(shape=(10, 20), dtype=np.float16),
+            ],
+            outputs=[
+                ct.TensorType(dtype=np.float32),
+            ],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "cast"])
         assert_input_dtype(mlmodel, expected_type_str="fp16", index=0)
         assert_input_dtype(mlmodel, expected_type_str="fp16", index=1)
@@ -1062,21 +1199,26 @@ class TestInputOutputConversionAPI:
 
     def test_single_output_model(self, int32_input_model, float32_input_model_relu_ops):
         # test output type: if not provided, it should be the default which is float32
-        mlmodel = ct.convert(int32_input_model,
-                             inputs=[ct.TensorType(shape=(10, 20))],
-                             minimum_deployment_target=ct.target.macOS12)
+        mlmodel = ct.convert(
+            int32_input_model,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.macOS12,
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "add", "cast"])
         assert_input_dtype(mlmodel, expected_type_str="fp32")
         assert_output_dtype(mlmodel, expected_type_str="fp32")
 
         # test that the output dtype provided by the user is applied during conversion
-        mlmodel = ct.convert(float32_input_model_relu_ops,
-                             inputs=[ct.TensorType(shape=(10, 20))],
-                             outputs=[ct.TensorType(dtype=np.int32)],
-                             minimum_deployment_target=ct.target.macOS12)
+        mlmodel = ct.convert(
+            float32_input_model_relu_ops,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            outputs=[ct.TensorType(dtype=np.int32)],
+            minimum_deployment_target=ct.target.macOS12,
+        )
         assert_input_dtype(mlmodel, expected_type_str="fp32")
         assert_output_dtype(mlmodel, expected_type_str="int32")
-        assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "relu", "cast", "cast"])
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "relu", "cast"])
 
         # test that an error is raised when shape is provided for the output
         with pytest.raises(ValueError):
@@ -1096,11 +1238,12 @@ class TestInputOutputConversionAPI:
                        )
 
         # test that output type float16 is applied correctly
-        mlmodel = ct.convert(float32_input_model_relu_ops,
-                             inputs=[ct.TensorType(shape=(10, 20))],
-                             outputs=[ct.TensorType(dtype=np.float16)],
-                             minimum_deployment_target=ct.target.macOS13,
-                             )
+        mlmodel = ct.convert(
+            float32_input_model_relu_ops,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            outputs=[ct.TensorType(dtype=np.float16)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         assert_output_dtype(mlmodel, expected_type_str="fp16")
         assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "relu"])
 
@@ -1138,10 +1281,12 @@ class TestInputOutputConversionAPI:
         verify_prediction(mlmodel)
 
     def test_color_input(self, rank4_input_model, rank3_input_model):
-        mlmodel = ct.convert(rank4_input_model,
-                             inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.RGB)],
-                             minimum_deployment_target=ct.target.macOS13,
-                             )
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.RGB)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "add", "cast"])
         assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
@@ -1168,10 +1313,12 @@ class TestInputOutputConversionAPI:
                        minimum_deployment_target=ct.target.macOS13,
                        )
 
-        mlmodel = ct.convert(rank4_grayscale_input_model,
-                             inputs=[ct.ImageType(shape=(1, 1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
-                             minimum_deployment_target=ct.target.macOS13,
-                             )
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.ImageType(shape=(1, 1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "add", "cast"])
         assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
@@ -1226,11 +1373,12 @@ class TestInputOutputConversionAPI:
         verify_prediction(mlmodel)
 
         # check neural network conversion
-        mlmodel = ct.convert(rank4_input_model,
-                             inputs=[ct.ImageType(shape=(1, 3, 10, 20),
-                                                  color_layout=ct.colorlayout.RGB)],
-                             outputs=[ct.ImageType(color_layout=ct.colorlayout.BGR)],
-                             )
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.RGB)],
+            outputs=[ct.ImageType(color_layout=ct.colorlayout.BGR)],
+            convert_to="neuralnetwork",
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["add"])
         assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.BGR)
@@ -1244,11 +1392,12 @@ class TestInputOutputConversionAPI:
                        minimum_deployment_target=ct.target.macOS12,
                       )
 
-        mlmodel = ct.convert(rank4_grayscale_input_model,
-                             inputs=[ct.ImageType(shape=(1, 1, 10, 20),
-                                                  color_layout=ct.colorlayout.GRAYSCALE)],
-                             outputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE)],
-                             )
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.ImageType(shape=(1, 1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
+            outputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE)],
+            convert_to="neuralnetwork",
+        )
         assert_ops_in_mil_program(mlmodel, expected_op_list=["add"])
         assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE)
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE)
@@ -1410,7 +1559,7 @@ class TestGrayscaleImagePredictions:
 
 
 @pytest.mark.skipif(
-    ct.utils._macos_version() < (14, 0), reason="Tests are for deployment target ios17/macos14"
+    ct.utils._macos_version() < (14, 0), reason="Tests are for deployment target iOS16/macos14"
 )
 class TestQuantizationConversionAPI:
     def test_dynamic_quantization(self):
@@ -1488,13 +1637,10 @@ class TestQuantizationConversionAPI:
 
         ops = get_op_types_in_program(coreml_model._mil_program)
         # constexpr_affine_dequantize and cast -> quantize can have arbitrary order
-        assert ops[:3] == ["cast", "quantize", "constexpr_affine_dequantize"] or ops[:3] == [
-            "constexpr_affine_dequantize",
-            "cast",
-            "quantize",
-        ]
+        assert set(ops[:2]) == set(["quantize", "constexpr_affine_dequantize"])
+
         # these ops have well-defined order
-        assert ops[3:] == [
+        assert ops[2:] == [
             # quantized ConvRelu op
             "dequantize",
             "conv",
@@ -1502,7 +1648,6 @@ class TestQuantizationConversionAPI:
             "quantize",
             # dequantize and output
             "dequantize",
-            "cast",
         ]
 
         output = traced_model(x)
@@ -1547,13 +1692,450 @@ class TestQuantizationConversionAPI:
 
         ops = get_op_types_in_program(coreml_model._mil_program)
         # constexpr_affine_dequantize and cast can have arbitrary order
-        assert ops[:2] == ["cast", "constexpr_affine_dequantize"] or ops[:2] == [
+        assert ops == [
             "constexpr_affine_dequantize",
-            "cast",
+            "conv",
         ]
-        # these ops have well-defined order
-        assert ops[2:] == ["conv", "cast"]
-
         output = traced_model(x)
         coreml_output = coreml_model.predict({"x": x})["y"]
         np.testing.assert_allclose(output, coreml_output, rtol=1e-2, atol=2e-2)
+
+
+class TestiOS16DefaultIODtype:
+    """
+    This class tests the default i/o dtype behavior for iOS16 (and above) models.
+    """
+
+    @staticmethod
+    def _verify_model_io(mlmodel, input_dtype, output_dtype, expected_op_list):
+        """
+        This utility function verifies the model's i/o dtypes and expected ops
+        """
+        assert_input_dtype(mlmodel, expected_type_str=input_dtype)
+        assert_output_dtype(mlmodel, expected_type_str=output_dtype)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=expected_op_list)
+        verify_prediction(mlmodel)
+
+    def test_iO16_default_fp16_input(self, float32_input_model_add_op):
+        """
+        With minimum_deployment_target set >= iOS16, and if the compute precision is
+        set to fp16. By default, a fp16 i/o model is produced.
+        However, if the users specify the dtype, the converter is going to respect that.
+        """
+        # Case 1: Inputs given / outputs None
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp16",
+            output_dtype="fp16",
+            expected_op_list=["add"],
+        )
+
+        # Case 2: Inputs given / outputs given
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=None)],
+            outputs=[ct.TensorType(dtype=None)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp16",
+            output_dtype="fp16",
+            expected_op_list=["add"],
+        )
+
+        # Case 3: Inputs set fp32 / outputs None
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp32",
+            output_dtype="fp16",
+            expected_op_list=["cast", "add"],
+        )
+
+        # Case 4: Inputs set fp32 / outputs given
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            outputs=[ct.TensorType(dtype=None)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp32",
+            output_dtype="fp16",
+            expected_op_list=["cast", "add"],
+        )
+
+        # Case 5: Inputs given / outputs set to fp32
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp16",
+            output_dtype="fp32",
+            expected_op_list=["add", "cast"],
+        )
+
+        # Case 6: Inputs / outputs both set to fp32
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            outputs=[ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp32",
+            output_dtype="fp32",
+            expected_op_list=["cast", "add", "cast"],
+        )
+
+    def test_iO16_default_fp16_io_with_multiple_inputs(self, float32_two_input_model):
+        """
+        For the multiple inputs model, the converter only set the default dtype for
+        inputs with unspecified dtype.
+        """
+        # Case 1: first input is set to fp32
+        mlmodel = ct.convert(
+            float32_two_input_model,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=np.float32), ct.TensorType(shape=(10, 20))],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp32", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="fp16")
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "add"])
+
+        # Case 2: second input is set to fp32
+        mlmodel = ct.convert(
+            float32_two_input_model,
+            inputs=[ct.TensorType(shape=(10, 20)), ct.TensorType(shape=(10, 20), dtype=np.float32)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp32", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="fp16")
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "add"])
+
+        # Case 3: both inputs are set to fp32
+        mlmodel = ct.convert(
+            float32_two_input_model,
+            inputs=[
+                ct.TensorType(shape=(10, 20), dtype=np.float32),
+                ct.TensorType(shape=(10, 20), dtype=np.float32),
+            ],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp32", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp32", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="fp16")
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "cast", "add"])
+
+        # Case 4: both inputs are not set
+        mlmodel = ct.convert(
+            float32_two_input_model,
+            inputs=[ct.TensorType(shape=(10, 20)), ct.TensorType(shape=(10, 20))],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="fp16")
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["add"])
+
+    def test_iO16_default_fp16_io_with_multiple_outputs(
+        self, float32_two_output_model, int32_float32_two_output_model
+    ):
+        """
+        For the multiple outputs model, the converter only set the default dtype to  fp16 for
+        outputs that satisfy
+        1. dtype is None
+        2. inferred dtype is fp32
+        """
+        # Case 1: first output is set to fp32
+        mlmodel = ct.convert(
+            float32_two_output_model,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            outputs=[ct.TensorType(dtype=np.float32), ct.TensorType(dtype=None)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16")
+        assert_output_dtype(mlmodel, expected_type_str="fp32", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["relu", "clip", "cast"])
+
+        # Case 2: second output is set to fp32
+        mlmodel = ct.convert(
+            float32_two_output_model,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            outputs=[ct.TensorType(dtype=None), ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16")
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp32", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["relu", "clip", "cast"])
+
+        # Case 3: both outputs are set to fp32
+        mlmodel = ct.convert(
+            float32_two_output_model,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            outputs=[ct.TensorType(dtype=np.float32), ct.TensorType(dtype=np.float32)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16")
+        assert_output_dtype(mlmodel, expected_type_str="fp32", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp32", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["relu", "clip", "cast", "cast"])
+
+        # Case 4: both outputs are not set
+        mlmodel = ct.convert(
+            float32_two_output_model,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            outputs=[ct.TensorType(dtype=None), ct.TensorType(dtype=None)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16")
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["relu", "clip"])
+
+        # Case 5: outputs is not provided at all
+        mlmodel = ct.convert(
+            float32_two_output_model,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="fp16")
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["relu", "clip"])
+
+        # Case 6: int32 and fp32 output. The fp32 defaults to fp32 while the int32 one remains unchanged.
+        mlmodel = ct.convert(
+            int32_float32_two_output_model,
+            inputs=[
+                ct.TensorType(shape=(10, 20), dtype=np.int32),
+                ct.TensorType(shape=(10, 20), dtype=np.float32),
+            ],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp32", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "cast", "add"])
+
+        # Case 7: int32 and fp32 output. The fp32 defaults to fp32 while the int32 one remains unchanged.
+        mlmodel = ct.convert(
+            int32_float32_two_output_model,
+            inputs=[
+                ct.TensorType(shape=(10, 20), dtype=np.int32),
+                ct.TensorType(shape=(10, 20)),
+            ],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "add"])
+
+        # Case 8: int32 and fp32 output. The fp32 defaults to fp32 while the int32 one remains unchanged.
+        mlmodel = ct.convert(
+            int32_float32_two_output_model,
+            inputs=[
+                ct.TensorType(shape=(10, 20), dtype=np.int32),
+                ct.TensorType(shape=(10, 20)),
+            ],
+            outputs=[
+                ct.TensorType(name="out1"),
+                ct.TensorType(name="out2"),
+            ],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="fp16", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "add"])
+
+        # Case 9: two int32 outputs. Nothing changed.
+        mlmodel = ct.convert(
+            int32_float32_two_output_model,
+            inputs=[
+                ct.TensorType(shape=(10, 20), dtype=np.int32),
+                ct.TensorType(shape=(10, 20), dtype=np.int32),
+            ],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_input_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_input_dtype(mlmodel, expected_type_str="int32", index=1)
+        assert_output_dtype(mlmodel, expected_type_str="int32", index=0)
+        assert_output_dtype(mlmodel, expected_type_str="int32", index=1)
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["add", "add"])
+
+    def test_iO16_default_image_dtype_input(
+        self,
+        rank4_input_model,
+        rank4_grayscale_input_model,
+    ):
+        """
+        We keep the input dtype for the image input model to fp32, unless it is GRAYSCALE_FLOAT16
+        """
+        # Example 1
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.RGB)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        verify_prediction(mlmodel)
+
+        # Example 2
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.BGR)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.BGR)
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        verify_prediction(mlmodel)
+
+        # Example 3
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.ImageType(shape=(1, 1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_spec_input_image_type(
+            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE
+        )
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        verify_prediction(mlmodel)
+
+        # Example 4
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[
+                ct.ImageType(shape=(1, 1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)
+            ],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_spec_input_image_type(
+            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16
+        )
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        verify_prediction(mlmodel)
+
+    def test_iO16_default_image_dtype_output(
+        self,
+        rank4_input_model,
+        rank4_grayscale_input_model,
+    ):
+        """
+        We keep the output dtype for the image input model to fp32, unless it is GRAYSCALE_FLOAT16
+        """
+        # Example 1
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.TensorType(shape=(1, 3, 10, 20))],
+            outputs=[ct.ImageType(color_layout=ct.colorlayout.RGB)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        verify_prediction(mlmodel)
+
+        # Example 2
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.TensorType(shape=(1, 3, 10, 20))],
+            outputs=[ct.ImageType(color_layout=ct.colorlayout.BGR)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.BGR)
+        verify_prediction(mlmodel)
+
+        # Example 3
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.TensorType(shape=(1, 1, 10, 20))],
+            outputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_spec_output_image_type(
+            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE
+        )
+        verify_prediction(mlmodel)
+
+        # Example 4
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.TensorType(shape=(1, 1, 10, 20))],
+            outputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
+        assert_spec_output_image_type(
+            mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16
+        )
+        verify_prediction(mlmodel)
+
+    def test_iO16_default_fp32_io(self, float32_input_model_add_op):
+        """
+        With minimum_deployment_target set >= iOS16, and if the compute precision is
+        set to fp32. By default, a fp32 i/o model is produced.
+        """
+        # Case 1: Inputs given / outputs None
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20))],
+            compute_precision=ct.precision.FLOAT32,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp32",
+            output_dtype="fp32",
+            expected_op_list=["add"],
+        )
+
+        # Case 2: Inputs given / outputs given
+        mlmodel = ct.convert(
+            float32_input_model_add_op,
+            inputs=[ct.TensorType(shape=(10, 20), dtype=None)],
+            outputs=[ct.TensorType(dtype=None)],
+            compute_precision=ct.precision.FLOAT32,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        self._verify_model_io(
+            mlmodel,
+            input_dtype="fp32",
+            output_dtype="fp32",
+            expected_op_list=["add"],
+        )

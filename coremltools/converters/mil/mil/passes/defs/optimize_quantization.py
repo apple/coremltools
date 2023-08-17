@@ -8,6 +8,7 @@ from typing import Tuple
 import numpy as np
 
 import coremltools.converters.mil.mil.types as types
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Var
@@ -18,6 +19,103 @@ from coremltools.converters.mil.mil.passes.helper import (
     block_context_manager,
 )
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+
+
+@register_pass(namespace="common")
+class int_op_canonicalization(AbstractGraphPass):
+    """
+    For general quantized operators, in Core ML, we represent them as
+    ``dequantize -> the floating-point version of this operator -> quantize``,
+    because mathematically it is the floating-point tensor rather than
+    its quantized integer representation that gets operated upon.
+
+    For some quantized operators that do not involve floating-point arithmetic,
+    however, it is unnecessary to prepend ``dequantize`` and append ``quantize``.
+    Examples are:
+
+    * reshape
+    """
+
+    INT_OP_TYPES_AND_OPSET_VERSIONS = {"reshape": {AvailableTarget.iOS17}}
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            self._canonicalize_int_ops_block(f)
+
+    @block_context_manager
+    def _canonicalize_int_ops_block(self, block: Block):
+        def apply_block(block: Block) -> bool:
+            for op in list(block.operations):
+                for b in op.blocks:
+                    self._canonicalize_int_ops_block(b)
+
+                matched_ops = self.match_pattern(op)
+                if matched_ops is not None:
+                    dequantize, quantize = matched_ops
+                    # has to break as the downstream iterator is affected
+                    if self.try_to_transform(dequantize, op, quantize):
+                        return True
+
+            return False
+
+        need_transformation = True
+        while need_transformation:
+            need_transformation = apply_block(block)
+
+    def match_pattern(self, op: Operation) -> Tuple[Operation, Operation]:
+        if (
+            op.op_type not in self.INT_OP_TYPES_AND_OPSET_VERSIONS
+            or op.opset_version not in self.INT_OP_TYPES_AND_OPSET_VERSIONS[op.op_type]
+        ):
+            return None
+
+        # make sure the input is quantized
+        dequantize = op.x.op
+        if dequantize is None or dequantize.op_type != "dequantize":
+            return None
+
+        # make sure the output is quantized
+        if not _check_child_op_type(op, "quantize"):
+            return None
+        quantize = op.outputs[0].child_ops[0]
+
+        # we do not have to check block output, because:
+        # * for dequantize, it is ok to connect to block output, since our
+        #   transformation method `try_to_transform` is able to deal with that
+        # * for op, checking child op has made sure it has only 1 child
+        #   and connects to quantize, i.e. it cannot connect to block output
+
+        return dequantize, quantize
+
+    def try_to_transform(self, dequantize: Operation, op: Operation, quantize: Operation) -> bool:
+        block: Block = op.enclosing_block
+
+        if not block.try_replace_uses_of_var_after_op(
+            anchor_op=quantize,
+            old_var=quantize.outputs[0],
+            new_var=self.build_int_op(dequantize, op, quantize),
+        ):
+            return False
+
+        # remove op and quantize here, but not dequantize, since:
+        # * all uses of op and quantize has been replaced with the canonicalized one
+        # * dequantize may feed to multiple ops, which are not replaced
+        #   (if not, then pass dead_code_elimination will eliminate it)
+        block.remove_ops([op, quantize])
+
+        return True
+
+    @staticmethod
+    def build_int_op(dequantize: Operation, op: Operation, quantize: Operation) -> Var:
+        if op.op_type == "reshape":
+            return mb.reshape(
+                x=dequantize.input,
+                shape=op.shape,
+                name=quantize.outputs[0].name,
+                before_op=op,
+            )
+
+        raise NotImplementedError(f"no build method implemented for int op {op.op_type}")
 
 
 # TODO (rdar://107718371): remove this pass after implementing QuantizedVar
@@ -85,7 +183,7 @@ class nullify_redundant_quantization_zero_point(AbstractGraphPass):
             self._nullify_redundant_quantization_zero_point_block(f)
 
     @block_context_manager
-    def _nullify_redundant_quantization_zero_point_block(self, block):
+    def _nullify_redundant_quantization_zero_point_block(self, block: Block):
         def apply_block(block: Block) -> bool:
             for op in list(block.operations):
                 for b in op.blocks:

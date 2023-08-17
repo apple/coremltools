@@ -5,7 +5,6 @@
 
 import itertools
 from typing import Tuple
-import unittest
 
 import numpy as np
 import parameterized
@@ -98,6 +97,235 @@ class QuantizationBaseTest:
                 x_fp = (x_q - broadcasted_zero_point) * broadcasted_scale
 
         return float_dtype(x_fp)
+
+
+class TestIntOpCanonicalization:
+    @pytest.mark.parametrize("op_type", ["reshape"])
+    def test_canonicalize_int_op(self, op_type):
+        """
+        Input graph:
+
+            input -> quantize -> dequantize -> int op -> quantize -> dequantize -> output
+
+        Output graph:
+
+            input -> quantize -> int op -> dequantize -> output
+        """
+        input_shape = (5, 6)
+        output_shape = (5, 2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)], opset_version=ct.target.iOS17)
+        def prog(x):
+            quantize_0 = mb.quantize(input=x, scale=0.1, output_dtype="int8")
+            dequantize_1 = mb.dequantize(input=quantize_0, scale=0.1)
+            if op_type == "reshape":
+                reshape = mb.reshape(x=dequantize_1, shape=output_shape)
+            quantize_1 = mb.quantize(input=reshape, scale=0.1, output_dtype="int8")
+            dequantize_2 = mb.dequantize(input=quantize_1, scale=0.1)
+            return dequantize_2
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::int_op_canonicalization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prev_prog) == [
+            "quantize",
+            "dequantize", "reshape", "quantize",
+            "dequantize",
+        ]
+        assert get_op_types_in_program(prog) == ["quantize", "reshape", "dequantize"]
+
+        assert_model_is_valid(
+            prog,
+            {"x": input_shape},
+            expected_output_shapes={block.outputs[0].name: output_shape},
+            minimum_deployment_target=ct.target.iOS17,
+            backend=("mlprogram", "fp32"),
+        )
+
+    @pytest.mark.parametrize("all_are_int", (True, False))
+    def test_canonicalize_versatile_inputs(self, all_are_int):
+        """
+        Input graph:
+
+                                             |-> int op 0 if all_are_int else add -> quantize -> dequantize -> output_0
+            input -> quantize -> dequantize -|
+                                             |-> int op 1 -> quantize -> dequantize -> output_1
+
+        Output graph:
+
+            if all_are_int:
+
+                                   |-> int op 0 -> dequantize -> output_0
+                input -> quantize -|
+                                   |-> int op 1 -> dequantize -> output_1
+
+            else:
+
+                                   |-> dequantize -> add -> quantize -> dequantize -> output_0
+                input -> quantize -|
+                                   |-> int op 1 -> dequantize -> output_1
+        """
+        input_shape = (5, 6)
+        output_shape = (5, 2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)], opset_version=ct.target.iOS17)
+        def prog(x):
+            quantize_0 = mb.quantize(input=x, scale=0.1, output_dtype="int8")
+            dequantize_1 = mb.dequantize(input=quantize_0, scale=0.1)
+
+            # int op 0 (here reshape) path
+            if all_are_int:
+                reshape = mb.reshape(x=dequantize_1, shape=output_shape)
+                quantize_1_0 = mb.quantize(input=reshape, scale=0.1, output_dtype="int8")
+                dequantize_2_0 = mb.dequantize(input=quantize_1_0, scale=0.1)
+            # float op (here add) path
+            else:
+                add = mb.add(x=dequantize_1, y=1.0)
+                quantize_1_0 = mb.quantize(input=add, scale=0.1, output_dtype="int8")
+                dequantize_2_0 = mb.dequantize(input=quantize_1_0, scale=0.1)
+
+            # int op 1 (here reshape) path
+            reshape = mb.reshape(x=dequantize_1, shape=output_shape)
+            quantize_1_1 = mb.quantize(input=reshape, scale=0.1, output_dtype="int8")
+            dequantize_2_1 = mb.dequantize(input=quantize_1_1, scale=0.1)
+
+            return dequantize_2_0, dequantize_2_1, 
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::int_op_canonicalization")
+        if all_are_int:
+            _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+            assert get_op_types_in_program(prev_prog) == [
+                "quantize", "dequantize",
+                "reshape", "quantize", "dequantize",
+                "reshape", "quantize", "dequantize",
+            ]
+            assert get_op_types_in_program(prog) == [
+                "quantize",
+                "reshape", "dequantize",
+                "reshape", "dequantize",
+            ]
+        else:
+            assert get_op_types_in_program(prev_prog) == [
+                "quantize", "dequantize",
+                "add", "quantize", "dequantize",
+                "reshape", "quantize", "dequantize",
+            ]
+            assert get_op_types_in_program(prog) == [
+                "quantize",
+                "dequantize", "add", "quantize", "dequantize",
+                "reshape", "dequantize",
+            ]
+
+        assert_model_is_valid(
+            prog,
+            {"x": input_shape},
+            expected_output_shapes={
+                block.outputs[0].name: output_shape if all_are_int else input_shape,
+                block.outputs[1].name: output_shape,
+            },
+            minimum_deployment_target=ct.target.iOS17,
+            backend=("mlprogram", "fp32"),
+        )
+
+    def test_canonicalize_consecutive_int_ops(self):
+        """
+        Input graph:
+
+            input -> quantize -> dequantize -> int op 0 -> quantize -> dequantize -> int op 1 -> quantize -> dequantize -> output
+
+        Output graph:
+
+            input -> quantize -> int op 0 -> int op 1 -> dequantize -> output
+        """
+        input_shape = (5, 6)
+        activation_shape = (10, 3)
+        output_shape = (5, 2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)], opset_version=ct.target.iOS17)
+        def prog(x):
+            quantize_0 = mb.quantize(input=x, scale=0.1, output_dtype="int8")
+
+            dequantize_1 = mb.dequantize(input=quantize_0, scale=0.1)
+            reshape0 = mb.reshape(x=dequantize_1, shape=activation_shape)
+            quantize_1 = mb.quantize(input=reshape0, scale=0.1, output_dtype="int8")
+
+            dequantize_2 = mb.dequantize(input=quantize_1, scale=0.1)
+            reshape1 = mb.reshape(x=dequantize_2, shape=output_shape)
+            quantize_2 = mb.quantize(input=reshape1, scale=0.1, output_dtype="int8")
+
+            dequantize_3 = mb.dequantize(input=quantize_2, scale=0.1)
+            return dequantize_3
+
+        prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::int_op_canonicalization")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        assert get_op_types_in_program(prev_prog) == [
+            "quantize",
+            "dequantize", "reshape", "quantize",
+            "dequantize", "reshape", "quantize",
+            "dequantize",
+        ]
+        assert get_op_types_in_program(prog) == ["quantize", "reshape", "reshape", "dequantize"]
+
+        assert_model_is_valid(
+            prog,
+            {"x": input_shape},
+            expected_output_shapes={block.outputs[0].name: output_shape},
+            minimum_deployment_target=ct.target.iOS17,
+            backend=("mlprogram", "fp32"),
+        )
+
+    def test_canonicalize_block_output_input(self):
+        """
+        Input graph:
+
+                                             |-> output_0
+            input -> quantize -> dequantize -|
+                                             |-> int op -> quantize -> dequantize -> output_1
+
+        Output graph:
+
+                               |-> dequantize -> output_0
+            input -> quantize -|
+                               |-> int op -> dequantize -> output_1
+        """
+        input_shape = (5, 6)
+        output_shape = (5, 2, 3)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)], opset_version=ct.target.iOS17)
+        def prog(x):
+            quantize_0 = mb.quantize(input=x, scale=0.1, output_dtype="int8")
+            dequantize_1 = mb.dequantize(input=quantize_0, scale=0.1)
+
+            reshape = mb.reshape(x=dequantize_1, shape=output_shape)
+            quantize_1 = mb.quantize(input=reshape, scale=0.1, output_dtype="int8")
+            dequantize_2 = mb.dequantize(input=quantize_1, scale=0.1)
+
+            return dequantize_1, dequantize_2
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::int_op_canonicalization")
+        assert get_op_types_in_program(prev_prog) == [
+            "quantize", "dequantize",
+            "reshape", "quantize", "dequantize",
+        ]
+        assert get_op_types_in_program(prog) == [
+            "quantize",
+            "dequantize",
+            "reshape", "dequantize",
+        ]
+
+        assert_model_is_valid(
+            prog,
+            {"x": input_shape},
+            expected_output_shapes={
+                block.outputs[0].name: input_shape,
+                block.outputs[1].name: output_shape,
+            },
+            minimum_deployment_target=ct.target.iOS17,
+            backend=("mlprogram", "fp32"),
+        )
+
+    # TODO (rdar://112297858): test the case where `int_op_canonicalization`
+    # refuses to transform because the "int op" is from an older iOS version
+    # that does not support int8 and uint8
 
 
 class TestNullifyRedundantQuantizationZeroPoint:
@@ -1329,7 +1557,11 @@ class TestDequantizeToConstexpr:
         assert get_op_types_in_program(prog) == ["dequantize"]
 
 
-class TestFP16CastTransform(unittest.TestCase):
+class TestFP16CastTransform:
+    def assertEqual(self, first, second):
+        """A convenience method to migrate from unittest (self.assertEqual) to pytest."""
+        assert first == second
+
     def test_single_input_to_single_operation(self):
         """
         Input graph:
@@ -1654,4 +1886,34 @@ class TestFP16CastTransform(unittest.TestCase):
             {"x": (1, 2)},
             expected_output_shapes={block.outputs[0].name: (1, 2), block.outputs[1].name: (1, 2)},
             backend=("mlprogram", "fp16"),
+        )
+
+    @pytest.mark.parametrize(
+        "opset_version, op_name",
+        itertools.product(
+            [None, ct.target.iOS17],
+            ["inverse", "log", "rsqrt"],
+        ),
+    )
+    def test_epsilon_mixed_precision(self, opset_version, op_name):
+        """The IOS17+ elementwise unary ops with epsilon support mixed precision."""
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))], opset_version=opset_version)
+        def prog(x):
+            return getattr(mb, op_name)(x=x, epsilon=0.1)
+
+        _, _, block = apply_pass_and_basic_check(prog, "common::add_fp16_cast")
+
+        expected_ops = ["cast", "cast", op_name, "cast"]
+        if opset_version is not None and opset_version >= ct.target.iOS17:
+            # Allow mixed precision, so the epsilon is not cast to fp16.
+            expected_ops = ["cast", op_name, "cast"]
+        assert get_op_types_in_program(prog) == expected_ops
+
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3)},
+            expected_output_shapes={block.outputs[0].name: (2, 3)},
+            backend=("mlprogram", "fp16"),
+            minimum_deployment_target=opset_version,
         )
