@@ -5718,6 +5718,36 @@ def roll(context, node):
     context.add(x, node.name)
 
 
+def _construct_unfold_indices(N, C, H, W, kernel_size, stride):
+    """
+    A utility function to construct indices for torch.unfold (im2col),
+    assuming the torch.unfold input `x` to be contiguous
+    """
+
+    # Get starting block indices.
+    start_idx = _np.arange(kernel_size[0])[None, :, None] * W + _np.arange(
+        kernel_size[1]
+    )
+
+    # Generate depth indices.
+    channel_index = H * W * _np.arange(C)
+    start_idx = (channel_index[None, :, None] + _np.ravel(start_idx)).reshape(
+        (-1, kernel_size[0], kernel_size[1])
+    )
+
+    # Get offsetted indices across the height and width of input array.
+    row_extent = H - kernel_size[0] + 1
+    col_extent = W - kernel_size[1] + 1
+    offset_idx = _np.arange(0, row_extent, stride[0])[None, :, None] * W + _np.arange(0, col_extent, stride[1])
+    indices = _np.ravel(start_idx)[:, None] + _np.ravel(offset_idx)
+
+    # Get batch block indices.
+    batch_idx = _np.arange(N)[:, None, None] * C * H * W
+    indices = batch_idx + indices
+
+    return indices.reshape(-1)
+
+
 @register_torch_op
 def im2col(context, node):
     """
@@ -5769,50 +5799,100 @@ def im2col(context, node):
     sptial_size = (H, W)
     block_count = 1
     for i in range(2):
-        block_count *= (
-            _np.floor(
-                # the original formula is
-                #     (sptial_size[i] + 2 * padding[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
-                # since we have explicitly padded, we no longer add 2 * padding[i] to sptial_size[i]
-                (sptial_size[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
-            ).astype(_np.int32)
+        block_count *= _np.floor(
+            # the original formula is
+            #     (sptial_size[i] + 2 * padding[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
+            # since we have explicitly padded, we no longer add 2 * padding[i] to sptial_size[i]
+            (sptial_size[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
             + 1
-        )
+        ).astype(_np.int32)
 
     """
     The implementation below assumes x to be contiguous
     """
 
-    # Get batch block indices.
-    batch_idx = _np.arange(N)[:, None, None] * C * H * W
+    indices = _construct_unfold_indices(N, C, H, W, kernel_size, stride)
 
-    # Get starting block indices.
-    start_idx = _np.arange(kernel_size[0])[None, :, None] * W + _np.arange(
-        kernel_size[1]
-    )
-
-    # Generate depth indices.
-    channel_index = H * W * _np.arange(C)
-    start_idx = (channel_index[None, :, None] + _np.ravel(start_idx)).reshape(
-        (-1, kernel_size[0], kernel_size[1])
-    )
-
-    # Get offsetted indices across the height and width of input array.
-    row_extent = H - kernel_size[0] + 1
-    col_extent = W - kernel_size[1] + 1
-    offset_idx = _np.arange(0, row_extent, stride[0])[None, :, None] * W + _np.arange(0, col_extent, stride[1])
-    indices = _np.ravel(start_idx)[:, None] + _np.ravel(offset_idx)
-
-    # Gather batches together.
-    indices = batch_idx + indices
     x = mb.reshape(x=x, shape=[-1])
-    gathered_data = mb.gather_along_axis(x=x, indices=indices.reshape(-1), axis=0)
+    gathered_data = mb.gather_along_axis(x=x, indices=indices, axis=0)
     block_size = C * kernel_size[0] * kernel_size[1]
     output = mb.reshape(
         x=gathered_data, shape=(N, block_size, block_count), name=node.name
     )
 
     context.add(output)
+
+
+@register_torch_op
+def col2im(context, node):
+    """
+    Combines an array of sliding local blocks into a large containing tensor.
+
+    torch.nn.functional.fold aims to be the general version:
+    col2im is the "2 output spatial dimensions" case of fold.
+
+    PyTorch currently only supports col2im: torch.nn.functional.fold redispatches to at::col2im,
+    which is why coremltools needs col2im to convert torch.nn.functional.fold.
+
+    We currently only support col2im (consistent with PyTorch) and:
+    * dilation set to 1
+    * padding set to 0
+    * stride set to kernel_size
+    * output_size is divisible by kernel_size
+
+    More flexbible support will be added in the future.
+
+    Reference https://pytorch.org/docs/stable/generated/torch.nn.Fold.html
+    """
+
+    inputs = _get_inputs(context, node, expected=6)
+    x = inputs[0]
+    output_size = inputs[1].val
+    kernel_size = inputs[2].val
+    dilation = inputs[3].val
+    padding = inputs[4].val
+    stride = inputs[5].val
+
+    if len(output_size) != 2:
+        raise ValueError("Only supports 2 output spatial dimensions for col2im (fold).")
+    if not (dilation[0] == 1 and dilation[1] == 1):
+        raise ValueError("Only supports dilation=1 for col2im (fold).")
+    if not (padding[0] == 0 and padding[1] == 0):
+        raise ValueError("Only supports padding=0 for col2im (fold).")
+    # In Pytorch, if multiple entries unfold to same location, then in folding they are accumulated
+    # In Core ML, however, there is no such op to perform this accumulation,
+    # so we cowardly refuse to convert if accumulation happens
+    # TODO: we may be able to support accumulation if x has certain symmetry (e.g. output by im2col)
+    #       by multiplying the repeat times of each entry
+    if any(stride != kernel_size):
+        raise ValueError("Only supports stride = kernel_size for col2im (fold).")
+    # We implement fold as an inverse to unfold
+    # i.e. a gather with indices that are inverse to unfold gather indices
+    # This works only if there is no edge leftover
+    if any(output_size % kernel_size != 0):
+        raise ValueError("Only supports output_size % kernel_size = 0 for col2im (fold).")
+
+    N, block_size, block_count = x.shape
+    C = int(block_size / _np.prod(kernel_size))
+    H, W = output_size
+
+    """
+    The implementation below assumes x to be contiguous
+    """
+
+    # inverse unfold indices
+    indices_unfold = _construct_unfold_indices(N, C, H, W, kernel_size, stride)
+    indices = _np.empty(indices_unfold.shape, dtype=np.int32)
+    for i in range(indices.shape[0]):
+        indices[indices_unfold[i]] = i
+
+    # perform gather with fold indices
+    x_flatten = mb.reshape(x=x, shape=(-1,))
+    y_flatten_with_extra = mb.gather_along_axis(x=x_flatten, indices=indices)
+    y_flatten = mb.slice_by_index(x=y_flatten_with_extra, begin=(0,), end=(N * C * H * W,))
+    y = mb.reshape(x=y_flatten, shape=(N, C, H, W), name=node.name)
+
+    context.add(y)
 
 
 @register_torch_op
