@@ -159,6 +159,7 @@ _BACKEND_MIL_PASSES: List[Text] = [
     "mil_backend::adjust_io_to_supported_types",
     "mil_backend::insert_image_preprocessing_ops",
     "mil_backend::fuse_activation_silu",
+    "mil_backend::fuse_pow2_sqrt",
     "common::const_elimination",  # rank0_expand_dims_swap might introduce some new const tensor
     "common::const_deduplication",  # after all consts have been settled
     "common::cast_optimization",
