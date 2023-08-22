@@ -1,0 +1,885 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Image Input and Output &#8212; Core ML Tools Guide</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/image-inputs';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Classifiers" href="classifiers.html" />
+    <link rel="prev" title="Model Input and Output Types" href="model-input-and-output-types.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Core ML Tools Guide</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Target Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supported-source-formats.html">Supported Source Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert a Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="ml-programs.html">ML Programs</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="save-as-model-package.html">Save ML Programs as Model Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="find-model-type-in-package.html">Find the Model Type in a Model Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="optimizing-models.html">Optimizing Models</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimization-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance-impact.html">Accuracy and Performance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimizecoreml-api-overview.html">optimize.coreml API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimizetorch-api-overview.html">optimize.torch API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="pruning-overview.html">Pruning Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pruning-a-core-ml-model.html">Post-Training Pruning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-pruning.html">Training-Time Pruning</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">Pruning During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post-training-palettization.html">Post-Training Palettization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training-time-palettization.html">Training-Time Palettization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Palettization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quantization-aware-training.html">Linear 8-Bit Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quantization-overview.html">Quantization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-free-quantization.html">Post-Training Quantization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-quantization.html">Training-Time Quantization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">Linear Quantization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/image-inputs.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Image Input and Output</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-an-mlmultiarray">Use an MLMultiArray</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-an-imagetype">Use an ImageType</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagetype-for-input">ImageType for Input</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagetype-for-output">ImageType for Output</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagetype-input-and-output-example">ImageType Input and Output Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#import-statements">Import Statements</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#image-filter-model">Image Filter Model</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-pytorch-model">Trace the PyTorch Model</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-to-an-ml-program">Convert the Model to an ML Program</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#test-with-an-image">Test With an Image</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#save-and-open-in-xcode">Save and Open in Xcode</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-scalar-type">Set the Scalar Type</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#add-image-preprocessing-options">Add Image Preprocessing Options</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocessing-for-tensorflow">Preprocessing for TensorFlow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocessing-for-torch">Preprocessing for Torch</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="image-input-and-output">
+<h1>Image Input and Output<a class="headerlink" href="#image-input-and-output" title="Permalink to this heading">#</a></h1>
+<p>The Core ML Tools <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> generates by default a Core ML model with a multidimensional array (<a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a>) as the type for input and output. If your model uses images for input, you can instead specify  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> for the input. Starting in coremltools version 6, you can also specify <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for the output.</p>
+<div class="admonition-imagetype-now-supported-for-output admonition">
+<p class="admonition-title">ImageType Now Supported for Output</p>
+<p>Starting in Core ML Tools 6, when converting a model you can specify an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> for output as well as for input.</p>
+</div>
+<section id="use-an-mlmultiarray">
+<h2>Use an MLMultiArray<a class="headerlink" href="#use-an-mlmultiarray" title="Permalink to this heading">#</a></h2>
+<p>When using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a>, if you include the model only, <em>without</em> an <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter, you get by default a Core ML model with the an input of type <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># Convert to Core ML with an MLMultiArray as input.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This example also excludes the <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter, so the Core ML model by default uses the <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> type for output as well.</p>
+<p>The following sample code shows how you can use <code class="docutils literal notranslate"><span class="pre">convert()</span></code> to convert a TensorFlow 2 model to Core ML neural network with an input of type <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a>. You can then use a <a class="reference external" href="https://numpy.org/">NumPy</a> array as input for making a prediction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span> <span class="c1"># TF 2.2.0</span>
+
+<span class="c1"># Load MobileNetV2.</span>
+<span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">applications</span><span class="o">.</span><span class="n">MobileNetV2</span><span class="p">()</span>
+<span class="n">input_name</span> <span class="o">=</span> <span class="n">keras_model</span><span class="o">.</span><span class="n">input_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Convert to Core ML with an MLMultiArray for input.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">)</span>
+
+<span class="c1"># In Python, provide a NumPy array as input for prediction.</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="c1"># Make a prediction using Core ML.</span>
+<span class="n">out_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="n">input_name</span><span class="p">:</span> <span class="n">data</span><span class="p">})</span>
+
+<span class="c1"># Save to disk.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;MobileNetV2.mlmodel&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>View the resulting model, saved as <code class="docutils literal notranslate"><span class="pre">MobileNetV2.mlmodel</span></code>, in Xcode. As you can see in the following figure, the input is called <code class="docutils literal notranslate"><span class="pre">image_array</span></code> and is a <code class="docutils literal notranslate"><span class="pre">MultiArray(1</span> <span class="pre">x</span> <span class="pre">224</span> <span class="pre">x</span> <span class="pre">224</span> <span class="pre">x</span> <span class="pre">3)</span></code> of type <code class="docutils literal notranslate"><span class="pre">Float32</span></code>:</p>
+<p><img alt="MLMultiArray" src="../_images/mobilenet-image-array.png" /></p>
+<p>You can rename the inputs and outputs using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.utils.rename_feature"><code class="docutils literal notranslate"><span class="pre">rename_feature()</span></code></a> method. For an example, see <a class="reference internal" href="mlmodel-utilities.html#rename-a-feature"><span class="std std-doc">Rename a Feature</span></a>.</p>
+<p>One benefit of using the <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> type that is not available with <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> is that the <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> lets you pass a batch of data. In the previous example, if you convert a model with input shape <code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">224,</span> <span class="pre">224,</span> <span class="pre">3)</span></code>, input values can be passed as a batch of 10.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> type is convenient as a default, but you may want to generate a model that accepts images as input and produces images for output.</p>
+</section>
+<section id="use-an-imagetype">
+<h2>Use an ImageType<a class="headerlink" href="#use-an-imagetype" title="Permalink to this heading">#</a></h2>
+<p>If your model expects an image as input, you may want to convert the model to use an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>, which may be more convenient for your code. An inefficient <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> copy operation could become a bottleneck in your model. Using an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> is an efficient way to copy over an input of type <a class="reference external" href="https://developer.apple.com/documentation/corevideo/cvpixelbuffer"><code class="docutils literal notranslate"><span class="pre">CVPixelBuffer</span></code></a> to the <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/2880280-prediction">Core ML prediction API</a>.</p>
+<section id="imagetype-for-input">
+<h3>ImageType for Input<a class="headerlink" href="#imagetype-for-input" title="Permalink to this heading">#</a></h3>
+<p>To use an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for input, include the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter with <code class="docutils literal notranslate"><span class="pre">convert()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># Convert to Core ML with an ImageType as input.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()])</span>
+</pre></div>
+</div>
+<p>By converting a model with <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for input, you can apply classification models and preprocess the images using the <a class="reference external" href="https://developer.apple.com/documentation/vision">Vision framework</a>. When providing an image for prediction with a Core ML model, Vision can automatically resize it for you. This makes an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> convenient for consumption on the device. The Core ML API also contains several convenient ways to initialize an image <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlfeaturevalue">feature value</a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For details on how to use Vision and Core ML for image classification, see <a class="reference external" href="https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml">Classifying Images with Vision and Core ML</a>.</p>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> differ in their interfaces to the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a> method in Core ML Tools, and differ when running on the device using the Core ML <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/2880280-prediction"><code class="docutils literal notranslate"><span class="pre">prediction()</span></code></a> API. For details about predictions, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>.</p>
+<p>The following example uses an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for a neural network model input, and makes a prediction. For this example, the type of input for an image must be a <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL image</a> to invoke a prediction in Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="c1"># Load MobileNetV2.</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+<span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">applications</span><span class="o">.</span><span class="n">MobileNetV2</span><span class="p">()</span>
+<span class="n">input_name</span> <span class="o">=</span> <span class="n">keras_model</span><span class="o">.</span><span class="n">input_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c1"># Convert to Core ML with an ImageType for input.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()])</span>
+
+<span class="c1"># Use PIL to load and resize the image to expected size.</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="n">example_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;daisy.jpg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">))</span>
+
+<span class="c1"># Make a prediction using Core ML.</span>
+<span class="n">out_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="n">input_name</span><span class="p">:</span> <span class="n">example_image</span><span class="p">})</span>
+
+<span class="c1"># Save to disk.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;MobileNetV2.mlmodel&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The following figure shows the model preview in Xcode. The <code class="docutils literal notranslate"><span class="pre">image</span></code> input is of type <code class="docutils literal notranslate"><span class="pre">Image</span></code> with attributes set to <code class="docutils literal notranslate"><span class="pre">(Color,</span> <span class="pre">224</span> <span class="pre">224)</span></code>. You can rename the inputs and outputs using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.utils.rename_feature"><code class="docutils literal notranslate"><span class="pre">rename_feature()</span></code></a> method.</p>
+<p><img alt="Image input" src="../_images/mobilenet-image-2.png" /></p>
+<p>In the above figure, the <code class="docutils literal notranslate"><span class="pre">image</span></code> input is of type <code class="docutils literal notranslate"><span class="pre">Image</span></code> with attributes set to <code class="docutils literal notranslate"><span class="pre">(Color,</span> <span class="pre">224</span> <span class="pre">224)</span></code>.</p>
+</section>
+<section id="imagetype-for-output">
+<h3>ImageType for Output<a class="headerlink" href="#imagetype-for-output" title="Permalink to this heading">#</a></h3>
+<p>To use an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for output, include the <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter with <code class="docutils literal notranslate"><span class="pre">convert()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()],</span>
+                                      <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">()])</span>
+</pre></div>
+</div>
+<p>For example, the following enables image inputs <em>and</em> outputs to convert a PyTorch model (<code class="docutils literal notranslate"><span class="pre">torch_model</span></code>) that accepts RGB images with the shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">3,</span> <span class="pre">H,</span> <span class="pre">W)</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># H: image height, W: image width</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">),</span>
+                     <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">)],</span>
+                     <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">)],</span>
+                     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS13</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The converter creates a Core ML model that outputs a <code class="docutils literal notranslate"><span class="pre">CVPixelBuffer</span></code> instance that is ready for use by other iOS or macOS system functions.</p>
+</section>
+<section id="imagetype-input-and-output-example">
+<h3>ImageType Input and Output Example<a class="headerlink" href="#imagetype-input-and-output-example" title="Permalink to this heading">#</a></h3>
+<p>The following example shows how you can use an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for model input and output when converting a model that works with images. The model is created in PyTorch. It has been tested with Python version 3.79 and <a class="reference external" href="https://pytorch.org/get-started/locally/">Torch</a> version 1.11.0.</p>
+<section id="import-statements">
+<h4>Import Statements<a class="headerlink" href="#import-statements" title="Permalink to this heading">#</a></h4>
+<p>The example uses PyTorch (<code class="docutils literal notranslate"><span class="pre">torch</span></code>) and <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL</a> for Python image support. Import the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="kn">from</span> <span class="nn">IPython.display</span> <span class="kn">import</span> <span class="n">display</span>
+</pre></div>
+</div>
+</section>
+<section id="image-filter-model">
+<h4>Image Filter Model<a class="headerlink" href="#image-filter-model" title="Permalink to this heading">#</a></h4>
+<p>For this example, create a simple image “blanching” filter model that whitens an image by adding 100 to each pixel value:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ImageFilteringModel</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">+</span> <span class="mi">100</span>
+</pre></div>
+</div>
+</section>
+<section id="trace-the-pytorch-model">
+<h4>Trace the PyTorch Model<a class="headerlink" href="#trace-the-pytorch-model" title="Permalink to this heading">#</a></h4>
+<p>The following code snippet traces the model instantiated from <code class="docutils literal notranslate"><span class="pre">ImageFilteringModel</span></code>, using  a 256 x 256 pixel image as its shape. The code uses <code class="docutils literal notranslate"><span class="pre">jit</span></code> (<a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.trace.html">JIT tracer</a>) to generate TorchScript. For details about tracing PyTorch models before converting them, see <a class="reference internal" href="model-tracing.html"><span class="doc std std-doc">Model Tracing</span></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">torch_model</span> <span class="o">=</span> <span class="n">ImageFilteringModel</span><span class="p">()</span>
+<span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span><span class="n">shape</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="convert-the-model-to-an-ml-program">
+<h4>Convert the Model to an ML Program<a class="headerlink" href="#convert-the-model-to-an-ml-program" title="Permalink to this heading">#</a></h4>
+<p>After tracing, use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> to convert the model to an <a class="reference internal" href="ml-programs.html"><span class="doc std std-doc">ML program</span></a>, specifying <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> for input and output:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">traced_model</span><span class="p">,</span>
+                          <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+                          <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;colorImage&quot;</span><span class="p">,</span>
+                                               <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span>
+                                               <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">,)],</span>
+                          <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;colorOutput&quot;</span><span class="p">,</span>
+                                                <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">,)],</span>
+                          <span class="p">)</span>
+</pre></div>
+</div>
+<p>With PyTorch conversions, if you specify a <code class="docutils literal notranslate"><span class="pre">name</span></code> with an <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for <code class="docutils literal notranslate"><span class="pre">outputs</span></code>, it is applied to the output name of the converted Core ML model. You can provide a <code class="docutils literal notranslate"><span class="pre">name</span></code> for the input image (<code class="docutils literal notranslate"><span class="pre">colorImage</span></code>) and the output image (<code class="docutils literal notranslate"><span class="pre">colorOutput</span></code>). The <code class="docutils literal notranslate"><span class="pre">&quot;mlprogram&quot;</span></code> in <code class="docutils literal notranslate"><span class="pre">convert()</span></code> returns an ML program executable on iOS15+, macOS12+, watchOS8+, and tvOS15+.</p>
+<p>For an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>, <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> must be a string or enumeration of type <code class="docutils literal notranslate"><span class="pre">ct.colorlayout</span></code>.</p>
+</section>
+<section id="test-with-an-image">
+<h4>Test With an Image<a class="headerlink" href="#test-with-an-image" title="Permalink to this heading">#</a></h4>
+<p>The following code snippet opens, resizes, and saves a sample image at 256 x 256 pixels, and then uses <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a> to test the image with the model, producing an image for output:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;palmtrees.jpg&quot;</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+<span class="n">display</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>
+<span class="n">img</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;palmtrees_256_by_256.jpg&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<figure class="align-center" id="id1">
+<img alt="Test image of palm trees" class="imgnoborder" src="../_images/palmtrees_256_by_256.jpg" />
+<figcaption>
+<p><span class="caption-text">Photo of palm trees and moon.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output</span> <span class="o">=</span> <span class="n">coreml_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;colorImage&quot;</span> <span class="p">:</span> <span class="n">img</span><span class="p">})[</span><span class="s2">&quot;colorOutput&quot;</span><span class="p">]</span>
+<span class="n">display</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<span class="n">output</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;palmtrees_result.png&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<figure class="align-center" id="id2">
+<img alt="Resulting image" class="imgnoborder" src="../_images/palmtrees_result.png" />
+<figcaption>
+<p><span class="caption-text">Same photo, whitened by the blanching model.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<p>The result is a blanched version of the photo.</p>
+</section>
+<section id="save-and-open-in-xcode">
+<h4>Save and Open in Xcode<a class="headerlink" href="#save-and-open-in-xcode" title="Permalink to this heading">#</a></h4>
+<p>Save the converted model in an ML package.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;ColorToColorModel.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can now double-click the ML package to open it in Xcode. Open the <strong>Preview</strong> tab and drag an image to the input well to test it:</p>
+<p><img alt="Drag palmtrees image" src="../_images/xcode-drag-palmtrees-preview.png" /></p>
+<p>Click the <strong>Stylized</strong> button in the preview:</p>
+<p><img alt="Click Stylize" src="../_images/xcode-palmtrees-stylized-preview.png" /></p>
+<p>The Xcode preview verifies that the converted model transforms any JPEG image.</p>
+</section>
+</section>
+</section>
+<section id="set-the-scalar-type">
+<h2>Set the Scalar Type<a class="headerlink" href="#set-the-scalar-type" title="Permalink to this heading">#</a></h2>
+<p>For an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>, Core ML supports 8-bit grayscale and 32-bit color images with 8 bits per component. For an <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiarray</span></code></a>, Core ML supports int 32, double, and float 32 as the scalar types. Starting in iOS 16 and macOS 13, you can also use OneComponent16Half Grayscale images and float 16 multiarrays for inputs and outputs.</p>
+<div class="admonition-grayscale-images-and-float-16-multiarrays admonition">
+<p class="admonition-title">Grayscale Images and Float 16 Multiarrays</p>
+<p>Starting in iOS 16 and macOS 13, you can use OneComponent16Half Grayscale images and float 16 <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray">multiarrays</a> for model inputs and outputs. Using <code class="docutils literal notranslate"><span class="pre">GRAYSCALE_FLOAT16</span></code> for input or output is available only if the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> is specified as <code class="docutils literal notranslate"><span class="pre">iOS16</span></code> or <code class="docutils literal notranslate"><span class="pre">macOS</span> <span class="pre">13</span></code>.</p>
+</div>
+<p>The following example shows how you can specify the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> and <code class="docutils literal notranslate"><span class="pre">outputs</span></code> arguments with <code class="docutils literal notranslate"><span class="pre">colorlayout</span></code> to set <code class="docutils literal notranslate"><span class="pre">GRAYSCALE_FLOAT16</span></code> images for both input and output:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># float 16 input and output of type grayscale images</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">source_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> 
+                         <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">)],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">)],</span>
+    <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By using the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> argument in a <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype"><code class="docutils literal notranslate"><span class="pre">TensorType</span></code></a>, you can control the type of the  <code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code> for both inputs and outputs. For example, to specify <code class="docutils literal notranslate"><span class="pre">np.float16</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
+                     <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
+                     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS13</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is missing, the <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> defaults to float 32.</p>
+</section>
+<section id="add-image-preprocessing-options">
+<h2>Add Image Preprocessing Options<a class="headerlink" href="#add-image-preprocessing-options" title="Permalink to this heading">#</a></h2>
+<p>Image-based models typically require the input image to be preprocessed before you can use it with the converted model. You may also need to apply the same transformations used in the original model.</p>
+<p>The <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> provides the option to specify preprocessing parameters for image inputs during conversion. These parameters include a global scale and channel-specific biases. The scale and biases are stored in the model and, at runtime, are applied according to the following equation:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y_red_channel = x_red_channel * scale + red_bias
+y_green_channel = x_green_channel * scale + green_bias
+y_blue_channel = x_blue_channel * scale + blue_bias
+</pre></div>
+</div>
+<p>If you want to use them, specify them while initializing the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> class:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">image_input</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_1&quot;</span><span class="p">,</span>
+                           <span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                           <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can then use <code class="docutils literal notranslate"><span class="pre">image_input</span></code> with the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter for the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert model to coreml with preprocessed image input.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">image_input</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<section id="preprocessing-for-tensorflow">
+<h3>Preprocessing for TensorFlow<a class="headerlink" href="#preprocessing-for-tensorflow" title="Permalink to this heading">#</a></h3>
+<p>TensorFlow models differ in how they manage image inputs. You need to examine the model to determine if preprocessing is required for the converted model. Please refer to the training recipe for the model that you are converting, and apply the scale and bias during conversion if required.</p>
+<p>For example, the TensorFlow MobileNet model shown in the <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Quickstart Example</span></a> expects the input image to be normalized with the interval <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. When converting it, use a scale of <code class="docutils literal notranslate"><span class="pre">1/127.5</span></code> and bias of <code class="docutils literal notranslate"><span class="pre">-1</span></code>. You can add <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> preprocessing parameters during the initialization of an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>, such as when using <code class="docutils literal notranslate"><span class="pre">convert()</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span> <span class="c1"># TF 1.15</span>
+
+<span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">applications</span><span class="o">.</span><span class="n">MobileNet</span><span class="p">()</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span> 
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">bias</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="mi">1</span><span class="o">/</span><span class="mf">127.5</span><span class="p">)])</span>
+</pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To learn how to evaluate a Core ML model with image inputs in Python, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>.</p>
+</div>
+</section>
+<section id="preprocessing-for-torch">
+<h3>Preprocessing for Torch<a class="headerlink" href="#preprocessing-for-torch" title="Permalink to this heading">#</a></h3>
+<p>Torch specifies preprocessing with <a class="reference external" href="https://pytorch.org/vision/stable/transforms.html#torchvision.transforms.Normalize"><code class="docutils literal notranslate"><span class="pre">torchvision.transform.Normalize</span></code></a>, using the following transformation formula:</p>
+<p><em>output[channel]</em> = (<em>input[channel]</em> - <strong>mean</strong> <em>[channel])</em> / <strong>std</strong> <em>[channel]</em></p>
+<p>For all pre-trained <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a> models, including MobileNetV2, the values are as follows:</p>
+<ul class="simple">
+<li><p><strong>mean</strong> is <code class="docutils literal notranslate"><span class="pre">[0.485,</span> <span class="pre">0.456,</span> <span class="pre">0.406]</span></code>.</p></li>
+<li><p><strong>std</strong> (standard deviation) is <code class="docutils literal notranslate"><span class="pre">[0.229,</span> <span class="pre">0.224,</span> <span class="pre">0.225]</span></code> .</p></li>
+</ul>
+<p>The three values correspond to the red (<code class="docutils literal notranslate"><span class="pre">[0.485</span></code> and <code class="docutils literal notranslate"><span class="pre">0.229</span></code>), green (<code class="docutils literal notranslate"><span class="pre">0.456</span></code> and <code class="docutils literal notranslate"><span class="pre">0.224</span></code>), and blue (<code class="docutils literal notranslate"><span class="pre">0.406</span></code> and <code class="docutils literal notranslate"><span class="pre">0.225</span></code>) channels.</p>
+<p>In addition, the training recipe for torchvision models assumes that the images have been normalized in the range <code class="docutils literal notranslate"><span class="pre">[0,1]</span></code> <em>prior</em> to applying the above transform.</p>
+<p>Therefore, to start with an image tensor that is in the range <code class="docutils literal notranslate"><span class="pre">[0,255]</span></code>, such as an image loaded with <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL</a>, or with <a class="reference external" href="https://developer.apple.com/documentation/corevideo/cvpixelbuffer"><code class="docutils literal notranslate"><span class="pre">CVPixelBuffer</span></code></a> in the Core ML framework for image inputs, the torchvision preprocessing can be represented as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y_red_channel = (x_red_channel/255.0 - 0.485) / 0.229
+y_green_channel = (x_green_channel/255.0 - 0.456) / 0.224
+y_blue_channel = (x_blue_channel/255.0 - 0.406) / 0.225
+</pre></div>
+</div>
+<p>The above formulas can be rewritten as follows:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y_red_channel = x_red_channel / (0.229*255)   - 0.485/(0.229)      
+y_green_channel = x_green_channel / (0.224*255)   - 0.456/(0.224)
+y_blue_channel = x_blue_channel / (0.225*255)   - 0.406/(0.225)
+</pre></div>
+</div>
+<p>For torchvision models, the following are the equivalent Core ML preprocessing parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mf">0.226</span><span class="o">*</span><span class="mf">255.0</span><span class="p">)</span>
+<span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span> <span class="mf">0.485</span><span class="o">/</span><span class="p">(</span><span class="mf">0.229</span><span class="p">)</span> <span class="p">,</span> <span class="o">-</span> <span class="mf">0.456</span><span class="o">/</span><span class="p">(</span><span class="mf">0.224</span><span class="p">),</span> <span class="o">-</span> <span class="mf">0.406</span><span class="o">/</span><span class="p">(</span><span class="mf">0.225</span><span class="p">)]</span>
+</pre></div>
+</div>
+<p>Core ML uses a global scale value rather than channel-specific values that torchvision uses.  Since the three scale values for torchvision models are very close, using one average value works reasonably well:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>0.226 = (0.229 + 0.224 + 0.225)/3
+</pre></div>
+</div>
+<p>The <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> input type lets you specify the <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> parameters. The scale is applied to the image first, and then the bias is added. Before converting, specify the <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># Set the image scale and bias for input image preprocessing</span>
+<span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mf">0.226</span><span class="o">*</span><span class="mf">255.0</span><span class="p">)</span>
+<span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span> <span class="mf">0.485</span><span class="o">/</span><span class="p">(</span><span class="mf">0.229</span><span class="p">)</span> <span class="p">,</span> <span class="o">-</span> <span class="mf">0.456</span><span class="o">/</span><span class="p">(</span><span class="mf">0.224</span><span class="p">),</span> <span class="o">-</span> <span class="mf">0.406</span><span class="o">/</span><span class="p">(</span><span class="mf">0.225</span><span class="p">)]</span>
+
+<span class="n">image_input</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_1&quot;</span><span class="p">,</span>
+                           <span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                           <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can then use <code class="docutils literal notranslate"><span class="pre">image_input</span></code> with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert traced model to coreml</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">image_input</span><span class="p">]</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="model-input-and-output-types.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Model Input and Output Types</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="classifiers.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Classifiers</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-an-mlmultiarray">Use an MLMultiArray</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-an-imagetype">Use an ImageType</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagetype-for-input">ImageType for Input</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagetype-for-output">ImageType for Output</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#imagetype-input-and-output-example">ImageType Input and Output Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#import-statements">Import Statements</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#image-filter-model">Image Filter Model</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-pytorch-model">Trace the PyTorch Model</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-to-an-ml-program">Convert the Model to an ML Program</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#test-with-an-image">Test With an Image</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#save-and-open-in-xcode">Save and Open in Xcode</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-the-scalar-type">Set the Scalar Type</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#add-image-preprocessing-options">Add Image Preprocessing Options</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocessing-for-tensorflow">Preprocessing for TensorFlow</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocessing-for-torch">Preprocessing for Torch</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple Inc
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

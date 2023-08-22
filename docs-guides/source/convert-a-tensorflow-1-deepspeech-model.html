@@ -1,0 +1,706 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Converting a TensorFlow 1 DeepSpeech Model &#8212; Core ML Tools Guide</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-a-tensorflow-1-deepspeech-model';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="TensorFlow 2 Workflow" href="tensorflow-2.html" />
+    <link rel="prev" title="Converting a TensorFlow 1 Image Classifier" href="convert-a-tensorflow-1-image-classifier.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Core ML Tools Guide</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Target Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supported-source-formats.html">Supported Source Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert a Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="ml-programs.html">ML Programs</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="save-as-model-package.html">Save ML Programs as Model Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="find-model-type-in-package.html">Find the Model Type in a Model Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="optimizing-models.html">Optimizing Models</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimization-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance-impact.html">Accuracy and Performance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimizecoreml-api-overview.html">optimize.coreml API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimizetorch-api-overview.html">optimize.torch API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="pruning-overview.html">Pruning Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pruning-a-core-ml-model.html">Post-Training Pruning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-pruning.html">Training-Time Pruning</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">Pruning During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post-training-palettization.html">Post-Training Palettization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training-time-palettization.html">Training-Time Palettization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Palettization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quantization-aware-training.html">Linear 8-Bit Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quantization-overview.html">Quantization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-free-quantization.html">Post-Training Quantization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-quantization.html">Training-Time Quantization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">Linear Quantization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/convert-a-tensorflow-1-deepspeech-model.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Converting a TensorFlow 1 DeepSpeech Model</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-the-model">Set Up the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-and-preprocess-an-audio-file">Convert the Model and Preprocess an Audio File</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feed-the-input-into-the-model">Feed the Input Into the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-a-dynamic-tensorflow-model">Use a Dynamic TensorFlow Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-a-dynamic-model-to-a-static-one">Convert a Dynamic Model to a Static One</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="converting-a-tensorflow-1-deepspeech-model">
+<h1>Converting a TensorFlow 1 DeepSpeech Model<a class="headerlink" href="#converting-a-tensorflow-1-deepspeech-model" title="Permalink to this heading">#</a></h1>
+<p>The following example explores the automatic handling of flexible shapes and other related capabilities of the Core ML Tools converter. It uses an <a class="reference external" href="https://en.wikipedia.org/wiki/Speech_recognition#End-to-end_automatic_speech_recognition">automatic speech recognition</a> (ASR) task in which the input is a speech audio file and the output is the text transcription of it.</p>
+<p>The ASR system for this example consists of three stages: preprocessing, post-processing, and a neural network model between them that does most of the heavy lifting. The preprocessing and post-processing stages employ standard techniques which can be easily implemented. The focus of this example is on converting the neural network model.</p>
+<div class="admonition-how-asr-works admonition">
+<p class="admonition-title">How ASR Works</p>
+<p>Preprocessing involves extracting the <a class="reference external" href="https://en.wikipedia.org/wiki/Mel-frequency_cepstrum">Mel-frequency cepstral coefficients</a> (MFCCs) from the raw audio file. The MFCCs are fed into the neural network model, which returns a character-level time series of probability distributions. Those are then postprocessed by a CTC decoder to produce the final transcription.</p>
+<p>The example uses a pre-trained TensorFlow model called <a class="reference external" href="https://github.com/mozilla/DeepSpeech/blob/master/DeepSpeech.py">DeepSpeech</a> that uses <a class="reference external" href="https://en.wikipedia.org/wiki/Long_short-term_memory">long short-term memory</a> (LSTM) and a few dense layers stacked on top of each other — an architecture common for <code class="docutils literal notranslate"><span class="pre">seq2seq</span></code> models.</p>
+</div>
+<section id="set-up-the-model">
+<h2>Set Up the Model<a class="headerlink" href="#set-up-the-model" title="Permalink to this heading">#</a></h2>
+<p>To run this example on your system, follow these steps:</p>
+<ol class="arabic">
+<li><p>Download the following assets:</p>
+<ul class="simple">
+<li><p>Processing and inspection utilities (<a class="reference external" href="https://docs-assets.developer.apple.com/coremltools/deepspeech/demo_utils.py">demo_utils.py</a>)</p></li>
+<li><p>Sample audio file (<a class="reference external" href="https://docs-assets.developer.apple.com/coremltools/deepspeech/audio_sample_16bit_mono_16khz.wav">audio_sample_16bit_mono_16khz.wav</a>)</p></li>
+<li><p>Alphabet configuration file (<a class="reference external" href="https://github.com/mozilla/DeepSpeech/blob/master/data/alphabet.txt">alphabet.txt</a>)</p></li>
+<li><p>Language model scorer (<a class="reference external" href="https://github.com/mozilla/DeepSpeech/blob/master/data/lm/kenlm.scorer">kenlm.scorer</a>)</p></li>
+<li><p>Pre-trained weights (<a class="reference external" href="https://github.com/mozilla/DeepSpeech/releases/download/v0.7.1/deepspeech-0.7.1-checkpoint.tar.gz">deepspeech-0.7.1-checkpoint</a>)</p></li>
+<li><p>Script to export TensorFlow 1 model (<a class="reference external" href="https://github.com/mozilla/DeepSpeech/blob/master/DeepSpeech.py">DeepSpeech.py</a>)</p></li>
+</ul>
+</li>
+<li><p>Install the <code class="docutils literal notranslate"><span class="pre">deepspeech</span></code> package using <code class="docutils literal notranslate"><span class="pre">pip</span></code>:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>deepspeech
+</pre></div>
+</div>
+</li>
+<li><p>Run the following script downloaded from the <a class="reference external" href="https://github.com/mozilla/DeepSpeech">DeepSpeech repository</a> to export the TensorFlow 1 model:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>DeepSpeech.py<span class="w"> </span>--export_dir<span class="w"> </span>/tmp<span class="w"> </span>--checkpoint_dir<span class="w"> </span>./deepspeech-0.7.1-checkpoint<span class="w"> </span>--alphabet_config_path<span class="o">=</span>alphabet.txt<span class="w"> </span>--scorer_path<span class="o">=</span>kenlm.scorer<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+</pre></div>
+</div>
+</li>
+<li><p>After the model is exported, inspect the outputs of the TensorFlow graph:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">tf_model</span> <span class="o">=</span> <span class="s2">&quot;/tmp/output_graph.pb&quot;</span>
+<span class="kn">from</span> <span class="nn">demo_utils</span> <span class="kn">import</span> <span class="n">inspect_tf_outputs</span>
+<span class="n">inspect_tf_outputs</span><span class="p">(</span><span class="n">tf_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The TensorFlow graph outputs are <code class="docutils literal notranslate"><span class="pre">'mfccs'</span></code>, <code class="docutils literal notranslate"><span class="pre">'logits'</span></code>, <code class="docutils literal notranslate"><span class="pre">'new_state_c'</span></code>, and <code class="docutils literal notranslate"><span class="pre">'new_state_h'</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">'mfccs'</span></code> output represents the output of the preprocessing stage. This means that the exported TensorFlow graph contains not just the DeepSpeech model, but also the preprocessing subgraph.</p>
+</li>
+<li><p>Strip off this preprocessing component by providing the remaining three output names to the unified converter function:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">,</span> <span class="s2">&quot;new_state_c&quot;</span><span class="p">,</span> <span class="s2">&quot;new_state_h&quot;</span><span class="p">]</span>
+</pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="convert-the-model-and-preprocess-an-audio-file">
+<h2>Convert the Model and Preprocess an Audio File<a class="headerlink" href="#convert-the-model-and-preprocess-an-audio-file" title="Permalink to this heading">#</a></h2>
+<p>Preprocessing and post-processing functions have already been constructed using code in the <a class="reference external" href="https://github.com/mozilla/DeepSpeech">DeepSpeech repository</a>. To convert the model and preprocess an audio file, follow these steps:</p>
+<ol class="arabic">
+<li><p>Convert the model to a Core ML neural network model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>After the model is converted, load and preprocess an audio file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">audiofile</span> <span class="o">=</span> <span class="s2">&quot;./audio_sample_16bit_mono_16khz.wav&quot;</span>
+<span class="kn">from</span> <span class="nn">demo_utils</span> <span class="kn">import</span> <span class="n">preprocessing</span><span class="p">,</span> <span class="n">postprocessing</span>
+<span class="n">mfccs</span> <span class="o">=</span> <span class="n">preprocessing</span><span class="p">(</span><span class="n">audiofile</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mfccs</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>Preprocessing transforms the audio file into a tensor object of shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">636,</span> <span class="pre">19,</span> <span class="pre">26)</span></code>. The shape of the tensor can be viewed as one audio file, preprocessed into 636 sequences, each of width 19, and containing 26 coefficients. The number of sequences changes with the length of the audio. In this 12-second audio file there are 636 sequences.</p>
+</section>
+<section id="feed-the-input-into-the-model">
+<h2>Feed the Input Into the Model<a class="headerlink" href="#feed-the-input-into-the-model" title="Permalink to this heading">#</a></h2>
+<p>Inspect the input shapes that the Core ML model expects:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">demo_utils</span> <span class="kn">import</span> <span class="n">inspect_inputs</span>
+<span class="n">inspect_inputs</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">tf_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The model input with the name <code class="docutils literal notranslate"><span class="pre">input_node</span></code> has the shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">16,</span> <span class="pre">19,</span> <span class="pre">26)</span></code> which matches the shape of the preprocessed tensor in all the dimensions except for the sequence dimension. Since the converted Core ML model can process only 16 sequences at a time, create a loop to break the input features into chunks and feed each segment into the model one-by-one:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">start</span> <span class="o">=</span> <span class="mi">0</span> 
+<span class="n">step</span> <span class="o">=</span> <span class="mi">16</span>
+<span class="n">max_time_steps</span> <span class="o">=</span> <span class="n">mfccs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">logits_sequence</span> <span class="o">=</span> <span class="p">[]</span>
+
+<span class="n">input_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;input_lengths&quot;</span><span class="p">]</span>  <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">step</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;previous_state_c&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2048</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="c1"># Initializing cell state </span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;previous_state_h&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2048</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="c1"># Initializing hidden state </span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Transcription: </span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">while</span> <span class="p">(</span><span class="n">start</span> <span class="o">+</span> <span class="n">step</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_time_steps</span><span class="p">:</span>
+    <span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;input_node&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mfccs</span><span class="p">[:,</span> <span class="n">start</span><span class="p">:(</span><span class="n">start</span> <span class="o">+</span> <span class="n">step</span><span class="p">),</span> <span class="p">:,</span> <span class="p">:]</span>
+
+    <span class="c1"># Evaluation</span>
+    <span class="n">preds</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">+=</span> <span class="n">step</span>
+    <span class="n">logits_sequence</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">preds</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Updating states</span>
+    <span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;previous_state_c&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;new_state_c&quot;</span><span class="p">]</span>
+    <span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;previous_state_h&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">preds</span><span class="p">[</span><span class="s2">&quot;new_state_h&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Decoding</span>
+    <span class="n">probs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">logits_sequence</span><span class="p">)</span>
+    <span class="n">transcription</span> <span class="o">=</span> <span class="n">postprocessing</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">transcription</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;</span><span class="se">\r</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">flush</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above code breaks the preprocessed feature into size-16 slices, and runs a prediction on each slice, along with state management, inside a loop. After running the above code, the transcription matches the contents of the audio file.</p>
+</section>
+<section id="use-a-dynamic-tensorflow-model">
+<h2>Use a Dynamic TensorFlow Model<a class="headerlink" href="#use-a-dynamic-tensorflow-model" title="Permalink to this heading">#</a></h2>
+<p>It is also possible to run the prediction on the entire preprocessed feature in just one go using a dynamic TensorFlow model. Follow these steps:</p>
+<ol class="arabic">
+<li><p>Rerun the same script from the DeepSpeech repository to obtain a dynamic graph. Provide an additional flag <code class="docutils literal notranslate"><span class="pre">n_steps</span></code> which corresponds to the sequence length and has a default value of 16. Setting it to -1 means that the sequence length can take any positive value:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>!python<span class="w"> </span>DeepSpeech.py<span class="w"> </span>--n_steps<span class="w"> </span>-1<span class="w"> </span>--export_dir<span class="w"> </span>/tmp<span class="w"> </span>--checkpoint_dir<span class="w"> </span>./deepspeech-0.7.1-checkpoint<span class="w"> </span>--alphabet_config_path<span class="o">=</span>alphabet.txt<span class="w"> </span>--scorer_path<span class="o">=</span>kenlm.scorer<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
+</pre></div>
+</div>
+</li>
+<li><p>Convert the newly exported dynamic TensorFlow model to a Core ML neural network model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>After the model is converted, inspect how this new model is different from the previous static one:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">inspect_inputs</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span><span class="n">tf_model</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>The shape of input <code class="docutils literal notranslate"><span class="pre">input_node</span></code> is now <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">None,</span> <span class="pre">19,</span> <span class="pre">26)</span></code>, which mean that this CoreML model can work on inputs of arbitrary-sequence length.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The dynamic Core ML model offers dynamic operations, such as “get shape” and “dynamic reshape”, which are not available in the previous static model. The Core ML Tools converter offers the same simplicity with dynamic models as it does with static models.</p>
+</div>
+<ol class="arabic simple" start="4">
+<li><p>Validate the transcription accuracy on the same audio file:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">input_dict</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;input_node&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mfccs</span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;input_lengths&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">mfccs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;previous_state_c&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2048</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="c1"># Initializing cell state </span>
+<span class="n">input_dict</span><span class="p">[</span><span class="s2">&quot;previous_state_h&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2048</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="c1"># Initializing hidden state</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="5">
+<li><p>With the dynamic model you don’t need to create a loop. You can feed the entire input feature directly into the model:</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">probs</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)[</span><span class="s2">&quot;logits&quot;</span><span class="p">]</span>
+<span class="n">transcription</span> <span class="o">=</span> <span class="n">postprocessing</span><span class="p">(</span><span class="n">probs</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">transcription</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>The result is the same transcription with the dynamic Core ML model as with the static model.</p>
+</section>
+<section id="convert-a-dynamic-model-to-a-static-one">
+<h2>Convert a Dynamic Model to a Static One<a class="headerlink" href="#convert-a-dynamic-model-to-a-static-one" title="Permalink to this heading">#</a></h2>
+<p>So far you worked with two variants of the DeepSpeech model:</p>
+<ul class="simple">
+<li><p>Static TF graph: The converter produced a Core ML neural network model with inputs of fixed shape.</p></li>
+<li><p>Dynamic model: The converter produced a Core ML neural network model that can accept inputs of any sequence length.</p></li>
+</ul>
+<p>The converter handles both cases transparently without needing to make a change to the conversion call.</p>
+<p>It is also possible with the Core ML Tools converter to start with a dynamic TF graph and obtain a static Core ML model. Provide the type description object containing the name and shape of the input to the conversion API:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">input</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_node&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">19</span><span class="p">,</span><span class="mi">26</span><span class="p">))</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="nb">input</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Under the hood, the type and value inference propagates this shape information to remove all the unnecessary dynamic operations.</p>
+<p>Static models are likely to be more performant while the dynamic ones are more flexible.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="convert-a-tensorflow-1-image-classifier.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Converting a TensorFlow 1 Image Classifier</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tensorflow-2.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">TensorFlow 2 Workflow</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#set-up-the-model">Set Up the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-model-and-preprocess-an-audio-file">Convert the Model and Preprocess an Audio File</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#feed-the-input-into-the-model">Feed the Input Into the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-a-dynamic-tensorflow-model">Use a Dynamic TensorFlow Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-a-dynamic-model-to-a-static-one">Convert a Dynamic Model to a Static One</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple Inc
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

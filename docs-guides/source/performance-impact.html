@@ -1,0 +1,958 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Accuracy and Performance &#8212; Core ML Tools Guide</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/performance-impact';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimize API Overview" href="api-overview.html" />
+    <link rel="prev" title="Optimization Workflow" href="optimization-workflow.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Core ML Tools Guide</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Target Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="supported-source-formats.html">Supported Source Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert a Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="ml-programs.html">ML Programs</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="save-as-model-package.html">Save ML Programs as Model Packages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="find-model-type-in-package.html">Find the Model Type in a Model Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="optimizing-models.html">Optimizing Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="optimization-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Accuracy and Performance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimizecoreml-api-overview.html">optimize.coreml API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimizetorch-api-overview.html">optimize.torch API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="pruning-overview.html">Pruning Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pruning-a-core-ml-model.html">Post-Training Pruning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-pruning.html">Training-Time Pruning</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">Pruning During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post-training-palettization.html">Post-Training Palettization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training-time-palettization.html">Training-Time Palettization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Palettization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quantization-aware-training.html">Linear 8-Bit Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quantization-overview.html">Quantization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-free-quantization.html">Post-Training Quantization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-quantization.html">Training-Time Quantization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">Linear Quantization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/performance-impact.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Accuracy and Performance</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compression-ratios">Compression Ratios</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weight-pruning">Weight Pruning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weight-palettization">Weight Palettization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-8-bit-quantization">Linear 8-Bit Quantization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#effect-on-latency-and-runtime-memory">Effect on Latency and Runtime Memory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-info">Model Info</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pruning">Pruning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#palettization">Palettization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Linear 8-Bit Quantization</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="accuracy-and-performance">
+<h1>Accuracy and Performance<a class="headerlink" href="#accuracy-and-performance" title="Permalink to this heading">#</a></h1>
+<p>This section provides a few concrete <a class="reference internal" href="#examples"><span class="std std-doc">examples</span></a> of the tradeoff between accuracy and performance, as described in <a class="reference internal" href="optimization-workflow.html"><span class="doc std std-doc">Optimization Workflow</span></a>. The accuracy of the compressed model depends not only on the type of model and the task for which it is trained, but also on the compression ratio. This section helps you understand the impact of compressing models, not just on model size, but also on latency and runtime memory consumption.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Results for only a handful of models are presented in this section. These can vary greatly based on the tasks and model types.</p>
+</div>
+<section id="compression-ratios">
+<h2>Compression Ratios<a class="headerlink" href="#compression-ratios" title="Permalink to this heading">#</a></h2>
+<p>For measuring the compression ratio, we use a <code class="docutils literal notranslate"><span class="pre">float16</span></code> precision model as the baseline, since this is the default precision setting for <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">mlprograms</span></a>. For each compression technique, the expected compressions ratios are as follows:</p>
+<section id="weight-pruning">
+<h3>Weight Pruning<a class="headerlink" href="#weight-pruning" title="Permalink to this heading">#</a></h3>
+<p>The main parameter that controls the compression factor is the amount of sparsity. A 50% sparse model implies that half of the weight values have been set to 0. Using sparse representation, only the non-zero elements will be stored, thereby saving half the memory.</p>
+<p>However, the locations of the non-zero values also need to be stored in order to fully reconstruct the weight tensor. Therefore, such a model will have a compression ratio slightly less than 2. For a 75% sparse model, the ratio will be slightly less than 4, and so on. In practice, the compression ratio will typically be less, as certain weight tensors (such as ones that are smaller in size) may be skipped from compression to preserve more model accuracy.</p>
+</section>
+<section id="weight-palettization">
+<h3>Weight Palettization<a class="headerlink" href="#weight-palettization" title="Permalink to this heading">#</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">n_bits</span></code> parameter controls model size with weight Palettization. <code class="docutils literal notranslate"><span class="pre">n_bits=8,4,2</span></code> will correspond to the maximum possible compression ratios of <code class="docutils literal notranslate"><span class="pre">2,4,8</span></code> respectively. Since additional memory needs to be allocated to store the look-up table, the compression ratio will be less than the maximum possible. Similar to pruning, if certain layers that are sensitive to precision are skipped from being palletized the overall compression ratio may be lower.</p>
+</section>
+<section id="linear-8-bit-quantization">
+<h3>Linear 8-Bit Quantization<a class="headerlink" href="#linear-8-bit-quantization" title="Permalink to this heading">#</a></h3>
+<p>Since linear 8-bit quantization always uses 8 bits, the compression ratio is close to 2 with this scheme. In practice, it would be slightly less than 2, as a bit of additional memory is required to store <code class="docutils literal notranslate"><span class="pre">per-channel</span></code> scale parameters.</p>
+</section>
+</section>
+<section id="effect-on-latency-and-runtime-memory">
+<h2>Effect on Latency and Runtime Memory<a class="headerlink" href="#effect-on-latency-and-runtime-memory" title="Permalink to this heading">#</a></h2>
+<p>While the primary advantage of compressing weights is model size reduction, improvements in latency and runtime memory usage <em>may</em> occur for compressed models as compared to their uncompressed versions, as seen in the  <a class="reference internal" href="#examples"><span class="std std-doc">examples</span></a>. This is due to runtime changes and enhancements made in Core ML starting from iOS 17, macOS 14, watchOS 10, and tvOS 17.</p>
+<p>The runtime performance is dependent on a variety of factors, including model architecture, hardware generation, the dominant compute unit the ops of the model are dispatched to, parametric configurations of the ops, and so on. Since performance characteristics are expected to change and generally improve with each software update, we recommend that you perform measurements on the device(s) of interest using the <a class="reference external" href="https://developer.apple.com/videos/play/wwdc2022/10027/">Xcode Performance tab and/or Core ML Instruments</a> for your particular model deployment and app code.</p>
+<p>To understand the impact of compressing models on latency and runtime memory consumption, consider the case when the activations are in <code class="docutils literal notranslate"><span class="pre">float</span></code> precision, and only the weights are compressed (which is the most common case, unless both activations and weights are compressed to 8-bit linear). In this scenario, during the time of computation, the weights need to be <em>decompressed</em> so that they can be brought back in the same dense <code class="docutils literal notranslate"><span class="pre">float</span></code> representation as the activations, and multiplied with them. Compressing the weights does not, technically,  reduce the amount of computation to be done at runtime and hence is not expected to reduce the time taken for a prediction. In fact, this decompression was explicitly done during the model <em>load</em> time in the <code class="docutils literal notranslate"><span class="pre">iOS16/macOS13/watchOS9/tvOS16</span></code> version of the Core ML framework. Therefore in this case, the prediction would happen exactly as it would for the corresponding uncompressed model, keeping the runtime memory usage and latency unchanged.</p>
+<p>With changes made from <code class="docutils literal notranslate"><span class="pre">iOS17/macOS13</span></code> onwards, the weight <em>decompression</em> may instead happen at the <em>prediction</em> time. The decision of <em>when</em> to decompress the weights depends on several factors including the op types, the hardware generation, the backend hardware unit (CPU, GPU or Neural Engine) that the ops run on, the backend compiler optimizations etc.</p>
+<p>For a given weight, if a decision is made to decompress at <em>prediction</em> time instead of <em>load</em> time, weights will be kept in their reduced size form until later — until they need to be loaded for the compute. This means that fewer number of bytes will be required to be moved from the main memory to the compute engine, thereby reducing the memory movement time. However, it also means that they need to be decompressed on the fly while doing the compute, thereby increasing the prediction time. Depending on how these two effects add up, the overall prediction time may decrease or may even increase (while runtime memory usage is lower).</p>
+<p>Specifically for models that are “weight memory bound” rather than “compute bound” or “activation memory bound” (meaning that the bottleneck is in the reading of weight data), decompressing weights “just in time” can be very beneficial if the decompression operation can be done efficiently. Since the decision to decompress weights at load or prediction time is now dynamic and influenced by several factors, it is mainly guided by the principle of providing the best tradeoff between runtime memory and prediction speed, as possible on a given hardware unit. Currently, in most cases Neural Engine is the compute backend that opts into just in time weight decompression, hence offering the possibility of lower runtime memory and latencies. However, there are variations to be expected based on the specific type of the compression scheme, for this and impact on latency for activation quantized models, learn more in the sections <a class="reference internal" href="pruning-overview.html"><span class="doc std std-doc">Pruning Overview</span></a>, <a class="reference internal" href="palettization-overview.html"><span class="doc std std-doc">Palettization Overview</span></a> and <a class="reference internal" href="quantization-overview.html"><span class="doc std std-doc">Quantization Overview</span></a>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
+<p>In the tables below, we provide benchmarks on several models, compressed using various techniques in <code class="docutils literal notranslate"><span class="pre">coremltools.optmize</span></code>, to illustrate the trade-off between accuracy, model size and runtime latency.</p>
+<p>The training time compressed models were obtained by fine-tuning the <code class="docutils literal notranslate"><span class="pre">float32</span></code> PyTorch models with weights initialized from the checkpoints linked in the <a class="reference internal" href="#model-info"><span class="std std-doc">Model Info</span></a> table, and using methods from <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> to perform compression. The datasets used for fine-tuning the models are also linked in the same table, along with the accuracy metric being reported. We used fine-tuning recipes which are commonly used in literature for the task at hand, and standard data augmentations.</p>
+<p>Similarly, the post training compressed models were obtained by compressing the converted <code class="docutils literal notranslate"><span class="pre">float16</span></code> Core ML models, with pre-trained weights, using methods from <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml</span></code> module. Models were palettized using the <code class="docutils literal notranslate"><span class="pre">kmeans</span></code> mode and quantized using the <code class="docutils literal notranslate"><span class="pre">linear_symmetric</span></code> mode.</p>
+<p>All evaluations were performed on the final compressed (or uncompressed) CoreML models, using the validation subset of the dataset linked in <a class="reference internal" href="#model-info"><span class="std std-doc">Model Info</span></a>. The training time compressed models were trained for three trials, starting from the same pre-trained weights, and using a different ordering of data during training for each trial. For these models, we report the <strong>mean</strong> accuracy across the three trials, along with the <strong>standard deviation</strong>.</p>
+<p>The trained and compressed models and the <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> config files used for compression can be downloaded by clicking the respective links embedded in the model and config names.</p>
+<p>The latency numbers were captured using the Xcode <strong>Performance</strong> tab, using the <code class="docutils literal notranslate"><span class="pre">median</span></code> statistic. Compute unit selection is <code class="docutils literal notranslate"><span class="pre">all</span></code> unless otherwise noted. The latency numbers are sensitive to the device state, and may vary depending on the device state and build versions.</p>
+<ul class="simple">
+<li><p>Device: iPhone 14 Pro</p></li>
+<li><p>iOS build: iOS17 Developer Beta 1</p></li>
+<li><p>Xcode : Xcode 15 Beta 1</p></li>
+</ul>
+<section id="model-info">
+<h3>Model Info<a class="headerlink" href="#model-info" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model Name</p></th>
+<th class="head"><p>Task</p></th>
+<th class="head"><p>Pre-trained Weights</p></th>
+<th class="head"><p>Dataset</p></th>
+<th class="head"><p>Accuracy Metric</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>MobileNetv2-1.0</p></td>
+<td><p>Image Classification</p></td>
+<td><p><a class="reference external" href="https://download.pytorch.org/models/mobilenet_v2-b0353104.pth">Torchvision</a></p></td>
+<td><p><a class="reference external" href="https://pytorch.org/vision/main/generated/torchvision.datasets.ImageNet.html">ImageNet</a></p></td>
+<td><p>Top-1 Accuracy (%)</p></td>
+</tr>
+<tr class="row-odd"><td><p>MobileNetv3-small</p></td>
+<td><p>Image Classification</p></td>
+<td><p><a class="reference external" href="https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth">Torchvision</a></p></td>
+<td><p><a class="reference external" href="https://pytorch.org/vision/main/generated/torchvision.datasets.ImageNet.html">ImageNet</a></p></td>
+<td><p>Top-1 Accuracy (%)</p></td>
+</tr>
+<tr class="row-even"><td><p>ResNet50</p></td>
+<td><p>Image Classification</p></td>
+<td><p><a class="reference external" href="https://download.pytorch.org/models/resnet50-0676ba61.pth">Torchvision</a></p></td>
+<td><p><a class="reference external" href="https://pytorch.org/vision/main/generated/torchvision.datasets.ImageNet.html">ImageNet</a></p></td>
+<td><p>Top-1 Accuracy (%)</p></td>
+</tr>
+<tr class="row-odd"><td><p>MobileViTv2-1.0</p></td>
+<td><p>Image Classification</p></td>
+<td><p>cvnets</p></td>
+<td><p><a class="reference external" href="https://pytorch.org/vision/main/generated/torchvision.datasets.ImageNet.html">ImageNet</a></p></td>
+<td><p>Top-1 Accuracy (%)</p></td>
+</tr>
+<tr class="row-even"><td><p>CenterNet (ResNet34 backbone)</p></td>
+<td><p>Object Detection</p></td>
+<td><p>Torchvision <a class="reference external" href="https://download.pytorch.org/models/resnet34-b627a593.pth">backbone</a></p></td>
+<td><p><a class="reference external" href="https://pytorch.org/vision/main/generated/torchvision.datasets.CocoDetection.html#torchvision.datasets.CocoDetection">MS-COCO</a></p></td>
+<td><p>mAP</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="pruning">
+<h3>Pruning<a class="headerlink" href="#pruning" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model Name</p></th>
+<th class="head"><p>Config</p></th>
+<th class="head"><p>Optimization Workflow</p></th>
+<th class="head"><p>Compression Ratio</p></th>
+<th class="head"><p>Accuracy</p></th>
+<th class="head"><p>Latency in ms (per batch)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>71.86</p></td>
+<td><p>0.52</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV2Alpha1UnstructuredSparsity50.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>Unstructured Sparsity 50%</p></td>
+<td><p>Training Time</p></td>
+<td><p>1.37</p></td>
+<td><p>71.83 ± 0.01</p></td>
+<td><p>0.45</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV2Alpha1UnstructuredSparsity75.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>Unstructured Sparsity 75%</p></td>
+<td><p>Training Time</p></td>
+<td><p>1.73</p></td>
+<td><p>69.47 ± 0.07</p></td>
+<td><p>0.45</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV3Small.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>67.58</p></td>
+<td><p>0.20</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity50.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity50.yaml">Unstructured Sparsity 50%</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>1.73</p></td>
+<td><p>66.55 ± 0.03</p></td>
+<td><p>0.18</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity75.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity75.yaml">Unstructured Sparsity 75%</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>3.06</p></td>
+<td><p>60.52 ± 0.06</p></td>
+<td><p>0.18</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip">ResNet50</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>76.14</p></td>
+<td><p>1.42</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity50.mlpackage.zip">ResNet50</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity50.yaml">Unstructured Sparsity 50%</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>1.77</p></td>
+<td><p>73.64 ± 0.04</p></td>
+<td><p>1.39</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity75.mlpackage.zip">ResNet50</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity75.yaml">Unstructured Sparsity 75%</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>3.17</p></td>
+<td><p>73.40 ± 0.08</p></td>
+<td><p>1.19</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="palettization">
+<h3>Palettization<a class="headerlink" href="#palettization" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model Name</p></th>
+<th class="head"><p>Config</p></th>
+<th class="head"><p>Optimization Workflow</p></th>
+<th class="head"><p>Compression Ratio</p></th>
+<th class="head"><p>Accuracy</p></th>
+<th class="head"><p>Latency in ms (per batch)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>71.86</p></td>
+<td><p>0.52</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization2Bit.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization2Bit.yaml">2 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>5.92</p></td>
+<td><p>68.81 ± 0.04</p></td>
+<td><p>0.49</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization4Bit.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization4Bit.yaml">4 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>3.38</p></td>
+<td><p>70.60 ± 0.08</p></td>
+<td><p>0.49</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV2Alpha1ScalarPalettization6Bit.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>6 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>2.54</p></td>
+<td><p>70.89</p></td>
+<td><p>0.47</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV2Alpha1ScalarPalettization8Bit.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>8 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>1.97</p></td>
+<td><p>71.80</p></td>
+<td><p>0.48</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV3Small.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>67.58</p></td>
+<td><p>0.20</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization2Bit.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization2Bit.yaml">2 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>5.82</p></td>
+<td><p>59.82 ± 0.98</p></td>
+<td><p>0.22</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization4Bit.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization4Bit.yaml">4 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>3.47</p></td>
+<td><p>67.23 ± 0.04</p></td>
+<td><p>0.2</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV3SmallScalarPalettization6Bit.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p>6 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>2.6</p></td>
+<td><p>65.46</p></td>
+<td><p>0.22</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV3SmallScalarPalettization8Bit.mlpackage.zip">MobileNetv3-small</a></p></td>
+<td><p>8 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>1.93</p></td>
+<td><p>67.44</p></td>
+<td><p>0.21</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip">ResNet50</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>76.14</p></td>
+<td><p>1.42</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization2Bit.mlpackage.zip">ResNet50</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization2Bit.yaml">2 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>7.63</p></td>
+<td><p>75.47 ± 0.05</p></td>
+<td><p>1.39</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization4Bit.mlpackage.zip">ResNet50</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization4Bit.yaml">4 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>3.9</p></td>
+<td><p>76.63 ± 0.01</p></td>
+<td><p>1.37</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/ResNet50ScalarPalettization6Bit.mlpackage.zip">ResNet50</a></p></td>
+<td><p>6 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>2.65</p></td>
+<td><p>75.68</p></td>
+<td><p>1.31</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/ResNet50ScalarPalettization8Bit.mlpackage.zip">ResNet50</a></p></td>
+<td><p>8 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>1.99</p></td>
+<td><p>76.05</p></td>
+<td><p>1.34</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/CenterNetResNet34.mlpackage.zip">CenterNet (ResNet34 backbone)</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>29.0</p></td>
+<td><p>7.48</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization2Bit.mlpackage.zip">CenterNet (ResNet34 backbone)</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization2Bit.yaml">2 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>7.71</p></td>
+<td><p>25.66 ± 0.03</p></td>
+<td><p>6.71</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization4Bit.mlpackage.zip">CenterNet (ResNet34 backbone)</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization4Bit.yaml">4 bit</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>3.94</p></td>
+<td><p>28.14 ± 0.11</p></td>
+<td><p>6.91</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/CenterNetResNet34ScalarPalettization6Bit.mlpackage.zip">CenterNet (ResNet34 backbone)</a></p></td>
+<td><p>6 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>2.65</p></td>
+<td><p>28.27</p></td>
+<td><p>7.01</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/CenterNetResNet34ScalarPalettization8Bit.mlpackage.zip">CenterNet (ResNet34 backbone)</a></p></td>
+<td><p>8 bit</p></td>
+<td><p>Post Training</p></td>
+<td><p>2.0</p></td>
+<td><p>28.75</p></td>
+<td><p>7.45</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id1">
+<h3>Linear 8-Bit Quantization<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Model Name</p></th>
+<th class="head"><p>Config</p></th>
+<th class="head"><p>Optimization Workflow</p></th>
+<th class="head"><p>Compression Ratio</p></th>
+<th class="head"><p>Accuracy</p></th>
+<th class="head"><p>Latency in ms (per batch)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>71.86</p></td>
+<td><p>0.52</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/MobileNetV2Alpha1WeightOnlySymmetricQuantized.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p>Weight-only</p></td>
+<td><p>Post Training</p></td>
+<td><p>1.92</p></td>
+<td><p>71.78</p></td>
+<td><p>0.47</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileNetV2Alpha1SymmetricPerChannel.mlpackage.zip">MobileNetv2-1.0</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileNetV2Alpha1SymmetricPerChannel.yaml">Weight &amp; activation</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>1.92</p></td>
+<td><p>71.66 ± 0.04</p></td>
+<td><p>0.28</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip">ResNet50</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>76.14</p></td>
+<td><p>1.42</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/ResNet50WeightOnlySymmetricQuantized.mlpackage.zip">ResNet50</a></p></td>
+<td><p>Weight-only</p></td>
+<td><p>Post Training</p></td>
+<td><p>1.99</p></td>
+<td><p>76.10</p></td>
+<td><p>1.36</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/ResNet50SymmetricPerChannel.mlpackage.zip">ResNet50</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/ResNet50SymmetricPerChannel.yaml">Weight &amp; activation</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>1.98</p></td>
+<td><p>76.80 ± 0.05</p></td>
+<td><p>1.47</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileViTV2Alpha1.mlpackage.zip">MobileViTv2-1.0</a></p></td>
+<td><p>Float16</p></td>
+<td><p>n/a</p></td>
+<td><p>1.0</p></td>
+<td><p>78.09</p></td>
+<td><p>1.48</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/MobileViTV2Alpha1WeightOnlySymmetricQuantized.mlpackage.zip">MobileViTv2-1.0</a></p></td>
+<td><p>Weight-only</p></td>
+<td><p>Post Training</p></td>
+<td><p>1.92</p></td>
+<td><p>77.66</p></td>
+<td><p>1.53</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileViTV2Alpha1SymmetricPerChannel.mlpackage.zip">MobileViTv2-1.0</a></p></td>
+<td><p><a class="reference external" href="https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileViTV2Alpha1SymmetricPerChannel.yaml">Weight &amp; activation</a></p></td>
+<td><p>Training Time</p></td>
+<td><p>1.89</p></td>
+<td><p>76.89 ± 0.07</p></td>
+<td><p>1.35</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="optimization-workflow.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Optimization Workflow</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api-overview.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Optimize API Overview</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#compression-ratios">Compression Ratios</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weight-pruning">Weight Pruning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#weight-palettization">Weight Palettization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-8-bit-quantization">Linear 8-Bit Quantization</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#effect-on-latency-and-runtime-memory">Effect on Latency and Runtime Memory</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#model-info">Model Info</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pruning">Pruning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#palettization">Palettization</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Linear 8-Bit Quantization</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple Inc
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
