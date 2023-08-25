@@ -32,7 +32,7 @@ namespace CoreML {
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
             ~Model();
-            explicit Model(const std::string& urlStr, const std::string& computeUnits);
+            explicit Model(const std::string& urlStr, const std::string& computeUnits, bool lowPrecision);
 
             py::dict predict(const py::dict& input) const;
             py::list batchPredict(const py::list& batch) const;

@@ -16,7 +16,10 @@ except:
 
 
 class CompiledMLModel:
-    def __init__(self, path: str, compute_units: _ComputeUnit =_ComputeUnit.ALL):
+    def __init__(self, 
+                 path: str, 
+                 compute_units: _ComputeUnit =_ComputeUnit.ALL, 
+                 low_precision_accumulation: bool = False):
         """
         Loads a compiled Core ML model.
 
@@ -61,7 +64,7 @@ class CompiledMLModel:
 
         path = _expanduser(path)
 
-        self._proxy = _MLModelProxy(path, compute_units.name)
+        self._proxy = _MLModelProxy(path, compute_units.name, low_precision_accumulation)
 
 
     def predict(self, data):

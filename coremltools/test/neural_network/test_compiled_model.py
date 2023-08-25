@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import pytest
 from shutil import copytree, rmtree
 from tempfile import TemporaryDirectory
 
@@ -35,10 +36,10 @@ class TestCompiledModel:
         self.spec = spec
 
 
-    def _test_compile_model_path(self, compiled_model_path, compute_units=ComputeUnit.ALL):
+    def _test_compile_model_path(self, compiled_model_path, compute_units=ComputeUnit.ALL, low_precision=False):
         try:
             # Load compiled model
-            model = CompiledMLModel(compiled_model_path, compute_units)
+            model = CompiledMLModel(compiled_model_path, compute_units, low_precision)
 
             # Single prediction
             y = model.predict({'x': 2})
@@ -81,10 +82,11 @@ class TestCompiledModel:
             self._test_compile_model_path(dst_path)
 
 
-    def test_non_default_compute_units(self):
+    @pytest.mark.parametrize("low_precision", [False, True])
+    def test_non_default_compute_units(self, low_precision):
         non_default_compute_units = (ComputeUnit.CPU_AND_GPU,
                                      ComputeUnit.CPU_AND_NE,
                                      ComputeUnit.CPU_ONLY)
         for cur_compute_unit in non_default_compute_units:
             compiled_model_path = compile_model(self.spec)
-            self._test_compile_model_path(compiled_model_path, compute_units=cur_compute_unit)
+            self._test_compile_model_path(compiled_model_path, compute_units=cur_compute_unit, low_precision=low_precision)

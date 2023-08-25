@@ -130,7 +130,7 @@ class _FeatureDescription:
             yield f.name
 
 
-def _get_proxy_and_spec(filename, compute_units, skip_model_load=False):
+def _get_proxy_and_spec(filename, compute_units, low_precision, skip_model_load=False):
     try:
         from ..libcoremlpython import _MLModelProxy
     except Exception:
@@ -149,7 +149,7 @@ def _get_proxy_and_spec(filename, compute_units, skip_model_load=False):
             return None, specification, None
 
         try:
-            return _MLModelProxy(filename, compute_units.name), specification, None
+            return _MLModelProxy(filename, compute_units.name, low_precision), specification, None
         except RuntimeError as e:
             _warnings.warn(
                 "You will not be able to run predict() on this Core ML model."
@@ -246,6 +246,7 @@ class MLModel:
         skip_model_load=False,
         compute_units=_ComputeUnit.ALL,
         weights_dir=None,
+        low_precision_accumulation=False,
     ):
         """
         Construct an MLModel from an ``.mlmodel``.
@@ -373,7 +374,7 @@ class MLModel:
                 self.is_temp_package = is_temp_package
                 self._weights_dir = _try_get_weights_dir_path(model)
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
-                model, compute_units, skip_model_load=skip_model_load,
+                model, compute_units, low_precision=low_precision_accumulation, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
             if does_model_contain_mlprogram(model):
@@ -393,7 +394,7 @@ class MLModel:
                 _save_spec(model, filename)
 
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
-                filename, compute_units, skip_model_load=skip_model_load,
+                filename, compute_units, low_precision=low_precision_accumulation, skip_model_load=skip_model_load,
             )
             try:
                 _os.remove(filename)
