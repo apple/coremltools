@@ -299,6 +299,10 @@ class MLModel:
             Path to the weight directory, required when loading an MLModel of type mlprogram,
             from a spec object, i.e. when the argument ``model`` is of type ``Model_pb2``
 
+        low_precision_accumulation: bool
+            Set to True to enable low precision accumulation for the model. This is only applies for partitions
+            that are dispatched to the GPU. Defaults to False.
+
         Notes
         -----
         Internally this maintains the following:
