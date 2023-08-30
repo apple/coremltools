@@ -146,6 +146,6 @@ For a complete example of implementing a custom layer, see [this detailed exampl
 
 ```{admonition} Custom Layer Support
 
-Custom layers are supported when the conversion is targeted at the "Neural Network" backend. They are not available when using the [ML Programs](ml-programs) backend.
+Custom layers are supported when the conversion is targeted at the "Neural Network" backend. They are not available when using the [ML Programs](convert-to-ml-program) backend.
 ```
 

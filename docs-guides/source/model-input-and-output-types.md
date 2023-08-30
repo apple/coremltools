@@ -23,7 +23,7 @@ For TensorFlow models, the shape is automatically picked up from the model. Howe
 
 Use the `dtype` parameter with [`TensorType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype) to override data types (such as float 32, float 16, and integer). The `dtype` parameter can take either a [NumPy](https://numpy.org/) `dtype` (such as `np.float32` and `np.int32`) or an MIL type with `TensorType` (such as `coremltools.converters.mil.mil.types.fp32`).
 
-Starting in coremltools version 6, you can use the `np.float16` type with ML programs, which can reduce the overhead of input and output type conversions for `float16` typed models (which is the default precision for ML programs). For more information, see [ML Programs](ml-programs).
+Starting in coremltools version 6, you can use the `np.float16` type with ML programs, which can reduce the overhead of input and output type conversions for `float16` typed models (which is the default precision for ML programs). For more information, see [ML Programs](convert-to-ml-program).
 
 For example, the following code snippet converts the `source_model` to a Core ML model with float 16 multiarray (`TensorType`) input and output:
 

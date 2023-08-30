@@ -35,13 +35,13 @@ The following are highlights of previous releases:
 - Added model compression utilities to compress the weights of a Core ML model, thereby reducing the space occupied by the model.
 - Enabled Float 16 input/output types including grayscale images and float 16 Multiarrays. 
 
-For details, see [Release Notes for coremltools 6.3](https://github.com/apple/coremltools/releases/tag/6.3)
+For details, see [Release Notes for coremltools 6.3](https://github.com/apple/coremltools/releases/tag/6.3).
 
 
 #### coremltools 5
 
 - Core ML models now also use a directory format, called [`.mlpackage`](https://developer.apple.com/documentation/coreml/core_ml_api/updating_a_model_file_to_a_model_package), rather than just a protobuf file.
-- Added a new backend: [ML program](ml-programs), which offers [typed execution](typed-execution) and a new GPU runtime backed by MPSGraph.
+- Added a new backend: [ML program](convert-to-ml-program), which offers [typed execution](typed-execution) and a new GPU runtime backed by MPSGraph.
 
 For details, see the following:
 
@@ -94,7 +94,7 @@ model = ct.models.MLModel("model.mlmodel", compute_units=ct.ComputeUnit.CPU_ONLY
 model.compute_unit
 ```
 
-For an [ML program](ml-programs), set `compute_precision` to Float 32 as described in [Set the ML Program Precision](convert-to-ml-program.md#set-the-ml-program-precision). For example:
+For an ML program, set `compute_precision` to Float 32 as described in [Set the ML Program Precision](convert-to-ml-program.md#set-the-ml-program-precision). For example:
 
 ```python
 # ml programs

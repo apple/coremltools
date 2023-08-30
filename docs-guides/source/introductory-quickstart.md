@@ -91,7 +91,7 @@ model = ct.convert(
 )
 ```
 
-The Unified Conversion API [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry "Unified Conversion API") method in the previous example produces an [ML program](ml-programs) model.
+The Unified Conversion API [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry "Unified Conversion API") method in the previous example produces an [ML program](convert-to-ml-program) model.
 
 If you include the `convert_to="neuralnetwork"` parameter, the method produces a neural network with the  `neuralnetwork` model type. The following is the same code as the above example, using the `convert_to` parameter in `convert()`:
 
@@ -189,7 +189,7 @@ You may find differences between predictions on macOS and your target platform (
 
 ## Save and Load the Model
 
-With the converted [ML program](ml-programs) model in memory, you can save the model into the [Core ML model package](save-as-model-package) by specifying `.mlpackage` with the `save()` method. You can then load the model into another session:
+With the converted [ML program](convert-to-ml-program) model in memory, you can save the model into the [Core ML model package](convert-to-ml-program.md#save-ml-programs-as-model-packages) format by specifying `.mlpackage` with the `save()` method. You can then load the model into another session:
 
 ```python
 # Save model as a Core ML model package

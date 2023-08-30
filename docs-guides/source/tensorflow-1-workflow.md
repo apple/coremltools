@@ -4,7 +4,7 @@ Use the frozen graph format for conversion from TensorFlow 1. After training, al
 
 ## Export as a Frozen Graph and Convert
 
-The following example demonstrates how to export a model to the frozen graph format and convert it to a [Core ML program](ml-programs) model. Follow these steps:
+The following example demonstrates how to export a model to the frozen graph format and convert it to a [Core ML program](convert-to-ml-program) model. Follow these steps:
 
 1. Define a simple model with random weights:
 
@@ -57,7 +57,7 @@ with tf.Session(graph=graph) as sess:
 print("TensorFlow frozen graph saved at {}".format(frozen_graph_file))
 ```
 
-3. Convert the model to an [ML program](ml-programs) and save it as a [Core ML model package](save-as-model-package):
+3. Convert the model to an ML program and save it as a [Core ML model package](convert-to-ml-program.md#save-ml-programs-as-model-packages):
 
 ```python
 import coremltools as ct

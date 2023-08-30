@@ -25,7 +25,6 @@ The following guides include instructions and examples. For details about using 
    source/new-features.md
    source/faqs.md
    source/coremltools-examples.md
-   source/migration.md
    source/how-to-contribute.md
 
 .. toctree::
@@ -36,14 +35,12 @@ The following guides include instructions and examples. For details about using 
    source/introductory-quickstart.md
    source/unified-conversion-api.md
    Core ML Model Format <https://apple.github.io/coremltools/mlmodel/index.html>
-   API GitHub <https://github.com/apple/coremltools>
 
 .. toctree::
    :maxdepth: 1
    :caption: Unified Conversion
 
    source/convert-learning-models.rst
-   source/ml-programs.rst
    source/convert-tensorflow.rst
    source/convert-pytorch.rst
    source/conversion-options.rst
