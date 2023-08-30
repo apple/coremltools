@@ -12,11 +12,11 @@ Full example:
 
 Full example:
 
-- [Typed Execution Workflow Example](typed-execution-example): Demonstrates a workflow for checking accuracy using [ML Programs](ml-programs) with [Typed Execution](typed-execution).
+- [Typed Execution Workflow Example](typed-execution-example): Demonstrates a workflow for checking accuracy using [ML Programs](convert-to-ml-program) with [Typed Execution](typed-execution).
 
 ## TensorFlow 2
 
-- [Load and Convert a Model](load-and-convert-model)
+- [Load and Convert Model Workflow](load-and-convert-model)
 - [TensorFlow 2 Workflow](tensorflow-2)
 - [Convert a Pre-trained Model](tensorflow-2.md#convert-a-pre-trained-model)
 - [Convert a User-defined Model](tensorflow-2.md#convert-a-user-defined-model)

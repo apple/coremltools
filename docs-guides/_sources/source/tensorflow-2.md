@@ -61,7 +61,7 @@ x = np.random.rand(1, 192, 192, 3)
 tf_out = model.predict([x])
 ```
 
-3. Convert the model to an [ML program](ml-programs) without specifying the input type, in order to generate a multidimensional array ([`MLMultiArray`](https://developer.apple.com/documentation/coreml/mlmultiarray)) input for convenience in checking predictions: 
+3. Convert the model to an [ML program](convert-to-ml-program) without specifying the input type, in order to generate a multidimensional array ([`MLMultiArray`](https://developer.apple.com/documentation/coreml/mlmultiarray)) input for convenience in checking predictions: 
 
 ```python
 import coremltools as ct
@@ -70,7 +70,7 @@ import coremltools as ct
 mlmodel = ct.convert(model, convert_to="mlprogram")
 ```
 
-4. Since the model operates on images, convert with the image input type before saving the model as a [Core ML model package](save-as-model-package):
+4. Since the model operates on images, convert with the image input type before saving the model as a [Core ML model package](convert-to-ml-program.md#save-ml-programs-as-model-packages):
 
 ```python
 coreml_out_dict = mlmodel.predict({"image":x})
@@ -94,7 +94,7 @@ Alternatively, you can first save the Keras model to the `HDF5` (`.h5`) or the `
 
 ### Convert a Sequential Model
 
-The following example defines and converts a Sequential `tf.keras` model to an [ML program](ml-programs):
+The following example defines and converts a Sequential `tf.keras` model to an [ML program](convert-to-ml-program):
 
 ```python convert_tf_keras_model
 # Tested with TensorFlow 2.6.2

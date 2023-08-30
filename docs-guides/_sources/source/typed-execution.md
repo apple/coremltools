@@ -1,6 +1,6 @@
 # Typed Execution
 
-A model’s compute precision impacts its performance and numerical accuracy, which may impact the user experience of apps using the model. Core ML models saved as [ML Programs](ml-programs) or neural networks execute with either float 32 or float 16 precision. 
+A model’s compute precision impacts its performance and numerical accuracy, which may impact the user experience of apps using the model. Core ML models saved as [ML Programs](convert-to-ml-program) or neural networks execute with either float 32 or float 16 precision. 
 
 This page describes how the precision is determined by the runtime during execution of either type of model. The ability to choose this precision can give you more flexible control over computations and performance.
 
@@ -63,7 +63,7 @@ For example, for float 32 precision, the only guaranteed path is to use `CPUOnly
 
 ## ML Program Typed Tensors
 
-[ML programs](ml-programs) describe a neural network in a code style in which all variables in the program are strongly typed. In contrast to a neural network model, the types of all the intermediate tensors of an ML program are specified in the model itself.
+[ML programs](convert-to-ml-program) describe a neural network in a code style in which all variables in the program are strongly typed. In contrast to a neural network model, the types of all the intermediate tensors of an ML program are specified in the model itself.
 
 
 ```{figure} images/ml-program-typed-tensors.png

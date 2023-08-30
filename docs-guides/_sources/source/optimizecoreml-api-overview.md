@@ -4,7 +4,7 @@ Use [`coremltools.optimize.coreml`](https://apple.github.io/coremltools/source/c
 
 ## Steps to Compress a Model
 
-The steps to compress an [ML Program](ml-programs) (`mlprogram`) model are as follows: 
+The steps to compress an [ML Program](convert-to-ml-program) (`mlprogram`) model are as follows: 
 
 - Load the model from disk into memory, unless it is already in memory (the object returned by [`ct.convert`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert) ).
 - Define an [op-specific configuration](#op-specific-configurations) for the compression technique.
@@ -79,7 +79,7 @@ Using such customizations, different weights in a single model can be compressed
 
 ## Requirements for Using optimize.coreml
 
-Documented in the [Post-Training Compression](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml) section of the API Reference, the `optimize` submodule is available in Core ML Tools 7.0 and newer versions. The methods in this submodule are  available only for the [ML Program](ml-programs) (`mlprogram`) model type, which is the [recommended](target-conversion-formats) Core ML model format. 
+Documented in the [Post-Training Compression](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml) section of the API Reference, the `optimize` submodule is available in Core ML Tools 7.0 and newer versions. The methods in this submodule are  available only for the [ML Program](convert-to-ml-program) (`mlprogram`) model type, which is the [recommended](target-conversion-formats) Core ML model format. 
 
 For the APIs to compress the weights of neural networks, see [Compressing Neural Network Weights](quantization-neural-network).
 

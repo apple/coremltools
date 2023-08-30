@@ -169,7 +169,7 @@ traced_model = torch.jit.trace(torch_model, torch.rand(*shape))
 
 #### Convert the Model to an ML Program
 
-After tracing, use [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) to convert the model to an [ML program](ml-programs), specifying [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype) for input and output:
+After tracing, use [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) to convert the model to an [ML program](convert-to-ml-program), specifying [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype) for input and output:
 
 ```python
 coreml_model = ct.convert(traced_model,

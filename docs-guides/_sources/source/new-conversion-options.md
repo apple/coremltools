@@ -1,6 +1,6 @@
 # New Conversion Options
 
-You can use the [Unified Conversion API](unified-conversion-api) to convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an [ML program](ml-programs). The following are the newest conversion options.
+You can use the [Unified Conversion API](unified-conversion-api) to convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an [ML program](convert-to-ml-program). The following are the newest conversion options.
 
 ## Convert to ML Program or Neural Network
 
@@ -10,7 +10,7 @@ The converter produces an ML program if the target is `>=` `iOS15`, `macOS12`, `
 
 If neither the `minimum_deployment_target` nor the `convert_to` parameter is specified, the converter produces a neural network with as minimum of a deployment target as possible.
 
-To learn about the differences between neural networks and ML programs, see [ML Programs](ml-programs).
+To learn about the differences between neural networks and ML programs, see [ML Programs](convert-to-ml-program).
 
 ## Set the Compute Precision for an ML Program
 

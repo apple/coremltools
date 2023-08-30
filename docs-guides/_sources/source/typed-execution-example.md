@@ -1,6 +1,6 @@
 # Typed Execution Workflow Example
 
-The following example demonstrates the recommended workflow when using [ML Programs](ml-programs) with [Typed Execution](typed-execution). The workflow consists of the following steps:
+The following example demonstrates the recommended workflow when using [ML Programs](convert-to-ml-program) with [Typed Execution](typed-execution). The workflow consists of the following steps:
 
 1. Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the ANE, GPU and CPU.
 

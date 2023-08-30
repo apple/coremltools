@@ -1,4 +1,4 @@
-# Load and Convert a Model
+# Load and Convert Model Workflow
  
 The typical conversion process with the [Unified Conversion API](convert-learning-models) is to load the model to infer its type, and then use the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method to convert it to the Core ML format. Follow these steps:
 
@@ -40,7 +40,7 @@ The typical conversion process with the [Unified Conversion API](convert-learnin
 
 The conversion produces an `MLModel` object which you can use to make predictions, change metadata, or save to the Core ML format for use in Xcode. 
 
-By default, older versions of the Unified Conversion API create a neural network, but you can use the `convert_to` parameter to specify the `mlprogram` model type for an [ML program](ml-programs) model:
+By default, older versions of the Unified Conversion API create a neural network, but you can use the `convert_to` parameter to specify the `mlprogram` model type for an [ML program](convert-to-ml-program) model:
 
 ```python TensorFlow
 # Convert using the same API
@@ -142,7 +142,7 @@ For more details on tracing and scripting to produce PyTorch models for conversi
 
 ## Set the Compute Units
 
-Normally you convert a model by using [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) without using the `compute_units` parameter. In most cases you don’t need it, because the converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). Whether you are using [ML programs](ml-programs) or [neural networks](comparing-ml-programs-and-neural-networks), the defaults for conversion and prediction are picked to execute the model in the most performant way, as described in [Typed Execution](typed-execution).
+Normally you convert a model by using [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) without using the `compute_units` parameter. In most cases you don’t need it, because the converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). Whether you are using [ML programs](convert-to-ml-program) or [neural networks](convert-to-neural-network), the defaults for conversion and prediction are picked to execute the model in the most performant way, as described in [Typed Execution](typed-execution).
 
 However, you may find it useful, especially for debugging, to specify the actual compute units when converting or loading a model by using the `compute_units` parameter. The parameter is based on the [MLComputeUnits](https://developer.apple.com/documentation/coreml/mlcomputeunits) enumeration in the Swift developer language — compute units are employed when [loading a Core ML model](https://developer.apple.com/documentation/coreml/mlmodel/3600218-load), taking in MLmodelConfiguration which includes compute units. Therefore, both the [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model) class and  [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) provide the `compute_units` parameter. 
 

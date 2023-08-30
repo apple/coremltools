@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
-    <title>Target Conversion Formats &#8212; Core ML Tools Guide</title>
+    <title>Source and Conversion Formats &#8212; Core ML Tools Guide</title>
   
   
   
@@ -49,7 +49,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/target-conversion-formats';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Supported Source Formats" href="supported-source-formats.html" />
+    <link rel="next" title="Load and Convert Model Workflow" href="load-and-convert-model.html" />
     <link rel="prev" title="Converting Deep Learning Models" href="convert-learning-models.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -133,7 +133,6 @@
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
-<li class="toctree-l1"><a class="reference internal" href="migration.html">Migration Workflow</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
@@ -142,26 +141,20 @@
 <li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">API GitHub</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l2 current active"><a class="current reference internal" href="#">Target Conversion Formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="supported-source-formats.html">Supported Source Formats</a></li>
-<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert a Model</a></li>
-</ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="ml-programs.html">ML Programs</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Source and Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
-<li class="toctree-l2"><a class="reference internal" href="save-as-model-package.html">Save ML Programs as Model Packages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="find-model-type-in-package.html">Find the Model Type in a Model Package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-neural-network.html">Convert Models to Neural Networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
@@ -169,7 +162,7 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -178,7 +171,7 @@
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -193,33 +186,33 @@
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1 has-children"><a class="reference internal" href="optimizing-models.html">Optimizing Models</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="optimizing-models.html">Optimizing Models</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="optimization-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimization-workflow.html">Optimization Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="performance-impact.html">Accuracy and Performance</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="optimizecoreml-api-overview.html">optimize.coreml API Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="optimizetorch-api-overview.html">optimize.torch API Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="pruning-overview.html">Pruning Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pruning-a-core-ml-model.html">Post-Training Pruning</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data-dependent-pruning.html">Training-Time Pruning</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">Pruning During Training Tutorial</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="post-training-palettization.html">Post-Training Palettization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="training-time-palettization.html">Training-Time Palettization</a></li>
 <li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Palettization During Training Tutorial</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="quantization-aware-training.html">Linear 8-Bit Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quantization-aware-training.html">Linear 8-Bit Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="quantization-overview.html">Quantization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data-free-quantization.html">Post-Training Quantization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="data-dependent-quantization.html">Training-Time Quantization</a></li>
@@ -240,7 +233,7 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-11"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
@@ -397,7 +390,7 @@ document.write(`
               
 
 <div id="jb-print-docs-body" class="onlyprint">
-    <h1>Target Conversion Formats</h1>
+    <h1>Source and Conversion Formats</h1>
     <!-- Table of contents -->
     <div id="print-main-content">
         <div id="jb-print-toc">
@@ -407,15 +400,24 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neural-network-and-ml-program">Neural Network and ML Program</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#format-differences">Format Differences</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minimum-deployment-target">Minimum Deployment Target</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-core-ml-file-formats">Supported Core ML File Formats</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-produce">How to Produce</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-specification">Format Specification</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-operations">Supported Operations</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-development">Feature Development</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-improvements">Performance Improvements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-source-formats">Supported Source Formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tensorflow-versions-1-x-formats">TensorFlow versions 1.x Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tensorflow-versions-2-x-formats">TensorFlow versions 2.x Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pytorch-formats">PyTorch Formats</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target-conversion-formats">Target Conversion Formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-format">Default Format</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-differences">Format Differences</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#minimum-deployment-target">Minimum Deployment Target</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-core-ml-file-formats">Supported Core ML File Formats</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-produce">How to Produce</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#format-specification">Format Specification</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-operations">Supported Operations</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-development">Feature Development</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-improvements">Performance Improvements</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -429,34 +431,89 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="target-conversion-formats">
-<h1>Target Conversion Formats<a class="headerlink" href="#target-conversion-formats" title="Permalink to this heading">#</a></h1>
-<p>You can use two different types of Core ML model formats to represent deep learning models: <code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code> and <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>. You can choose which format to use during conversion using the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> or the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> arguments in the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method.</p>
-<section id="neural-network-and-ml-program">
-<h2>Neural Network and ML Program<a class="headerlink" href="#neural-network-and-ml-program" title="Permalink to this heading">#</a></h2>
+  <section id="source-and-conversion-formats">
+<h1>Source and Conversion Formats<a class="headerlink" href="#source-and-conversion-formats" title="Permalink to this heading">#</a></h1>
+<p>Use the <code class="docutils literal notranslate"><span class="pre">convert()</span></code> method of the Core ML Tools <a class="reference external" href="https://apple.github.io/coremltools/index.html">Unified Conversion API</a> (available from Core ML Tools version 4.0 and newer versions) to convert deep learning models to the Core ML model format in order to deploy them in the <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a> framework.</p>
+<section id="supported-source-formats">
+<h2>Supported Source Formats<a class="headerlink" href="#supported-source-formats" title="Permalink to this heading">#</a></h2>
+<p>Source model formats supported by the <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> include the following:</p>
+<section id="tensorflow-versions-1-x-formats">
+<h3>TensorFlow versions 1.x Formats<a class="headerlink" href="#tensorflow-versions-1-x-formats" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p>Frozen <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/Graph"><code class="docutils literal notranslate"><span class="pre">tf.Graph</span></code></a></p></li>
+<li><p>Frozen graph (<code class="docutils literal notranslate"><span class="pre">.pb</span></code>) file path</p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras"><code class="docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></a></p></li>
+<li><p><a class="reference external" href="https://keras.io/api/models/model_saving_apis/">HDF5 file path</a> (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>)</p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/guide/saved_model">SavedModel</a> directory path</p></li>
+</ul>
+</section>
+<section id="tensorflow-versions-2-x-formats">
+<h3>TensorFlow versions 2.x Formats<a class="headerlink" href="#tensorflow-versions-2-x-formats" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras"><code class="docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></a></p></li>
+<li><p><a class="reference external" href="https://keras.io/api/models/model_saving_apis/">HDF5 file path</a> (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>)</p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/guide/saved_model">SavedModel</a> directory path</p></li>
+<li><p><a class="reference external" href="https://www.tensorflow.org/guide/concrete_function">Concrete function</a>.</p></li>
+</ul>
+</section>
+<section id="pytorch-formats">
+<h3>PyTorch Formats<a class="headerlink" href="#pytorch-formats" title="Permalink to this heading">#</a></h3>
+<ul class="simple">
+<li><p><a class="reference external" href="https://pytorch.org/docs/stable/jit.html">TorchScript</a> object</p></li>
+<li><p>TorchScript object saved as a <code class="docutils literal notranslate"><span class="pre">.pt</span></code> file</p></li>
+</ul>
+</section>
+</section>
+<section id="target-conversion-formats">
+<h2>Target Conversion Formats<a class="headerlink" href="#target-conversion-formats" title="Permalink to this heading">#</a></h2>
+<p>You can choose which format to use during conversion using the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> or the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> arguments in the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method.</p>
+<section id="default-format">
+<h3>Default Format<a class="headerlink" href="#default-format" title="Permalink to this heading">#</a></h3>
 <p>While <code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code> was the format originally used by Core ML to represent neural networks, it is now in maintenance mode and no longer receiving new features. The <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> model format, deployable to <code class="docutils literal notranslate"><span class="pre">iOS15</span></code>, <code class="docutils literal notranslate"><span class="pre">macOS12</span></code>, <code class="docutils literal notranslate"><span class="pre">watchOS8</span></code>, <code class="docutils literal notranslate"><span class="pre">tvOS15</span></code>, and newer versions, is the recommended format.</p>
 <p>Since the <code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code> format is widely available, it is still the default format produced by versions of the <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> older than 7.0b2. Calling <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">convert()</a> without providing the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> or the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> parameters, in versions older than 7.0b2, defaults to the <code class="docutils literal notranslate"><span class="pre">iOS11</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS10.13</span></code> deployment target and the <code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code> backend.</p>
 <p>However, in 7.0b2 and newer versions of Core ML Tools, the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method produces an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> by default with the <code class="docutils literal notranslate"><span class="pre">iOS15</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS12</span></code> deployment target. You can override this behavior by providing a <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> value.</p>
 </section>
 <section id="format-differences">
-<h2>Format Differences<a class="headerlink" href="#format-differences" title="Permalink to this heading">#</a></h2>
-<p>To learn more about the differences between the two formats, see <a class="reference internal" href="comparing-ml-programs-and-neural-networks.html"><span class="doc std std-doc">Comparing ML Programs and Neural Networks</span></a>. The following is a summary:</p>
+<h3>Format Differences<a class="headerlink" href="#format-differences" title="Permalink to this heading">#</a></h3>
+<p>The following table summarizes the format differences:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p></p></th>
+<th class="head"><p>Neural Network</p></th>
+<th class="head"><p>ML Program</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Minimum deployment target</p></td>
+<td><p>macOS 10.13, iOS 11, watchOS 4, tvOS 11</p></td>
+<td><p>macOS 12, iOS 15, watchOS 8, tvOS 15</p></td>
+</tr>
+<tr class="row-odd"><td><p>Supported file formats</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> or <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>To learn more about the differences between the two formats, see <a class="reference internal" href="comparing-ml-programs-and-neural-networks.html"><span class="doc std std-doc">Comparing ML Programs and Neural Networks</span></a>.</p>
+</div>
 <section id="minimum-deployment-target">
-<h3>Minimum Deployment Target<a class="headerlink" href="#minimum-deployment-target" title="Permalink to this heading">#</a></h3>
+<h4>Minimum Deployment Target<a class="headerlink" href="#minimum-deployment-target" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Neural network: macOS 10.13, iOS 11, watchOS 4, tvOS 11</p></li>
 <li><p>ML Program: macOS 12, iOS 15, watchOS 8, tvOS 15</p></li>
 </ul>
 </section>
 <section id="supported-core-ml-file-formats">
-<h3>Supported Core ML File Formats<a class="headerlink" href="#supported-core-ml-file-formats" title="Permalink to this heading">#</a></h3>
+<h4>Supported Core ML File Formats<a class="headerlink" href="#supported-core-ml-file-formats" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
-<li><p>Neural network: <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> or <a class="reference internal" href="save-as-model-package.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code></span></a></p></li>
-<li><p>ML Program: <a class="reference internal" href="save-as-model-package.html"><span class="doc std std-doc"><code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code></span></a></p></li>
+<li><p>Neural network: <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> or <a class="reference internal" href="convert-to-ml-program.html#save-ml-programs-as-model-packages"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code></span></a></p></li>
+<li><p>ML Program: <a class="reference internal" href="convert-to-ml-program.html#save-ml-programs-as-model-packages"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code></span></a></p></li>
 </ul>
 </section>
 <section id="how-to-produce">
-<h3>How to Produce<a class="headerlink" href="#how-to-produce" title="Permalink to this heading">#</a></h3>
+<h4>How to Produce<a class="headerlink" href="#how-to-produce" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Core ML Tools versions older than 7.0b2:</p>
 <ul>
@@ -473,32 +530,33 @@ document.write(`
 </ul>
 </section>
 <section id="format-specification">
-<h3>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this heading">#</a></h3>
+<h4>Format Specification<a class="headerlink" href="#format-specification" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Neural network: See <a class="reference external" href="https://github.com/apple/coremltools/blob/main/mlmodel/format/NeuralNetwork.proto">NeuralNetwork.proto</a> or <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/NeuralNetwork.html">NeuralNetwork spec description</a>.</p></li>
 <li><p>ML Program: See <a class="reference external" href="https://github.com/apple/coremltools/blob/main/mlmodel/format/MIL.proto">MIL.proto</a> or <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/MIL.html">MILspec.Program spec description</a>.</p></li>
 </ul>
 </section>
 <section id="supported-operations">
-<h3>Supported Operations<a class="headerlink" href="#supported-operations" title="Permalink to this heading">#</a></h3>
+<h4>Supported Operations<a class="headerlink" href="#supported-operations" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Neural network: Set of supported ops frozen. For the current list of ops (also known as <em>layers</em>), see the <a class="reference external" href="https://apple.github.io/coremltools/mlmodel/Format/NeuralNetwork.html">NeuralNetwork spec description</a>.</p></li>
 <li><p>ML Program: New ops are added continually. For the current list of ops, see <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a>.</p></li>
 </ul>
 </section>
 <section id="feature-development">
-<h3>Feature Development<a class="headerlink" href="#feature-development" title="Permalink to this heading">#</a></h3>
+<h4>Feature Development<a class="headerlink" href="#feature-development" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Neural network: Frozen, under maintenance only.</p></li>
 <li><p>ML Program: All new features target the ML Program format.</p></li>
 </ul>
 </section>
 <section id="performance-improvements">
-<h3>Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permalink to this heading">#</a></h3>
+<h4>Performance Improvements<a class="headerlink" href="#performance-improvements" title="Permalink to this heading">#</a></h4>
 <ul class="simple">
 <li><p>Neural network: Limited.</p></li>
 <li><p>ML Program: All major performance enhancements target ML Program.</p></li>
 </ul>
+</section>
 </section>
 </section>
 </section>
@@ -525,11 +583,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="supported-source-formats.html"
+       href="load-and-convert-model.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Supported Source Formats</p>
+        <p class="prev-next-title">Load and Convert Model Workflow</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -551,15 +609,24 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neural-network-and-ml-program">Neural Network and ML Program</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#format-differences">Format Differences</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#minimum-deployment-target">Minimum Deployment Target</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-core-ml-file-formats">Supported Core ML File Formats</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-produce">How to Produce</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-specification">Format Specification</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-operations">Supported Operations</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-development">Feature Development</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-improvements">Performance Improvements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-source-formats">Supported Source Formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tensorflow-versions-1-x-formats">TensorFlow versions 1.x Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tensorflow-versions-2-x-formats">TensorFlow versions 2.x Formats</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pytorch-formats">PyTorch Formats</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#target-conversion-formats">Target Conversion Formats</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#default-format">Default Format</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#format-differences">Format Differences</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#minimum-deployment-target">Minimum Deployment Target</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-core-ml-file-formats">Supported Core ML File Formats</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#how-to-produce">How to Produce</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#format-specification">Format Specification</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-operations">Supported Operations</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#feature-development">Feature Development</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#performance-improvements">Performance Improvements</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>

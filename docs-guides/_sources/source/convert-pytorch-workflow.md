@@ -37,7 +37,7 @@ If your model uses a data-dependent control flow, such as a loop or conditional,
 
 Convert the traced or scripted model to Core ML using the Unified Conversion API [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. In the `inputs` parameter, you can use either [`TensorType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype) or [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType) as the input type.
 
-The following example uses `TensorType` and converts the PyTorch traced model to a [Core ML program](ml-programs) model. For more about image input conversions, see [Image Inputs](image-inputs).
+The following example uses `TensorType` and converts the PyTorch traced model to a [Core ML program](convert-to-ml-program) model. For more about image input conversions, see [Image Inputs](image-inputs).
 
 ```python
 import coremltools as ct
@@ -51,7 +51,7 @@ model = ct.convert(
  )
 ```
 
-With the converted ML model in memory, you can save it as a [Core ML model package](save-as-model-package):
+With the converted ML model in memory, you can save it as a [Core ML model package](convert-to-ml-program.md#save-ml-programs-as-model-packages):
 
 ```python
 # Save the converted model.
