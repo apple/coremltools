@@ -104,7 +104,19 @@ test_py37_tf1_intel:
     WHEEL_PATH: build/dist/*cp37*10_15*
     REQUIREMENTS: reqs/test_tf1.pip
 
-test_py39_tf2_intel:
+test_py39_tf2_intel-1:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13
+  dependencies:
+    - build_wheel_macos_py39_intel
+  variables:
+    PYTHON: "3.9"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    REQUIREMENTS: reqs/test.pip
+
+test_py39_tf2_intel-2:
   <<: *test_macos_pkg
   tags:
     - macOS13
@@ -152,7 +164,19 @@ test_py310_pytorch:
     WHEEL_PATH: build/dist/*cp310*11*
     REQUIREMENTS: reqs/test.pip
 
-test_py310_tf2:
+test_py310_tf2-1:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+
+test_py310_tf2-2:
   <<: *test_macos_pkg
   tags:
     - macOS13_M1
