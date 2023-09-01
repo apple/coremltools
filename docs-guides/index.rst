@@ -13,13 +13,13 @@ Core ML Tools
 
 `Convert models from TensorFlow, PyTorch, and other libraries to Core ML.`
 
-The following guides include instructions and examples. For details about using the application programming interface classes and methods, see `coremltools API Reference <https://apple.github.io/coremltools/index.html>`_.
+This guide includes instructions and examples. For details about using the API classes and methods, see the `coremltools API Reference <https://apple.github.io/coremltools/index.html>`_.
 
 --------------
 
 .. toctree::
    :maxdepth: 1
-   :caption: Overview:
+   :caption: Overview
 
    source/overview-coremltools.md
    source/new-features.md
@@ -34,6 +34,7 @@ The following guides include instructions and examples. For details about using 
    source/installing-coremltools.md
    source/introductory-quickstart.md
    source/unified-conversion-api.md
+   coremltools API Reference <https://apple.github.io/coremltools/index.html>
    Core ML Model Format <https://apple.github.io/coremltools/mlmodel/index.html>
 
 .. toctree::
