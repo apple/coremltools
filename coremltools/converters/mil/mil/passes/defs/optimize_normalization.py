@@ -169,6 +169,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         # check whether the pattern is instance_norm or layer_norm
         is_layernorm = False
         is_instancenorm = False
+        is_new_const = False
         is_require_rank4_transpose = False
 
         negative_axes = [a - rank if a >= 0 else a for a in axes]
@@ -178,6 +179,11 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             # axes for layer_norm must be [-1] or [-1, -2] or [-1, -2, -3] and so on
             if negative_axes == list(range(-len(negative_axes), 0)):
                 is_layernorm = True
+
+        if len(gamma_var.val.shape) == 1 and len(beta_var.val.shape) == 1:
+            if rank == 4 and negative_axes == [-3]:
+                is_layernorm = True
+                is_new_const = True
 
         if rank == 4 and (negative_axes == [-2, -1] or negative_axes == [-3, -2]):
             if (
@@ -214,8 +220,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             x = mb.layer_norm(
                 x=x if is_require_rank4_transpose else reduce_op.x,
                 axes=axes,
-                gamma=gamma_var,
-                beta=beta_var,
+                gamma=gamma_var.val if is_new_const else gamma_var,
+                beta=beta_var.val if is_new_const else beta_var,
                 epsilon=epsilon_var,
                 name=out_name + "_layernorm" if is_require_rank4_transpose else out_name,
                 before_op=end_op,
@@ -823,6 +829,156 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             reduce_op, block, gamma_var, beta_var, epsilon_var, add_op, ops_to_remove
         )
 
+    def _try_match_and_transform_pattern_5(self, reduce_op, block) -> bool:
+        """
+        Detect BC1S ``LayerNorm`` pattern as in ml-ane-transformers.
+
+        Identify two patterns, the first:
+
+        ``y = (x - mean(x)) * rsqrt(variance(X) + eps)``
+
+        ``y = (x - mean(x)) * rsqrt(mean((x - mean(x))^2) + eps)``
+
+        .. code-block::
+
+            x --> reduce_mean --|
+            |                   |  |---|
+            |                   V  |   V
+            |----------------> sub --> mul --> reduce_mean --> add(epsilon) --> rsqrt
+                                |                                                   |
+                                |                                                   V
+                                |-------------------------------------------------> mul --> [...]
+
+        If the optional elementwise weight and bias are set, the second pattern is:
+
+        ``y = [(x - mean(x)) * rsqrt(mean((x - mean(x))^2) + eps) + beta] * gamma``
+
+        .. code-block::
+
+            x --> reduce_mean --|
+            |                   |  |---|
+            |                   V  |   V
+            |----------------> sub --> mul --> reduce_mean --> add(epsilon) --> rsqrt
+                                |                                                   |
+                                |                                                   V
+                                |-------------------------------------------------> mul
+                                                                                    |
+                                                                                    V
+                                                                                add(beta)
+                                                                                    |
+                                                                                    V
+                                                                                mul(gamma) --> [...]
+
+        These pattern corresponds to a specific ``layer_norm``:
+            - ``rank`` is 4.
+            - ``axes`` is ``[1]``
+            - ``gamma`` and ``beta`` are applied as in ml-ane-transformers, opposite of torch.
+
+         """
+        ops_to_remove = []
+        root_var = reduce_op.x
+
+        if root_var.shape is None:
+            return False
+
+        # check that root_var feeds into exactly 3 ops
+        if len(list(root_var.child_ops)) != 2:
+            return False
+        if root_var.op is not None and not self._check_child_op_types(
+            root_var.op, child_op_types=["reduce_mean", "sub", "mul"]
+        ):
+            return False
+
+        # check 1st reduce_mean op
+        if not self._check_reduce_op(reduce_op):
+            return False
+        ops_to_remove.append(reduce_op)
+
+        # check 1st sub op
+        if not self._check_child_op_types(reduce_op, ["sub"], check_order=False):
+            return False
+        child_ops_reduce_mean = list(reduce_op.outputs[0].child_ops)
+        sub_op1 = child_ops_reduce_mean[0]
+        if not (sub_op1.x == root_var and sub_op1.y == reduce_op.outputs[0]):
+            return False
+        ops_to_remove.append(sub_op1)
+
+        # check mul op (equivalent to a square op)
+        square_op = self._try_get_child_op_type(sub_op1, "mul")
+        if square_op is None:
+            return False
+        if square_op.x != square_op.y:
+            return False
+        ops_to_remove.append(square_op)
+
+        # check second reduce mean
+        reduce_op2 = self._try_get_child_op_type(square_op, "reduce_mean")
+        if not self._check_reduce_op(reduce_op2):
+            return False
+        ops_to_remove.append(reduce_op2)
+
+        # check add op (with epsilon)
+        add_op1 = self._try_get_child_op_type(reduce_op2, "add")
+        if add_op1 is None:
+            return False
+        epsilon_var = add_op1.y if add_op1.x == reduce_op2.outputs[0] else add_op1.x
+        if epsilon_var.val is None or len(epsilon_var.val.shape) != 0:
+            return False  # must be scalar
+        ops_to_remove.append(add_op1)
+
+        # check rsqrt
+        rsqrt_op = self._try_get_child_op_type(add_op1, "rsqrt")
+        if rsqrt_op is None:
+            return False
+        ops_to_remove.append(rsqrt_op)
+
+        ## without elementwise affine
+        mul_op = self._try_get_child_op_type(rsqrt_op, "mul")
+        if mul_op is None:
+            return False
+        if mul_op.y != sub_op1.outputs[0] and mul_op.x != sub_op1.outputs[0]:
+            return False
+        ops_to_remove.append(mul_op)
+
+        # Default values if no gamma or beta ops.
+        end_op = mul_op
+        gamma_var = None
+        beta_var = None
+
+        add_beta_op = self._try_get_child_op_type(mul_op, "add")
+        if add_beta_op is not None:
+            beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
+            beta_var = mb.const(
+                val=np.squeeze(beta_var.val),
+                name="_fuse_layernorm_or_instancenorm_beta",
+            )
+            ops_to_remove.append(add_beta_op)
+            end_op = add_beta_op
+        else:
+            beta_var = mb.const(
+                val=np.zeros(shape=(root_var.shape[1])),
+                name="_fuse_layernorm_or_instancenorm_beta",
+            )
+
+        mul_gamma_op = self._try_get_child_op_type(add_beta_op, "mul")
+        if add_beta_op is not None and mul_gamma_op is not None:
+            gamma_var = mul_gamma_op.y if mul_gamma_op.x == add_beta_op.outputs[0] else mul_gamma_op.x
+            gamma_var = mb.const(
+                val=np.squeeze(gamma_var.val),
+                name="_fuse_layernorm_or_instancenorm_gamma",
+            )
+            ops_to_remove.append(mul_gamma_op)
+            end_op = mul_gamma_op
+        else:
+            gamma_var = mb.const(
+                val=np.ones(shape=(root_var.shape[1])),
+                name="_fuse_layernorm_or_instancenorm_gamma",
+            )
+
+        return self._try_apply_transform(
+            reduce_op, block, gamma_var, beta_var, epsilon_var, end_op, ops_to_remove
+        )
+
     @block_context_manager
     def _fuse_layernorm_or_instancenorm_block(self, block: Block):
         fusion_status = False
@@ -842,6 +998,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                     fusion_status = self._try_match_and_transform_pattern_2(op, block)
                 if fusion_status is False:
                     fusion_status = self._try_match_and_transform_pattern_3(op, block)
+                if fusion_status is False:
+                    fusion_status = self._try_match_and_transform_pattern_5(op, block)
                 # has to break as the downstream iterator is affected.
                 if fusion_status:
                     return fusion_status
