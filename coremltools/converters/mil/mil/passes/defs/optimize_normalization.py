@@ -853,6 +853,9 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
         ``y = [(x - mean(x)) * rsqrt(mean((x - mean(x))^2) + eps) + beta] * gamma``
 
+        Note that this is different from the torch and MIL definitions of beta and gamma
+        so beta must be scaled by gamma.
+
         .. code-block::
 
             x --> reduce_mean --|
@@ -948,17 +951,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         add_beta_op = self._try_get_child_op_type(mul_op, "add")
         if add_beta_op is not None:
             beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
-            beta_var = mb.const(
-                val=np.squeeze(beta_var.val),
-                name="_fuse_layernorm_or_instancenorm_beta",
-            )
             ops_to_remove.append(add_beta_op)
             end_op = add_beta_op
-        else:
-            beta_var = mb.const(
-                val=np.zeros(shape=(root_var.shape[1])),
-                name="_fuse_layernorm_or_instancenorm_beta",
-            )
 
         mul_gamma_op = self._try_get_child_op_type(add_beta_op, "mul")
         if add_beta_op is not None and mul_gamma_op is not None:
@@ -967,13 +961,29 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                 val=np.squeeze(gamma_var.val),
                 name="_fuse_layernorm_or_instancenorm_gamma",
             )
+
+            # Scale beta by gamma. This introduces a little loss.
+            # https://github.com/apple/ml-ane-transformers/blob/da64000fa56cc85b0859bc17cb16a3d753b8304a/ane_transformers/huggingface/distilbert.py#L31
+            beta_var = mb.const(
+                val=np.squeeze(beta_var.val)* gamma_var.val,
+                name="_fuse_layernorm_or_instancenorm_beta"
+            )
+
             ops_to_remove.append(mul_gamma_op)
             end_op = mul_gamma_op
-        else:
+
+        if beta_var is None and gamma_var is None:
+            beta_var = mb.const(
+                val=np.zeros(shape=(root_var.shape[1])),
+                name="_fuse_layernorm_or_instancenorm_beta",
+            )
             gamma_var = mb.const(
                 val=np.ones(shape=(root_var.shape[1])),
                 name="_fuse_layernorm_or_instancenorm_gamma",
             )
+        elif beta_var is None or gamma_var is None:
+            # Having only one of gamma or beta does not match the pattern.
+            return False
 
         return self._try_apply_transform(
             reduce_op, block, gamma_var, beta_var, epsilon_var, end_op, ops_to_remove
