@@ -884,13 +884,11 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         if root_var.shape is None:
             return False
 
-        # check that root_var feeds into exactly 3 ops
-        if len(list(root_var.child_ops)) != 2:
+        # check that root_var feeds into at least 2 ops
+        if len(list(root_var.child_ops)) < 2:
             return False
-        if root_var.op is not None and not self._check_child_op_types(
-            root_var.op, child_op_types=["reduce_mean", "sub", "mul"]
-        ):
-            return False
+        # Do not enforce that the only child ops are reduce_mean and sub as in other
+        # patterns. There are models where the root op is used after the layer norm.
 
         # check 1st reduce_mean op
         if not self._check_reduce_op(reduce_op):
