@@ -947,26 +947,25 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         beta_var = None
 
         add_beta_op = self._try_get_child_op_type(mul_op, "add")
-        if add_beta_op is not None:
-            beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
-            ops_to_remove.append(add_beta_op)
-            end_op = add_beta_op
-
         mul_gamma_op = self._try_get_child_op_type(add_beta_op, "mul")
+
         if add_beta_op is not None and mul_gamma_op is not None:
+            beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
+
             gamma_var = mul_gamma_op.y if mul_gamma_op.x == add_beta_op.outputs[0] else mul_gamma_op.x
             gamma_var = mb.const(
                 val=np.squeeze(gamma_var.val),
-                name="_fuse_layernorm_or_instancenorm_gamma",
+                name="_fuse_layernorm_gamma",
             )
 
             # Scale beta by gamma. This introduces a little loss.
             # https://github.com/apple/ml-ane-transformers/blob/da64000fa56cc85b0859bc17cb16a3d753b8304a/ane_transformers/huggingface/distilbert.py#L31
             beta_var = mb.const(
-                val=np.squeeze(beta_var.val)* gamma_var.val,
-                name="_fuse_layernorm_or_instancenorm_beta"
+                val=np.squeeze(beta_var.val) * gamma_var.val,
+                name="_fuse_layernorm_beta"
             )
 
+            ops_to_remove.append(add_beta_op)
             ops_to_remove.append(mul_gamma_op)
             end_op = mul_gamma_op
 
