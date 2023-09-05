@@ -8,6 +8,7 @@ chardet
 docutils
 idna
 imagesize
+myst-parser
 numpy
 numpydoc
 
@@ -19,9 +20,11 @@ pytz
 six
 snowballstemmer
 sphinx-rtd-theme
+sphinx-book-theme
 sphinxcontrib-websupport
 sphinx-gallery
 sphinx-code-tabs
+sphinx-copybutton
 sympy
 typing
 urllib3
