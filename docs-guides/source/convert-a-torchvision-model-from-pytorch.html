@@ -1,0 +1,764 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Converting a torchvision Model from PyTorch &#8212; Guide to Core ML Tools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-a-torchvision-model-from-pytorch';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Converting a PyTorch Segmentation Model" href="pytorch-conversion-examples.html" />
+    <link rel="prev" title="Converting a Natural Language Processing Model" href="convert-nlp-model.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guide to Core ML Tools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-neural-network.html">Convert Models to Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="optimizing-models.html">Optimizing Models</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimization-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimization-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="performance-impact.html">Accuracy and Performance</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api-overview.html">Optimize API Overview</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="optimizecoreml-api-overview.html">optimize.coreml API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optimizetorch-api-overview.html">optimize.torch API Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="converting-compressed-source-models.html">Converting Compressed Source Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="pruning-overview.html">Pruning Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pruning-a-core-ml-model.html">Post-Training Pruning</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-pruning.html">Training-Time Pruning</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">Pruning During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post-training-palettization.html">Post-Training Palettization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="training-time-palettization.html">Training-Time Palettization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Palettization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="quantization-aware-training.html">Linear 8-Bit Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="quantization-overview.html">Quantization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-free-quantization.html">Post-Training Quantization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data-dependent-quantization.html">Training-Time Quantization</a></li>
+<li class="toctree-l2"><a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">Linear Quantization During Training Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-10"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/convert-a-torchvision-model-from-pytorch.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Converting a torchvision Model from PyTorch</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-mobilenetv2-model">Load the MobileNetV2 Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-model">Trace the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-class-labels">Download the Class Labels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocess-the-image-input-for-torchvision-models">Preprocess the Image Input for torchvision Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-a-neural-network">Convert to a Neural Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-test-image">Load the Test Image</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-protobuf-spec">Get the protobuf spec</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-core-ml-prediction">Make a Core ML Prediction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-pytorch-prediction-and-compare">Make a PyTorch Prediction and Compare</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-image-to-a-tensor">Convert the Image to a Tensor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-prediction-with-torch-and-print-outputs">Make a Prediction with Torch and Print Outputs</a></li>
+</ul>
+</li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="converting-a-torchvision-model-from-pytorch">
+<h1>Converting a torchvision Model from PyTorch<a class="headerlink" href="#converting-a-torchvision-model-from-pytorch" title="Permalink to this heading">#</a></h1>
+<p>The following example shows how to convert into Core ML a <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_mobilenet_v2/">MobileNetV2</a> model trained using PyTorch. MobileNet is a type of convolutional neural network designed for mobile and embedded vision applications.</p>
+<p>The example is similar to the one provided in <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Getting Started</span></a>, in which you convert the TensorFlow version of the model.</p>
+<p>In this example you do the following:</p>
+<ol class="arabic simple">
+<li><p>Load a pre-trained model from <a class="reference external" href="https://pytorch.org/vision/stable/index.html#torchvision">torchvision</a>, a package of datasets, model architectures, and common image transformations.</p></li>
+<li><p>Trace the model to generate TorchScript using the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace</span></code> command.</p></li>
+<li><p>Download the class labels.</p></li>
+<li><p>Preprocess the image input for torchvision models.</p></li>
+<li><p>Convert the traced model to a Core ML neural network using the  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method.</p></li>
+<li><p>Load an image to use for testing.</p></li>
+<li><p>Make a prediction with the converted model.</p></li>
+<li><p>Make a prediction with the original torch-traced model for comparison.</p></li>
+</ol>
+<p>Once you have converted the model, you can follow the steps in <a class="reference internal" href="introductory-quickstart.html#save-and-load-the-model"><span class="std std-doc">Save and Load the Model</span></a> and <a class="reference internal" href="introductory-quickstart.html#use-the-model-with-xcode"><span class="std std-doc">Use the Model with Xcode</span></a>.</p>
+<section id="load-the-mobilenetv2-model">
+<h2>Load the MobileNetV2 Model<a class="headerlink" href="#load-the-mobilenetv2-model" title="Permalink to this heading">#</a></h2>
+<p>The example uses a pre-trained version of the <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_mobilenet_v2/">MobileNetV2</a> model from <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a>. Follow these steps:</p>
+<ol class="arabic">
+<li><p>Load the pre-trained version of MobileNetV2:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+
+<span class="c1"># Load a pre-trained version of MobileNetV2 model.</span>
+<span class="n">torch_model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">mobilenet_v2</span><span class="p">(</span><span class="n">pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Set the model to evaluation mode:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the model in evaluation mode.</span>
+<span class="n">torch_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<div class="admonition-set-the-model-to-evaluation-mode admonition">
+<p class="admonition-title">Set the Model to Evaluation Mode</p>
+<p>To ensure that operations such as dropout are disabled, it’s important to set the model to evaluation mode (not training mode) before tracing. This setting also results in a more optimized version of the model for conversion.</p>
+</div>
+</section>
+<section id="trace-the-model">
+<h2>Trace the Model<a class="headerlink" href="#trace-the-model" title="Permalink to this heading">#</a></h2>
+<p>The process of tracing takes an example input and traces its flow through the model. To understand the reasons for tracing and how to trace a PyTorch model, see <a class="reference internal" href="model-tracing.html"><span class="doc std std-doc">Model Tracing</span></a>.</p>
+<p>You can trace the model by creating an example image input, as shown in the following code using random data. The rank and shape of the tensor depends on your model’s use case. If your model expects a fixed-size input, use that size for the example image. In all cases, the rank of the tensor must be fixed.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Trace the model with random data.</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span> 
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+<span class="n">out</span> <span class="o">=</span> <span class="n">traced_model</span><span class="p">(</span><span class="n">example_input</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="download-the-class-labels">
+<h2>Download the Class Labels<a class="headerlink" href="#download-the-class-labels" title="Permalink to this heading">#</a></h2>
+<p>MobileNetV2 is pre-trained on the <a class="reference external" href="https://en.wikipedia.org/wiki/ImageNet">ImageNet</a> benchmark dataset. Download the class labels from the labels text file, and remove the first class (which is the background):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Download class labels in ImageNetLabel.txt.</span>
+<span class="kn">import</span> <span class="nn">urllib</span>
+<span class="n">label_url</span> <span class="o">=</span> <span class="s1">&#39;https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt&#39;</span>
+<span class="n">class_labels</span> <span class="o">=</span> <span class="n">urllib</span><span class="o">.</span><span class="n">request</span><span class="o">.</span><span class="n">urlopen</span><span class="p">(</span><span class="n">label_url</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+<span class="n">class_labels</span> <span class="o">=</span> <span class="n">class_labels</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="c1"># remove the first class which is background</span>
+<span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">class_labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1000</span>
+</pre></div>
+</div>
+</section>
+<section id="preprocess-the-image-input-for-torchvision-models">
+<h2>Preprocess the Image Input for torchvision Models<a class="headerlink" href="#preprocess-the-image-input-for-torchvision-models" title="Permalink to this heading">#</a></h2>
+<p>Image-based models typically require the input image to be preprocessed before using it with the converted model. For the details of how to preprocess image input for torchvision models, see <a class="reference internal" href="image-inputs.html#preprocessing-for-torch"><span class="std std-doc">Preprocessing for Torch</span></a>.</p>
+<p>The Core ML Tools <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> input type lets you specify the <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> parameters. The scale is applied to the image first, and then the bias is added. Import coremltools, and before converting, specify the <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> input type as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the image scale and bias for input image preprocessing.</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">scale</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="mf">0.226</span><span class="o">*</span><span class="mf">255.0</span><span class="p">)</span>
+<span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span> <span class="mf">0.485</span><span class="o">/</span><span class="p">(</span><span class="mf">0.229</span><span class="p">)</span> <span class="p">,</span> <span class="o">-</span> <span class="mf">0.456</span><span class="o">/</span><span class="p">(</span><span class="mf">0.224</span><span class="p">),</span> <span class="o">-</span> <span class="mf">0.406</span><span class="o">/</span><span class="p">(</span><span class="mf">0.225</span><span class="p">)]</span>
+
+<span class="n">image_input</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_1&quot;</span><span class="p">,</span>
+                           <span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                           <span class="n">scale</span><span class="o">=</span><span class="n">scale</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-images-for-input-and-output admonition">
+<p class="admonition-title">Images for Input and Output</p>
+<p>By default, the Core ML Tools converter generates a Core ML model with inputs of type <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a>. By providing an additional inputs argument, as shown in the next section, you can use either <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype"><code class="docutils literal notranslate"><span class="pre">TensorType</span></code></a> or <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>. This example uses <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>. To learn how to work with images for input and output, see <a class="reference internal" href="image-inputs.html"><span class="doc std std-doc">Image Input and Output</span></a>.</p>
+</div>
+</section>
+<section id="convert-to-a-neural-network">
+<h2>Convert to a Neural Network<a class="headerlink" href="#convert-to-a-neural-network" title="Permalink to this heading">#</a></h2>
+<p>Convert the model to a Core ML neural network using the Core ML Tools   <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. Specify the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter with the preprocessed <code class="docutils literal notranslate"><span class="pre">image_input</span></code> from the previous section:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using image_input in the inputs parameter:</span>
+<span class="c1"># Convert to Core ML using the Unified Conversion API.</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
+    <span class="n">traced_model</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">image_input</span><span class="p">],</span>
+    <span class="n">classifier_config</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ClassifierConfig</span><span class="p">(</span><span class="n">class_labels</span><span class="p">),</span>
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>With the converted model in memory, you can save it using the <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> extension. It may also be helpful to display a confirmation message:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;mobilenet.mlmodel&quot;</span><span class="p">)</span>
+<span class="c1"># Print a confirmation message.</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;model converted and saved&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can now incorporate this model into an application in Xcode, as described in <a class="reference internal" href="introductory-quickstart.html#use-the-model-with-xcode"><span class="std std-doc">Use the Model With Xcode</span></a>.</p>
+<p>The above example also sets the <code class="docutils literal notranslate"><span class="pre">class_labels</span></code> for classifying the image, and the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> to restrict execution to the CPU. For more information about <code class="docutils literal notranslate"><span class="pre">compute_units</span></code>, see <a class="reference internal" href="load-and-convert-model.html#set-the-compute-units"><span class="std std-doc">Set the Compute Units</span></a>.</p>
+</section>
+<section id="load-the-test-image">
+<h2>Load the Test Image<a class="headerlink" href="#load-the-test-image" title="Permalink to this heading">#</a></h2>
+<p>The next step is to load an image using <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL</a>, to use as input for testing the original PyTorch model and the converted model. Resize the input image for consistency so that it is 224 x 224 pixels, and specify <code class="docutils literal notranslate"><span class="pre">ANTIALIAS</span></code> for the algorithm to use for resampling pixels from one size to another:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the test image and resize to 224, 224.</span>
+<span class="n">img_path</span> <span class="o">=</span> <span class="s2">&quot;daisy.jpg&quot;</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">([</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">],</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Right-click the following image and save it as <code class="docutils literal notranslate"><span class="pre">daisy.jpg</span></code> in the same folder as your Python project.</p>
+<figure class="align-center" id="id1">
+<img alt="Daisy image" class="imgnoborder" src="../_images/daisy.jpg" />
+<figcaption>
+<p><span class="caption-text">Right-click this image and save it as <code class="docutils literal notranslate"><span class="pre">daisy.jpg</span></code> in the same folder as your Python project.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="get-the-protobuf-spec">
+<h2>Get the protobuf spec<a class="headerlink" href="#get-the-protobuf-spec" title="Permalink to this heading">#</a></h2>
+<p>To get the fields and types used in the model, get the protobuf spec with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">get_spec()</a>, and select the <code class="docutils literal notranslate"><span class="pre">dictionaryType</span></code> output to use for displaying the results:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the protobuf spec of the model.</span>
+<span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">out</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">out</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;dictionaryType&quot;</span><span class="p">:</span>
+        <span class="n">coreml_dict_name</span> <span class="o">=</span> <span class="n">out</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">break</span>
+</pre></div>
+</div>
+</section>
+<section id="make-a-core-ml-prediction">
+<h2>Make a Core ML Prediction<a class="headerlink" href="#make-a-core-ml-prediction" title="Permalink to this heading">#</a></h2>
+<p>You can now make a prediction with the converted model, using the test image. To learn more about making predictions, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>. The code for <code class="docutils literal notranslate"><span class="pre">coreml_out_dict[&quot;classLabel&quot;]</span></code> returns the top-level class label.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a prediction with the Core ML version of the model.</span>
+<span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_1&quot;</span> <span class="p">:</span> <span class="n">img</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coreml predictions: &quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;top class label: &quot;</span><span class="p">,</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="s2">&quot;classLabel&quot;</span><span class="p">])</span>
+
+<span class="n">coreml_prob_dict</span> <span class="o">=</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="n">coreml_dict_name</span><span class="p">]</span>
+
+<span class="n">values_vector</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="n">keys_vector</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">coreml_prob_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="n">top_3_indices_coreml</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">values_vector</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">top_3_indices_coreml</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">score_value</span> <span class="o">=</span> <span class="n">values_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">class_id</span> <span class="o">=</span> <span class="n">keys_vector</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;class name: </span><span class="si">{}</span><span class="s2">, raw score value: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_id</span><span class="p">,</span> <span class="n">score_value</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>When you run this example, the output should be something like the following, using the image of a daisy as the input:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coreml predictions: 
+top class label:  daisy
+class name: daisy, raw score value: 15.690682411193848
+class name: vase, raw score value: 8.516773223876953
+class name: ant, raw score value: 8.169312477111816
+</pre></div>
+</div>
+</section>
+<section id="make-a-pytorch-prediction-and-compare">
+<h2>Make a PyTorch Prediction and Compare<a class="headerlink" href="#make-a-pytorch-prediction-and-compare" title="Permalink to this heading">#</a></h2>
+<p>To test the accuracy of the converted model with respect to the traced (TorchScript) model, make a prediction with the test image using the original PyTorch model.</p>
+<section id="convert-the-image-to-a-tensor">
+<h3>Convert the Image to a Tensor<a class="headerlink" href="#convert-the-image-to-a-tensor" title="Permalink to this heading">#</a></h3>
+<p>Convert the image to a tensor for input into the PyTorch model:</p>
+<ol class="arabic simple">
+<li><p>Convert the PIL image to a numPy array, and add a dimension. The result is <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">224,</span> <span class="pre">224,</span> <span class="pre">3)</span></code>.</p></li>
+<li><p>The PyTorch model expects as input a torch tensor of shape <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">3,</span> <span class="pre">224,</span> <span class="pre">224)</span></code>, so you need to reshape the numPy array from the previous step by transposing it.</p></li>
+<li><p>The PyTorch model was trained assuming that the input is normalized to the pixel range of <code class="docutils literal notranslate"><span class="pre">[0,1]</span></code>. However, this example tests the model with a <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL image</a> as input, which is in the range of <code class="docutils literal notranslate"><span class="pre">[0,255]</span></code>. Therefore, divide the array by 255.</p></li>
+<li><p>Convert the array to a tensor for input to the PyTorch model.</p></li>
+</ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a prediction with the Torch version of the model:</span>
+<span class="c1"># prepare the input numpy array.</span>
+<span class="n">img_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">img</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="c1"># (224, 224, 3)</span>
+<span class="n">img_np</span> <span class="o">=</span> <span class="n">img_np</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="c1"># (1, 224, 224, 3)</span>
+<span class="n">img_np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">img_np</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span> <span class="c1"># (1, 3, 224, 224)</span>
+<span class="n">img_np</span> <span class="o">=</span> <span class="n">img_np</span> <span class="o">/</span> <span class="mf">255.0</span>
+<span class="n">torch_tensor_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">img_np</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="make-a-prediction-with-torch-and-print-outputs">
+<h3>Make a Prediction with Torch and Print Outputs<a class="headerlink" href="#make-a-prediction-with-torch-and-print-outputs" title="Permalink to this heading">#</a></h3>
+<p>The torchvision <a class="reference external" href="https://pytorch.org/vision/stable/transforms.html#torchvision.transforms.Normalize"><code class="docutils literal notranslate"><span class="pre">transforms.Normalize</span></code></a> class normalizes a tensor image with the mean and standard deviation. To <a class="reference external" href="https://pytorch.org/vision/stable/transforms.html#scriptable-transforms">script the transformation</a>, use  <code class="docutils literal notranslate"><span class="pre">torch.nn.Sequential</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Preprocess model for Torch.</span>
+<span class="n">transform_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">torchvision</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">mean</span><span class="o">=</span><span class="p">(</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">),</span>
+                                     <span class="n">std</span><span class="o">=</span><span class="p">(</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">)),</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>Make a prediction using the traced PyTorch model and the normalized image, and print the output, including the top three indices and the score value for each one:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Invoke prediction and print outputs.</span>
+<span class="n">torch_out</span> <span class="o">=</span> <span class="n">traced_model</span><span class="p">(</span><span class="n">transform_model</span><span class="p">(</span><span class="n">torch_tensor_input</span><span class="p">))</span>
+
+<span class="n">torch_out_np</span> <span class="o">=</span> <span class="n">torch_out</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">squeeze</span><span class="p">()</span>
+<span class="n">top_3_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="n">torch_out_np</span><span class="p">)[:</span><span class="mi">3</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;torch top 3 predictions: &#39;</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+    <span class="n">idx</span> <span class="o">=</span> <span class="n">top_3_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+    <span class="n">score_value</span> <span class="o">=</span> <span class="n">torch_out_np</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="n">class_id</span> <span class="o">=</span> <span class="n">class_labels</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;class name: </span><span class="si">{}</span><span class="s2">, raw score value: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">class_id</span><span class="p">,</span> <span class="n">score_value</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>When you run this example, the output should be something like the following, using the image of a daisy as the input:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch top 3 predictions: 
+class name: daisy, raw score value: 15.65333366394043
+class name: vase, raw score value: 8.527873992919922
+class name: ant, raw score value: 8.256473541259766
+</pre></div>
+</div>
+<p>As you can see from the results, the converted model performs very closely to the original model — the raw score values are very similar.</p>
+</section>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="convert-nlp-model.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Converting a Natural Language Processing Model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="pytorch-conversion-examples.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Converting a PyTorch Segmentation Model</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-mobilenetv2-model">Load the MobileNetV2 Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-model">Trace the Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-class-labels">Download the Class Labels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocess-the-image-input-for-torchvision-models">Preprocess the Image Input for torchvision Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-a-neural-network">Convert to a Neural Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-test-image">Load the Test Image</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-protobuf-spec">Get the protobuf spec</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-core-ml-prediction">Make a Core ML Prediction</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-pytorch-prediction-and-compare">Make a PyTorch Prediction and Compare</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-the-image-to-a-tensor">Convert the Image to a Tensor</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-prediction-with-torch-and-print-outputs">Make a Prediction with Torch and Print Outputs</a></li>
+</ul>
+</li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
