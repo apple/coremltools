@@ -352,7 +352,7 @@ sparse matrices, which have a smaller memory footprint than dense matrices.
 
 .. rst-class:: sphx-glr-timing
 
-   **Total running time of the script:** ( 0 minutes  0.000 seconds)
+   **Total running time of the script:** (0 minutes 0.000 seconds)
 
 
 .. _sphx_glr_download__examples_magnitude_pruning.py:

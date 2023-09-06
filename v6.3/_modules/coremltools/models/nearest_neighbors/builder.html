@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.models.nearest_neighbors.builder &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../_static/css/norightmargin.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+        <script src="../../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.nearest_neighbors.builder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.models.nearest_neighbors.builder</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2019, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+
+<span class="kn">import</span> <span class="nn">coremltools</span>
+
+<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">datatypes</span>
+
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">[docs]</a><span class="k">class</span> <span class="nc">KNearestNeighborsClassifierBuilder</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct a CoreML KNearestNeighborsClassifier specification.</span>
+
+<span class="sd">    Please see the Core ML Nearest Neighbors protobuf message for more information</span>
+<span class="sd">    on KNearestNeighborsClassifier parameters.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder</span>
+<span class="sd">        from coremltools.models.utils import save_spec</span>
+
+<span class="sd">        # Create a KNearestNeighborsClassifier model that takes 4-dimensional input data and outputs a string label.</span>
+<span class="sd">        &gt;&gt;&gt; builder = KNearestNeighborsClassifierBuilder(input_name=&#39;input&#39;,</span>
+<span class="sd">        ...                                              output_name=&#39;output&#39;,</span>
+<span class="sd">        ...                                              number_of_dimensions=4,</span>
+<span class="sd">        ...                                              default_class_label=&#39;default_label&#39;)</span>
+
+<span class="sd">        # save the spec by the builder</span>
+<span class="sd">        &gt;&gt;&gt; save_spec(builder.spec, &#39;knnclassifier.mlmodel&#39;)</span>
+<span class="sd">        </span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_VALID_INDEX_TYPES</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;kd_tree&quot;</span><span class="p">]</span>
+
+    <span class="n">_VALID_WEIGHTING_SCHEMES</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;uniform&quot;</span><span class="p">,</span> <span class="s2">&quot;inverse_distance&quot;</span><span class="p">]</span>
+
+    <span class="n">_VALID_DISTANCE_METRICS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;squared_euclidean&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Optional parameter keys for constructor</span>
+    <span class="n">_PARAMETER_KEY_NUMBER_OF_NEIGHBORS</span> <span class="o">=</span> <span class="s2">&quot;number_of_neighbors&quot;</span>
+    <span class="n">_PARAMETER_KEY_WEIGHTING_SCHEME</span> <span class="o">=</span> <span class="s2">&quot;weighting_scheme&quot;</span>
+    <span class="n">_PARAMETER_KEY_INDEX_TYPE</span> <span class="o">=</span> <span class="s2">&quot;index_type&quot;</span>
+    <span class="n">_PARAMETER_KEY_LEAF_SIZE</span> <span class="o">=</span> <span class="s2">&quot;leaf_size&quot;</span>
+    <span class="n">_PARAMETER_KEY_INPUT_TYPE</span> <span class="o">=</span> <span class="s2">&quot;input_type&quot;</span>
+
+    <span class="c1"># Optional parameter default values</span>
+    <span class="n">_PARAMETER_DEFAULT_NUMBER_OF_NEIGHBORS</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="n">_PARAMETER_DEFAULT_WEIGHTING_SCHEME</span> <span class="o">=</span> <span class="s2">&quot;uniform&quot;</span>
+    <span class="n">_PARAMETER_DEFAULT_INDEX_TYPE</span> <span class="o">=</span> <span class="s2">&quot;linear&quot;</span>
+    <span class="n">_PARAMETER_DEFAULT_LEAF_SIZE</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="n">_PARAMETER_DEFAULT_INPUT_TYPE</span> <span class="o">=</span> <span class="s2">&quot;NotSpecified&quot;</span>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.__init__"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">input_name</span><span class="p">,</span>
+        <span class="n">output_name</span><span class="p">,</span>
+        <span class="n">number_of_dimensions</span><span class="p">,</span>
+        <span class="n">default_class_label</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a KNearestNeighborsClassifierBuilder object.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_name</span>
+<span class="sd">        	Name of the model input.</span>
+<span class="sd">        </span>
+<span class="sd">        output_name</span>
+<span class="sd">        	Name of the output.</span>
+<span class="sd">        </span>
+<span class="sd">        number_of_dimensions</span>
+<span class="sd">        	Number of dimensions of the input data.</span>
+<span class="sd">        </span>
+<span class="sd">        default_class_label</span>
+<span class="sd">        	The default class label to use for predictions. Must be either an</span>
+<span class="sd">        	int64 or a string.</span>
+<span class="sd">        </span>
+<span class="sd">        number_of_neighbors</span>
+<span class="sd">        	Number of neighbors to use for predictions. Default = 5 with allowed values</span>
+<span class="sd">        	between 1-1000.</span>
+<span class="sd">        </span>
+<span class="sd">        weighting_scheme</span>
+<span class="sd">        	Weight function used in prediction. One of ``&#39;uniform&#39;`` (default) or</span>
+<span class="sd">        	``&#39;inverse_distance&#39;``.</span>
+<span class="sd">        </span>
+<span class="sd">        index_type</span>
+<span class="sd">        	Algorithm to compute nearest neighbors. One of ``&#39;linear&#39;`` (default), or</span>
+<span class="sd">        	``&#39;kd_tree&#39;``.</span>
+<span class="sd">        </span>
+<span class="sd">        leaf_size</span>
+<span class="sd">        	Leaf size for the kd-tree. Ignored if index type is ``&#39;linear&#39;``. Default = 30.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">coremltools</span><span class="o">.</span><span class="n">_MINIMUM_NEAREST_NEIGHBORS_SPEC_VERSION</span>
+        <span class="p">)</span>
+
+        <span class="c1"># the model is initially empty - assume it&#39;s updatable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_updatable</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">number_of_dimensions</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;number_of_dimensions must be &gt;= 0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">numberOfDimensions</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">number_of_dimensions</span>
+        <span class="p">)</span>
+
+        <span class="n">input_type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_KEY_INPUT_TYPE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_DEFAULT_INPUT_TYPE</span>
+        <span class="p">)</span>
+        <span class="n">input_feature_type</span> <span class="o">=</span> <span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span>
+        <span class="k">if</span> <span class="n">input_type</span> <span class="o">==</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">:</span>
+            <span class="n">input_feature_type</span> <span class="o">=</span> <span class="n">FeatureTypes_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">DOUBLE</span>
+
+        <span class="n">input_feature</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">input_feature</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">input_name</span>
+        <span class="n">input_feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">input_feature_type</span>
+        <span class="n">input_feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">number_of_dimensions</span><span class="p">])</span>
+
+        <span class="n">training_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">trainingInput</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">training_features</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">input_name</span>
+        <span class="n">training_features</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="n">input_feature_type</span>
+        <span class="n">training_features</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">number_of_dimensions</span><span class="p">])</span>
+
+        <span class="n">output_label</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">output_label</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">output_name</span>
+        <span class="n">output_label_probs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">output_label_probs</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">output_name</span> <span class="o">+</span> <span class="s2">&quot;Probs&quot;</span>
+        <span class="n">training_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">trainingInput</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">training_features</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">output_name</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_valid_text_type</span><span class="p">(</span><span class="n">default_class_label</span><span class="p">):</span>
+            <span class="n">output_label</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">stringType</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">training_features</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">stringType</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">output_label_probs</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">dictionaryType</span><span class="o">.</span><span class="n">stringKeyType</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">stringClassLabels</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">defaultStringLabel</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">default_class_label</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_valid_number_type</span><span class="p">(</span><span class="n">default_class_label</span><span class="p">):</span>
+            <span class="n">output_label</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">int64Type</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">training_features</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">int64Type</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="n">output_label_probs</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">dictionaryType</span><span class="o">.</span><span class="n">int64KeyType</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">int64ClassLabels</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">defaultInt64Label</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">default_class_label</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;default_class_label type (</span><span class="si">{}</span><span class="s2">) is invalid. Must be either string or int64&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">default_class_label</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedFeatureName</span> <span class="o">=</span> <span class="n">output_label</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedProbabilitiesName</span> <span class="o">=</span> <span class="n">output_label_probs</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="n">number_of_neighbors</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_KEY_NUMBER_OF_NEIGHBORS</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_DEFAULT_NUMBER_OF_NEIGHBORS</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_number_of_neighbors_with_bounds</span><span class="p">(</span>
+            <span class="n">number_of_neighbors</span><span class="p">,</span> <span class="n">allowed_range</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># Can we think of a more sensible default value?</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">weighting_scheme</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_KEY_WEIGHTING_SCHEME</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_DEFAULT_WEIGHTING_SCHEME</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">index_type</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_KEY_INDEX_TYPE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_DEFAULT_INDEX_TYPE</span>
+        <span class="p">)</span>
+        <span class="n">leaf_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_KEY_LEAF_SIZE</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_PARAMETER_DEFAULT_LEAF_SIZE</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_index_type</span><span class="p">(</span><span class="n">index_type</span><span class="p">,</span> <span class="n">leaf_size</span><span class="p">)</span>
+
+        <span class="c1"># SED is currently the only supported distance metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">squaredEuclideanDistance</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span>
+            <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+        <span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the author for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The author</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">author</span>
+
+    <span class="nd">@author</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">author</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an author for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        author</span>
+<span class="sd">        	The author.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="n">author</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the license for the KNearestNeighborsClassifier model.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The license.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">license</span>
+
+    <span class="nd">@author</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">license</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">license</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a license for the KNearestNeighborsClassifier model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        license</span>
+<span class="sd">        	The license.</span>
+<span class="sd">        	</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">license</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the description for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The description.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">shortDescription</span>
+
+    <span class="nd">@description</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">description</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">description</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a description for the model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        description</span>
+<span class="sd">        	The description</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">shortDescription</span> <span class="o">=</span> <span class="n">description</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Check if the KNearestNeighborsClassifier is updatable.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Is updatable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span>
+
+    <span class="nd">@is_updatable</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">is_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">is_updatable</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the KNearestNeighborsClassifier to be updatable.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        is_updatable</span>
+<span class="sd">        	Boolean</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span> <span class="o">=</span> <span class="n">is_updatable</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">weighting_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the weighting scheme for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The weighting scheme.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weighting_scheme</span>
+
+    <span class="nd">@weighting_scheme</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">weighting_scheme</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">weighting_scheme</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the weighting scheme for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        weighting_scheme</span>
+<span class="sd">        	One of [ ``&#39;uniform&#39;``, ``&#39;inverse_distance&#39;`` ].</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">weighting_scheme</span> <span class="o">=</span> <span class="n">weighting_scheme</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">weighting_scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_WEIGHTING_SCHEMES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid weighting scheme&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">weighting_scheme</span> <span class="o">==</span> <span class="s2">&quot;inverse_distance&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">inverseDistanceWeighting</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span>
+                <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">uniformWeighting</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># storing this in the object is just a convenience</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weighting_scheme</span> <span class="o">=</span> <span class="n">weighting_scheme</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">index_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the index type for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The index type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_type</span>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.set_index_type"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_index_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_type</span><span class="p">,</span> <span class="n">leaf_size</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the index type for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        index_type</span>
+<span class="sd">        	One of [ ``&#39;linear&#39;``, ``&#39;kd_tree&#39;`` ].</span>
+<span class="sd">        </span>
+<span class="sd">        leaf_size</span>
+<span class="sd">        	For kd_tree indexes, the leaf size to use (default = 30).</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">index_type</span> <span class="o">=</span> <span class="n">index_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">index_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_INDEX_TYPES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid index type&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">index_type</span> <span class="o">==</span> <span class="s2">&quot;kd_tree&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">leaf_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;leaf_size must be &gt; 0&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">singleKdTreeIndex</span><span class="o">.</span><span class="n">leafSize</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">leaf_size</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">linearIndex</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span>
+                <span class="sa">b</span><span class="s2">&quot;&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># storing this in the object is just a convenience</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_index_type</span> <span class="o">=</span> <span class="n">index_type</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">leaf_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the leaf size for the KNearestNeighborsClassifier.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The leaf size.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">singleKdTreeIndex</span><span class="o">.</span><span class="n">leafSize</span>
+        <span class="p">)</span>
+
+    <span class="nd">@leaf_size</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">leaf_size</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">leaf_size</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the leaf size for a KNearestNeighborsClassifier model. Only for kd-tree indexes.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        leaf_size</span>
+<span class="sd">        	The leaf size.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">leaf_size</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;leaf_size must be &gt; 0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">singleKdTreeIndex</span><span class="o">.</span><span class="n">leafSize</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">leaf_size</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of dimensions of the input data for the</span>
+<span class="sd">        KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Number of dimensions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">numberOfDimensions</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">number_of_neighbors</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the number of neighbors value for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The number of neighbors default value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">defaultValue</span>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">set_number_of_neighbors_with_bounds</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">number_of_neighbors</span><span class="p">,</span> <span class="n">allowed_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allowed_set</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        allowed_range</span>
+<span class="sd">        	Tuple of (``min_value``, ``max_value``) defining the range of allowed values.</span>
+<span class="sd">        </span>
+<span class="sd">        allowed_values</span>
+<span class="sd">        	Set of allowed values for the number of neighbors.</span>
+<span class="sd">    	</span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">number_of_neighbors</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;number_of_neighbors must be &gt; 0&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">allowed_range</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">allowed_set</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Exactly one of allowed_range or allowed_values must be provided&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">allowed_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">allowed_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Exactly one of allowed_range or allowed_values must be provided&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">allowed_range</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">allowed_range</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;allowed_range expects a tuple of (min_value, max_value)&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">allowed_range</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;allowed_range expects a tuple of (min_value, max_value)&quot;</span>
+                <span class="p">)</span>
+
+            <span class="p">(</span><span class="n">min_value</span><span class="p">,</span> <span class="n">max_value</span><span class="p">)</span> <span class="o">=</span> <span class="n">allowed_range</span>
+            <span class="k">if</span> <span class="n">min_value</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;allowed_range minimum must be &gt; 0&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">max_value</span> <span class="o">&lt;</span> <span class="n">min_value</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;allowed_range max_value must be &gt;= min_value&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">number_of_neighbors</span> <span class="o">&lt;</span> <span class="n">min_value</span> <span class="ow">or</span> <span class="n">number_of_neighbors</span> <span class="o">&gt;</span> <span class="n">max_value</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;number_of_neighbors is not within allowed range&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">defaultValue</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">number_of_neighbors</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">minValue</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">min_value</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">maxValue</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">max_value</span>
+            <span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">allowed_set</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">allowed_set</span><span class="p">,</span> <span class="nb">set</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;allowed_values expects &#39;set&#39; type&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">allowed_set</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;allowed_values cannot be empty&quot;</span><span class="p">)</span>
+
+            <span class="n">found_match</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">allowed_set</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_valid_number_type</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;allowed_values must contain only integer types&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;allowed_values must only contain values &gt; 0&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">number_of_neighbors</span> <span class="o">==</span> <span class="n">v</span><span class="p">:</span>
+                    <span class="n">found_match</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="n">found_match</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">defaultValue</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">number_of_neighbors</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">allowed_set</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">v</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;number_of_neighbors is not a valid value&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">[docs]</a>    <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the range of allowed values for the numberOfNeighbors parameter.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple of (``min_value``, ``max_value``) or ``None`` if the range hasn&#39;t been set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;range&quot;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">minValue</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">range</span><span class="o">.</span><span class="n">maxValue</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">[docs]</a>    <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the set of allowed values for the numberOfNeighbors parameter.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Set of allowed values or ``None`` if the set of allowed values hasn&#39;t been</span>
+<span class="sd">        populated.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;set&quot;</span><span class="p">):</span>
+            <span class="n">spec_values</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">set</span><span class="o">.</span><span class="n">values</span>
+            <span class="p">)</span>
+            <span class="n">allowed_values</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">spec_values</span><span class="p">:</span>
+                <span class="n">allowed_values</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">allowed_values</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.add_samples"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples">[docs]</a>    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_points</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add some samples to the KNearestNeighborsClassifier model.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_points</span>
+<span class="sd">        	List of input data points.</span>
+<span class="sd">        </span>
+<span class="sd">        labels</span>
+<span class="sd">        	List of corresponding labels.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;data_points is empty&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;labels is empty&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_points</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">number_of_dimensions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                <span class="s2">&quot;dimensionality of data_points != expected number of dimensions&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_points</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;len(data_points) !=  len(labels)&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Validate the types of the labels before adding any points.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_label_types</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">data_point</span> <span class="ow">in</span> <span class="n">data_points</span><span class="p">:</span>
+            <span class="n">sample</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">floatSamples</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+            <span class="p">)</span>
+            <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">data_point</span><span class="p">:</span>
+                <span class="n">sample</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;int64ClassLabels&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">int64ClassLabels</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">label</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># string labels</span>
+            <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">stringClassLabels</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">label</span>
+                <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_label_types</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ensure the label types matched the expected types.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec</span>
+<span class="sd">        	The spec.</span>
+<span class="sd">        </span>
+<span class="sd">        labels</span>
+<span class="sd">        	The list of labels.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None, throws a TypeError if not expected.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;int64ClassLabels&quot;</span><span class="p">):</span>
+            <span class="n">check_is_valid</span> <span class="o">=</span> <span class="n">KNearestNeighborsClassifierBuilder</span><span class="o">.</span><span class="n">_is_valid_number_type</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">check_is_valid</span> <span class="o">=</span> <span class="n">KNearestNeighborsClassifierBuilder</span><span class="o">.</span><span class="n">_is_valid_text_type</span>
+        <span class="k">for</span> <span class="n">label</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">check_is_valid</span><span class="p">(</span><span class="n">label</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Invalid type for label: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">label</span><span class="p">)))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_is_valid_text_type</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the object is a valid text type.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obj</span>
+<span class="sd">        	The object to check.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        True if a valid text type, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_is_valid_number_type</span><span class="p">(</span><span class="n">obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Checks if the object is a valid number type.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        obj</span>
+<span class="sd">        	The object to check.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        True if a valid number type, False otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
