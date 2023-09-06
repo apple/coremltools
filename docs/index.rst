@@ -9,7 +9,7 @@ coremltools API
 .. image:: logo.png
    :alt: Core ML Tools logo
 
-This document is the API Reference for coremltools. For guides, installation instructions, and examples, see `Guides <https://coremltools.readme.io/docs>`_.
+This document is the API Reference for Core ML Tools (``coremltools``). For guides, installation instructions, and examples, see the `Guide <https://coremltools.readme.io/docs>`_.
 
 .. toctree::
    :maxdepth: 1
@@ -30,6 +30,8 @@ This document is the API Reference for coremltools. For guides, installation ins
    :maxdepth: 1
    :caption: Resources
 
-   Guides and examples <https://coremltools.readme.io/docs>
+   Guide and Examples <https://coremltools.readme.io/docs>
    Core ML Format Specification <https://apple.github.io/coremltools/mlmodel/index.html>
+   source/api-versions.rst
    GitHub <https://github.com/apple/coremltools>
+
