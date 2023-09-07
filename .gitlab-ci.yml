@@ -140,6 +140,44 @@ test_py39_mil_intel:
     WHEEL_PATH: build/dist/*cp39*10_15*
     REQUIREMENTS: reqs/test.pip
 
+test_py39_backends_intel:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13
+  dependencies:
+    - build_wheel_macos_py39_intel
+  variables:
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    TEST_PACKAGE: coremltools.converters.mil.backend
+    PYTHON: "3.9"
+    REQUIREMENTS: reqs/test.pip
+
+test_py39_shapes_intel:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13
+  dependencies:
+    - build_wheel_macos_py39_intel
+  variables:
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    TEST_PACKAGE: coremltools.converters.mil.test_inputs_outputs_shape
+    PYTHON: "3.9"
+    REQUIREMENTS: reqs/test.pip
+
+test_py39_milproto_intel:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13
+  dependencies:
+    - build_wheel_macos_py39_intel
+  variables:
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    TEST_PACKAGE: coremltools.converters.mil.frontend.milproto
+    PYTHON: "3.9"
+    REQUIREMENTS: reqs/test.pip
+
+
+
 test_py310_coremltools_test:
   <<: *test_macos_pkg
   tags:
@@ -199,6 +237,43 @@ test_py310_mil:
     TEST_PACKAGE: coremltools.converters.mil.mil
     WHEEL_PATH: build/dist/*cp310*11*
     REQUIREMENTS: reqs/test.pip
+
+test_py310_backends:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.backend
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+
+test_py310_shapes:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.test_inputs_outputs_shape
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+
+test_py310_milproto:
+  <<: *test_macos_pkg
+  tags:
+    - macOS13_M1
+  dependencies:
+    - build_wheel_macos_py310
+  variables:
+    PYTHON: "3.10"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.milproto
+    WHEEL_PATH: build/dist/*cp310*11*
+    REQUIREMENTS: reqs/test.pip
+
 
 
 #########################################################################
