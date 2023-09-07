@@ -21,7 +21,8 @@ import pathlib
 project = 'coremltools API Reference'
 copyright = '2021, Apple Inc'
 author = 'Apple Inc'
-
+release = '7.0'
+version = '7.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -62,6 +63,10 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
+
+html_theme_options = {
+    'display_version': True
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
