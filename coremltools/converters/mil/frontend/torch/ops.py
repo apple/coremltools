@@ -4278,6 +4278,7 @@ def masked_fill(context, node):
     if value.dtype != x.dtype:
         value = mb.cast(x=value, dtype=builtin_to_string(x.dtype))
 
+    value, x = promote_input_dtypes([value, x])
     res = mb.select(cond=mask, a=value, b=x, name=node.name)
     context.add(res)
 
