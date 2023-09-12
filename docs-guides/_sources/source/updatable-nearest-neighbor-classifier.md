@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index::
+    single: classifier; nearest neighbor updatable
+    single: updatable nearest neighbor classifier
+    single: nearest neighbor classifier
+```
+
 # Nearest Neighbor Classifier
 
 This topic demonstrates the process of creating an updatable empty k-nearest neighbor model using Core ML Tools.

@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: PyTorch; convert torchvision model
+    single: torchvision model
+```
+
 # Converting a torchvision Model from PyTorch
 
 The following example shows how to convert into Core ML a [MobileNetV2](https://pytorch.org/hub/pytorch_vision_mobilenet_v2/) model trained using PyTorch. MobileNet is a type of convolutional neural network designed for mobile and embedded vision applications. 
@@ -68,6 +74,13 @@ class_labels = urllib.request.urlopen(label_url).read().decode("utf-8").splitlin
 class_labels = class_labels[1:] # remove the first class which is background
 assert len(class_labels) == 1000
 ```
+
+```{eval-rst}
+.. index:: 
+    single: PyTorch; preprocess image input
+    single: preprocessing for images
+```
+
 
 ## Preprocess the Image Input for torchvision Models
 
@@ -140,6 +153,10 @@ Right-click the following image and save it as `daisy.jpg` in the same folder as
 Right-click this image and save it as `daisy.jpg` in the same folder as your Python project.
 ```
 
+```{eval-rst}
+.. index:: 
+    single: protobuf spec
+```
 
 ## Get the protobuf spec
 
@@ -152,6 +169,11 @@ for out in spec.description.output:
     if out.type.WhichOneof('Type') == "dictionaryType":
         coreml_dict_name = out.name
         break
+```
+
+```{eval-rst}
+.. index:: 
+    single: PyTorch; make prediction
 ```
 
 ## Make a Core ML Prediction
@@ -185,6 +207,7 @@ class name: daisy, raw score value: 15.690682411193848
 class name: vase, raw score value: 8.516773223876953
 class name: ant, raw score value: 8.169312477111816
 ```
+
 
 ## Make a PyTorch Prediction and Compare
 

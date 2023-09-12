@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: optimization; workflow
+```
+
 # Optimization Workflow
 
 Core ML Tools offers two ways to incorporate model compression into your workflow:
@@ -6,6 +11,12 @@ Core ML Tools offers two ways to incorporate model compression into your workflo
 - [_Training-time compression_](optimization-workflow.md#training-time-compression). Use this method with a PyTorch model while in training. It lets you fine-tune with data for higher accuracy.
 
 Since model compression is a lossy operation, in both cases you should evaluate the model on the validation data set and compare it with the uncompressed model to ascertain the loss in accuracy and see if that is acceptable. 
+
+```{eval-rst}
+.. index:: 
+    single: post-training compression
+    single: compression; post-training
+```
 
 ## Post-Training Compression
 
@@ -38,6 +49,12 @@ Benefits of this post-training approach include:
 These benefits make this approach more flexible. You can try different techniques with different configurations relatively quickly, to compare accuracy and performance impacts (such as size and latency). The results can guide you to decide whether to deploy the compressed model resulting from this process, or to explore training-time compression to improve accuracy, which involves fine-tuning with data.
 
 A drawback of this approach is that you may observe a steep decline in accuracy as compared to the amount of compression, depending on the model and the task. That is, for lower amounts of compression, you may observe the accuracy to be close to that of the uncompressed model, but as you choose configurations to increase the compression, the accuracy may decline very sharply.
+
+```{eval-rst}
+.. index:: 
+    single: training-time compression
+    single: compression; training-time
+```
 
 ## Training-Time Compression
 

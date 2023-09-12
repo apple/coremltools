@@ -416,7 +416,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="pipeline-classifier">
-<h1>Pipeline Classifier<a class="headerlink" href="#pipeline-classifier" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Pipeline Classifier<a class="headerlink" href="#pipeline-classifier" title="Permalink to this heading">#</a></h1>
 <p>This example creates a model which can be used to train a simple drawing or sketch classifier based on user examples. The model is a pipeline composed of a drawing-embedding model and a nearest-neighbor classifier.</p>
 <p>The model is updatable and starts off empty, meaning that the nearest-neighbor classifier has no examples or labels. Before updating with training examples, the model predicts “unknown” for all input.</p>
 <p>The input to the model is a 28 x 28 grayscale drawing. The background is expected to be black (<code class="docutils literal notranslate"><span class="pre">0</span></code>), while the strokes of the drawing should be rendered as white (<code class="docutils literal notranslate"><span class="pre">255</span></code>). Right-click these 28 x 28 images for the following example:</p>

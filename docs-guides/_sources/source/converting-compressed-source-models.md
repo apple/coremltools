@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: convert compressed models
+```
+
 # Converting Compressed Source Models
 
 This section shows how you can indicate to the converter to use the sparse or palettized representations to store the weights. This is required when you bring in a source model whose weights are compressed but still represented in dense `float`format.  This is the case for PyTorch models that are updated and fine-tuned using the [`ct.optimize.torch`](optimizetorch-api-overview) APIs.  

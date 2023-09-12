@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: optimization; overview
+    single: compression; types of
+```
+
 # Overview
 
 Optimization is a rapidly evolving field of machine learning. There are several ways to optimize a deep learning model. For example, you can distill a large model into a smaller model, start from scratch and train a smaller efficient architecture, customize the model architecture for a specific task and hardware, and so on. 

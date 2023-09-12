@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: Scikit-learn
+```
+
 # Scikit-learn
 
 You can convert a [scikit-learn](https://scikit-learn.org/stable/) pipeline, classifier, or regressor to the Core ML format using [`sklearn.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.sklearn.html#coremltools.converters.sklearn._converter.convert):

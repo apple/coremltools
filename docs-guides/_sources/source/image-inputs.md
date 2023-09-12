@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index:: 
+    single: images; input and output
+    single: MLMultiArray
+    single: ImageType
+```
+
 # Image Input and Output
 
 The Core ML Tools [Unified Conversion API](unified-conversion-api) generates by default a Core ML model with a multidimensional array ([`MLMultiArray`](https://developer.apple.com/documentation/coreml/mlmultiarray)) as the type for input and output. If your model uses images for input, you can instead specify  [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType) for the input. Starting in coremltools version 6, you can also specify `ImageType` for the output.
@@ -239,6 +246,12 @@ Click the **Stylized** button in the preview:
 
 The Xcode preview verifies that the converted model transforms any JPEG image.
 
+```{eval-rst}
+.. index::
+    single: images; set the scalar type
+    single: scalar type for ImageType
+```
+
 ## Set the Scalar Type
 
 For an [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype), Core ML supports 8-bit grayscale and 32-bit color images with 8 bits per component. For an [`MLMultiarray`](https://developer.apple.com/documentation/coreml/mlmultiarray), Core ML supports int 32, double, and float 32 as the scalar types. Starting in iOS 16 and macOS 13, you can also use OneComponent16Half Grayscale images and float 16 multiarrays for inputs and outputs. 
@@ -271,6 +284,12 @@ mlmodel = ct.convert(keras_model,
 ```
 
 If `dtype` is missing, the `TensorType` defaults to float 32.
+
+```{eval-rst}
+.. index::
+    single: images; preprocessing
+    single: preprocessing for images
+```
 
 ## Add Image Preprocessing Options
 

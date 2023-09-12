@@ -426,7 +426,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="converting-a-torchvision-model-from-pytorch">
-<h1>Converting a torchvision Model from PyTorch<a class="headerlink" href="#converting-a-torchvision-model-from-pytorch" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Converting a torchvision Model from PyTorch<a class="headerlink" href="#converting-a-torchvision-model-from-pytorch" title="Permalink to this heading">#</a></h1>
 <p>The following example shows how to convert into Core ML a <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_mobilenet_v2/">MobileNetV2</a> model trained using PyTorch. MobileNet is a type of convolutional neural network designed for mobile and embedded vision applications.</p>
 <p>The example is similar to the one provided in <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Getting Started</span></a>, in which you convert the TensorFlow version of the model.</p>
 <p>In this example you do the following:</p>
@@ -490,7 +490,7 @@ document.write(`
 </div>
 </section>
 <section id="preprocess-the-image-input-for-torchvision-models">
-<h2>Preprocess the Image Input for torchvision Models<a class="headerlink" href="#preprocess-the-image-input-for-torchvision-models" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Preprocess the Image Input for torchvision Models<a class="headerlink" href="#preprocess-the-image-input-for-torchvision-models" title="Permalink to this heading">#</a></h2>
 <p>Image-based models typically require the input image to be preprocessed before using it with the converted model. For the details of how to preprocess image input for torchvision models, see <a class="reference internal" href="image-inputs.html#preprocessing-for-torch"><span class="std std-doc">Preprocessing for Torch</span></a>.</p>
 <p>The Core ML Tools <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> input type lets you specify the <code class="docutils literal notranslate"><span class="pre">scale</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code> parameters. The scale is applied to the image first, and then the bias is added. Import coremltools, and before converting, specify the <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> input type as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set the image scale and bias for input image preprocessing.</span>
@@ -549,7 +549,7 @@ document.write(`
 </figure>
 </section>
 <section id="get-the-protobuf-spec">
-<h2>Get the protobuf spec<a class="headerlink" href="#get-the-protobuf-spec" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Get the protobuf spec<a class="headerlink" href="#get-the-protobuf-spec" title="Permalink to this heading">#</a></h2>
 <p>To get the fields and types used in the model, get the protobuf spec with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">get_spec()</a>, and select the <code class="docutils literal notranslate"><span class="pre">dictionaryType</span></code> output to use for displaying the results:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Get the protobuf spec of the model.</span>
 <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
@@ -561,7 +561,7 @@ document.write(`
 </div>
 </section>
 <section id="make-a-core-ml-prediction">
-<h2>Make a Core ML Prediction<a class="headerlink" href="#make-a-core-ml-prediction" title="Permalink to this heading">#</a></h2>
+<span id="index-3"></span><h2>Make a Core ML Prediction<a class="headerlink" href="#make-a-core-ml-prediction" title="Permalink to this heading">#</a></h2>
 <p>You can now make a prediction with the converted model, using the test image. To learn more about making predictions, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>. The code for <code class="docutils literal notranslate"><span class="pre">coreml_out_dict[&quot;classLabel&quot;]</span></code> returns the top-level class label.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a prediction with the Core ML version of the model.</span>
 <span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_1&quot;</span> <span class="p">:</span> <span class="n">img</span><span class="p">})</span>

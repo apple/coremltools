@@ -434,7 +434,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="image-input-and-output">
-<h1>Image Input and Output<a class="headerlink" href="#image-input-and-output" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Image Input and Output<a class="headerlink" href="#image-input-and-output" title="Permalink to this heading">#</a></h1>
 <p>The Core ML Tools <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> generates by default a Core ML model with a multidimensional array (<a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a>) as the type for input and output. If your model uses images for input, you can instead specify  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a> for the input. Starting in coremltools version 6, you can also specify <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> for the output.</p>
 <div class="admonition-imagetype-now-supported-for-output admonition">
 <p class="admonition-title">ImageType Now Supported for Output</p>
@@ -631,7 +631,7 @@ document.write(`
 </section>
 </section>
 <section id="set-the-scalar-type">
-<h2>Set the Scalar Type<a class="headerlink" href="#set-the-scalar-type" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Set the Scalar Type<a class="headerlink" href="#set-the-scalar-type" title="Permalink to this heading">#</a></h2>
 <p>For an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>, Core ML supports 8-bit grayscale and 32-bit color images with 8 bits per component. For an <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiarray</span></code></a>, Core ML supports int 32, double, and float 32 as the scalar types. Starting in iOS 16 and macOS 13, you can also use OneComponent16Half Grayscale images and float 16 multiarrays for inputs and outputs.</p>
 <div class="admonition-grayscale-images-and-float-16-multiarrays admonition">
 <p class="admonition-title">Grayscale Images and Float 16 Multiarrays</p>
@@ -659,7 +659,7 @@ document.write(`
 <p>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is missing, the <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> defaults to float 32.</p>
 </section>
 <section id="add-image-preprocessing-options">
-<h2>Add Image Preprocessing Options<a class="headerlink" href="#add-image-preprocessing-options" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Add Image Preprocessing Options<a class="headerlink" href="#add-image-preprocessing-options" title="Permalink to this heading">#</a></h2>
 <p>Image-based models typically require the input image to be preprocessed before you can use it with the converted model. You may also need to apply the same transformations used in the original model.</p>
 <p>The <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> provides the option to specify preprocessing parameters for image inputs during conversion. These parameters include a global scale and channel-specific biases. The scale and biases are stored in the model and, at runtime, are applied according to the following equation:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>y_red_channel = x_red_channel * scale + red_bias

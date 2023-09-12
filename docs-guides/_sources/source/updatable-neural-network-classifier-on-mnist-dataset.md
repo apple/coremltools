@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index::
+    single: classifier; neural network updatable
+    single: updatable neural network classifier
+    single: neural network; classifier
+```
+
 # Neural Network Classifier
 
 A neural network is a collection of layers, each containing weights that get used alongside its other inputs to produce an output. To be able to update weights of a layer, we need to mark them as "updatable". 

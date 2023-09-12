@@ -1,3 +1,10 @@
+```
+.. index:: 
+    single: PyTorch; model tracing
+    single: model tracing
+    single: TorchScript
+```
+
 # Model Tracing
 
 The easiest way to generate TorchScript for your model is to use PyTorch's [JIT tracer](https://pytorch.org/docs/stable/generated/torch.jit.trace.html). Tracing runs an example input tensor through your model, and captures the operations that are invoked as that input makes its way through the model's layers.

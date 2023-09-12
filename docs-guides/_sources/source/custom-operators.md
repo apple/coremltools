@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index::
+    single: custom operators
+```
+
 # Custom Operators
 
 While converting a model to [Core ML](https://developer.apple.com/documentation/coreml), you may encounter an unsupported operation that can't be represented by a [composite operator](composite-operators).

@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index::
+    single: convert to; workflow
+```
+
+
+
 # Load and Convert Model Workflow
  
 The typical conversion process with the [Unified Conversion API](convert-learning-models) is to load the model to infer its type, and then use the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method to convert it to the Core ML format. Follow these steps:
@@ -64,6 +71,12 @@ For more information, see the [MLModel Overview](mlmodel).
 The [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method tries to infer as much as possible from the source network, but some information may not be present, such as input names, types, shapes, and classifier options. For more information see [Conversion Options](conversion-options).
 ```
 
+```{eval-rst}
+.. index:: 
+    single: TensorFlow; convert from
+```
+
+
 ## Convert From TensorFlow 2
 
 TensorFlow 2 models are typically exported as `tf.Model` objects in the SavedModel or HDF5 file formats. For additional TensorFlow formats you can convert, see [TensorFlow 2 Workflow](tensorflow-2).
@@ -116,6 +129,11 @@ mlmodel = ct.convert("mobilenet_v2_1.0_224_frozen.pb",
                     inputs=[ct.TensorType(shape=(1, 224, 224, 3))])
 ```
 
+```{eval-rst}
+.. index:: 
+    single: PyTorch; convert from
+```
+
 ## Convert from PyTorch
 
 You can convert PyTorch models that are either traced or in already the TorchScript format. For example, you can convert a model obtained using [PyTorch's save and load APIs](https://pytorch.org/tutorials/beginner/saving_loading_models.html) to Core ML using the same Unified Conversion API as the previous example:
@@ -138,6 +156,12 @@ mlmodel = ct.convert("torchvision_mobilenet_v2.pt",
 ```
 
 For more details on tracing and scripting to produce PyTorch models for conversion, see [Converting from PyTorch](convert-pytorch).
+
+```{eval-rst}
+.. index:: 
+    single: compute units
+    single: ML program; compute units
+```
 
 
 ## Set the Compute Units

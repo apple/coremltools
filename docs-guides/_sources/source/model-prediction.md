@@ -1,3 +1,11 @@
+
+```{eval-rst}
+.. index:: 
+   single: prediction; input and output
+   single: prediction; specify compute units
+   single: prediction; image
+```
+
 # Model Prediction
 
 After converting a source model to a Core ML model, you can evaluate the Core ML model by verifying that the predictions made by the Core ML model match the predictions made by the source model. 

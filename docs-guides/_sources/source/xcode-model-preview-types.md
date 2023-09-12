@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: Xcode; model preview types
+    single: model preview types in Xcode
+```
+
 # Xcode Model Preview Types
 
 After converting models to the Core ML format, you can set up the Xcode preview of certain models by adding preview metadata and parameters.

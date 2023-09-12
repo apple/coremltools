@@ -417,6 +417,13 @@ document.write(`
                   
   <section id="model-scripting">
 <h1>Model Scripting<a class="headerlink" href="#model-scripting" title="Permalink to this heading">#</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">..</span> <span class="n">index</span><span class="p">::</span> 
+    <span class="n">single</span><span class="p">:</span> <span class="n">PyTorch</span><span class="p">;</span> <span class="n">model</span> <span class="n">scripting</span>
+    <span class="n">single</span><span class="p">:</span> <span class="n">model</span> <span class="n">scripting</span>
+    <span class="n">single</span><span class="p">:</span> <span class="n">PyTorch</span><span class="p">;</span> <span class="n">JIT</span> <span class="n">script</span>
+    <span class="n">single</span><span class="p">:</span> <span class="n">TorchScript</span>
+</pre></div>
+</div>
 <p>Model tracing is not appropriate in all cases. If your model includes a data-dependent control flow, such as a loop or conditional, you can experiment with PyTorch’s <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.jit.script.html">JIT script</a> to <em>script</em> the model by analyzing the code to generate TorchScript.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>

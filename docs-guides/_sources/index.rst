@@ -15,6 +15,8 @@ Core ML Tools
 
 This guide includes instructions and examples. For details about using the API classes and methods, see the `coremltools API Reference <https://apple.github.io/coremltools/index.html>`_.
 
+:ref:`genindex`  |  :ref:`search`
+
 --------------
 
 .. toctree::
@@ -78,10 +80,4 @@ This guide includes instructions and examples. For details about using the API c
    source/model-prediction.md
    source/updatable-model-examples.rst
 
-
-Index
------
-
-* :ref:`genindex`
-* :ref:`search`
 

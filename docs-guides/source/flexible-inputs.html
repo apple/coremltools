@@ -418,7 +418,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="flexible-input-shapes">
-<h1>Flexible Input Shapes<a class="headerlink" href="#flexible-input-shapes" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Flexible Input Shapes<a class="headerlink" href="#flexible-input-shapes" title="Permalink to this heading">#</a></h1>
 <p>While some neural network models accept only fixed-size input, such as an image with a resolution of 224 x 224 pixels, other models require flexible input shapes that are determined at runtime. Examples are language models that work on arbitrary input lengths, and style transfer models that work on multiple resolutions.</p>
 <p>When converting a model to Core ML using Core ML Tools, you can specify a fixed input shape or a flexible input shape. With a flexible input shape you can specify the input as follows:</p>
 <ul class="simple">
@@ -427,7 +427,7 @@ document.write(`
 <li><p><a class="reference internal" href="#enable-unbounded-ranges"><span class="std std-doc">Enable unbounded ranges</span></a>, if necessary, for maximum flexibility.</p></li>
 </ul>
 <section id="select-from-predetermined-shapes">
-<h2>Select From Predetermined Shapes<a class="headerlink" href="#select-from-predetermined-shapes" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Select From Predetermined Shapes<a class="headerlink" href="#select-from-predetermined-shapes" title="Permalink to this heading">#</a></h2>
 <p>To optimize performance, ensure model accuracy, or limit the range of inputs for other purposes, specify a set of predetermined shapes for input. To make Core ML models using this constraint, set <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes"><code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code></a> as shown in the following example.</p>
 <div class="admonition-enumerated-shapes-provide-a-performance-advantage admonition">
 <p class="admonition-title">Enumerated Shapes Provide a Performance Advantage</p>
@@ -495,7 +495,7 @@ document.write(`
 </div>
 </section>
 <section id="set-the-range-for-each-dimension">
-<h2>Set the Range for Each Dimension<a class="headerlink" href="#set-the-range-for-each-dimension" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Set the Range for Each Dimension<a class="headerlink" href="#set-the-range-for-each-dimension" title="Permalink to this heading">#</a></h2>
 <p>If you know that the input shape will be within a specific interval in each dimension, set the range for each dimension with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#rangedim"><code class="docutils literal notranslate"><span class="pre">RangeDim</span></code></a> as shown in the following example.</p>
 <p>Using a bounded range for each dimension provides more opportunity for the runtime compiler to make optimizations, which is harder to do with an unbounded range. Note also that unbounded ranges are not permitted when converting to an ML program (<code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>).</p>
 <p>The code in the following example performs these steps:</p>

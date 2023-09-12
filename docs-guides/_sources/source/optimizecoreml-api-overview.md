@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: optimize.coreml
+```
+
 # optimize.coreml API Overview
 
 Use [`coremltools.optimize.coreml`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml) (post-training compression) to compress weights in the model. Weight compression reduces the space occupied by the model. However, the precision of the intermediate tensors and the compute precision of the ops are not altered — at load time or prediction time, weights are decompressed into float precision, and all computations use float precision.

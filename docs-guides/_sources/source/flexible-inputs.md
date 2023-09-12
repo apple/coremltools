@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index::
+    single: input shapes
+    single: flexible input shapes
+    single: shapes
+```
+
 # Flexible Input Shapes
 
 While some neural network models accept only fixed-size input, such as an image with a resolution of 224 x 224 pixels, other models require flexible input shapes that are determined at runtime. Examples are language models that work on arbitrary input lengths, and style transfer models that work on multiple resolutions. 
@@ -7,6 +14,11 @@ When converting a model to Core ML using Core ML Tools, you can specify a fixed 
 - [Select from predetermined shapes](#select-from-predetermined-shapes) to limit the input to selected shapes, optimizing performance.
 - [Set a bounded range for each dimension](#set-the-range-for-each-dimension) to define the minimum and maximum for more dynamic shapes. Using a bounded range provides more opportunity for the runtime compiler to make optimizations, which is harder with an unbounded range. 
 - [Enable unbounded ranges](#enable-unbounded-ranges), if necessary, for maximum flexibility.
+
+```{eval-rst}
+.. index::
+    single: enumerated shapes
+```
 
 ## Select From Predetermined Shapes
 
@@ -81,6 +93,11 @@ Core ML preallocates the memory for the default shape, so the first prediction w
 ```{admonition} Enumerated Shapes with Multi-input Models
 
 For a multi-input model, only one of the inputs can be marked with `EnumeratedShapes`; the rest must have fixed single shapes. If you require multiple inputs to be flexible, set the range for each dimension.
+```
+
+```{eval-rst}
+.. index::
+    single: RangeDim
 ```
 
 ## Set the Range for Each Dimension

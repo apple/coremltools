@@ -481,7 +481,7 @@ document.write(`
 </div>
 </section>
 <section id="convert-the-model">
-<h2>Convert the Model<a class="headerlink" href="#convert-the-model" title="Permalink to this heading">#</a></h2>
+<span id="index-0"></span><h2>Convert the Model<a class="headerlink" href="#convert-the-model" title="Permalink to this heading">#</a></h2>
 <p>Use the following code to convert the model to Core ML with an image as the input, and the class labels baked into the model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
@@ -532,7 +532,7 @@ document.write(`
 </div>
 </section>
 <section id="set-the-model-metadata">
-<h2>Set the Model Metadata<a class="headerlink" href="#set-the-model-metadata" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Set the Model Metadata<a class="headerlink" href="#set-the-model-metadata" title="Permalink to this heading">#</a></h2>
 <p>After converting the model, you can set additional metadata for the model in order to take advantage of Xcode features:</p>
 <ul class="simple">
 <li><p>Xcode can display a <strong>Preview</strong> tab of the model’s output for a given input. The classifier model for this example does not need further metadata to display the <strong>Preview</strong> tab. For other examples, see <a class="reference internal" href="xcode-model-preview-types.html"><span class="doc std std-doc">Xcode Model Preview Types</span></a>.</p></li>
@@ -589,7 +589,7 @@ document.write(`
 </div>
 </section>
 <section id="save-and-load-the-model">
-<h2>Save and Load the Model<a class="headerlink" href="#save-and-load-the-model" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Save and Load the Model<a class="headerlink" href="#save-and-load-the-model" title="Permalink to this heading">#</a></h2>
 <p>With the converted <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML program</span></a> model in memory, you can save the model into the <a class="reference internal" href="convert-to-ml-program.html#save-ml-programs-as-model-packages"><span class="std std-doc">Core ML model package</span></a> format by specifying <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> with the <code class="docutils literal notranslate"><span class="pre">save()</span></code> method. You can then load the model into another session:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save model as a Core ML model package</span>
 <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;MobileNetV2.mlpackage&quot;</span><span class="p">)</span>
@@ -607,7 +607,7 @@ document.write(`
 </div>
 </section>
 <section id="use-the-model-with-xcode">
-<h2>Use the Model with Xcode<a class="headerlink" href="#use-the-model-with-xcode" title="Permalink to this heading">#</a></h2>
+<span id="index-3"></span><h2>Use the Model with Xcode<a class="headerlink" href="#use-the-model-with-xcode" title="Permalink to this heading">#</a></h2>
 <p>Double-click the newly converted <code class="docutils literal notranslate"><span class="pre">MobileNetV2.mlpackage</span></code> or <code class="docutils literal notranslate"><span class="pre">MobileNetV2.mlmodel</span></code> file in the Mac Finder to launch Xcode and open the model information pane:</p>
 <p><img alt="xcode-quickstart3-model-metadata3.png" src="../_images/xcode-quickstart3-model-metadata3.png" /></p>
 <p>The classifier model for this example offers tabs for <strong>Metadata</strong>, <strong>Preview</strong>, <strong>Predictions</strong>, and <strong>Utilities</strong>. The <strong>Preview</strong> tab appears for classifier models, and for models that have added preview metadata as described in <a class="reference internal" href="xcode-model-preview-types.html"><span class="doc std std-doc">Xcode Model Preview Types</span></a>.</p>

@@ -416,7 +416,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="tensorflow-1-workflow">
-<h1>TensorFlow 1 Workflow<a class="headerlink" href="#tensorflow-1-workflow" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>TensorFlow 1 Workflow<a class="headerlink" href="#tensorflow-1-workflow" title="Permalink to this heading">#</a></h1>
 <p>Use the frozen graph format for conversion from TensorFlow 1. After training, always export the model for inference to this format using the <code class="docutils literal notranslate"><span class="pre">tensorflow.python.tools.freeze_graph</span></code> method. TensorFlow 1 pre-trained models are also generally available in the frozen <code class="docutils literal notranslate"><span class="pre">.pb</span></code> file format.</p>
 <section id="export-as-a-frozen-graph-and-convert">
 <h2>Export as a Frozen Graph and Convert<a class="headerlink" href="#export-as-a-frozen-graph-and-convert" title="Permalink to this heading">#</a></h2>
@@ -483,7 +483,7 @@ document.write(`
 </div>
 </section>
 <section id="convert-a-pre-trained-model">
-<h2>Convert a Pre-trained Model<a class="headerlink" href="#convert-a-pre-trained-model" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Convert a Pre-trained Model<a class="headerlink" href="#convert-a-pre-trained-model" title="Permalink to this heading">#</a></h2>
 <p>The following example demonstrates how to use a downloaded pre-trained model, load it as a <code class="docutils literal notranslate"><span class="pre">tf.Graph</span></code> object, and then convert and compare predictions with Core ML. This example also compares predictions after conversion to verify the numerical accuracy.</p>
 <ol class="arabic simple">
 <li><p>Download the <a class="reference external" href="https://storage.googleapis.com/mobilenet_v2/checkpoints/mobilenet_v2_1.0_224.tgz"><code class="docutils literal notranslate"><span class="pre">float_v2_1.0_224</span></code> MobileNet V2 model</a> from <a class="reference external" href="https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet">TensorFlow models</a>.</p></li>
