@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: LibSVM
+```
+
 # LibSVM
 
 You can convert a [LibSVM](https://www.csie.ntu.edu.tw/~cjlin/libsvm/) model to the Core ML format using [`libsvm.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.libsvm.html#coremltools.converters.libsvm._libsvm_converter.convert):

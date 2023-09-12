@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: pruning; post-training
+    single: OpThresholdPrunerConfig, OpMagnitudePrunerConfig
+```
+
 # Post-Training Pruning
 
 To sparsify the weights of a Core ML model, you can use one of two configurations:

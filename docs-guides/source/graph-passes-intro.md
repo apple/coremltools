@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index::
+    single: graph passes
+    single: pass_pipeline
+```
+
 # Graph Passes
 
 During conversion, Core ML Tools optimizes the model by applying graph transformations, called _graph passes_, which simplify and canonicalize the representation for a more efficient execution by the Core ML runtime. 

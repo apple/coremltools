@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index::
+    single: composite operators
+```
+
 # Composite Operators
 
 As machine learning continually evolves, new operations are regularly added to source frameworks such as [TensorFlow](https://www.tensorflow.org/) and [PyTorch](https://pytorch.org/). While converting a model to [Core ML](https://developer.apple.com/documentation/coreml), you may encounter an unsupported operation.
@@ -41,6 +46,11 @@ You may need to first install [Transformers](https://huggingface.co/transformers
 
 ![Not-implemented error](images/not-implemented-error.png)
 
+
+```{eval-rst}
+.. index::
+    single: MIL operators
+```
 
 ## Decompose into Existing MIL Operators
 

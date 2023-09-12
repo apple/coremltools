@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index::
+    single: classifier; preview and produce
+```
+
 # Classifiers
 
 A [classifier](https://deepai.org/machine-learning-glossary-and-terms/classifier) is a special kind of [Core ML](https://developer.apple.com/documentation/coreml) model that provides a class label and class name to a probability dictionary as outputs. This topic describes the steps to produce a classifier model using the [Unified Conversion API](unified-conversion-api) by using the [ClassifierConfig](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#classifierconfig) class.
@@ -46,6 +51,11 @@ To produce a classifier model, follow these steps:
 	)
 	```
 
+```{eval-rst}
+.. index::
+    single: PIL
+```
+
 3. Use PIL to load and resize the image to the expected size:
     
 	```python
@@ -69,4 +79,8 @@ To produce a classifier model, follow these steps:
 All Core ML models use the Core ML framework and its APIs. However, with image input models you can also use the [Vision Classifier Observation API](https://developer.apple.com/documentation/vision/vnclassificationobservation), which provides image analysis and additional convenience features for preprocessing images.
 ```
 
+```{eval-rst}
+.. index::
+    single: Vision Classifier Observation API
+```
 

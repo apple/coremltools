@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: pruning; training-time
+    single: MagnitudePruner
+```
+
 # Training-Time Pruning
 
 The [Training-Time Pruning](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#training-time-pruning) API in `coremltools.optimize.torch` builds on top of the [BasePruningMethod](https://pytorch.org/docs/stable/generated/torch.nn.utils.prune.BasePruningMethod.html) API in PyTorch and extends it to:

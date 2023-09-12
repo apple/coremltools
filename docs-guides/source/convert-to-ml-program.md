@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index::
+    pair: ML program; convert to
+```
+
+
 # Convert Models to ML Programs
 
 This section describes the `ML program` model type. It is an evolution of the neural network model type that has been available since the first version of Core ML. 
@@ -19,6 +25,12 @@ model = ct.convert(source_model)
 ```
 
 The above example produces an `mlprogram` with an `iOS15`/`macOS12` deployment target (or newer). You can override this behavior by providing a `minimum_deployment_target` value, such as `minimum_deployment_target=target.iOS14` or older.
+
+```{eval-rst}
+.. index:: 
+   single: precision type
+   single: ML program; precision type
+```
 
 ## Set the ML Program Precision
 
@@ -43,6 +55,13 @@ For details on ML program precision, see [Typed Execution](typed-execution).
 ```{admonition} Float 16 Default
 
 For ML programs, Core ML Tools version 5.0b3 and newer produces a model with float 16 precision by default (previous beta versions produced float 32 by default). You can override the default precision by using the `compute_precision` parameter of [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert).
+```
+
+```{eval-rst}
+.. index:: 
+   single: model package
+   single: ML program; save as model package
+   single: save a model package
 ```
 
 ## Save ML Programs as Model Packages

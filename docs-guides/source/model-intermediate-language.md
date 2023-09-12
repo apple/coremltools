@@ -1,3 +1,7 @@
+```{eval-rst}
+.. index:: MIL, Model Intermediate Language
+```
+
 # Model Intermediate Language
 
 When converting a model to [Core ML](https://developer.apple.com/documentation/coreml), Core ML Tools first creates an [intermediate representation](https://en.wikipedia.org/wiki/Intermediate_representation) of the model in the Model Intermediate Language (MIL), and then translates the MIL representation to the Core ML protobuf representation.
@@ -71,26 +75,14 @@ A block is a sequence of operations. The above example shows 10 operations in `b
 
 You can translate the MIL representation to the Core ML protobuf representation for either a neural network or an ML program. (For a comparison, see [Comparing ML Programs and Neural Networks](comparing-ml-programs-and-neural-networks).)
 
-To convert to an ML program, use the following code:
-
-```python
-model = ct.convert(prog, convert_to="mlprogram")
-```
-
-To convert to a neural network, use the following:
-
-```python
-model = ct.convert(prog)
-```
-
-For example, you can convert the MIL program from the previous section to a neural network, and then run a prediction with the converted model:
+To convert to an ML program, follow the instructions in [Load and Convert Model Workflow](load-and-convert-model). For example, you can convert the MIL program from the previous section to an ML program, and then run a prediction with the converted model:
 
 ```python
 # Note: This example continues the code from the previous section.
 import coremltools as ct
 import numpy as np
 
-# Convert to CoreML neural network format
+# Convert to ML program
 model = ct.convert(prog)
 
 # Make a prediction with CoreML

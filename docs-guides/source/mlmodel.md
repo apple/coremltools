@@ -1,3 +1,10 @@
+
+```{eval-rst}
+.. index:: 
+   single: MLModel; overview and spec
+   single: prediction; with MLModel
+```
+
 # MLModel Overview
 
 An MLModel encapsulates a [Core ML](https://developer.apple.com/documentation/coreml) model's prediction methods, configuration, and model description. You can use the `coremltools` package to convert trained models from a variety of training tools into Core ML models. For the full list of model types, see [Core ML Model](https://apple.github.io/coremltools/mlmodel/Format/Model.html).

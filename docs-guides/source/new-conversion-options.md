@@ -1,6 +1,17 @@
+```{eval-rst}
+.. index:: conversion options
+```
+
 # New Conversion Options
 
 You can use the [Unified Conversion API](unified-conversion-api) to convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an [ML program](convert-to-ml-program). The following are the newest conversion options.
+
+```{eval-rst}
+.. index:: 
+    single: convert_to parameter
+    single: ML program; minimum_deployment_target
+    single: neural network; minimum_deployment_target
+```
 
 ## Convert to ML Program or Neural Network
 
@@ -12,6 +23,12 @@ If neither the `minimum_deployment_target` nor the `convert_to` parameter is spe
 
 To learn about the differences between neural networks and ML programs, see [ML Programs](convert-to-ml-program).
 
+```{eval-rst}
+.. index:: 
+    single: ML program; compute precision
+    single: compute precision
+```
+
 ## Set the Compute Precision for an ML Program
 
 For ML programs, coremltools produces a model with float 16 precision by default. You can override the default precision by using the `compute_precision` parameter. For details, see [Set the ML Program Precision](convert-to-ml-program.md#set-the-ml-program-precision). 
@@ -21,6 +38,12 @@ For ML programs, coremltools produces a model with float 16 precision by default
 The converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). 
 
 However, you may find it useful, especially for debugging, to specify the actual compute units when converting or loading a model by using the `compute_units` parameter. For details, see [Set the compute units](load-and-convert-model.md#set-the-compute-units).
+
+```{eval-rst}
+.. index:: 
+    single: input type options
+    single: output type options
+```
 
 ## Input and Output Type Options
 

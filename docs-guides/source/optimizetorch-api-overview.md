@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: optimize.torch
+```
+
 # optimize.torch API Overview
 
 Use [`coremltools.optimize.torch`](https://apple.github.io/coremltools/source/coremltools.optimize.html#training-time-compression) (training-time compression) to train your model in a compression-aware fashion, or start from a pre-trained `float` precision model  and fine-tune it with training data. 
