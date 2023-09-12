@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: XGBoost
+```
+
 # XGBoost
 
 You can convert a trained [XGBoost](https://en.wikipedia.org/wiki/XGBoost) model to Core ML format using [`xgboost.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.xgboost.html#coremltools.converters.xgboost._tree.convert):

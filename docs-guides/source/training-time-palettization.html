@@ -416,7 +416,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="training-time-palettization">
-<h1>Training-Time Palettization<a class="headerlink" href="#training-time-palettization" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Training-Time Palettization<a class="headerlink" href="#training-time-palettization" title="Permalink to this heading">#</a></h1>
 <p>The <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">DKMPalettizer</a> class implements a palettization algorithm based on the <a class="reference external" href="https://machinelearning.apple.com/research/differentiable-k-means">DKM (Differentiable K-means)</a> paper.  The hyper-parameters of the algorithm can be set via the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig">DKMPalettizerConfig</a> object.</p>
 <p>The key idea of the algorithm is that in each training step, a soft k-means cluster assignment of weight tensors is performed such that each operation in the process is differentiable. This allows for gradient updates to take place for the weights while a <a class="reference external" href="https://en.wikipedia.org/wiki/Lookup_table">lookup table (LUT)</a> of centroids and indices are learned.</p>
 <section id="use-the-dkmpalettizer">

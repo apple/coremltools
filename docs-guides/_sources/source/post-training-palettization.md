@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: palettization; post-training
+    single: OpPalettizerConfig, OptimizationConfig
+```
+
 # Post-Training Palettization
 
 The [`palettize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights) function discretizes the values of all weights in the ML program and constructs the LUT according to the algorithm you specify as `mode` in the [`OpPalettizerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpPalettizerConfig). The float values are then converted to _nbit_ values, and the LUT is saved along side each weight. The `const` ops that were storing weight values are replaced by `constexpr_lut_to_dense` ops.

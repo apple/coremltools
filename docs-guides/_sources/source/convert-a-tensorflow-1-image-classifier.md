@@ -1,3 +1,11 @@
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 1; convert image classifier
+    single: classifier; convert TensorFlow 1
+    single: classifier; image
+```
+
+
 # Converting a TensorFlow 1 Image Classifier
 
 The following example converts the TensorFlow Inception V1 image classifier to a Core ML neural network classifier model that directly predicts the class label of the input image. It demonstrates the importance of setting the image preprocessing parameters correctly to get the right results.

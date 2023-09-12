@@ -424,7 +424,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="optimization-workflow">
-<h1>Optimization Workflow<a class="headerlink" href="#optimization-workflow" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Optimization Workflow<a class="headerlink" href="#optimization-workflow" title="Permalink to this heading">#</a></h1>
 <p>Core ML Tools offers two ways to incorporate model compression into your workflow:</p>
 <ul class="simple">
 <li><p><a class="reference internal" href="#post-training-compression"><span class="std std-doc"><em>Post-training data-free compression</em></span></a>. Use this faster method with a Core ML model, either created or converted from another model. You can quickly try different techniques with different configurations.</p></li>
@@ -432,7 +432,7 @@ document.write(`
 </ul>
 <p>Since model compression is a lossy operation, in both cases you should evaluate the model on the validation data set and compare it with the uncompressed model to ascertain the loss in accuracy and see if that is acceptable.</p>
 <section id="post-training-compression">
-<h2>Post-Training Compression<a class="headerlink" href="#post-training-compression" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Post-Training Compression<a class="headerlink" href="#post-training-compression" title="Permalink to this heading">#</a></h2>
 <p>Start with a Core ML model that uses <code class="docutils literal notranslate"><span class="pre">float</span></code> precision weights. It can be a model you created and trained yourself, or a pre-trained model, in either case converted by the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. This workflow is also commonly referred to as  <em>post-training quantization</em>.</p>
 <figure class="align-center" id="id2">
 <a class="imgnoborder reference internal image-reference" href="../_images/compress_coreml_models.jpg"><img alt="Data-Free Model compression workflow" class="imgnoborder" src="../_images/compress_coreml_models.jpg" style="width: 300px;" /></a>
@@ -461,7 +461,7 @@ document.write(`
 </section>
 </section>
 <section id="training-time-compression">
-<h2>Training-Time Compression<a class="headerlink" href="#training-time-compression" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Training-Time Compression<a class="headerlink" href="#training-time-compression" title="Permalink to this heading">#</a></h2>
 <p>Train your model in a compression-aware fashion, or start from a pre-trained <code class="docutils literal notranslate"><span class="pre">float</span></code> precision model  and fine-tune it with training data. The resulting model typically has higher accuracy because compression is introduced gradually and in a differentiable manner to allow the weights to readjust to the new constraints imposed on them.</p>
 <figure class="align-center" id="id3">
 <a class="imgnoborder reference internal image-reference" href="../_images/in-training-optimize-workflow.png"><img alt="Training-time optimization workflow" class="imgnoborder" src="../_images/in-training-optimize-workflow.png" style="width: 400px;" /></a>

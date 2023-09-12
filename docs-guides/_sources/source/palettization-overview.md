@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: palettization; overview
+```
+
 # Palettization Overview
 
 Palettization, also referred to as weight clustering,  compresses a model by clustering the model's `float` weights, and creating a [lookup table (LUT)](https://en.wikipedia.org/wiki/Lookup_table) of centroids, and then storing the original weight values with indices pointing to the entries in the LUT. 

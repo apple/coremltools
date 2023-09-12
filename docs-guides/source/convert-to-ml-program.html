@@ -417,7 +417,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="convert-models-to-ml-programs">
-<h1>Convert Models to ML Programs<a class="headerlink" href="#convert-models-to-ml-programs" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Convert Models to ML Programs<a class="headerlink" href="#convert-models-to-ml-programs" title="Permalink to this heading">#</a></h1>
 <p>This section describes the <code class="docutils literal notranslate"><span class="pre">ML</span> <span class="pre">program</span></code> model type. It is an evolution of the neural network model type that has been available since the first version of Core ML.</p>
 <p>The ML program model type is a foundation for future improvements. ML programs are available for the iOS15, macOS12, watchOS8, and tvOS15 deployment targets. For details, see <a class="reference internal" href="#availability-of-ml-programs"><span class="std std-doc">Availability of ML Programs</span></a>.</p>
 <div class="admonition note">
@@ -433,7 +433,7 @@ document.write(`
 </div>
 <p>The above example produces an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> with an <code class="docutils literal notranslate"><span class="pre">iOS15</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS12</span></code> deployment target (or newer). You can override this behavior by providing a <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> value, such as <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target=target.iOS14</span></code> or older.</p>
 <section id="set-the-ml-program-precision">
-<h2>Set the ML Program Precision<a class="headerlink" href="#set-the-ml-program-precision" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Set the ML Program Precision<a class="headerlink" href="#set-the-ml-program-precision" title="Permalink to this heading">#</a></h2>
 <p>You can optionally set the precision type (float 16 or float 32) of the weights and the intermediate tensors in the ML program during conversion. The ML program type offers an additional <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> parameter as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># produce a Float 16 typed model</span>
 <span class="c1"># this is also the default if compute_precision argument is skipped</span>
@@ -455,7 +455,7 @@ document.write(`
 </div>
 </section>
 <section id="save-ml-programs-as-model-packages">
-<h2>Save ML Programs as Model Packages<a class="headerlink" href="#save-ml-programs-as-model-packages" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Save ML Programs as Model Packages<a class="headerlink" href="#save-ml-programs-as-model-packages" title="Permalink to this heading">#</a></h2>
 <p>The ML program type uses the <a class="reference external" href="https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package">Core ML model package</a> container format that separates the model into components and offers more flexible metadata editing. Since an ML program decouples the weights from the program architecture, it cannot be saved as an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> file.</p>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">save()</span></code> method to save a file with the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension, as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>

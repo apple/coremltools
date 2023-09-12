@@ -416,7 +416,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="model-intermediate-language">
-<h1>Model Intermediate Language<a class="headerlink" href="#model-intermediate-language" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Model Intermediate Language<a class="headerlink" href="#model-intermediate-language" title="Permalink to this heading">#</a></h1>
 <p>When converting a model to <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a>, Core ML Tools first creates an <a class="reference external" href="https://en.wikipedia.org/wiki/Intermediate_representation">intermediate representation</a> of the model in the Model Intermediate Language (MIL), and then translates the MIL representation to the Core ML protobuf representation.</p>
 <p>What can you do with MIL, and why would you need to use it? In most cases you define your networks in TensorFlow or PyTorch, and convert to Core ML using the <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a>. You don’t need to know MIL except in the following use cases:</p>
 <ul class="simple">
@@ -477,20 +477,12 @@ document.write(`
 <section id="convert-mil-to-core-ml">
 <h2>Convert MIL to Core ML<a class="headerlink" href="#convert-mil-to-core-ml" title="Permalink to this heading">#</a></h2>
 <p>You can translate the MIL representation to the Core ML protobuf representation for either a neural network or an ML program. (For a comparison, see <a class="reference internal" href="comparing-ml-programs-and-neural-networks.html"><span class="doc std std-doc">Comparing ML Programs and Neural Networks</span></a>.)</p>
-<p>To convert to an ML program, use the following code:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">prog</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>To convert to a neural network, use the following:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For example, you can convert the MIL program from the previous section to a neural network, and then run a prediction with the converted model:</p>
+<p>To convert to an ML program, follow the instructions in <a class="reference internal" href="load-and-convert-model.html"><span class="doc std std-doc">Load and Convert Model Workflow</span></a>. For example, you can convert the MIL program from the previous section to an ML program, and then run a prediction with the converted model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Note: This example continues the code from the previous section.</span>
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="c1"># Convert to CoreML neural network format</span>
+<span class="c1"># Convert to ML program</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
 
 <span class="c1"># Make a prediction with CoreML</span>

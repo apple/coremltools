@@ -420,7 +420,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="tensorflow-2-workflow">
-<h1>TensorFlow 2 Workflow<a class="headerlink" href="#tensorflow-2-workflow" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>TensorFlow 2 Workflow<a class="headerlink" href="#tensorflow-2-workflow" title="Permalink to this heading">#</a></h1>
 <p>To convert a <a class="reference external" href="https://www.tensorflow.org/api_docs">TensorFlow 2</a> model, provide one of following formats to the converter:</p>
 <ul class="simple">
 <li><p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras"><code class="docutils literal notranslate"><span class="pre">tf.keras.Model</span></code></a></p></li>
@@ -438,7 +438,7 @@ document.write(`
 <li><p><a class="reference internal" href="#convert-a-user-defined-model"><span class="std std-doc">Convert a user-defined model</span></a>: Defining a model from scratch, training it, and then converting the model.</p></li>
 </ul>
 <section id="convert-a-pre-trained-model">
-<h2>Convert a Pre-trained Model<a class="headerlink" href="#convert-a-pre-trained-model" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Convert a Pre-trained Model<a class="headerlink" href="#convert-a-pre-trained-model" title="Permalink to this heading">#</a></h2>
 <p>The following example demonstrates how to convert an <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/applications/xception">Xception model</a> in <code class="docutils literal notranslate"><span class="pre">HDF5</span></code> format (a <code class="docutils literal notranslate"><span class="pre">.h5</span></code> file) from <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/applications"><code class="docutils literal notranslate"><span class="pre">tf.keras.applications</span></code></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span> 
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
@@ -505,11 +505,11 @@ document.write(`
 </div>
 </section>
 <section id="convert-a-user-defined-model">
-<h2>Convert a User-defined Model<a class="headerlink" href="#convert-a-user-defined-model" title="Permalink to this heading">#</a></h2>
+<span id="index-2"></span><h2>Convert a User-defined Model<a class="headerlink" href="#convert-a-user-defined-model" title="Permalink to this heading">#</a></h2>
 <p>The most convenient way to define a model is to use the  <code class="docutils literal notranslate"><span class="pre">tf.keras</span></code> APIs. You can define your model using <a class="reference external" href="https://www.tensorflow.org/guide/keras/sequential_model">sequential</a>, <a class="reference external" href="https://www.tensorflow.org/guide/keras/functional">functional</a> or <a class="reference external" href="https://www.tensorflow.org/guide/keras/custom_layers_and_models">subclassing</a> APIs, and then convert directly to Core ML.</p>
 <p>Alternatively, you can first save the Keras model to the <code class="docutils literal notranslate"><span class="pre">HDF5</span></code> (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>) or the <code class="docutils literal notranslate"><span class="pre">SavedModel</span></code> file format, and then provide the file path with the <code class="docutils literal notranslate"><span class="pre">convert()</span></code> method. For details about saving the model, see <a class="reference external" href="https://www.tensorflow.org/guide/keras/save_and_serialize">Save and load Keras models</a>.</p>
 <section id="convert-a-sequential-model">
-<h3>Convert a Sequential Model<a class="headerlink" href="#convert-a-sequential-model" title="Permalink to this heading">#</a></h3>
+<span id="index-3"></span><h3>Convert a Sequential Model<a class="headerlink" href="#convert-a-sequential-model" title="Permalink to this heading">#</a></h3>
 <p>The following example defines and converts a Sequential <code class="docutils literal notranslate"><span class="pre">tf.keras</span></code> model to an <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML program</span></a>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Tested with TensorFlow 2.6.2</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
@@ -541,7 +541,7 @@ document.write(`
 </div>
 </section>
 <section id="convert-a-keras-model-with-subclassing">
-<h3>Convert a Keras Model With Subclassing<a class="headerlink" href="#convert-a-keras-model-with-subclassing" title="Permalink to this heading">#</a></h3>
+<span id="index-4"></span><h3>Convert a Keras Model With Subclassing<a class="headerlink" href="#convert-a-keras-model-with-subclassing" title="Permalink to this heading">#</a></h3>
 <p>The following example defines and converts a Keras model with subclassing and a custom Keras layer, using a low-level TensorFlow API. The <a class="reference external" href="https://www.tensorflow.org/guide/keras/functional#extend_the_api_using_custom_layers">custom layer example</a> of the functional Keras API can be converted to an ML program or a neural network by passing the final model object to the converter. The following example converts the model to an ML program:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Tested with TensorFlow 2.6.2</span>
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
@@ -577,7 +577,7 @@ document.write(`
 </div>
 </section>
 <section id="convert-a-tensorflow-concrete-function">
-<h3>Convert a TensorFlow Concrete Function<a class="headerlink" href="#convert-a-tensorflow-concrete-function" title="Permalink to this heading">#</a></h3>
+<span id="index-5"></span><h3>Convert a TensorFlow Concrete Function<a class="headerlink" href="#convert-a-tensorflow-concrete-function" title="Permalink to this heading">#</a></h3>
 <p>The following example converts a TensorFlow concrete function to an ML program:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Tested with TensorFlow 2.6.2</span>
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>

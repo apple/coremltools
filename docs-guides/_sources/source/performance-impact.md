@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: optimization; accuracy and performance
+```
+
 # Accuracy and Performance
 
 This section provides a few concrete [examples](performance-impact.md#examples) of the tradeoff between accuracy and performance, as described in [Optimization Workflow](optimization-workflow). The accuracy of the compressed model depends not only on the type of model and the task for which it is trained, but also on the compression ratio. This section helps you understand the impact of compressing models, not just on model size, but also on latency and runtime memory consumption.

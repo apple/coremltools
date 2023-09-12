@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index:: 
+   single: TensorFlow; source formats
+   single: PyTorch; source formats
+```
+
+
 # Source and Conversion Formats
 
 Use the `convert()` method of the Core ML Tools [Unified Conversion API](https://apple.github.io/coremltools/index.html) (available from Core ML Tools version 4.0 and newer versions) to convert deep learning models to the Core ML model format in order to deploy them in the [Core ML](https://developer.apple.com/documentation/coreml) framework. 
@@ -27,6 +34,12 @@ Source model formats supported by the [Unified Conversion API](unified-conversio
 - [TorchScript](https://pytorch.org/docs/stable/jit.html) object
 - TorchScript object saved as a `.pt` file
 
+```{eval-rst}
+.. index:: 
+   single: convert to; target format
+   single: neural network; target format
+   single: ML program; target format
+```
 
 ## Target Conversion Formats
 

@@ -417,7 +417,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="optimize-coreml-api-overview">
-<h1>optimize.coreml API Overview<a class="headerlink" href="#optimize-coreml-api-overview" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>optimize.coreml API Overview<a class="headerlink" href="#optimize-coreml-api-overview" title="Permalink to this heading">#</a></h1>
 <p>Use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#module-coremltools.optimize.coreml"><code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml</span></code></a> (post-training compression) to compress weights in the model. Weight compression reduces the space occupied by the model. However, the precision of the intermediate tensors and the compute precision of the ops are not altered — at load time or prediction time, weights are decompressed into float precision, and all computations use float precision.</p>
 <section id="steps-to-compress-a-model">
 <h2>Steps to Compress a Model<a class="headerlink" href="#steps-to-compress-a-model" title="Permalink to this heading">#</a></h2>

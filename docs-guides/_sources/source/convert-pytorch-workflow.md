@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index:: 
+    single: PyTorch; convert workflow
+    single: Torchscript
+```
+
+
 # PyTorch Conversion Workflow
 
 ```{admonition} Minimum Deployment Target

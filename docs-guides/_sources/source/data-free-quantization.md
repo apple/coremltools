@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: quantization; post-training
+    single: linear_quantize_weights, OpLinearQuantizerConfig
+```
+
 # Post-Training Quantization
 
 You can linearly quantize the weights of your Core ML model by using the [`linear_quantize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights) method as follows: 

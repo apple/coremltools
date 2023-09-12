@@ -417,7 +417,7 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="composite-operators">
-<h1>Composite Operators<a class="headerlink" href="#composite-operators" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Composite Operators<a class="headerlink" href="#composite-operators" title="Permalink to this heading">#</a></h1>
 <p>As machine learning continually evolves, new operations are regularly added to source frameworks such as <a class="reference external" href="https://www.tensorflow.org/">TensorFlow</a> and <a class="reference external" href="https://pytorch.org/">PyTorch</a>. While converting a model to <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a>, you may encounter an unsupported operation.</p>
 <p>In most cases, you can handle unsupported operations by using composite operators, which you can construct using the existing MIL operations. For an  overview of MIL operations, see <a class="reference internal" href="model-intermediate-language.html"><span class="doc std std-doc">Model Intermediate Language</span></a>.</p>
 <p>All of the operations in the MIL Builder class are at your disposal to construct a composite operator. The following example defines a <code class="docutils literal notranslate"><span class="pre">mb.matmul</span></code> operation using the ML Builder to construct a composite operator. It converts the <a class="reference external" href="https://huggingface.co/transformers/model_doc/t5.html?highlight=t5#transformers.T5Model">T5 Model</a>, available in the <a class="reference external" href="https://huggingface.co/transformers/">Transformers library</a>.</p>
@@ -454,7 +454,7 @@ document.write(`
 <p><img alt="Not-implemented error" src="../_images/not-implemented-error.png" /></p>
 </section>
 <section id="decompose-into-existing-mil-operators">
-<h2>Decompose into Existing MIL Operators<a class="headerlink" href="#decompose-into-existing-mil-operators" title="Permalink to this heading">#</a></h2>
+<span id="index-1"></span><h2>Decompose into Existing MIL Operators<a class="headerlink" href="#decompose-into-existing-mil-operators" title="Permalink to this heading">#</a></h2>
 <p>The TensorFlow <a class="reference external" href="https://www.tensorflow.org/api_docs/java/org/tensorflow/op/core/Einsum">documentation on Einsum</a> refers to Einstein summation notation. You can use this notation to represent a variety of tensor operations such as <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code>, <code class="docutils literal notranslate"><span class="pre">transpose</span></code>, and <code class="docutils literal notranslate"><span class="pre">trace</span></code>, using a string. Einsum is usually a complicated operation, but with this example you don’t need to know all the possible cases, just the particular notation that this model uses.</p>
 <p>The error trace shows that the model uses the following notation for Einsum:</p>
 <a class="imgnoborder reference internal image-reference" href="../_images/first_eq_300.png"><img alt="Notation for Einsum" class="imgnoborder align-center" src="../_images/first_eq_300.png" style="width: 400px;" /></a>

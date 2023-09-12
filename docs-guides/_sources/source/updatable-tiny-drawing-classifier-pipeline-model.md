@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index::
+    single: classifier; pipeline updatable
+    single: updatable pipeline classifier
+    single: pipeline classifier
+```
+
 # Pipeline Classifier
 
 This example creates a model which can be used to train a simple drawing or sketch classifier based on user examples. The model is a pipeline composed of a drawing-embedding model and a nearest-neighbor classifier.
