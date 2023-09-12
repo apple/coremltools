@@ -66,6 +66,11 @@ Now that the model is loaded and the class labels are collected, you can convert
 Before converting the model, a good practice for improving device performance is to know in advance the types and shapes, and to consider the model's interface, including the names and types of inputs and outputs. For this example, the application is an image classifier, and therefore the model's input is an `ImageType` of a specified size. When using inputs of an `ImageType`, it is also important to find out how the model expects its input to be preprocessed or normalized.
 ```
 
+```{eval-rst}
+.. index:: 
+    single: ML program; convert image classifier
+```
+
 ## Convert the Model
 
 Use the following code to convert the model to Core ML with an image as the input, and the class labels baked into the model:
@@ -120,6 +125,13 @@ model = ct.convert(
 ```{admonition} ML Programs vs. Neural Networks
 
 To learn the differences between the newer ML Program model type and the neural network model type, see [Comparing ML Programs and Neural Networks](comparing-ml-programs-and-neural-networks).
+```
+
+```{eval-rst}
+.. index:: 
+    single: metadata; TensorFlow model
+    single: TensorFlow; set model metadata
+    single: ML program; set model metadata
 ```
 
 ## Set the Model Metadata
@@ -187,6 +199,12 @@ print(out_dict["classLabel"])
 You may find differences between predictions on macOS and your target platform (such as iOS or watchOS), so you still need to verify on your target platform. For more information on using the predict API, see [Model Prediction](model-prediction).
 ```
 
+```{eval-rst}
+.. index:: 
+    single: ML program; save and load
+    single: model package
+```
+
 ## Save and Load the Model
 
 With the converted [ML program](convert-to-ml-program) model in memory, you can save the model into the [Core ML model package](convert-to-ml-program.md#save-ml-programs-as-model-packages) format by specifying `.mlpackage` with the `save()` method. You can then load the model into another session:
@@ -206,6 +224,12 @@ model.save("MobileNetV2.mlmodel")
                   
 # Load the saved model
 loaded_model = ct.models.MLModel("MobileNetV2.mlmodel")
+```
+
+```{eval-rst}
+.. index:: 
+    single: ML program; use with Xcode
+    single: Xcode; open model
 ```
 
 ## Use the Model with Xcode

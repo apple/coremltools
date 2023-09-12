@@ -1,5 +1,13 @@
 # Model Scripting
 
+```
+.. index:: 
+    single: PyTorch; model scripting
+    single: model scripting
+    single: PyTorch; JIT script
+    single: TorchScript
+```
+
 Model tracing is not appropriate in all cases. If your model includes a data-dependent control flow, such as a loop or conditional, you can experiment with PyTorch's [JIT script](https://pytorch.org/docs/stable/generated/torch.jit.script.html) to _script_ the model by analyzing the code to generate TorchScript.
 
 ```{warning}

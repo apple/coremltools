@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: pruning; overview
+```
+
 # Pruning Overview
 
 Pruning a model is the process of sparsifying the weight matrices of the  

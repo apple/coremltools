@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index::
+    single: ML program; compared to neural network
+    single: neural network; compared to ML program
+```
+
+
 # Comparing ML Programs and Neural Networks
 
 As ML models evolve in sophistication and complexity, their [representations](#model-representations) are also evolving to describe how they work. _ML programs_ are models that are represented as operations in code. The ML program model type is the foundation for future Core ML improvements.
@@ -11,6 +18,15 @@ A few of the major the differences between a neural network and an ML program ar
 | Intermediate tensor type implicit | Intermediate tensor type explicit |
 | Limited control over precision | More granular control over precision |
 
+
+```{eval-rst}
+.. index:: 
+	single: typed execution
+	single: GPU runtime
+	single: Metal Performance Shaders Graph framework
+	single: compiling an ML program
+	single: ML program; compiling
+```
 
 ## ML Program Benefits
 
@@ -41,6 +57,10 @@ There are several ways to represent a deep learning model. At a foundational lev
 :class: imgnoborder
 
 Three ways to represent a deep learning model.
+```
+
+```{eval-rst}
+.. index:: Core ML NeuralNetwork
 ```
 
 To express a neural network, the mathematical descriptions are often abstracted into a _computational graph_, which is a more concise and scalable representation (as shown in the center of the previous figure). A computational graph is a directed graph in which computational layers connect to each other — the input feeds into the _source_ layers and undergoes a series of mathematical transformations to generate the outputs through the _sink_ layers. 
@@ -91,6 +111,9 @@ While the new ML program model type supports most of the functionality supported
     
     ML programs currently support both float 16 and float 32 typed weights and activations.
 
+```{eval-rst}
+.. index:: MIL, Model Intermediate Language
+```
 
 ## ML Programs and MIL
 

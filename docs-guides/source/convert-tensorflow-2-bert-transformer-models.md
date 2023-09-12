@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert BERT Transformer Models
+```
+
+
 # Converting TensorFlow 2 BERT Transformer Models
 
 The following examples demonstrate converting TensorFlow 2 models to Core ML using Core ML Tools.

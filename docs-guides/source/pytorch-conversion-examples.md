@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: PyTorch; convert segmentation model
+```
+
 # Converting a PyTorch Segmentation Model
 
 This example demonstrates how to convert a PyTorch [segmentation model](https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/ "DeepLabV3 model with a ResNet-101 backbone") to a Core ML neural network. The model takes an image and outputs a class prediction for each pixel of the image.
@@ -171,6 +176,12 @@ Follow these steps:
 	mlmodel.save("SegmentationModel_no_metadata.mlmodel")
 	```
 
+```{eval-rst}
+.. index:: 
+    single: PyTorch; set model metadata
+    single: metadata; PyTorch model
+```
+
 
 ## Set the Model's Metadata
 
@@ -192,6 +203,12 @@ mlmodel.user_defined_metadata["com.apple.coreml.model.preview.type"] = "imageSeg
 mlmodel.user_defined_metadata['com.apple.coreml.model.preview.params'] = json.dumps(labels_json)
 
 mlmodel.save("SegmentationModel_with_metadata.mlmodel")
+```
+
+```{eval-rst}
+.. index:: 
+    single: Xcode; preview
+    single: preview in Xcode
 ```
 
 ## Open the Model in Xcode

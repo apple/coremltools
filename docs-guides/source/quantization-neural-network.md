@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: neural network; compress weights
+    single: quantization; neural network
+```
+
 # Compressing Neural Network Weights
 
 ```{admonition} For Neural Network Format Only

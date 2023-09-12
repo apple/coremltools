@@ -1,3 +1,8 @@
+```{eval-rst}
+.. index:: 
+    single: quantization; overview
+```
+
 # Quantization Overview
 
 Quantization refers to the process of reducing the number of bits that represent a number. This process casts values from `float` type to an `integer` type that uses fewer bits.

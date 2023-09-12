@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert workflow
+    single: TensorFlow 2; convert from
+```
+
+
 # TensorFlow 2 Workflow
 
 To convert a [TensorFlow 2](https://www.tensorflow.org/api_docs) model, provide one of following formats to the converter:
@@ -16,6 +23,12 @@ This page demonstrates the following typical workflows:
 
 - [Convert a pre-trained model](#convert-a-pre-trained-model): Downloading a pre-trained model in the `SavedModel` or `.h5` file format, loading it as a `tf.keras.Model`, and then converting the model.
 - [Convert a user-defined model](#convert-a-user-defined-model): Defining a model from scratch, training it, and then converting the model.
+
+
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert pre-trained model
+```
 
 ## Convert a Pre-trained Model
 
@@ -86,11 +99,21 @@ mlmodel = ct.convert(model, convert_to="mlprogram",
 mlmodel.save("mobilenet.mlpackage")
 ```
 
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert user-defined model
+```
+
 ## Convert a User-defined Model
 
 The most convenient way to define a model is to use the  `tf.keras` APIs. You can define your model using [sequential](https://www.tensorflow.org/guide/keras/sequential_model "The Sequential model"), [functional](https://www.tensorflow.org/guide/keras/functional "The Functional API") or [subclassing](https://www.tensorflow.org/guide/keras/custom_layers_and_models "Making new Layers and Models via subclassing") APIs, and then convert directly to Core ML. 
 
 Alternatively, you can first save the Keras model to the `HDF5` (`.h5`) or the `SavedModel` file format, and then provide the file path with the `convert()` method. For details about saving the model, see [Save and load Keras models](https://www.tensorflow.org/guide/keras/save_and_serialize "Save and load Keras models").
+
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert sequential model
+```
 
 ### Convert a Sequential Model
 
@@ -123,6 +146,11 @@ mlmodel = ct.convert(tf_keras_model, convert_to="mlprogram")
 # or save the keras model in HDF5 format and then convert
 tf_keras_model.save('tf_keras_model.h5')
 mlmodel = ct.convert('tf_keras_model.h5', convert_to="mlprogram")
+```
+
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert a Keras model
 ```
 
 ### Convert a Keras Model With Subclassing
@@ -160,6 +188,11 @@ outputs = CustomDense(10)(inputs)
 model = keras.Model(inputs, outputs)
 
 mlmodel = ct.convert(model, convert_to="mlprogram")
+```
+
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 2; convert concrete function
 ```
 
 ### Convert a TensorFlow Concrete Function

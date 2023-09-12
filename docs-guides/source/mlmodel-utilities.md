@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index:: 
+    single: MLModel; utilities
+    single: rename a feature
+```
+
+
 # MLModel Utilities
 
 The following are useful utilities for processing `MLModel` objects. To learn more about MLModel, see [MLModel Overview](mlmodel). For the full list of utilities, see the [API Reference](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.utils).

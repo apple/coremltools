@@ -1,3 +1,10 @@
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 1; convert workflow
+    single: TensorFlow 1; convert from
+```
+
+
 # TensorFlow 1 Workflow
 
 Use the frozen graph format for conversion from TensorFlow 1. After training, always export the model for inference to this format using the `tensorflow.python.tools.freeze_graph` method. TensorFlow 1 pre-trained models are also generally available in the frozen `.pb` file format.
@@ -64,6 +71,11 @@ import coremltools as ct
 
 mlmodel = ct.convert(frozen_graph_file, convert_to="mlprogram")
 mlmodel.save(frozen_graph_file.replace("pb","mlpackage")))
+```
+
+```{eval-rst}
+.. index:: 
+    single: TensorFlow 1; convert pre-trained model
 ```
 
 ## Convert a Pre-trained Model

@@ -1,3 +1,9 @@
+```{eval-rst}
+.. index:: 
+    single: palettization; training-time
+    single: DKMPalettizer
+```
+
 # Training-Time Palettization
 
 The [DKMPalettizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer) class implements a palettization algorithm based on the [DKM (Differentiable K-means)](https://machinelearning.apple.com/research/differentiable-k-means) paper.  The hyper-parameters of the algorithm can be set via the [DKMPalettizerConfig](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig) object. 

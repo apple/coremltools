@@ -1,3 +1,11 @@
+```{eval-rst}
+.. index:: 
+    single: quantization; training-time
+    single: PyTorch; quantization APIs
+    single: quantization; PyTorch APIs
+    single: LinearQuantizer
+```
+
 # Training-Time Quantization
 
 The [`LinearQuantizer`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer) class implements training-time quantization, also known as quantization-aware training (QAT) as described in the paper [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](https://arxiv.org/pdf/1712.05877.pdf). [`LinearQuantizer`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer) quantizes both weights and activations, whereas [Post-Training Quantization](data-free-quantization) quantizes only the weights.
