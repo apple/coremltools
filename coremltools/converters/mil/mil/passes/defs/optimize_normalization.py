@@ -855,7 +855,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         ``y = [(x - mean(x)) * rsqrt(mean((x - mean(x))^2) + eps) + beta] * gamma``
 
         Note that this is different from the torch and MIL definitions of beta and gamma
-        so beta must be scaled by gamma.
+        so beta is be scaled by gamma and applied before it.
 
         .. code-block::
 
@@ -876,7 +876,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         These pattern corresponds to a specific ``layer_norm``:
             - ``rank`` is 4.
             - ``axes`` is ``[1]``
-            - ``gamma`` and ``beta`` are applied as in ml-ane-transformers, opposite of torch.
+            - ``gamma`` and ``beta`` are applied as in ml-ane-transformers, in the opposite order of torch.
 
          """
         ops_to_remove = []
@@ -959,7 +959,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                 name="_fuse_layernorm_gamma",
             )
 
-            # Scale beta by gamma. This introduces a little loss.
+            # Scale beta by gamma. Note: this un-scaling introduces a little error.
             # https://github.com/apple/ml-ane-transformers/blob/da64000fa56cc85b0859bc17cb16a3d753b8304a/ane_transformers/huggingface/distilbert.py#L31
             beta_var = mb.const(
                 val=np.squeeze(beta_var.val) * gamma_var.val,
@@ -973,11 +973,11 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         if beta_var is None and gamma_var is None:
             beta_var = mb.const(
                 val=np.zeros(shape=(root_var.shape[1])),
-                name="_fuse_layernorm_or_instancenorm_beta",
+                name="_fuse_layernorm_beta",
             )
             gamma_var = mb.const(
                 val=np.ones(shape=(root_var.shape[1])),
-                name="_fuse_layernorm_or_instancenorm_gamma",
+                name="_fuse_layernorm_gamma",
             )
         elif beta_var is None or gamma_var is None:
             # Having only one of gamma or beta does not match the pattern.
