@@ -37,7 +37,7 @@ function(coreml_add_build_proto proto_fn target_suffix)
             ${CMAKE_CURRENT_BINARY_DIR}/format/${proto_fn}_enum.h
         COMMENT "Generating c++ enums from ${proto_fn}.proto into ${CMAKE_CURRENT_BINARY_DIR}/format/"
         COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-            --plugin=protoc-gen-enum=mlmodel${target_suffix}/enumgen
+            --plugin=protoc-gen-enum=mlmodel/enumgen
             --enum_out=${CMAKE_CURRENT_BINARY_DIR}/format/
             -I${CMAKE_CURRENT_SOURCE_DIR}/format/
             ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto
@@ -77,7 +77,7 @@ function(coreml_add_build_proto proto_fn target_suffix)
         add_custom_target(tgt_${proto_fn}_enums ALL
             COMMENT "Generating c++ enums from ${proto_fn}.proto into ${CMAKE_CURRENT_SOURCE_DIR}/build/format/"
             COMMAND ${CMAKE_BINARY_DIR}/deps/protobuf/cmake/protoc
-                --plugin=protoc-gen-enum=mlmodel${target_suffix}/enumgen
+                --plugin=protoc-gen-enum=mlmodel/enumgen
                 --enum_out=${CMAKE_CURRENT_SOURCE_DIR}/build/format/
                 -I${CMAKE_CURRENT_SOURCE_DIR}/format/
                 ${CMAKE_CURRENT_SOURCE_DIR}/format/${proto_fn}.proto

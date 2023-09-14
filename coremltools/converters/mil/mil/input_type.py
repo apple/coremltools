@@ -148,11 +148,12 @@ class InputSpec:
             input_type = self.input_types[name]
             # Check constness
             # Don't check InternalInputType (so _const_symbolic can work)
-            if input_type.const and \
-                not isinstance(input_type, InternalInputType) \
-                and var.val is None:
-                msg = msg_prefix + \
-                    'Input {} must be const at compile time'
+            if (
+                input_type.const
+                and not isinstance(input_type, InternalInputType)
+                and not var.is_descendant_of_const
+            ):
+                msg = msg_prefix + "Input {} must be const at compile time"
                 raise ValueError(msg.format(name), name, var.name)
 
             if not isinstance(var, InternalVar) and \

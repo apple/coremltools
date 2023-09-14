@@ -8,9 +8,9 @@ import torch as _torch
 
 from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Var
+from coremltools.converters.mil.mil import Var, types
 
-from .ops import NUM_TO_TORCH_DTYPE, _get_inputs
+from .ops import NUM_TO_TORCH_DTYPE, _create_linear_layer, _get_inputs, promote_input_dtypes
 from .torch_op_registry import register_torch_op
 
 TORCH_QTYPE_TO_NP_TYPE = {_torch.qint8: _np.int8, _torch.quint8: _np.uint8}
@@ -30,10 +30,15 @@ def _quantize_general(
     scale = scale_var.val
     if scale is None:
         raise ValueError("quantization scale must be const at compile time")
+    if len(scale.shape) > 0 and _np.prod(scale.shape) == 1:
+        scale = scale.reshape(-1)[0]
+        axis = None
 
     zero_point = zero_point_var.val
     if zero_point is None:
         raise ValueError("quantization zero point must be const at compile time")
+    if len(zero_point.shape) > 0 and _np.prod(zero_point.shape) == 1:
+        zero_point = zero_point.reshape(-1)[0]
 
     torch_dtype = NUM_TO_TORCH_DTYPE.get(torch_dtype_var.val)
     if torch_dtype is None:
@@ -90,7 +95,7 @@ def dequantize(context, node):
     context.quant_context.get_dequantized_var(node.inputs[0], node.name)
 
 
-def _dequantized_weight(qweight):
+def _dequantized_weight(qweight, name:str = None):
     """
     Given the first output (qweight) of torch.ops.quantized.conv2d/linear_unpack,
     this returns a dequantized version of the tensor to be added to the context.
@@ -102,12 +107,15 @@ def _dequantized_weight(qweight):
         quantized_weights = _torch.int_repr(qweight).numpy()
         # Axis doesn't matter for per-tensor quantization.
         axis = _np.int32(0)
-        dequant_weights = mb.constexpr_affine_dequantize(
-            quantized_data=quantized_weights,
-            zero_point=zero_point,
-            scale=scale,
-            axis=axis,
-        )
+        kwargs = {
+            "quantized_data": quantized_weights,
+            "zero_point": zero_point,
+            "scale": scale,
+            "axis": axis,
+        }
+        if name is not None:
+            kwargs["name"] = name
+        dequant_weights = mb.constexpr_affine_dequantize(**kwargs)
     # per_channel_affine_float_qparams is same as per_channel_affine except that it
     # expects both scale and zero point to be floating point values.
     elif qweight.qscheme() in {_torch.per_channel_affine, _torch.per_channel_affine_float_qparams}:
@@ -133,12 +141,15 @@ def _dequantized_weight(qweight):
         quantized_weights = _torch.int_repr(qweight).numpy()
         # Axis doesn't matter for per-tensor quantization.
         axis = _np.int32(0)
-        dequant_weights = mb.constexpr_affine_dequantize(
-            quantized_data=quantized_weights,
-            zero_point=zero_point,
-            scale=scale,
-            axis=axis,
-        )
+        kwargs = {
+            "quantized_data": quantized_weights,
+            "zero_point": zero_point,
+            "scale": scale,
+            "axis": axis,
+        }
+        if name is not None:
+            kwargs["name"] = name
+        dequant_weights = mb.constexpr_affine_dequantize(**kwargs)
     else:
         raise ValueError(f'Unsupported quant scheme "{qweight.qscheme()}"')
     return dequant_weights
@@ -196,7 +207,7 @@ def _process_conv(context, node, add_relu=False):
 
     out_scale = context[node.inputs[2]]
     out_zero_point = context[node.inputs[3]].val
-    _ = context.quant_context.get_quantized_per_tensor(
+    context.quant_context.get_quantized_per_tensor(
         res.name, x_dtype, out_scale, out_zero_point, node.name
     )
 
@@ -209,24 +220,31 @@ def _process_linear(context, node, add_relu=False):
     # 4. output zero-point
 
     # Unpack PyTorch's packed params.
-    packed_params = context.torch_graph.params[node.inputs[1]]
-    qweight, bias = _torch.ops.quantized.linear_unpack(packed_params)
-    dequant_weights = _dequantized_weight(qweight)
-    context.add(dequant_weights)
-    # Bias can be fed as-is.
-    bias = bias.detach().numpy()
+    if node.inputs[1] not in context:
+        packed_params = context.torch_graph.params[node.inputs[1]]
+        qweight, bias = _torch.ops.quantized.linear_unpack(packed_params)
+        dequant_weights = _dequantized_weight(qweight)
+        context.add(dequant_weights)
+        bias = bias.detach().numpy()
+    else:
+        dequant_weights, bias = context[node.inputs[1]]
 
     x, x_dtype = context.quant_context.get_dequantized_var(node.inputs[0])
-    res = mb.linear(x=x, weight=dequant_weights, bias=bias)
+
+    x, dequant_weights = promote_input_dtypes([x, dequant_weights])
+    res = _create_linear_layer(x, dequant_weights, bias)
     if add_relu:
         res = mb.relu(x=res)
     context.add(res)
 
     out_scale = context[node.inputs[2]]
     out_zero_point = context[node.inputs[3]].val
-    _ = context.quant_context.get_quantized_per_tensor(
-        res.name, x_dtype, out_scale, out_zero_point, node.name
-    )
+    if out_scale.val != 0 or out_zero_point != 0:
+        context.quant_context.get_quantized_per_tensor(
+            res.name, x_dtype, out_scale, out_zero_point, node.name
+        )
+    else:
+        context.add(res, node.name)
 
 
 def _process_binary(context, node, binary_op, add_relu=False):
@@ -250,9 +268,34 @@ def _process_binary(context, node, binary_op, add_relu=False):
 
     out_scale = context[node.inputs[2]]
     out_zero_point = context[node.inputs[3]].val
-    _ = context.quant_context.get_quantized_per_tensor(
+    context.quant_context.get_quantized_per_tensor(
         res.name, lhs_dtype, out_scale, out_zero_point, node.name
     )
+
+
+@register_torch_op(torch_alias=["quantized::matmul"])
+def quantized_matmul(context, node):
+    inputs = _get_inputs(context, node, expected=4)
+    assert types.is_float(inputs[0].dtype)
+    assert types.is_float(inputs[1].dtype)
+    x, y = promote_input_dtypes([inputs[0], inputs[1]])
+    assert (
+        inputs[2].val == 0 and inputs[3].val == 0
+    ), "non zero scale / zero-point not supported in quantized_matmul op."
+    res = mb.matmul(x=x, y=y, name=node.name)
+    context.add(res)
+
+
+# Defines all the quantization-related nodes that are noOps
+@register_torch_op(
+    torch_alias=[
+        "quantized::linear_prepack",
+    ]
+)
+def quant_noop(context, node):
+    logger.info("Setting pytorch op: {} to no-op.".format(node))
+    inputs = _get_inputs(context, node)
+    context.add(inputs, torch_name=node.name)
 
 
 @register_torch_op(torch_alias=["quantized::linear"])

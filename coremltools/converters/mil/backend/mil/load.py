@@ -42,7 +42,8 @@ from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_
 
 try:
     from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
-except:
+except Exception as e:
+    logger.warning(f"Fail to import BlobWriter from libmilstoragepython. {e}")
     BlobWriter = None
 
 

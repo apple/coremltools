@@ -17,6 +17,7 @@ from coremltools.converters.mil.mil import (
 from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes, parse_einsum_equation
+from coremltools.converters.mil.mil.types import nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 
@@ -57,7 +58,7 @@ class linear(Operation):
     def default_inputs(self):
         Dout = self.weight.shape[0]
         return DefaultInputs(
-            bias=[0.]*Dout,
+            bias=np.array([0.0] * Dout, dtype=nptype_from_builtin(self.x.dtype)),
         )
 
     def type_inference(self):
@@ -75,10 +76,10 @@ class linear(Operation):
             raise ValueError(msg.format(self.name, x_shape[-1], weight_shape[-1]))
         if self.bias is not None:
             assert len(self.bias.shape) == 1
-            if len(self.bias.val) != weight_shape[-2]:
+            if self.bias.shape[0] != weight_shape[-2]:
                 msg = "Op '{}' (linear op): Size of the bias, which is {}, " \
                       "does not match the first dimension of weights, which is {}"
-                raise ValueError(msg.format(self.name, len(self.bias.val), weight_shape[-2]))
+                raise ValueError(msg.format(self.name, self.bias.shape[0], weight_shape[-2]))
         shape = list(x_shape)
         shape[-1] = weight_shape[0]
         return types.tensor(x_type, tuple(shape))

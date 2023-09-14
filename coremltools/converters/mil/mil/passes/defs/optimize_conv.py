@@ -394,6 +394,10 @@ class fuse_conv_batchnorm(AbstractGraphPass):
             conv_bias = np.zeros(Cout)
         else:
             conv_bias = conv_bias.val
+
+        if conv_bias is None:
+            return False
+
         conv_bias = conv_bias.astype(conv_weight_type)
 
         # get the original shape of weight and bias

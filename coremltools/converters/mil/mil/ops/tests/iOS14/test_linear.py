@@ -13,6 +13,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.mil.types import builtin_to_string, nptype_from_builtin
 from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 
@@ -102,6 +103,23 @@ class TestLinear:
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_type",
+        itertools.product(compute_units, backends, [types.int32, types.fp16, types.fp32]),
+    )
+    def test_default_bias_type(self, compute_unit, backend, input_type):
+        # Test the default bias matches the dtype of x
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 2), dtype=types.fp32)],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
+            x = mb.cast(x=x, dtype=builtin_to_string(input_type))
+            weight = np.random.rand(3, 2).astype(nptype_from_builtin(input_type))
+            res = mb.linear(x=x, weight=weight)
+            assert res.op.bias.val.dtype == nptype_from_builtin(input_type)
+            return res
 
 
 class TestMatMul:

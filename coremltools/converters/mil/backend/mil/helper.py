@@ -19,6 +19,9 @@ from coremltools.converters.mil.mil.types import (
 from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
 from coremltools.models.utils import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 
+# For immediate values, those types are stored in bytes (MIL parser reads those types from bytes).
+IMMEDIATE_VALUE_TYPES_IN_BYTES = (types.fp16, types.int8, types.uint8, types.uint32)
+
 
 def create_valuetype_scalar(data_type):
     """
@@ -105,7 +108,7 @@ def _tensor_field_by_type(tensor_val, builtin_type):
     elif types.is_int(builtin_type):
         if builtin_type == types.int64 or builtin_type == types.uint64:
             return tensor_val.longInts.values
-        if builtin_type in (types.int8, types.uint8, types.uint32):
+        if builtin_type in IMMEDIATE_VALUE_TYPES_IN_BYTES:
             return tensor_val.bytes.values
         if builtin_type == types.int16 or builtin_type == types.uint16:
             # TODO (rdar://111797203): Serialize to byte after MIL changes to read from byte field.
@@ -132,7 +135,7 @@ def _set_empty_tensor_field_by_type(tensor_val, builtin_type):
     elif types.is_int(builtin_type):
         if (builtin_type == types.int64 or builtin_type == types.uint64):
             tensor_val.longInts.SetInParent()
-        elif builtin_type in (types.int8, types.uint8, types.uint32):
+        elif builtin_type in IMMEDIATE_VALUE_TYPES_IN_BYTES:
             tensor_val.bytes.SetInParent()
         else:
             tensor_val.ints.SetInParent()
@@ -167,7 +170,7 @@ def create_tensor_value(np_tensor):
         if builtin_type == types.str:
             for x in np.nditer(np_tensor):
                 t_field.append(x.encode("utf-8"))
-        elif builtin_type in (types.fp16, types.int8, types.uint8, types.uint32):
+        elif builtin_type in IMMEDIATE_VALUE_TYPES_IN_BYTES:
             val.immediateValue.tensor.bytes.values = np_val_to_py_type(np_tensor)
         else:
             for x in np_tensor.flatten():
@@ -189,7 +192,7 @@ def create_scalar_value(py_scalar):
 
     # Set the tensor value
     t_field = _tensor_field_by_type(t_val, builtin_type)
-    if builtin_type in (types.fp16, types.int8, types.uint8, types.uint32):
+    if builtin_type in IMMEDIATE_VALUE_TYPES_IN_BYTES:
         # Serialize to bytes because MIL read them from the "bytes" field in TensorValue.
         val.immediateValue.tensor.bytes.values = np_val_to_py_type(py_scalar)
     else:
@@ -295,7 +298,7 @@ def types_to_proto(valuetype):
         return create_valuetype_scalar(types_to_proto_primitive(valuetype))
 
 
-def create_file_value(output_var, blob_writer):
+def _get_offset_by_writing_data(output_var, blob_writer):
     if output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 4:
         offset = blob_writer.write_float_data(np.ascontiguousarray(output_var.val.flatten()))
     elif output_var.val.dtype.kind == "f" and output_var.val.dtype.itemsize == 2:
@@ -315,6 +318,12 @@ def create_file_value(output_var, blob_writer):
         offset = blob_writer.write_int16_data(np.ascontiguousarray(output_var.val.flatten()))
     else:
         raise TypeError("Unsupported type, {}, for net buffer serialization.".format(output_var.val.dtype))
+
+    return offset
+
+
+def create_file_value(output_var, blob_writer):
+    offset = _get_offset_by_writing_data(output_var, blob_writer)
 
     return create_file_value_tensor(
         file_name=os.path.join(os.path.join('@model_path', _WEIGHTS_DIR_NAME), _WEIGHTS_FILE_NAME),

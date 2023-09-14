@@ -227,7 +227,7 @@ class TestPalettizeWeights:
         config.set_global(global_config)
         config.set_op_type("conv", conv_config)
         config.set_op_name("conv_2_1", conv_2_config)
-        config.set_op_name("input_5", linear_1_config)
+        config.set_op_name("linear_0", linear_1_config)
 
         mlmodel = cto.coreml.palettize_weights(mlmodel, config)
         expected_ops = [
@@ -493,7 +493,7 @@ class TestPruneWeights:
 
         config.set_global(global_config)
         config.set_op_type("lstm", None)
-        config.set_op_name("input_5", None)
+        config.set_op_name("linear_0", None)
 
         mlmodel = cto.coreml.prune_weights(mlmodel, config)
         expected_ops = [

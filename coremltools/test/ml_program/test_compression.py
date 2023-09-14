@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
-import pytest
 import torch
 
 import coremltools as ct
@@ -15,6 +14,7 @@ from coremltools.models.ml_program.compression_utils import (
     sparsify_weights,
 )
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+
 
 def get_test_model_and_data(multi_layer=False):
     inputs = [ct.TensorType(name="data", shape=(1, 64, 10, 10))]
@@ -53,18 +53,18 @@ class TestCompressionUtils:
         mlmodel_no_quantized = affine_quantize_weights(mlmodel, mode="linear", op_selector=lambda const_op: const_op.val.val.size > 1e7)
         expected_ops = ['cast', 'conv', 'cast']
         assert get_op_types_in_program(mlmodel_no_quantized._mil_program) == expected_ops
-        
+
     @staticmethod
     def test_affine_quantize_weights_smoke():
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
         mlmodel_quantized = affine_quantize_weights(mlmodel, mode="linear_symmetric", dtype=np.int8)
-        
+
         # validate parameters
         expected_ops = ['constexpr_affine_dequantize', 'cast', 'conv', 'cast']
         assert get_op_types_in_program(mlmodel_quantized._mil_program) == expected_ops
-        
+
     @staticmethod
     def test_palettize_weights_smoke():
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
@@ -75,7 +75,7 @@ class TestCompressionUtils:
         # validate parameters
         expected_ops = ['constexpr_lut_to_dense', 'cast', 'conv', 'cast']
         assert get_op_types_in_program(mlmodel_palettized._mil_program) == expected_ops
-        
+
     @staticmethod
     def test_sparsify_weights_threshold_smoke():
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
@@ -88,7 +88,7 @@ class TestCompressionUtils:
         # validate parameters
         expected_ops = ['constexpr_sparse_to_dense', 'cast', 'conv', 'cast']
         assert get_op_types_in_program(mlmodel_sparsified._mil_program) == expected_ops
-        
+
     @staticmethod
     def test_sparsify_weights_percentile_smoke():
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
@@ -101,13 +101,13 @@ class TestCompressionUtils:
         # validate parameters
         expected_ops = ['constexpr_sparse_to_dense', 'cast', 'conv', 'cast']
         assert get_op_types_in_program(mlmodel_sparsified._mil_program) == expected_ops
-        
+
     @staticmethod
     def test_weight_decompression_smoke():
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(multi_layer=True)
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
-        
+
         # we first compress the model
         mlmodel = palettize_weights(mlmodel, mode="kmeans", nbits=4, op_selector=lambda const_op: const_op.name == "conv_1_weight_to_fp16")
         mlmodel = affine_quantize_weights(mlmodel, mode="linear", op_selector=lambda const_op: const_op.name == "conv_2_weight_to_fp16")

@@ -6870,6 +6870,34 @@ class TestSelect(TorchBaseTest):
         )
 
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends)
+    )
+    def test_dynamic_index(self, compute_unit, backend):
+        class M(torch.nn.Module):
+            def forward(self, float_arr, int_arr):
+                dynamic_index = int_arr[1]
+                float_arr[dynamic_index] = 12.95
+                return float_arr
+
+        a = torch.Tensor([1., 2., 4., 5])
+        i = torch.Tensor([0, 1, 2]).long()
+        inputs_types=[
+            ct.TensorType(name="a", shape=a.shape),
+            ct.TensorType(name="i", shape=i.shape, dtype=np.int32)
+        ]
+
+        self.run_compare_torch(
+            [a, i],
+            M(),
+            input_as_shape=False,
+            converter_input_type=inputs_types,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+
 class TestNonZero(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank, as_tuple",
@@ -9616,6 +9644,59 @@ class TestBitwiseAnd(TorchBaseTest):
             )
 
 
+class TestLogicalNot(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [torch.int32, torch.float32, torch.bool],
+        ),
+    )
+    def test_logical_not(self, compute_unit, backend, input_dtype):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.logical_not(x)
+
+        input_data = torch.randint(
+            low=0, high=2 if input_dtype == torch.bool else 4, size=(2, 3, 4), dtype=input_dtype
+        )
+        self.run_compare_torch(
+            input_data,
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_dtype, output_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [torch.int32, torch.float32, torch.bool],
+            [torch.int16, torch.float16, torch.bool],
+        ),
+    )
+    def test_logical_not_with_out(self, compute_unit, backend, input_dtype, output_dtype):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                out_tensor = torch.empty((2, 3, 4), dtype=output_dtype)
+                torch.logical_not(x, out=out_tensor)
+                return out_tensor
+
+        input_data = torch.randint(
+            low=0, high=2 if input_dtype == torch.bool else 4, size=(2, 3, 4), dtype=input_dtype
+        )
+        self.run_compare_torch(
+            input_data,
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+
 class TestUnfold(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, kernel_size, padding, stride",
@@ -9996,3 +10077,16 @@ class TestTransformer(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch((3, 32), model, backend=backend, compute_unit=compute_unit)
+
+
+class TestFliplr(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape",
+        itertools.product(compute_units, backends, [(2, 3), (3, 4, 5), (8, 2, 6, 4)]),
+    )
+    def test_fliplr(self, compute_unit, backend, input_shape):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.fliplr(x)
+
+        self.run_compare_torch(input_shape, TestModel(), backend=backend, compute_unit=compute_unit)

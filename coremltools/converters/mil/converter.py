@@ -288,7 +288,7 @@ def mil_convert_to_proto(
 
     PassPipelineManager.apply_pipeline(prog, main_pipeline)
 
-    prog._check_invalid_tensor_rank()
+    prog._check_invalid_program()
 
     if convert_to == 'milinternal':
         return None, prog

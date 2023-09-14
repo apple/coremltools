@@ -1022,8 +1022,7 @@ class TestSliceByIndex:
             np.testing.assert_allclose(ans[idx], v[idx].val, atol=1e-04, rtol=1e-05)
 
     @staticmethod
-    @pytest.mark.skipif(ct.utils._macos_version() < (14, 0),
-                        reason="Bug fixed in macOS 14")
+    @pytest.mark.skipif(ct.utils._macos_version() < (14, 0), reason="Bug fixed in macOS 14")
     def test_slice_by_index():
         INPUT_SHAPE = (1, 2, 8, 16)
 
@@ -1061,8 +1060,7 @@ class TestSliceByIndex:
         np.testing.assert_allclose(y_numpy, y_mlprogram)
 
     @staticmethod
-    @pytest.mark.skipif(ct.utils._macos_version() < (14, 0),
-                        reason="Bug fixed in macOS 14")
+    @pytest.mark.skipif(ct.utils._macos_version() < (14, 0), reason="Bug fixed in macOS 14")
     def test_slice_by_index_slice_squeeze_separate():
         INPUT_SHAPE = (1, 2, 8, 16)
 

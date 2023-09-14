@@ -269,7 +269,10 @@ class InternalTorchIRGraph:
             # Add params
             for name, param in params_dict.items():
                 if isinstance(param, torch.Tensor):
-                    value = param.detach().cpu().numpy()
+                    if param.is_quantized:
+                        value = param
+                    else:
+                        value = param.detach().cpu().numpy()
                 else:
                     value = param
                 self.params[name] = value

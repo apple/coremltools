@@ -158,7 +158,7 @@ class TestTfModelInputsOutputs(TensorFlowBaseTest):
 
     @pytest.mark.parametrize(
         "target",
-        [ct.target.iOS13, ct.target.macOS15, ct.target.watchOS6, ct.target.tvOS13],
+        [ct.target.iOS13, ct.target.macOS10_15, ct.target.watchOS6, ct.target.tvOS13],
     )
     def test_invalid_deployment_target_cumsum(self, target):
         x_shape = (3, 4, 5)
@@ -179,7 +179,7 @@ class TestTfModelInputsOutputs(TensorFlowBaseTest):
 
     @pytest.mark.parametrize(
         "target",
-        [ct.target.iOS14, ct.target.macOS16, ct.target.watchOS7, ct.target.tvOS14],
+        [ct.target.iOS14, ct.target.macOS10_16, ct.target.watchOS7, ct.target.tvOS14],
     )
     def test_valid_deployment_target_cumsum(self, target):
         x_shape = (3, 4, 5)

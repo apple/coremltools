@@ -94,18 +94,19 @@ def tensor(primitive, shape):
 
             v_type = numpy_type_to_builtin_type(v.dtype)
             promoted_type = promote_types(v_type, primitive)
-            if v_type == primitive or v.dtype == np.dtype("O"):
+            primitive_np_type = nptype_from_builtin(primitive)
+            if v_type == primitive or v.dtype == np.dtype("O") or v.dtype == primitive_np_type:
                 # np.array of symbolic has object type. Don't cast type.
                 self._val = v
             elif promoted_type == primitive:
-                self._val = v.astype(nptype_from_builtin(primitive))
+                self._val = v.astype(primitive_np_type)
             else:
                 logger.warning(
                     "Saving value type of {} into a builtin type of {}, might lose precision!".format(
                         v.dtype, builtin_to_string(primitive)
                     )
                 )
-                self._val = v.astype(nptype_from_builtin(primitive))
+                self._val = v.astype(primitive_np_type)
 
     tensor.__template_name__ = (
         "tensor[" + primitive.__name__ + "," + ",".join(str(s) for s in shape) + "]"

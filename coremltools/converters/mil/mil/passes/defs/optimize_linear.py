@@ -58,6 +58,10 @@ class fuse_linear_bias(AbstractGraphPass):
         is_sub = add_or_sub_op.op_type == "sub"
         is_first_input = add_or_sub_op.x == linear_op.outputs[0]
 
+        # Return if weight or bias are missing values
+        if linear_op.weight.val is None or linear_op.bias.val is None:
+            return False
+
         # compute the new bias
         linear_bias = linear_op.bias.val
         bias = add_or_sub_op.y.val if is_first_input else add_or_sub_op.x.val
@@ -184,7 +188,7 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
     def _transpose(v, before_op, name=None):
         """
         Transpose the last 2 dims.
-        
+
         - ``v``: (Var, must be a tensor).
         - ``before_op``: (Operation) The op right before the newly added ``transpose`` op.
         - ``name``: Name for the ``transpose`` op if provided.

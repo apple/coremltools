@@ -157,10 +157,9 @@ class conv(Operation):
         C_in = self.x.shape[1]
         groups = self.groups.val
 
-        if self.bias is not None and \
-        (len(self.bias.val.shape) > 1 or self.bias.val.shape[0] != C_out):
+        if self.bias is not None and (len(self.bias.shape) > 1 or self.bias.shape[0] != C_out):
             msg = "# of bias values {} not equal to # output channels {}"
-            raise ValueError(msg.format(self.bias.val.shape[0], C_out))
+            raise ValueError(msg.format(self.bias.shape[0], C_out))
         if C_in % groups != 0:
             msg = "# of input channels {} not divisible by groups {}"
             raise ValueError(msg.format(C_in, groups))
@@ -179,7 +178,8 @@ class conv(Operation):
         # Ignore self.pad if pad_type != custom
         custom_pad = None if self.pad_type.val != 'custom' else self.pad.val
 
-        if self.weight.val is None and any([True if d > 1 else False for d in dilations]):
+        is_weight_dynamic = not self.weight.is_descendant_of_const
+        if is_weight_dynamic and any([True if d > 1 else False for d in dilations]):
             raise ValueError("Convolution with dynamic weights does not support dilations!")
 
         N = inshape[0]

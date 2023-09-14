@@ -165,9 +165,8 @@ uint32 = make_int(32, "u")
 uint64 = make_int(64, "u")
 uint = uint64
 
+_INT_TYPES = (int8, int16, int32, int64, uint8, uint16, uint32, uint64)
+
 
 def is_int(t):
-    return any(
-        t is i or isinstance(t, i)
-        for i in [int8, int16, int32, int64, uint8, uint16, uint32, uint64]
-    )
+    return any(t is i or isinstance(t, i) for i in _INT_TYPES)

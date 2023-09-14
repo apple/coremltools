@@ -5,8 +5,11 @@
 
 import collections
 
+import numpy as np
+
+from coremltools.converters.mil.mil import Var
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.mil.passes.helper import _are_ops_identical, block_context_manager
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -107,6 +110,69 @@ class remove_redundant_ops(AbstractGraphPass):
         return candidate_ops_lists
 
     @staticmethod
+    def _are_ops_identical(op1, op2):
+        """
+        Return True, if all inputs of op1 and op2 are identical.
+        non-constant inputs must refer to the same object.
+
+        For constant inputs, we only compare arrays with small size.
+        Large size const ops are already deduplicated in the const_deduplication pass so we
+        can compare the pointers.
+        """
+
+        def _are_values_identical(val1, val2):
+            if not isinstance(val1, np.ndarray) or not isinstance(val2, np.ndarray):
+                return np.array_equal(np.array(val1), np.array(val2))
+            if val1.size != val2.size:
+                return False
+            if val1.size < 100:
+                return np.array_equal(val1, val2)
+            return False
+
+        def _are_vars_identical(var1, var2):
+            if var1 is var2:
+                return True
+            if var1.val is None and var2.val is None:
+                if var1 != var2:
+                    return False
+            elif var1.val is not None and var2.val is not None:
+                if var1.dtype != var2.dtype:
+                    return False
+                if not _are_values_identical(var1.val, var2.val):
+                    return False
+            else:
+                return False
+            return True
+
+        if op1 == op2:
+            return True
+        if op1.op_type != op2.op_type:
+            return False
+        if len(op1.inputs) != len(op2.inputs):
+            return False
+
+        for key, value1 in op1.inputs.items():
+            if key not in op2.inputs:
+                return False
+            value2 = op2.inputs[key]
+            if isinstance(value1, Var) and isinstance(value2, Var):
+                if not _are_vars_identical(value1, value2):
+                    return False
+            elif isinstance(value1, (list, tuple)) and isinstance(value2, (list, tuple)):
+                if len(value1) != len(value2):
+                    return False
+                else:
+                    for i, v in enumerate(value1):
+                        if not _are_vars_identical(v, value2[i]):
+                            return False
+            else:
+                return False
+
+        assert len(op1.blocks) == 0, "this method does not handle ops that have blocks in it"
+        assert len(op2.blocks) == 0, "this method does not handle ops that have blocks in it"
+        return True
+
+    @staticmethod
     def _try_to_remove_ops(candidate_ops_list):
         # candidate_ops_list contains ops in topological order.
         # All the ops in candidate_ops_list will be compared to the first op, and removed if identical to it.
@@ -126,7 +192,7 @@ class remove_redundant_ops(AbstractGraphPass):
         ops_to_remove = []
         for op in candidate_ops_list[1:]:
             if op.outputs[0] not in block.outputs:  # to make sure we don't remove an output op
-                if _are_ops_identical(first_op, op):
+                if remove_redundant_ops._are_ops_identical(first_op, op):
                     ops_to_remove.append(op)
 
         if len(ops_to_remove) == 0:
