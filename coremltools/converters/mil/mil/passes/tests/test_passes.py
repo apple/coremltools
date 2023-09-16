@@ -7711,7 +7711,7 @@ class TestFuseLayerNormOrInstanceNorm:
         )
 
     @pytest.mark.parametrize("with_affine", [True, False])
-    def test_ane_layer_norm_with_root_var(self, with_affine):
+    def test_ane_layer_norm_root_var_reuse(self, with_affine):
         """
         Detect layer norm pattern, found in models based on ml-ane-transformers.
 
@@ -7744,7 +7744,7 @@ class TestFuseLayerNormOrInstanceNorm:
                 y = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
                 y = mb.mul(x=y, y=np.random.rand(1,shape[1],1,1))
 
-            y = mb.add(x=x, y=y) # use x for something after the norm
+            y = mb.sub(x=x, y=y) # use x for something after the norm
             return y
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -7759,8 +7759,164 @@ class TestFuseLayerNormOrInstanceNorm:
             "add",
             "rsqrt",
             "mul",
-        ] + (["add", "mul"] if with_affine else []) + ["add"]
-        assert get_op_types_in_program(prog) == ["add", "layer_norm", "add"]
+        ] + (["add", "mul"] if with_affine else []) + ["sub"]
+        assert get_op_types_in_program(prog) == ["add", "layer_norm", "sub"]
+        assert_model_is_valid(
+            prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
+        )
+
+    @pytest.mark.parametrize(
+        "with_affine, reused_name",
+        itertools.product(
+            [True, False],
+            [None, "x2", "x3", "x4", "x8"],
+        ),
+    )
+    def test_ane_layer_norm_intermediate_var_reuse(self, with_affine, reused_name):
+        """
+        Avoid false positive detection of ml-ane-transformers layer norm pattern.
+
+        In cases where an intermediate value is used after the layer norm
+        is computed, the pattern should not be fused.
+        """
+        shape = (3, 5, 1, 6)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        def prog(x):
+            x1 = mb.add(x=x, y=np.random.rand(*shape))
+            x2 = mb.reduce_mean(x=x1, axes=[1], keep_dims=True) # mean
+            x3 = mb.sub(x=x1, y=x2) # x - mean
+            x4 = mb.mul(x=x3, y=x3) # (x - mean)^2
+            x5 = mb.reduce_mean(x=x4, axes=[1], keep_dims=True) # variance
+            x6 = mb.add(x=x5, y=1e-5) # variance + eps
+            x7 = mb.rsqrt(x=x6) # rsqrt(variance + eps)
+            x8 = mb.mul(x=x3, y=x7) # (x - mean) * rsqrt(variance + eps)
+            y = x8
+
+            if with_affine:
+                y = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
+                y = mb.mul(x=y, y=np.random.rand(1,shape[1],1,1))
+
+            # All the same shape (3,5,1,6)
+            reused = None
+            if reused_name == "x2":
+                reused = x2
+            elif reused_name == "x3":
+                reused = x3
+            elif reused_name == "x4":
+                reused = x4
+            elif reused_name == "x8":
+                reused = x8
+
+            if reused:
+                y = mb.sub(x=reused, y=y) # reuse an intermediate variable
+
+            return y
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_layernorm_or_instancenorm"
+        )
+        if reused_name == "x8" and not with_affine:
+            # This can be fused since without affine, x8 is the final op in the layer norm.
+            assert get_op_types_in_program(prog) == ["add", "layer_norm", "sub"]
+        elif reused_name:
+            assert "layer_norm" not in get_op_types_in_program(prog)
+            assert get_op_types_in_program(prog)[-1] ==  "sub"
+        else:
+            # Fusion should still work when nothing is reused.
+            assert get_op_types_in_program(prog) == ["add", "layer_norm"]
+
+        assert_model_is_valid(
+            prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
+        )
+
+    def test_ane_layer_norm_ambiguous_add(self):
+        """
+        Avoid false positive detection of ml-ane-transformers layer norm pattern.
+
+        In cases where the pattern has an add that could be beta,
+        but it does not feed into a gamma mul, it is ambiguous if the
+        pattern should be fused so don't.
+        """
+        shape = (3, 5, 1, 6)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        def prog(x):
+            x1 = mb.add(x=x, y=np.random.rand(*shape))
+            x2 = mb.reduce_mean(x=x1, axes=[1], keep_dims=True) # mean
+            x3 = mb.sub(x=x1, y=x2) # x - mean
+            x4 = mb.mul(x=x3, y=x3) # (x - mean)^2
+            x5 = mb.reduce_mean(x=x4, axes=[1], keep_dims=True) # variance
+            x6 = mb.add(x=x5, y=1e-5) # variance + eps
+            x7 = mb.rsqrt(x=x6) # rsqrt(variance + eps)
+            x8 = mb.mul(x=x3, y=x7) # (x - mean) * rsqrt(variance + eps)
+            y = mb.add(x=x8, y=np.random.rand(1,shape[1],1,1)) # ambiguous add (maybe beta)
+            return y
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_layernorm_or_instancenorm"
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "add",
+            "reduce_mean",
+            "sub",
+            "mul",
+            "reduce_mean",
+            "add",
+            "rsqrt",
+            "mul",
+            "add",
+        ]
+        assert "layer_norm" not in get_op_types_in_program(prog)
+        assert_model_is_valid(
+            prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
+        )
+
+    @pytest.mark.parametrize(
+        "first_axes, second_axes",
+        [
+            [[0], [1]],
+            [[1], [0]],
+            [[2], [1]],
+            [[1], [2]],
+            [[1,2], [1]],
+            [[1], [1,2]],
+        ]
+    )
+    def test_ane_layer_norm_wrong_axes(self, first_axes, second_axes):
+        """
+        Avoid false positive detection of ml-ane-transformers layer norm pattern.
+
+        In cases where the axes != [1] the pattern should not be fused.
+        """
+        shape = (1, 1, 1, 6)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        def prog(x):
+            x1 = mb.add(x=x, y=np.random.rand(*shape))
+            x2 = mb.reduce_mean(x=x1, axes=first_axes, keep_dims=True) # mean
+            x3 = mb.sub(x=x1, y=x2) # x - mean
+            x4 = mb.mul(x=x3, y=x3) # (x - mean)^2
+            x5 = mb.reduce_mean(x=x4, axes=second_axes, keep_dims=True) # variance
+            x6 = mb.add(x=x5, y=1e-5) # variance + eps
+            x7 = mb.rsqrt(x=x6) # rsqrt(variance + eps)
+            y = mb.mul(x=x3, y=x7) # (x - mean) * rsqrt(variance + eps)
+            return y
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_layernorm_or_instancenorm"
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "add",
+            "reduce_mean",
+            "sub",
+            "mul",
+            "reduce_mean",
+            "add",
+            "rsqrt",
+            "mul",
+        ]
+        assert "layer_norm" not in get_op_types_in_program(prog)
         assert_model_is_valid(
             prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
         )

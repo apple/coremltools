@@ -170,21 +170,27 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         # check whether the pattern is instance_norm or layer_norm
         is_layernorm = False
         is_instancenorm = False
-        is_new_const = False
         is_require_rank4_transpose = False
 
         negative_axes = [a - rank if a >= 0 else a for a in axes]
         negative_axes.sort()
 
-        if len(gamma_var.val.shape) == len(axes) and len(beta_var.val.shape) == len(axes):
+        gamma_shape_len = len(gamma_var.val.shape) if gamma_var is not None else -1
+        beta_shape_len = len(beta_var.val.shape) if beta_var is not None else -1
+
+        if gamma_shape_len == len(axes) and beta_shape_len == len(axes):
             # axes for layer_norm must be [-1] or [-1, -2] or [-1, -2, -3] and so on
             if negative_axes == list(range(-len(negative_axes), 0)):
                 is_layernorm = True
 
-        if len(gamma_var.val.shape) == 1 and len(beta_var.val.shape) == 1:
+        if (
+            (gamma_var is None and beta_var is None)
+             or (gamma_shape_len == 1 and beta_shape_len == 1)
+        ):
             if rank == 4 and negative_axes == [-3]:
                 is_layernorm = True
-                is_new_const = True
+                gamma_var = gamma_var.val if gamma_var else None
+                beta_var = beta_var.val if beta_var else None
 
         if rank == 4 and (negative_axes == [-2, -1] or negative_axes == [-3, -2]):
             if (
@@ -221,8 +227,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             x = mb.layer_norm(
                 x=x if is_require_rank4_transpose else reduce_op.x,
                 axes=axes,
-                gamma=gamma_var.val if is_new_const else gamma_var,
-                beta=beta_var.val if is_new_const else beta_var,
+                gamma=gamma_var,
+                beta=beta_var,
                 epsilon=epsilon_var,
                 name=out_name + "_layernorm" if is_require_rank4_transpose else out_name,
                 before_op=end_op,
@@ -888,11 +894,14 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         # check that root_var feeds into at least 2 ops
         if len(list(root_var.child_ops)) < 2:
             return False
+
         # Do not enforce that the only child ops are reduce_mean and sub as in other
         # patterns. There are models where the root op is used after the layer norm.
 
         # check 1st reduce_mean op
         if not self._check_reduce_op(reduce_op):
+            return False
+        if len(reduce_op.axes.val) != 1 or reduce_op.axes.val != [1] or not reduce_op.keep_dims.val:
             return False
         ops_to_remove.append(reduce_op)
 
@@ -901,13 +910,19 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             return False
         child_ops_reduce_mean = list(reduce_op.outputs[0].child_ops)
         sub_op1 = child_ops_reduce_mean[0]
+        if sub_op1 is None or not self._check_child_op_types(
+            sub_op1, child_op_types=["mul", "mul", "mul"]
+        ):
+            return False
         if not (sub_op1.x == root_var and sub_op1.y == reduce_op.outputs[0]):
             return False
         ops_to_remove.append(sub_op1)
 
         # check mul op (equivalent to a square op)
         square_op = self._try_get_child_op_type(sub_op1, "mul")
-        if square_op is None:
+        if square_op is None or not self._check_child_op_types(
+            square_op, child_op_types=["reduce_mean"]
+        ):
             return False
         if square_op.x != square_op.y:
             return False
@@ -915,13 +930,19 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
         # check second reduce mean
         reduce_op2 = self._try_get_child_op_type(square_op, "reduce_mean")
-        if not self._check_reduce_op(reduce_op2):
+        if not self._check_reduce_op(reduce_op2) or not self._check_child_op_types(
+            reduce_op2, child_op_types=["add"]
+        ):
+            return False
+        if len(reduce_op2.axes.val) != 1 or reduce_op2.axes.val != [1] or not reduce_op2.keep_dims.val:
             return False
         ops_to_remove.append(reduce_op2)
 
         # check add op (with epsilon)
         add_op1 = self._try_get_child_op_type(reduce_op2, "add")
-        if add_op1 is None:
+        if add_op1 is None or not self._check_child_op_types(
+            add_op1, child_op_types=["rsqrt"]
+        ):
             return False
         epsilon_var = add_op1.y if add_op1.x == reduce_op2.outputs[0] else add_op1.x
         if epsilon_var.val is None or len(epsilon_var.val.shape) != 0:
@@ -930,11 +951,13 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
         # check rsqrt
         rsqrt_op = self._try_get_child_op_type(add_op1, "rsqrt")
-        if rsqrt_op is None:
+        if rsqrt_op is None or not self._check_child_op_types(
+            rsqrt_op, child_op_types=["mul"]
+        ):
             return False
         ops_to_remove.append(rsqrt_op)
 
-        ## without elementwise affine
+        # Last op in pattern if there is no elementwise affine.
         mul_op = self._try_get_child_op_type(rsqrt_op, "mul")
         if mul_op is None:
             return False
@@ -950,7 +973,20 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         add_beta_op = self._try_get_child_op_type(mul_op, "add")
         mul_gamma_op = self._try_get_child_op_type(add_beta_op, "mul")
 
-        if add_beta_op is not None and mul_gamma_op is not None:
+        has_beta_and_gamma = add_beta_op is not None and mul_gamma_op is not None
+
+        if has_beta_and_gamma and not self._check_child_op_types(
+            mul_op, child_op_types=["add"]
+        ):
+            # It would be possible to fuse this pattern as:
+            # layer_norm(x, gamma=None, beta=None) -> add(beta) -> mul(gamma) -> ...
+            #                                      |-> other mul_op child ops
+            # For simplicity don't handle this edge case.
+            return False
+
+        if has_beta_and_gamma and self._check_child_op_types(
+            add_beta_op, child_op_types=["mul"]
+        ):
             beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
 
             gamma_var = mul_gamma_op.y if mul_gamma_op.x == add_beta_op.outputs[0] else mul_gamma_op.x
@@ -959,7 +995,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                 name="_fuse_layernorm_gamma",
             )
 
-            # Scale beta by gamma. Note: this un-scaling introduces a little error.
+            # Scale beta by gamma. Note: this un-scaling introduces a small amount
+            # of precision loss.
             # https://github.com/apple/ml-ane-transformers/blob/da64000fa56cc85b0859bc17cb16a3d753b8304a/ane_transformers/huggingface/distilbert.py#L31
             beta_var = mb.const(
                 val=np.squeeze(beta_var.val) * gamma_var.val,
@@ -970,17 +1007,13 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             ops_to_remove.append(mul_gamma_op)
             end_op = mul_gamma_op
 
-        if beta_var is None and gamma_var is None:
-            beta_var = mb.const(
-                val=np.zeros(shape=(root_var.shape[1])),
-                name="_fuse_layernorm_beta",
-            )
-            gamma_var = mb.const(
-                val=np.ones(shape=(root_var.shape[1])),
-                name="_fuse_layernorm_gamma",
-            )
-        elif beta_var is None or gamma_var is None:
-            # Having only one of gamma or beta does not match the pattern.
+        if add_beta_op is None and mul_gamma_op is None:
+            # Gamma and beta are optional in layer_norm.
+            pass
+        elif add_beta_op is None or mul_gamma_op is None:
+            # If only one of gamma or beta is present, they could
+            # be folded into the layer_norm op. For simplicity
+            # don't handle this edge case.
             return False
 
         return self._try_apply_transform(
