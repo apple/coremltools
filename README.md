@@ -25,28 +25,11 @@ With coremltools, you can do the following:
 
 After conversion, you can integrate the Core ML models with your app using Xcode.
 
-## Version 7
-The [coremltools version 7 beta 1](https://github.com/apple/coremltools/releases/tag/7.0b1) is now out. To install, run the following command in your terminal:
+## Installation
+To install, run the following command in your terminal:
 ```shell
-pip install coremltools==7.0b1
+pip install -U coremltools
 ```
-
-## Version 6
-
-The coremltools 6 package offers new features to optimize the model conversion process. For details, see [New in coremltools](https://coremltools.readme.io/docs/new-in-coremltools).
-
-For a full list of changes, see [Release Notes](https://github.com/apple/coremltools/releases/). 
-
-To install [coremltools 6.0](https://github.com/apple/coremltools/releases/tag/6.0) use the following command:
-
-```shell
-pip install coremltools
-```
-
-## Version 5
-
-The coremltools 5 package offers several performance improvements over previous versions, including new features. For details, see [New in coremltools](https://coremltools.readme.io/docs/new-in-coremltools).
-
 
 ## Core ML
 
