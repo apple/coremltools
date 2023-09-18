@@ -10,6 +10,7 @@ import coremltools as ct
 from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
 
 np.random.seed(0)
 
@@ -324,15 +325,15 @@ class TestMLProgramVersionHandling:
         '''
         The builder should error out early when detecting a rank 6 (or higher) tensor which cannot be eliminated by graph passes
         '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
+        def prog(x):
+            res = mb.reshape(x=x, shape=(1, 1, 1, 1, 1, 1), name="reshape_0")
+            return res
+
         expected_err_str = (
             "Core ML only supports tensors with rank <= 5. Layer \"reshape_0\", with type \"reshape\", outputs a rank 6 tensor"
         )
         with pytest.raises(ValueError, match=expected_err_str):
-            @mb.program(input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)])
-            def prog(x):
-                res = mb.reshape(x=x, shape=(1, 1, 1, 1, 1, 1), name="reshape_0")
-                return res
-
             ct.convert(
                 prog,
                 source="milinternal",
@@ -359,3 +360,65 @@ class TestMLProgramVersionHandling:
                     name="list_0",
                 )
                 return ls
+
+    @staticmethod
+    def test_invalid_const_input_early_error_out():
+        """
+        The following program:
+
+        constexpr -> transpose -> linear
+
+        will not error out during the front end conversion, even though the weight of
+        linear op needs to be const / constexpr directly.
+
+        It is going to error out after all the optimization graph passes are finished,
+        and transpose remains.
+
+        However, if transpose can be removed, the conversion goes through.
+        """
+        # Test a simple constexpr op fed into linear
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            constexpr = CONSTEXPR_FUNCS["constexpr_affine_dequantize"]((4, 3))
+            return mb.linear(x=x, weight=constexpr)
+
+        for compute_precision in [ct.precision.FLOAT32, ct.precision.FLOAT16]:
+            mlmodel = ct.convert(
+                prog,
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS16,
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+                compute_precision=compute_precision,
+            )
+
+        # Additional pattern (transpose) after constexpr will cause an early error out
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            constexpr = CONSTEXPR_FUNCS["constexpr_affine_dequantize"]((3, 4))
+            constexpr = mb.transpose(x=constexpr, perm=[1, 0])
+            return mb.linear(x=x, weight=constexpr)
+
+        for compute_precision in [ct.precision.FLOAT32, ct.precision.FLOAT16]:
+            with pytest.raises(ValueError, match="must be const or constexpr ops"):
+                mlmodel = ct.convert(
+                    prog,
+                    convert_to="mlprogram",
+                    minimum_deployment_target=ct.target.iOS16,
+                    compute_units=ct.ComputeUnit.CPU_ONLY,
+                    compute_precision=compute_precision,
+                )
+
+        # If the transpose is removed by optimization passes, the conversion goes through
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            constexpr = CONSTEXPR_FUNCS["constexpr_affine_dequantize"]((4, 3))
+            constexpr = mb.transpose(x=constexpr, perm=[0, 1])
+            return mb.linear(x=x, weight=constexpr)
+
+            mlmodel = ct.convert(
+                prog,
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS16,
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+                compute_precision=compute_precision,
+            )

@@ -68,7 +68,10 @@ class TestConstexprAffineDequantize:
             scale=np.float32(2),
             axis=0,
         )
-        np.testing.assert_allclose(np.float32([[0, 2, 4], [0, 2, 4]]), v.val)
+        assert v.val is None
+        np.testing.assert_allclose(
+            np.float32([[0, 2, 4], [0, 2, 4]]), v.op.materialized_val_inference()
+        )
 
         # vector zero-point & scalar scale
         v = mb.constexpr_affine_dequantize(
@@ -77,7 +80,9 @@ class TestConstexprAffineDequantize:
             scale=np.float32(2),
             axis=0,
         )
-        np.testing.assert_allclose(np.float32([[0, 2, 4], [-2, 0, 2]]), v.val)
+        np.testing.assert_allclose(
+            np.float32([[0, 2, 4], [-2, 0, 2]]), v.op.materialized_val_inference()
+        )
 
         # scalar zero-point & vector scale
         v = mb.constexpr_affine_dequantize(
@@ -86,7 +91,9 @@ class TestConstexprAffineDequantize:
             scale=np.array([2, 4]).astype(np.float32),
             axis=0,
         )
-        np.testing.assert_allclose(np.float32([[0, 2, 4], [0, 4, 8]]), v.val)
+        np.testing.assert_allclose(
+            np.float32([[0, 2, 4], [0, 4, 8]]), v.op.materialized_val_inference()
+        )
 
         # vector zero-point & vector scale
         v = mb.constexpr_affine_dequantize(
@@ -95,7 +102,9 @@ class TestConstexprAffineDequantize:
             scale=np.array([2, 4]).astype(np.float32),
             axis=0,
         )
-        np.testing.assert_allclose(np.float32([[0, 2, 4], [-4, 0, 4]]), v.val)
+        np.testing.assert_allclose(
+            np.float32([[0, 2, 4], [-4, 0, 4]]), v.op.materialized_val_inference()
+        )
 
     @staticmethod
     def affine_dequant_config_generator():
@@ -225,7 +234,8 @@ class TestConstexprCast:
     @ssa_fn
     def test_builder_eval(self):
         v = mb.constexpr_cast(source_val=np.float16([1, 2]), output_dtype="fp32")
-        np.testing.assert_allclose(np.float32([1, 2]), v.val)
+        assert v.val is None
+        np.testing.assert_allclose(np.float32([1, 2]), v.op.materialized_val_inference())
 
     @staticmethod
     def cast_config_generator():
@@ -351,7 +361,10 @@ class TestConstexprLutToDense:
                 ]
             ).astype(np.uint32),
         )
-        np.testing.assert_allclose(np.float32([3, 3, 1, 1, 1]).astype(np.float32), v.val)
+        assert v.val is None
+        np.testing.assert_allclose(
+            np.float32([3, 3, 1, 1, 1]).astype(np.float32), v.op.materialized_val_inference()
+        )
 
     @staticmethod
     def lut_config_generator():
@@ -480,7 +493,10 @@ class TestConstexprSparseToDense:
                 ]
             ).astype(np.uint32),
         )
-        np.testing.assert_allclose(np.float32([1.0, 2.0, 0.0, 4.0]), v.val)
+        assert v.val is None
+        np.testing.assert_allclose(
+            np.float32([1.0, 2.0, 0.0, 4.0]), v.op.materialized_val_inference()
+        )
 
     @staticmethod
     def sparse_config_generator():

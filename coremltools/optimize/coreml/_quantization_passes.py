@@ -8,8 +8,11 @@ from tqdm import tqdm
 
 from coremltools import _logger as logger
 from coremltools.converters.mil.backend.mil.load import should_use_weight_file
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, types
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.ops.defs._utils import pack_elements_into_bits
 from coremltools.converters.mil.mil.ops.defs.iOS16 import (
     constexpr_affine_dequantize,
     constexpr_lut_to_dense,
@@ -61,6 +64,8 @@ class AbstractCompressionPass(AbstractQuantizationPass):
     """
     The abstract class for the compression graph passes.
     """
+    _MINIMUM_OPSET_VERSION = AvailableTarget.iOS16
+
     def __init__(self, config: OptimizationConfig = None, fake_compression: bool = False):
         if not isinstance(config, (OptimizationConfig, type(None))):
             raise ValueError(f"config must be of type OptimizationConfig. Got {type(config)}.")
@@ -80,6 +85,12 @@ class AbstractCompressionPass(AbstractQuantizationPass):
 
         @block_context_manager
         def apply_block(block):
+            if not is_current_opset_version_compatible_with(self._MINIMUM_OPSET_VERSION):
+                logger.warning(
+                    f"The program's opset is not compatible with {self._MINIMUM_OPSET_VERSION}. "
+                    f"Skipped the compression pass {self.__class__}.")
+                return
+
             valid_consts = []
             for op in list(block.operations):
                 for b in op.blocks:
@@ -159,12 +170,12 @@ class AbstractCompressionPass(AbstractQuantizationPass):
 class prune_weights(AbstractCompressionPass):
     """
     This transform works for each ``const`` op if:
-    
+
     - ``_is_deprecated=True`` and the ``op_selector`` returns ``True``.
     - ``_is_deprecated=False`` and the ``const`` value size ``> weight_threshold``.
 
     The transform performs the following:
-    
+
     - The fraction of values with the least absolute value are zeroed out (self.sparsity).
     - If ``fake_compression=False``, the zeroed-out value is encoded using the ``constexpr_sparse_to_dense`` op.
     - If ``fake_compression=True``, the zeroed-out value is encoded using the ``const`` op.
@@ -207,7 +218,7 @@ class prune_weights(AbstractCompressionPass):
             assert rank in [2, 3, 4, 5], "block sparsity only supports weights of rank [2, 3, 4, 5]"
             """
             Block sparsity follows these steps:
-            
+
             1. Input tensor with shape of ``[C_out, Cin, *K]``.
             2. If ``dim = 1``, the tensor is transposed to ``[Cin, C_out, *K]``. The following example assumes ``dim = 0``.
             3. Pad ``C_out`` so that it can be divided by ``block_size``: ``[C_out_pad, Cin, *K]``.
@@ -406,7 +417,7 @@ class palettize_weights(AbstractCompressionPass):
     - ``_is_deprecated=False`` and the ``const`` value size ``> weight_threshold``.
 
     The transform performs the following:
-    
+
     - A linear look-up table (LUT) with 2\ :sup:`nbits` entries is created with values represented by indexing into this LUT.
     - If ``fake_compression=False``, compressed value is encoded using the ``constexpr_lut_to_dense`` op.
     - If ``fake_compression=True``,  compressed value is decompressed and then encoded using the ``const`` op.
@@ -472,10 +483,6 @@ class palettize_weights(AbstractCompressionPass):
             indices = indices.astype(np.uint8)
             return lut, indices
 
-        def pack_indices_into_bytes_array(indices, nbits):
-            bitarray = np.unpackbits(indices.reshape(-1, 1), bitorder="little", axis=-1)[:, :nbits]
-            return np.packbits(bitarray.flatten(), bitorder="little")
-
         def check_lut_parameters_are_valid(val, lut, indices):
             if not isinstance(lut, np.ndarray) or not isinstance(indices, np.ndarray):
                 raise ValueError("LUT and indices must be type of numpy array.")
@@ -518,7 +525,7 @@ class palettize_weights(AbstractCompressionPass):
         params = LutParams()
         params.lut = lut
         params.shape = val.shape
-        params.indices = pack_indices_into_bytes_array(indices, int(np.log2(lut.shape[0])))
+        params.indices = pack_elements_into_bits(indices, int(np.log2(lut.shape[0])))
         return params
 
     @staticmethod
@@ -725,14 +732,10 @@ class WeightDecompressor(AbstractQuantizationPass):
         super().__init__(op_selector=op_selector)
 
     def is_valid_op(self, op):
-        return op.op_type in (
-            "constexpr_affine_dequantize",
-            "constexpr_lut_to_dense",
-            "constexpr_sparse_to_dense",
-        )
+        return op.op_type is not None and op.op_type.startswith("constexpr_")
 
     def transform_op(self, op):
-        decompressed_val = op.value_inference()
+        decompressed_val = op.materialized_val_inference()
         new_var = mb.const(
             val=decompressed_val,
             before_op=op,

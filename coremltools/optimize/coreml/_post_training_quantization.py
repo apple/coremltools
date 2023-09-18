@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import OrderedDict
-from typing import Dict, List, Optional
+from typing import Callable, Dict, List, Optional
 
 import numpy as np
 from attrs import define, field, validators
@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 from coremltools import _SPECIFICATION_VERSION_IOS_16
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
-from coremltools.converters.mil.frontend.milproto.load import load as _milproto_to_pymil
+from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
 from coremltools.converters.mil.mil.passes.defs.quantization import (
     AbstractQuantizationPass as _AbstractQuantizationPass,
 )
@@ -25,9 +25,10 @@ from ._quantization_passes import linear_quantize_weights as _linear_quantize_we
 from ._quantization_passes import palettize_weights as _palettize_weights
 from ._quantization_passes import prune_weights as _prune_weights
 
-_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION = _SPECIFICATION_VERSION_IOS_16
 
-def _convert_model_spec_to_pymil_prog(mlmodel: _MLModel, specification_version: int):
+def _convert_model_spec_to_pymil_prog(
+    mlmodel: _MLModel, specification_version: int, pymil_load_func: Callable
+):
     """
     An utility that converts a ml program model into PyMIL program.
     """
@@ -43,7 +44,7 @@ def _convert_model_spec_to_pymil_prog(mlmodel: _MLModel, specification_version: 
     else:
        raise TypeError("weight compression not applicable for model type {}".format(model_type))
 
-    prog = _milproto_to_pymil(
+    prog = pymil_load_func(
         model_spec=model_spec,
         specification_version=specification_version,
         file_weights_dir=mlmodel.weights_dir,
@@ -51,14 +52,18 @@ def _convert_model_spec_to_pymil_prog(mlmodel: _MLModel, specification_version: 
     return prog
 
 
-def _apply_graph_pass(mlmodel: _MLModel, graph_pass: _AbstractQuantizationPass):
+def _apply_graph_pass(
+    mlmodel: _MLModel,
+    graph_pass: _AbstractQuantizationPass,
+    spec_version: int = _SPECIFICATION_VERSION_IOS_16,
+    skip_model_load: bool = False,
+    pymil_load_func: Callable = _milproto_to_pymil.load,
+):
     # Utility function which compresses a Core ML model
     # converts the full precision mlmodel into a pymil program
     model_spec = mlmodel.get_spec()
-    specification_version = max(
-        model_spec.specificationVersion, _DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION
-    )
-    prog = _convert_model_spec_to_pymil_prog(mlmodel, specification_version)
+    specification_version = max(model_spec.specificationVersion, spec_version)
+    prog = _convert_model_spec_to_pymil_prog(mlmodel, specification_version, pymil_load_func)
 
     # apply compression graph pass
     assert isinstance(
@@ -74,6 +79,7 @@ def _apply_graph_pass(mlmodel: _MLModel, graph_pass: _AbstractQuantizationPass):
         specification_version=specification_version,
         compute_units=mlmodel.compute_unit,
         model_description=model_spec.description,
+        skip_model_load=skip_model_load,
     )
     return compressed_mlmodel
 
@@ -464,7 +470,8 @@ def get_weights_metadata(mlmodel: _MLModel, weight_threshold: int = 2048):
             )
         return CoreMLWeightMetaData(op.val.val, child_ops=child_ops)
 
-    prog = _convert_model_spec_to_pymil_prog(mlmodel, mlmodel.get_spec().specificationVersion)
+    prog = _convert_model_spec_to_pymil_prog(mlmodel, mlmodel.get_spec().specificationVersion,
+                                             _milproto_to_pymil.load)
     res = _MetaDataDict({})
 
     def get_weights_meta_block(block):

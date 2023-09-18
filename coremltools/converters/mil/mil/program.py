@@ -7,11 +7,11 @@ import numpy as _np
 import sympy as _sm
 
 from coremltools import _logger as logger
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as _target
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import InputType
-from coremltools.converters.mil.mil.var import ListVar
+from coremltools.converters.mil.mil.input_type import InternalInputType
 from coremltools.converters.mil.mil.ops.helper import _get_version_of_op
+from coremltools.converters.mil.mil.var import ListVar
 
 from . import types
 from .block import Function
@@ -95,10 +95,13 @@ class Program:
         self._check_ops_version_compatibility(max_opset_version)
         self._check_or_set_functions_opset_version(max_opset_version)
 
-    def _check_invalid_tensor_rank(self):
-        '''
-        Early error out for tensor with rank >= 6
-        '''
+    def _check_invalid_program(self):
+        """
+        Early error out for
+        1. tensor with rank >= 6
+        2. non const tensor feed in const input
+        """
+
         def _check_invalid_tensor_rank_block(block):
             for op in block.operations:
                 for b in op.blocks:
@@ -109,8 +112,29 @@ class Program:
                             f'Core ML only supports tensors with rank <= 5. Layer "{op.name}", '
                             f'with type "{op.op_type}", outputs a rank {o.rank} tensor. '
                         )
+
+        def _check_invalid_const_tensor_input_block(block):
+            for op in block.operations:
+                for b in op.blocks:
+                    _check_invalid_const_tensor_input_block(b)
+
+                for k, v in op.inputs.items():
+                    input_type = op.input_spec.input_types[k]
+
+                    if (
+                        input_type.const
+                        and not isinstance(input_type, InternalInputType)
+                        and not (v.op.op_type.startswith("constexpr_") or v.val is not None)
+                    ):
+                        raise ValueError(
+                            f"In op {op.name}. Input {k} ({v.name}) must be const or constexpr ops."
+                        )
+
         for f in self.functions.values():
             _check_invalid_tensor_rank_block(f)
+
+        for f in self.functions.values():
+            _check_invalid_const_tensor_input_block(f)
 
     def add_function(self, name, ssa_func):
         if not isinstance(ssa_func, Function):

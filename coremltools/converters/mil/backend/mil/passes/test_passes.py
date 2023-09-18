@@ -1088,13 +1088,13 @@ class TestPassFusePow2Sqrt:
                 x = mb.pow(x=x, y=2.0)
                 x = mb.sqrt(x=x)
                 x = mb.reduce_argmax(x=x)
-                x = mb.reshape(x=x, shape=[*x_shape])
+                x = mb.reshape(x=x, shape=[*x_shape[:-1]])
             else:
                 x = mb.mul(x=x, y=x)
                 x = mb.sqrt(x=x)
                 x = mb.pow(x=x, y=2.0)
                 x = mb.reduce_argmax(x=x)
-                x = mb.reshape(x=x, shape=[*x_shape])
+                x = mb.reshape(x=x, shape=[*x_shape[:-1]])
             return x
 
         prev_prog, _, block = apply_pass_and_basic_check(
@@ -1108,5 +1108,5 @@ class TestPassFusePow2Sqrt:
             program=program,
             inputs={"x": x_shape},
             backend=("mlprogram", "fp32"),
-            expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+            expected_output_shapes={block.outputs[0].name: tuple(x_shape[:-1])},
         )

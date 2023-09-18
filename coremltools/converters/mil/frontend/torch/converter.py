@@ -19,6 +19,7 @@ from coremltools.converters.mil.mil.types import is_float
 from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 from .ops import convert_nodes
+from .quantization_ops import _dequantized_weight
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchir_passes import (
     flatten_graph_input_values,
@@ -147,8 +148,6 @@ class QuantizationContext:
             # the MIL op.
             if dequantized_name is not None:
                 self._context.add(original_var, dequantized_name)
-            if self._quant_dtype is None:
-                raise AssertionError("Trying to dequantize without quantization info")
             return original_var, self._quant_dtype
 
         quant_params = self.get_quantization_info(name)
@@ -429,6 +428,10 @@ class TorchConverter:
             if isinstance(val, torch._C.ScriptObject):
                 logger.info(f"Encountered constant {name} of type _torch._C.ScriptObject")
                 continue
+            elif isinstance(val, torch.Tensor) and val.is_quantized:
+                const = _dequantized_weight(val.cpu(), name)
+                self.context.add(const)
+                continue
             elif not isinstance(val, np.ndarray):
                 raise ValueError(f"unsupported class for {name} in PyTorch graph: {type(val)}")
             # TODO (rdar://107718371): support uint8 quantization
@@ -623,10 +626,10 @@ class TorchConverter:
                 if is_tensor or is_quantized_tensor:
                     if is_tensor and prefix in state_dict:
                         assert torch.equal(
-                            module, state_dict[prefix]
+                            module.cpu(), state_dict[prefix].cpu()
                         ), "tensor value not consistent between torch ir and state_dict"
                     if prefix in params_dict:
-                        assert torch.equal(module, params_dict[prefix])
+                        assert torch.equal(module.cpu(), params_dict[prefix].cpu())
                         replace_input[_output] = first_node_with_prefix[prefix]
                     else:
                         params_dict[prefix] = module

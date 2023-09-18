@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.tests.test_passes import TestSkipConstexprOps
+from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
 from coremltools.converters.mil.testing_utils import (
     assert_same_output_names,
     assert_same_output_shapes,
@@ -271,7 +271,7 @@ def test_replace_nonreplaceable_vars():
     constexpr_op = "constexpr_sparse_to_dense"
     @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2))])
     def prog(x):
-        constexpr = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+        constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
         return mb.add(x=x, y=constexpr)
 
     block = prog.functions["main"]
@@ -297,7 +297,7 @@ def test_replace_nonreplaceable_vars_force():
     constexpr_op = "constexpr_sparse_to_dense"
     @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2))])
     def prog(x):
-        constexpr = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+        constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
         return mb.add(x=x, y=constexpr)
 
     block = prog.functions["main"]

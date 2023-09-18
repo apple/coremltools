@@ -42,6 +42,77 @@ np.random.seed(1984)
 _VALIDATE_MODEL = True
 
 
+def _get_constexpr_cast(shape, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    val = np.random.rand(*shape).astype(np.float16)
+    return mb.constexpr_cast(source_val=val, output_dtype="fp32")
+
+
+def _get_constexpr_sparse_to_dense(shape, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    val = np.random.rand(*shape)
+    sparse_params = cto.coreml._quantization_passes.prune_weights.compress_by_magnitude(
+        val=val, target_sparsity=0.4
+    )
+    return mb.constexpr_sparse_to_dense(
+        nonzero_data=sparse_params.nonzero_data,
+        mask=sparse_params.mask,
+        shape=np.uint32(sparse_params.shape),
+    )
+
+
+def _get_constexpr_lut_to_dense(shape, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    val = np.random.rand(*shape)
+    lut_params = cto.coreml._quantization_passes.palettize_weights.compress(
+        val=val, nbits=4, mode="UNIFORM"
+    )
+    return mb.constexpr_lut_to_dense(
+        indices=lut_params.indices,
+        lut=lut_params.lut,
+        shape=np.uint32(lut_params.shape),
+    )
+
+
+def _get_constexpr_affine_dequantize(shape, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+    val = np.random.rand(*shape)
+    quant_params = cto.coreml._quantization_passes.linear_quantize_weights.compress(
+        val=val, axis=0, mode="LINEAR_SYMMETRIC", dtype=types.uint8
+    )
+    return mb.constexpr_affine_dequantize(
+        quantized_data=quant_params.quantized_data,
+        zero_point=quant_params.zero_point,
+        scale=quant_params.scale,
+        axis=quant_params.axis,
+    )
+
+
+def _get_constexpr_val(constexpr_var):
+    assert "constexpr" in constexpr_var.op.op_type
+    if constexpr_var.val is not None:
+        return constexpr_var.val
+    return constexpr_var.op.materialized_val_inference()
+
+
+CONSTEXPR_FUNCS = {
+    "constexpr_cast": _get_constexpr_cast,
+    "constexpr_sparse_to_dense": _get_constexpr_sparse_to_dense,
+    "constexpr_lut_to_dense": _get_constexpr_lut_to_dense,
+    "constexpr_affine_dequantize": _get_constexpr_affine_dequantize,
+}
+
+CONSTEXPR_OPS = [
+    "constexpr_cast",
+    "constexpr_sparse_to_dense",
+    "constexpr_lut_to_dense",
+    "constexpr_affine_dequantize",
+]
+
 class TestConstDeduplication:
     def test_const_deduplication(self):
         BATCH_DIM = 5
@@ -67,16 +138,15 @@ class TestConstDeduplication:
         assert_op_count_match(prev_prog, expect=6, op="const")
         assert_op_count_match(prog, expect=4, op="const")
 
-    def test_constexpr_deduplication(self):
+    @pytest.mark.parametrize(
+        "constexpr_op",
+        CONSTEXPR_OPS,
+    )
+    def test_constexpr_deduplication(self, constexpr_op):
         BATCH_DIM = 5
         SEQUENCE_LENGTH = 4
         ENCODING_DIM = 256
         EMBEDDING_DIM = 128
-        quantized_weight = np.random.randint(
-            -128, 128, size=(EMBEDDING_DIM, ENCODING_DIM), dtype=np.int8
-        )
-        quantized_bias = np.random.randint(-128, 128, size=EMBEDDING_DIM, dtype=np.int8)
-
         @mb.program(
             input_specs=[
                 mb.TensorSpec(shape=(BATCH_DIM, SEQUENCE_LENGTH, ENCODING_DIM)),
@@ -84,38 +154,18 @@ class TestConstDeduplication:
             ]
         )
         def prog(q, k):
-            weight_q = mb.constexpr_affine_dequantize(
-                quantized_data=quantized_weight,
-                zero_point=np.int8(0),
-                scale=np.float32(1.0),
-                axis=0,
-            )
-            weight_k = mb.constexpr_affine_dequantize(
-                quantized_data=quantized_weight,
-                zero_point=np.int8(0),
-                scale=np.float32(1.0),
-                axis=0,
-            )
-            bias_q = mb.constexpr_affine_dequantize(
-                quantized_data=quantized_bias,
-                zero_point=np.int8(0),
-                scale=np.float32(1.0),
-                axis=0,
-            )
-            bias_k = mb.constexpr_affine_dequantize(
-                quantized_data=quantized_bias,
-                zero_point=np.int8(0),
-                scale=np.float32(1.0),
-                axis=0,
-            )
+            weight_q = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM, ENCODING_DIM), seed=19)
+            weight_k = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM, ENCODING_DIM), seed=19)
+            bias_q = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM,), seed=29)
+            bias_k = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM,), seed=29)
             q_e = mb.linear(x=q, weight=weight_q, bias=bias_q)
             k_e = mb.linear(x=k, weight=weight_k, bias=bias_k)
             attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
             return attention
 
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
-        assert_op_count_match(prev_prog, expect=4, op="constexpr_affine_dequantize")
-        assert_op_count_match(prog, expect=2, op="constexpr_affine_dequantize")
+        assert_op_count_match(prev_prog, expect=4, op=constexpr_op)
+        assert_op_count_match(prog, expect=2, op=constexpr_op)
 
     def test_const_deduplication_as_outputs(self):
         """
@@ -1384,20 +1434,24 @@ class TestRemoveRedundantOps:
         )
 
     @staticmethod
-    def _make_repeated_conv_prog(redundant_conv=True):
+    def _make_repeated_conv_prog(redundant_conv=True, out_channel=2):
         prog = Program()
         func_inputs = {"x": mb.placeholder(shape=[1, 4, 5, 5])}
         with Function(func_inputs) as ssa_fun:
             x = ssa_fun.inputs["x"]
             x = mb.relu(x=x)
-            W = np.random.rand(8, 4, 3, 3)
+            W = np.random.rand(out_channel, 4, 3, 3)
             if redundant_conv:
-                bias = np.random.rand(8)
+                bias = np.random.rand(out_channel)
                 x1 = mb.conv(x=x, weight=W, bias=bias, pad_type="same", strides=[1, 1])
                 x2 = mb.conv(x=x, weight=W, bias=bias, pad_type="same", strides=[1, 1])
             else:
-                x1 = mb.conv(x=x, weight=W, bias=np.random.rand(8), pad_type="same", strides=[1, 1])
-                x2 = mb.conv(x=x, weight=W, bias=np.random.rand(8), pad_type="same", strides=[1, 1])
+                x1 = mb.conv(
+                    x=x, weight=W, bias=np.random.rand(out_channel), pad_type="same", strides=[1, 1]
+                )
+                x2 = mb.conv(
+                    x=x, weight=W, bias=np.random.rand(out_channel), pad_type="same", strides=[1, 1]
+                )
             x1 = mb.relu(x=x1)
             x2 = mb.relu(x=x2)
             x1 = mb.avg_pool(x=x1, kernel_sizes=[2, 2], strides=[1, 1], pad_type="same")
@@ -1436,7 +1490,52 @@ class TestRemoveRedundantOps:
         assert_model_is_valid(
             prog,
             {"x": (1, 4, 5, 5)},
-            expected_output_shapes={block.outputs[0].name: (1, 16, 5, 5)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 5, 5)},
+        )
+
+    def test_redundant_ops_inside_graph_with_large_const(self):
+        """
+        For the large constants, they need to be deduplicated by the const_deduplication first.
+        This test is making sure the converter is not doing any "brutal force" comparision.
+
+        Input graph:
+        input--> relu--------->conv------>relu----> pool ---> concat ---> out
+                 |                                              ^
+                 |                                              |
+                 |---->conv---->relu----------------------------
+
+        Output graph:
+        input-> relu--->conv------>relu----> pool ---> concat ---> out
+                                    |                   ^
+                                    |                   |
+                                    |-------------------
+        """
+        # The remove_redundant_ops is not doing brutal force array comparison
+        prog = self._make_repeated_conv_prog(redundant_conv=True, out_channel=10)
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+        ops_in_prev_prog = [
+            "relu",
+            "conv",
+            "conv",
+            "relu",
+            "relu",
+            "avg_pool",
+            "concat",
+        ]
+        assert get_op_types_in_program(prev_prog) == ops_in_prev_prog
+        assert get_op_types_in_program(prog) == ops_in_prev_prog
+
+        # We need to first run the const_deduplication pass.
+        prog = self._make_repeated_conv_prog(redundant_conv=True, out_channel=10)
+        _, _, block = apply_pass_and_basic_check(prog, "common::const_deduplication")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::remove_redundant_ops")
+
+        assert get_op_types_in_program(prog) == ["relu", "conv", "relu", "avg_pool", "concat"]
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 5, 5)},
+            expected_output_shapes={block.outputs[0].name: (1, 20, 5, 5)},
         )
 
     def test_redundant_ops_inside_graph_invalid_pattern(self):
@@ -1470,7 +1569,7 @@ class TestRemoveRedundantOps:
         assert_model_is_valid(
             prog,
             {"x": (1, 4, 5, 5)},
-            expected_output_shapes={block.outputs[0].name: (1, 16, 5, 5)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 5, 5)},
         )
 
     def test_redundant_op_as_output_valid_pattern_1(self):
@@ -2628,61 +2727,6 @@ class TestPreluToLrelu:
 
 class TestSkipConstexprOps:
     @staticmethod
-    def _get_constexpr_cast(shape):
-        val = np.random.rand(*shape).astype(np.float16)
-        return mb.constexpr_cast(source_val=val, output_dtype="fp32")
-
-    @staticmethod
-    def _get_constexpr_sparse_to_dense(shape):
-        val = np.random.rand(*shape)
-        sparse_params = cto.coreml._quantization_passes.prune_weights.compress_by_magnitude(
-            val=val, target_sparsity=0.4
-        )
-        return mb.constexpr_sparse_to_dense(
-            nonzero_data=sparse_params.nonzero_data,
-            mask=sparse_params.mask,
-            shape=np.uint32(sparse_params.shape),
-        )
-
-    @staticmethod
-    def _get_constexpr_lut_to_dense(shape):
-        val = np.random.rand(*shape)
-        lut_params = cto.coreml._quantization_passes.palettize_weights.compress(val=val, nbits=4, mode="UNIFORM")
-        return mb.constexpr_lut_to_dense(
-            indices=lut_params.indices,
-            lut=lut_params.lut,
-            shape=np.uint32(lut_params.shape),
-        )
-
-    @staticmethod
-    def _get_constexpr_affine_dequantize(shape):
-        val = np.random.rand(*shape)
-        quant_params = cto.coreml._quantization_passes.linear_quantize_weights.compress(
-            val=val, axis=0, mode="LINEAR_SYMMETRIC", dtype=types.uint8
-        )
-        return mb.constexpr_affine_dequantize(
-            quantized_data=quant_params.quantized_data,
-            zero_point=quant_params.zero_point,
-            scale=quant_params.scale,
-            axis=quant_params.axis,
-        )
-
-    # Static method cannot be stored as a function without attribute access.
-    CONSTEXPR_FUNCS = {
-        "constexpr_cast": _get_constexpr_cast.__func__,
-        "constexpr_sparse_to_dense": _get_constexpr_sparse_to_dense.__func__,
-        "constexpr_lut_to_dense": _get_constexpr_lut_to_dense.__func__,
-        "constexpr_affine_dequantize": _get_constexpr_affine_dequantize.__func__,
-    }
-
-    CONSTEXPR_OPS = [
-        "constexpr_cast",
-        "constexpr_sparse_to_dense",
-        "constexpr_lut_to_dense",
-        "constexpr_affine_dequantize",
-    ]
-
-    @staticmethod
     @pytest.mark.parametrize(
         "constexpr_op",
         CONSTEXPR_OPS,
@@ -2707,7 +2751,7 @@ class TestSkipConstexprOps:
             a = np.random.rand(
                 2,
             )
-            constexpr = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+            constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
             linear = mb.linear(x=a, weight=constexpr)
             return mb.add(x=x, y=linear)
 
@@ -2734,15 +2778,15 @@ class TestSkipConstexprOps:
         """
 
         def get_matmul(x, weight_constexpr):
-            weight = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((3, 2))
+            weight = CONSTEXPR_FUNCS[constexpr_op]((3, 2))
             if not weight_constexpr:
-                weight = weight.val
+                weight = _get_constexpr_val(weight)
             return mb.matmul(x=x, y=weight)
 
         def get_add(x, bias_constexpr):
-            bias = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((2,))
+            bias = CONSTEXPR_FUNCS[constexpr_op]((2,))
             if not bias_constexpr:
-                bias = bias.val
+                bias = _get_constexpr_val(bias)
             return mb.add(x=x, y=bias)
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3))])
@@ -2793,13 +2837,13 @@ class TestSkipConstexprOps:
 
         @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
         def prog(x):
-            conv_weight = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((Cout, Cin, 2, 2))
+            conv_weight = CONSTEXPR_FUNCS[constexpr_op]((Cout, Cin, 2, 2))
             if not weight_constexpr:
-                conv_weight = conv_weight.val
+                conv_weight = _get_constexpr_val(conv_weight)
             x = mb.conv(x=x, weight=conv_weight)
-            const = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((Cout, 1, 1))
+            const = CONSTEXPR_FUNCS[constexpr_op]((Cout, 1, 1))
             if not const_constexpr:
-                const = const.val
+                const = _get_constexpr_val(const)
             return getattr(mb, op)(x=x, y=const)
 
         apply_pass_and_basic_check(prog, "common::fuse_conv_scale")
@@ -2842,13 +2886,13 @@ class TestSkipConstexprOps:
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(2,))])
         def prog(x):
-            weight = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+            weight = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
             if not weight_constexpr:
-                weight = weight.val
+                weight = _get_constexpr_val(weight)
             linear = mb.linear(x=x, weight=weight)
-            bias = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4,))
+            bias = CONSTEXPR_FUNCS[constexpr_op]((4,))
             if not bias_constexpr:
-                bias = bias.val
+                bias = _get_constexpr_val(bias)
             return mb.add(x=linear, y=bias)
 
         apply_pass_and_basic_check(prog, "common::fuse_linear_bias")
@@ -2894,12 +2938,12 @@ class TestSkipConstexprOps:
         @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
         def prog(x):
             # conv layer
-            weight = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((Cout, Cin, 2, 2))
+            weight = CONSTEXPR_FUNCS[constexpr_op]((Cout, Cin, 2, 2))
             if not weight_constexpr:
-                weight = weight.val
-            bias = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((Cout,))
+                weight = _get_constexpr_val(weight)
+            bias = CONSTEXPR_FUNCS[constexpr_op]((Cout,))
             if not bias_constexpr:
-                bias = bias.val
+                bias = _get_constexpr_val(bias)
 
             x = mb.conv(
                 x=x,
@@ -3217,7 +3261,7 @@ class TestExpandHighRankReshapeAndTranspose:
             return x
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
-        prog._check_invalid_tensor_rank()
+        prog._check_invalid_program()
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
@@ -3235,7 +3279,7 @@ class TestExpandHighRankReshapeAndTranspose:
             return x
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
-        prog._check_invalid_tensor_rank()
+        prog._check_invalid_program()
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
@@ -3254,7 +3298,7 @@ class TestExpandHighRankReshapeAndTranspose:
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
-        prog._check_invalid_tensor_rank()
+        prog._check_invalid_program()
         assert get_op_types_in_program(prog) == ["reshape", "transpose"] * 16 + ["reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
@@ -3274,7 +3318,7 @@ class TestExpandHighRankReshapeAndTranspose:
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
         with pytest.raises(ValueError, match="Core ML only supports tensors with rank <= 5"):
-            prog._check_invalid_tensor_rank()
+            prog._check_invalid_program()
 
 
 class TestMergeConsecutiveRelus:

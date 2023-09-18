@@ -236,6 +236,35 @@ def _list_select(shape_var, index):
         res = mb.gather(x=shape_var, indices=index)
     return res
 
+def _is_const(var, optional=False):
+    """
+    Check if a var is a const.
+    It could be `const` or `constexpr_` ops.
+    """
+    if optional and var is None:
+        return True
+    if isinstance(var, np.ndarray):
+        return True
+    return var is not None and (var.val is not None or var.op.op_type.startswith("constexpr_"))
+
+def _create_linear_layer(x, w, bias):
+    """
+    Utility to translate linear layer.
+    Since the linear layer can only take `const` or `constexpr_` weight as input,
+    for other cases, we implement the linear layer through matmul.
+
+    For instance, given a torch model with an int8 weight:
+
+    int8_weight -> transpose -> reshape -> linear
+
+    If we directly use `mb.linear`, it is going to produce compilation error at the runtime.
+    """
+    if _is_const(w) and _is_const(bias, optional=True):
+        return mb.linear(x=x, weight=w, bias=bias)
+    res = mb.matmul(x=x, y=w, transpose_y=True)
+    if bias is not None:
+        res = mb.add(x=res, y=bias)
+    return res
 
 def _construct_constant(val, name):
     # Converter cannot handle torch tensors.
@@ -854,9 +883,10 @@ def linear(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     x = inputs[0]
     W = inputs[1]
+    x, W = promote_input_dtypes([x, W])
     bias = inputs[2] if len(node.inputs) == 3 else None
-    res = mb.linear(x=x, weight=W, bias=bias, name=node.name)
-    context.add(res)
+    res = _create_linear_layer(x, W, bias)
+    context.add(res, torch_name=node.name)
 
 
 @register_torch_op(torch_alias=["conv2d"])
@@ -1157,6 +1187,7 @@ def relu6(context, node):
 @register_torch_op
 def einsum(context, node):
     vars = context[node.inputs[1]]
+    vars = promote_input_dtypes(vars)
     equation = context[node.inputs[0]].val
     x = build_einsum_mil(vars, equation, node.name)
     context.add(x)
@@ -1574,7 +1605,6 @@ def view(context, node):
     if (
         isinstance(shape, list)
         and all([isinstance(dim, Var) and len(dim.shape) == 0 for dim in shape])
-        and any([dim.val is None for dim in shape])
     ):
         shape = mb.concat(values=shape, axis=0)
 
@@ -1860,7 +1890,7 @@ def group_norm(context, node):
         x = mb.mul(x=x,y=weight)
     if bias is not None:
         bias = mb.reshape(x=bias, shape=bias_shape)
-        x = mb.add(x=x,y=bias)
+        x = mb.add(x=x, y=bias)
     context.add(x,node.name)
 
 
@@ -3256,24 +3286,38 @@ def select(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
     dim = inputs[1].val
-    index = inputs[2].val
+    index = inputs[2]
 
     assert dim.shape == ()
-    assert index.shape == ()
 
     # NOTE:
     # Each index in @begin_array/@end_array corresponds to a dimension of @_input
     # Each val of those arrays corresponds to the start/end index to slice in that dimension
     rank = _input.rank
+
     begin_array = [0] * rank
-    begin_array[dim] = index
+    if index.val is None:
+        # index value not known till runtime
+        begin_array[dim] = index
+        begin_array = mb.concat(values=begin_array, axis=0)
+    else:
+        # index value known now
+        assert index.val.shape == ()
+        begin_array[dim] = index.val
+
     end_array = [s if isinstance(s, int) else 0 for s in _input.shape]
     end_mask = [True] * rank
     squeeze_mask = [False] * rank
     squeeze_mask[dim] = True
 
-    if index != -1:
-        end_array[dim] = index + 1
+    if index.val != -1:
+        if  index.val is None:
+            # index value not know till runtime
+            temp = mb.add(x=index, y=1)
+            end_array[dim] = temp
+            end_array = mb.concat(values=end_array, axis=0)
+        else:
+            end_array[dim] = index.val + 1
         end_mask[dim] = False
 
     slice_by_index = mb.slice_by_index(
@@ -3326,7 +3370,9 @@ def _get_slice_params(context, data, inputs):
     for i in range(num_of_slice_set):
         if inputs[3 * i + 1] is None:
             # This is pure index select
-            idx = context[inputs[3 * i]].val
+            idx = context[inputs[3 * i]]
+            if idx.val is not None:
+                idx = idx.val
             begin[i] = idx
             squeeze_mask[i] = True
         else:
@@ -3768,7 +3814,7 @@ def rand(context, node):
 
 @register_torch_op
 def randn(context, node):
-    inputs = _get_inputs(context, node, expected=5)
+    inputs = _get_inputs(context, node, expected=[5, 6])
     shape = inputs[0]
     rand_normal = mb.random_normal(shape=shape)
     rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)
@@ -3809,6 +3855,17 @@ def bitwise_and(context, node):
         raise NotImplementedError(
             f"The `bitwise_and` op only supports boolean input, but get {input_dtypes}."
         )
+
+
+@register_torch_op
+def logical_not(context, node):
+    # There is an optional `out` parameter in torch.logical_not.
+    inputs = _get_inputs(context, node, expected=[1, 2])
+    x = inputs[0]
+    if not types.is_bool(x.dtype):
+        x = mb.cast(x=x, dtype="bool")
+    res = mb.logical_not(x=x, name=node.name)
+    context.add(res)
 
 
 def _avg_pool(context, node, inputs):
@@ -5547,7 +5604,7 @@ def baddbmm(context, node):
             context.add(bias)
 
         baddbmm_node = mb.add(x=bias, y=bmm_node, name=node.name)
-        context.add(baddbmm_node)    
+        context.add(baddbmm_node)
     else:
         bmm_node.name = node.name
         context.add(bmm_node)
@@ -6203,4 +6260,18 @@ def scaled_dot_product_attention(context, node):
 
     # multiply attn_weights and value tensor
     res = mb.matmul(x=attn_weights_normalized, y=v, name=node.name)
+    context.add(res)
+
+
+@register_torch_op
+def fliplr(context, node):
+    """
+    Flip tensor in the left/right direction.
+
+    Flip the entries in each row in the left/right direction. Columns are preserved, but appear in a
+    different order than before.
+    It's equivalent to TF's reverse op but with axes always be [1].
+    """
+    x = _get_inputs(context, node, expected=1)[0]
+    res = mb.reverse(x=x, axes=[1], name=node.name)
     context.add(res)

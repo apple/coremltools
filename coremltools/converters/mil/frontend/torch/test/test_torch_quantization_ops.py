@@ -18,6 +18,8 @@ from coremltools._deps import (
     MSG_TORCH_NOT_FOUND,
     MSG_TORCH_VISION_NOT_FOUND,
 )
+from coremltools.converters.mil.testing_utils import get_op_types_in_program
+
 from .testing_utils import TorchBaseTest
 
 pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
@@ -26,6 +28,24 @@ torch.manual_seed(30)
 np.random.seed(30)
 torch.backends.quantized.engine = "qnnpack"
 
+
+def _force_quantize_model(model, q_dtype):
+    """
+    In torch, the quantized model can only be obtained from PTQ.
+    This utility allows us to produce an int8 quantized model.
+    """
+    # modify the parameter to int8
+    with torch.no_grad():
+        for name, param in model.named_parameters():
+            shape = param.shape
+            new_value = torch.quantize_per_tensor(
+                torch.rand(*shape), scale=1.0, zero_point=0, dtype=q_dtype
+            )
+            param_cls = type(param)
+            kwargs = param.__dict__
+            new_value = param_cls(new_value, requires_grad=False).to(torch.device("cpu"))
+            model._parameters[name] = new_value
+    return model
 
 class TorchQuantizationBaseTest(TorchBaseTest):
     @staticmethod
@@ -38,7 +58,7 @@ class TorchQuantizationBaseTest(TorchBaseTest):
     ):
         # TODO(rdar://108472419): properly design a random input
         if input_as_shape:
-            input_data = torch.ones(*input_data)
+            input_data = [torch.ones(*shape) for shape in input_data]
 
         return TorchBaseTest.run_compare_torch(
             input_data,
@@ -56,15 +76,23 @@ class TorchQuantizationBaseTest(TorchBaseTest):
 # TODO(rdar://107430678): test stand-alone quantize and dequantize when cast is ready
 class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
     @pytest.mark.parametrize(
-        "quant_dtype, input_rank, is_zp_present, zp_dtype",
+        "quant_dtype, input_rank, is_zp_present, zp_dtype, are_params_tensors",
         itertools.product(
             (torch.qint8, torch.quint8, torch.qint32),
             (1, 3, 5),
             (True, False),
             (np.int8, np.uint8, np.int32),
+            (True, False),
         ),
     )
-    def test_quantize_dequantize_per_tensor(self, quant_dtype, input_rank, is_zp_present, zp_dtype):
+    def test_quantize_dequantize_per_tensor(
+        self,
+        quant_dtype,
+        input_rank,
+        is_zp_present,
+        zp_dtype,
+        are_params_tensors,
+    ):
         input_shape = [*np.random.randint(low=1, high=5, size=(input_rank,))]
         scale = np.random.rand()
         zero_point = 0
@@ -72,6 +100,9 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
             low = 0 if quant_dtype == torch.quint8 or zp_dtype == np.uint8 else -128
             high = 128 if quant_dtype == torch.qint8 or zp_dtype == np.int8 else 256
             zero_point = np.random.randint(low, high, dtype=zp_dtype)
+        if are_params_tensors:
+            scale = torch.tensor([scale])
+            zero_point = torch.tensor([zero_point])
 
         class Model(torch.nn.Module):
             def forward(self, x):
@@ -85,9 +116,9 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
                 ValueError,
                 match=r"MIL quantization dtype must be int8 or uint8",
             ):
-                self.run_compare_torch(input_shape, model)
+                self.run_compare_torch([input_shape], model)
         else:
-            self.run_compare_torch(input_shape, model, atol=5e-4, rtol=5e-4)
+            self.run_compare_torch([input_shape], model, atol=5e-4, rtol=5e-4)
 
     @pytest.mark.parametrize(
         "quant_dtype, input_rank, is_zp_present, zp_dtype",
@@ -122,9 +153,9 @@ class TestPyTorchQuantizationOps(TorchQuantizationBaseTest):
                 ValueError,
                 match=r"MIL quantization dtype must be int8 or uint8",
             ):
-                self.run_compare_torch(input_shape, model)
+                self.run_compare_torch([input_shape], model)
         else:
-            self.run_compare_torch(input_shape, model, atol=5e-4, rtol=5e-4)
+            self.run_compare_torch([input_shape], model, atol=5e-4, rtol=5e-4)
 
 
 # TODO(rdar://108463675): refactor torch op tests later to parametrize quantized vs standard ops
@@ -157,7 +188,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
             input_shape = (1, 3, 5)
         elif input_rank == 4:
             input_shape = (1, 2, 3, 5)
-        self.run_compare_torch(input_shape, model)
+        self.run_compare_torch([input_shape], model)
 
     @pytest.mark.parametrize(
         ",".join(
@@ -234,7 +265,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         model = Model()
 
         self.run_compare_torch(
-            (1, in_channels, height, width),
+            [(1, in_channels, height, width)],
             model,
         )
 
@@ -266,7 +297,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         input_data = torch.from_numpy(input_data)
         model = EmbeddingModel()
         self.run_compare_torch(
-            input_data, model, input_as_shape=False, converter_input_type=converter_input_type
+            [input_data], model, input_as_shape=False, converter_input_type=converter_input_type
         )
 
     # Tests for add, add_relu, mul
@@ -290,8 +321,50 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
                 return torch.dequantize(x)
 
         model = Model()
+        self.run_compare_torch([(2, 3)], model)
 
-        self.run_compare_torch((2, 3), model)
+    @pytest.mark.xfail(
+        reason="torch.ops.quantized.matmul is not suporting mixed precision computation.",
+        strict=True,
+    )
+    @pytest.mark.parametrize(
+        "quant_dtype",
+        [torch.quint8, torch.qint8],
+    )
+    def test_quantized_matmul(self, quant_dtype):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.weight = torch.nn.parameter.Parameter(torch.rand(5, 4))
+
+            def forward(self, x):
+                return torch.ops.quantized.matmul(x, self.weight, 0, 0)
+
+        model = Model()
+        model = _force_quantize_model(model, q_dtype=quant_dtype)
+        input_shape = [(3, 5)]
+        self.run_compare_torch(input_shape, model)
+
+    @pytest.mark.parametrize(
+        "quant_dtype",
+        [torch.quint8, torch.qint8],
+    )
+    def test_quantized_params(self, quant_dtype):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.weight = torch.nn.parameter.Parameter(torch.rand(5, 4))
+
+            def forward(self, x):
+                dequanitized_weight = torch.dequantize(self.weight)
+                return torch.matmul(x, dequanitized_weight)
+
+        model = Model()
+        model = _force_quantize_model(model, q_dtype=quant_dtype)
+        input_shape = [(3, 5)]
+        res = self.run_compare_torch(input_shape, model)
+        prog = res[1]._mil_program
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize", "matmul"]
 
 
 @pytest.mark.skipif(not _HAS_TORCH_VISION, reason=MSG_TORCH_VISION_NOT_FOUND)
@@ -306,4 +379,4 @@ class TestTorchvisionQuantizedModels(TorchQuantizationBaseTest):
 
     def test_quantized_mobilenetv2(self):
         model = torchvision.models.quantization.mobilenet_v2(pretrained=True, quantize=True)
-        self.run_compare_torch((1, 3, 224, 224), model, atol=1.0)
+        self.run_compare_torch([(1, 3, 224, 224)], model, atol=1.0)

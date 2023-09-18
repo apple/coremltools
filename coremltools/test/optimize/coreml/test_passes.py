@@ -17,7 +17,7 @@ import coremltools.optimize as cto
 import coremltools.optimize.coreml._quantization_passes as quantization
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.passes.tests.test_passes import TestSkipConstexprOps
+from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS, CONSTEXPR_OPS
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
 
@@ -774,7 +774,7 @@ class TestOptimizationConfig(TestCompressionPasses):
     @staticmethod
     @pytest.mark.parametrize(
         "constexpr_op",
-        TestSkipConstexprOps.CONSTEXPR_OPS,
+        CONSTEXPR_OPS,
     )
     def test_constexpr_const_not_compressed(constexpr_op):
         """
@@ -782,7 +782,7 @@ class TestOptimizationConfig(TestCompressionPasses):
         """
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 4, 5))])
         def prog(x):
-            constexpr = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((2, 3, 4, 5))
+            constexpr = CONSTEXPR_FUNCS[constexpr_op]((2, 3, 4, 5))
             return mb.add(x=x, y=constexpr)
 
         compressor = quantization.palettize_weights(

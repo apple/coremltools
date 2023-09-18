@@ -10,6 +10,7 @@ from coremltools.converters.mil.mil.input_type import (DefaultInputs,
                                                        TensorInputType)
 from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.types import nptype_from_builtin
 
 
 class ReductionAxes(Operation):
@@ -57,7 +58,8 @@ class ReductionAxes(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         axes = tuple(self.axes.val) if self.axes is not None else None
-        return self.get_operator()(self.x.val, axis=axes, keepdims=self.keep_dims.val)
+        res = self.get_operator()(self.x.val, axis=axes, keepdims=self.keep_dims.val)
+        return res.astype(nptype_from_builtin(self.x.dtype))
 
     def get_operator(self):
         raise NotImplementedError()

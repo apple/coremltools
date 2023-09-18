@@ -403,6 +403,10 @@ class Operation:
         in `self.input_var`. Return a builtin value (single output) or a tuple of
         builtin values (multi-outputs) of the same length as returned by `
         type_inference`
+
+        Please note that, for ``constexpr_`` (compression) ops, we implement
+        ``materialized_val_inference`` instead, so that we don't compute the actual
+        values for those ops, which might potentially results in memory issue.
         """
         msg = "value_inference() is not implemented by op {}"
         raise NotImplementedError(msg.format(self.op_type))
@@ -487,8 +491,8 @@ class Operation:
             # existing's sym_type.
             if not is_compatible_type(v_new.sym_type, v_old.sym_type) and not no_check_var_types:
                 raise ValueError(
-                    f"New var type `{types.builtin_to_string(v_new.sym_type)}` not a "
-                    f"subtype of existing var type `{types.builtin_to_string(v_old.sym_type)}`."
+                    f"New var type `{v_new.sym_type}` not a "
+                    f"subtype of existing var type `{v_old.sym_type}`."
                 )
             v_old.remove_child_op(op, no_check_var_types)
 

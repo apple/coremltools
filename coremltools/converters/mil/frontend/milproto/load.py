@@ -8,16 +8,22 @@ import os
 import numpy as np
 
 from coremltools import _logger as logger
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as _target
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
+from coremltools.converters.mil.backend.mil import helper
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import (Function, ListVar, Placeholder,
-                                            Program, TupleInputType, Var,
-                                            mil_list, types)
+from coremltools.converters.mil.mil import (
+    Function,
+    ListVar,
+    Placeholder,
+    Program,
+    TupleInputType,
+    Var,
+    mil_list,
+    types,
+)
 from coremltools.converters.mil.mil.block import curr_block
-from coremltools.converters.mil.mil.ops.registry import \
-    SSAOpRegistry as _SSAOpRegistry
+from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry as _SSAOpRegistry
 from coremltools.proto import MIL_pb2 as pm
 from coremltools.proto import Model_pb2 as ml
 
@@ -25,7 +31,8 @@ from .helper import proto_to_types
 
 try:
     from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
-except:
+except Exception as e:
+    logger.warning(f"Fail to import BlobReader from libmilstoragepython. {e}")
     BlobReader = None
 
 
@@ -145,7 +152,7 @@ def _load_value(context, value_spec):
         else:
             value = _load_file_value(context, value_spec.blobFileValue, dtype)
 
-        if dtype in (types.fp16, types.int8, types.uint8, types.uint32):
+        if dtype in helper.IMMEDIATE_VALUE_TYPES_IN_BYTES:
             value = np.frombuffer(value, types.nptype_from_builtin(dtype)).reshape(
                 shape
             )
@@ -246,20 +253,23 @@ def _set_inputs_for_control_flow_op(inputs, blocks, op_type):
         inputs["_false_fn"] = _dummy_false_fn
 
 
+def _load_const_op(context, op_spec):
+    inputs = {k: _load_value(context, v) for k, v in op_spec.attributes.items()}
+    pymil_var = getattr(mb, op_spec.type)(**inputs)
+    context.register_var_with_name(op_spec.outputs[0].name, pymil_var)
+
+
 def _load_operation(context, op_spec):
     if not isinstance(op_spec, pm.Operation):
         raise TypeError("Invalid Operation spec object")
 
     op_type = op_spec.type
-    if op_type == "const" or op_type.startswith("constexpr_"):
+    if op_type == "const" or "constexpr_" in op_type:
         if op_spec.blocks:
             raise ValueError("const / constexpr operation can't have any block")
         if op_spec.inputs:
             raise ValueError("const / constexpr operation can't have any input")
-
-        inputs = {k: _load_value(context, v) for k, v in op_spec.attributes.items()}
-        pymil_var = getattr(mb, op_type)(**inputs)
-        context.register_var_with_name(op_spec.outputs[0].name, pymil_var)
+        _load_const_op(context, op_spec)
 
     else:
         if op_type == "custom_layer":
@@ -402,11 +412,19 @@ def _load_function(context, func_spec, spec_version):
 
 
 def load(model_spec, specification_version, file_weights_dir="", **kwargs):
+    """
+    Load MILProto to Pymil.
+
+    Set force_spec_version to force override the spec version.
+    """
     if not isinstance(model_spec, ml.Model):
         raise TypeError("Invalid Model sepc object")
 
     if specification_version < model_spec.specificationVersion:
-        raise ValueError("specification_version must be greater or equal to the input model spec version")
+        if not kwargs.get("force_spec_version", False):
+            raise ValueError(
+                "specification_version must be greater or equal to the input model spec version"
+            )
 
     if model_spec.WhichOneof("Type") != "mlProgram":
         raise ValueError("Only MIL proto based mlmodels can be loaded")

@@ -254,9 +254,14 @@ class TestReduction:
 
         @ssa_fn
         def test_reduce_prod():
+            # test  value
             res = mb.reduce_prod(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.prod(x_val, axis=axis, keepdims=keep_dims)
             np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
+
+            # test dtype for int input
+            res = mb.reduce_prod(x=x_val.astype(np.int32), axes=[axis], keep_dims=keep_dims).val
+            assert res.dtype == np.int32
 
         @ssa_fn
         def test_reduce_sum():
