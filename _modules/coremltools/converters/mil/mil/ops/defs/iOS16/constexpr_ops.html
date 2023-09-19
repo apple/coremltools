@@ -100,10 +100,10 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InputSpec</span><span class="p">,</span>
-                                                       <span class="n">TensorInputType</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="n">restore_elements_from_packed_bits</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16</span> <span class="kn">import</span> <span class="n">_IOS16_TARGET</span>
 
 
@@ -128,7 +128,7 @@
 <span class="sd">    quantized_data: const tensor&lt;SrcT, [1..]&gt; (Required)</span>
 
 <span class="sd">    zero_point: const tensor&lt;ZeroPointT, [0..1]&gt; (Required)</span>
-<span class="sd"> 	   * ``zero_point`` can be either a scalar or a vector. </span>
+<span class="sd"> 	   * ``zero_point`` can be either a scalar or a vector.</span>
 <span class="sd"> 	   * ``zero_point`` follows similar broadcasting rules and size constraints as ``scale``.</span>
 
 <span class="sd">    scale: const tensor&lt;DstT, [0..1]&gt; (Required)</span>
@@ -203,12 +203,9 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> 
-            <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> 
-            <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> 
-            <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
         <span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
@@ -266,14 +263,14 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_val</span><span class="o">.</span><span class="n">shape</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_val</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="constexpr_lut_to_dense"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_lut_to_dense">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">constexpr_lut_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A compile-time operation that returns a constant output value upon decompressing </span>
+<span class="sd">    A compile-time operation that returns a constant output value upon decompressing</span>
 <span class="sd">    a look-up table (LUT) to a dense tensor.</span>
 
 <span class="sd">    This operation is used to store constant weights in a LUT format (also known as</span>
@@ -289,9 +286,8 @@
 
 <span class="sd">    shape: const tensor&lt;uint32, [K]&gt; (Required)</span>
 
-<span class="sd">	Notes</span>
-<span class="sd">	-----</span>
-
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
 <span class="sd">    * Any data is packed and read in a row-major order.</span>
 <span class="sd">    * ``NUM_PALETTES`` can be one of ``{2, 4, 16, 64 or 256}``.</span>
 <span class="sd">    * ``n_bits = log2(NUM_PALETTES)`` can thus be one of ``{1, 2, 4, 6, 8}``.</span>
@@ -326,7 +322,7 @@
         <span class="n">lut</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)</span>
     <span class="p">}</span>
@@ -355,7 +351,7 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">lut</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
@@ -364,19 +360,8 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
-        <span class="n">bitarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span>
         <span class="n">nbits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">lut</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-
-        <span class="n">pad_required</span> <span class="o">=</span> <span class="n">bitarray</span><span class="o">.</span><span class="n">size</span> <span class="o">%</span> <span class="n">nbits</span> <span class="o">!=</span> <span class="mi">0</span>
-        <span class="k">if</span> <span class="n">pad_required</span><span class="p">:</span>
-            <span class="n">bitarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">bitarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nbits</span> <span class="o">-</span> <span class="n">bitarray</span><span class="o">.</span><span class="n">size</span> <span class="o">%</span> <span class="n">nbits</span><span class="p">)])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">bitarray</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-
-        <span class="k">assert</span> <span class="n">bitarray</span><span class="o">.</span><span class="n">size</span> <span class="o">%</span> <span class="n">nbits</span> <span class="o">==</span> <span class="mi">0</span>
-
-        <span class="n">size</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">bitarray</span> <span class="o">=</span> <span class="n">bitarray</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">nbits</span><span class="p">)[:</span><span class="n">size</span><span class="p">,</span> <span class="p">:]</span>
-
-        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">packbits</span><span class="p">(</span><span class="n">bitarray</span><span class="p">,</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">restore_elements_from_packed_bits</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
         <span class="n">flatten_val</span> <span class="o">=</span> <span class="n">lut</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">flatten_val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
 
@@ -433,7 +418,7 @@
         <span class="n">mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
         <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)</span>
     <span class="p">}</span>
@@ -465,7 +450,7 @@
         <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>

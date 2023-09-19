@@ -131,26 +131,18 @@
 <span class="sd">            q_embedding = linear(x=q, weight=weight_q, bias=bias_q)</span>
 <span class="sd">            k_embedding = linear(x=k, weight=weight_q, bias=bias_q)</span>
 
-<span class="sd">    Concretely, we consider a constant as duplicated if there exists such a previous constant that:</span>
+<span class="sd">    Concretely, this graph pass consists of two stages:</span>
 
-<span class="sd">    1. has same dtype and value</span>
+<span class="sd">    (1) Deduplication of ``const`` op:</span>
 
-<span class="sd">    2. comes from same type of op</span>
+<span class="sd">        We consider a ``const`` as duplicated if there exists such a previous ``const`` that has same dtype and value</span>
 
-<span class="sd">    The reason why op type is considered is, there are 2 types of constants in Core ML:</span>
+<span class="sd">    (2) Deduplication of ``constexpr_*`` op:</span>
 
-<span class="sd">    1. The usual constant, i.e., the output of ``const`` op</span>
-
-<span class="sd">    2. The result of const expression, i.e., the output of ``constexpr_*`` ops</span>
+<span class="sd">        We consider a ``constexpr_*`` as duplicated if there exists such a previous ``constexpr_*`` that has the same ``op_type`` and input attributes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">NUMEL_THRESH</span> <span class="o">=</span> <span class="mi">100</span>
-    <span class="n">CONSTEXPR_OPS</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;constexpr_affine_dequantize&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;constexpr_cast&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;constexpr_lut_to_dense&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;constexpr_sparse_to_dense&quot;</span><span class="p">,</span>
-    <span class="p">}</span>
     <span class="n">DTYPE2ATOL</span> <span class="o">=</span> <span class="p">{</span>
         <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span> <span class="mf">6e-8</span><span class="p">,</span>
         <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">:</span> <span class="mf">1e-12</span><span class="p">,</span>
@@ -160,13 +152,9 @@
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_constant_deduplication_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
-    <span class="nd">@block_context_manager</span>
-    <span class="k">def</span> <span class="nf">_constant_deduplication_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_constant_deduplication_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
-
-        <span class="n">unique2duplicates</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_constants</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">remove_duplicate_ops</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">,</span> <span class="n">unique2duplicates</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]],</span> <span class="n">force_replace</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">unique</span> <span class="ow">in</span> <span class="n">unique2duplicates</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">duplicate</span> <span class="ow">in</span> <span class="n">unique2duplicates</span><span class="p">[</span><span class="n">unique</span><span class="p">]:</span>
                 <span class="k">if</span> <span class="n">duplicate</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
@@ -176,9 +164,53 @@
                     <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
                     <span class="n">old_var</span><span class="o">=</span><span class="n">duplicate</span><span class="p">,</span>
                     <span class="n">new_var</span><span class="o">=</span><span class="n">unique</span><span class="p">,</span>
-                    <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span> <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONSTEXPR_OPS</span> <span class="k">else</span> <span class="kc">False</span><span class="p">,</span>
+                    <span class="n">force_replace</span><span class="o">=</span><span class="n">force_replace</span><span class="p">,</span>
                 <span class="p">)</span>
                 <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">_constant_deduplication_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_constant_deduplication_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+        <span class="c1"># Deduplication of ``const`` op</span>
+        <span class="n">unique2duplicates_const</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_constants</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_duplicate_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">unique2duplicates_const</span><span class="p">,</span> <span class="n">force_replace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Deduplication of ``constexpr_*`` op</span>
+        <span class="c1"># Note that, the ``find_constexpr`` must go after ``find_constants`` + ``remove_duplicate_ops`` for ``const`` ops.</span>
+        <span class="c1"># Since after the above two functions, ``const`` ops with identical values are</span>
+        <span class="c1"># deduplicated into a single ``Var`` object, which allows ``find_constexpr`` to</span>
+        <span class="c1"># directly compare the ``const`` input attr pointers instead of the actual values.</span>
+        <span class="n">unique2duplicates_constexpr</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_constexprs</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">remove_duplicate_ops</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">unique2duplicates_constexpr</span><span class="p">,</span> <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">find_constexprs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Given a block, return all constexpr in the block in such a format:</span>
+<span class="sd">            {unique_var_0: [duplicated_var_0_0, duplicated_var_0_1, ...],</span>
+<span class="sd">             unique_var_1: [duplicated_var_1_0, duplicated_var_1_1, ...],</span>
+<span class="sd">             ...</span>
+<span class="sd">            }</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">hashkey_2_duplicates</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">if</span> <span class="s2">&quot;constexpr&quot;</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="p">:</span>
+                <span class="n">hash_key</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="p">]</span>
+                <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                    <span class="n">hash_key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">NUMEL_THRESH</span><span class="p">:</span>
+                        <span class="n">hash_key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">hash_key</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">hash_key</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">hash_key</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">hash_key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">hashkey_2_duplicates</span><span class="p">:</span>
+                    <span class="n">hashkey_2_duplicates</span><span class="p">[</span><span class="n">hash_key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">hashkey_2_duplicates</span><span class="p">[</span><span class="n">hash_key</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">return</span> <span class="p">{</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">hashkey_2_duplicates</span><span class="o">.</span><span class="n">values</span><span class="p">()}</span>
 
     <span class="k">def</span> <span class="nf">find_constants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Var</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -193,8 +225,7 @@
         <span class="c1"># instead of brute-force C_N^2 comparison, use a hash map to be O(N)</span>
         <span class="n">constant_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Var</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
-            <span class="n">op_type</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span>
-            <span class="k">if</span> <span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">or</span> <span class="n">op_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">CONSTEXPR_OPS</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
                 <span class="n">constant_var</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">constant_var</span><span class="p">,</span> <span class="n">ListVar</span><span class="p">):</span>
                     <span class="k">continue</span>
@@ -209,7 +240,7 @@
                 <span class="nb">hash</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span>
                     <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">NUMEL_THRESH</span><span class="p">])</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
-                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">op_type</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="nb">hash</span><span class="p">)</span>
+                <span class="n">key</span> <span class="o">=</span> <span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="nb">hash</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">constant_dict</span><span class="p">:</span>
                     <span class="n">constant_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">constant_var</span><span class="p">]</span>

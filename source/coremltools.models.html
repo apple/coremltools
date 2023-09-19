@@ -155,6 +155,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.utils">utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.compile_model"><code class="docutils literal notranslate"><span class="pre">compile_model()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.convert_double_to_float_multiarray_type"><code class="docutils literal notranslate"><span class="pre">convert_double_to_float_multiarray_type()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier_with_probabilities"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier_with_probabilities()</span></code></a></li>
@@ -1319,6 +1320,27 @@ the features.</p>
 <section id="module-coremltools.models.utils">
 <span id="utils"></span><h2>utils<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this heading"></a></h2>
 <p>Utilities for the entire package.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.models.utils.compile_model">
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">compile_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Model</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#compile_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.compile_model" title="Permalink to this definition"></a></dt>
+<dd><p>Compiles a Core ML model.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>model: str, Model_pb2 or MLModel</strong></dt><dd><p>str : Path to model to compile</p>
+<p>Model_pb2 : Spec to model to compile</p>
+<p>MLModel : Instantiated Core ML model to compile</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>str</strong><span class="classifier">Path to compiled model directory</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.convert_double_to_float_multiarray_type">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">convert_double_to_float_multiarray_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#convert_double_to_float_multiarray_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.convert_double_to_float_multiarray_type" title="Permalink to this definition"></a></dt>

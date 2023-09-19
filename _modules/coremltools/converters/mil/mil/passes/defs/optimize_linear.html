@@ -152,6 +152,10 @@
         <span class="n">is_sub</span> <span class="o">=</span> <span class="n">add_or_sub_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;sub&quot;</span>
         <span class="n">is_first_input</span> <span class="o">=</span> <span class="n">add_or_sub_op</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">linear_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
+        <span class="c1"># Return if weight or bias are missing values</span>
+        <span class="k">if</span> <span class="n">linear_op</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">linear_op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
         <span class="c1"># compute the new bias</span>
         <span class="n">linear_bias</span> <span class="o">=</span> <span class="n">linear_op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span>
         <span class="n">bias</span> <span class="o">=</span> <span class="n">add_or_sub_op</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="n">is_first_input</span> <span class="k">else</span> <span class="n">add_or_sub_op</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span>
@@ -278,7 +282,7 @@
     <span class="k">def</span> <span class="nf">_transpose</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">before_op</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Transpose the last 2 dims.</span>
-<span class="sd">        </span>
+
 <span class="sd">        - ``v``: (Var, must be a tensor).</span>
 <span class="sd">        - ``before_op``: (Operation) The op right before the newly added ``transpose`` op.</span>
 <span class="sd">        - ``name``: Name for the ``transpose`` op if provided.</span>

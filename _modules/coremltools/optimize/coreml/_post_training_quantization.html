@@ -98,7 +98,7 @@
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">define</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">validators</span>
@@ -106,7 +106,7 @@
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto.load</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AbstractQuantizationPass</span> <span class="k">as</span> <span class="n">_AbstractQuantizationPass</span><span class="p">,</span>
 <span class="p">)</span>
@@ -119,9 +119,10 @@
 <span class="kn">from</span> <span class="nn">._quantization_passes</span> <span class="kn">import</span> <span class="n">palettize_weights</span> <span class="k">as</span> <span class="n">_palettize_weights</span>
 <span class="kn">from</span> <span class="nn">._quantization_passes</span> <span class="kn">import</span> <span class="n">prune_weights</span> <span class="k">as</span> <span class="n">_prune_weights</span>
 
-<span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>
 
-<span class="k">def</span> <span class="nf">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_convert_model_spec_to_pymil_prog</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pymil_load_func</span><span class="p">:</span> <span class="n">Callable</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An utility that converts a ml program model into PyMIL program.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -137,7 +138,7 @@
     <span class="k">else</span><span class="p">:</span>
        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;weight compression not applicable for model type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
 
-    <span class="n">prog</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="p">(</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">pymil_load_func</span><span class="p">(</span>
         <span class="n">model_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
         <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">file_weights_dir</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
@@ -145,14 +146,18 @@
     <span class="k">return</span> <span class="n">prog</span>
 
 
-<span class="k">def</span> <span class="nf">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">graph_pass</span><span class="p">:</span> <span class="n">_AbstractQuantizationPass</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_apply_graph_pass</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span>
+    <span class="n">graph_pass</span><span class="p">:</span> <span class="n">_AbstractQuantizationPass</span><span class="p">,</span>
+    <span class="n">spec_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span>
+    <span class="n">skip_model_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">pymil_load_func</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">,</span>
+<span class="p">):</span>
     <span class="c1"># Utility function which compresses a Core ML model</span>
     <span class="c1"># converts the full precision mlmodel into a pymil program</span>
     <span class="n">model_spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
-    <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
-        <span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span>
-    <span class="p">)</span>
-    <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">)</span>
+    <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">spec_version</span><span class="p">)</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">,</span> <span class="n">pymil_load_func</span><span class="p">)</span>
 
     <span class="c1"># apply compression graph pass</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
@@ -168,6 +173,7 @@
         <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
         <span class="n">model_description</span><span class="o">=</span><span class="n">model_spec</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
+        <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">compressed_mlmodel</span>
 
@@ -558,7 +564,8 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="n">CoreMLWeightMetaData</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">child_ops</span><span class="o">=</span><span class="n">child_ops</span><span class="p">)</span>
 
-    <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">)</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span>
+                                             <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">)</span>
     <span class="n">res</span> <span class="o">=</span> <span class="n">_MetaDataDict</span><span class="p">({})</span>
 
     <span class="k">def</span> <span class="nf">get_weights_meta_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>

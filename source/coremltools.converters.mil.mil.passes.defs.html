@@ -203,15 +203,14 @@
     <span class="n">k_embedding</span> <span class="o">=</span> <span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">k</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">weight_q</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="n">bias_q</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Concretely, we consider a constant as duplicated if there exists such a previous constant that:</p>
-<ol class="arabic simple">
-<li><p>has same dtype and value</p></li>
-<li><p>comes from same type of op</p></li>
-</ol>
-<p>The reason why op type is considered is, there are 2 types of constants in Core ML:</p>
-<ol class="arabic simple">
-<li><p>The usual constant, i.e., the output of <code class="docutils literal notranslate"><span class="pre">const</span></code> op</p></li>
-<li><p>The result of const expression, i.e., the output of <code class="docutils literal notranslate"><span class="pre">constexpr_*</span></code> ops</p></li>
+<p>Concretely, this graph pass consists of two stages:</p>
+<ol class="arabic">
+<li><p>Deduplication of <code class="docutils literal notranslate"><span class="pre">const</span></code> op:</p>
+<p>We consider a <code class="docutils literal notranslate"><span class="pre">const</span></code> as duplicated if there exists such a previous <code class="docutils literal notranslate"><span class="pre">const</span></code> that has same dtype and value</p>
+</li>
+<li><p>Deduplication of <code class="docutils literal notranslate"><span class="pre">constexpr_*</span></code> op:</p>
+<p>We consider a <code class="docutils literal notranslate"><span class="pre">constexpr_*</span></code> as duplicated if there exists such a previous <code class="docutils literal notranslate"><span class="pre">constexpr_*</span></code> that has the same <code class="docutils literal notranslate"><span class="pre">op_type</span></code> and input attributes.</p>
+</li>
 </ol>
 </dd></dl>
 

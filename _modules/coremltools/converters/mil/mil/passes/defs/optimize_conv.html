@@ -488,6 +488,10 @@
             <span class="n">conv_bias</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">Cout</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">conv_bias</span> <span class="o">=</span> <span class="n">conv_bias</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="k">if</span> <span class="n">conv_bias</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
         <span class="n">conv_bias</span> <span class="o">=</span> <span class="n">conv_bias</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">conv_weight_type</span><span class="p">)</span>
 
         <span class="c1"># get the original shape of weight and bias</span>

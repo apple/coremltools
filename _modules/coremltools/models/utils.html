@@ -1098,30 +1098,25 @@
             <span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span></div>
 
 
-<span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="s1">&#39;_ct.models.MLModel&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="compile_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.compile_model">[docs]</a><span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="s1">&#39;_ct.models.MLModel&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Compiles a Core ML model.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-
 <span class="sd">    model: str, Model_pb2 or MLModel</span>
 
-<span class="sd">        str - path to model to compile</span>
+<span class="sd">        str : Path to model to compile</span>
 
-<span class="sd">        Model_pb2 - spec to model to compile</span>
+<span class="sd">        Model_pb2 : Spec to model to compile</span>
 
-<span class="sd">        MLModel - instantiated Core ML model to compile</span>
+<span class="sd">        MLModel : Instantiated Core ML model to compile</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 
-<span class="sd">    str : path to compiled model directory</span>
+<span class="sd">    str : Path to compiled model directory</span>
 
-<span class="sd">    See Also</span>
-<span class="sd">    --------</span>
-
-<span class="sd">    ``coremltools.models.CompiledMLModel``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Check environment</span>
     <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
@@ -1149,7 +1144,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
         <span class="n">model</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="make_pipeline"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.make_pipeline">[docs]</a><span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span><span class="o">*</span><span class="n">models</span><span class="p">):</span>
