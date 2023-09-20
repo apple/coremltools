@@ -16,11 +16,11 @@ To convert a model to the older neural network model type, see [Convert Models t
 
 You can convert a [TensorFlow](https://www.tensorflow.org "TensorFlow") or [PyTorch](https://pytorch.org "PyTorch") model, or a model created directly in the [Model Intermediate Language (MIL)](model-intermediate-language), to a Core ML model that is either  an ML program or a neural network. The [Unified Conversion API](unified-conversion-api) can produce either type of model with the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert) method.
 
-In Core ML Tools 7.0b2 and newer versions, the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method produces an `mlprogram` by default:
+In Core ML Tools 7.0 and newer versions, the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method produces an `mlprogram` by default:
 
 ```python
 # Convert to an ML Program
-import coremltools as ct  # Core ML Tools version 7.0b2
+import coremltools as ct  # Core ML Tools version 7.0
 model = ct.convert(source_model)
 ```
 
