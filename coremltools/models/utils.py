@@ -1023,6 +1023,9 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) ->
 
     str : Path to compiled model directory
 
+    See Also
+    --------
+    coremltools.models.CompiledMLModel
     """
     # Check environment
     if _macos_version() < (10, 13):
