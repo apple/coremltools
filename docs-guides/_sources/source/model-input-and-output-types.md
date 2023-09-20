@@ -14,7 +14,7 @@ When using the Core ML Tools [Unified Conversion API](unified-conversion-api), y
 
 The `convert()` method generates by default a [Core ML](https://developer.apple.com/documentation/coreml) model with a multidimensional array ([`MLMultiArray`](https://developer.apple.com/documentation/coreml/mlmultiarray)) as the type for both input and output. The data types, names, and shapes are picked up automatically from a TensorFlow source model. For a PyTorch model you must provide the input shape.
 
-In Core ML Tools 7.0b2 and newer versions, the default input/output dtype for models converted to the `mlprogram` type are float 16 for the `iOS16`/`macOS13` and newer deployment targets. Also, the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method produces an `mlprogram` (ML program) by default with an `iOS15`/`macOS12` or newer deployment target. For more details, see [Convert Models to ML Programs](convert-to-ml-program).
+In Core ML Tools 7.0 and newer versions, the default input/output dtype for models converted to the `mlprogram` type are float 16 for the `iOS16`/`macOS13` and newer deployment targets. Also, the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method produces an `mlprogram` (ML program) by default with an `iOS15`/`macOS12` or newer deployment target. For more details, see [Convert Models to ML Programs](convert-to-ml-program).
 
 
 ## Use Images

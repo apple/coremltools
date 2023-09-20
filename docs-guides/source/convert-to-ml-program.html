@@ -47,7 +47,6 @@
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-to-ml-program';</script>
-    <link rel="canonical" href="./docs-guides/source/convert-to-ml-program.html" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Convert Models to Neural Networks" href="convert-to-neural-network.html" />
@@ -426,9 +425,9 @@ document.write(`
 <p>To convert a model to the older neural network model type, see <a class="reference internal" href="convert-to-neural-network.html"><span class="doc std std-doc">Convert Models to Neural Networks</span></a>. For a comparison of the ML program and neural network model types, see <a class="reference internal" href="comparing-ml-programs-and-neural-networks.html"><span class="doc std std-doc">Comparing ML Programs and Neural Networks</span></a>.</p>
 </div>
 <p>You can convert a <a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> or <a class="reference external" href="https://pytorch.org">PyTorch</a> model, or a model created directly in the <a class="reference internal" href="model-intermediate-language.html"><span class="doc std std-doc">Model Intermediate Language (MIL)</span></a>, to a Core ML model that is either  an ML program or a neural network. The <a class="reference internal" href="unified-conversion-api.html"><span class="doc std std-doc">Unified Conversion API</span></a> can produce either type of model with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method.</p>
-<p>In Core ML Tools 7.0b2 and newer versions, the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method produces an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> by default:</p>
+<p>In Core ML Tools 7.0 and newer versions, the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method produces an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> by default:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert to an ML Program</span>
-<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>  <span class="c1"># Core ML Tools version 7.0b2</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>  <span class="c1"># Core ML Tools version 7.0</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">source_model</span><span class="p">)</span>
 </pre></div>
 </div>

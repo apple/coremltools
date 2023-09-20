@@ -8,13 +8,8 @@ The [coremltools 7](https://github.com/apple/coremltools) package now includes m
 
 You can either directly compress a Core ML model, or compress a model in the source framework during training and then convert. While the former is quicker and can happen without needing data, the latter can preserve accuracy better by fine-tuning with data. For details, see [Optimizing Models](optimizing-models).
 
-For a full list of changes, see [Release Notes](#release-notes).
+For a full list of changes, see [Release Notes](#release-notes). For installation instructions, see [Installing Core ML Tools](installing-coremltools).
 
-To install Core ML Tools version 7.0b2: 
-
-```shell
-pip install coremltools==7.0b2
-```
 
 ## Previous Versions
 
