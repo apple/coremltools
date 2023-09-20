@@ -7,6 +7,14 @@ MLModel
 .. automodule:: coremltools.models.model
    :members:
 
+
+Compiled MLModel
+-------------------------------
+
+.. autoclass:: coremltools.models.CompiledMLModel
+   :members:
+
+
 compression\_utils
 -------------------------------------------------
 
