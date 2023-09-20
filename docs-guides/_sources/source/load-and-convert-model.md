@@ -62,7 +62,7 @@ model_from_torch = ct.convert(traced_model,
                                                     shape=example_input.shape)])
 ```
 
-Since the `neuralnetwork` format is widely available, it is still the default format produced by versions of the [Unified Conversion API](unified-conversion-api) older than 7.0b2. However, in 7.0b2 and newer versions, the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method produces an `mlprogram` by default with the `iOS15`/`macOS12` deployment target. You can override this behavior by providing a `minimum_deployment_target` or `convert_to` value.
+Since the `neuralnetwork` format is widely available, it is still the default format produced by versions of the [Unified Conversion API](unified-conversion-api) older than 7.0. However, in 7.0 and newer versions, the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method produces an `mlprogram` by default with the `iOS15`/`macOS12` deployment target. You can override this behavior by providing a `minimum_deployment_target` or `convert_to` value.
 
 For more information, see the [MLModel Overview](mlmodel).
 

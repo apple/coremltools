@@ -68,6 +68,14 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#compiled-mlmodel">Compiled MLModel</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.CompiledMLModel"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.CompiledMLModel.__init__"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.CompiledMLModel.predict"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel.predict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#compression-utils">compression_utils</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html">affine_quantize_weights</a></li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html#module-0">palettize_weights</a></li>
@@ -404,6 +412,94 @@ a package directory containing the <code class="docutils literal notranslate"><s
 <p class="rubric">Examples</p>
 <p>model.save(‘my_model_file.mlmodel’)
 loaded_model = MLModel(‘my_model_file.mlmodel’)</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="compiled-mlmodel">
+<h2>Compiled MLModel<a class="headerlink" href="#compiled-mlmodel" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.models.CompiledMLModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.</span></span><span class="sig-name descname"><span class="pre">CompiledMLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.CompiledMLModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Loads a compiled Core ML model.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>The path to a compiled model directory, ending in “.mlmodelc”.</p>
+</dd>
+<dt><strong>compute_units</strong><span class="classifier">coremltools.ComputeUnit</span></dt><dd><p>An enum with the following possible values.</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the</p></li>
+</ul>
+<blockquote>
+<div><p>neural engine.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU, but not the</p></li>
+</ul>
+<blockquote>
+<div><p>neural engine.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but
+not the GPU. Available only for macOS &gt;= 13.0.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.CompiledMLModel.predict" title="coremltools.models.CompiledMLModel.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;my_model_path.mlmodelc&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">my_compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.CompiledMLModel.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.predict" title="Permalink to this definition"></a></dt>
+<dd><p>Return predictions for the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data: dict[str, value] or list[dict[str, value]]</strong></dt><dd><p>Dictionary of data to use for predictions, where the keys are the names of the input features.
+For batch predictons, use a list of such dictionaries.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>dict[str, value]</dt><dd><p>Predictions as a dictionary where each key is the output feature name.</p>
+</dd>
+<dt>list[dict[str, value]]</dt><dd><p>For batch prediction, returns a list of the above dictionaries.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>data = {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240}
+predictions = model.predict(data)</p>
+<dl class="simple">
+<dt>data = [ {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240},</dt><dd><p>{‘bedroom’: 4.0, ‘bath’: 2.5, ‘size’: 2400} ]</p>
+</dd>
+</dl>
+<p>batch_predictions = model.predict(data)</p>
 </dd></dl>
 
 </dd></dl>
@@ -1339,6 +1435,12 @@ the features.</p>
 </dl>
 </dd>
 </dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.CompiledMLModel" title="coremltools.models.CompiledMLModel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.models.CompiledMLModel</span></code></a></dt><dd></dd>
+</dl>
+</div>
 </dd></dl>
 
 <dl class="py function">

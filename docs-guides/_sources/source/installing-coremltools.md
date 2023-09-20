@@ -86,16 +86,10 @@ source coremltools-venv/bin/activate
 
 ## Install Core ML Tools
 
-Use the following command to install or upgrade to [beta version 7.0b2](https://github.com/apple/coremltools) of Core ML Tools:
+Use the following command to install or upgrade to [version 7.0](https://github.com/apple/coremltools) of Core ML Tools:
 
 ```shell
-pip install coremltools==7.0b2
-```
-
-Use the following command to install or upgrade to the released version ([release v6.3](https://github.com/apple/coremltools/releases/tag/6.3)) of Core ML Tools:
-
-```shell
-pip install coremltools
+pip install -U coremltools
 ```
 
 ## Install Third-party Packages
