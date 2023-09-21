@@ -36,7 +36,7 @@ def _default_op_selector(const_op):
 def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None, dtype=_np.int8):
     """
     ``coremltools.compression_utils.affine_quantize_weights`` is deprecated and will be removed in the future.
-    Please use ``coremltools.optimize.coreml.linear_quantize_weights``.
+    Please use :py:class:`coremltools.optimize.coreml.linear_quantize_weights`.
     """
     if op_selector is None:
         op_selector = _default_op_selector
@@ -53,7 +53,7 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None, 
 def palettize_weights(mlmodel, nbits=None, mode="kmeans", op_selector=None, lut_function=None):
     """
     ``coremltools.compression_utils.palettize_weights`` is deprecated and will be removed in the future.
-    Please use ``coremltools.optimize.coreml.palettize_weights``.
+    Please use :py:class:`coremltools.optimize.coreml.palettize_weights`.
     """
     if op_selector is None:
         op_selector = _default_op_selector
@@ -72,7 +72,7 @@ def sparsify_weights(
 ):
     """
     ``coremltools.compression_utils.sparsify_weights`` is deprecated and will be removed in the future.
-    Please use ``coremltools.optimize.coreml.prune_weights``.
+    Please use :py:class:`coremltools.optimize.coreml.prune_weights`.
     """
     if op_selector is None:
         op_selector = _default_op_selector
@@ -107,6 +107,6 @@ def sparsify_weights(
 def decompress_weights(mlmodel):
     """
     ``coremltools.compression_utils.decompress_weights`` is deprecated and will be removed in the future.
-    Please use ``coremltools.optimize.coreml.decompress_weights``.
+    Please use :py:class:`coremltools.optimize.coreml.decompress_weights`.
     """
     return _decompress_weights(mlmodel)

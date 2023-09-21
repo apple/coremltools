@@ -23,17 +23,15 @@ class CompiledMLModel:
         Parameters
         ----------
         path : str
-            The path to a compiled model directory, ending in ".mlmodelc".
+            The path to a compiled model directory, ending in ``.mlmodelc``.
 
         compute_units : coremltools.ComputeUnit
-
-            An enum with the following possible values.
-
+            An enum with the following possible values:
                 - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
-                 neural engine.
+                  neural engine.
                 - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
                 - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the
-                 neural engine.
+                  neural engine.
                 - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
                   not the GPU. Available only for macOS >= 13.0.
 
@@ -41,8 +39,8 @@ class CompiledMLModel:
         --------
         .. sourcecode:: python
 
-        >>> my_compiled_model = ct.models.CompiledMLModel("my_model_path.mlmodelc")
-        >>> y = my_compiled_model.predict({'x': 3})
+            my_compiled_model = ct.models.CompiledMLModel("my_model_path.mlmodelc")
+            y = my_compiled_model.predict({'x': 3})
 
         See Also
         --------
@@ -84,12 +82,15 @@ class CompiledMLModel:
 
         Examples
         --------
-        data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
-        predictions = model.predict(data)
+        .. sourcecode:: python
 
-        data = [ {'bedroom': 1.0, 'bath': 1.0, 'size': 1240},
-                 {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
-        batch_predictions = model.predict(data)
+			data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
+			predictions = model.predict(data)
+            
+			data = [ {'bedroom': 1.0, 'bath': 1.0, 'size': 1240},
+					 {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
+			batch_predictions = model.predict(data)
+
         """
         _MLModel._check_predict_data(data)
 

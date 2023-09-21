@@ -254,19 +254,21 @@ class MLModel:
         ----------
         model: str or Model_pb2
 
-            For MLProgram, the model can be a path string (``.mlpackage``) or ``Model_pb2``.
-            If its a path string, it must point to a directory containing bundle
+            For an ML program (``mlprogram``), the model can be a path string (``.mlpackage``) or ``Model_pb2``.
+            If it is a path string, it must point to a directory containing bundle
             artifacts (such as ``weights.bin``).
-            If it is of type ``Model_pb2`` (spec), then ``weights_dir`` must also be provided, if the model
-            has weights, since to initialize and load the model, both the proto spec and the weights are
-            required. Proto spec for an MLProgram, unlike the NeuralNetwork, does not contain the weights,
-            they are stored separately. If the model does not have weights, an empty weights_dir can be provided.
+            If it is of type ``Model_pb2`` (spec), then you must also provide ``weights_dir`` if the model
+            has weights, because both the proto spec and the weights are
+            required to initialize and load the model.
+            The proto spec for an ``mlprogram``, unlike a neural network (``neuralnetwork``),
+            does not contain the weights; they are stored separately.
+            If the model does not have weights, you can provide an empty ``weights_dir``.
 
-            For non mlprogram model types, the model can be a path string (``.mlmodel``) or type ``Model_pb2``,
-            i.e. a spec object.
+            For non- ``mlprogram`` model types, the model can be a path string (``.mlmodel``)
+            or type ``Model_pb2``, such as a spec object.
 
         is_temp_package: bool
-            Set to True if the input model package dir is temporary and can be deleted upon interpreter termination.
+            Set to ``True`` if the input model package dir is temporary and can be deleted upon interpreter termination.
 
         mil_program: coremltools.converters.mil.Program
             Set to the MIL program object, if available.
@@ -274,15 +276,15 @@ class MLModel:
             the unified converter API `coremltools.convert() <https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry>`_.
 
         skip_model_load: bool
-            Set to True to prevent coremltools from calling into the Core ML framework
+            Set to ``True`` to prevent Core ML Tools from calling into the Core ML framework
             to compile and load the model. In that case, the returned model object cannot
             be used to make a prediction. This flag may be used to load a newer model
             type on an older Mac, to inspect or load/save the spec.
 
-            Example: Loading an ML Program model type on a macOS 11, since an ML Program can be
+            Example: Loading an ML program model type on a macOS 11, since an ML program can be
             compiled and loaded only from macOS12+.
 
-            Defaults to False.
+            Defaults to ``False``.
 
         compute_units: coremltools.ComputeUnit
             An enum with three possible values:
@@ -295,8 +297,8 @@ class MLModel:
                   not the GPU. Available only for macOS >= 13.0.
 
         weights_dir: str
-            Path to the weight directory, required when loading an MLModel of type mlprogram,
-            from a spec object, i.e. when the argument ``model`` is of type ``Model_pb2``
+            Path to the weight directory, required when loading an MLModel of type ``mlprogram``,
+            from a spec object, such as when the argument ``model`` is of type ``Model_pb2``.
 
         Notes
         -----
@@ -313,8 +315,11 @@ class MLModel:
 
         Examples
         --------
-        loaded_model = MLModel('my_model.mlmodel')
-        loaded_model = MLModel("my_model.mlpackage")
+        .. sourcecode:: python
+
+			loaded_model = MLModel('my_model.mlmodel')
+			loaded_model = MLModel("my_model.mlpackage")
+
         """
 
         def cleanup(package_path):
@@ -466,7 +471,7 @@ class MLModel:
 
     def save(self, save_path: str):
         """
-        Save the model to a ``.mlmodel`` format. For an MIL program, the save_path is
+        Save the model to an ``.mlmodel`` format. For an MIL program, the ``save_path`` is
         a package directory containing the ``mlmodel`` and weights.
 
         Parameters
@@ -475,8 +480,11 @@ class MLModel:
 
         Examples
         --------
-        model.save('my_model_file.mlmodel')
-        loaded_model = MLModel('my_model_file.mlmodel')
+        .. sourcecode:: python
+
+			model.save('my_model_file.mlmodel')
+			loaded_model = MLModel('my_model_file.mlmodel')
+
         """
         save_path = _os.path.expanduser(save_path)
 
@@ -511,8 +519,9 @@ class MLModel:
         """
         Returns the path for the underlying compiled ML Model.
 
-        IMPORTANT - This path is only available for the lifetime of this Python object. If you want
+        **Important**: This path is available only for the lifetime of this Python object. If you want
         the compiled model to persist, you need to make a copy.
+
         """
         return self.__proxy__.get_compiled_model_path()
 
@@ -528,7 +537,10 @@ class MLModel:
 
         Examples
         --------
-        spec = model.get_spec()
+        .. sourcecode:: python
+
+			spec = model.get_spec()
+
         """
         return _deepcopy(self._spec)
 
@@ -556,12 +568,15 @@ class MLModel:
 
         Examples
         --------
-        data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
-        predictions = model.predict(data)
+        .. sourcecode:: python
 
-        data = [ {'bedroom': 1.0, 'bath': 1.0, 'size': 1240},
-                 {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
-        batch_predictions = model.predict(data)
+			data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
+			predictions = model.predict(data)
+
+			data = [ {'bedroom': 1.0, 'bath': 1.0, 'size': 1240},
+					 {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
+			batch_predictions = model.predict(data)
+
         """
         def verify_and_convert_input_dict(d):
             self._verify_input_dict(d)
@@ -683,7 +698,10 @@ class MLModel:
 
         Examples
         --------
-        mil_prog = model._get_mil_internal()
+        .. sourcecode:: python
+
+			mil_prog = model._get_mil_internal()
+
         """
         return _deepcopy(self._mil_program)
 
