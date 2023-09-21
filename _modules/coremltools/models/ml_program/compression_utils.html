@@ -130,7 +130,7 @@
 <span class="k">def</span> <span class="nf">affine_quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">int8</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    ``coremltools.compression_utils.affine_quantize_weights`` is deprecated and will be removed in the future.</span>
-<span class="sd">    Please use ``coremltools.optimize.coreml.linear_quantize_weights``.</span>
+<span class="sd">    Please use :py:class:`coremltools.optimize.coreml.linear_quantize_weights`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">op_selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">op_selector</span> <span class="o">=</span> <span class="n">_default_op_selector</span>
@@ -147,7 +147,7 @@
 <span class="k">def</span> <span class="nf">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lut_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    ``coremltools.compression_utils.palettize_weights`` is deprecated and will be removed in the future.</span>
-<span class="sd">    Please use ``coremltools.optimize.coreml.palettize_weights``.</span>
+<span class="sd">    Please use :py:class:`coremltools.optimize.coreml.palettize_weights`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">op_selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">op_selector</span> <span class="o">=</span> <span class="n">_default_op_selector</span>
@@ -166,7 +166,7 @@
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    ``coremltools.compression_utils.sparsify_weights`` is deprecated and will be removed in the future.</span>
-<span class="sd">    Please use ``coremltools.optimize.coreml.prune_weights``.</span>
+<span class="sd">    Please use :py:class:`coremltools.optimize.coreml.prune_weights`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">op_selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">op_selector</span> <span class="o">=</span> <span class="n">_default_op_selector</span>
@@ -201,7 +201,7 @@
 <span class="k">def</span> <span class="nf">decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    ``coremltools.compression_utils.decompress_weights`` is deprecated and will be removed in the future.</span>
-<span class="sd">    Please use ``coremltools.optimize.coreml.decompress_weights``.</span>
+<span class="sd">    Please use :py:class:`coremltools.optimize.coreml.decompress_weights`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">)</span>
 </pre></div>

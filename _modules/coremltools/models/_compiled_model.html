@@ -117,17 +117,15 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        path : str</span>
-<span class="sd">            The path to a compiled model directory, ending in &quot;.mlmodelc&quot;.</span>
+<span class="sd">            The path to a compiled model directory, ending in ``.mlmodelc``.</span>
 
 <span class="sd">        compute_units : coremltools.ComputeUnit</span>
-
-<span class="sd">            An enum with the following possible values.</span>
-
+<span class="sd">            An enum with the following possible values:</span>
 <span class="sd">                - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
-<span class="sd">                 neural engine.</span>
+<span class="sd">                  neural engine.</span>
 <span class="sd">                - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
-<span class="sd">                 neural engine.</span>
+<span class="sd">                  neural engine.</span>
 <span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
 <span class="sd">                  not the GPU. Available only for macOS &gt;= 13.0.</span>
 
@@ -135,8 +133,8 @@
 <span class="sd">        --------</span>
 <span class="sd">        .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; my_compiled_model = ct.models.CompiledMLModel(&quot;my_model_path.mlmodelc&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; y = my_compiled_model.predict({&#39;x&#39;: 3})</span>
+<span class="sd">            my_compiled_model = ct.models.CompiledMLModel(&quot;my_model_path.mlmodelc&quot;)</span>
+<span class="sd">            y = my_compiled_model.predict({&#39;x&#39;: 3})</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -178,12 +176,15 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
-<span class="sd">        predictions = model.predict(data)</span>
+<span class="sd">        .. sourcecode:: python</span>
 
-<span class="sd">        data = [ {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240},</span>
-<span class="sd">                 {&#39;bedroom&#39;: 4.0, &#39;bath&#39;: 2.5, &#39;size&#39;: 2400} ]</span>
-<span class="sd">        batch_predictions = model.predict(data)</span>
+<span class="sd">			data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
+<span class="sd">			predictions = model.predict(data)</span>
+<span class="sd">            </span>
+<span class="sd">			data = [ {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240},</span>
+<span class="sd">					 {&#39;bedroom&#39;: 4.0, &#39;bath&#39;: 2.5, &#39;size&#39;: 2400} ]</span>
+<span class="sd">			batch_predictions = model.predict(data)</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_MLModel</span><span class="o">.</span><span class="n">_check_predict_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 

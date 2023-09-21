@@ -348,19 +348,21 @@
 <span class="sd">        ----------</span>
 <span class="sd">        model: str or Model_pb2</span>
 
-<span class="sd">            For MLProgram, the model can be a path string (``.mlpackage``) or ``Model_pb2``.</span>
-<span class="sd">            If its a path string, it must point to a directory containing bundle</span>
+<span class="sd">            For an ML program (``mlprogram``), the model can be a path string (``.mlpackage``) or ``Model_pb2``.</span>
+<span class="sd">            If it is a path string, it must point to a directory containing bundle</span>
 <span class="sd">            artifacts (such as ``weights.bin``).</span>
-<span class="sd">            If it is of type ``Model_pb2`` (spec), then ``weights_dir`` must also be provided, if the model</span>
-<span class="sd">            has weights, since to initialize and load the model, both the proto spec and the weights are</span>
-<span class="sd">            required. Proto spec for an MLProgram, unlike the NeuralNetwork, does not contain the weights,</span>
-<span class="sd">            they are stored separately. If the model does not have weights, an empty weights_dir can be provided.</span>
+<span class="sd">            If it is of type ``Model_pb2`` (spec), then you must also provide ``weights_dir`` if the model</span>
+<span class="sd">            has weights, because both the proto spec and the weights are</span>
+<span class="sd">            required to initialize and load the model.</span>
+<span class="sd">            The proto spec for an ``mlprogram``, unlike a neural network (``neuralnetwork``),</span>
+<span class="sd">            does not contain the weights; they are stored separately.</span>
+<span class="sd">            If the model does not have weights, you can provide an empty ``weights_dir``.</span>
 
-<span class="sd">            For non mlprogram model types, the model can be a path string (``.mlmodel``) or type ``Model_pb2``,</span>
-<span class="sd">            i.e. a spec object.</span>
+<span class="sd">            For non- ``mlprogram`` model types, the model can be a path string (``.mlmodel``)</span>
+<span class="sd">            or type ``Model_pb2``, such as a spec object.</span>
 
 <span class="sd">        is_temp_package: bool</span>
-<span class="sd">            Set to True if the input model package dir is temporary and can be deleted upon interpreter termination.</span>
+<span class="sd">            Set to ``True`` if the input model package dir is temporary and can be deleted upon interpreter termination.</span>
 
 <span class="sd">        mil_program: coremltools.converters.mil.Program</span>
 <span class="sd">            Set to the MIL program object, if available.</span>
@@ -368,15 +370,15 @@
 <span class="sd">            the unified converter API `coremltools.convert() &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry&gt;`_.</span>
 
 <span class="sd">        skip_model_load: bool</span>
-<span class="sd">            Set to True to prevent coremltools from calling into the Core ML framework</span>
+<span class="sd">            Set to ``True`` to prevent Core ML Tools from calling into the Core ML framework</span>
 <span class="sd">            to compile and load the model. In that case, the returned model object cannot</span>
 <span class="sd">            be used to make a prediction. This flag may be used to load a newer model</span>
 <span class="sd">            type on an older Mac, to inspect or load/save the spec.</span>
 
-<span class="sd">            Example: Loading an ML Program model type on a macOS 11, since an ML Program can be</span>
+<span class="sd">            Example: Loading an ML program model type on a macOS 11, since an ML program can be</span>
 <span class="sd">            compiled and loaded only from macOS12+.</span>
 
-<span class="sd">            Defaults to False.</span>
+<span class="sd">            Defaults to ``False``.</span>
 
 <span class="sd">        compute_units: coremltools.ComputeUnit</span>
 <span class="sd">            An enum with three possible values:</span>
@@ -389,8 +391,8 @@
 <span class="sd">                  not the GPU. Available only for macOS &gt;= 13.0.</span>
 
 <span class="sd">        weights_dir: str</span>
-<span class="sd">            Path to the weight directory, required when loading an MLModel of type mlprogram,</span>
-<span class="sd">            from a spec object, i.e. when the argument ``model`` is of type ``Model_pb2``</span>
+<span class="sd">            Path to the weight directory, required when loading an MLModel of type ``mlprogram``,</span>
+<span class="sd">            from a spec object, such as when the argument ``model`` is of type ``Model_pb2``.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -407,8 +409,11 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        loaded_model = MLModel(&#39;my_model.mlmodel&#39;)</span>
-<span class="sd">        loaded_model = MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">			loaded_model = MLModel(&#39;my_model.mlmodel&#39;)</span>
+<span class="sd">			loaded_model = MLModel(&quot;my_model.mlpackage&quot;)</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
@@ -560,7 +565,7 @@
 
 <div class="viewcode-block" id="MLModel.save"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save the model to a ``.mlmodel`` format. For an MIL program, the save_path is</span>
+<span class="sd">        Save the model to an ``.mlmodel`` format. For an MIL program, the ``save_path`` is</span>
 <span class="sd">        a package directory containing the ``mlmodel`` and weights.</span>
 
 <span class="sd">        Parameters</span>
@@ -569,8 +574,11 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        model.save(&#39;my_model_file.mlmodel&#39;)</span>
-<span class="sd">        loaded_model = MLModel(&#39;my_model_file.mlmodel&#39;)</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">			model.save(&#39;my_model_file.mlmodel&#39;)</span>
+<span class="sd">			loaded_model = MLModel(&#39;my_model_file.mlmodel&#39;)</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">save_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
 
@@ -605,8 +613,9 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns the path for the underlying compiled ML Model.</span>
 
-<span class="sd">        IMPORTANT - This path is only available for the lifetime of this Python object. If you want</span>
+<span class="sd">        **Important**: This path is available only for the lifetime of this Python object. If you want</span>
 <span class="sd">        the compiled model to persist, you need to make a copy.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span></div>
 
@@ -622,7 +631,10 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        spec = model.get_spec()</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">			spec = model.get_spec()</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">)</span></div>
 
@@ -650,12 +662,15 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
-<span class="sd">        predictions = model.predict(data)</span>
+<span class="sd">        .. sourcecode:: python</span>
 
-<span class="sd">        data = [ {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240},</span>
-<span class="sd">                 {&#39;bedroom&#39;: 4.0, &#39;bath&#39;: 2.5, &#39;size&#39;: 2400} ]</span>
-<span class="sd">        batch_predictions = model.predict(data)</span>
+<span class="sd">			data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
+<span class="sd">			predictions = model.predict(data)</span>
+
+<span class="sd">			data = [ {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240},</span>
+<span class="sd">					 {&#39;bedroom&#39;: 4.0, &#39;bath&#39;: 2.5, &#39;size&#39;: 2400} ]</span>
+<span class="sd">			batch_predictions = model.predict(data)</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">def</span> <span class="nf">verify_and_convert_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_dict</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
@@ -777,7 +792,10 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        mil_prog = model._get_mil_internal()</span>
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">			mil_prog = model._get_mil_internal()</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span><span class="p">)</span>
 
