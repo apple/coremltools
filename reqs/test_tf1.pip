@@ -1,0 +1,7 @@
+boto3==1.14.8
+h5py==2.10.0
+parameterized==0.8.1
+pillow
+pytest==7.1.2
+pytest-timeout
+tensorflow==1.15.4

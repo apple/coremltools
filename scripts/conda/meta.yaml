@@ -1,0 +1,57 @@
+# build a conda package from a local git checkout
+package:
+  name: coremltools
+  version: {{ GIT_DESCRIBE_TAG }}
+
+source:
+  path: ../..  
+
+build:
+  number: {{ GIT_DESCRIBE_NUMBER|int }}
+  string: py{{ CONDA_PY }}_{{GIT_DESCRIBE_HASH}}_{{ GIT_DESCRIBE_NUMBER }}
+
+requirements:
+  build:
+    - cmake
+    - make
+    - {{ compiler('c') }}  # [linux]
+    - {{ compiler('cxx') }}  # [linux]
+  host:
+    - python
+    - numpy
+    - pip
+    - libuuid  # [linux]
+  run:
+    - python
+    - {{ pin_compatible('numpy') }}
+    - protobuf >=3.1.0
+    - attrs
+    - sympy
+    - tqdm
+    - packaging
+    - libuuid  # [linux]
+  run_constrained:
+    - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx]
+    - pytorch >=1.4,<1.7  # inferred by testing
+
+test:
+  imports:
+    - coremltools
+
+about:
+  home: https://github.com/apple/coremltools
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: "LICENSE.txt"
+  summary: 'Core ML is an Apple framework to integrate machine learning models into your app. Core ML provides a unified representation for all models.'
+
+  description: |
+    Core ML is an Apple framework to integrate machine learning models into your app.
+
+    Use the coremltools Python package to convert models from third-party training libraries such as TensorFlow and PyTorch to the Core ML format. You can then use Core ML to integrate the models into your app.
+
+    Core ML provides a unified representation for all models. Your app uses Core ML APIs and user data to make predictions, and to fine-tune models, all on the user’s device. Running a model strictly on the user’s device removes any need for a network connection, which helps keep the user’s data private and your app responsive.
+
+    Core ML optimizes on-device performance by leveraging the CPU, GPU, and Neural Engine while minimizing its memory footprint and power consumption.
+  doc_url: https://coremltools.readme.io/docs
+  dev_url: https://github.com/apple/coremltools

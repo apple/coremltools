@@ -1,0 +1,81 @@
+name: build
+# When the 'permissions' key is specified, unspecified permission scopes (e.g.,
+# actions, checks, etc.) are set to no access (none).
+permissions:
+  contents: read
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    # Run weekly (* is a special character in YAML, so quote the string)
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    inputs:
+      # When git-ref is empty, HEAD will be checked out.
+      git-ref:
+        description: Optional git ref (branch, tag, or full SHA)
+        required: false
+
+jobs:
+  build:
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.6', '3.7', '3.8', '3.9', '3.10']
+        config:
+          - os: ubuntu-latest
+            cc: clang
+            cxx: clang++
+          - os: ubuntu-latest
+            cc: gcc
+            cxx: g++
+          - os: windows-latest
+          - os: macos-latest
+        exclude:
+          # Python 3.6 is not supported on GitHub-hosted Ubuntu runners as of Ubuntu 22.04.
+          # https://github.com/actions/setup-python/issues/544#issuecomment-1332535877
+          - {config: {os: ubuntu-latest}, python-version: '3.6'}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        # When the ref is empty, HEAD will be checked out.
+        ref: ${{ github.event.inputs.git-ref }}
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Lint
+      run: |
+        pip install flake8
+        # stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    - name: Typing
+      run: |
+        python -m pip install mypy
+        python -m mypy kmeans1d
+
+    - name: Install (ubuntu)
+      if: matrix.config.os == 'ubuntu-latest'
+      env:
+        CC: ${{ matrix.config.cc }}
+        CXX: ${{ matrix.config.cxx }}
+      run: pip install --verbose .
+
+    - name: Install (other)
+      if: matrix.config.os != 'ubuntu-latest'
+      run: pip install --verbose .
+
+    - name: Test
+      run: |
+        cd tests  # so package is imported from site-packages instead of working directory
+        python -m unittest discover . -v
