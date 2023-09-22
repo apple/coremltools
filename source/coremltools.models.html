@@ -282,29 +282,31 @@ predictions for the purposes of testing (on select platforms).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>model: str or Model_pb2</strong></dt><dd><p>For MLProgram, the model can be a path string (<code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code>) or <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>.
-If its a path string, it must point to a directory containing bundle
+<dt><strong>model: str or Model_pb2</strong></dt><dd><p>For an ML program (<code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>), the model can be a path string (<code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code>) or <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>.
+If it is a path string, it must point to a directory containing bundle
 artifacts (such as <code class="docutils literal notranslate"><span class="pre">weights.bin</span></code>).
-If it is of type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code> (spec), then <code class="docutils literal notranslate"><span class="pre">weights_dir</span></code> must also be provided, if the model
-has weights, since to initialize and load the model, both the proto spec and the weights are
-required. Proto spec for an MLProgram, unlike the NeuralNetwork, does not contain the weights,
-they are stored separately. If the model does not have weights, an empty weights_dir can be provided.</p>
-<p>For non mlprogram model types, the model can be a path string (<code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code>) or type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>,
-i.e. a spec object.</p>
+If it is of type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code> (spec), then you must also provide <code class="docutils literal notranslate"><span class="pre">weights_dir</span></code> if the model
+has weights, because both the proto spec and the weights are
+required to initialize and load the model.
+The proto spec for an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, unlike a neural network (<code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code>),
+does not contain the weights; they are stored separately.
+If the model does not have weights, you can provide an empty <code class="docutils literal notranslate"><span class="pre">weights_dir</span></code>.</p>
+<p>For non- <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> model types, the model can be a path string (<code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code>)
+or type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>, such as a spec object.</p>
 </dd>
-<dt><strong>is_temp_package: bool</strong></dt><dd><p>Set to True if the input model package dir is temporary and can be deleted upon interpreter termination.</p>
+<dt><strong>is_temp_package: bool</strong></dt><dd><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if the input model package dir is temporary and can be deleted upon interpreter termination.</p>
 </dd>
 <dt><strong>mil_program: coremltools.converters.mil.Program</strong></dt><dd><p>Set to the MIL program object, if available.
 It is available whenever an MLModel object is constructed using
 the unified converter API <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry">coremltools.convert()</a>.</p>
 </dd>
-<dt><strong>skip_model_load: bool</strong></dt><dd><p>Set to True to prevent coremltools from calling into the Core ML framework
+<dt><strong>skip_model_load: bool</strong></dt><dd><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to prevent Core ML Tools from calling into the Core ML framework
 to compile and load the model. In that case, the returned model object cannot
 be used to make a prediction. This flag may be used to load a newer model
 type on an older Mac, to inspect or load/save the spec.</p>
-<p>Example: Loading an ML Program model type on a macOS 11, since an ML Program can be
+<p>Example: Loading an ML program model type on a macOS 11, since an ML program can be
 compiled and loaded only from macOS12+.</p>
-<p>Defaults to False.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
 <dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><dl class="simple">
 <dt>An enum with three possible values:</dt><dd><ul class="simple">
@@ -319,8 +321,8 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </dd>
 </dl>
 </dd>
-<dt><strong>weights_dir: str</strong></dt><dd><p>Path to the weight directory, required when loading an MLModel of type mlprogram,
-from a spec object, i.e. when the argument <code class="docutils literal notranslate"><span class="pre">model</span></code> is of type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code></p>
+<dt><strong>weights_dir: str</strong></dt><dd><p>Path to the weight directory, required when loading an MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>,
+from a spec object, such as when the argument <code class="docutils literal notranslate"><span class="pre">model</span></code> is of type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -336,15 +338,17 @@ weights, and so on).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">weights_dir</span></code> (mlprogram only): Directory containing weights inside the package_path.</p></li>
 </ul>
 <p class="rubric">Examples</p>
-<p>loaded_model = MLModel(‘my_model.mlmodel’)
-loaded_model = MLModel(“my_model.mlpackage”)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.get_compiled_model_path">
 <span class="sig-name descname"><span class="pre">get_compiled_model_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.get_compiled_model_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.get_compiled_model_path" title="Permalink to this definition"></a></dt>
 <dd><p>Returns the path for the underlying compiled ML Model.</p>
-<p>IMPORTANT - This path is only available for the lifetime of this Python object. If you want
+<p><strong>Important</strong>: This path is available only for the lifetime of this Python object. If you want
 the compiled model to persist, you need to make a copy.</p>
 </dd></dl>
 
@@ -361,7 +365,9 @@ the compiled model to persist, you need to make a copy.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>spec = model.get_spec()</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -388,19 +394,20 @@ and torch.Tensor.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>data = {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240}
-predictions = model.predict(data)</p>
-<dl class="simple">
-<dt>data = [ {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240},</dt><dd><p>{‘bedroom’: 4.0, ‘bath’: 2.5, ‘size’: 2400} ]</p>
-</dd>
-</dl>
-<p>batch_predictions = model.predict(data)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">},</span>
+                 <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">2400</span><span class="p">}</span> <span class="p">]</span>
+<span class="n">batch_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.save">
 <span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.save" title="Permalink to this definition"></a></dt>
-<dd><p>Save the model to a <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> format. For an MIL program, the save_path is
+<dd><p>Save the model to an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> format. For an MIL program, the <code class="docutils literal notranslate"><span class="pre">save_path</span></code> is
 a package directory containing the <code class="docutils literal notranslate"><span class="pre">mlmodel</span></code> and weights.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -410,8 +417,10 @@ a package directory containing the <code class="docutils literal notranslate"><s
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>model.save(‘my_model_file.mlmodel’)
-loaded_model = MLModel(‘my_model_file.mlmodel’)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
@@ -426,31 +435,23 @@ loaded_model = MLModel(‘my_model_file.mlmodel’)</p>
 <dt class="sig sig-object py" id="coremltools.models.CompiledMLModel.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Loads a compiled Core ML model.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
-<dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>The path to a compiled model directory, ending in “.mlmodelc”.</p>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>path</strong><span class="classifier">str</span></dt><dd><p>The path to a compiled model directory, ending in <code class="docutils literal notranslate"><span class="pre">.mlmodelc</span></code>.</p>
 </dd>
-<dt><strong>compute_units</strong><span class="classifier">coremltools.ComputeUnit</span></dt><dd><p>An enum with the following possible values.</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the</p></li>
-</ul>
-<blockquote>
-<div><p>neural engine.</p>
-</div></blockquote>
-<ul class="simple">
+<dt><strong>compute_units</strong><span class="classifier">coremltools.ComputeUnit</span></dt><dd><dl class="simple">
+<dt>An enum with the following possible values:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the
+neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU, but not the</p></li>
-</ul>
-<blockquote>
-<div><p>neural engine.</p>
-</div></blockquote>
-<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU, but not the
+neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but
 not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd>
@@ -462,11 +463,8 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </dl>
 </div>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
-</div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">my_compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;my_model_path.mlmodelc&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">my_compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;my_model_path.mlmodelc&quot;</span><span class="p">)</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">my_compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -493,13 +491,14 @@ For batch predictons, use a list of such dictionaries.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>data = {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240}
-predictions = model.predict(data)</p>
-<dl class="simple">
-<dt>data = [ {‘bedroom’: 1.0, ‘bath’: 1.0, ‘size’: 1240},</dt><dd><p>{‘bedroom’: 4.0, ‘bath’: 2.5, ‘size’: 2400} ]</p>
-</dd>
-</dl>
-<p>batch_predictions = model.predict(data)</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">},</span>
+                 <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">2400</span><span class="p">}</span> <span class="p">]</span>
+<span class="n">batch_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </dd></dl>
