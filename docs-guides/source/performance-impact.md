@@ -25,7 +25,7 @@ However, the locations of the non-zero values also need to be stored in order to
 
 The `n_bits` parameter controls model size with weight Palettization. `n_bits=8,4,2` will correspond to the maximum possible compression ratios of `2,4,8` respectively. Since additional memory needs to be allocated to store the look-up table, the compression ratio will be less than the maximum possible. Similar to pruning, if certain layers that are sensitive to precision are skipped from being palletized the overall compression ratio may be lower. 
 
-### Linear 8-Bit Quantization
+### Linear Quantization (8 bit)
 
 Since linear 8-bit quantization always uses 8 bits, the compression ratio is close to 2 with this scheme. In practice, it would be slightly less than 2, as a bit of additional memory is required to store `per-channel` scale parameters. 
 
@@ -41,7 +41,18 @@ With changes made from `iOS17/macOS13` onwards, the weight _decompression_ may i
 
 For a given weight, if a decision is made to decompress at _prediction_ time instead of _load_ time, weights will be kept in their reduced size form until later — until they need to be loaded for the compute. This means that fewer number of bytes will be required to be moved from the main memory to the compute engine, thereby reducing the memory movement time. However, it also means that they need to be decompressed on the fly while doing the compute, thereby increasing the prediction time. Depending on how these two effects add up, the overall prediction time may decrease or may even increase (while runtime memory usage is lower).
 
-Specifically for models that are "weight memory bound" rather than "compute bound" or "activation memory bound" (meaning that the bottleneck is in the reading of weight data), decompressing weights "just in time" can be very beneficial if the decompression operation can be done efficiently. Since the decision to decompress weights at load or prediction time is now dynamic and influenced by several factors, it is mainly guided by the principle of providing the best tradeoff between runtime memory and prediction speed, as possible on a given hardware unit. Currently, in most cases Neural Engine is the compute backend that opts into just in time weight decompression, hence offering the possibility of lower runtime memory and latencies. However, there are variations to be expected based on the specific type of the compression scheme, for this and impact on latency for activation quantized models, learn more in the sections [Pruning Overview](pruning-overview), [Palettization Overview](palettization-overview) and [Quantization Overview](quantization-overview). 
+Specifically for models that are "weight memory bound" rather than "compute bound" or "activation memory bound" 
+(meaning that the bottleneck is in the reading of weight data), decompressing weights "just in time" can be very 
+beneficial if the decompression operation can be done efficiently. Since the decision to decompress weights at 
+load or prediction time is now dynamic and influenced by several factors, it is mainly guided by the principle of 
+providing the best tradeoff between runtime memory and prediction speed, as possible on a given hardware unit. 
+Currently, in most cases Neural Engine is the compute backend that opts into just in time weight decompression, 
+hence offering the possibility of lower runtime memory and latencies. 
+However, there are variations to be expected based on the specific type of the compression scheme, 
+for this and impact on latency for activation quantized models, learn more in the sections 
+[Pruning Overview](pruning-overview.md#impact-on-latency-and-compute-unit-considerations), 
+[Palettization Overview](palettization-overview.md#impact-on-latency-and-compute-unit-considerations) and 
+[Quantization Overview](quantization-overview.md#impact-on-latency-and-compute-unit-considerations). 
 
 ## Examples
 
@@ -57,9 +68,9 @@ All evaluations were performed on the final compressed (or uncompressed) CoreML 
 
 The latency numbers were captured using the Xcode **Performance** tab, using the `median` statistic. Compute unit selection is `all` unless otherwise noted. The latency numbers are sensitive to the device state, and may vary depending on the device state and build versions. 
 
-- Device: iPhone 14 Pro
-- iOS build: iOS17 Developer Beta 1 
-- Xcode : Xcode 15 Beta 1 
+- Device: iPhone 14 Pro (A16), unless otherwise mentioned
+- iOS build: iOS17 
+- Xcode : Xcode 15
 
 ### Model Info
 
@@ -75,54 +86,54 @@ The latency numbers were captured using the Xcode **Performance** tab, using the
 ### Pruning
 
 | Model Name | Config | Optimization Workflow | Compression Ratio | Accuracy | Latency in ms (per batch) |
-| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | 
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 71.86 | 0.52 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV2Alpha1UnstructuredSparsity50.mlpackage.zip) | Unstructured Sparsity 50% | Training Time | 1.37 | 71.83 ± 0.01 | 0.45 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV2Alpha1UnstructuredSparsity75.mlpackage.zip) | Unstructured Sparsity 75% | Training Time | 1.73 | 69.47 ± 0.07 | 0.45 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV3Small.mlpackage.zip) | Float16 | n/a | 1.0 | 67.58 | 0.20 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity50.mlpackage.zip) | [Unstructured Sparsity 50%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity50.yaml) | Training Time | 1.73 | 66.55 ± 0.03 | 0.18 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity75.mlpackage.zip) | [Unstructured Sparsity 75%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity75.yaml) | Training Time | 3.06 | 60.52 ± 0.06 | 0.18 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip) | Float16 | n/a | 1.0 | 76.14 | 1.42 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity50.mlpackage.zip) | [Unstructured Sparsity 50%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity50.yaml) | Training Time | 1.77 | 73.64 ± 0.04 | 1.39 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity75.mlpackage.zip) | [Unstructured Sparsity 75%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity75.yaml) | Training Time | 3.17 | 73.40 ± 0.08 | 1.19 |
+| ----------- | ----------- | ----------- | ----------- | ----------- |---------------------------| 
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 71.86 | 0.48                      |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV2Alpha1UnstructuredSparsity50.mlpackage.zip) | Unstructured Sparsity 50% | Training Time | 1.37 | 71.83 ± 0.01 | 0.46                      |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV2Alpha1UnstructuredSparsity75.mlpackage.zip) | Unstructured Sparsity 75% | Training Time | 1.73 | 69.47 ± 0.07 | 0.46                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV3Small.mlpackage.zip) | Float16 | n/a | 1.0 | 67.58 | 0.13                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity50.mlpackage.zip) | [Unstructured Sparsity 50%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity50.yaml) | Training Time | 1.73 | 66.55 ± 0.03 | 0.12                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity75.mlpackage.zip) | [Unstructured Sparsity 75%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/MobileNetV3SmallUnstructuredSparsity75.yaml) | Training Time | 3.06 | 60.52 ± 0.06 | 0.12                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip) | Float16 | n/a | 1.0 | 76.14 | 1.52                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity50.mlpackage.zip) | [Unstructured Sparsity 50%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity50.yaml) | Training Time | 1.77 | 73.64 ± 0.04 | 1.46                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity75.mlpackage.zip) | [Unstructured Sparsity 75%](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/pruned/ResNet50UnstructuredSparsity75.yaml) | Training Time | 3.17 | 73.40 ± 0.08 | 1.28                      |
 
 ### Palettization
 
 | Model Name | Config | Optimization Workflow | Compression Ratio | Accuracy | Latency in ms (per batch) |
-| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | 
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 71.86 | 0.52 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization2Bit.yaml) | Training Time | 5.92 | 68.81 ± 0.04 | 0.49 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization4Bit.yaml) | Training Time | 3.38 | 70.60 ± 0.08 | 0.49 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV2Alpha1ScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.54 | 70.89 | 0.47 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV2Alpha1ScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 1.97 | 71.80 | 0.48 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV3Small.mlpackage.zip) | Float16 | n/a | 1.0 | 67.58 | 0.20 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization2Bit.yaml) | Training Time | 5.82 | 59.82 ± 0.98 | 0.22 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization4Bit.yaml) | Training Time | 3.47 | 67.23 ± 0.04 | 0.2 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV3SmallScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.6 | 65.46 | 0.22 |
-| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV3SmallScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 1.93 | 67.44 | 0.21 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip) | Float16 | n/a | 1.0 | 76.14 | 1.42 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization2Bit.yaml) | Training Time | 7.63 | 75.47 ± 0.05 | 1.39 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization4Bit.yaml) | Training Time | 3.9 | 76.63 ± 0.01 | 1.37 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/ResNet50ScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.65 | 75.68 | 1.31 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/ResNet50ScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 1.99 | 76.05 | 1.34 |
-| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/CenterNetResNet34.mlpackage.zip) | Float16 | n/a | 1.0 | 29.0 | 7.48 |
-| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization2Bit.yaml) | Training Time | 7.71 | 25.66 ± 0.03 | 6.71 |
-| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization4Bit.yaml) | Training Time | 3.94 | 28.14 ± 0.11 | 6.91 |
-| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/CenterNetResNet34ScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.65 | 28.27 | 7.01 |
-| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/CenterNetResNet34ScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 2.0 | 28.75 | 7.45 |
+| ----------- | ----------- | ----------- | ----------- | ----------- |---------------------------| 
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 71.86 | 0.48                      |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization2Bit.yaml) | Training Time | 5.92 | 68.81 ± 0.04 | 0.47                      |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV2Alpha1ScalarPalettization4Bit.yaml) | Training Time | 3.38 | 70.60 ± 0.08 | 0.45                      |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV2Alpha1ScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.54 | 70.89 | 0.48                      |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV2Alpha1ScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 1.97 | 71.80 | 0.45                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV3Small.mlpackage.zip) | Float16 | n/a | 1.0 | 67.58 | 0.13                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization2Bit.yaml) | Training Time | 5.82 | 59.82 ± 0.98 | 0.13                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/MobileNetV3SmallScalarPalettization4Bit.yaml) | Training Time | 3.47 | 67.23 ± 0.04 | 0.13                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV3SmallScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.6 | 65.46 | 0.13                      |
+| [MobileNetv3-small](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/MobileNetV3SmallScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 1.93 | 67.44 | 0.13                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip) | Float16 | n/a | 1.0 | 76.14 | 1.52                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization2Bit.yaml) | Training Time | 7.63 | 75.47 ± 0.05 | 1.43                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/ResNet50ScalarPalettization4Bit.yaml) | Training Time | 3.9 | 76.63 ± 0.01 | 1.41                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/ResNet50ScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.65 | 75.68 | 1.37                      |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/ResNet50ScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 1.99 | 76.05 | 1.4                       |
+| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/CenterNetResNet34.mlpackage.zip) | Float16 | n/a | 1.0 | 29.0 | 6.85                      |
+| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization2Bit.mlpackage.zip) | [2 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization2Bit.yaml) | Training Time | 7.71 | 25.66 ± 0.03 | 6.37                      |
+| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization4Bit.mlpackage.zip) | [4 bit](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/palettized/CenterNetResNet34ScalarPalettization4Bit.yaml) | Training Time | 3.94 | 28.14 ± 0.11 | 6.67                      |
+| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/CenterNetResNet34ScalarPalettization6Bit.mlpackage.zip) | 6 bit | Post Training | 2.65 | 28.27 | 6.71                      |
+| [CenterNet (ResNet34 backbone)](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/palettized/CenterNetResNet34ScalarPalettization8Bit.mlpackage.zip) | 8 bit | Post Training | 2.0 | 28.75 | 6.85                      |
 
 ### Linear 8-Bit Quantization
 
-| Model Name | Config | Optimization Workflow | Compression Ratio | Accuracy | Latency in ms (per batch) |
-| ----------- | ----------- | ----------- | ----------- | ----------- | ----------- | 
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 71.86 | 0.52 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/MobileNetV2Alpha1WeightOnlySymmetricQuantized.mlpackage.zip) | Weight-only | Post Training | 1.92 | 71.78 | 0.47 |
-| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileNetV2Alpha1SymmetricPerChannel.mlpackage.zip) | [Weight & activation](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileNetV2Alpha1SymmetricPerChannel.yaml) | Training Time | 1.92 | 71.66 ± 0.04 | 0.28 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip) | Float16 | n/a | 1.0 | 76.14 | 1.42 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/ResNet50WeightOnlySymmetricQuantized.mlpackage.zip) | Weight-only | Post Training | 1.99 | 76.10 | 1.36 |
-| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/ResNet50SymmetricPerChannel.mlpackage.zip) | [Weight & activation](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/ResNet50SymmetricPerChannel.yaml) | Training Time | 1.98 | 76.80 ± 0.05 | 1.47 |
-| [MobileViTv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileViTV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 78.09 | 1.48 |
-| [MobileViTv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/MobileViTV2Alpha1WeightOnlySymmetricQuantized.mlpackage.zip) | Weight-only | Post Training | 1.92 | 77.66 | 1.53 |
-| [MobileViTv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileViTV2Alpha1SymmetricPerChannel.mlpackage.zip) | [Weight & activation](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileViTV2Alpha1SymmetricPerChannel.yaml) | Training Time | 1.89 | 76.89 ± 0.07 | 1.35 |
+| Model Name | Config | Optimization Workflow | Compression Ratio | Accuracy | Latency in ms (per batch) on iPhone 14 pro  | Latency in ms (per batch) on iPhone 15 pro | 
+| ----------- | ----------- | ----------- | ----------- | ----------- |---------------------------------------------|-------------------| 
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileNetV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 71.86 | 0.48                                        | 0.49              |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/MobileNetV2Alpha1WeightOnlySymmetricQuantized.mlpackage.zip) | Weight-only | Post Training | 1.92 | 71.78 | 0.45                                        | 0.44              |
+| [MobileNetv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileNetV2Alpha1SymmetricPerChannel.mlpackage.zip) | [Weight & activation](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileNetV2Alpha1SymmetricPerChannel.yaml) | Training Time | 1.92 | 71.66 ± 0.04 | 0.27                                        | 0.20              |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/ResNet50.mlpackage.zip) | Float16 | n/a | 1.0 | 76.14 | 1.52                                        | 1.38              |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/ResNet50WeightOnlySymmetricQuantized.mlpackage.zip) | Weight-only | Post Training | 1.99 | 76.10 | 1.49                                        | 1.50              |
+| [ResNet50](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/ResNet50SymmetricPerChannel.mlpackage.zip) | [Weight & activation](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/ResNet50SymmetricPerChannel.yaml) | Training Time | 1.98 | 76.80 ± 0.05 | 0.94                                        | 0.77              |
+| [MobileViTv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/uncompressed/MobileViTV2Alpha1.mlpackage.zip) | Float16 | n/a | 1.0 | 78.09 | 1.38                                        | 1.36              |
+| [MobileViTv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/post_training_compressed/quantized/MobileViTV2Alpha1WeightOnlySymmetricQuantized.mlpackage.zip) | Weight-only | Post Training | 1.92 | 77.66 | 1.43                                        | 1.37              |
+| [MobileViTv2-1.0](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileViTV2Alpha1SymmetricPerChannel.mlpackage.zip) | [Weight & activation](https://ml-assets.apple.com/coreml/quantized_models/training_time_compressed/quantized/MobileViTV2Alpha1SymmetricPerChannel.yaml) | Training Time | 1.89 | 76.89 ± 0.07 | 1.18                                        | 1.03              |
 
 
