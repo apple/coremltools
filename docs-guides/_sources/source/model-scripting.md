@@ -1,6 +1,6 @@
 # Model Scripting
 
-```
+```{eval-rst}
 .. index:: 
     single: PyTorch; model scripting
     single: model scripting
