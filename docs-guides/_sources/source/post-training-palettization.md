@@ -38,7 +38,8 @@ For more details on the parameters available in the config, see the following in
 - [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig)
 - [`palettize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights)
 
-```{admonition} Post-Training Palettization Works Well for `nbits = 6, 8`
+
+```{admonition} Post-Training Palettization Works Well for nbits = 6, 8
 
 Results are model and task dependent, but in most cases, palettizing with [`optimize.coreml.palettize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights) preserves the accuracy to a good degree for 6-bit or 8-bit settings. With lower settings, you will likely see a sharp drop in accuracy, in which case consider using [Training-Time Palettization](training-time-palettization) with `nbits = 2, 4`.
 

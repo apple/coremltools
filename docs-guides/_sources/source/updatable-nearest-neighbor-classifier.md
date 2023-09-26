@@ -18,12 +18,12 @@ This topic demonstrates the process of creating an updatable empty k-nearest nei
 
 	from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder
 	builder = KNearestNeighborsClassifierBuilder(input_name='input',
-												 output_name='output',
-												 number_of_dimensions=number_of_dimensions,
-												 default_class_label='defaultLabel',
-												 number_of_neighbors=3,
-												 weighting_scheme='inverse_distance',
-												 index_type='linear')
+					 output_name='output',
+					 number_of_dimensions=number_of_dimensions,
+					 default_class_label='defaultLabel',
+					 number_of_neighbors=3,
+					 weighting_scheme='inverse_distance',
+					 index_type='linear')
 
 	builder.author = 'Core ML Tools Example'
 	builder.license = 'MIT'

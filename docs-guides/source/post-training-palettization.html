@@ -432,10 +432,9 @@ document.write(`
 <li><p><a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig"><code class="docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a></p></li>
 <li><p><a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights"><code class="docutils literal notranslate"><span class="pre">palettize_weights</span></code></a></p></li>
 </ul>
-<p>```{admonition} Post-Training Palettization Works Well for <code class="docutils literal notranslate"><span class="pre">nbits</span> <span class="pre">=</span> <span class="pre">6,</span> <span class="pre">8</span></code></p>
+<div class="admonition-post-training-palettization-works-well-for-nbits-6-8 admonition">
+<p class="admonition-title">Post-Training Palettization Works Well for nbits = 6, 8</p>
 <p>Results are model and task dependent, but in most cases, palettizing with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights"><code class="docutils literal notranslate"><span class="pre">optimize.coreml.palettize_weights</span></code></a> preserves the accuracy to a good degree for 6-bit or 8-bit settings. With lower settings, you will likely see a sharp drop in accuracy, in which case consider using <a class="reference internal" href="training-time-palettization.html"><span class="doc std std-doc">Training-Time Palettization</span></a> with <code class="docutils literal notranslate"><span class="pre">nbits</span> <span class="pre">=</span> <span class="pre">2,</span> <span class="pre">4</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>
-</pre></div>
 </div>
 </section>
 

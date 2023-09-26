@@ -28,6 +28,6 @@ Since palettization reduces the size of each weight value, the amount of data to
 
 ```{admonition} Feature Availability
 
-Palettized weight representations for Core ML `mlprogram` models is available in `iOS16`/`macOS13`/`watchOS9`/`tvOS16` and newer deployment target formats.
+Palettized weight representation for Core ML `mlprogram` models is available in `iOS16`/`macOS13`/`watchOS9`/`tvOS16` and newer deployment target formats.
 ```
 

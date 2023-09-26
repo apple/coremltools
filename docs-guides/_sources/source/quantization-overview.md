@@ -54,9 +54,17 @@ Since 8 bits are used to represent weights, quantization can reduce your model s
 
 Since quantization reduces the size of each weight value, the amount of data to be moved is reduced during prediction. This can lead to benefits with memory-bottlenecked models. 
 
-This latency advantage is available only when quantized weights are loaded from memory and are decompressed "just in time" of computation. Starting with `iOS17/macOS14`, this is more likely to happen for models running primarily on the Neural Engine backend. 
+This latency advantage is available only when quantized weights are loaded from memory and are decompressed "just in time" of computation. Starting with `iOS17/macOS14`, this is more likely to happen for models running primarily on the Neural Engine (NE) backend. 
 
-Quantizing the activations may further ease this memory pressure and may lead to more gains when compared to weight-only quantization. However, with activation quantization, you may observe a considerable slowdown in inference for the compute units (CPU and sometimes GPU) that employ load-time weight decompression, since activations are not known at load time, and they need to be decompressed at runtime, slowing down the inference. Therefore it is recommended to use activation quantization only when your model is fully or mostly running on the Neural Engine. 
+Quantizing the activations may further ease this memory pressure and may lead to more gains when compared to weight-only quantization. 
+However, with activation quantization, you may observe a considerable slowdown in inference for 
+the compute units (CPU and sometimes GPU) that employ load-time weight decompression, 
+since activations are not known at load time, and they need to be decompressed at runtime, slowing down the inference. 
+Therefore it is recommended to use activation quantization only when your model is fully or mostly running on the Neural Engine.
+
+In newer hardware, e.g. iPhone 15 pro (A17 pro), there is increased int8-int8 compute available on NE, compared to previous versions. 
+Hence, activation and weight quantization for networks running on NE can give even more latency gains, as seen in the examples in the
+[performance impact section](performance-impact.md#linear-8-bit-quantization).
 
 ```{admonition} Feature Availability
 
