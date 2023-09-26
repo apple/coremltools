@@ -4007,6 +4007,18 @@ class TestRandint(TorchBaseTest):
             shape, TestModel(), backend=backend, compute_unit=compute_unit
         )
 
+
+    def test_tuple_input(self):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.randint(0, 3, (10,))
+
+        model = TestModel().eval()
+        x = torch.randn((1, 3, 256, 256))
+        traced_model = torch.jit.trace(model, example_inputs=x)
+        ct.convert(traced_model, inputs=[ct.TensorType(shape=x.shape)])
+
+
 class TestRand(TorchBaseTest):
 
     @pytest.mark.parametrize(

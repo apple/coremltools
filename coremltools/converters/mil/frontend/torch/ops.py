@@ -3796,7 +3796,7 @@ def new_full(context, node):
 
 @register_torch_op
 def randint(context, node):
-    inputs = _get_inputs(context, node, expected=8)
+    inputs = _get_inputs(context, node, expected=(7, 8))
     low = mb.cast(x=inputs[0], dtype="fp32")
     high = mb.cast(x=inputs[1], dtype="fp32")
     shape = inputs[2]
