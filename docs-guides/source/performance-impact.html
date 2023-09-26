@@ -19,12 +19,12 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
@@ -35,14 +35,13 @@
     <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
 
     <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/jquery.js"></script>
-    <script src="../_static/underscore.js"></script>
-    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
     <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/clipboard.min.js"></script>
     <script src="../_static/copybutton.js"></script>
     <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
@@ -61,6 +60,15 @@
   
   
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
@@ -363,10 +371,10 @@
 
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script>
@@ -374,7 +382,7 @@ document.write(`
 <script>
 document.write(`
   <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
@@ -428,7 +436,7 @@ document.write(`
                   
   <section id="accuracy-and-performance">
 <span id="index-0"></span><h1>Accuracy and Performance<a class="headerlink" href="#accuracy-and-performance" title="Permalink to this heading">#</a></h1>
-<p>This section provides a few concrete <a class="reference internal" href="#examples"><span class="std std-doc">examples</span></a> of the tradeoff between accuracy and performance, as described in <a class="reference internal" href="optimization-workflow.html"><span class="doc std std-doc">Optimization Workflow</span></a>. The accuracy of the compressed model depends not only on the type of model and the task for which it is trained, but also on the compression ratio. This section helps you understand the impact of compressing models, not just on model size, but also on latency and runtime memory consumption.</p>
+<p>This section provides a few concrete <a class="reference internal" href="#examples"><span class="std std-ref">examples</span></a> of the tradeoff between accuracy and performance, as described in <a class="reference internal" href="optimization-workflow.html"><span class="doc std std-doc">Optimization Workflow</span></a>. The accuracy of the compressed model depends not only on the type of model and the task for which it is trained, but also on the compression ratio. This section helps you understand the impact of compressing models, not just on model size, but also on latency and runtime memory consumption.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Results for only a handful of models are presented in this section. These can vary greatly based on the tasks and model types.</p>
@@ -452,7 +460,7 @@ document.write(`
 </section>
 <section id="effect-on-latency-and-runtime-memory">
 <h2>Effect on Latency and Runtime Memory<a class="headerlink" href="#effect-on-latency-and-runtime-memory" title="Permalink to this heading">#</a></h2>
-<p>While the primary advantage of compressing weights is model size reduction, improvements in latency and runtime memory usage <em>may</em> occur for compressed models as compared to their uncompressed versions, as seen in the  <a class="reference internal" href="#examples"><span class="std std-doc">examples</span></a>. This is due to runtime changes and enhancements made in Core ML starting from iOS 17, macOS 14, watchOS 10, and tvOS 17.</p>
+<p>While the primary advantage of compressing weights is model size reduction, improvements in latency and runtime memory usage <em>may</em> occur for compressed models as compared to their uncompressed versions, as seen in the  <a class="reference internal" href="#examples"><span class="std std-ref">examples</span></a>. This is due to runtime changes and enhancements made in Core ML starting from iOS 17, macOS 14, watchOS 10, and tvOS 17.</p>
 <p>The runtime performance is dependent on a variety of factors, including model architecture, hardware generation, the dominant compute unit the ops of the model are dispatched to, parametric configurations of the ops, and so on. Since performance characteristics are expected to change and generally improve with each software update, we recommend that you perform measurements on the device(s) of interest using the <a class="reference external" href="https://developer.apple.com/videos/play/wwdc2022/10027/">Xcode Performance tab and/or Core ML Instruments</a> for your particular model deployment and app code.</p>
 <p>To understand the impact of compressing models on latency and runtime memory consumption, consider the case when the activations are in <code class="docutils literal notranslate"><span class="pre">float</span></code> precision, and only the weights are compressed (which is the most common case, unless both activations and weights are compressed to 8-bit linear). In this scenario, during the time of computation, the weights need to be <em>decompressed</em> so that they can be brought back in the same dense <code class="docutils literal notranslate"><span class="pre">float</span></code> representation as the activations, and multiplied with them. Compressing the weights does not, technically,  reduce the amount of computation to be done at runtime and hence is not expected to reduce the time taken for a prediction. In fact, this decompression was explicitly done during the model <em>load</em> time in the <code class="docutils literal notranslate"><span class="pre">iOS16/macOS13/watchOS9/tvOS16</span></code> version of the Core ML framework. Therefore in this case, the prediction would happen exactly as it would for the corresponding uncompressed model, keeping the runtime memory usage and latency unchanged.</p>
 <p>With changes made from <code class="docutils literal notranslate"><span class="pre">iOS17/macOS13</span></code> onwards, the weight <em>decompression</em> may instead happen at the <em>prediction</em> time. The decision of <em>when</em> to decompress the weights depends on several factors including the op types, the hardware generation, the backend hardware unit (CPU, GPU or Neural Engine) that the ops run on, the backend compiler optimizations etc.</p>
@@ -466,16 +474,16 @@ Currently, in most cases Neural Engine is the compute backend that opts into jus
 hence offering the possibility of lower runtime memory and latencies.
 However, there are variations to be expected based on the specific type of the compression scheme,
 for this and impact on latency for activation quantized models, learn more in the sections
-<a class="reference internal" href="pruning-overview.html#impact-on-latency-and-compute-unit-considerations"><span class="std std-doc">Pruning Overview</span></a>,
-<a class="reference internal" href="palettization-overview.html#impact-on-latency-and-compute-unit-considerations"><span class="std std-doc">Palettization Overview</span></a> and
-<a class="reference internal" href="quantization-overview.html#impact-on-latency-and-compute-unit-considerations"><span class="std std-doc">Quantization Overview</span></a>.</p>
+<a class="reference internal" href="pruning-overview.html#impact-on-latency-and-compute-unit-considerations"><span class="std std-ref">Pruning Overview</span></a>,
+<a class="reference internal" href="palettization-overview.html#impact-on-latency-and-compute-unit-considerations"><span class="std std-ref">Palettization Overview</span></a> and
+<a class="reference internal" href="quantization-overview.html#impact-on-latency-and-compute-unit-considerations"><span class="std std-ref">Quantization Overview</span></a>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Permalink to this heading">#</a></h2>
 <p>In the tables below, we provide benchmarks on several models, compressed using various techniques in <code class="docutils literal notranslate"><span class="pre">coremltools.optmize</span></code>, to illustrate the trade-off between accuracy, model size and runtime latency.</p>
-<p>The training time compressed models were obtained by fine-tuning the <code class="docutils literal notranslate"><span class="pre">float32</span></code> PyTorch models with weights initialized from the checkpoints linked in the <a class="reference internal" href="#model-info"><span class="std std-doc">Model Info</span></a> table, and using methods from <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> to perform compression. The datasets used for fine-tuning the models are also linked in the same table, along with the accuracy metric being reported. We used fine-tuning recipes which are commonly used in literature for the task at hand, and standard data augmentations.</p>
+<p>The training time compressed models were obtained by fine-tuning the <code class="docutils literal notranslate"><span class="pre">float32</span></code> PyTorch models with weights initialized from the checkpoints linked in the <a class="reference internal" href="#model-info"><span class="std std-ref">Model Info</span></a> table, and using methods from <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> to perform compression. The datasets used for fine-tuning the models are also linked in the same table, along with the accuracy metric being reported. We used fine-tuning recipes which are commonly used in literature for the task at hand, and standard data augmentations.</p>
 <p>Similarly, the post training compressed models were obtained by compressing the converted <code class="docutils literal notranslate"><span class="pre">float16</span></code> Core ML models, with pre-trained weights, using methods from <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml</span></code> module. Models were palettized using the <code class="docutils literal notranslate"><span class="pre">kmeans</span></code> mode and quantized using the <code class="docutils literal notranslate"><span class="pre">linear_symmetric</span></code> mode.</p>
-<p>All evaluations were performed on the final compressed (or uncompressed) CoreML models, using the validation subset of the dataset linked in <a class="reference internal" href="#model-info"><span class="std std-doc">Model Info</span></a>. The training time compressed models were trained for three trials, starting from the same pre-trained weights, and using a different ordering of data during training for each trial. For these models, we report the <strong>mean</strong> accuracy across the three trials, along with the <strong>standard deviation</strong>.</p>
+<p>All evaluations were performed on the final compressed (or uncompressed) CoreML models, using the validation subset of the dataset linked in <a class="reference internal" href="#model-info"><span class="std std-ref">Model Info</span></a>. The training time compressed models were trained for three trials, starting from the same pre-trained weights, and using a different ordering of data during training for each trial. For these models, we report the <strong>mean</strong> accuracy across the three trials, along with the <strong>standard deviation</strong>.</p>
 <p>The trained and compressed models and the <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> config files used for compression can be downloaded by clicking the respective links embedded in the model and config names.</p>
 <p>The latency numbers were captured using the Xcode <strong>Performance</strong> tab, using the <code class="docutils literal notranslate"><span class="pre">median</span></code> statistic. Compute unit selection is <code class="docutils literal notranslate"><span class="pre">all</span></code> unless otherwise noted. The latency numbers are sensitive to the device state, and may vary depending on the device state and build versions.</p>
 <ul class="simple">
@@ -861,11 +869,10 @@ for this and impact on latency for activation quantized models, learn more in th
 
               
               
-                <footer class="bd-footer-article">
-                  
-<div class="footer-article-items footer-article__inner">
-  
-    <div class="footer-article-item"><!-- Previous / next buttons -->
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
        href="optimization-workflow.html"
@@ -885,10 +892,7 @@ for this and impact on latency for activation quantized models, learn more in th
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
-</div></div>
-  
 </div>
-
                 </footer>
               
             </div>
@@ -964,8 +968,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
 
   <footer class="bd-footer">
   </footer>
