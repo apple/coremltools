@@ -2,12 +2,12 @@
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
 
-[Core ML Tools](https://coremltools.readme.io/docs)
+[Core ML Tools](https://apple.github.io/coremltools/docs-guides/source/overview-coremltools.html)
 =======================
 
 ![Core ML Tools logo](docs/logo.png)
 
-Use *coremltools* to convert machine learning models from third-party libraries to the Core ML format. This Python package contains the supporting tools for converting models from training libraries such as the following:
+Use [Core ML Tools](https://apple.github.io/coremltools/docs-guides/source/overview-coremltools.html) (*coremltools*) to convert machine learning models from third-party libraries to the Core ML format. This Python package contains the supporting tools for converting models from training libraries such as the following:
 
 * [TensorFlow 1.x](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf)
 * [TensorFlow 2.x](https://www.tensorflow.org/api_docs)
@@ -17,7 +17,7 @@ Use *coremltools* to convert machine learning models from third-party libraries 
 	* [XGBoost](https://xgboost.readthedocs.io/en/latest/)
 	* [LibSVM](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 
-With coremltools, you can do the following:
+With coremltools, you can:
 
 * Convert trained models to the Core ML format.
 * Read, write, and optimize Core ML models.
@@ -37,10 +37,10 @@ pip install -U coremltools
 
 ## Resources
 
-To install coremltools, see the [“Installation“ page](https://coremltools.readme.io/docs/installation). For more information, see the following:
+To install coremltools, see [Installing Core ML Tools](https://apple.github.io/coremltools/docs-guides/source/installing-coremltools.html). For more information, see the following:
 
 * [Release Notes](https://github.com/apple/coremltools/releases/) 
-* [Guides and examples](https://coremltools.readme.io/) 
+* [Guide and examples](https://apple.github.io/coremltools/docs-guides/index.html) 
 * [API Reference](https://apple.github.io/coremltools/index.html)
 * [Core ML Specification](https://apple.github.io/coremltools/mlmodel/index.html)
 * [Building from Source](BUILDING.md)

@@ -4,7 +4,7 @@ coremltools API Documentation
 This document describes the following:
 
 * [Viewing documentation](#viewing-documentation)
-* [Updating the guides and examples](#updating-the-guides-and-examples)
+* [Updating the guide and examples](#updating-the-guides-and-examples)
 * [How the API Reference is auto-generated](#how-the-api-reference-is-auto-generated)
 * [Updating the API Reference](#updating-the-api-reference)
 * [Generating the top-level RST files](#generating-the-top-level-rst-files)
@@ -16,7 +16,7 @@ This document describes the following:
 For coremltools documentation, see the following:
 
 * Core ML Tools [README](https://github.com/apple/coremltools/blob/main/README.md) file for this repository
-* [Guides and examples](https://coremltools.readme.io/)
+* [Guide and examples](https://apple.github.io/coremltools/docs-guides/)
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
 * [API Reference](https://apple.github.io/coremltools/index.html): Documentation describing the coremltools API, auto-generated from _docstrings_ in the source code.
 * [Core ML Format Specification](https://apple.github.io/coremltools/mlmodel/index.html): Documentation describing the Core ML model spec, auto-generated from the proto files located in [`coremltools/mlmodel/format`](https://github.com/apple/coremltools/tree/main/mlmodel/format).
@@ -24,7 +24,7 @@ For coremltools documentation, see the following:
 
 ## Updating the guides and examples
 
-To make editing changes to [Guides and examples](https://coremltools.readme.io/), see [the Documentation section of Contributing](https://coremltools.readme.io/docs/how-to-contribute#documentation).
+To make editing changes to the [Guide and examples](https://apple.github.io/coremltools/docs-guides/index.html), Send a pull request as described in [Contributions](https://apple.github.io/coremltools/docs-guides/source/how-to-contribute.html#contributions) and add the **docs** label to it (see [Labels](https://apple.github.io/coremltools/docs-guides/source/how-to-contribute.html#labels) for details).
 
 
 ## How the API Reference is auto-generated
