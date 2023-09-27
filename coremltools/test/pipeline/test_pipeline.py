@@ -233,7 +233,7 @@ class TestMakePipeline:
     @staticmethod
     def _make_model(input_name, input_length,
                     output_name, output_length,
-                    convert_to):
+                    convert_to, compute_units):
 
         weight_tensor = np.arange(input_length * output_length, dtype='float32')
         weight_tensor = weight_tensor.reshape(output_length, input_length)
@@ -246,18 +246,22 @@ class TestMakePipeline:
             ssa_fun.set_outputs([y])
             prog.add_function("main", ssa_fun)
 
-        return ct.convert(prog, convert_to=convert_to)
+        return ct.convert(prog, convert_to=convert_to, compute_units=compute_units)
 
 
     @staticmethod
     @pytest.mark.parametrize(
-        "model1_backend, model2_backend",
-        itertools.product(["mlprogram", "neuralnetwork"], ["mlprogram", "neuralnetwork"]),
+        "model1_backend, model2_backend, compute_units",
+        itertools.product(
+            ["mlprogram", "neuralnetwork"],
+            ["mlprogram", "neuralnetwork"],
+            [ct.ComputeUnit.ALL, ct.ComputeUnit.CPU_ONLY]
+        ),
     )
-    def test_simple(model1_backend, model2_backend):
+    def test_simple(model1_backend, model2_backend, compute_units):
         # Create models
-        m1 = TestMakePipeline._make_model("x", 20, "y1", 10, model1_backend)
-        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2, model2_backend)
+        m1 = TestMakePipeline._make_model("x", 20, "y1", 10, model1_backend, compute_units)
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2, model2_backend, compute_units)
 
         # Get non-pipeline result
         x = np.random.rand(20)
@@ -265,7 +269,8 @@ class TestMakePipeline:
             y1 = m1.predict({"x": x})["y1"]
             y2 = m2.predict({"y1": y1})
 
-        pipeline_model = ct.utils.make_pipeline(m1, m2)
+        pipeline_model = ct.utils.make_pipeline(m1, m2, compute_units=compute_units)
+        assert pipeline_model.compute_unit == compute_units
 
         if _is_macos():
             y_pipeline = pipeline_model.predict({"x": x})
@@ -278,13 +283,15 @@ class TestMakePipeline:
             pipeline_model.save(save_path)
 
             # Check loading from a mlpackage path
-            p2 = ct.models.MLModel(save_path)
+            p2 = ct.models.MLModel(save_path, compute_units=compute_units)
             if _is_macos():
                 y_pipeline = p2.predict({"x": x})
                 np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
 
             # Check loading from spec and weight dir
-            p3 = ct.models.MLModel(p2.get_spec(), weights_dir=p2.weights_dir)
+            p3 = ct.models.MLModel(p2.get_spec(),
+                                   weights_dir=p2.weights_dir,
+                                   compute_units=compute_units)
             if _is_macos():
                 y_pipeline = p3.predict({"x": x})
                 np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
