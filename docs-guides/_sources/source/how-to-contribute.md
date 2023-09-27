@@ -47,10 +47,7 @@ Once you submit an issue, feature request, or question, members of the community
 
 ## Documentation
 
-Help us improve the documentation. Even if you find only a typo, don’t hesitate to report it. To make changes, use one of these methods:
-
-- Click the **SUGGEST EDITS** button in the top right corner of the documentation page, and edit the text.
-- Send a pull request as described in [Contributions](#contributions) and add the **docs** label to it (see [Labels](#labels) for details).
+Help us improve the documentation. Even if you find only a typo, don’t hesitate to report it. To make changes, send a pull request as described in [Contributions](#contributions) and add the **docs** label to it (see [Labels](#labels) for details).
 
 ## Contributions
 
