@@ -1058,7 +1058,7 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) ->
 
 def make_pipeline(
         *models: '_ct.models.MLModel',
-        compute_units: _ct.ComputeUnit =_ComputeUnit.ALL
+        compute_units: _Union[None, _ct.ComputeUnit] = None
     ) -> '_ct.models.MLModel':
     """
     Makes a pipeline with the given models.
@@ -1066,10 +1066,15 @@ def make_pipeline(
     Parameters
     ----------
     *models
-        Two or more instances of ct.models.MLModel.
+        Two or more instances of ``ct.models.MLModel``.
 
-    compute_units: coremltools.ComputeUnit
-        An enum with three possible values:
+    compute_units: ``None`` or ``coremltools.ComputeUnit``
+        The set of processing units that all models in the pipeline can use to make predictions.
+
+        If None, the ``compute_unit`` will be infered from the ``compute_units`` values of the models.
+        If all models do not have the same ``compute_units`` values, this parameter must be specified.
+
+        ``coremltools.ComputeUnit`` is an enum with four possible values:
             - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
                 neural engine.
             - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
@@ -1119,10 +1124,21 @@ def make_pipeline(
 
 
     assert len(models) > 1
+    if compute_units is not None and not isinstance(compute_units, _ComputeUnit):
+        raise TypeError('"compute_units" parameter must be None or of type coremltools.ComputeUnit')
 
-    if not isinstance(compute_units, _ComputeUnit):
-        raise TypeError('"compute_units" parameter must be of type: coremltools.ComputeUnit')
-    elif (compute_units == _ComputeUnit.CPU_AND_NE
+    if compute_units is None:
+        all_compute_units_the_same = all(map(
+            lambda m: models[0].compute_unit is m.compute_unit,
+            models[1:]
+        ))
+        if not all_compute_units_the_same:
+            raise ValueError(
+                'Models have different compute_unit values. The "compute_units" parameter must be specified.'
+            )
+        compute_units = models[0].compute_unit
+
+    if (compute_units == _ComputeUnit.CPU_AND_NE
           and _is_macos()
           and _macos_version() < (13, 0)
           ):

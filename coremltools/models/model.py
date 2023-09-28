@@ -287,7 +287,9 @@ class MLModel:
             Defaults to ``False``.
 
         compute_units: coremltools.ComputeUnit
-            An enum with three possible values:
+            The set of processing units the model can use to make predictions.
+
+            An enum with four possible values:
                 - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
                   neural engine.
                 - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.

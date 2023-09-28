@@ -233,7 +233,7 @@ class TestMakePipeline:
     @staticmethod
     def _make_model(input_name, input_length,
                     output_name, output_length,
-                    convert_to, compute_units):
+                    convert_to='mlprogram', compute_units = ct.ComputeUnit.ALL):
 
         weight_tensor = np.arange(input_length * output_length, dtype='float32')
         weight_tensor = weight_tensor.reshape(output_length, input_length)
@@ -251,17 +251,13 @@ class TestMakePipeline:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "model1_backend, model2_backend, compute_units",
-        itertools.product(
-            ["mlprogram", "neuralnetwork"],
-            ["mlprogram", "neuralnetwork"],
-            [ct.ComputeUnit.ALL, ct.ComputeUnit.CPU_ONLY]
-        ),
+        "model1_backend, model2_backend",
+        itertools.product(["mlprogram", "neuralnetwork"], ["mlprogram", "neuralnetwork"]),
     )
-    def test_simple(model1_backend, model2_backend, compute_units):
+    def test_simple(model1_backend, model2_backend):
         # Create models
-        m1 = TestMakePipeline._make_model("x", 20, "y1", 10, model1_backend, compute_units)
-        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2, model2_backend, compute_units)
+        m1 = TestMakePipeline._make_model("x", 20, "y1", 10, model1_backend)
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2, model2_backend)
 
         # Get non-pipeline result
         x = np.random.rand(20)
@@ -269,8 +265,7 @@ class TestMakePipeline:
             y1 = m1.predict({"x": x})["y1"]
             y2 = m2.predict({"y1": y1})
 
-        pipeline_model = ct.utils.make_pipeline(m1, m2, compute_units=compute_units)
-        assert pipeline_model.compute_unit == compute_units
+        pipeline_model = ct.utils.make_pipeline(m1, m2)
 
         if _is_macos():
             y_pipeline = pipeline_model.predict({"x": x})
@@ -283,15 +278,38 @@ class TestMakePipeline:
             pipeline_model.save(save_path)
 
             # Check loading from a mlpackage path
-            p2 = ct.models.MLModel(save_path, compute_units=compute_units)
+            p2 = ct.models.MLModel(save_path)
             if _is_macos():
                 y_pipeline = p2.predict({"x": x})
                 np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
 
             # Check loading from spec and weight dir
-            p3 = ct.models.MLModel(p2.get_spec(),
-                                   weights_dir=p2.weights_dir,
-                                   compute_units=compute_units)
+            p3 = ct.models.MLModel(p2.get_spec(), weights_dir=p2.weights_dir)
             if _is_macos():
                 y_pipeline = p3.predict({"x": x})
                 np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+
+
+    @staticmethod
+    def test_compute_unit():
+        # Case 1 - Infering compute_unit
+        m1 = TestMakePipeline._make_model("x", 20, "y1", 10,
+                                          compute_units=ct.ComputeUnit.CPU_ONLY)
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2,
+                                          compute_units=ct.ComputeUnit.CPU_ONLY)
+        pipeline_model = ct.utils.make_pipeline(m1, m2)
+        assert pipeline_model.compute_unit is ct.ComputeUnit.CPU_ONLY
+
+        # Case 2 - Specifying compute_unit
+        pipeline_model = ct.utils.make_pipeline(m1, m2, compute_units=ct.ComputeUnit.ALL)
+        assert pipeline_model.compute_unit is ct.ComputeUnit.ALL
+
+        # Case 3 (error case) - No compute_unit specified and the two models don't agree
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2,
+                                          compute_units=ct.ComputeUnit.ALL)
+        with pytest.raises(ValueError, match='"compute_units" parameter must be specified.'):
+            pipeline_model = ct.utils.make_pipeline(m1, m2)
+
+        # Case 4 (error case) - Garbage compute_unit input
+        with pytest.raises(TypeError, match='"compute_units" parameter must'):
+            pipeline_model = ct.utils.make_pipeline(m1, m2, compute_units="Garbage!")
