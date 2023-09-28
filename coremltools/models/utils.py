@@ -1153,15 +1153,24 @@ def make_pipeline(
         map(lambda spec: spec.specificationVersion, input_specs)
     )
 
-    # Set pipeline input
-    pipeline_spec.description.input.MergeFrom(
-        input_specs[0].description.input
-    )
+    # If a later model doesn't get an input from a previous model, it must be
+    # an input to the pipeline.
+    available_as_input = set()
+    for cur_spec in input_specs:
+        for cur_input in cur_spec.description.input:
+            if cur_input.name not in available_as_input:
+                pipeline_spec.description.input.add().MergeFrom(cur_input)
+                available_as_input.add(cur_input.name)
+        available_as_input.update([i.name for i in cur_spec.description.output])
 
-    # Set pipeline output
-    pipeline_spec.description.output.MergeFrom(
-        input_specs[-1].description.output
-    )
+    # If an output for a model is not used as input for a later model, assume it
+    # should be an output to the pipeline.
+    used_as_input = set()
+    for cur_spec in input_specs[::-1]:     # iterate overs specs in reverse
+        for cur_output in cur_spec.description.output:
+            if cur_output.name not in used_as_input:
+                pipeline_spec.description.output.add().MergeFrom(cur_output)
+        used_as_input.update([i.name for i in cur_spec.description.input])
 
     # Map input shapes to output shapes
     var_name_to_type = {}
