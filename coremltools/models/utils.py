@@ -1056,14 +1056,32 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) ->
         return _MLModelProxy.compileModel(model)
 
 
-def make_pipeline(*models):
+def make_pipeline(
+        *models: '_ct.models.MLModel',
+        compute_units: _Union[None, _ct.ComputeUnit] = None
+    ) -> '_ct.models.MLModel':
     """
     Makes a pipeline with the given models.
 
     Parameters
     ----------
     *models
-        Two or more instances of ct.models.MLModel.
+        Two or more instances of ``ct.models.MLModel``.
+
+    compute_units: ``None`` or ``coremltools.ComputeUnit``
+        The set of processing units that all models in the pipeline can use to make predictions.
+
+        If None, the ``compute_unit`` will be infered from the ``compute_units`` values of the models.
+        If all models do not have the same ``compute_units`` values, this parameter must be specified.
+
+        ``coremltools.ComputeUnit`` is an enum with four possible values:
+            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
+                neural engine.
+            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
+            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,
+                but not the neural engine.
+            - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
+                not the GPU. Available only for macOS >= 13.0.
 
     Returns
     -------
@@ -1077,6 +1095,11 @@ def make_pipeline(*models):
         my_model2 = ct.models.MLModel('/tmp/m2.mlmodel')
         
         my_pipeline_model = ct.utils.make_pipeline(my_model1, my_model2)
+
+        y = my_pipeline_model.predict({'x': 12})
+
+        my_pipeline_model.save('/tmp/my_pipeline.mlpackage')
+        new_my_pipeline = ct.model.MLModel('/tmp/my_pipeline.mlpackage')
 
     """
 
@@ -1101,6 +1124,28 @@ def make_pipeline(*models):
 
 
     assert len(models) > 1
+    if compute_units is not None and not isinstance(compute_units, _ComputeUnit):
+        raise TypeError('"compute_units" parameter must be None or of type coremltools.ComputeUnit')
+
+    if compute_units is None:
+        all_compute_units_the_same = all(map(
+            lambda m: models[0].compute_unit is m.compute_unit,
+            models[1:]
+        ))
+        if not all_compute_units_the_same:
+            raise ValueError(
+                'Models have different compute_unit values. The "compute_units" parameter must be specified.'
+            )
+        compute_units = models[0].compute_unit
+
+    if (compute_units == _ComputeUnit.CPU_AND_NE
+          and _is_macos()
+          and _macos_version() < (13, 0)
+          ):
+        raise ValueError(
+            'coremltools.ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
+        )
+
     input_specs = list(map(lambda m: m.get_spec(), models))
 
     pipeline_spec = _ct.proto.Model_pb2.Model()
@@ -1150,4 +1195,4 @@ def make_pipeline(*models):
             if _os.path.exists(weight_file_path):
                 _shutil.copyfile(weight_file_path, dst + f"/{i}-weight.bin")
 
-    return _ct.models.MLModel(pipeline_spec, weights_dir=dst)
+    return _ct.models.MLModel(pipeline_spec, compute_units=compute_units, weights_dir=dst)

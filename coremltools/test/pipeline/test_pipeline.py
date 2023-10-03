@@ -233,7 +233,7 @@ class TestMakePipeline:
     @staticmethod
     def _make_model(input_name, input_length,
                     output_name, output_length,
-                    convert_to):
+                    convert_to='mlprogram', compute_units = ct.ComputeUnit.ALL):
 
         weight_tensor = np.arange(input_length * output_length, dtype='float32')
         weight_tensor = weight_tensor.reshape(output_length, input_length)
@@ -246,7 +246,7 @@ class TestMakePipeline:
             ssa_fun.set_outputs([y])
             prog.add_function("main", ssa_fun)
 
-        return ct.convert(prog, convert_to=convert_to)
+        return ct.convert(prog, convert_to=convert_to, compute_units=compute_units)
 
 
     @staticmethod
@@ -288,3 +288,28 @@ class TestMakePipeline:
             if _is_macos():
                 y_pipeline = p3.predict({"x": x})
                 np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+
+
+    @staticmethod
+    def test_compute_unit():
+        # Case 1 - Infering compute_unit
+        m1 = TestMakePipeline._make_model("x", 20, "y1", 10,
+                                          compute_units=ct.ComputeUnit.CPU_ONLY)
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2,
+                                          compute_units=ct.ComputeUnit.CPU_ONLY)
+        pipeline_model = ct.utils.make_pipeline(m1, m2)
+        assert pipeline_model.compute_unit is ct.ComputeUnit.CPU_ONLY
+
+        # Case 2 - Specifying compute_unit
+        pipeline_model = ct.utils.make_pipeline(m1, m2, compute_units=ct.ComputeUnit.ALL)
+        assert pipeline_model.compute_unit is ct.ComputeUnit.ALL
+
+        # Case 3 (error case) - No compute_unit specified and the two models don't agree
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2,
+                                          compute_units=ct.ComputeUnit.ALL)
+        with pytest.raises(ValueError, match='"compute_units" parameter must be specified.'):
+            pipeline_model = ct.utils.make_pipeline(m1, m2)
+
+        # Case 4 (error case) - Garbage compute_unit input
+        with pytest.raises(TypeError, match='"compute_units" parameter must'):
+            pipeline_model = ct.utils.make_pipeline(m1, m2, compute_units="Garbage!")
