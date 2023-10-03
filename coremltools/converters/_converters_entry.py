@@ -371,7 +371,9 @@ def convert(
         Defaults to ``False``.
 
     compute_units: coremltools.ComputeUnit
-        The set of processing units the model can use to make predictions.
+        The set of processing units the model can use to make predictions. After
+        conversion, the model is loaded with the provided set of compute units and
+        returned.
 
         An enum with the following possible values.
             - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
