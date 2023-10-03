@@ -233,7 +233,7 @@ class TestMakePipeline:
     @staticmethod
     def _make_model(input_name, input_length,
                     output_name, output_length,
-                    convert_to='mlprogram',compute_units=ct.ComputeUnit.ALL):
+                    convert_to='mlprogram', compute_units=ct.ComputeUnit.ALL):
 
         weight_tensor = np.arange(input_length * output_length, dtype='float32')
         weight_tensor = weight_tensor.reshape(output_length, input_length)
