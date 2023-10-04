@@ -363,7 +363,7 @@ class TestMakePipeline:
         m2 = TestMakePipeline._make_model("y1", 10, "y2", 2)
         m3 = TestMakePipeline._make_model("y1", 10, "y3", 4)
 
-        # Get non-pipeline result
+        # Get non-pipeline results
         x = np.random.rand(20)
         if _is_macos():
             y1 = m1.predict({"x": x})["y1"]
@@ -376,3 +376,34 @@ class TestMakePipeline:
             assert(len(y_pipeline) == 2)
             np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
             np.testing.assert_allclose(y3["y3"], y_pipeline["y3"])
+
+
+    @staticmethod
+    def test_pipeline_input_goes_to_multiple_models():
+        # Create the first two models that take the same input
+        m1 = TestMakePipeline._make_model("x", 20, "y1", 10)
+        m2 = TestMakePipeline._make_model("x", 20, "y2", 10)
+
+        # Create the last models which add the output from the other two models.
+        p3 = Program()
+        func_inputs = {'y1': mb.placeholder(shape=(10,)),
+                       'y2': mb.placeholder(shape=(10,)),}
+        with Function(func_inputs) as ssa_fun:
+            y1, y2 = ssa_fun.inputs['y1'], ssa_fun.inputs['y2']
+            y3 = mb.add(x=y1, y=y2, name='y3')
+            ssa_fun.set_outputs([y3])
+            p3.add_function("main", ssa_fun)
+        m3 = ct.convert(p3)
+
+        # Get non-pipeline result
+        x = np.random.rand(20)
+        if _is_macos():
+            y1 = m1.predict({"x": x})["y1"]
+            y2 = m2.predict({"x": x})["y2"]
+            y3 = m3.predict({"y1": y1, "y2": y2})
+
+        pipeline_model = ct.utils.make_pipeline(m1, m2, m3)
+        if _is_macos():
+            y_pipeline = pipeline_model.predict({"x": x})
+            assert(len(y_pipeline) == 1)
+            np.testing.assert_allclose(y3['y3'], y_pipeline["y3"])
