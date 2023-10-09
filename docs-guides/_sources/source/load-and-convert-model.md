@@ -166,16 +166,16 @@ For more details on tracing and scripting to produce PyTorch models for conversi
 
 ## Set the Compute Units
 
-Normally you convert a model by using [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) without using the `compute_units` parameter. In most cases you don’t need it, because the converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). Whether you are using [ML programs](convert-to-ml-program) or [neural networks](convert-to-neural-network), the defaults for conversion and prediction are picked to execute the model in the most performant way, as described in [Typed Execution](typed-execution).
+Normally you convert a model by using [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) without using the `compute_units` parameter. In most cases you don’t need it, because the converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the Neural Engine (NE), the CPU, and the graphics processing unit (GPU). Whether you are using [ML programs](convert-to-ml-program) or [neural networks](convert-to-neural-network), the defaults for conversion and prediction are picked to execute the model in the most performant way, as described in [Typed Execution](typed-execution).
 
 However, you may find it useful, especially for debugging, to specify the actual compute units when converting or loading a model by using the `compute_units` parameter. The parameter is based on the [MLComputeUnits](https://developer.apple.com/documentation/coreml/mlcomputeunits) enumeration in the Swift developer language — compute units are employed when [loading a Core ML model](https://developer.apple.com/documentation/coreml/mlmodel/3600218-load), taking in MLmodelConfiguration which includes compute units. Therefore, both the [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model) class and  [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) provide the `compute_units` parameter. 
 
 The `compute_units` parameter can have the following values:
 
 - `coremltools.ComputeUnit.CPU_ONLY`: Limit the model to use only the CPU.
-- `coremltools.ComputeUnit.CPU_AND_GPU`: Use both the CPU and GPU, but not the ANE.
-- `coremltools.ComputeUnit.CPU_AND_NE`: Use both the CPU and ANE, but not the GPU.
-- `coremltools.ComputeUnit.ALL`: The default setting uses all compute units available, including the ANE, CPU, and GPU.
+- `coremltools.ComputeUnit.CPU_AND_GPU`: Use both the CPU and GPU, but not the NE.
+- `coremltools.ComputeUnit.CPU_AND_NE`: Use both the CPU and NE, but not the GPU.
+- `coremltools.ComputeUnit.ALL`: The default setting uses all compute units available, including the NE, CPU, and GPU.
 
 For example, the following converts the model and sets the `compute_units` to CPU only:
 

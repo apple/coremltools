@@ -127,21 +127,21 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="current nav bd-sidenav">
@@ -423,7 +423,7 @@ document.write(`
 <h1>Typed Execution Workflow Example<a class="headerlink" href="#typed-execution-workflow-example" title="Permalink to this heading">#</a></h1>
 <p>The following example demonstrates the recommended workflow when using <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML Programs</span></a> with <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">Typed Execution</span></a>. The workflow consists of the following steps:</p>
 <ol class="arabic simple">
-<li><p>Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the ANE, GPU and CPU.</p></li>
+<li><p>Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the Neural Engine (NE), GPU and CPU.</p></li>
 <li><p>Check the accuracy of the Core ML model with the source model on a set of input examples, using an error metric that is suitable for that model.</p></li>
 <li><p>If the accuracy is not sufficient for the use case, then convert again to a float 32 typed model. This will execute on a combination of the GPU and CPU.</p></li>
 </ol>
@@ -621,7 +621,7 @@ Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;
 </figcaption>
 </figure>
 <p>As expected it is hard to spot any difference! With an SNR of 70dB, the float 16 typed Core ML model is sufficient. Since the output is a new stylized image, it does not need to exactly match that of the original model, as long as it represents the style faithfully.</p>
-<p>While the float 16 version of the model performs well with this image, the best practice would be to check a set of validation images. If their SNRs are also high, you would deploy the float 16 version model, as it can execute on the ANE as well as the GPU and CPU.</p>
+<p>While the float 16 version of the model performs well with this image, the best practice would be to check a set of validation images. If their SNRs are also high, you would deploy the float 16 version model, as it can execute on the NE as well as the GPU and CPU.</p>
 </section>
 </section>
 

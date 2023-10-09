@@ -12,7 +12,7 @@ This page offers frequently asked questions (FAQs):
 - [Are TensorFlow or PyTorch the only starting points to make a deep learning Core ML model?](#starting-a-deep-learning-core-ml-model)
 - [How do I handle the unsupported op error "convert function for op not implemented"?](#handling-an-unsupported-op)
 - [Can I choose custom names for the input and outputs of the model during conversion?](#choosing-custom-names-for-input-and-outputs)
-- [If I change my fixed-shape model to use flexible inputs, will it still run on the Apple Neural Network (ANE)?](#ane-with-flexible-input-shapes)
+- [If I change my fixed-shape model to use flexible inputs, will it still run on the  Neural Engine?](#neural-engine-with-flexible-input-shapes)
 - [Why use `ct.optimize.torch` rather than PyTorch's default quantization?](#why-optimizetorch-is-better-than-pytorchs-default-quantization)
 
 ***
@@ -159,9 +159,9 @@ output_names = [out.name for out in spec.description.output]
 
 You can update these names by using the [`rename_feature`](mlmodel-utilities.md#rename-a-feature) API.
 
-## ANE With Flexible Input Shapes
+## Neural Engine With Flexible Input Shapes
 
-When converting a fixed-shape model (which already runs on the ANE) to use flexible inputs, you should specify a flexible input shape with a set of predetermined shapes using [`EnumeratedShapes`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes). The converted model will run on the ANE, unless the conversion introduces dynamic layers not supported on the ANE, such as converting a static reshape to a fully dynamic reshape.
+When converting a fixed-shape model that already runs on the Neural Engine (NE) to use flexible inputs, you should specify a flexible input shape with a set of predetermined shapes using [`EnumeratedShapes`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes). The converted model will run on the NE, unless the conversion introduces dynamic layers not supported on the NE, such as converting a static reshape to a fully dynamic reshape.
 
 With `EnumeratedShapes` the model can be optimized for the finite set of input shapes on the device during compilation. You can provide up to 128 different shapes. If you need more flexibility for inputs, consider setting the range for each dimension.
 

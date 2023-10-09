@@ -127,21 +127,21 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
-</ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="current nav bd-sidenav">
@@ -538,14 +538,14 @@ document.write(`
 </section>
 <section id="set-the-compute-units">
 <span id="index-3"></span><h2>Set the Compute Units<a class="headerlink" href="#set-the-compute-units" title="Permalink to this heading">#</a></h2>
-<p>Normally you convert a model by using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> without using the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter. In most cases you don’t need it, because the converter picks the default optimized path for fast execution while loading the model. The default setting (<code class="docutils literal notranslate"><span class="pre">ComputeUnit.ALL</span></code>) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). Whether you are using <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML programs</span></a> or <a class="reference internal" href="convert-to-neural-network.html"><span class="doc std std-doc">neural networks</span></a>, the defaults for conversion and prediction are picked to execute the model in the most performant way, as described in <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">Typed Execution</span></a>.</p>
+<p>Normally you convert a model by using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> without using the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter. In most cases you don’t need it, because the converter picks the default optimized path for fast execution while loading the model. The default setting (<code class="docutils literal notranslate"><span class="pre">ComputeUnit.ALL</span></code>) uses all compute units available, including the Neural Engine (NE), the CPU, and the graphics processing unit (GPU). Whether you are using <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML programs</span></a> or <a class="reference internal" href="convert-to-neural-network.html"><span class="doc std std-doc">neural networks</span></a>, the defaults for conversion and prediction are picked to execute the model in the most performant way, as described in <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">Typed Execution</span></a>.</p>
 <p>However, you may find it useful, especially for debugging, to specify the actual compute units when converting or loading a model by using the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter. The parameter is based on the <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlcomputeunits">MLComputeUnits</a> enumeration in the Swift developer language — compute units are employed when <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/3600218-load">loading a Core ML model</a>, taking in MLmodelConfiguration which includes compute units. Therefore, both the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model">MLModel</a> class and  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> provide the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter can have the following values:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to use only the CPU.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU, but not the ANE.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and ANE, but not the GPU.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: The default setting uses all compute units available, including the ANE, CPU, and GPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU, but not the NE.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and NE, but not the GPU.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: The default setting uses all compute units available, including the NE, CPU, and GPU.</p></li>
 </ul>
 <p>For example, the following converts the model and sets the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> to CPU only:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>

@@ -21,23 +21,23 @@ This guide includes instructions and examples. For details about using the API c
 
 .. toctree::
    :maxdepth: 1
+   :caption: API Reference
+
+   coremltools API Reference <https://apple.github.io/coremltools/index.html>
+   source/unified-conversion-api.md
+   Core ML Model Format <https://apple.github.io/coremltools/mlmodel/index.html>
+
+.. toctree::
+   :maxdepth: 1
    :caption: Overview
 
    source/overview-coremltools.md
+   source/installing-coremltools.md
+   source/introductory-quickstart.md
    source/new-features.md
    source/faqs.md
    source/coremltools-examples.md
    source/how-to-contribute.md
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Essentials
-
-   source/installing-coremltools.md
-   source/introductory-quickstart.md
-   source/unified-conversion-api.md
-   coremltools API Reference <https://apple.github.io/coremltools/index.html>
-   Core ML Model Format <https://apple.github.io/coremltools/mlmodel/index.html>
 
 .. toctree::
    :maxdepth: 1
