@@ -24,7 +24,6 @@ This guide includes instructions and examples. For details about using the API c
    :caption: API Reference
 
    coremltools API Reference <https://apple.github.io/coremltools/index.html>
-   source/unified-conversion-api.md
    Core ML Model Format <https://apple.github.io/coremltools/mlmodel/index.html>
 
 .. toctree::
@@ -43,6 +42,7 @@ This guide includes instructions and examples. For details about using the API c
    :maxdepth: 1
    :caption: Unified Conversion
 
+   source/unified-conversion-api.md
    source/convert-learning-models.rst
    source/convert-tensorflow.rst
    source/convert-pytorch.rst
