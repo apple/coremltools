@@ -35,7 +35,7 @@ For ML programs, coremltools produces a model with float 16 precision by default
 
 ## Pick the Compute Units for Execution
 
-The converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). 
+The converter picks the default optimized path for fast execution while loading the model. The default setting (`ComputeUnit.ALL`) uses all compute units available, including the  Neural Engine (NE), the CPU, and the graphics processing unit (GPU). 
 
 However, you may find it useful, especially for debugging, to specify the actual compute units when converting or loading a model by using the `compute_units` parameter. For details, see [Set the compute units](load-and-convert-model.md#set-the-compute-units).
 

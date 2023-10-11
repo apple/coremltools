@@ -50,7 +50,7 @@ To learn how to work with images and achieve better performance and more conveni
 
 ## Specifying Compute Units
 
-If you don't specify compute units when converting or loading a model, all compute units available on the device are used for execution including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU). 
+If you don't specify compute units when converting or loading a model, all compute units available on the device are used for execution including the Neural Engine (NE), the CPU, and the graphics processing unit (GPU). 
 
 You can control which compute unit the model runs on by setting the `compute_units` argument when converting a model (with [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert)) or loading a model (with [`coremltools.models.MLModel`](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model)). Calling [`predict()`](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.predict) on the converted or loaded model restricts the model to use only the specific compute units for execution. 
 
