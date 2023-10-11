@@ -127,24 +127,24 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
@@ -419,7 +419,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-a-deep-learning-core-ml-model">Starting a Deep Learning Core ML Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-an-unsupported-op">Handling an Unsupported Op</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-custom-names-for-input-and-outputs">Choosing Custom Names for Input and Outputs</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ane-with-flexible-input-shapes">ANE With Flexible Input Shapes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neural-engine-with-flexible-input-shapes">Neural Engine With Flexible Input Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization">Why <code class="docutils literal notranslate"><span class="pre">optimize.torch</span></code> is better than PyTorch’s default quantization</a></li>
 </ul>
             </nav>
@@ -445,7 +445,7 @@ document.write(`
 <li><p><a class="reference internal" href="#starting-a-deep-learning-core-ml-model"><span class="std std-doc">Are TensorFlow or PyTorch the only starting points to make a deep learning Core ML model?</span></a></p></li>
 <li><p><a class="reference internal" href="#handling-an-unsupported-op"><span class="std std-doc">How do I handle the unsupported op error “convert function for op not implemented”?</span></a></p></li>
 <li><p><a class="reference internal" href="#choosing-custom-names-for-input-and-outputs"><span class="std std-doc">Can I choose custom names for the input and outputs of the model during conversion?</span></a></p></li>
-<li><p><a class="reference internal" href="#ane-with-flexible-input-shapes"><span class="std std-doc">If I change my fixed-shape model to use flexible inputs, will it still run on the Apple Neural Network (ANE)?</span></a></p></li>
+<li><p><a class="reference internal" href="#neural-engine-with-flexible-input-shapes"><span class="std std-doc">If I change my fixed-shape model to use flexible inputs, will it still run on the  Neural Engine?</span></a></p></li>
 <li><p><a class="reference internal" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization"><span class="std std-doc">Why use <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch</span></code> rather than PyTorch’s default quantization?</span></a></p></li>
 </ul>
 <hr class="docutils" />
@@ -584,9 +584,9 @@ document.write(`
 </div>
 <p>You can update these names by using the <a class="reference internal" href="mlmodel-utilities.html#rename-a-feature"><span class="std std-doc"><code class="docutils literal notranslate"><span class="pre">rename_feature</span></code></span></a> API.</p>
 </section>
-<section id="ane-with-flexible-input-shapes">
-<h2>ANE With Flexible Input Shapes<a class="headerlink" href="#ane-with-flexible-input-shapes" title="Permalink to this heading">#</a></h2>
-<p>When converting a fixed-shape model (which already runs on the ANE) to use flexible inputs, you should specify a flexible input shape with a set of predetermined shapes using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes"><code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code></a>. The converted model will run on the ANE, unless the conversion introduces dynamic layers not supported on the ANE, such as converting a static reshape to a fully dynamic reshape.</p>
+<section id="neural-engine-with-flexible-input-shapes">
+<h2>Neural Engine With Flexible Input Shapes<a class="headerlink" href="#neural-engine-with-flexible-input-shapes" title="Permalink to this heading">#</a></h2>
+<p>When converting a fixed-shape model that already runs on the Neural Engine (NE) to use flexible inputs, you should specify a flexible input shape with a set of predetermined shapes using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#enumeratedshapes"><code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code></a>. The converted model will run on the NE, unless the conversion introduces dynamic layers not supported on the NE, such as converting a static reshape to a fully dynamic reshape.</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code> the model can be optimized for the finite set of input shapes on the device during compilation. You can provide up to 128 different shapes. If you need more flexibility for inputs, consider setting the range for each dimension.</p>
 <p>For details and examples of using flexible input shapes, see <a class="reference internal" href="flexible-inputs.html"><span class="doc std std-doc">Flexible Input Shapes</span></a>.</p>
 </section>
@@ -662,7 +662,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#starting-a-deep-learning-core-ml-model">Starting a Deep Learning Core ML Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#handling-an-unsupported-op">Handling an Unsupported Op</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-custom-names-for-input-and-outputs">Choosing Custom Names for Input and Outputs</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ane-with-flexible-input-shapes">ANE With Flexible Input Shapes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neural-engine-with-flexible-input-shapes">Neural Engine With Flexible Input Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization">Why <code class="docutils literal notranslate"><span class="pre">optimize.torch</span></code> is better than PyTorch’s default quantization</a></li>
 </ul>
   </nav></div>

@@ -127,24 +127,24 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
@@ -455,7 +455,7 @@ document.write(`
 </section>
 <section id="specifying-compute-units">
 <h2>Specifying Compute Units<a class="headerlink" href="#specifying-compute-units" title="Permalink to this heading">#</a></h2>
-<p>If you don’t specify compute units when converting or loading a model, all compute units available on the device are used for execution including the Apple Neural Engine (ANE), the CPU, and the graphics processing unit (GPU).</p>
+<p>If you don’t specify compute units when converting or loading a model, all compute units available on the device are used for execution including the Neural Engine (NE), the CPU, and the graphics processing unit (GPU).</p>
 <p>You can control which compute unit the model runs on by setting the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> argument when converting a model (with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert"><code class="docutils literal notranslate"><span class="pre">coremltools.convert()</span></code></a>) or loading a model (with <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model"><code class="docutils literal notranslate"><span class="pre">coremltools.models.MLModel</span></code></a>). Calling <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a> on the converted or loaded model restricts the model to use only the specific compute units for execution.</p>
 <p>For example, the following sets the compute units to CPU only when loading the model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;path/to/the/saved/model.mlmodel&#39;</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>

@@ -2,7 +2,7 @@
 
 The following example demonstrates the recommended workflow when using [ML Programs](convert-to-ml-program) with [Typed Execution](typed-execution). The workflow consists of the following steps:
 
-1. Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the ANE, GPU and CPU.
+1. Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the Neural Engine (NE), GPU and CPU.
 
 2. Check the accuracy of the Core ML model with the source model on a set of input examples, using an error metric that is suitable for that model.
 
@@ -227,5 +227,5 @@ Testing the match between the models visually.
 
 As expected it is hard to spot any difference! With an SNR of 70dB, the float 16 typed Core ML model is sufficient. Since the output is a new stylized image, it does not need to exactly match that of the original model, as long as it represents the style faithfully.
 
-While the float 16 version of the model performs well with this image, the best practice would be to check a set of validation images. If their SNRs are also high, you would deploy the float 16 version model, as it can execute on the ANE as well as the GPU and CPU.
+While the float 16 version of the model performs well with this image, the best practice would be to check a set of validation images. If their SNRs are also high, you would deploy the float 16 version model, as it can execute on the NE as well as the GPU and CPU.
 

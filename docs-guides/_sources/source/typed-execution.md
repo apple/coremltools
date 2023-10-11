@@ -46,7 +46,7 @@ A sample Core ML model description, as shown in Xcode. The input and output of t
 A neural network does not define the types of intermediate tensors that are produced by one layer and consumed by another.
 ```
 
-The Core ML runtime dynamically partitions the network graph into sections for the Apple Neural Engine (ANE), GPU, and CPU, and each unit executes its section of the network using its native type to maximize its performance and the model’s overall performance. The GPU and ANE use float 16 precision, and the CPU uses float 32. The execution precision varies based on the hardware and software versions, since the partitioning of the graph varies with hardware and software. 
+The Core ML runtime dynamically partitions the network graph into sections for the Neural Engine (NE), GPU, and CPU, and each unit executes its section of the network using its native type to maximize its performance and the model’s overall performance. The GPU and NE use float 16 precision, and the CPU uses float 32. The execution precision varies based on the hardware and software versions, since the partitioning of the graph varies with hardware and software. 
 
 You have some control over numeric precision by configuring the set of allowed compute units when converting the model (such as `All`, `CPU&GPU`, or `CPUOnly`), as shown in following chart:
 
@@ -74,7 +74,7 @@ For example, for float 32 precision, the only guaranteed path is to use `CPUOnly
 In an ML program, the types of all the intermediate tensors are specified in the model itself.
 ```
 
-An ML program uses the same automatic partitioning scheme that neural networks use to distribute work to the ANE, GPU, and CPU. However, the types of the tensors add an additional constraint. The runtime respects the explicit types as the minimum precision, and will not reduce the precision. 
+An ML program uses the same automatic partitioning scheme that neural networks use to distribute work to the NE, GPU, and CPU. However, the types of the tensors add an additional constraint. The runtime respects the explicit types as the minimum precision, and will not reduce the precision. 
 
 For example, a float 32 typed model will only ever run with float 32 precision. A float 16 typed model may run with float 32 precision as well, depending on the availability of the float 16 version of the op, which in turn may depend on the hardware and software versions. With an ML program, the precision and compute engine are independent of each other.
 
@@ -91,7 +91,7 @@ The ML program runtime supports an expanded set of precisions on the backend eng
 
 By default, an ML program produced by the converter is typed in float 16 precision, and run with the default configuration that uses all compute units (similar to the default neural network).
 
-For models sensitive to precision, you can set the precision to float 32 during conversion by using the `compute_precision=coremltools.precision.FLOAT32` flag with the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. Such a model is guaranteed to run with float 32 precision on all hardware and software versions. Unlike a neural network, the float 32 typed ML program will run on a CPU as well as the GPU. Only the ANE is barred as a compute unit when a model is typed with float 32 precision. 
+For models sensitive to precision, you can set the precision to float 32 during conversion by using the `compute_precision=coremltools.precision.FLOAT32` flag with the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. Such a model is guaranteed to run with float 32 precision on all hardware and software versions. Unlike a neural network, the float 32 typed ML program will run on a CPU as well as the GPU. Only the NE is barred as a compute unit when a model is typed with float 32 precision. 
 
 With an ML program, you can even mix and match precision support within a single compute unit, such as the CPU or GPU. If you need float 32 precision for specific layers instead of the entire model, you can selectively preserve float 32 tensor types by using the `compute_precision=ct.transform.Float16ComputePrecision()` transform during model conversion.
 

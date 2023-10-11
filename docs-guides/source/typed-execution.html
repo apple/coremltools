@@ -127,24 +127,24 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
@@ -450,7 +450,7 @@ document.write(`
 <p><span class="caption-text">A neural network does not define the types of intermediate tensors that are produced by one layer and consumed by another.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
-<p>The Core ML runtime dynamically partitions the network graph into sections for the Apple Neural Engine (ANE), GPU, and CPU, and each unit executes its section of the network using its native type to maximize its performance and the model’s overall performance. The GPU and ANE use float 16 precision, and the CPU uses float 32. The execution precision varies based on the hardware and software versions, since the partitioning of the graph varies with hardware and software.</p>
+<p>The Core ML runtime dynamically partitions the network graph into sections for the Neural Engine (NE), GPU, and CPU, and each unit executes its section of the network using its native type to maximize its performance and the model’s overall performance. The GPU and NE use float 16 precision, and the CPU uses float 32. The execution precision varies based on the hardware and software versions, since the partitioning of the graph varies with hardware and software.</p>
 <p>You have some control over numeric precision by configuring the set of allowed compute units when converting the model (such as <code class="docutils literal notranslate"><span class="pre">All</span></code>, <code class="docutils literal notranslate"><span class="pre">CPU&amp;GPU</span></code>, or <code class="docutils literal notranslate"><span class="pre">CPUOnly</span></code>), as shown in following chart:</p>
 <figure class="align-center" id="id3">
 <img alt="Control over numeric precision" class="imgnoborder" src="../_images/neural-net-control-precision2.png" />
@@ -469,7 +469,7 @@ document.write(`
 <p><span class="caption-text">In an ML program, the types of all the intermediate tensors are specified in the model itself.</span><a class="headerlink" href="#id4" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
-<p>An ML program uses the same automatic partitioning scheme that neural networks use to distribute work to the ANE, GPU, and CPU. However, the types of the tensors add an additional constraint. The runtime respects the explicit types as the minimum precision, and will not reduce the precision.</p>
+<p>An ML program uses the same automatic partitioning scheme that neural networks use to distribute work to the NE, GPU, and CPU. However, the types of the tensors add an additional constraint. The runtime respects the explicit types as the minimum precision, and will not reduce the precision.</p>
 <p>For example, a float 32 typed model will only ever run with float 32 precision. A float 16 typed model may run with float 32 precision as well, depending on the availability of the float 16 version of the op, which in turn may depend on the hardware and software versions. With an ML program, the precision and compute engine are independent of each other.</p>
 <p>The ML program runtime supports an expanded set of precisions on the backend engines. All of the ops supported on the GPU runtime are now equally supported in float 16 and float 32 precisions. As a result, a float 32 model saved as an ML program need not be restricted to run only on the CPU. In addition, a few selected ops, such as convolution, are also available with float 16 precision on the CPU, and on newer hardware, it can provide further acceleration.</p>
 <figure class="align-center" id="id5">
@@ -479,7 +479,7 @@ document.write(`
 </figcaption>
 </figure>
 <p>By default, an ML program produced by the converter is typed in float 16 precision, and run with the default configuration that uses all compute units (similar to the default neural network).</p>
-<p>For models sensitive to precision, you can set the precision to float 32 during conversion by using the <code class="docutils literal notranslate"><span class="pre">compute_precision=coremltools.precision.FLOAT32</span></code> flag with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. Such a model is guaranteed to run with float 32 precision on all hardware and software versions. Unlike a neural network, the float 32 typed ML program will run on a CPU as well as the GPU. Only the ANE is barred as a compute unit when a model is typed with float 32 precision.</p>
+<p>For models sensitive to precision, you can set the precision to float 32 during conversion by using the <code class="docutils literal notranslate"><span class="pre">compute_precision=coremltools.precision.FLOAT32</span></code> flag with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. Such a model is guaranteed to run with float 32 precision on all hardware and software versions. Unlike a neural network, the float 32 typed ML program will run on a CPU as well as the GPU. Only the NE is barred as a compute unit when a model is typed with float 32 precision.</p>
 <p>With an ML program, you can even mix and match precision support within a single compute unit, such as the CPU or GPU. If you need float 32 precision for specific layers instead of the entire model, you can selectively preserve float 32 tensor types by using the <code class="docutils literal notranslate"><span class="pre">compute_precision=ct.transform.Float16ComputePrecision()</span></code> transform during model conversion.</p>
 </section>
 </section>

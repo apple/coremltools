@@ -49,7 +49,7 @@
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/overview-coremltools';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="New Features" href="new-features.html" />
+    <link rel="next" title="Installing Core ML Tools" href="installing-coremltools.html" />
     <link rel="prev" title="Core ML Tools" href="../index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -127,24 +127,24 @@
 </a></div>
         <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
-        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
 <li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
 <li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
 </ul>
-<p aria-level="2" class="caption" role="heading"><span class="caption-text">Essentials</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
-<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
-</ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
@@ -416,7 +416,8 @@ document.write(`
                   
   <section id="what-is-core-ml-tools">
 <h1>What Is Core ML Tools?<a class="headerlink" href="#what-is-core-ml-tools" title="Permalink to this heading">#</a></h1>
-<p>The <a class="reference external" href="https://github.com/apple/coremltools">coremltools</a> Python package is the primary way to convert third-party models to Core ML. <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a> is an Apple framework to integrate machine learning models into your app.</p>
+<p>The <a class="reference external" href="https://github.com/apple/coremltools"><code class="docutils literal notranslate"><span class="pre">coremltools</span></code></a> Python package is the primary way to convert third-party models to Core ML. <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML</a> is an Apple framework to integrate machine learning models into your app.</p>
+<p>For details about using the <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> API classes and methods, see the <a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a>.</p>
 <p>Use Core ML Tools to convert models from third-party training libraries such as <a class="reference external" href="https://www.tensorflow.org">TensorFlow</a> and <a class="reference external" href="https://pytorch.org">PyTorch</a> to the <a class="reference external" href="https://developer.apple.com/documentation/coreml/core_ml_api/updating_a_model_file_to_a_model_package">Core ML model package format</a>. You can then use Core ML to integrate the models into your app.</p>
 <figure class="align-center" id="id1">
 <img alt="Core ML Tools overview" class="imgnoborder" src="../_images/introduction-coremltools.png" />
@@ -431,10 +432,11 @@ document.write(`
 <li><p>Verify creation and conversion by making predictions using Core ML in macOS.</p></li>
 </ul>
 <p>Core ML provides a unified representation for all models. Your app uses Core ML APIs and user data to make predictions, and to fine-tune models, all on the user’s device. Running a model strictly on the user’s device removes any need for a network connection, which helps keep the user’s data private and your app responsive.</p>
-<p>Core ML optimizes on-device performance by leveraging the CPU, GPU, and Apple Neural Engine (ANE) while minimizing its memory footprint and power consumption.</p>
+<p>Core ML optimizes on-device performance by leveraging the CPU, GPU, and Neural Engine (NE) while minimizing its memory footprint and power consumption.</p>
 <section id="additional-resources">
 <h2>Additional Resources<a class="headerlink" href="#additional-resources" title="Permalink to this heading">#</a></h2>
 <ul class="simple">
+<li><p>The <a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a> provides details about using the <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> API classes and methods.</p></li>
 <li><p>The <a class="reference external" href="https://developer.apple.com/machine-learning/">Machine Learning</a> page provides educational material, tutorials, guides, and documentation for Apple developers.</p></li>
 <li><p>The <a class="reference external" href="https://developer.apple.com/videos/frameworks/machine-learning-and-vision">ML &amp; Vision session videos</a> from the World Wide Developer Conference are a great place to start if you are new to machine learning technology and Core ML.</p></li>
 <li><p>The <a class="reference external" href="https://developer.apple.com/documentation/coreml">Core ML documentation</a> walks you through the first steps in developing an app with a machine learning model.</p></li>
@@ -493,11 +495,11 @@ document.write(`
       </div>
     </a>
     <a class="right-next"
-       href="new-features.html"
+       href="installing-coremltools.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">New Features</p>
+        <p class="prev-next-title">Installing Core ML Tools</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
