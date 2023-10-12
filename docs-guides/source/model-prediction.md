@@ -160,3 +160,140 @@ img_as_np_array = np.reshape(img_as_np_array, model_expected_input_shape)
 out_dict = model.predict({'image': img_as_np_array})
 ```
 
+
+## Using Compiled Python Models for Prediction
+
+You can use a *compiled* Core ML model to initialize the [MLModel](mlmodel) object for making predictions. For large models, using a compiled model can save considerable time in initializing the `mlmodel` object. 
+
+For example, [Stable Diffusion](https://machinelearning.apple.com/research/stable-diffusion-coreml-apple-silicon), adopted by a vibrant community of artists and developers, enables the creation of unprecedented visuals from a text prompt. When using [Core ML Stable Diffusion](https://github.com/apple/ml-stable-diffusion#core-ml-stable-diffusion), you can speed up the load time after the initial load by first copying and storing the location of the `mlmodelc` compiled model to a fixed location, and then initializing the MLModel from that location. 
+
+```{note}
+You can't modify a compiled model like you can an [MLModel](mlmodel) loaded from a non-compiled `mlpackage` model file. 
+```
+
+### Why Use a Compiled Model?
+
+When you initialize a model using (in Python) `model ct.models.MLModel("model.mlpackge")`, the Core ML Framework is invoked and the following steps occur, as shown in the following diagram.
+
+```{figure} images/model-lifecycle.png
+:alt: Initialize MLModel
+:align: center
+:class: imgnoborder
+
+This diagram is from [Improve Core ML integration with async prediction](https://developer.apple.com/videos/play/wwdc2023/10049/),
+presented at the Apple 2023 World Wide Developer Conference.
+```
+
+1. The `mlpackage` is [compiled](https://developer.apple.com/documentation/coreml/mlmodel/3929553-compilemodelaturl) into a file with extension `mlmodelc` . This step is usually very fast.
+
+2. The compiled model is then [instantiated](https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl) using the specified `compute_units`,  and captured in the MLModelConfiguration config. 
+
+3. During instantiation, another compilation occurs for backend device specialization, such as for the Neural Engine (NE), which may take a few seconds or even minutes for large models. 
+    
+This device specialization step creates the final compiled asset ready to be run. This final compiled model is cached so that the expensive device optimization process does not need to run again. The cache entry is linked to the full file system path of the `mlmodelc` folder.
+
+As you create an MLModel object in Python using an `mlpackage`, it uses a temporary directory in a new location to place the `mlmodelc` folder. The `mlmodelc` file is then deleted after you have made predictions and the Python process has ended. 
+
+The next time you start a new Python process and create an MLModel, the compilation to `mlmodelc` and the subsequent device specialization occurs again. The cached set can’t be used again, because the location of `mlmodelc` has changed. 
+
+By storing the `mlmodelc` file to a fixed location first, and then initializing the MLModel from that location, you can make sure that the cache model generated remains active for subsequent loads, thereby making them faster. Let's see how you would do that in code. 
+
+### Predict From the Compiled Model 
+
+To use a compiled model file, follow these steps:
+
+1. Load a saved MLModel, or convert a model from a training framework (such as TensorFlow or PyTorch). 
+    
+    For instructions on converting a model, see [Load and Convert Model Workflow](load-and-convert-model). This example uses the [regnet_y_128fg](https://pytorch.org/vision/main/models/generated/torchvision.models.regnet_y_128gf.html) torchvision model and assumes that you have already converted it to a Core ML `mlpackage`.
+
+2. Get the compiled model directory by calling its `get_compiled_model_path` method. 
+    
+    For example, the following code snippet loads a saved MLModel (`"regnet_y_128gf.mlpackage"`) and gets the compiled path:
+    
+	```
+	mlmodel.save("regnet_y_128gf.mlpackage")
+	compiled_model_path = mlmodel.get_compiled_model_path()
+	```
+
+3. The returned directory in `compiled_model_path` is only temporary. Copy that directory to a new persistent location (as in the following example, `regnet_y_128gf` with the extension `.mlmodelc` in the same directory) using the [`shutil.copytree()`](https://docs.python.org/3/library/shutil.html) method. You can then use CompiledMLModel to load the compiled model from `"regnet_y_128gf.mlmodelc"`:
+    
+	```
+	from shutil import copytree
+	copytree(compiled_model_path, "regnet_y_128gf.mlmodelc", dirs_exist_ok=True)
+
+	mlmodel = ct.models.CompiledMLModel("regnet_y_128gf.mlmodelc")
+	```
+    
+	This step includes compiling for device specialization. Therefore, the first load can still take a long time. However, since the location of the `mlmodelc` folder is fixed, the cache is able to work, so subsequent calls to model using CompiledMLModel are quick.
+
+4. For each prediction, use the `mlmodel` object to take advantage of this caching:
+    
+	```
+	prediction = mlmodel.predict({'x': 2})
+	```
+
+With most large models, it should be very quick to use the compiled model again after the first call. 
+
+
+### Timing Example
+
+This example demonstrates timing differences with calling a large model. The results are based on running the example on a MacBook Pro M1 Max with macOS Sonoma. Your timing results will vary depending on your system configuration and other factors.
+
+The following code snippet converts a relatively large model from torchvision: 
+
+```
+import coremltools as ct
+import torchvision
+import torch
+from shutil import copytree
+
+torch_model = torchvision.models.regnet_y_128gf()
+torch_model.eval()
+example_input = torch.rand(1, 3, 224, 224)
+traced_model = torch.jit.trace(torch_model, example_input)
+
+mlmodel = ct.convert(traced_model,
+                     inputs=[ct.TensorType(shape=example_input.shape)],
+                     )
+
+mlmodel.save("regnet_y_128gf.mlpackage")
+
+# save the mlmodelc
+compiled_model_path = mlmodel.get_compiled_model_path()
+copytree(compiled_model_path, "regnet_y_128gf.mlmodelc", dirs_exist_ok=True)
+
+```
+
+The following code snippet measures load time:
+
+```
+from time import perf_counter
+
+tick = perf_counter()
+mlmodel = ct.models.MLModel("regnet_y_128gf.mlpackage")
+print("time taken to load using ct.models.MLModel: {:.1f} secs".format(perf_counter() - tick))
+
+tick = perf_counter()
+mlmodel = ct.models.MLModel("regnet_y_128gf.mlpackage")
+print("time taken to load using ct.models.MLModel: {:.1f} secs".format(perf_counter() - tick))
+
+tick = perf_counter()
+mlmodel = ct.models.CompiledMLModel("regnet_y_128gf.mlmodelc")
+print("time taken to load using ct.models.CompiledMLModel: {:.1f} secs".format(perf_counter() - tick))
+
+tick = perf_counter()
+mlmodel = ct.models.CompiledMLModel("regnet_y_128gf.mlmodelc")
+print("time taken to load using ct.models.CompiledMLModel: {:.1f} secs".format(perf_counter() - tick))
+```
+
+Running the code produces the following output:
+
+```
+time take to load using ct.models.MLModel: 15.3 secs
+time take to load using ct.models.MLModel: 17.7 secs
+time take to load using ct.models.CompiledMLModel: 14.7 secs
+time take to load using ct.models.CompiledMLModel: 0.1 secs
+```
+
+These results show that it takes relatively the same time to load an MLModel after the first load, while loading a CompiledMLModel takes much less time after the first load.
+
