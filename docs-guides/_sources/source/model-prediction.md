@@ -289,10 +289,10 @@ print("time taken to load using ct.models.CompiledMLModel: {:.1f} secs".format(p
 Running the code produces the following output:
 
 ```
-time take to load using ct.models.MLModel: 15.3 secs
-time take to load using ct.models.MLModel: 17.7 secs
-time take to load using ct.models.CompiledMLModel: 14.7 secs
-time take to load using ct.models.CompiledMLModel: 0.1 secs
+time taken to load using ct.models.MLModel: 15.3 secs
+time taken to load using ct.models.MLModel: 17.7 secs
+time taken to load using ct.models.CompiledMLModel: 14.7 secs
+time taken to load using ct.models.CompiledMLModel: 0.1 secs
 ```
 
 These results show that it takes relatively the same time to load an MLModel after the first load, while loading a CompiledMLModel takes much less time after the first load.
