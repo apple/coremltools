@@ -4925,7 +4925,10 @@ def reciprocal(context, node):
 @register_torch_op
 def log(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.log(x=inputs[0], name=node.name))
+    x = inputs[0]
+    if types.is_int(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+    context.add(mb.log(x=x, name=node.name))
 
 
 @register_torch_op(torch_alias=["round"])
