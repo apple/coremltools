@@ -5438,6 +5438,33 @@ class TestElementWiseUnary(TorchBaseTest):
             rand_range=(20, 100),
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.int32, np.float32],
+        ),
+    )
+    def test_log_dtype(
+        self, compute_unit, backend, dtype
+    ):
+        SHAPE = (2, 3)
+
+        input_data = np.random.randint(1, 100, SHAPE).astype(dtype)
+        input_data = torch.from_numpy(input_data)
+        model = ModuleWrapper(torch.log)
+        converter_input_type = [TensorType(shape=SHAPE, dtype=dtype)]
+
+        self.run_compare_torch(
+            input_data,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            converter_input_type=converter_input_type
+        )
+
 
 class TestAtan2(TorchBaseTest):
     @pytest.mark.parametrize(
