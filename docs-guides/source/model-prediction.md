@@ -163,12 +163,12 @@ out_dict = model.predict({'image': img_as_np_array})
 
 ## Using Compiled Python Models for Prediction
 
-You can use a *compiled* Core ML model to initialize the [MLModel](mlmodel) object for making predictions. For large models, using a compiled model can save considerable time in initializing the `mlmodel` object. 
+You can use a *compiled* Core ML model ([CompiledMLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.CompiledMLModel)) rather than  [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel) for making predictions. For large models, using a compiled model can save considerable time in initializing the model. 
 
-For example, [Stable Diffusion](https://machinelearning.apple.com/research/stable-diffusion-coreml-apple-silicon), adopted by a vibrant community of artists and developers, enables the creation of unprecedented visuals from a text prompt. When using [Core ML Stable Diffusion](https://github.com/apple/ml-stable-diffusion#core-ml-stable-diffusion), you can speed up the load time after the initial load by first copying and storing the location of the `mlmodelc` compiled model to a fixed location, and then initializing the MLModel from that location. 
+For example, [Stable Diffusion](https://machinelearning.apple.com/research/stable-diffusion-coreml-apple-silicon), adopted by a vibrant community of artists and developers, enables the creation of unprecedented visuals from a text prompt. When using [Core ML Stable Diffusion](https://github.com/apple/ml-stable-diffusion#core-ml-stable-diffusion), you can speed up the load time after the initial load by first copying and storing the location of the `mlmodelc` compiled model to a fixed location, and then initializing the model from that location. 
 
 ```{note}
-You can't modify a compiled model like you can an [MLModel](mlmodel) loaded from a non-compiled `mlpackage` model file. 
+You can't modify a compiled model like you can an [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel) loaded from a non-compiled `mlpackage` model file. 
 ```
 
 ### Why Use a Compiled Model?
@@ -186,7 +186,7 @@ presented at the Apple 2023 World Wide Developer Conference.
 
 1. The `mlpackage` is [compiled](https://developer.apple.com/documentation/coreml/mlmodel/3929553-compilemodelaturl) into a file with extension `mlmodelc` . This step is usually very fast.
 
-2. The compiled model is then [instantiated](https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl) using the specified `compute_units`,  and captured in the MLModelConfiguration config. 
+2. The compiled model is then [instantiated](https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl) using the specified `compute_units`, and captured in the MLModelConfiguration config. 
 
 3. During instantiation, another compilation occurs for backend device specialization, such as for the Neural Engine (NE), which may take a few seconds or even minutes for large models. 
     
