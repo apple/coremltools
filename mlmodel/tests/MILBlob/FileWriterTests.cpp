@@ -115,7 +115,7 @@ int testFileWriterTestsWriteDataWithOffset()
         TestUtil::ReadBlobFile<uint8_t>(tempfile.GetFilename(), offset, outputSpan);
         ML_ASSERT_SPAN_EQ(expectedSpan, outputSpan);
 
-        // Writer writes 0s if offset is out of current file boundry
+        // Writer writes 0s if offset is out of current file boundary
         expected = {0, 0, 0, 0};
         TestUtil::ReadBlobFile<uint8_t>(tempfile.GetFilename(), 0, outputSpan);
         ML_ASSERT_SPAN_EQ(expectedSpan, outputSpan);
@@ -193,7 +193,7 @@ int testFileWriterTestsReadData()
         // Unable to read data i.e. reached end of file
         ML_ASSERT_THROWS_WITH_MESSAGE(writer.ReadData(offset2, CastAndMakeSpan(data1)),
                                       std::runtime_error,
-                                      "Unknown error occured while reading data from the file.");
+                                      "Unknown error occurred while reading data from the file.");
     }
 
     return 0;

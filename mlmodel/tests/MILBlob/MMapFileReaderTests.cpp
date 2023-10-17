@@ -97,7 +97,7 @@ int testMMapFileReaderTestsReadStruct()
         uint64_t b;
     };
 
-    // test invalid offsets/lenths
+    // test invalid offsets/lengths
     ML_ASSERT_THROWS(reader.ReadStruct<Int16Data>(6), std::range_error);
     ML_ASSERT_THROWS(reader.ReadStruct<Int64Data>(0), std::range_error);
 

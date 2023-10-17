@@ -86,7 +86,7 @@ class remove_redundant_ops(AbstractGraphPass):
     def _get_candidate_ops_lists_from_var(var):
         """
         Return a list of lists.
-        Each element is a list of a subset of the child ops of var, which satisifies the following conditions:
+        Each element is a list of a subset of the child ops of var, which satisfies the following conditions:
         - they are of the same op_type
         - ops are not repeated in it. The .child_ops property of a var may sometimes contain an op repeated more than once
         - the ops are ordered based on the order in which they appear in the block.operations list (which is topologically sorted),
@@ -215,8 +215,8 @@ class remove_redundant_ops(AbstractGraphPass):
     @staticmethod
     def _try_to_transform(parent_var):
         """
-        scan the children ops to parent_var, to find and remove indentical ops, if any.
-        Returns True, if succesful in finding such redundant ops.
+        scan the children ops to parent_var, to find and remove identical ops, if any.
+        Returns True, if successful in finding such redundant ops.
         """
         candidate_ops_lists = remove_redundant_ops._get_candidate_ops_lists_from_var(parent_var)
         block_changed = False

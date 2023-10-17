@@ -137,7 +137,7 @@ def tf_graph_to_mlmodel(
     inputs_for_conversion: list of coremltools.TensorType() or coremltools.ImageType() objects
         Defaults to None. It is passed as is to the "inputs" argument of the converter.
     minimum_deployment_target : coremltools.target enumeration
-        It set the minimum_deployment_target argument in the coremltools.convert functino.
+        It set the minimum_deployment_target argument in the coremltools.convert function.
     -----------
     Returns MLModel, Input Values, Output Names
     """
@@ -247,10 +247,10 @@ def run_compare_tf(
     tf_outputs: float or list[float]
         If present, use it as TensorFlow predictions
     minimum_deployment_target : coremltools.target enumeration
-        It set the minimum_deployment_target argument in the coremltools.convert functino.
+        It set the minimum_deployment_target argument in the coremltools.convert function.
 
     Return:
-        Proto, mlmodel, input dictionay, prediction(if possible)
+        Proto, mlmodel, input dictionary, prediction(if possible)
     """
     if not isinstance(output_nodes, (tuple, list)):
         output_nodes = [output_nodes]

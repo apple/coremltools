@@ -293,7 +293,7 @@ class TestMakePipeline:
 
     @staticmethod
     def test_compute_unit():
-        # Case 1 - Infering compute_unit
+        # Case 1 - Inferring compute_unit
         m1 = TestMakePipeline._make_model("x", 20, "y1", 10,
                                           compute_units=ct.ComputeUnit.CPU_ONLY)
         m2 = TestMakePipeline._make_model("y1", 10, "y2", 2,

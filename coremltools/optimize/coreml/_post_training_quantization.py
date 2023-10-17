@@ -217,7 +217,7 @@ def palettize_weights(mlmodel: _MLModel, config: _OptimizationConfig):
     ``constexpr_lut_to_dense`` ops.
 
     At runtime, the LUT and the `nbit` values are used to reconstruct the float weight
-    values, which are then used to perform the float operaton the weight is feeding into.
+    values, which are then used to perform the float operation the weight is feeding into.
 
     Consider the following example of ``"uniform"`` mode (a linear histogram):
 

@@ -524,7 +524,7 @@ class TorchConverter:
             # in Fairseq MT.
             for g in graph_outputs:
                 if g is None:
-                    logger.warning(f"Droping output {g} which is None")
+                    logger.warning(f"Dropping output {g} which is None")
             graph_outputs = [g for g in graph_outputs if g is not None]
 
             # Output renaming occurs

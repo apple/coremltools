@@ -182,7 +182,7 @@ int testFeatureDescriptions() {
     ML_ASSERT_GOOD(validateFeatureDescription(*feature2, MLMODEL_SPECIFICATION_VERSION, true));
 
     /// Range
-    // Now make it a range that inclues 6 x 5
+    // Now make it a range that includes 6 x 5
     auto* size_range = feature2->mutable_type()->mutable_imagetype()->mutable_imagesizerange();
     size_range->mutable_widthrange()->set_lowerbound(1);
     size_range->mutable_widthrange()->set_upperbound(-1); // unbounded

@@ -1752,7 +1752,7 @@ Fields
 
 Output
   A blob of rank 5.
-  The output blob's shape is ``[batch, channelsOut, depthOut, heightOut, widthOut]``.
+  The output blob's shape is ``[batch, channelsOut, depthOut, heightOut, without]``.
 
 Type of padding can be ``custom``, ``valid``, or ``same``. Padded values are all zeros.
 Output spatial dimensions depend on the the type of padding. For details, refer to the

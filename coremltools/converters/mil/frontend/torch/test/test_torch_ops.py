@@ -7364,7 +7364,7 @@ class TestTensorAssign(TorchBaseTest):
         ),
     )
     def test_tensor_assign_case_5(self, compute_unit, backend):
-        # slice dimension assigment
+        # slice dimension assignment
         class TensorAssignModel(torch.nn.Module):
             def forward(self, x):
                 x[:, 1] = torch.tensor([1.0, 2.0])
@@ -7382,7 +7382,7 @@ class TestTensorAssign(TorchBaseTest):
         ),
     )
     def test_tensor_assign_case_6(self, compute_unit, backend):
-        # a more complicated slice dimension assigment
+        # a more complicated slice dimension assignment
         class TensorAssignModel(torch.nn.Module):
             def forward(self, x):
                 x[:, 1, :] = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).view(2, 3)
@@ -9045,7 +9045,7 @@ class TestRoll(TorchBaseTest):
                 [4, 0],
                 [9, 0],
                 [[0, 1], [0, 1]],
-                # Shifts exceeeds dimension
+                # Shifts exceeds dimension
                 [[89, 93, 102], [0, 1, 2]],
                 # Negative shifts
                 [[-9, -1], [1, 2]],
@@ -9693,7 +9693,7 @@ class TestNms(TorchBaseTest):
                 # removed, so it's a bug in PyTorch's side.
                 #
                 # The reason of the PyTorch bug is:
-                #     They always use fp64 for the IOU theshold in their c++ backend,
+                #     They always use fp64 for the IOU threshold in their c++ backend,
                 #     even if the boxes and the scores can be fp32,
                 #     so the IOU threshold (fp64 0.2) rounds to 0.20000000000000001 and
                 #     the IOU between the last and the 2nd boxes (fp32 0.2) rounds to 0.20000000298023224,

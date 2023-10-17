@@ -710,7 +710,7 @@ class distributive_quantized_binary_op_scale_normalization(AbstractGraphPass):
         self, op: Operation, dequantize_x: Operation, dequantize_y: Operation, quantize_z: Operation
     ) -> bool:
         """
-        given dequantize_x, dequantize_y, quantize_z, tranform by
+        given dequantize_x, dequantize_y, quantize_z, transform by
             z_fp = (x - zp_x) * s_x/s_y .op. (y - zp_y) * 1.0
             z = z_fp / (s_z/s_y) - zp_z
 
@@ -836,7 +836,7 @@ class distributive_quantized_binary_op_scale_normalization(AbstractGraphPass):
 class dequantize_to_constexpr(AbstractGraphPass):
     """
     ``dequantize`` op with constant input is equivalent to ``constexpr_affine_dequantize``.
-    This is one of the canoncalization pass that transforms all such
+    This is one of the canonicalization pass that transforms all such
     ``dequantize`` ops to respective ``constexpr_affine_dequantize`` ops.
 
     .. code-block::

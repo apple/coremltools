@@ -79,7 +79,7 @@ class SimpleTest(unittest.TestCase):
         model_dir = tempfile.TemporaryDirectory()
         model_path = os.path.join(model_dir.name, "test_layer.mlmodel")
         coremltools.utils.save_spec(builder.spec, model_path)
-        # preprare input and get predictions
+        # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
         X = np.random.randint(low=0, high=10, size=15)
         X = np.reshape(X, (15, 1, 1, 1, 1)).astype(np.float32)

@@ -31,9 +31,9 @@ class TestCompositeOp(TensorFlowBaseTest):
         def Selu(context, node):
             x = context[node.inputs[0]]
             alpha = 1.6732631921768188
-            lamda = 1.0507010221481323
+            lambda = 1.0507010221481323
             out_elu = mb.elu(x=x, alpha=alpha)
-            out = mb.mul(x=out_elu, y=lamda, name=node.name)
+            out = mb.mul(x=out_elu, y=lambda, name=node.name)
             context.add(node.name, out)
 
         yield

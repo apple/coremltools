@@ -1573,7 +1573,7 @@ class TestRemoveRedundantOps:
     def test_redundant_ops_inside_graph_with_large_const(self):
         """
         For the large constants, they need to be deduplicated by the const_deduplication first.
-        This test is making sure the converter is not doing any "brutal force" comparision.
+        This test is making sure the converter is not doing any "brutal force" comparison.
 
         Input graph:
         input--> relu--------->conv------>relu----> pool ---> concat ---> out
@@ -2820,7 +2820,7 @@ class TestSkipConstexprOps:
 
         We are testing that:
         1. constexpr_op can serve as a const input weight for linear op
-        2. linear op shoudn't be removed by the const_elimination pass
+        2. linear op shouldn't be removed by the const_elimination pass
         """
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(4,))])
@@ -3628,7 +3628,7 @@ class TestMergeConsecutiveReshapes:
             bias = np.random.rand(7) * 2.0 - 1.0
             y3 = mb.sub(x=y2, y=bias)
 
-            # this reshape is seperated, so it will be kept
+            # this reshape is separated, so it will be kept
             y4 = mb.reshape(x=y3, shape=OUTPUT_SHAPE)
             return y4
 
@@ -4475,7 +4475,7 @@ class TestCastOptimizationComplexPatterns:
 
 class TestCastOptimizationAcrossBlocks:
     """
-    Test the cast optmization for cast ops at the boundary of inner and outer block.
+    Test the cast optimization for cast ops at the boundary of inner and outer block.
     """
     def test_cast_ops_fuse_across_block_smoke_1(self):
         """
@@ -5104,7 +5104,7 @@ class TestConvBatchNormFusion:
     @staticmethod
     def _apply_weight_transform(inputs, is_deconv, dtype=np.float32):
         """
-        Utility funtion to test the weight transform function in conv batch_norm fusion pass.
+        Utility function to test the weight transform function in conv batch_norm fusion pass.
         """
         Cin, _, groups = 10, 20, 10
         input_shape = (1, Cin, 2, 2)
@@ -5601,7 +5601,7 @@ class TestConvBiasFusion:
         output_shape[1] = Cout
         output_shape = np.array(output_shape)
 
-        # generate the perm for the tranpose op
+        # generate the perm for the transpose op
         perm = np.arange(rank)
         np.random.shuffle(perm)
         output_shape = output_shape[perm]
@@ -5691,7 +5691,7 @@ class TestConvScaleFusion:
     @staticmethod
     def _apply_weight_transform(inputs, is_deconv, is_real_div, is_conv_first_input, const_type):
         """
-        Utility funtion to test the weight transform function in conv scale fusion pass.
+        Utility function to test the weight transform function in conv scale fusion pass.
         """
         Cin, _, groups = 10, 20, 10
         input_shape = (1, Cin, 2, 2)
@@ -8383,7 +8383,7 @@ class TestFuseLinearBias:
     @staticmethod
     def _apply_transform(inputs, func, is_first_input, has_bias):
         """
-        Utility funtion to test the weight/bias transform function in linear bias fusion pass.
+        Utility function to test the weight/bias transform function in linear bias fusion pass.
         """
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(3, 4))])

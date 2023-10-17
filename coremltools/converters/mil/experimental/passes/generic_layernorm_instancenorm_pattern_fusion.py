@@ -95,7 +95,7 @@ if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
         y = (x - mean) / pow(variance + epsilon) * gamma + beta
 
         This pattern corresponds to, should be fused as instance_norm.
-        All of the following must be satisty:
+        All of the following must be satisfy:
         1) Input is rank 4 tensor
         2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
            channel first to channel last transpose would be inserted in such case)
@@ -131,7 +131,7 @@ if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
         Detect InstanceNorm pattern in TensorFlow-Addons.
 
         This pattern corresponds to, should be fused as instance_norm.
-        All of the following must be satisty:
+        All of the following must be satisfy:
         1) Input is rank 4 tensor
         2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
            channel first to channel last transpose would be inserted in such case)
@@ -169,7 +169,7 @@ if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
         y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
 
         This pattern corresponds to, should be fused as instance_norm.
-        All of the following must be satisty:
+        All of the following must be satisfy:
         1) Input is rank 4 tensor
         2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
            channel first to channel last transpose would be inserted in such case)

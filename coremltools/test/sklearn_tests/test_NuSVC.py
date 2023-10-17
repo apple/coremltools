@@ -303,7 +303,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
         spec = libsvm.convert(libsvm_model_path, "data", "target")
 
     def test_conversion_bad_inputs(self):
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = libsvm.convert(model, "data", "out")

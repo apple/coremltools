@@ -6541,12 +6541,12 @@ class IOS14SingleLayerTests(CorrectnessTest):
                     torch_pool = torch.nn.AvgPool3d(shape[-3:])
                 else:
                     torch_pool = torch.nn.MaxPool3d(shape[-3:])
-                exptected = torch_pool(torch_input).numpy()
+                expected = torch_pool(torch_input).numpy()
 
                 self._test_model(
                     builder.spec,
                     {"data": input},
-                    {"output": exptected},
+                    {"output": expected},
                     useCPUOnly=cpu_only,
                 )
 

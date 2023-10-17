@@ -176,7 +176,7 @@ def _load_value(context, value_spec):
 def _create_var_from_spec(spec):
     """
     This helper function is used for creating PyMIL Var/ListVar from the proto spec.
-    Mainly used for the contruction of the control flow ops.
+    Mainly used for the construction of the control flow ops.
     """
     assert isinstance(spec, pm.NamedValueType)
     sym_type = proto_to_types(spec.type)
@@ -214,7 +214,7 @@ def _create_nested_blocks(context, op_spec):
         for v in input_vars:
             context.register_var_with_name(v.name, v)
 
-        # In pymil, the outer_op for a block can only be None if the block is a Functino.
+        # In pymil, the outer_op for a block can only be None if the block is a Function.
         # As the result, we use a dummy outer_op here for block creation, and set it to
         # the legit op later on in _set_outer_op_for_nested_blocks
         dummy = mb.const(val=0.)
@@ -286,7 +286,7 @@ def _load_operation(context, op_spec):
         #       For that case, we directly create a constant variable.
 
         # (ii)  Create nested blocks for control flow operations:
-        #       The Python functinoal input arguments for control flow ops cannot be recovered from milproto -> pymil conversion,
+        #       The Python functional input arguments for control flow ops cannot be recovered from milproto -> pymil conversion,
         #       for instance, the _body, _cond for mb.while_loop and _true_fn, _false_fn for mb.cond are not invertible
         #       Hence, here we directly create the nested blocks from the proto, and set them to mb.while_loop.blocks / mb.cond.blocks.
         #       Note that, when creating a block, PyMIL required an outer_op, which should be the control flow operation itself. However,
@@ -295,7 +295,7 @@ def _load_operation(context, op_spec):
         #       for the creation of the block.
 
         # (iii) Create PyMIL operation using inputs / blocks
-        #       Note that for the control flow cases, we create dummy functional inputs, and use the exisiting block to create the op.
+        #       Note that for the control flow cases, we create dummy functional inputs, and use the existing block to create the op.
 
         # (iv)  Set the outer_op for control flow
         #       Once the operation is created, we replace the dummy outer_op with the legit one, to make it a valid PyMIL program

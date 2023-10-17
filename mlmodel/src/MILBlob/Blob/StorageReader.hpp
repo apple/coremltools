@@ -19,7 +19,7 @@ namespace Blob {
 /**
  * StorageReader encapsulates memory-mapped reading of the Storage Blob Format.
  *
- * Memory-mapping is performed laziliy on first access to the underlying data.
+ * Memory-mapping is performed lazily on first access to the underlying data.
  *
  * This file format supports the following types:
  * - uint8_t

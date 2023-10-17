@@ -45,7 +45,7 @@ namespace CoreML {
             auto size = element.inputdimensions();
             if (size <= 0) {
                 return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                              "Dimension size must be greater tha zero.");
+                              "Dimension size must be greater than zero.");
             }
         }
         

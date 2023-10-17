@@ -343,7 +343,7 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
     
     // Loop over the layers
     // For each layer, validate the following:
-    // 1. inputtensor/outputtensor message, rank compatibilty with Model input/output ranks
+    // 1. inputtensor/outputtensor message, rank compatibility with Model input/output ranks
     // 2. Check rank consistency across the network for all blobs: ranks are not allowed to change for the same blob
     // 3. Call layer specific validation function
     // 4. check that layer's inputs are already present in "availableBlobs" set
@@ -355,7 +355,7 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
             return r;
         }
         
-        // check for inputtensor message valididty
+        // check for inputtensor message validity
         if (ndArrayInterpretation) {
             if (layer.inputtensor_size() != 0) {
                 if (layer.input_size() != layer.inputtensor_size()) {

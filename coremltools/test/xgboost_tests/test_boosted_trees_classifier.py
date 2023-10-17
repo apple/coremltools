@@ -88,7 +88,7 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
             model = GradientBoostingClassifier()
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):
@@ -163,7 +163,7 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
             model = GradientBoostingClassifier()
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):
@@ -230,7 +230,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
             model = xgboost.XGBClassifier()
             spec = xgb_converter.convert(model, "data", "out", mode="classifier")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(Exception):
             model = xgboost.XGBRegressor()
             spec = xgb_converter.convert(model, "data", "out", mode="classifier")

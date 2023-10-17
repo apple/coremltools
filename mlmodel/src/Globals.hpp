@@ -35,7 +35,7 @@ namespace CoreML {
     // - Large expansion of supported neural network layers
     //   - Generalized operations
     //   - Control flow
-    //   - Dynmaic layers
+    //   - Dynamic layers
     //   - See NeuralNetwork.proto
     // - Nearest Neighbor Classifier
     // - Sound Analysis Prepreocessing

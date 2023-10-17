@@ -67,7 +67,7 @@ uint64_t FileWriter::AppendData(Span<const uint8_t> data)
     m_fileStream.write(reinterpret_cast<const char*>(data.Data()), static_cast<std::streamsize>(data.Size()));
     MILVerifyIsTrue(m_fileStream.good(),
                     std::runtime_error,
-                    "[MIL FileWriter]: Unknown error occured while writing data to the file.");
+                    "[MIL FileWriter]: Unknown error occurred while writing data to the file.");
     return offset;
 }
 
@@ -81,7 +81,7 @@ void FileWriter::WriteData(Span<const uint8_t> data, uint64_t offset)
     m_fileStream.write(reinterpret_cast<const char*>(data.Data()), static_cast<std::streamsize>(data.Size()));
     MILVerifyIsTrue(m_fileStream.good(),
                     std::runtime_error,
-                    "[MIL FileWriter]: Unknown error occured while writing data to the file.");
+                    "[MIL FileWriter]: Unknown error occurred while writing data to the file.");
 }
 
 void FileWriter::ReadData(uint64_t offset, Util::Span<uint8_t> destData)
@@ -90,5 +90,5 @@ void FileWriter::ReadData(uint64_t offset, Util::Span<uint8_t> destData)
     m_fileStream.read(reinterpret_cast<char*>(destData.Data()), static_cast<std::streamsize>(destData.Size()));
     MILVerifyIsTrue(m_fileStream.good(),
                     std::runtime_error,
-                    "[MIL FileWriter]: Unknown error occured while reading data from the file.");
+                    "[MIL FileWriter]: Unknown error occurred while reading data from the file.");
 }

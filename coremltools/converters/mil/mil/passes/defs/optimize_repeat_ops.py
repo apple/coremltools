@@ -534,7 +534,7 @@ class cast_optimization(AbstractGraphPass):
                 fusion_happens = True
             else:
                 if child_op.enclosing_block != block:
-                    # If cast_2 is in an inner block, we handle it at once in a seperated function `_fuse_casts_ops_across_blocks`
+                    # If cast_2 is in an inner block, we handle it at once in a separated function `_fuse_casts_ops_across_blocks`
                     cast_ops_across_blocks[child_op.enclosing_block].add((root_op, child_op))
                     continue
                 self._fuse_cast_ops((root_op, child_op))
@@ -549,7 +549,7 @@ class cast_optimization(AbstractGraphPass):
     def _fuse_or_cancel_consecutive_casts_block_wrapper(self, block):
         def _fuse_or_cancel_consecutive_casts_block(block, cast_ops_across_blocks):
             # We first make sure all the inner blocks are optimized
-            # It is important to do it seperately in the very beginning, to ensure the last step of optimization cast ops across the block boundary is correct.
+            # It is important to do it separately in the very beginning, to ensure the last step of optimization cast ops across the block boundary is correct.
             for i, op in enumerate(list(block.operations)):
                 for b in op.blocks:
                     self._fuse_or_cancel_consecutive_casts_block_wrapper(b)
@@ -1037,7 +1037,7 @@ class _TransposeOptimization:
             while len(queue) > 0:
                 o = queue.pop(0)
                 visited[o] = 1
-                # enque nodes connected to o
+                # enqueue nodes connected to o
                 if o in self.transpose_op_to_cancel_ops:
                     set_a.update(set([o]))
                     for neighbor_op in self.transpose_op_to_cancel_ops[o]:
@@ -1310,7 +1310,7 @@ class _TransformConcat(TransformAxisUpdateOps):
     def update(self):
         new_axis_val = self.transpose_axes[self.axis_var.val]
 
-        # to be used, if there is a consant inputs to the concat op
+        # to be used, if there is a constant inputs to the concat op
         self._update_const_inputs()
 
         # insert a new constant for the new axis, JUST before the op

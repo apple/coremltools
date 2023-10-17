@@ -161,7 +161,7 @@ int testSpanTestsDefaultConstructor()
 
 int testSpanTestsEmpty()
 {
-    // test 0 length but valud ptr
+    // test 0 length but valid ptr
     std::vector<int> v = {1, 2, 3, 4};
     Span<int> span(v.data(), 0);
     ML_ASSERT(span.IsEmpty());

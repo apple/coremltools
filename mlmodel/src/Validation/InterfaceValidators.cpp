@@ -177,7 +177,7 @@ namespace CoreML {
                     case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
                         if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE){
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
+                                          "Description of multiarray feature '" + desc.name() + "' has mismatch"
                                           " between dataType and the type of default optional value.");
                         }
                         break;
@@ -185,14 +185,14 @@ namespace CoreML {
                         if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_FLOAT32 &&
                             type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_FLOAT16){
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
+                                          "Description of multiarray feature '" + desc.name() + "' has mismatch"
                                           " between dataType and the type of default optional value.");
                         }
                         break;
                     case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
                         if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_INT32){
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
+                                          "Description of multiarray feature '" + desc.name() + "' has mismatch"
                                           " between dataType and the type of default optional value.");
                         }
                         break;
@@ -337,7 +337,7 @@ namespace CoreML {
 
                 if (modelVersion < MLMODEL_SPECIFICATION_VERSION_IOS12) {
                     return  Result(ResultType::INVALID_MODEL_INTERFACE,
-                                   "Sequence types are only valid in specification verison >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS12)+
+                                   "Sequence types are only valid in specification version >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS12)+
                                    ". This model has version " + std::to_string(modelVersion));
                 }
 

@@ -282,7 +282,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = sklearn.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(TypeError):
             from sklearn.linear_model import LinearRegression
 

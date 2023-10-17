@@ -181,7 +181,7 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
             quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.
             Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and
             all observers and quantization simulation will be turned on from the first step, batch norm layers always
-            operate in training mode, and mean and varaince statistics collection is not frozen.
+            operate in training mode, and mean and variance statistics collection is not frozen.
     """
 
     weight_dtype: _torch.dtype = _field(

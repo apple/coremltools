@@ -304,7 +304,7 @@ class TestCompressionGraphBackwardCompatibility:
     """
     Most of the numerical tests are already convered in coremltools.tests.ml_program.test_compression_utils.
     This test is checking the basic behavior of the graph pass classes using only global config.
-    This test also convers the backward compatibility test for the deprecated ct.compression_utils.
+    This test also converts the backward compatibility test for the deprecated ct.compression_utils.
     """
     @staticmethod
     def _get_conv_program():
@@ -436,7 +436,7 @@ class TestCompressionPasses:
 
 class TestOptimizationConfig(TestCompressionPasses):
     """
-    Test some basic funtionality of the OptimizationConfig.
+    Test some basic functionality of the OptimizationConfig.
     """
     @pytest.mark.parametrize(
         "compressor_class, fake_compression",
@@ -521,7 +521,7 @@ class TestOptimizationConfig(TestCompressionPasses):
 
     def test_config_hierarchy(self):
         """
-        This test is checking the graph pass compresses the program correctly according to the following heirarchical order (high -> low):
+        This test is checking the graph pass compresses the program correctly according to the following hierarchical order (high -> low):
         1. op name
         2. op type
         3. global
@@ -1787,7 +1787,7 @@ class TestCompressionOperations(TestCompressionPasses):
 
 class TestInvalidConfig:
     """
-    This test is checking error handling for invalid configuraion.
+    This test is checking error handling for invalid configuration.
     """
 
     @staticmethod

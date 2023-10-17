@@ -911,7 +911,7 @@ def addmm(context, node):
         context.add(mat1)
 
     # MIL linear will transpose mat2, but addmm expects that mat1 and mat2
-    # can multiply as is. So we add a tranpose.
+    # can multiply as is. So we add a transpose.
     mat2 = mb.transpose(x=mat2, perm=[1, 0], name=mat2.name + "_transposed")
     context.add(mat2)
 
@@ -2380,7 +2380,7 @@ def gru(context, node):
     expected_num_weights = 2 * num_layers * (int(has_bias) + 1) * (int(bidirectional) + 1)
     if len(weights_list) != expected_num_weights:
         raise ValueError(
-            "Incorrect weights shape for gru layer: Expected: {}. Recieved {}".format(
+            "Incorrect weights shape for gru layer: Expected: {}. Received {}".format(
                 expected_num_weights, len(weights_list)
             )
         )
@@ -2538,7 +2538,7 @@ def _add_simple_rnn(context, node, activation):
     expected_num_weights = 2 * num_layers * (int(has_bias) + 1)
     if len(weights_list) != expected_num_weights:
         raise ValueError(
-            "Incorrect weights shape for lstm layer: Expected: {}. Recieved {}".format(
+            "Incorrect weights shape for lstm layer: Expected: {}. Received {}".format(
                 expected_num_weights, len(weights_list)
             )
         )
@@ -2625,7 +2625,7 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
 
 
     The Core ML LSTM op expects two tensors, weight and bias. So
-    the tensors for weight and bias are seperated from pytorch's @weights list (1.).
+    the tensors for weight and bias are separated from pytorch's @weights list (1.).
     For bias tensor, the Core ML LSTM op expects the form ii, if, io, ig and hi, hf, ho, hg,
     requiring the ifzo_to_ifoz function. Further adding input and hidden bias into one (2.).
     Similar to bias, input and hidden weight requires different layout. (3.)
@@ -2782,7 +2782,7 @@ def lstm(context, node):
     expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(has_bias) + 1)
     if len(weights_list) != expected_num_weights:
         raise ValueError(
-            "Incorrect weights shape for lstm layer: Expected: {}. Recieved {}".format(
+            "Incorrect weights shape for lstm layer: Expected: {}. Received {}".format(
                 expected_num_weights, len(weights_list)
             )
         )
@@ -3745,7 +3745,7 @@ def index(context, node):
         index = indices[axis]
         index = mb.non_zero(x=index)
 
-        # tranpose the masked axes to the beginning
+        # transpose the masked axes to the beginning
         perm = axes + [i for i in range(rank) if i not in axes]
         x = mb.transpose(x=x, perm=perm)
         x = mb.gather_nd(x=x, indices=index)
@@ -4564,7 +4564,7 @@ def meshgrid(context, node):
         raise ValueError("Requires >= 2 tensor inputs.")
 
     if any([len(tensor_var.shape) > 1 for tensor_var in tensor_inputs]):
-        raise ValueError("meshgrid recieved non-1d tensor.")
+        raise ValueError("meshgrid received non-1d tensor.")
 
     dim_tuple = tuple(tensor_var.shape[0] for tensor_var in tensor_inputs)
 
@@ -5634,7 +5634,7 @@ def _pad_packed_sequence(context, node):
         add_values = mb.concat(values=concate_values, axis=0)
 
         # trim the dummy padding tensor
-        # the output would have shpae [padded_seq_len, input_dim]
+        # the output would have shape [padded_seq_len, input_dim]
         x = mb.slice_by_index(
             x=add_values,
             begin=[0, 0],

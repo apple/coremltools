@@ -413,7 +413,7 @@ namespace CoreML { namespace TreeEnsembles {
 
                 // Now, are there nodes in not connected to any root nodes?
                 // Because no node can have more than one parent, and that root
-                // nodes are definied by a node having no parent, then there
+                // nodes are defined by a node having no parent, then there
                 // exists nodes not connected to any root node if and only if
                 // there is a cycle.  Thus we can easily test for this.
 

@@ -226,7 +226,7 @@ def convert_function(function, parameters, blob_writer, opset):
     return pm.Function(inputs=inputs, opset=opset, block_specializations={opset: block})
 
 # Add a classify op to the output.
-# Replaces the original probabilites output (in the containing MIL block)
+# Replaces the original probabilities output (in the containing MIL block)
 # with the outputs of the classifier op. Returns the name of the original
 # probabilities output variable.
 def _add_classify_op(prog, classifier_config):

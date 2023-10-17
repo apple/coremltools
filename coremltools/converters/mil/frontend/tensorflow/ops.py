@@ -884,10 +884,10 @@ def Pow(context, node):
 def DepthwiseConv2dNative(context, node):
     # [kH, kW, C_in, multiplier]
     W_hwim = context[node.inputs[1]]  # m = multiplier
-    # [kH, kW, 1, C_in * multipler]
+    # [kH, kW, 1, C_in * multiplier]
     shape_hw1o = list(W_hwim.shape[:2]) + [1, W_hwim.shape[2] * W_hwim.shape[3]]
     W_hw1o = mb.reshape(x=W_hwim, shape=shape_hw1o)
-    # [C_in * multipler, 1, kH, kW]. Note that C_in * multiplier = C_out in
+    # [C_in * multiplier, 1, kH, kW]. Note that C_in * multiplier = C_out in
     # MIL. C_in / groups = 1 in depthwise conv.
     W_o1hw = mb.transpose(x=W_hw1o, perm=[3, 2, 0, 1])
     data_format = node.attr.get("data_format", "NHWC")
@@ -1906,7 +1906,7 @@ def MirrorPad(context, node):
 
     pad = pad.val
 
-    # get axix which is non zero
+    # get axis which is non zero
     non_zero_axis = []
     for i in range(len(pad)):
         if not all(pad[i] == 0):
@@ -2378,7 +2378,7 @@ def _perform_gather_with_batch_dims(x, indices, batch_dims, gather_func, func_ar
     # All results are stacked into a tensor with shape [prod(batch_1, ..., batch_n), *remaning_result_shape]
     res = []
     if batch_prod.val is None:
-        raise ValueError("batch dimenstion must be known at compile time")
+        raise ValueError("batch dimension must be known at compile time")
     for i in range(batch_prod.val[0]):
         temp_x = mb.gather(x=x_reshape, indices=[i], axis=0)
         temp_indices = mb.gather(x=indices_reshape, indices=[i], axis=0)

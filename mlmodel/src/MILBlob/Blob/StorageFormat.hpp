@@ -14,8 +14,8 @@ namespace Blob {
 // ---: Blob Storage File Format :---
 // Default file format for CoreML (iOS15 onwards)
 //
-// ---: File sturcture :---
-// File is structued as below:
+// ---: File structure :---
+// File is structured as below:
 // 1. Storage header: `struct storage_header`
 // 2. Followed by pair: `struct blob_metadata` and `raw_data`
 // Each entry i.e. blob_metadata and raw data is 64 bytes aligned.
@@ -79,7 +79,7 @@ struct storage_header {
 
 // storage_header and blob_metadata are 64 bytes aligned.
 // This allows first metadata to be aligned by default
-// and data following blob_metadata aligned by defaul as well.
+// and data following blob_metadata aligned by default as well.
 static_assert(sizeof(blob_metadata) == sizeof(uint64_t) * 8, "blob_metadata must be of size 64 bytes");
 static_assert(sizeof(storage_header) == sizeof(uint64_t) * 8, "storage_header must be of size 64 bytes");
 

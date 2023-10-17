@@ -175,7 +175,7 @@ def remove_disconnected_layers(spec):
 
     def _get_disconnected_layers_rec(nn_spec):
         """
-        - Iteraters over layers in bottom-up fashion
+        - Iterates over layers in bottom-up fashion
         - Collect layers if it's output is not being used (marks and does lazy deletion)
         - Recursively iterates over NN Spec if layer is Loop or Branch
         """
@@ -245,7 +245,7 @@ def remove_disconnected_layers(spec):
                     and len(else_layers_to_delete) == total_else_layers
                 ):
                     # If both branches are empty after dead-layer elimination
-                    # remove branch layer altogehter
+                    # remove branch layer altogether
                     layers_to_delete.append(_layer)
                     _decrease_input_degree(_layer)
                 continue
@@ -422,7 +422,7 @@ def remove_redundant_transposes(spec):
             For example, if sol_num[10] = 5, this means after index 10, we can at most remove 5 nodes.
             sol_bt[i] keeps the first starting point of identity sequence which results in the
             optimal solution after index i.
-            For example, if sol_num[10] = 12, means that in order to get rid of the maxium number of
+            For example, if sol_num[10] = 12, means that in order to get rid of the maximum number of
             nodes after 10, the first starting point is index 12.
             After construct sol_num and sol_bt by dynamic programming, we backtrack for the optimal
             solution using sol_bt.

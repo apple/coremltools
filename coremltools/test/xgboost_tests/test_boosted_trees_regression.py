@@ -89,7 +89,7 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
             model = GradientBoostingRegressor()
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(Exception):
             model = OneHotEncoder()
             spec = skl_converter.convert(model, "data", "out")

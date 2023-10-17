@@ -163,7 +163,7 @@ def convert(
               in the TF model.
             - If ``name`` is specified with ``TensorType`` and ``ImageType``, it
               must correspond to a placeholder op in the TF graph. The input names
-              in the converted Core ML model can later be modifed using the
+              in the converted Core ML model can later be modified using the
               ``ct.utils.rename_feature`` API.
             - If ``dtype`` is not specified, it defaults to the ``dtype`` of the
               inputs in the TF model.

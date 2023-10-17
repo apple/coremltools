@@ -75,7 +75,7 @@ class DecisionTreeBinaryClassifierScikitTest(unittest.TestCase):
             model = DecisionTreeClassifier()
             spec = skl_converter(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):
@@ -142,7 +142,7 @@ class DecisionTreeMultiClassClassifierScikitTest(unittest.TestCase):
             model = DecisionTreeClassifier()
             spec = skl_converter(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):

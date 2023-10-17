@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 """
-List of all external dependancies for this package. Imported as
+List of all external dependencies for this package. Imported as
 optional includes
 """
 import platform as _platform

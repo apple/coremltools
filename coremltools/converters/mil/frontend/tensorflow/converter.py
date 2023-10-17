@@ -330,7 +330,7 @@ class TFConverter:
         # validation
         if get_output_names(self.main_output_types) is None:
             # this is the case, where the user did not provide names for the outputs.
-            # In this case, the outputs were inferred from the TF graph autmatically.
+            # In this case, the outputs were inferred from the TF graph automatically.
             # There are two scenarios here: number of inferred outputs equal to 1 or greater than 1
             if len(output_vars) == 1:
                 if len(self.main_output_types) > 1:

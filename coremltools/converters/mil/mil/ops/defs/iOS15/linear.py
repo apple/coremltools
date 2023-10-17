@@ -235,7 +235,7 @@ class matmul(Operation):
 class einsum(Operation):
     """
     Perform tensor multiplication expressed according to the einsum notation.
-    The mode/equation that is currently supported is mutiplying matrices that are laid out on
+    The mode/equation that is currently supported is multiplying matrices that are laid out on
     dimensions -1 and -3, treating all the other dimensions as batch. Broadcasting is supported along batch dimensions.
     In particular, the inputs must be of the following shapes:
 

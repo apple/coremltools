@@ -35,7 +35,7 @@ def value_at(x: Var, idx: int, name=None, before_op=None):
 
 def _reverse_input_einsum_eq(equation: str) -> str:
     """
-    Reverse the input order of the einsum eqaution
+    Reverse the input order of the einsum equation
     e.g.:
     input : "nchw,nwhu->nchu"
     returns : "nwhu,nchw->nchu"

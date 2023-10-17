@@ -80,7 +80,7 @@ class RandomForestRegressorScikitTest(unittest.TestCase):
             model = RandomForestRegressor(n_estimators=10)
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):

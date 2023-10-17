@@ -70,7 +70,7 @@ class ImputerTestCase(unittest.TestCase):
             model = Imputer()
             spec = converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(Exception):
             from sklearn.linear_model import LinearRegression
 

@@ -95,7 +95,7 @@ class Builder:
         candidate_kv):
         """
         For each key K in `candidate_kv`, create a Var if the
-        followings are satisfied:
+        following are satisfied:
 
         - K exists in input_spec and is not an InternalInputType
         - candidate_kv[K] is not already a Var

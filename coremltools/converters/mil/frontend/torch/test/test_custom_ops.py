@@ -95,7 +95,7 @@ class TestCustomOp:
             x_type = self.x.dtype
             x_shape = self.x.shape
             y_shape = self.y.shape
-            # For illustration purpose, assumming getting valid shape
+            # For illustration purpose, assuming getting valid shape
             # Ideally, should consider transpose_?, ?_is_sparse parameters into consideration
             # for computing output shape
             return types.tensor(x_type, [x_shape[0], y_shape[1]])
@@ -129,7 +129,7 @@ class TestCustomOp:
         assert layers[-1].custom is not None, "Expecting a custom layer"
         assert (
             "SparseMatMul" == layers[-1].custom.className
-        ), "Custom Layer class name mis-match"
+        ), "Custom Layer class name mismatch"
         assert (
             not layers[-1].custom.parameters["transpose_x"].boolValue
         ), "Incorrect parameter value k"

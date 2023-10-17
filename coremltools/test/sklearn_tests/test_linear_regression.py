@@ -81,7 +81,7 @@ class LinearRegressionScikitTest(unittest.TestCase):
             model = LinearRegression()
             spec = convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = convert(model, "data", "out")

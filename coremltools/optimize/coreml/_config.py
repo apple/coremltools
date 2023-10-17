@@ -287,13 +287,13 @@ class OpMagnitudePrunerConfig(OpCompressorConfig):
 
         * If set, must be greater than ``1`` to enable block sparsity.
         * Block sparsity can be applied only to ``linear`` and ``conv`` layers.
-        * The channel will be padded with ``0`` if it is not divisble by ``block_size``.
+        * The channel will be padded with ``0`` if it is not divisible by ``block_size``.
 
     n_m_ratio: tuple[int]
         A tuple of two integers which specify the ratio for ``n:m`` pruning.
 
         * ``n`` must be smaller or equal to ``m``.
-        * The channel would be padded with ``0`` if it is not divisble by ``m``.
+        * The channel would be padded with ``0`` if it is not divisible by ``m``.
 
     dim: int
         Dimension where the block sparsity or ``n:m`` sparsity is applied.
@@ -585,7 +585,7 @@ class OptimizationConfig:
 
     1. ``global_config``: The default configuration applied to all ops / consts.
     2. ``op_type_configs``: Configurations applied to specific op type. It overrides ``global_config``.
-    3. ``op_name_configs``: Confgurations applied to specific constant or op instance. It overrides ``global_config`` and ``op_type_configs``.
+    3. ``op_name_configs``: Configurations applied to specific constant or op instance. It overrides ``global_config`` and ``op_type_configs``.
 
     The following is an example that constructs an optimization config for weight palettization.
 
