@@ -175,22 +175,18 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         negative_axes = [a - rank if a >= 0 else a for a in axes]
         negative_axes.sort()
 
-        gamma_shape_len = len(gamma_var.val.shape) if gamma_var is not None else -1
-        beta_shape_len = len(beta_var.val.shape) if beta_var is not None else -1
+        gamma_rank = gamma_var.rank if gamma_var is not None else -1
+        beta_rank = beta_var.rank if beta_var is not None else -1
 
-        if gamma_shape_len == len(axes) and beta_shape_len == len(axes):
+        if gamma_rank == len(axes) and beta_rank == len(axes):
             # axes for layer_norm must be [-1] or [-1, -2] or [-1, -2, -3] and so on
             if negative_axes == list(range(-len(negative_axes), 0)):
                 is_layernorm = True
 
-        if (
-            (gamma_var is None and beta_var is None)
-             or (gamma_shape_len == 1 and beta_shape_len == 1)
-        ):
-            if rank == 4 and negative_axes == [-3]:
-                is_layernorm = True
-                gamma_var = gamma_var.val if gamma_var else None
-                beta_var = beta_var.val if beta_var else None
+        if rank == 4 and negative_axes == [-3]:
+            is_layernorm = (gamma_var is None and beta_var is None) or (gamma_rank == 1 and beta_rank == 1)
+            gamma_var = gamma_var.val if gamma_var else None
+            beta_var = beta_var.val if beta_var else None
 
         if rank == 4 and (negative_axes == [-2, -1] or negative_axes == [-3, -2]):
             if (
@@ -975,6 +971,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
         has_beta_and_gamma = add_beta_op is not None and mul_gamma_op is not None
 
+        # mul_op cannot be used except as an input to add_beta_op.
         if has_beta_and_gamma and not self._check_child_op_types(
             mul_op, child_op_types=["add"]
         ):
@@ -984,9 +981,17 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             # For simplicity don't handle this edge case.
             return False
 
-        if has_beta_and_gamma and self._check_child_op_types(
+        # add_beta_op cannot be used except as an input to mul_gamma_op.
+        if has_beta_and_gamma and not self._check_child_op_types(
             add_beta_op, child_op_types=["mul"]
         ):
+            # It would be possible to fuse this pattern as:
+            # layer_norm(x, gamma=None, beta=None) -> add(beta) -> mul(gamma) -> ...
+            #                                                   |-> other add_beta_op child ops
+            # For simplicity don't handle this edge case.
+            return False
+
+        if has_beta_and_gamma:
             beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
 
             gamma_var = mul_gamma_op.y if mul_gamma_op.x == add_beta_op.outputs[0] else mul_gamma_op.x

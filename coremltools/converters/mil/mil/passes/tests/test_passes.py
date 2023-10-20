@@ -7767,9 +7767,12 @@ class TestFuseLayerNormOrInstanceNorm:
 
     @pytest.mark.parametrize(
         "with_affine, reused_name",
-        itertools.product(
-            [True, False],
-            [None, "x2", "x3", "x4", "x8"],
+        itertools.chain(
+            itertools.product(
+                [True, False],
+                [None, "x2", "x3", "x4", "x8"],
+            ),
+            [[True, "x9"]]
         ),
     )
     def test_ane_layer_norm_intermediate_var_reuse(self, with_affine, reused_name):
@@ -7794,7 +7797,8 @@ class TestFuseLayerNormOrInstanceNorm:
             y = x8
 
             if with_affine:
-                y = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
+                x9 = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
+                y = x9
                 y = mb.mul(x=y, y=np.random.rand(1,shape[1],1,1))
 
             # All the same shape (3,5,1,6)
@@ -7807,6 +7811,8 @@ class TestFuseLayerNormOrInstanceNorm:
                 reused = x4
             elif reused_name == "x8":
                 reused = x8
+            elif reused_name == "x9":
+                reused = x9
 
             if reused:
                 y = mb.sub(x=reused, y=y) # reuse an intermediate variable
