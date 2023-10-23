@@ -304,7 +304,7 @@ class ModuleMagnitudePrunerConfig(_ModuleOptimizationConfig):
             if self.initial_sparsity is not None and self.initial_sparsity > 0.0:
                 raise ValueError(
                     f"Received initial_sparsity = {self.initial_sparsity} and "
-                    f"n_m_ratio = {self.nm_ratio}. When n_m_ratio != None, the only allowed "
+                    f"n_m_ratio = {self.n_m_ratio}. When n_m_ratio != None, the only allowed "
                     f"value of initial_sparsity is 0."
                 )
 
