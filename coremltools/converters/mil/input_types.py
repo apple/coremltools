@@ -152,8 +152,8 @@ class ImageType(InputType):
         return self.__str__()
 
     def __str__(self):
-        str_repr = 'ImageType[name={}, shape={}, scale={}, bias={}, ' +\
-                'color_layout={}, channel_first={}]'
+        str_repr = 'ImageType(name={}, shape={}, scale={}, bias={}, ' +\
+                'color_layout={}, channel_first={})'
         return str_repr.format(self.name, self.shape, self.scale, self.bias,
                                self.color_layout, self.channel_first)
 
@@ -268,7 +268,7 @@ class TensorType(InputType):
         return self.__str__()
 
     def __str__(self):
-        return 'TensorType[name={}, shape={}, dtype={}]'.format(self.name,
+        return 'TensorType(name={}, shape={}, dtype={})'.format(self.name,
                                                                 self.shape,
                                                                 self.dtype)
 
@@ -408,6 +408,11 @@ class Shape:
     def __str__(self):
         return str(self.shape)
 
+
+    def __repr__(self):
+        return self.__str__()
+
+
     @property
     def has_symbolic(self):
         return any(is_symbolic(s) for s in self.symbolic_shape)
@@ -436,7 +441,27 @@ class EnumeratedShapes:
             the metadata of the model file.
 
             If None, then the first element in ``shapes`` is used.
+
+        Examples
+        --------
+        .. sourcecode:: python
+
+        sample_shape = ct.EnumeratedShapes(
+            shapes=[
+                (2, 4, 64, 64),
+                (2, 4, 48, 48),
+                (2, 4, 32, 32)
+            ],
+            default=(2, 4, 64, 64)
+        )
+
+        my_core_ml_model = ct.convert(
+            my_model,
+            inputs=[ct.TensorType(name="sample", shape=sample_shape)],
+        )
         """
+
+        # lazy import to avoid circular import
         from coremltools.converters.mil.mil import get_new_symbol
 
         if not isinstance(shapes, (list, tuple)):
@@ -488,6 +513,14 @@ class EnumeratedShapes:
         else:
             default = self.shapes[0].default
         self.default = default
+
+
+    def __repr__(self):
+        return self.__str__()
+
+
+    def __str__(self):
+        return "EnumeratedShapes(" + str(self.shapes) + ", default=" + str(self.default) + ")"
 
 
 def _get_shaping_class(shape):
