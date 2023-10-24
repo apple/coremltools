@@ -338,10 +338,7 @@ def _stft(
             input_imaginary = mb.expand_dims(x=input_imaginary, axes=(0,), before_op=before_op)
 
     is_onesided = onesided and onesided.val
-    cos_base, sin_base = _calculate_dft_matrix(
-        n_fft,
-        onesided=is_onesided,
-        before_op=before_op)
+    cos_base, sin_base = _calculate_dft_matrix(n_fft, onesided=is_onesided, before_op=before_op)
     
     # create a window of centered 1s of the requested size
     if win_length:
@@ -352,29 +349,46 @@ def _stft(
         cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
         sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
 
-    # conv with DFT kernel across the input signal
-    sin_base = mb.sub(x=0., y=sin_base, before_op=before_op)
+
+    # Expand
     cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
     sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
     hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
-
     signal_real = mb.expand_dims(x=input_real, axes=(1,), before_op=before_op)
-    cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
-    sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
-
     if input_imaginary:
         signal_imaginary = mb.expand_dims(x=input_imaginary, axes=(1,), before_op=before_op)
+
+    # conv with DFT kernel across the input signal
+    # The DFT matrix is obtained with the equation e^(2pi/N i) but the definition is:
+    # DFT(x) => X[k] = Σx[n]*e^(-2kpi/N i)
+    # If x is complex then x[n]=(a+i*b)
+    # So the real part = Σ(a*cos(2kpi/N)+b*sin(2kpi/N))
+    # So the imag part = Σ(b*cos(2kpi/N)-a*sin(2kpi/N))
+    cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    if input_imaginary:
         cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
         sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
 
     # add everything together
     if input_imaginary:
-        # sin base is already negative so subtract
-        real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
-        imag_result = mb.add(x=sin_windows_real, y=cos_windows_imag, before_op=before_op)
+        real_result = mb.add(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
+        imag_result = mb.sub(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
     else:
         real_result = cos_windows_real
-        imag_result = sin_windows_real
+        imag_result = mb.sub(x=0., y=sin_windows_real, before_op=before_op)
+
+    # reduce the rank of the output
+    if should_increase_rank:
+        real_result = mb.squeeze(x=real_result, axes=(0,), before_op=before_op)
+        imag_result = mb.squeeze(x=imag_result, axes=(0,), before_op=before_op)
+
+    if normalized and normalized.val:
+        divisor = mb.sqrt(x=mb.cast(x=n_fft, dtype="fp32", before_op=before_op), before_op=before_op)
+        real_result = mb.real_div(x=real_result, y=divisor, before_op=before_op)
+        imag_result = mb.real_div(x=imag_result, y=divisor, before_op=before_op)
+
+    return real_result, imag_result
 
 def _istft(
     input_real: Var,
