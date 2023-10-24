@@ -376,6 +376,10 @@ def _stft(
         real_result = cos_windows_real
         imag_result = sin_windows_real
 
+    # Overlap-add
+    real_result = _overlap_add(x=real_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
+    imag_result = _overlap_add(x=imag_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
+
     # reduce the rank of the output
     if should_increase_rank:
         real_result = mb.squeeze(x=real_result, axes=(0,), before_op=before_op)
@@ -387,6 +391,23 @@ def _stft(
         imag_result = mb.real_div(x=imag_result, y=divisor, before_op=before_op)
 
     return real_result, imag_result
+
+def _overlap_add(
+    x: Var,
+    n_fft: Var,
+    hop_length: Var,
+    before_op: Operation,
+) -> Var:
+    n_frames = mb.shape(x=x, before_op=before_op)[1]
+    output = mb.fill(shape=(n_fft + hop_length * (n_frames - 1)), value=0., before_op=before_op)
+    signal_frames = mb.split(x=x, num_splits=n_frames, axis=1, before_op=before_op)
+    local_idx = mb.range_1d(start=0, end=n_fft, step=1, before_op=before_op)
+
+    for frame_num, frame in enumerate(signal_frames):
+        global_idx = mb.add(x=local_idx , y=frame_num*hop_length.val, before_op=before_op)
+        output = mb.scatter_nd(data=output, indices=global_idx, updates=frame, before_op=before_op)
+
+    return output
 
 def _get_window(
     win_length: Var,
