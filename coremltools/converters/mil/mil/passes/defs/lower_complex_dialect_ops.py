@@ -399,6 +399,7 @@ def _istft(
     window: Optional[Var],
     normalized: Optional[Var],
     onesided: Optional[Var],
+    length: Optional[Var],
     before_op: Operation,
 ) -> Tuple[Var, Var]:
     """
@@ -419,7 +420,7 @@ def _istft(
     input_shape = mb.shape(x=x, before_op=before_op)
     n_frames = input_shape.val[-1]
     fft_size = input_shape.val[-2]
-    expected_output_signal_len = n_fft.val + hop_length.val * (n_frames - 1)
+    # expected_output_signal_len = n_fft.val + hop_length.val * (n_frames - 1)
 
     is_onesided = onesided.val if onesided else fft_size != n_fft
     cos_base, sin_base = _calculate_dft_matrix(n_fft, onesided=is_onesided, before_op=before_op)
@@ -478,10 +479,14 @@ def _istft(
     real_result = mb.real_div(x=real_result, y=window_envelope, before_op=before_op)
     imag_result = mb.real_div(x=imag_result, y=window_envelope, before_op=before_op)
 
-    # reduce the rank of the output
-    if should_increase_rank:
-        real_result = mb.squeeze(x=real_result, axes=(0,), before_op=before_op)
-        imag_result = mb.squeeze(x=imag_result, axes=(0,), before_op=before_op)
+    # We need to adapt last dimension
+    if length is not None:
+        if length > expected_output_signal_len:
+            real_result = mb.pad(x=real_result, pad=, mode="constant", constant_val=0, before_op=before_op)
+            imag_result = mb.pad(x=imag_result, pad=, mode="constant", constant_val=0, before_op=before_op)
+        elif length < expected_output_signal_len:
+            real_result = mb.slice_by_size(x=real_result, begin=[0], size=[length], before_op=before_op)
+            imag_result = mb.slice_by_size(x=imag_result, begin=[0], size=[length], before_op=before_op)
 
     return real_result, imag_result
 
