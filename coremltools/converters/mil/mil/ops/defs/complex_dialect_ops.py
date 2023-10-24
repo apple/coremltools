@@ -861,3 +861,85 @@ class complex_stft(Operation):
         
         return types.tensor(output_type, tuple(output_shape))
 
+@register_op(namespace="complex")
+class complex_istft(Operation):
+    """
+    Dialect op for 1-D ISTFT.
+
+    Parameters
+    ----------
+    input: tensor<\*V, complex64> (Required)
+        * A complex tensor where real and imag parts have the same shape.
+    n_fft: const i32 (Required)
+        * Size of the fourier transform.
+    hop_length: const i32 (Optional)
+        * Stride between window frames of the input tensor.
+    win_length: const i32 (optional)
+        * The size of the window frame.
+    window: tensor<1, win_length> (optional)
+        * The window to apply to the input signal before performing the fourier transform.
+    normalized: const bool (optional, Default=``false``)
+        * Whether to normalize the results of the STFT
+    onesided: const bool (optional, Default=``true``)
+        * Whether the STFT was onesieded
+    length: const i32 (Required)
+        * Output fixed length, which will be zeropadded
+
+
+    Returns
+    -------
+    tensor<\*D, T>
+        * The output tensor
+
+    Attributes
+    ----------
+    T: fp32, complex64
+
+    References
+    ----------
+    See `torch.istft <https://pytorch.org/docs/2.0/generated/torch.istft.html>`_.
+    """
+
+    input_spec = InputSpec(
+        input=TensorInputType(type_domain="T"),
+        n_fft=TensorInputType(const=True, type_domain=types.int32),
+        hop_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        win_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        window=TensorInputType(const=True, optional=True, type_domain=types.fp32),
+        normalized=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        onesided=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+    )
+
+    type_domains = {
+        "T": (types.fp32, types.complex64),
+    }
+
+    def default_inputs(self):
+        return DefaultInputs(
+            hop_length = None,
+            win_length = None,
+            window = None,
+            normalized = False,
+            onesided = True,
+            length = None
+        )
+
+    def type_inference(self):
+        output_type = (types.fp32)
+        output_shape = []
+
+        # add back rank if needed
+        if self.input.rank == 2:
+            output_shape += [self.input.shape[0]]
+
+        if self.length:
+            output_shape += [self.length]
+            return types.tensor(output_type, tuple(output_shape))
+
+
+        n_frames = self.input.shape[-1]
+        output_shape = self.n_fft.val + self.hop_length.val * (n_frames - 1)
+
+        return types.tensor(output_type, tuple(output_shape))
+

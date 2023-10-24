@@ -376,6 +376,80 @@ def _stft(
         real_result = cos_windows_real
         imag_result = sin_windows_real
 
+def _istft(
+    input_real: Var,
+    input_imaginary: Var,
+    n_fft: Var,
+    hop_length: Optional[Var],
+    win_length: Optional[Var],
+    window: Optional[Var],
+    normalized: Optional[Var],
+    onesided: Optional[Var],
+    before_op: Operation,
+) -> Tuple[Var, Var]:
+    """
+    We can write ISTFT in terms of convolutions with a DFT kernel.
+    At the end:
+        * The real part output is: cos_base * input_real + sin_base * input_imag
+        * The imaginary part output is: - (sin_base * input_real - cos_base * input_imag)
+    Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
+    """
+    # Set the default hop, if it's not already specified
+    hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
+
+    # By default, use the entire frame
+    win_length = win_length or n_fft
+
+    # input should always be 2D
+    should_increase_rank = input_real.rank == 1
+    if should_increase_rank:
+        input_real = mb.expand_dims(x=input_real, axes=(0,), before_op=before_op)
+        if input_imaginary:
+            input_imaginary = mb.expand_dims(x=input_imaginary, axes=(0,), before_op=before_op)
+
+    is_onesided = onesided and onesided.val
+    cos_base, sin_base = _calculate_dft_matrix(n_fft, onesided=is_onesided, before_op=before_op)
+
+    # create a window of centered 1s of the requested size
+    if win_length:
+        window = _get_window(win_length=win_length, n_fft=n_fft, before_op=before_op)
+
+    # apply time window
+    if window:
+        cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
+        sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
+
+    # The DFT matrix is obtained with the equation e^(2pi/N i), which is what we want but we actually need the conjuate => e^(-2pi/N i)
+    # or in terms of cos and sin => cos+i*sin cos-i*sin
+    sin_base = mb.sub(x=0., ysin_base, before_op=before_op)
+
+    cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
+    sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
+    hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
+
+    signal_real = mb.expand_dims(x=input_real, axes=(1,), before_op=before_op)
+    signal_imaginary = mb.expand_dims(x=input_imaginary, axes=(1,), before_op=before_op)
+
+    # Conv with DFT kernel across the input signal
+    # We can describe the IDFT in terms of DFT just by swapping the input and output
+    # ref: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#Expressing_the_inverse_DFT_in_terms_of_the_DFT
+    # So IDFT(x) = (1/N) * swap(DFT(swap(x)))
+    # DFT(x) => X[k] = Σx[n]*e^(-2kpi/N i)
+    # If x is complex then x[n]=(a+i*b)
+    # So the real part = (1/N)*Σ(a*cos(2kpi/N)-b*sin(2kpi/N))
+    # So the imag part = (1/N)*Σ(b*cos(2kpi/N)+a*sin(2kpi/N))
+    cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+
+    real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
+    imag_result = mb.add(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
+
+    # Divide by N
+    real_result = mb.real_div(x=real_result, y=n_fft, before_op=before_op)
+    imag_result = mb.real_div(x=imag_result, y=n_fft, before_op=before_op)
+
     # Overlap-add
     real_result = _overlap_add(x=real_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
     imag_result = _overlap_add(x=imag_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
@@ -635,6 +709,24 @@ def _lower_complex_stft(op: Operation):
         op.input.imag if is_complex else None, 
         op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
    
+    return _wrap_complex_output(op.outputs[0], real, imag)
+
+
+@LowerComplex.register_lower_func(op_type="complex_istft")
+def _lower_complex_istft(op: Operation):
+    is_complex = types.is_complex(op.input.dtype)
+
+    # check parameters for validity
+    if op.win_length and op.win_length.val > op.n_fft.val:
+        raise ValueError("Window length must be less than or equal to n_fft")
+    if is_complex and op.onesided and op.onesided.val:
+        raise ValueError("Onesided is only valid for real inputs")
+
+    real, imag = _istft(
+        op.input.real if is_complex else op.input,
+        op.input.imag if is_complex else None,
+        op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, before_op=op)
+
     return _wrap_complex_output(op.outputs[0], real, imag)
 
 
