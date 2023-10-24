@@ -345,16 +345,7 @@ def _stft(
     
     # create a window of centered 1s of the requested size
     if win_length:
-        n_left = (n_fft.val - win_length.val) // 2
-        n_right = n_fft.val - win_length.val - n_left
-
-        left = mb.fill(shape=(n_left,), value=0., before_op=before_op)
-        if not window:
-            window = mb.fill(shape=(win_length.val,), value=1., before_op=before_op)
-        right = mb.fill(shape=(n_right,), value=0., before_op=before_op)
-        
-        # concatenate
-        window = mb.concat(values=(left, window, right), axis=0, before_op=before_op)
+        window = _get_window(win_length=win_length, n_fft=n_fft, before_op=before_op)
 
     # apply time window
     if window:
@@ -396,6 +387,23 @@ def _stft(
         imag_result = mb.real_div(x=imag_result, y=divisor, before_op=before_op)
 
     return real_result, imag_result
+
+def _get_window(
+    win_length: Var,
+    n_fft: Var,
+    before_op: Operation,
+) -> Var:
+    n_left = (n_fft.val - win_length.val) // 2
+    n_right = n_fft.val - win_length.val - n_left
+
+    left = mb.fill(shape=(n_left,), value=0., before_op=before_op)
+    if not window:
+        window = mb.fill(shape=(win_length.val,), value=1., before_op=before_op)
+    right = mb.fill(shape=(n_right,), value=0., before_op=before_op)
+
+    # concatenate
+    return mb.concat(values=(left, window, right), axis=0, before_op=before_op)
+
 
 def _wrap_complex_output(original_output: Var, real_data: Var, imag_data: Var) -> ComplexVar:
     return ComplexVar(
