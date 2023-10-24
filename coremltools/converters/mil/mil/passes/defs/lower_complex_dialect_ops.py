@@ -421,7 +421,7 @@ def _istft(
 
     # The DFT matrix is obtained with the equation e^(2pi/N i), which is what we want but we actually need the conjuate => e^(-2pi/N i)
     # or in terms of cos and sin => cos+i*sin cos-i*sin
-    sin_base = mb.sub(x=0., ysin_base, before_op=before_op)
+    sin_base = mb.sub(x=0., y=sin_base, before_op=before_op)
 
     cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
     sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
