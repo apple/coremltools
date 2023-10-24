@@ -10,7 +10,7 @@ import pytest
 
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.mil.types import builtin_to_string, nptype_from_builtin
@@ -109,7 +109,7 @@ class TestLinear:
         itertools.product(compute_units, backends, [types.int32, types.fp16, types.fp32]),
     )
     def test_default_bias_type(self, compute_unit, backend, input_type):
-        # Test the default bias matches the dtype of x
+        # Test the default bias matches the dtype of x and weight.
         @mb.program(
             input_specs=[mb.TensorSpec(shape=(1, 2), dtype=types.fp32)],
             opset_version=backend.opset_version,
@@ -365,3 +365,35 @@ class TestEinsum:
         equation = "bcd,dce->bce"
         v = mb.einsum(values=(x_val, y_val), equation=equation)
         np.testing.assert_allclose(np.einsum(equation, x_val, y_val), v.val, atol=1e-04, rtol=1e-05)
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_symbolic_input_conv_and_einsum(self, backend):
+        """
+        Test a pattern of:
+
+            %1 = conv_1(%x)
+            %2 = conv_2(%x)
+            %3 = transpose(%2, [0, 3, 2, 1])
+            %4 = einsum(%1, %3)
+
+        If ``%x`` has symbolic shape and ``conv_1, conv_2`` have the same
+        configuration, the above program should pass the type inference.
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 3, get_new_symbol(), get_new_symbol()), dtype=types.fp32)
+            ],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
+            weight = np.random.rand(2, 3, 2, 2)
+            conv_1 = mb.conv(x=x, weight=weight)
+            conv_2 = mb.conv(x=x, weight=weight)
+            conv_2_transpose = mb.transpose(x=conv_2, perm=[0, 3, 2, 1])
+            return mb.einsum(values=(conv_1, conv_2_transpose), equation="abcd,adce->abce")
+
+        assert prog is not None

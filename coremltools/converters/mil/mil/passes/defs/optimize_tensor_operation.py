@@ -20,6 +20,83 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
 @register_pass(namespace="common")
+class fuse_squeeze_expand_dims(AbstractGraphPass):
+    """
+    Detect the pattern ``input-->squeeze-->expand_dims``, and fuse
+    them into an ``identity`` op if ``squeeze`` and ``expand_dims`` cancel out each other.
+    Note that, the ``identity`` can be further removed by ``noop_elimination``.
+
+    .. code-block::
+
+        Given:
+            %x[3, 1, 4, 1]
+            %1[3, 4] = squeeze(%x, axes=[1, 3])
+            %2[3, 1, 4, 1] = expand_dims(%1, axes=[1, 3])
+            %3 = op(%2)
+
+        Result:
+            %x[3, 1, 4, 1]
+            %2[3, 1, 4, 1] = identity(%x)
+            %3 = op(%2)
+    """
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = self.fuse_squeeze_expand_dims_block(f)
+
+    @block_context_manager
+    def fuse_squeeze_expand_dims_block(self, block):
+        fusion_status = False
+        for op in list(block.operations):
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = self.fuse_squeeze_expand_dims_block(b)
+
+            if len(op.blocks) > 0:
+                continue
+
+            squeeze_op = self._match_pattern(op)
+            if squeeze_op is not None:
+                fusion_status = self._try_to_transform(squeeze_op, block)
+                # has to break as the downstream iterator is affected.
+                if fusion_status:
+                    return fusion_status
+        return fusion_status
+
+    @staticmethod
+    def _match_pattern(op):
+        if op.op_type != "squeeze":
+            return None
+        if not _check_child_op_type(op, "expand_dims"):
+            return None
+        return op
+
+    @staticmethod
+    def _try_to_transform(op, block):
+        expand_dims_op = op.outputs[0].child_ops[0]
+        x = op.x
+        out_var = expand_dims_op.outputs[0]
+        if x.shape != out_var.shape:
+            return False
+        if op.outputs[0] in block.outputs:
+            return False
+
+        new_var = mb.identity(x=x, before_op=op)
+        if op.enclosing_block.try_replace_uses_of_var_after_op(
+            anchor_op=expand_dims_op,
+            old_var=out_var,
+            new_var=new_var,
+        ):
+            # Remove all the ops at once
+            block.remove_ops([op, expand_dims_op])
+            return True
+        return False
+
+
+@register_pass(namespace="common")
 class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
     """
     Detect the pattern ``reshape_1-->transpose-->reshape_2``, where ``reshape_1`` has

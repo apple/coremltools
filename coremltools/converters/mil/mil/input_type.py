@@ -276,7 +276,7 @@ class TensorInputType(_InputType):
         super().__init__(**kwargs)
 
     def _is_compatible(self, v):
-        result = types.is_scalar(v.dtype) or types.is_tensor(v.dtype)
+        result = types.is_scalar(v.sym_type) or types.is_tensor(v.sym_type)
         result = result and (v.dtype in self.type_domain)
         return result
 
@@ -309,9 +309,6 @@ class ListInputType(_InputType):
     """
     ListInputType allows inputs of type types.list
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def _is_compatible(self, v):
         return types.is_list(v.sym_type)
 
@@ -326,14 +323,9 @@ class ListOrTensorInputType(_InputType):
     (1) MIL tensor
     (2) python list/tuple of MIL tensors
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def _is_compatible(self, v):
         return (
-            types.is_list(v.sym_type)
-            or types.is_scalar(v.dtype)
-            or types.is_tensor(v.dtype)
+            types.is_list(v.sym_type) or types.is_scalar(v.sym_type) or types.is_tensor(v.sym_type)
         )
 
     @property
@@ -345,9 +337,6 @@ class TupleInputType(_InputType):
     """
     TupleInputType specifies input types of python list/tuple of MIL tensors.
     """
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def _is_compatible(self, v):
         # We don't check the detail types within the tuple.
         return isinstance(v, (tuple, list))
@@ -363,10 +352,6 @@ class InternalInputType(_InputType):
     It allows ops to take, for example, python primitive types, instead of
     only the builtin types.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def _is_compatible(self, v):
         return True  # skip type check by default for InternalInputType.
 
@@ -375,9 +360,5 @@ class PyFunctionInputType(InternalInputType):
     """
     Native python function.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def _is_compatible(self, v):
         return callable(v.val)

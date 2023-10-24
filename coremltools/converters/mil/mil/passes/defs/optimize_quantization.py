@@ -22,6 +22,136 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 @register_pass(namespace="common")
+class merge_tensorwise_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
+    """
+    This graph pass does const folding to a chain of supported ops starts with a
+    tensor-wise ``constexpr_affine_dequantize`` op. i.e., both ``scale`` and
+    ``zero_point`` are scalar (rank 0).
+
+    For example:
+    Input graph:
+        data -> constexpr_affine_dequantize -> transpose -> expand_dims -> out
+
+    Output graph:
+        new_data -> constexpr_affine_dequantize -> out
+
+    where ``new_data`` is computed by ``data -> transpose -> expand_dims``.
+
+    Note that, the graph pass only supports const folding of a single linked list pattern.
+    For example, the following pattern will not be changed:
+
+        data ---> constexpr_affine_dequantize -> transpose -> out
+              |
+              --> constexpr_affine_dequantize -> reshape -> out_2
+    """
+
+    SUPPORTED_OPS = [
+        "transpose",
+        "reshape",
+        "expand_dims",
+        "squeeze",
+    ]
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = self.merge_tensorwise_affine_dequantize_with_consecutive_ops_block(
+                    f
+                )
+
+    @block_context_manager
+    def merge_tensorwise_affine_dequantize_with_consecutive_ops_block(self, block):
+        fusion_status = False
+        for op in list(block.operations):
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = (
+                        self.merge_tensorwise_affine_dequantize_with_consecutive_ops_block(b)
+                    )
+
+            if op.op_type != "constexpr_affine_dequantize":
+                continue
+
+            fusion_status = self._try_to_transform(op, block)
+            if fusion_status:
+                return fusion_status
+        return fusion_status
+
+    @staticmethod
+    def _apply_equivalent_transform(val, op):
+        if op.op_type not in merge_tensorwise_affine_dequantize_with_consecutive_ops.SUPPORTED_OPS:
+            raise ValueError(f"unsupported op_type {op.op_type}")
+
+        if op.op_type == "transpose":
+            return np.transpose(val, axes=op.perm.val)
+        if op.op_type == "reshape":
+            return np.reshape(val, op.outputs[0].shape)
+        if op.op_type == "expand_dims":
+            return np.expand_dims(val, axis=op.axes.val.tolist())
+        if op.op_type == "squeeze":
+            axes = op.axes
+            if axes is None or axes.val is None:
+                return np.squeeze(val)
+            return np.squeeze(val, axis=tuple(op.axes.val.tolist()))
+
+    @staticmethod
+    def _try_to_transform(op, block):
+        # first check if it is tensorwise quantization
+        if op.scale.rank != 0 or op.zero_point.rank != 0:
+            return False
+
+        # first check if quantized_data only feeds into a single op
+        if len(op.quantized_data.child_ops) != 1:
+            return False
+
+        # traverse the graph to get a chain of applicable ops to fold
+        ops_to_fold = []
+        cursor = op
+        while True:
+            prev_cursor = cursor
+            if cursor.outputs[0] in block.outputs:
+                break
+            for val in merge_tensorwise_affine_dequantize_with_consecutive_ops.SUPPORTED_OPS:
+                if _check_child_op_type(cursor, val):
+                    ops_to_fold.append(cursor.outputs[0].child_ops[0])
+                    cursor = ops_to_fold[-1]
+                    break
+            if prev_cursor == cursor:
+                break
+
+        if len(ops_to_fold) == 0:
+            return False
+
+        # do the same transformation on the source quantized data
+        cursor = op.quantized_data.val
+        for val in ops_to_fold:
+            cursor = (
+                merge_tensorwise_affine_dequantize_with_consecutive_ops._apply_equivalent_transform(
+                    cursor, val
+                )
+            )
+
+        # after transformation, we create a new constexpr_affine_dequantize op and do the replacement
+        new_var = mb.constexpr_affine_dequantize(
+            quantized_data=cursor,
+            zero_point=op.zero_point,
+            scale=op.scale,
+            axis=op.axis,
+            name=ops_to_fold[-1].outputs[0].name,
+            before_op=ops_to_fold[-1],
+        )
+        block.replace_uses_of_var_after_op(
+            anchor_op=ops_to_fold[-1],
+            old_var=ops_to_fold[-1].outputs[0],
+            new_var=new_var,
+            force_replace=True,
+        )
+        block.remove_ops([op] + ops_to_fold)
+        return True
+
+@register_pass(namespace="common")
 class int_op_canonicalization(AbstractGraphPass):
     """
     For general quantized operators, in Core ML, we represent them as

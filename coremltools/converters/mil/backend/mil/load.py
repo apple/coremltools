@@ -5,6 +5,7 @@
 
 import os
 import warnings
+from typing import Optional
 
 import numpy as np
 
@@ -22,7 +23,7 @@ from coremltools.converters.mil.backend.mil.helper import (
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
 from coremltools.converters.mil.input_types import EnumeratedShapes, ImageType, RangeDim, TensorType
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, mil_list, types
+from coremltools.converters.mil.mil import Function, Program, mil_list, types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, any_variadic, is_symbolic
 from coremltools.models.neural_network.flexible_shape_utils import (
@@ -282,21 +283,17 @@ def _add_classify_op(prog, classifier_config):
         return out[0].name, out[1].name
 
 
-def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECIFICATION_VERSION_IOS_15, **kwargs):
+def _pymil_to_milproto(
+    prog: Program,
+    weights_dir: str,
+    specification_version: Optional[int] = _SPECIFICATION_VERSION_IOS_15,
+) -> pm.Program:
+    """
+    Convert a pymil program into mil proto.
+    """
     if BlobWriter is None:
         raise RuntimeError("BlobWriter not loaded")
-    if "main" not in prog.functions:
-        raise ValueError("main function not found in program")
 
-    # if user has specified "ClassifierConfig", then add the "classify" op to the prog
-    classifier_config = kwargs.get("classifier_config", None)
-    predicted_feature_name = None
-    predicted_probabilities_name = None
-    if classifier_config is not None:
-        predicted_feature_name, predicted_probabilities_name = _add_classify_op(prog, classifier_config)
-
-    input_types = prog.main_input_types
-    output_types = prog.main_output_types
     weight_path = os.path.join(weights_dir, _WEIGHTS_FILE_NAME)
     blob_writer = BlobWriter(weight_path)
 
@@ -310,6 +307,33 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
         version=1,
         functions=function_protos,
     )
+    return proto
+
+
+def load(
+    prog: Program,
+    weights_dir: str,
+    resume_on_errors: Optional[bool] = False,
+    specification_version: Optional[int] = _SPECIFICATION_VERSION_IOS_15,
+    **kwargs,
+):
+    if "main" not in prog.functions:
+        raise ValueError("main function not found in program")
+
+    # if user has specified "ClassifierConfig", then add the "classify" op to the prog
+    classifier_config = kwargs.get("classifier_config", None)
+    predicted_feature_name = None
+    predicted_probabilities_name = None
+    if classifier_config is not None:
+        predicted_feature_name, predicted_probabilities_name = _add_classify_op(
+            prog, classifier_config
+        )
+
+    # convert pymil program into mil proto
+    proto = _pymil_to_milproto(prog, weights_dir, specification_version)
+
+    input_types = prog.main_input_types
+    output_types = prog.main_output_types
 
     desc = kwargs.get("model_description", None)
     if desc and not isinstance(desc, ml.ModelDescription):

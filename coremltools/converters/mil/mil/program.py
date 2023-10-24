@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from collections import defaultdict
+from typing import Dict, List
+
 import numpy as _np
 import sympy as _sm
 
@@ -15,6 +18,7 @@ from coremltools.converters.mil.mil.var import ListVar
 
 from . import types
 from .block import Function
+from .operation import Operation
 from .types.symbolic import k_num_internal_syms, k_used_symbols
 from .var import Var
 
@@ -24,6 +28,13 @@ class Program:
     def _get_opset_str_value(op):
         return f"coremltools.target.{op.name}"
 
+    @staticmethod
+    def _get_supported_dialect_opset() -> List[str]:
+        """
+        Return a list of supported dialect opsets at runtime.
+        """
+        return []
+
     def __init__(self):
         self.main_input_types = []
         self.main_output_types = None
@@ -31,22 +42,32 @@ class Program:
         self.parameters = {}
         self.skip_all_passes = False
 
+    def _get_dialect_namespaces(self) -> Dict[str, List[Operation]]:
+        """
+        Return a dict which maps the dialect namespace into a list of corresponding operations.
+        """
+        res = defaultdict(list)
+
+        def get_dialect_namespaces_block(block):
+            for op in list(block.operations):
+                for b in op.blocks:
+                    get_dialect_namespaces_block(b)
+                if hasattr(op, "_dialect_namespace"):
+                    dialect_namespace = op._dialect_namespace
+                    res[dialect_namespace].append(op)
+
+        for func in self.functions.values():
+            get_dialect_namespaces_block(func)
+        return res
+
     def _get_max_opset_version_and_op(self):
         max_opset_version = _target.iOS13
         op_with_max_opset_version = None
-        def update_max_opset_version_block(block):
-            nonlocal max_opset_version
-            nonlocal op_with_max_opset_version
-            for op in list(block.operations):
-                for b in op.blocks:
-                    update_max_opset_version_block(b)
-                if not hasattr(op, "_op_variants") or not isinstance(op._op_variants, dict):
-                    continue
-                if op.opset_version > max_opset_version:
-                    max_opset_version = op.opset_version
-                    op_with_max_opset_version = op
         for func in self.functions.values():
-            update_max_opset_version_block(func)
+            cur_max_opset, cur_op = func.get_max_opset_version_and_op()
+            if cur_max_opset > max_opset_version:
+                max_opset_version = cur_max_opset
+                op_with_max_opset_version = cur_op
         return max_opset_version, op_with_max_opset_version
 
     def _check_ops_version_compatibility(self, max_opset_version):
@@ -95,24 +116,57 @@ class Program:
         self._check_ops_version_compatibility(max_opset_version)
         self._check_or_set_functions_opset_version(max_opset_version)
 
-    def _check_invalid_program(self):
+    @staticmethod
+    def _get_runtime_supported_dialect_opset() -> List[str]:
         """
-        Early error out for
-        1. tensor with rank >= 6
-        2. non const tensor feed in const input
+        Return a list of supported dialect opsets at runtime.
         """
+        return []
 
+    def _check_invalid_opset(self):
+        """
+        Check if the program consists of opsets not supported by runtime.
+        """
+        dialect_namespaces = self._get_dialect_namespaces()
+        if len(dialect_namespaces) != 0:
+            for dialect_key in list(dialect_namespaces.keys()):
+                if dialect_key not in self._get_runtime_supported_dialect_opset():
+                    invalid_op = dialect_namespaces[dialect_key][0]
+                    raise ValueError(
+                        f'Core ML only support core opset. Got unsupported op "{invalid_op.name}" with type "{invalid_op.op_type}" of dialect namespace "{invalid_op._dialect_namespace}".'
+                    )
+
+    def _check_invalid_tensor_rank(self):
+        """
+        Check if the program consists of tensors with rank >= 6.
+        """
         def _check_invalid_tensor_rank_block(block):
             for op in block.operations:
                 for b in op.blocks:
                     _check_invalid_tensor_rank_block(b)
                 for o in op.outputs:
                     if not isinstance(o, ListVar) and (o.rank < 0 or o.rank >= 6):
+                        if op.op_type == "const" and len(o.child_ops) == 1 and \
+                                o.child_ops[0].op_type == "constexpr_lut_to_dense":
+                            # For lut op, the lookup table is allowed to have rank > 5.
+                            continue
                         raise ValueError(
                             f'Core ML only supports tensors with rank <= 5. Layer "{op.name}", '
                             f'with type "{op.op_type}", outputs a rank {o.rank} tensor. '
                         )
 
+        for f in self.functions.values():
+            _check_invalid_tensor_rank_block(f)
+
+    def _check_invalid_const_tensor_input(self):
+        """
+        Check if non const tensor feed into const input.
+        This might happen in the early stage of conversion, for instance:
+            constexpr_ -> reshape -> transpose -> linear
+
+        However, the pattern is optimized into the following in a graph pass.
+            constexpr_ -> linear
+        """
         def _check_invalid_const_tensor_input_block(block):
             for op in block.operations:
                 for b in op.blocks:
@@ -131,10 +185,18 @@ class Program:
                         )
 
         for f in self.functions.values():
-            _check_invalid_tensor_rank_block(f)
-
-        for f in self.functions.values():
             _check_invalid_const_tensor_input_block(f)
+
+    def _check_early_error_out_for_invalid_program(self):
+        """
+        Early error out for
+        1. tensor with rank >= 6
+        2. non const tensor feed into const input
+        3. program consist of non mil core ops
+        """
+        self._check_invalid_tensor_rank()
+        self._check_invalid_const_tensor_input()
+        self._check_invalid_opset()
 
     def add_function(self, name, ssa_func):
         if not isinstance(ssa_func, Function):
@@ -229,15 +291,8 @@ class Placeholder:
         self.dtype = dtype
         if self.dtype is None:
             self.dtype = types.float
-        sym_type = self.type_inference()
-
-        # Globally unique var name for placeholders
-        if name is None:
-            name = 'placeholder_' + str(self.__class__.counter)
-            self.__class__.counter += 1
-
-        # List of output vars (consistent w/ other ops)
-        self.outputs = [Var(name, sym_type)]
+        self.name = name
+        self._infer_output_var()
 
     def set_name(self, name):
         self.name = name
@@ -251,6 +306,16 @@ class Placeholder:
     def __str__(self):
         return str(self.outputs[0])
 
+    def _infer_output_var(self):
+        sym_type = self.type_inference()
+
+        # Globally unique var name for placeholders
+        if self.name is None:
+            self.name = f"{self.__class__.__name__}_{self.__class__.counter}"
+            self.__class__.counter += 1
+
+        # List of output vars (consistent w/ other ops)
+        self.outputs = [Var(self.name, sym_type)]
 
 def get_new_variadic_symbol():
     global k_num_internal_syms

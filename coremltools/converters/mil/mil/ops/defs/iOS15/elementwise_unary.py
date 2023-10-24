@@ -848,7 +848,7 @@ class cast(Operation):
 
     @classmethod
     def supported_dtypes(cls):
-        return (builtin_to_string(v) for v in cls.type_domains["T"])
+        return [builtin_to_string(v) for v in cls.type_domains["T"]]
 
     def type_inference(self):
         if self.dtype.val not in self.supported_dtypes():

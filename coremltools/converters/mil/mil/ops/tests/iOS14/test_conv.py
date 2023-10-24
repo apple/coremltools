@@ -218,6 +218,44 @@ class TestConvTranspose:
 
 
 class TestConv:
+    @pytest.mark.parametrize(
+        "backend, pad_type",
+        itertools.product(
+            backends,
+            ["valid", "same", "same_lower", "custom"],
+        ),
+    )
+    def test_type_inference_cache_no_pad(self, backend, pad_type):
+        # Test the type inference has the caching mechanism to ensure
+        # same symbolic input shapes results in the same output shape
+        if pad_type == "same_lower" and backend.opset_version == ct.target.iOS15:
+            return
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 3, get_new_symbol(), get_new_symbol()), dtype=types.fp32)
+            ],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
+            weight = np.random.rand(2, 3, 2, 2)
+
+            # Basic conv
+            conv_1 = mb.conv(x=x, weight=weight)
+            conv_2 = mb.conv(x=x, weight=weight)
+            assert conv_1.shape == conv_2.shape
+
+            # With strides / dialations
+            conv_1 = mb.conv(x=x, weight=weight, strides=[1, 2], dilations=[3, 4])
+            conv_2 = mb.conv(x=x, weight=weight, strides=[1, 2], dilations=[3, 4])
+            assert conv_1.shape == conv_2.shape
+
+            # With padding
+            conv_1 = mb.conv(x=x, weight=weight, pad_type=pad_type, pad=[2, 3, 4, 5])
+            conv_2 = mb.conv(x=x, weight=weight, pad_type=pad_type, pad=[2, 3, 4, 5])
+            assert conv_1.shape == conv_2.shape
+            return conv_1
+
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         "compute_unit, backend, padding_mode, conv_dim",

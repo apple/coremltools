@@ -4,17 +4,20 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import OrderedDict
+from typing import List, Optional, Union
 
 import numpy as np
 import torch as torch
+from torch.jit._script import RecursiveScriptModule
 
 from coremltools import _logger as logger
-from coremltools._deps import version_lt
+from coremltools._deps import _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.input_types import ImageType, TensorType
+from coremltools.converters.mil.input_types import ImageType, InputType, TensorType
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, Program, types
+from coremltools.converters.mil.mil import Function, Placeholder, Program, types
 from coremltools.converters.mil.mil.types import is_float
+from coremltools.converters.mil.mil.var import Var
 
 from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
@@ -28,26 +31,37 @@ from .torchir_passes import (
     remove_getattr_nodes,
     transform_inplace_ops,
 )
+from .torchscript_utils import torch_to_mil_types
 
-torch_to_mil_types = {
-    torch.bool: types.bool,
-    torch.float16: types.fp16,
-    torch.float32: types.fp32,
-    torch.float64: types.fp32,
-    torch.int32: types.int32,
-    torch.int64: types.int32,
-}
+if _HAS_TORCH_EXPORT_API:
+    from torch.export import ExportedProgram
 
 
-mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
-
+def _convert_to_torch_inputtype(inputs: List[TensorType]) -> List[TensorType]:
+    input_type = []
+    for _input in inputs:
+        if isinstance(_input, (list, tuple)):
+            input_type.append(_convert_to_torch_inputtype(_input))
+        elif isinstance(_input, InputType):
+            if _input.shape is None:
+                raise ValueError(
+                    "'shape' must be provided in the 'inputs' argument for pytorch conversion"
+                )
+            input_type.append(_input)
+        elif isinstance(_input, torch.Tensor):
+            input_type.append(
+                TensorType(shape=_input.shape, dtype=torch_to_mil_types[_input.dtype])
+            )
+        else:
+            raise ValueError("Unknown type {} for conversion to InputType.".format(type(_input)))
+    return input_type
 
 class QuantizationContext:
     """
     Utilities to manage information pertaining to quantization of tensors in a PyTorch graph.
     """
 
-    def __init__(self, context):
+    def __init__(self, context: "TranscriptionContext") -> None:
         self._context = context
 
         # Maps var name to tuple of (torch dtype, scale, zero_point)
@@ -71,7 +85,7 @@ class QuantizationContext:
         """
         self._quant_param_map[name] = (torch_dtype, scale, zero_point, axis)
 
-    def get_quantization_info(self, name):
+    def get_quantization_info(self, name: str) -> None:
         """
         Retrieves the information added via add_quantization_info, if applicable.
         Returns None if quantization parameters could not be found.
@@ -80,7 +94,7 @@ class QuantizationContext:
             return None
         return self._quant_param_map[name]
 
-    def maybe_handle_quantized_inputs(self, node: InternalTorchIRNode):
+    def maybe_handle_quantized_inputs(self, node: InternalTorchIRNode) -> None:
         """
         If a node's op doesn't support quantized inputs but gets one, this will wire it to
         receive a dequantized version of it.
@@ -91,14 +105,15 @@ class QuantizationContext:
             # Op can handle quantized inputs. Nothing to do here.
             return
 
-        for input_name in node.inputs:
-            if self.get_quantization_info(input_name) is None:
+        for input in node.inputs:
+            # In Edge IR, input can be a literal and thus have no name
+            if not isinstance(input, str) or self.get_quantization_info(input) is None:
                 # Not a quantized tensor
                 continue
 
             # We need a dequantized version of the input to feed to the op.
-            dequantized_var, _ = self.get_dequantized_var(input_name)
-            node.replace_name(input_name, dequantized_var.name)
+            dequantized_var, _ = self.get_dequantized_var(input)
+            node.replace_name(input, dequantized_var.name)
 
     def get_quantized_per_tensor(self, name, torch_dtype, scale, zero_point, quantized_name):
         """
@@ -179,7 +194,7 @@ class TranscriptionContext:
     context when stepping out.
     """
 
-    def __init__(self, name=None):
+    def __init__(self, name: Optional[str] = None) -> None:
         self.name = name if name else ""
         self._current_graph = [{}]
         self._torch_graph = None
@@ -192,21 +207,24 @@ class TranscriptionContext:
         return self._torch_graph
 
     @property
-    def quant_context(self):
+    def quant_context(self) -> QuantizationContext:
         return self._quant_context
 
     @torch_graph.setter
     def torch_graph(self, graph: InternalTorchIRGraph):
         self._torch_graph = graph
 
-    def prepare_for_conversion(self, node: InternalTorchIRNode):
+    def prepare_for_conversion(self, node: InternalTorchIRNode) -> None:
         """
         Perform any preparation necessary before node-specific frontend conversion
         is invoked.
         """
-        self.quant_context.maybe_handle_quantized_inputs(node)
+        return
 
-    def add(self, ssa_var, torch_name=None):
+    def process_inplace_op(self, node: InternalTorchIRNode):
+        return
+
+    def add(self, ssa_var: Var, torch_name: Optional[str] = None, override=False) -> None:
         """
         Arguments:
             ssa_var: Variable to add to the graph being constructed.
@@ -215,12 +233,12 @@ class TranscriptionContext:
         """
         if torch_name is None:
             torch_name = ssa_var.name
-        if torch_name in self._current_graph[-1]:
-            print(f"Torch var {torch_name} is added again.")
+        if torch_name in self._current_graph[-1] and not override:
+            logger.warning(f"Torch var {torch_name} is added again.")
             return
         self._current_graph[-1][torch_name] = ssa_var
 
-    def __getitem__(self, torch_name):
+    def __getitem__(self, torch_name: str) -> Var:
         """
         Lookup a name in the context. Note that since nested blocks must be
         able to access anything that was defined before them, we have to
@@ -276,26 +294,26 @@ class TranscriptionContext:
 
 class TorchConverter:
     """
-    Class that handles conversion of pytorch models represented in TorchScript
-    format to the MIL format.
+    Class that handles conversion of pytorch models to the MIL format.
 
     Models passed to the @TorchConverter go from:
-    TorchScript -> Expanded/Optimized Torch IR -> Internal Graph -> CoreML SSA
-    The internal graph representation was added to make testing easier.
+    Loaded-Torch Model -> Internal Graph -> PyMIL
     """
 
     def __init__(
         self,
-        torchscript,
-        inputs,
-        outputs=None,
-        cut_at_symbols=None,
-        opset_version=None,
-        use_default_fp16_io=False,
-    ):
+        loaded_model: Union[RecursiveScriptModule, "ExportedProgram"],
+        inputs: Optional[List[TensorType]] = None,
+        outputs: Optional[List[TensorType]] = None,
+        cut_at_symbols: Optional[List[str]] = None,
+        opset_version: Optional[int] = None,
+        use_default_fp16_io: bool = False,
+    ) -> None:
         """
         Arguments:
-            torchscript: torch.jit.ScriptModule object representing the model to convert.
+            loaded_model: It could be one of the following:
+                    - In-memory TorchScript model of type torch.jit.ScriptModule
+                    - In-memory EdgeIR program of type ExportedProgram
             inputs: Input values and optional names. See kwarg in load.py for full description.
             outputs: List of outputs as ct.InputType. See kwarg in load.py for full description.
             cut_at_symbols: A list of internal symbol name strings. Graph conversion will
@@ -307,46 +325,54 @@ class TorchConverter:
                 and the compute precision set to fp16, this flag is True.
                 When True, fp32 i/o defaults to fp16.
         """
-        assert isinstance(torchscript, torch.jit.ScriptModule)
-
-        self.inputs = inputs
-        for idx, inp in enumerate(self.inputs):
-            if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
-                self.inputs[idx].channel_first = True
-
-        self.torchscript = torchscript
-        self.outputs = outputs
         self.use_default_fp16_io = use_default_fp16_io
 
-        if self.use_default_fp16_io:
-            # If the input type is not specified by the user and use_default_fp16_io
-            # is True. Make the default input type to fp16
-            self._adjust_default_input_to_fp16()
+        if inputs is not None:
+            inputs = _convert_to_torch_inputtype(inputs)
+            self.inputs = inputs
+            for idx, inp in enumerate(self.inputs):
+                if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
+                    self.inputs[idx].channel_first = True
 
+            if self.use_default_fp16_io:
+                # If the input type is not specified by the user and use_default_fp16_io
+                # is True. Make the default input type to fp16
+                self._adjust_default_input_to_fp16()
+
+        self.outputs = outputs
         self.output_names = get_output_names(self.outputs)
         self.opset_version = _target(opset_version) if opset_version is not None else None
         self.context = TranscriptionContext()
-        raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
-        self.params_dict = params_dict
-        self.graph = InternalTorchIRGraph(
-            raw_graph, params_dict, self.inputs, cut_at_symbols
-        )
+        self._prog = Program()
+
+        if isinstance(loaded_model, torch.jit.ScriptModule):
+            self.graph, self.params_dict, self.buffer_dict = InternalTorchIRGraph.from_torchscript(
+                torchscript=loaded_model, input_values=self.inputs, cut_at_symbols=cut_at_symbols
+            )
+
+            # TODO (rdar://106161395): Register Torch IR passes and unify them into the pass pipeline.
+            # Apply Torch IR passes
+            passes = [
+                transform_inplace_ops,
+                flatten_graph_input_values,
+                flatten_graph_output_values,
+                remove_getattr_nodes,
+                generate_tensor_assignment_ops,
+            ]
+            for p in passes:
+                p(self.graph)
+
+        elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
+            self.graph = InternalTorchIRGraph.from_edgeir(edgeir=loaded_model)
+            self.params_dict, self.buffer_dict = None, None
+        else:
+            raise ValueError(
+                "Model should be an instance of either torch.jit.ScriptModule or ExportedProgram"
+            )
+
         self.context.torch_graph = self.graph
 
-        # TODO (rdar://106161395): Register Torch IR passes and unify them into the pass pipeline.
-        # Apply Torch IR passes
-        passes = [
-            transform_inplace_ops,
-            flatten_graph_input_values,
-            flatten_graph_output_values,
-            remove_getattr_nodes,
-            generate_tensor_assignment_ops,
-        ]
-        for p in passes:
-            p(self.graph)
-
         self.inputs = list(self.graph.inputs.values())
-        self._prog = Program()
 
     def _adjust_default_input_to_fp16(self):
         """
@@ -389,7 +415,7 @@ class TorchConverter:
         implemented_ops = set()
         missing_ops = set()
         for node in graph.nodes:
-            _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
+            _add_op = _TORCH_OPS_REGISTRY.get_func(node.kind)
             if _add_op is None:
                 missing_ops.add(node.kind)
             else:
@@ -401,7 +427,9 @@ class TorchConverter:
         return implemented_ops, missing_ops
 
     @staticmethod
-    def _create_placeholder(_input):
+    def _create_placeholder(
+        _input: TensorType,
+    ) -> Placeholder:
         """
         Converts an InputType into a Placeholder.
 
@@ -416,6 +444,14 @@ class TorchConverter:
             dtype = types.fp32
         return mb.placeholder(shape, dtype=dtype)
 
+    @staticmethod
+    def _preprocess_input_vars(input_var):
+        if (
+            types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)
+        ) and input_var.dtype == types.fp16:
+            input_var = mb.cast(x=input_var, dtype="fp32")
+        return input_var
+
     def check_ops(self):
         """
         Returns the set of ops in @self.graph that are implemented, and
@@ -423,7 +459,7 @@ class TorchConverter:
         """
         return TorchConverter._check_ops(self.graph)
 
-    def convert_const(self):
+    def convert_const(self) -> None:
         for name, val in self.graph.params.items():
             if isinstance(val, torch._C.ScriptObject):
                 logger.info(f"Encountered constant {name} of type _torch._C.ScriptObject")
@@ -444,23 +480,23 @@ class TorchConverter:
             const = mb.const(val=val, name=name)
             self.context.add(const)
 
-    def convert(self):
+    def convert(self) -> Program:
         logger.info("Converting graph.")
 
-        # This will hold the converted model.
-        prog = self._prog
-
-        # Construct placeholder for input to SSA function
-        # This is where input renaming occurs
-        ssa_func_inputs = OrderedDict()
+        # Set SSA function input name to user defined name if provided.
         for index, (name, spec) in enumerate(self.graph.inputs.items()):
-            placeholder = self._create_placeholder(spec)
-            # Set SSA function input name to user defined name if provided.
             if spec.name is not None:
                 name = spec.name
             self.inputs[index].name = name
-            ssa_func_inputs[name] = placeholder
+
+        # This will hold the converted model.
+        prog = self._prog
         prog.set_main_input_types(tuple(self.inputs))
+
+        # Construct placeholder for input to SSA function
+        ssa_func_inputs = OrderedDict()
+        for spec in self.inputs:
+            ssa_func_inputs[spec.name] = self._create_placeholder(spec)
 
         # Initialize the SSA for conversion
         with Function(ssa_func_inputs, opset_version=self.opset_version) as ssa_func:
@@ -468,16 +504,15 @@ class TorchConverter:
             # Map internal @self.graph.inputs to user specified @ssa_func_inputs
             # If @self.graph.inputs == @ssa_func_inputs this just adds the inputs
             # to the context.
-            for internal_name, users_name in zip(
-                self.graph.inputs.keys(), ssa_func_inputs.keys()
-            ):
-                input_var = ssa_func.inputs[users_name]
-                if (
-                    types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)
-                ) and input_var.dtype == types.fp16:
-                    input_var = mb.cast(x=input_var, dtype="fp32")
-                self.context.add(input_var, torch_name=internal_name)
+            # Convert input placeholders
+            user_names = list(ssa_func_inputs.keys())
+            internal_names = list(self.graph.inputs.keys())
+            internal_names.extend(user_names[len(internal_names) :])
+            for torch_name, ssa_name in zip(internal_names, user_names):
+                input_var = self._preprocess_input_vars(ssa_func.inputs[ssa_name])
+                self.context.add(input_var, torch_name=torch_name)
 
+            # Convert constants
             self.convert_const()
 
             # Add the rest of the operations
@@ -513,184 +548,3 @@ class TorchConverter:
             if self.outputs is not None:
                 prog.set_main_output_types(self.outputs)
         return prog
-
-    def _jit_pass_lower_graph(graph, torchscript):
-        """
-        This graph pass does a similar thing as torch._C._jit_pass_lower_graph does.
-        It does two things:
-        1. Rename getattr nodes which produce a torch tensor to match the keys in torch model's state_dict
-        2. Construct the params_dict, with the keys similar to state_dict
-
-        To be more specific, this graph pass traces down series of GetAttr ops, and rename the final node to match the torch model state_dict.
-        It also replaces the node inputs by the first created tensor node with the same name.
-
-        Example:
-        Input graph:
-        graph(%self.1 : __torch__.torch.nn.modules.Sequential, %input.1 : Tensor):
-        %2 : prim::GetAttr[name="linear"](%self.1)
-        %3 : prim::GetAttr[name="weight"](%2)
-        %4 : prim::GetAttr[name="bias"](%2)
-        %5 : prim::GetAttr[name="bias"](%2) # duplicated node
-        %6 : conv(%input.1, %3, %4)
-        %7 : add(%input.1, %5)
-        return (%6, %7)
-
-        Output graph:
-        graph(%self.1 : __torch__.torch.nn.modules.Sequential, %input.1 : Tensor):
-        %2 : prim::GetAttr[name="linear"](%self.1)
-        %linear.weight : prim::GetAttr[name="weight"](%2)
-        %linear.bias : prim::GetAttr[name="bias"](%2)
-        %5 : prim::GetAttr[name="bias"](%2) # duplicated node, it is not used now
-        %6 : conv(%input.1, %linear.weight, %linear.bias)
-        %7 : add(%input.1, %linear.bias) # the second input is replaced
-        return (%6, %7)
-
-        And a dictionary {"linear.weight": ..., "linear.bias": ...} is returned, to record the parameters values.
-        Note that, those GetAttr nodes are still in the torch ir graph, but they would be removed in a latter
-        graph pass in the coremltools torch internal graph
-
-        """
-
-        """
-        Each getattr node corresponds to a torch object in the torch IR,
-        it could be either:
-        1. torch.nn.modules: submodule in a torch model. For instance, a linear layer in a MLP network.
-        2. torch.Tensor: torch model parameters. For instance, weight for a conv layer.
-        3. torch._C.ScriptObject: quantized torch model parameters.
-        For example, in the graph above, %2 is pointing to the __torch__.torch.nn.modules.Sequential.linear torch submodule.
-        node_to_module_map tracks these mapping.
-
-        node_to_prefic_map track the name for each module,
-        for example, %2 has the prefix name linear and %3 is linear.weight.
-        These names are also keys in the state_dict
-        """
-        node_to_module_map = {}
-        node_to_prefix_map = {}
-        first_node_with_prefix = {}
-        replace_input = {}
-
-        base_module_node = list(graph.inputs())[0]
-        node_to_module_map[base_module_node] = torchscript
-        node_to_prefix_map[base_module_node] = ""
-
-        """
-        params_dict will be contructed in this graph pass. It contains all const tensors needed for the graph computation.
-        And the value is validated against the state_dict if the key is presented in both dictionaries.
-        In some rare cases, state_dict lacks parameters / buffers, so we still need to go through the while graph ourselves.
-        """
-        params_dict = {}
-        state_dict = torchscript.state_dict(keep_vars=True)
-
-        def _check_is_tensor(node, module):
-            if not isinstance(module, torch.Tensor):
-                return False
-            if str(node.output().type()) not in ("Tensor", "Optional[Tensor]"):
-                raise TypeError(f'Type "{node.output().type()}" not supported')
-            return True
-
-        def _check_is_quantized_tensor(node, module):
-            if not isinstance(module, torch._C.ScriptObject):
-                return False
-            # We only support ScriptObjects that correspond to quantized packed params.
-            assert "PackedParams" in node.output().type().name()
-            return True
-
-        def _lower_graph_block(graph):
-            for node in list(graph.nodes()):
-
-                for block in node.blocks():
-                    _lower_graph_block(block)
-
-                for idx, _input in enumerate(list(node.inputs())):
-                    if _input in replace_input:
-                        node.replaceInput(idx, replace_input[_input])
-
-                kind = node.kind().split("::")[1].lower()
-                if kind != "getattr":
-                    continue
-
-                _input = node.input()
-                _output = node.output()
-                attr_name = getattr(node, node.kindOf("name"))("name")
-
-                module = getattr(node_to_module_map[_input], attr_name)
-                node_to_module_map[_output] = module
-
-                input_prefix = node_to_prefix_map[_input]
-                prefix = input_prefix + '.' + attr_name if input_prefix != "" else attr_name
-                node_to_prefix_map[_output] = prefix
-
-                is_tensor = _check_is_tensor(node, module)
-                is_quantized_tensor = _check_is_quantized_tensor(node, module)
-
-                if is_tensor or is_quantized_tensor:
-                    if is_tensor and prefix in state_dict:
-                        assert torch.equal(
-                            module.cpu(), state_dict[prefix].cpu()
-                        ), "tensor value not consistent between torch ir and state_dict"
-                    if prefix in params_dict:
-                        assert torch.equal(module.cpu(), params_dict[prefix].cpu())
-                        replace_input[_output] = first_node_with_prefix[prefix]
-                    else:
-                        params_dict[prefix] = module
-                        first_node_with_prefix[prefix] = _output
-                        _output.setDebugName(prefix)
-
-        _lower_graph_block(graph)
-
-        return graph, params_dict
-
-    @staticmethod
-    def _expand_and_optimize_ir(torchscript):
-        """
-        Given a torch.jit.ScriptModule, convert it to a optimized
-        torch._C.Graph and dict of model parameter's names to tensors.
-        """
-        graph = torchscript.forward.graph
-
-        # From PyTorch code: Inline function and method calls.
-        torch._C._jit_pass_inline(graph)
-        # From PyTorch code: This inlines the forked section in the fork()
-        # callsite and replaces uses of the result of wait() calls with the
-        # values produced from the (now-inlined) forked section.
-        torch._C._jit_pass_inline_fork_wait(graph)
-        # Starting from the return node, marks all nodes that feed into the
-        # output, as well as nodes with side effects. Any nodes not marked are
-        # eliminated.
-        torch._C._jit_pass_dce(graph)
-        # From PyTorch code: checks well-formedness and invariants of graph.
-        torch._C._jit_pass_lint(graph)
-        # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
-        if version_lt(torch, "1.6.0"):
-            torch._C._jit_pass_canonicalize_ops(graph)
-            torch._C._jit_pass_lint(graph)
-
-            # From PyTorch code: This pass catches all of the small, easy to catch
-            # peephole optimizations you might be interested in doing.
-            #     Eliminate no-op 'expand' nodes
-            #     Simplify x.t().t() to x
-            # pass disabled for v1.6.0 and onwards, wrongly captures the shape of dummy inputs during tracing.
-            torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
-        else:
-            # v1.6.0 pass renamed
-            torch._C._jit_pass_canonicalize_graph_fuser_ops(graph)
-        torch._C._jit_pass_lint(graph)
-
-        # From PyTorch docs: Renumber the graph so that all structurally
-        # equivalent graphs have same numbers.
-        graph = torch._C._jit_pass_canonicalize(graph)
-        torch._C._jit_pass_lint(graph)
-        if version_lt(torch, "1.6.0"):
-            # v1.6.0 JIT changes disallows pulling list values out of
-            # prim::Constant. We can only pull scalar values. constant
-            # propagation removes `listConstruct` and results in list values.
-            # We disallow constant prop pass to keep them as scalars, and rely
-            # on our own constant prop to interpret `listConstruct`.
-            torch._C._jit_pass_constant_propagation(graph)
-        # NOTE: Don't need another DCE, it's included in constant propagation.
-        torch._C._jit_pass_lint(graph)
-
-        # Get the params_dict and rename the getattr nodes in the graph
-        graph, params_dict = TorchConverter._jit_pass_lower_graph(graph, torchscript)
-
-        return graph, params_dict

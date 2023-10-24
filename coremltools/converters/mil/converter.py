@@ -277,7 +277,7 @@ def mil_convert_to_proto(
         # behaviour same as before, the quantization pass is removed in this situation.
         # TODO: rdar://106111553 ([Infra] Quantization Pass is skipped when `mil_convert` is called directly.)
         main_pipeline = PassPipeline()
-        main_pipeline.remove_passes({"common::add_fp16_cast"})
+        main_pipeline.remove_passes({"common::add_fp16_cast", "common::add_int16_cast"})
     frontend_pipeline, backend_pipeline = _construct_other_pipelines(
         main_pipeline, convert_from, convert_to
     )
@@ -288,12 +288,13 @@ def mil_convert_to_proto(
 
     PassPipelineManager.apply_pipeline(prog, main_pipeline)
 
-    prog._check_invalid_program()
-
     if convert_to == 'milinternal':
         return None, prog
 
     PassPipelineManager.apply_pipeline(prog, backend_pipeline)
+
+    prog._check_early_error_out_for_invalid_program()
+
     backend_converter_type = converter_registry.backends.get(convert_to.lower())
     if not backend_converter_type:
         raise NotImplementedError(

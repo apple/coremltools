@@ -50,6 +50,7 @@ _COMMON_PASSES: List[Text] = [
     "common::fuse_gelu_exact",
     "common::fuse_leaky_relu",
     "common::rank0_expand_dims_swap",
+    "common::fuse_squeeze_expand_dims",
     "common::compose_conv1d",  # compose conv1d before any other conv passes
     "common::use_reflection_padding",
     "common::merge_consecutive_paddings",
@@ -91,6 +92,7 @@ _COMMON_PASSES: List[Text] = [
     # which detects patterns that involve redundant ops ("sub") etc.
     "common::remove_redundant_ops",
     "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
+    "common::add_int16_cast",  # Will be removed if compute precision is not FP16.
     "common::dead_code_elimination",  # always end with dce
 ]
 
@@ -98,8 +100,11 @@ _CLEANUP_PASSES: List[Text] = [
     "common::dead_code_elimination",
     "common::const_elimination",
     "common::cast_optimization",
+    "common::dead_code_elimination",  # must follow cast_optimization
     "common::const_elimination",
     "common::const_deduplication",  # after all consts have been settled
+    "common::dead_code_elimination",  # come before merge_tensorwise_affine_dequantize_with_consecutive_ops
+    "common::merge_tensorwise_affine_dequantize_with_consecutive_ops",  # after const_deduplication and dead_code_elimination
     "common::loop_invariant_elimination",
     "common::noop_elimination",
     "common::dedup_op_and_var_names",
@@ -370,6 +375,11 @@ class PassPipeline:
                 f"Available pipelines: {cls._PIPELINE_NAME_TO_PASSES.keys()}"
             )
         return PassPipeline(cls._PIPELINE_NAME_TO_PASSES[pipeline_name], pipeline_name)
+
+    @classmethod
+    def list_available_pipelines(cls) -> List[str]:
+        """List all available pipelines."""
+        return list(cls._PIPELINE_NAME_TO_PASSES.keys())
 
     """
     =======================================

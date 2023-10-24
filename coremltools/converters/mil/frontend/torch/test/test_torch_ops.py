@@ -11,17 +11,19 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 import torch.nn as nn
-import torchaudio
-import torchvision
 
 import coremltools as ct
 from coremltools import RangeDim, Shape, TensorType
-from coremltools._deps import version_lt
+from coremltools._deps import (
+    _HAS_EXECUTORCH,
+    _HAS_TORCH_AUDIO,
+    _HAS_TORCH_VISION,
+    version_lt,
+)
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.torch.ops import (
     NUM_TO_TORCH_DTYPE,
     NUMPY_DTYPE_TO_TORCH_NUM,
-    TORCH_DTYPE_TO_NUM,
 )
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.var import Var
@@ -33,7 +35,25 @@ from coremltools.converters.mil.testing_utils import (
 )
 from coremltools.models.utils import _macos_version, _python_version
 
-from .testing_utils import ModuleWrapper, TorchBaseTest, contains_op, generate_input_data
+from .testing_utils import (
+    ModuleWrapper,
+    TorchBaseTest,
+    TorchFrontend,
+    contains_op,
+    generate_input_data,
+)
+
+if _HAS_TORCH_AUDIO:
+    import torchaudio
+
+if _HAS_TORCH_VISION:
+    import torchvision
+
+
+frontends = [TorchFrontend.TORCHSCRIPT]
+
+if _HAS_EXECUTORCH:
+    frontends.append(TorchFrontend.EDGEIR)
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
@@ -182,8 +202,10 @@ class TestScriptedModels(TorchBaseTest):
             use_scripting=True
         )
 
-    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
-    def test_linear(self, compute_unit, backend):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend", itertools.product(compute_units, backends, frontends)
+    )
+    def test_linear(self, compute_unit, backend, frontend):
         class Model(torch.nn.Module):
             def __init__(self):
                 super(Model, self).__init__()
@@ -199,6 +221,7 @@ class TestScriptedModels(TorchBaseTest):
             model,
             input_as_shape=False,
             backend=backend,
+            frontend=frontend,
             compute_unit=compute_unit,
             use_scripting=True,
         )
@@ -4092,6 +4115,11 @@ class TestTypeAs(TorchBaseTest):
         itertools.product(compute_units, backends, ["int32", "float32", "bool"]),
     )
     def test_type_as(self, compute_unit, backend, type):
+        if backend == ("mlprogram", "fp16") and type == "bool":
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
+
         class TestNet(nn.Module):
             def forward(self, x, y):
                 return x.type_as(y)
@@ -4417,7 +4445,8 @@ class TestExpand(TorchBaseTest):
             converter_input_type=[
                 TensorType(
                     shape=[ct.RangeDim(upper_bound=20 if backend[0] == "mlprogram" else -1), 1]
-                )
+                ),
+                TensorType(shape=(2,)),
             ],
             backend=backend,
             compute_unit=compute_unit,
@@ -4707,6 +4736,11 @@ class TestEinsum(TorchBaseTest):
         ),
     )
     def test_unary_einsum(self, compute_unit, backend, equation, dynamic):
+        if backend == ("mlprogram", "fp16") and equation == "iijk->ji" and dynamic:
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
+
         class TestUnaryEinsum(nn.Module):
             def forward(self, x):
                 return torch.einsum(equation, x)
@@ -5571,6 +5605,39 @@ class TestMatMul(TorchBaseTest):
             [shape_x, shape_y], model, backend=backend, compute_unit=compute_unit
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_bmm_with_fp16_inputs(self, compute_unit, backend):
+        if backend == ("mlprogram", "fp16"):
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
+
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                x = x.to(torch.float16)
+                y = y + 1
+                return torch.bmm(x, y)
+
+        inputs = [
+            TensorType(name="x", shape=(1, 2, 3), dtype=np.int32),
+            TensorType(name="y", shape=(1, 3, 2), dtype=np.float16),
+        ]
+
+        self.run_compare_torch(
+            inputs,
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=ct.target.iOS16,
+            torch_device=torch.device("mps"),
+        )
+
 
 class TestNumel(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -5759,6 +5826,29 @@ class TestTo(TorchBaseTest):
         inputs = [TensorType(name="input_data", shape=(1, 2, 3), dtype=np.int32)]
         self.run_compare_torch(
             inputs, TestModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_to_float16(self, compute_unit, backend):
+        class TestModel(torch.nn.Module):
+            def forward(self, input_data):
+                input_data = input_data.to(torch.float16)
+                return input_data + 8
+
+        inputs = [TensorType(name="input_data", shape=(1, 2, 3), dtype=np.float32)]
+        self.run_compare_torch(
+            inputs,
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            atol=0.01,
+            rtol=0.001,
         )
 
     @pytest.mark.parametrize(
@@ -7243,14 +7333,10 @@ class TestTensorAssign(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, dynamic",
-        itertools.product(
-            compute_units,
-            backends,
-            [True, False],
-        ),
+        "compute_unit, backend, dynamic, mixed_rank",
+        itertools.product(compute_units, backends, [True, False], [True, False]),
     )
-    def test_tensor_assign_case_8(self, compute_unit, backend, dynamic):
+    def test_tensor_assign_case_8(self, compute_unit, backend, dynamic, mixed_rank):
         # general case with dynamic begin and end
         class TensorAssignModel(torch.nn.Module):
             def forward(self, x, begin_0, begin_1, end_1):
@@ -7260,6 +7346,22 @@ class TestTensorAssign(TorchBaseTest):
 
         shape = (2, 10, 3)
         model = TensorAssignModel()
+
+        if mixed_rank:
+            inputs = [
+                torch.rand(*shape),
+                torch.as_tensor([[[1]]], dtype=torch.int32),
+                torch.as_tensor([1], dtype=torch.int32),
+                torch.as_tensor([[2]], dtype=torch.int32),
+            ]
+        else:
+            inputs = [
+                torch.rand(*shape),
+                torch.as_tensor([1], dtype=torch.int32),
+                torch.as_tensor([1], dtype=torch.int32),
+                torch.as_tensor([2], dtype=torch.int32),
+            ]
+
         if dynamic:
             upper_bound = 10 if backend[0] == "mlprogram" else -1
             converter_input_type = [
@@ -7270,24 +7372,17 @@ class TestTensorAssign(TorchBaseTest):
                         ct.RangeDim(upper_bound=upper_bound),
                     )
                 ),
-                ct.TensorType(shape=(1,), dtype=np.int32),
-                ct.TensorType(shape=(1,), dtype=np.int32),
-                ct.TensorType(shape=(1,), dtype=np.int32),
+                ct.TensorType(shape=inputs[1].shape, dtype=np.int32),
+                ct.TensorType(shape=inputs[2].shape, dtype=np.int32),
+                ct.TensorType(shape=inputs[3].shape, dtype=np.int32),
             ]
         else:
             converter_input_type = None
 
-        inputs = [
-            torch.rand(*shape),
-            torch.as_tensor([1], dtype=torch.int32),
-            torch.as_tensor([1], dtype=torch.int32),
-            torch.as_tensor([2], dtype=torch.int32),
-        ]
-
         torch_inputs = [torch.clone(x) for x in inputs]
         expected_results = model(*torch_inputs)
 
-        self.run_compare_torch(
+        res = self.run_compare_torch(
             inputs,
             model,
             expected_results=expected_results,
@@ -7296,6 +7391,13 @@ class TestTensorAssign(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit
         )
+
+        if not mixed_rank:
+            # the fuse_squeeze_expand_dims graph pass is going to
+            # fuse the pattern of ``squeeze -> expand_dims``
+            prog = res[1]._mil_program
+            assert "squeeze" not in get_op_types_in_program(prog)
+            assert "expand_dims" not in get_op_types_in_program(prog)
 
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -9323,47 +9425,52 @@ class TestSTFT(TorchBaseTest):
             compute_unit=compute_unit
         )
 
-class TestSpectrogram(TorchBaseTest):
-    @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, spec, power",
-        itertools.product(
-            compute_units,
-            backends,
-            [(1, 1000), (1000,), (3, 1000)], # input shape
-            [torchaudio.transforms.Spectrogram, torchaudio.transforms.MelSpectrogram],
-            [None, 1, 2] # magnitude or power
+
+if _HAS_TORCH_AUDIO:
+
+    class TestSpectrogram(TorchBaseTest):
+        @pytest.mark.parametrize(
+            "compute_unit, backend, input_shape, spec, power",
+            itertools.product(
+                compute_units,
+                backends,
+                [(1, 1000), (1000,), (3, 1000)],  # input shape
+                [torchaudio.transforms.Spectrogram, torchaudio.transforms.MelSpectrogram],
+                [None, 1, 2],  # magnitude or power
+            ),
         )
-    )
-    def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
-        if platform.machine() != "arm64":
-            pytest.xfail("rdar://108001659 ([PyTorch] Torchaudio Spectrogram Failed on Intel Machine)")
+        def test_spectrogram(self, compute_unit, backend, input_shape, spec, power):
+            if platform.machine() != "arm64":
+                pytest.xfail(
+                    "rdar://108001659 ([PyTorch] Torchaudio Spectrogram Failed on Intel Machine)"
+                )
 
-        if spec is torchaudio.transforms.MelSpectrogram and power is None:
-            pytest.skip("power or magnitude required for melspec")
+            if spec is torchaudio.transforms.MelSpectrogram and power is None:
+                pytest.skip("power or magnitude required for melspec")
 
-        class SpectrogramModel(torch.nn.Module):
-            def __init__(self) -> None:
-                super().__init__()
-                # the other spectrogram options are passed through to stft
-                # and are tested in TestSTFT
-                self.spec = spec(power=power, n_fft=128)
+            class SpectrogramModel(torch.nn.Module):
+                def __init__(self) -> None:
+                    super().__init__()
+                    # the other spectrogram options are passed through to stft
+                    # and are tested in TestSTFT
+                    self.spec = spec(power=power, n_fft=128)
 
-            def forward(self, x):
-                x = self.spec(x)
-                if power is None:
-                    # complex: stack them
-                    x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
-                return x
+                def forward(self, x):
+                    x = self.spec(x)
+                    if power is None:
+                        # complex: stack them
+                        x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                    return x
 
-        np.random.seed(1024)
-        TorchBaseTest.run_compare_torch(
-            input_shape,
-            SpectrogramModel(),
-            backend=backend,
-            compute_unit=compute_unit,
-            rtol=1e-4,
-            atol=1e-4,
-        )
+            np.random.seed(1024)
+            TorchBaseTest.run_compare_torch(
+                input_shape,
+                SpectrogramModel(),
+                backend=backend,
+                compute_unit=compute_unit,
+                rtol=1e-4,
+                atol=1e-4,
+            )
 
 class TestNms(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -9859,7 +9966,9 @@ class TestScaledDotProductAttention(TorchBaseTest):
             [2, 3, 4, 5],
         ),
     )
-    def test_different_input_ranks_no_mask(self, compute_unit, backend, rank):
+    def test_different_input_ranks_no_mask(
+        self, compute_unit, backend, rank, minimum_deployment_target=None
+    ):
         """
         The query/key/value inputs can be any rank 2 or greater.
         """
@@ -9884,12 +9993,14 @@ class TestScaledDotProductAttention(TorchBaseTest):
             },
         )
 
-        self.run_compare_torch(
+        res = self.run_compare_torch(
             [input_shape] * 3,
             model,
             backend=backend,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
         )
+        return res[1]
 
     @pytest.mark.parametrize(
         "compute_unit, backend, seq_lengths, include_heads",
@@ -9900,7 +10011,9 @@ class TestScaledDotProductAttention(TorchBaseTest):
             [False, True],
         ),
     )
-    def test_is_causal_flag(self, compute_unit, backend, seq_lengths, include_heads):
+    def test_is_causal_flag(
+        self, compute_unit, backend, seq_lengths, include_heads, minimum_deployment_target=None
+    ):
         source_seq_len, target_seq_len = seq_lengths
         query_shape = (2, 2, target_seq_len, 7) if include_heads else (2, target_seq_len, 7)
         key_shape = (2, 2, source_seq_len, 7) if include_heads else (2, source_seq_len, 7)
@@ -9918,6 +10031,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
         )
         # check that "fill" and "band_part" ops, which are needed to compute mask, have been constant folded
         mil_prog = res[1]._get_mil_internal()
@@ -9934,7 +10048,9 @@ class TestScaledDotProductAttention(TorchBaseTest):
             [False, True],
         ),
     )
-    def test_attn_mask(self, compute_unit, backend, seq_lengths, bool_mask):
+    def test_attn_mask(
+        self, compute_unit, backend, seq_lengths, bool_mask, minimum_deployment_target=None
+    ):
         if bool_mask:
             pytest.xfail(
                 "rdar://110499660 ([CI][Bug] test_attn_mask is occasionally failing when bool_mask = True)"
@@ -9960,6 +10076,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
             input_as_shape=False,
         )
 
@@ -9971,7 +10088,9 @@ class TestScaledDotProductAttention(TorchBaseTest):
             [True, False],
         ),
     )
-    def test_toy_xformer_with_sdpa(self, compute_unit, backend, mask_as_input):
+    def test_toy_xformer_with_sdpa(
+        self, compute_unit, backend, mask_as_input, minimum_deployment_target=None
+    ):
         embedding_size = 32
         seq_length = 16
         n_heads = 4
@@ -10061,7 +10180,43 @@ class TestScaledDotProductAttention(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
         )
+
+    def test_dropout_early_error_out(self):
+        B, S, L, E, EV = 3, 5, 7, 16, 32
+
+        query_shape = (B, L, E)
+        key_shape = (B, S, E)
+        value_shape = (B, S, EV)
+
+        query = generate_input_data(query_shape)
+        key = generate_input_data(key_shape)
+        value = generate_input_data(value_shape)
+
+        model = ModuleWrapper(
+            function=nn.functional.scaled_dot_product_attention,
+            kwargs={"dropout_p": 0.0}
+        )
+        self.run_compare_torch(
+            (query, key, value),
+            model,
+            input_as_shape=False,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match=r"scaled_dot_product_attention op: dropout is not supported yet",
+        ):
+            model = ModuleWrapper(
+                function=nn.functional.scaled_dot_product_attention,
+                kwargs={"dropout_p": 0.1}
+            )
+            self.run_compare_torch(
+                (query, key, value),
+                model,
+                input_as_shape=False,
+            )
 
 
 class TestTransformer(TorchBaseTest):
@@ -10102,3 +10257,62 @@ class TestFliplr(TorchBaseTest):
                 return torch.fliplr(x)
 
         self.run_compare_torch(input_shape, TestModel(), backend=backend, compute_unit=compute_unit)
+
+
+class TestMultinomial(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, num_samples",
+        itertools.product(compute_units, backends, [1, 3]),
+    )
+    def test_multinomial(self, compute_unit, backend, num_samples):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.multinomial(x, num_samples, replacement=True)
+
+        # As sampling is random, we make one element significantly larger than others to make
+        # outputs consistent.
+        input_data = torch.tensor([0, 1e5, 0, 0, 1, 1, 1], dtype=torch.float)
+        self.run_compare_torch(
+            input_data,
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_multinomial_not_supported(self, compute_unit, backend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.multinomial(x, 4)
+
+        class TestModelDynamicNumSamples(nn.Module):
+            def forward(self, x):
+                return torch.multinomial(x, x.shape[0], replacement=True)
+
+        input_data = torch.tensor([0, 10, 0, 0, 1, 1, 1], dtype=torch.float)
+        with pytest.raises(
+            ValueError,
+            match="When num_samples is larger than 1, only replacement=True is supported.",
+        ):
+            self.run_compare_torch(
+                input_data,
+                TestModel(),
+                backend=backend,
+                compute_unit=compute_unit,
+                input_as_shape=False,
+            )
+
+        with pytest.raises(ValueError, match="In torch.multinomial op, num_samples must be const"):
+            converter_input_type = [TensorType(shape=(RangeDim(1, 10),), dtype=np.float32)]
+            self.run_compare_torch(
+                input_data,
+                TestModelDynamicNumSamples(),
+                backend=backend,
+                compute_unit=compute_unit,
+                input_as_shape=False,
+                converter_input_type=converter_input_type,
+            )

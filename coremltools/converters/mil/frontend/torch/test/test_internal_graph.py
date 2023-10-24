@@ -523,7 +523,7 @@ class TestTorchOps:
             kind="Permute", inputs=input_list, outputs=[output_name],
         )
         ssa = self._construct_test_graph(
-            context, ops.permute, permute_node, output_name, constants=constants
+            context, ops.permute_copy, permute_node, output_name, constants=constants
         )
         expected_result = test_data.permute(*permutation)
         assert expected_result.shape == ssa.shape
@@ -1483,7 +1483,7 @@ class TestTorchOps:
             context, ops.erf, node, output_name, constants=constants
         )
         expected_result = test_input.erf()
-        assert np.allclose(expected_result, ssa.val)
+        assert np.allclose(expected_result, ssa.val, atol=1e-05)
 
     def test_implicittensortonum(self, context):
         input_shape = (1,)

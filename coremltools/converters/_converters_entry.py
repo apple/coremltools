@@ -15,7 +15,7 @@ from coremltools import (
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import __version__ as _ct_version
 from coremltools import _logger as logger
-from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
+from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH, _HAS_TORCH_EXPORT_API
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil._deployment_compatibility import (
     AvailableTarget,
@@ -36,7 +36,7 @@ from coremltools.converters.mil.mil.passes.defs.quantization import ComputePreci
 from coremltools.converters.mil.mil.passes.defs.quantization import FP16ComputePrecision
 from coremltools.converters.mil.mil.passes.graph_pass import PassOption as _PassOption
 from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
-from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
+from coremltools.models import _METADATA_SOURCE, _METADATA_SOURCE_DIALECT, _METADATA_VERSION
 from coremltools.models.utils import _MLPACKAGE_EXTENSION
 
 if _HAS_TF_1:
@@ -51,8 +51,13 @@ if _HAS_TF_2:
 if _HAS_TORCH:
     import torch
 
-    from coremltools.converters.mil.frontend.torch.load import \
-        _torchscript_from_model as pytorch_load
+    from coremltools.converters.mil.frontend.torch.load import (
+        _torchscript_from_spec as try_load_torchscript,
+    )
+
+    if _HAS_TORCH_EXPORT_API:
+        from torch.export import ExportedProgram
+
 
 
 @_profile
@@ -102,8 +107,12 @@ def convert(
 
         * PyTorch
 
-            - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
-            - Path to a ``.pt`` file
+            - TorchScript Models:
+                - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
+                - Path to a ``.pt`` file
+
+            - Torch Exported Models:
+                - A `ExportedProgram <https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram> ` object with `EDGE` dialect
 
     source : str (optional)
 
@@ -161,18 +170,23 @@ def convert(
               When ``inputs`` not provided or ``dtype`` not specified. The float 32 inputs defaults to float 16.
 
         * PyTorch:
-            - The ``inputs`` parameter is required.
-            - Number of elements in ``inputs`` must match the number of inputs
-              of the PyTorch model.
-            - ``inputs`` may be a nested list or tuple.
-            - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.
-            - If the ``name`` argument is specified with ``TensorType`` or
-              ``ImageType``, the converted Core ML model will have inputs with
-              the same name.
-            - If ``dtype`` is missing:
-              * For ``minimum_deployment_target <= ct.target.macOS12``, it defaults to float 32.
-              * For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
-                It defaults to float 16.
+
+            - TorchScript Models:
+                - The ``inputs`` parameter is required.
+                - Number of elements in ``inputs`` must match the number of inputs
+                  of the PyTorch model.
+                - ``inputs`` may be a nested list or tuple.
+                - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.
+                - If the ``name`` argument is specified with ``TensorType`` or
+                  ``ImageType``, the converted Core ML model will have inputs with
+                  the same name.
+                - If ``dtype`` is missing:
+                  * For ``minimum_deployment_target <= ct.target.macOS12``, it defaults to float 32.
+                  * For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
+                    It defaults to float 16.
+
+            - Torch Exported Models:
+                - The ``inputs`` parameter is not supported. ``inputs`` parameter is inferred from Torch ExportedProgram.
 
     outputs : list of ``TensorType`` or ``ImageType`` (optional)
 
@@ -218,13 +232,17 @@ def convert(
 
         * PyTorch:
 
-            - If specified, the length of the list must match the number of
-              outputs returned by the PyTorch model.
-            - If ``name`` is specified, it is applied to the output names of the
-              converted Core ML model.
-            - For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
-              If ``dtype`` not specified, the outputs inferred of type float 32
-              defaults to float 16.
+            - TorchScript Models:
+                - If specified, the length of the list must match the number of
+                outputs returned by the PyTorch model.
+                - If ``name`` is specified, it is applied to the output names of the
+                converted Core ML model.
+                - For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
+                If ``dtype`` not specified, the outputs inferred of type float 32
+                defaults to float 16.
+
+            - Torch Exported Models:
+                - The ``outputs`` parameter is not supported. ``outputs`` parameter is inferred from Torch ExportedProgram.
 
 
     classifier_config : ClassifierConfig class (optional)
@@ -308,7 +326,7 @@ def convert(
           The above transform iterates through all the ops, looking at each op's
           inputs and outputs. If they are of type float 32, ``cast``
           ops are injected to convert those tensors (also known as `vars`) to
-          type float 16.
+          type float 16. Similarly, int32 vars will also be cast to int16.
 
         - ``coremltools.precision.FLOAT32`` enum: No transform is applied.
 
@@ -489,15 +507,17 @@ def convert(
 
     PyTorch:
 
-        >>> model = torchvision.models.mobilenet_v2()
-        >>> model.eval()
-        >>> example_input = torch.rand(1, 3, 256, 256)
-        >>> traced_model = torch.jit.trace(model, example_input)
+        TorchScript Models:
 
-        >>> input = ct.TensorType(name='input_name', shape=(1, 3, 256, 256))
-        >>> mlmodel = ct.convert(traced_model, inputs=[input])
-        >>> results = mlmodel.predict({"input": example_input.numpy()})
-        >>> print(results['1651']) # 1651 is the node name given by PyTorch's JIT
+            >>> model = torchvision.models.mobilenet_v2()
+            >>> model.eval()
+            >>> example_input = torch.rand(1, 3, 256, 256)
+            >>> traced_model = torch.jit.trace(model, example_input)
+
+            >>> input = ct.TensorType(name='input_name', shape=(1, 3, 256, 256))
+            >>> mlmodel = ct.convert(traced_model, inputs=[input])
+            >>> results = mlmodel.predict({"input": example_input.numpy()})
+            >>> print(results['1651']) # 1651 is the node name given by PyTorch's JIT
 
     See `Conversion Options <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options.
@@ -508,6 +528,7 @@ def convert(
                                      outputs_as_strings,
                                      outputs_as_tensor_or_image_types,
                                      outputs)
+    source_dialect = _determine_source_dialect(model, exact_source)
     exact_target = _determine_target(convert_to, minimum_deployment_target)
     _validate_conversion_arguments(
         model,
@@ -525,7 +546,7 @@ def convert(
     if pass_pipeline is None:
         pass_pipeline = PassPipeline()
     if not need_fp16_cast_pass:
-        pass_pipeline.remove_passes({"common::add_fp16_cast"})
+        pass_pipeline.remove_passes({"common::add_fp16_cast", "common::add_int16_cast"})
     if isinstance(compute_precision, FP16ComputePrecision):
         # For backward compatibility with the `op_selector` param in FP16ComputePrecision.
         pass_pipeline._pass_options["common::add_fp16_cast"] = [
@@ -584,7 +605,7 @@ def convert(
 
     gc.collect()
 
-    mlmodel = _record_build_metadata(mlmodel, exact_source)
+    mlmodel = _record_build_metadata(mlmodel, exact_source, source_dialect=source_dialect)
 
     return mlmodel
 
@@ -819,22 +840,64 @@ def _validate_conversion_arguments(
             raise ValueError("Input should be a list of TensorType or ImageType")
 
     elif exact_source == "pytorch":
-        if inputs is None:
-            raise ValueError('Expected argument for pytorch "inputs" not provided')
+        if _HAS_TORCH_EXPORT_API and isinstance(model, ExportedProgram):
+            if model.dialect != "EDGE":
+                raise NotImplementedError(
+                    f"Conversion for models with only EDGE dialect is supported/tested. Provided Dialect: {model.dialect}"
+                )
 
-        raise_if_duplicated(flat_inputs)
-        if inputs is not None and not all(
-            [isinstance(_input, InputType) for _input in flat_inputs]
-        ):
-            raise ValueError(
-                "Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType"
-            )
+            # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
+            if inputs is not None:
+                raise AssertionError("'inputs' argument should be None for ExportedProgram")
+
+            if outputs is not None:
+                raise AssertionError("'outputs' argument should be None for ExportedProgram")
+
+        else:
+            is_torch_load_successful = False
+            try:
+                try_load_torchscript(model)
+                is_torch_load_successful = True
+            except:
+                pass
+            if is_torch_load_successful:
+                if inputs is None:
+                    raise ValueError(
+                        'Expected argument "inputs" for TorchScript models not provided'
+                    )
+
+                raise_if_duplicated(flat_inputs)
+                if inputs is not None and not all(
+                    [isinstance(_input, InputType) for _input in flat_inputs]
+                ):
+                    raise ValueError(
+                        "Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType"
+                    )
+            else:
+                raise TypeError(
+                    "@model must either be a TorchScript object (or .pt or .pth file) or an ExportedProgram object (if using torch.export based API), received: {}".format(
+                        type(model)
+                    )
+                )
 
     elif exact_source == "milinternal":
         if not isinstance(model, Program):
             raise ValueError(
                 "Converter was asked to convert MIL input, but input is not a MIL " "program!"
             )
+
+
+def _determine_source_dialect(model, exact_source):
+
+    source_dialect = None
+    if exact_source == "pytorch":
+
+        if _HAS_TORCH_EXPORT_API and isinstance(model, ExportedProgram):
+            return f"TorchExport::{model.dialect}"
+        else:
+            return "TorchScript"
+
+    return source_dialect
 
 
 def _determine_source(model, source,
@@ -875,9 +938,13 @@ def _determine_source(model, source,
             pass
 
     if source == "auto" and _HAS_TORCH:
+
+        if _HAS_TORCH_EXPORT_API and isinstance(model, ExportedProgram):
+            return "pytorch"
+
         is_torch_load_successful = False
         try:
-            pytorch_load(model)
+            try_load_torchscript(model)
             is_torch_load_successful = True
         except:
             pass
@@ -953,6 +1020,12 @@ def _get_metadata_from_mlmodel(mlmodel):
     src_pkg_version = mlmodel.user_defined_metadata[_METADATA_SOURCE]
     coremltools_version = mlmodel.user_defined_metadata[_METADATA_VERSION]
 
+    src_dialect = (
+        None
+        if _METADATA_SOURCE_DIALECT not in mlmodel.user_defined_metadata
+        else mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT]
+    )
+
     src_pkg_version_list = src_pkg_version.split("==")
     if len(src_pkg_version_list) == 0:
         src_pkg, pkg_ver = None, None
@@ -969,10 +1042,13 @@ def _get_metadata_from_mlmodel(mlmodel):
     if src_pkg is not None and pkg_ver is not None:
         build_info['coremltools-component-' + src_pkg] = str(pkg_ver)
 
+    if src_dialect is not None:
+        build_info["coremltools-source-dialect"] = src_dialect
+
     return build_info
 
 
-def _record_build_metadata(mlmodel, exact_source):
+def _record_build_metadata(mlmodel, exact_source, source_dialect=None):
     # recording metadata: coremltools version, source framework and version
     if exact_source in {"tensorflow", "tensorflow2"} and (_HAS_TF_1 or _HAS_TF_2):
         src_pkg_version = "tensorflow=={0}".format(tf.__version__)
@@ -985,6 +1061,9 @@ def _record_build_metadata(mlmodel, exact_source):
 
     mlmodel.user_defined_metadata[_METADATA_SOURCE] = src_pkg_version
     mlmodel.user_defined_metadata[_METADATA_VERSION] = _ct_version
+
+    if source_dialect is not None:
+        mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] = source_dialect
 
     build_info = _get_metadata_from_mlmodel(mlmodel)
 

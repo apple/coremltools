@@ -1006,6 +1006,17 @@ class TestPad:
                 pad = mb.reshape(x=y, shape=[-1])
                 res = mb.pad(x=x, pad=pad)
 
+    @staticmethod
+    def test_error_out_with_invalid_padding_value():
+        with pytest.raises(
+            ValueError,
+            match=r"pad must be non-negative integer, got -1022 at index 6",
+        ):
+
+            @mb.program(input_specs=[mb.TensorSpec(shape=(1, 48, 1, 1024))])
+            def prog(x):
+                y = mb.pad(x=x, pad=[0, 0, 0, 0, 0, 0, -1022, 0], mode="constant")
+                return y
 
 class TestRange1d:
     @pytest.mark.parametrize(

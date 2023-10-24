@@ -344,6 +344,15 @@ class TestExpandDims:
             backend=backend,
         )
 
+    @staticmethod
+    def test_expand_dims_value_inference_is_inplace():
+        @mb.program()
+        def prog():
+            const = mb.const(val=[[2, 3], [4, 5]])
+            x = mb.expand_dims(x=const, axes=(1, 2))
+            x.val[0, 0, 0, 0] = 112
+            assert const.val[0, 0] == 112
+            return x
 
 class TestReshape:
     @pytest.mark.parametrize(
@@ -490,6 +499,16 @@ class TestReshape:
             assert res_sym_val[0][0] == shape.sym_val[0]
             assert res_sym_val[0][1] == shape.sym_val[1]
             return res
+
+    @staticmethod
+    def test_reshape_value_inference_is_inplace():
+        @mb.program()
+        def prog():
+            const = mb.const(val=[[2, 3], [4, 5]])
+            x = mb.reshape(x=const, shape=(4, 1))
+            x.val[0, 0] = 112
+            assert const.val[0, 0] == 112
+            return x
 
 class TestReverse:
     @pytest.mark.parametrize(
@@ -891,7 +910,7 @@ class TestSliceByIndex:
             mb.slice_by_index(
                 x=x_val,
                 begin=[1, 1, 1],
-                end=[2, 3, 4],
+                end=[2, 3, 3],
                 stride=[1, 1, 2],
                 begin_mask=[False, False, True],
                 end_mask=[True, False, False],
@@ -1239,6 +1258,16 @@ class TestSqueeze:
         assert type(v.val) == np.float32
         assert np.isclose(np.squeeze(x), v.val)
 
+    @staticmethod
+    def test_squeeze_value_inference_is_inplace():
+        @mb.program()
+        def prog():
+            const = mb.const(val=[[[2, 3], [4, 5]]])
+            x = mb.squeeze(x=const, axes=(0,))
+            x.val[0, 0] = 112
+            assert const.val[0, 0, 0] == 112
+            return x
+
 
 class TestTranspose:
     @pytest.mark.parametrize(
@@ -1341,6 +1370,15 @@ class TestTranspose:
             backend=backend,
         )
 
+    @staticmethod
+    def test_transpose_value_inference_is_inplace():
+        @mb.program()
+        def prog():
+            const = mb.const(val=[[2, 3], [4, 5]])
+            x = mb.transpose(x=const, perm=(0, 1))
+            x.val[0, 0] = 112
+            assert const.val[0, 0] == 112
+            return x
 
 class TestPixelShuffle:
     @pytest.mark.parametrize(

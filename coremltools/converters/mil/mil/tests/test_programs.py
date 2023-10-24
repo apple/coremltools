@@ -9,7 +9,7 @@ import pytest
 import coremltools as ct
 from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import Function, Program, types
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
 
 np.random.seed(0)
@@ -199,8 +199,10 @@ def get_simple_nested_block_program(opset_version=None):
         return mb.cond(pred=mb.cast(x=pred, dtype="bool"), _true_fn=true_fn, _false_fn=false_fn)
     return prog
 
-class TestMLProgramVersionHandling:
-
+class TestMILProgramVersionHandling:
+    """
+    Test basic functionality of opset version handling in pymil
+    """
     @staticmethod
     def test_multi_versions_op_selection():
         '''
@@ -306,6 +308,110 @@ class TestMLProgramVersionHandling:
         with pytest.raises(ValueError, match=expected_err_str):
             get_simple_topk_pixel_unshuffle_program()
 
+class TestMILBuilderAPI:
+    """
+    Test the basic builder API.
+    """
+    def test_create_function(self):
+        """
+        Test mb.function API
+        """
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def func(x):
+            return mb.add(x=x, y=0.0)
+
+        assert isinstance(func, Function)
+        assert len(func.operations) == 2  # add, const
+        assert len(func.inputs) == 1
+        assert len(func.outputs) == 1
+
+    def test_create_program(self):
+        """
+        Test mb.program API
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            return mb.add(x=x, y=0.0)
+
+        assert isinstance(prog, Program)
+        func = prog.functions["main"]
+        assert len(func.operations) == 2  # add, const
+        assert len(func.inputs) == 1
+        assert len(func.outputs) == 1
+
+    def test_create_program_function_name(self):
+        """
+        If ``function_name`` is not provide, mb.program creates function with name "main" by default.
+        """
+        # defaults to "main"
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x0):
+            return x0
+
+        assert len(prog.functions) == 1
+        assert "main" in prog.functions
+
+        # user can also provide function_name
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))], function_name="good_function")
+        def prog(x0):
+            return x0
+
+        assert len(prog.functions) == 1
+        assert "good_function" in prog.functions
+
+    def test_program_with_multiple_functions(self):
+        """
+        Basic creation of a program with multiple functions
+        """
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def func_1(x):
+            return x
+
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def func_2(x):
+            return x
+
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def func_3(x):
+            return x
+
+        prog = Program()
+        prog.add_function("func_1", func_1)
+        prog.add_function("func_2", func_2)
+        prog.add_function("func_3", func_3)
+
+        assert set(prog.functions.keys()) == set(["func_1", "func_2", "func_3"])
+
+    def test_error_out_incompatible_functions(self):
+        """
+        ``add_function`` should error out when a function with different
+        opset is added to a program.
+        """
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 4))], opset_version=ct.target.iOS13)
+        def func_1(x):
+            return x
+
+        @mb.function(input_specs=[mb.TensorSpec(shape=(2, 4))], opset_version=ct.target.iOS17)
+        def func_2(x):
+            return x
+
+        err_msg = "all functions must have the same opset_version."
+
+        prog = Program()
+        prog.add_function("func_1", func_1)
+        with pytest.raises(ValueError, match=err_msg):
+            prog.add_function("func_2", func_2)
+
+        prog = Program()
+        prog.add_function("func_2", func_2)
+        with pytest.raises(ValueError, match=err_msg):
+            prog.add_function("func_1", func_1)
+
+
+class TestMILBasic:
+    """
+    Test the basic error handling / validation in pymil.
+    """
     @staticmethod
     def test_type_domain_validation():
         '''
@@ -319,6 +425,49 @@ class TestMLProgramVersionHandling:
             def prog(x):
                 res = mb.rsqrt(x=x, epsilon=1)
                 return res
+
+    @staticmethod
+    def test_get_dialect_namespaces():
+        """
+        Test we can get a dict of dialect namespaces in the program.
+        """
+        # The pymil program is mixed of torch / complex dialect opset
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 2, 3, 4), dtype=types.fp32)])
+        def prog(x):
+            real_data = mb.torch_upsample_nearest_neighbor(
+                x=x, output_height=10, output_width=5, name="op_1"
+            )
+            imag_data = mb.add(x=real_data, y=8.9, name="op_2")
+            return mb.complex(real_data=real_data, imag_data=imag_data, name="op_3")
+
+        dialect_namespaces = prog._get_dialect_namespaces()
+        assert len(dialect_namespaces["torch"]) == 1
+        assert dialect_namespaces["torch"][0].name == "op_1"
+        assert len(dialect_namespaces["complex"]) == 1
+        assert dialect_namespaces["complex"][0].name == "op_3"
+
+        # The pymil program with only core ops returns an empty dict
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 2, 3, 4), dtype=types.fp32)])
+        def prog(x):
+            return mb.add(x=x, y=8.9)
+
+        assert len(prog._get_dialect_namespaces()) == 0
+
+    @staticmethod
+    def test_invalid_dialect_namespaces_error_out():
+        """
+        The converter should early error out if dialect opset is detected in the pymil program.
+        """
+        # The pymil program of torch dialect opset cannot be lowered to backend
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 2, 3, 4), dtype=types.fp32)])
+        def prog(x):
+            return mb.torch_upsample_nearest_neighbor(
+                x=x, output_height=10, output_width=5, name="op_1"
+            )
+
+        expected_err_str = 'Core ML only support core opset. Got unsupported op "op_1" with type "torch_upsample_nearest_neighbor" of dialect namespace "torch".'
+        with pytest.raises(ValueError, match=expected_err_str):
+            ct.convert(prog, convert_to="mlprogram", pass_pipeline=ct.PassPipeline.EMPTY)
 
     @staticmethod
     def test_rank6_tensor_early_error_out():

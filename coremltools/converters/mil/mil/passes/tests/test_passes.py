@@ -248,6 +248,83 @@ class TestConstDeduplication:
         assert_op_count_match(prog, expect=6, op="const")
 
 
+class TestFuseSqueezeExpandDims:
+    @pytest.mark.parametrize(
+        "rank",
+        [1, 5],
+    )
+    def test_fuse_squeeze_expand_dims_basic(self, rank):
+        """
+        Given:
+          %1 = squeeze(%x)
+          %2 = expand_dims(%1)
+          %3 = relu(%2)
+
+        Result:
+          %3 = relu(%x)
+        """
+        if rank == 1:
+            input_shape = (1,)
+            axes = (0,)
+        else:
+            assert rank == 5
+            input_shape = (3, 1, 4, 1, 1)
+            axes = (1, 3, 4)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
+        def prog(x):
+            x = mb.squeeze(x=x, axes=axes)
+            x = mb.expand_dims(x=x, axes=axes)
+            return mb.relu(x=x)
+
+        # fuse_squeeze_expand_dims fused squeeze + expand_dims into identity
+        apply_pass_and_basic_check(prog, "common::fuse_squeeze_expand_dims")
+        assert get_op_types_in_program(prog) == ["identity", "relu"]
+
+        # noop_elimination can further remove the identity op
+        apply_pass_and_basic_check(prog, "common::noop_elimination")
+        assert get_op_types_in_program(prog) == ["relu"]
+
+    def test_fuse_squeeze_expand_dims_negative(self):
+        """
+        If squeeze and expand_dims cannot cancel each other,
+        the graph pass does nothing
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 1, 4, 1, 1))])
+        def prog(x):
+            x = mb.squeeze(x=x, axes=(1, 2))
+            x = mb.expand_dims(x=x, axes=(1, 3))
+            return mb.relu(x=x)
+
+        apply_pass_and_basic_check(prog, "common::fuse_squeeze_expand_dims")
+        assert get_op_types_in_program(prog) == ["squeeze", "expand_dims", "relu"]
+
+    def test_fuse_squeeze_expand_dims_connected_output(self):
+        """
+        If squeeze is connected to block output, it cannot be removed.
+        However, the expand_dims can be a block output.
+        """
+        # squeeze connected to output. Nothing happens.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,))])
+        def prog(x):
+            squeeze = mb.squeeze(x=x, axes=(0,))
+            expand_dims = mb.expand_dims(x=squeeze, axes=(0,))
+            return mb.relu(x=expand_dims), squeeze
+
+        apply_pass_and_basic_check(prog, "common::fuse_squeeze_expand_dims")
+        assert get_op_types_in_program(prog) == ["squeeze", "expand_dims", "relu"]
+
+        # expand_dims connected to output. Still good to fuse.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,))])
+        def prog(x):
+            squeeze = mb.squeeze(x=x, axes=(0,))
+            expand_dims = mb.expand_dims(x=squeeze, axes=(0,))
+            return mb.relu(x=expand_dims), expand_dims
+
+        apply_pass_and_basic_check(prog, "common::fuse_squeeze_expand_dims")
+        assert get_op_types_in_program(prog) == ["identity", "relu"]
+
 class TestConstElimination:
     def test_const_elimination(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
@@ -3261,7 +3338,7 @@ class TestExpandHighRankReshapeAndTranspose:
             return x
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
-        prog._check_invalid_program()
+        prog._check_early_error_out_for_invalid_program()
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
@@ -3279,7 +3356,7 @@ class TestExpandHighRankReshapeAndTranspose:
             return x
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
-        prog._check_invalid_program()
+        prog._check_early_error_out_for_invalid_program()
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
@@ -3298,7 +3375,7 @@ class TestExpandHighRankReshapeAndTranspose:
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
-        prog._check_invalid_program()
+        prog._check_early_error_out_for_invalid_program()
         assert get_op_types_in_program(prog) == ["reshape", "transpose"] * 16 + ["reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
@@ -3318,7 +3395,7 @@ class TestExpandHighRankReshapeAndTranspose:
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::expand_high_rank_reshape_and_transpose")
 
         with pytest.raises(ValueError, match="Core ML only supports tensors with rank <= 5"):
-            prog._check_invalid_program()
+            prog._check_early_error_out_for_invalid_program()
 
 
 class TestMergeConsecutiveRelus:

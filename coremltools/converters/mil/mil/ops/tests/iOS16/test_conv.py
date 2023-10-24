@@ -3,23 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import itertools
 
 import numpy as np
 import pytest
 
-from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.tests.iOS16 import backends
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
-compute_units = testing_reqs.compute_units
-
-
 class TestConvolution:
-    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
-    def test_type_inference_with_constexpr_ops(self, compute_unit, backend):
+    @pytest.mark.parametrize("backend", backends)
+    def test_type_inference_with_constexpr_ops(self, backend):
         # Test the type inference of the conv op doesn't error out for constexpr bias
         @mb.program(
             input_specs=[mb.TensorSpec(shape=(1, 3, 4, 4), dtype=types.fp32)],

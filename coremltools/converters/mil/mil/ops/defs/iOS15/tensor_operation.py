@@ -524,6 +524,10 @@ class pad(Operation):
             if len(pad) % 2 != 0:
                 raise ValueError("Number of elements in the argument Pad must be divisible by 2.")
 
+            for i in range(len(pad)):
+                if not is_symbolic(pad[i]) and pad[i] < 0:
+                    raise ValueError(f"pad must be non-negative integer, got {pad[i]} at index {i}")
+
             pad = pad.reshape(-1, 2)
 
             if pad.shape[0] > len(ret_shape):

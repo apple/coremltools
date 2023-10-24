@@ -9,11 +9,9 @@ import numpy as np
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import is_compatible_type
-from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
-                                                           is_symbolic)
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 from . import SPACES
-from .block import curr_block
 from .input_type import DefaultInputs, TensorInputType, TupleInputType
 from .var import ComplexVar, InternalVar, ListVar, Var
 
@@ -143,6 +141,11 @@ class Operation:
     input_types (InputSpec, class attr):
         Read-only named input types from all subclasses. Input types are used
         to validate `inputs`.
+        If an input arg name start with prefix `_`, that indicates the input has the following properties:
+        1. Most of the time, the input is type of ``InternalInputType`` and
+           used only in pymil scope. It doesn't have the corresponding arg / attr
+           in the MIL framework definition.
+        2. It won't be printed in pymil.
 
     inputs [_input_vars] (dict of str --> Var):
         An Operation (subclass of Operation) only has access to input Var,
@@ -163,7 +166,7 @@ class Operation:
         self._output_vars = None
         self._input_vars = {}
         self.blocks = []
-        self.enclosing_block = curr_block()
+        self.enclosing_block = kwargs["enclosing_block"]
 
         # Initialize inputs as object attributes (all None)
         for k in self._input_types.keys():
@@ -205,6 +208,7 @@ class Operation:
             "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
             "no_check_var_types",
             # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
+            "enclosing_block",
         ]
         for k in kwargs.keys():
             if k not in non_attributes and k not in self._input_types:

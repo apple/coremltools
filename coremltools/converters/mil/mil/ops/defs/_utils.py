@@ -20,6 +20,37 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 MAX_SIZE_CONSTANT_FOLDING = 1024 * 1024 / 4 # When a fp32 const takes over 1MB, we won't create a const op for that
 
+class ConvPoolingTypeInferenceCache(dict):
+    """
+    An utility class to cache the shape inference of ``conv`` and ``pool`` op.
+    The cache mechanism makes sure ops with the same input shape (symbolic also),
+    and params (``pad, stride, kernel``) would produce the same output shape.
+    """
+    @staticmethod
+    def get_cache_key(
+        input_shape: Tuple[int],
+        pad_type: str,
+        pad: Tuple[int],
+        strides: Tuple[int],
+        kernel: Tuple[int],
+        ceil_mode: bool,
+    ) -> Tuple[Tuple]:
+        return (
+            ("input_shape", input_shape),
+            ("pad_type", pad_type),
+            ("pad", pad),
+            ("strides", strides),
+            ("kernel", kernel),
+            ("ceil_mode", ceil_mode),
+        )
+
+    def __setitem__(self, key, value):
+        if key in self:
+            raise ValueError(f"cache key {key} already exisit.")
+        return dict.__setitem__(self, key, value)
+
+CONV_POOLING_TYPE_INFERENCE_CACHE = ConvPoolingTypeInferenceCache()
+
 def broadcast_shapes(shape_x, shape_y):
     """
     Check and broadcast given input shapes.
@@ -129,7 +160,7 @@ def effective_kernel(kernel_shape, dilations):
             f"kernel_shape ({len(kernel_shape)}) and dilations ({len(dilations)}) "
             f"must be the same length"
         )
-    return [(k - 1) * d + 1 for k, d in zip(kernel_shape, dilations)]
+    return tuple([(k - 1) * d + 1 for k, d in zip(kernel_shape, dilations)])
 
 
 def aggregated_pad(
@@ -161,7 +192,7 @@ def aggregated_pad(
 
 
     Returns:
-        A list of total (before + after) padding for each spatial dimension in kernel_shape.
+        A tuple of total (before + after) padding for each spatial dimension in kernel_shape.
     """
     num_spatial_dims = len(kernel_shape)
     if dilations is None:
@@ -188,19 +219,20 @@ def aggregated_pad(
                 )
             )
         effective_ks = effective_kernel(kernel_shape, dilations)
-        return [
-            int(max(0, s * math.ceil(float(i) / float(s)) - i + k - s))
-            if not is_symbolic(i) else get_new_symbol()
-            for i, k, s in zip(input_shape, effective_ks, strides)
-        ]
+        return tuple(
+            [
+                int(max(0, s * math.ceil(float(i) / float(s)) - i + k - s))
+                if not is_symbolic(i)
+                else get_new_symbol()
+                for i, k, s in zip(input_shape, effective_ks, strides)
+            ]
+        )
     if pad_type == "valid":
-        return [0] * num_spatial_dims
+        return tuple([0] * num_spatial_dims)
     if pad_type == "custom":
         if custom_pad is None or len(custom_pad) != 2 * num_spatial_dims:
             raise ValueError("Invalid custom_pad.")
-        return [
-            custom_pad[2 * d] + custom_pad[2 * d + 1] for d in range(num_spatial_dims)
-        ]
+        return tuple([custom_pad[2 * d] + custom_pad[2 * d + 1] for d in range(num_spatial_dims)])
     raise ValueError('Invalid padding pad_type "{}"'.format(pad_type))
 
 
@@ -242,7 +274,7 @@ def spatial_dimensions_out_shape(
     if dilations is None:
         dilations = [1] * num_spatial_dims
     if custom_pad is None:
-        custom_pad = [0] * num_spatial_dims * 2
+        custom_pad = np.array([0] * num_spatial_dims * 2)
     if not (
         len(input_shape)
         == len(kernel_shape)
@@ -259,6 +291,22 @@ def spatial_dimensions_out_shape(
             "must all be the same length"
         )
 
+    effective_ks = effective_kernel(kernel_shape, dilations)
+    if isinstance(strides, np.ndarray):
+        strides = tuple(strides.tolist())
+    if isinstance(custom_pad, np.ndarray):
+        custom_pad = tuple(custom_pad.tolist())
+    cache_key = CONV_POOLING_TYPE_INFERENCE_CACHE.get_cache_key(
+        input_shape,
+        pad_type,
+        custom_pad,
+        strides,
+        effective_ks,
+        ceil_mode,
+    )
+    if cache_key in CONV_POOLING_TYPE_INFERENCE_CACHE:
+        return CONV_POOLING_TYPE_INFERENCE_CACHE[cache_key]
+
     pad = aggregated_pad(
         pad_type=pad_type,
         kernel_shape=kernel_shape,
@@ -267,7 +315,7 @@ def spatial_dimensions_out_shape(
         dilations=dilations,
         custom_pad=custom_pad,
     )
-    effective_ks = effective_kernel(kernel_shape, dilations)
+
     out_shape = []
     for r in range(num_spatial_dims):
         # only check if `input_shape` (spatial part of the input image) is symbolic, because:
@@ -288,6 +336,7 @@ def spatial_dimensions_out_shape(
             if out_dim <= 0:
                 raise ValueError(f"spatial dimension {r} has invalid output size {out_dim}")
             out_shape.append(out_dim)
+    CONV_POOLING_TYPE_INFERENCE_CACHE[cache_key] = out_shape
     return out_shape
 
 
@@ -409,17 +458,85 @@ def promote_input_dtypes(input_vars):
     return input_vars
 
 
+def get_squeeze_axes(squeeze_mask, rank):
+    """
+    Utility function to get the squeeze_axes from squeeze_mask.
+    i.e., returns a list of indices ``i`` where ``squeeze_mask[i] == True``.
+    For instance, given ``squeeze_mask = [True, False, True]``,
+    this utility returns ``[0, 2]``
+    """
+    if squeeze_mask is None:
+        squeeze_mask = [False] * rank
+    squeeze_axes = []
+    for idx, mask in enumerate(squeeze_mask):
+        if mask:
+            squeeze_axes.append(idx)
+    return squeeze_axes
+
+def get_param_val(param):
+    """
+    Given a param, if it is not None, returns param.val, else returns None.
+    """
+    if param is None:
+        return None
+    return param.val
+
+def solve_slice_by_index_slice(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):
+    """
+    Utility function to solve the slices of tensor slicing
+    """
+    # set default values for parameters
+    rank = len(x_shape)
+    begin = [int(i) for i in list(begin[:])]
+    end = [int(i) for i in list(end[:])]
+    if stride is None:
+        stride = [1] * rank
+    if begin_mask is None:
+        begin_mask = [False] * rank
+    if end_mask is None:
+        end_mask = [False] * rank
+    if squeeze_mask is None:
+        squeeze_mask = [False] * rank
+
+    # compute slices
+    slices = []
+    for idx, mask in enumerate(begin_mask):
+        if mask:
+            begin[idx] = None
+    for idx, mask in enumerate(end_mask):
+        if mask:
+            end[idx] = None
+    for idx, mask in enumerate(squeeze_mask):
+        if mask:
+            end[idx] = None
+            stride[idx] = np.iinfo(
+                np.int32
+            ).max  # We slice out only 1 element by setting stride to INF
+    for idx in range(rank):
+        slices.append(slice(begin[idx], end[idx], stride[idx]))
+
+    return tuple(slices)
+
 def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):
     """
     Helper function to solve the shape of tensor slicing.
     """
-    ret_shape = []
-
+    # set default values
+    rank = len(x_shape)
     if begin is None or len(begin) == 0:
-        begin = [None] * len(x_shape)
+        begin = [None] * rank
     if end is None or len(end) == 0:
-        end = [None] * len(x_shape)
+        end = [None] * rank
+    if stride is None:
+        stride = [1] * rank
+    if begin_mask is None:
+        begin_mask = [False] * rank
+    if end_mask is None:
+        end_mask = [False] * rank
+    if squeeze_mask is None:
+        squeeze_mask = [False] * rank
 
+    # basic validation for tensor shape
     if len(begin) != len(x_shape):
         raise TypeError(
             "slice_by_index op: size of 'begin', {}, is not equal to the rank of input, which is {}".format(
@@ -434,6 +551,7 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
         )
 
     # solve for shape inference
+    ret_shape = []
     for idx in range(len(x_shape)):
         # skip if we want to squeeze the dimension
         if squeeze_mask[idx]:

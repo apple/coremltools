@@ -411,25 +411,10 @@ def _load_function(context, func_spec, spec_version):
     return pymil_func
 
 
-def load(model_spec, specification_version, file_weights_dir="", **kwargs):
+def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
     """
-    Load MILProto to Pymil.
-
-    Set force_spec_version to force override the spec version.
+    Load in-memory Proto specification of MILSpec.Program(.Proto) object to PyMIL
     """
-    if not isinstance(model_spec, ml.Model):
-        raise TypeError("Invalid Model sepc object")
-
-    if specification_version < model_spec.specificationVersion:
-        if not kwargs.get("force_spec_version", False):
-            raise ValueError(
-                "specification_version must be greater or equal to the input model spec version"
-            )
-
-    if model_spec.WhichOneof("Type") != "mlProgram":
-        raise ValueError("Only MIL proto based mlmodels can be loaded")
-
-    program_spec = model_spec.mlProgram
     if not isinstance(program_spec, pm.Program):
         raise TypeError("Invalid Program spec object")
 
@@ -451,3 +436,24 @@ def load(model_spec, specification_version, file_weights_dir="", **kwargs):
             raise ValueError("Invalid attribute for program")
 
     return pymil_program
+
+
+def load(model_spec, specification_version, file_weights_dir="", **kwargs):
+    """
+    Load in-memory Proto specification of Model(.Proto) object to PyMIL
+
+    Set force_spec_version to force override the spec version.
+    """
+    if not isinstance(model_spec, ml.Model):
+        raise TypeError("Invalid Model sepc object")
+
+    if specification_version < model_spec.specificationVersion:
+        if not kwargs.get("force_spec_version", False):
+            raise ValueError(
+                "specification_version must be greater or equal to the input model spec version"
+            )
+
+    if model_spec.WhichOneof("Type") != "mlProgram":
+        raise ValueError("Only MIL proto based mlmodels can be loaded")
+
+    return load_mil_proto(model_spec.mlProgram, specification_version, file_weights_dir)

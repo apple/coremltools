@@ -19,7 +19,12 @@ from coremltools.converters.mil.mil import (
 from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import SYMBOL, VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
+from coremltools.converters.mil.mil.ops.defs._utils import (
+    get_param_val,
+    get_squeeze_axes,
+    solve_slice_by_index_shape,
+    solve_slice_by_index_slice,
+)
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     any_variadic,
@@ -514,23 +519,16 @@ class slice_by_index(Operation):
             )
 
     def type_inference(self):
-
-        # get tensor and set default value
-        begin = self.begin.val
-        end = self.end.val
-        x_rank = self.x.rank
-        stride = self.stride.val if self.stride is not None else [1] * x_rank
-        begin_mask = (
-            self.begin_mask.val if self.begin_mask is not None else [False] * x_rank
-        )
-        end_mask = self.end_mask.val if self.end_mask is not None else [False] * x_rank
-        squeeze_mask = (
-            self.squeeze_mask.val if self.squeeze_mask is not None else [False] * x_rank
-        )
-
         # solve shape
-        x_shape = self.x.shape
-        ret_shape = solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask)
+        ret_shape = solve_slice_by_index_shape(
+            self.x.shape,
+            self.begin.val,
+            self.end.val,
+            get_param_val(self.stride),
+            get_param_val(self.begin_mask),
+            get_param_val(self.end_mask),
+            get_param_val(self.squeeze_mask),
+        )
 
         if len(ret_shape) == 0:
             # Scalar case.
@@ -541,41 +539,21 @@ class slice_by_index(Operation):
     def value_inference(self):
         if self.x.sym_val is None or self.begin.val is None or self.end.val is None:
             return None
-        begin = [int(i) for i in list(self.begin.val[:])]
-        end = [int(i) for i in list(self.end.val[:])]
-        stride = [1] * self.x.rank if self.stride is None else self.stride.val
-        begin_mask = (
-            [False] * self.x.rank if self.begin_mask is None else self.begin_mask.val
-        )
-        end_mask = [False] * self.x.rank if self.end_mask is None else self.end_mask.val
-        squeeze_mask = (
-            [False] * self.x.rank
-            if self.squeeze_mask is None
-            else self.squeeze_mask.val
-        )
 
-        slices = []
-        for idx, mask in enumerate(begin_mask):
-            if mask:
-                begin[idx] = None
-        for idx, mask in enumerate(end_mask):
-            if mask:
-                end[idx] = None
-        squeeze_axes = []
-        for idx, mask in enumerate(squeeze_mask):
-            if mask:
-                end[idx] = None
-                stride[
-                    idx
-                ] = 2147483647  # We slice out only 1 element by setting stride to INF
-                squeeze_axes.append(idx)
-        for idx in range(self.x.rank):
-            slices.append(slice(begin[idx], end[idx], stride[idx]))
-
-        slices = tuple(slices)
+        # solve the data slices and slice tensor
+        slices = solve_slice_by_index_slice(
+            self.x.shape,
+            self.begin.val,
+            self.end.val,
+            get_param_val(self.stride),
+            get_param_val(self.begin_mask),
+            get_param_val(self.end_mask),
+            get_param_val(self.squeeze_mask),
+        )
         res = self.x.sym_val[slices]
 
-        # remove squeezed axes
+        # remove squeeze_axes
+        squeeze_axes = get_squeeze_axes(get_param_val(self.squeeze_mask), self.x.rank)
         if len(squeeze_axes) > 0:
             if len(squeeze_axes) == len(res.shape):
                 if len(res) == 0:

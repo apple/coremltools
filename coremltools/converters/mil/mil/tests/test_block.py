@@ -27,7 +27,6 @@ Function has some different behaviors from Block that are irrelevant to
 the core API being tested here.
 """
 
-
 def test_empty_block():
     """
     Test an empty program

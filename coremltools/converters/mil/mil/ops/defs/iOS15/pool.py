@@ -101,16 +101,26 @@ class avg_pool(Pooling):
         * ``S == len(D_in)``.
 
     pad_type: const str (Required)
-        Must be one of ``valid``, ``same``, ``custom`` or ``same_lower``.
 
-        * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for
-          all i``.
-        * ``same`` : This is equivalent to custom pad with ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
-        * ``custom``: Specify custom padding in the parameter pad. note that ``same``
-          padding is equivalent to custom padding with
-          ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
-        * ``same_lower``: Similar to ``same`` but the padding
-          will place extra rows/cols on the top/left if the padding amount is odd.
+        Must be one of the following:
+
+            * ``valid``: No padding. This is equivalent to custom pad with
+              ``pad[2*i] == pad[2*i+1] == 0, for i=0,...,len(d_in)-1``.
+            * ``custom``: Specify custom padding in the parameter ``pad``.
+            * ``same``: Input is padded such that out spatial shapes are
+              ``d_out[i] = ceil(d_in[i] / strides[i])``.
+            * ``same_lower``: Similar to ``same`` but the padding
+              will place extra rows/cols on the top/left if the padding amount is odd.
+
+        Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
+        calculated as follows:
+
+            * ``dilated_kernel = (K[i] - 1) * dilate[i] + 1``
+            * If ``dilated_kernel`` is odd,
+              ``padding[2*i] = padding[2*i+1] = floor(dilated_kernel / 2)``
+            * Otherwise:
+              ``padding[2*i] = ceil((dilated_kernel - 1) / 2)``,
+              ``padding[2*i+1] = floor((dilated_kernel - 1) / 2)``
 
     pad: const<[P],i32> (Optional. Default to all 0s)
         * ``pad`` represents the number of elements to pad before and after each

@@ -6400,6 +6400,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 input_shape=shape[2:],
                 strides=stride,
             )
+            total_paddings = list(total_paddings)
             total_paddings.reverse()
             for p in total_paddings:
                 before = int(math.floor(float(p) / 2.0))

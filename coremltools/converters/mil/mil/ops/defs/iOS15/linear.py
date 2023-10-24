@@ -57,8 +57,10 @@ class linear(Operation):
 
     def default_inputs(self):
         Dout = self.weight.shape[0]
+        # If the bias is not provided, we initialize it a zero vector
+        # with dtype of weight.
         return DefaultInputs(
-            bias=np.array([0.0] * Dout, dtype=nptype_from_builtin(self.x.dtype)),
+            bias=np.array([0.0] * Dout, dtype=nptype_from_builtin(self.weight.dtype)),
         )
 
     def type_inference(self):

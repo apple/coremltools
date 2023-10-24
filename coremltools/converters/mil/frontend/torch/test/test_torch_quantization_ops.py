@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+from typing import Optional
 
 import numpy as np
 import pytest
@@ -29,23 +30,56 @@ np.random.seed(30)
 torch.backends.quantized.engine = "qnnpack"
 
 
-def _force_quantize_model(model, q_dtype):
+def _force_quantize_model(
+    model: torch.nn.Module,
+    q_dtype: torch.dtype,
+    low: Optional[int] = None,
+    high: Optional[int] = None,
+    scale: Optional[float] = None,
+    zero_point: Optional[int] = None,
+    channel_axis: Optional[int] = None,
+):
     """
     In torch, the quantized model can only be obtained from PTQ.
     This utility allows us to produce an int8 quantized model.
+
+    If channel_axis is set, it will do per-channel quantization instead of per-tensor, for the param
+    that channel_axis is valid for.
     """
-    # modify the parameter to int8
+    if scale is None:
+        scale = 1.0
+    if zero_point is None:
+        zero_point = 0
+
+    # modify the parameter to force the quantization within a specific range.
     with torch.no_grad():
         for name, param in model.named_parameters():
             shape = param.shape
-            new_value = torch.quantize_per_tensor(
-                torch.rand(*shape), scale=1.0, zero_point=0, dtype=q_dtype
+            input_data = (
+                torch.rand(*shape) if low is None else torch.randint(low, high, shape).float()
             )
+            input_data = (input_data - zero_point) * scale
+
+            if channel_axis is not None and -len(shape) <= channel_axis < len(shape):
+                scale = torch.Tensor([scale] * shape[channel_axis])
+                zero_point = torch.Tensor([zero_point] * shape[channel_axis])
+                new_value = torch.quantize_per_channel(
+                    input_data,
+                    scales=scale,
+                    zero_points=zero_point,
+                    axis=channel_axis,
+                    dtype=q_dtype,
+                )
+            else:
+                new_value = torch.quantize_per_tensor(
+                    input_data, scale=scale, zero_point=zero_point, dtype=q_dtype
+                )
+
             param_cls = type(param)
-            kwargs = param.__dict__
             new_value = param_cls(new_value, requires_grad=False).to(torch.device("cpu"))
             model._parameters[name] = new_value
     return model
+
 
 class TorchQuantizationBaseTest(TorchBaseTest):
     @staticmethod
@@ -55,6 +89,7 @@ class TorchQuantizationBaseTest(TorchBaseTest):
         atol=1e-04,
         rtol=1e-05,
         input_as_shape=True,
+        minimum_deployment_target=ct.target.iOS17,
     ):
         # TODO(rdar://108472419): properly design a random input
         if input_as_shape:
@@ -69,7 +104,7 @@ class TorchQuantizationBaseTest(TorchBaseTest):
             backend=("mlprogram", "fp32"),
             use_scripting=False,
             compute_unit=ct.ComputeUnit.CPU_ONLY,
-            minimum_deployment_target=ct.target.iOS17,
+            minimum_deployment_target=minimum_deployment_target,
         )
 
 
@@ -346,10 +381,10 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         self.run_compare_torch(input_shape, model)
 
     @pytest.mark.parametrize(
-        "quant_dtype",
-        [torch.quint8, torch.qint8],
+        "quant_dtype, channel_axis",
+        itertools.product([torch.quint8, torch.qint8], [0, 1, None]),
     )
-    def test_quantized_params(self, quant_dtype):
+    def test_quantized_params(self, quant_dtype, channel_axis):
         class Model(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -360,7 +395,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
                 return torch.matmul(x, dequanitized_weight)
 
         model = Model()
-        model = _force_quantize_model(model, q_dtype=quant_dtype)
+        model = _force_quantize_model(model, q_dtype=quant_dtype, channel_axis=channel_axis)
         input_shape = [(3, 5)]
         res = self.run_compare_torch(input_shape, model)
         prog = res[1]._mil_program
