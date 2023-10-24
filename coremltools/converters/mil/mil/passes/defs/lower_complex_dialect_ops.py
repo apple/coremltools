@@ -403,10 +403,12 @@ def _istft(
 ) -> Tuple[Var, Var]:
     """
     We can write ISTFT in terms of convolutions with a DFT kernel.
-    At the end:
-        * The real part output is: cos_base * input_real + sin_base * input_imag
-        * The imaginary part output is: - (sin_base * input_real - cos_base * input_imag)
-    Adapted from: https://github.com/adobe-research/convmelspec/blob/main/convmelspec/mil.py
+
+    The input has shape (channels, fft_size, n_frames)
+
+    References:
+        H. Zhivomirov, “On the Development of STFT-analysis and ISTFT-synthesis Routines and their Practical Implementation,” TEM Journal, vol. 8, no. 1, pp. 56–64, 2019.
+        https://en.wikipedia.org/wiki/Discrete_Fourier_transform
     """
     # Set the default hop, if it's not already specified
     hop_length = hop_length or mb.floor_div(x=n_fft, y=4, before_op=before_op)
@@ -414,14 +416,12 @@ def _istft(
     # By default, use the entire frame
     win_length = win_length or n_fft
 
-    # input should always be 2D
-    should_increase_rank = input_real.rank == 1
-    if should_increase_rank:
-        input_real = mb.expand_dims(x=input_real, axes=(0,), before_op=before_op)
-        if input_imaginary:
-            input_imaginary = mb.expand_dims(x=input_imaginary, axes=(0,), before_op=before_op)
+    input_shape = mb.shape(x=x, before_op=before_op)
+    n_frames = input_shape.val[-1]
+    fft_size = input_shape.val[-2]
+    expected_output_signal_len = n_fft.val + hop_length.val * (n_frames - 1)
 
-    is_onesided = onesided and onesided.val
+    is_onesided = onesided.val if onesided else fft_size != n_fft
     cos_base, sin_base = _calculate_dft_matrix(n_fft, onesided=is_onesided, before_op=before_op)
 
     # create a window of centered 1s of the requested size
@@ -433,10 +433,6 @@ def _istft(
         cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
         sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
 
-    # The DFT matrix is obtained with the equation e^(2pi/N i), which is what we want but we actually need the conjuate => e^(-2pi/N i)
-    # or in terms of cos and sin => cos+i*sin cos-i*sin
-    sin_base = mb.sub(x=0., y=sin_base, before_op=before_op)
-
     cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
     sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
     hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
@@ -444,21 +440,27 @@ def _istft(
     signal_real = mb.expand_dims(x=input_real, axes=(1,), before_op=before_op)
     signal_imaginary = mb.expand_dims(x=input_imaginary, axes=(1,), before_op=before_op)
 
+    # De-normalized signal before applying the IFT
+    if normalized and normalized.val:
+        multiplier = mb.sqrt(x=mb.cast(x=n_fft, dtype="fp32", before_op=before_op), before_op=before_op)
+        signal_real = mb.mul(x=signal_real, y=multiplier, before_op=before_op)
+        signal_imaginary = mb.mul(x=signal_imaginary, y=multiplier, before_op=before_op)
+
     # Conv with DFT kernel across the input signal
     # We can describe the IDFT in terms of DFT just by swapping the input and output
     # ref: https://en.wikipedia.org/wiki/Discrete_Fourier_transform#Expressing_the_inverse_DFT_in_terms_of_the_DFT
     # So IDFT(x) = (1/N) * swap(DFT(swap(x)))
-    # DFT(x) => X[k] = Σx[n]*e^(-2kpi/N i)
+    # and DFT(x) = X[k] = Σx[n]*e^(-2kpi/N i) but we are using the conjugate e^(2kpi/N i)
     # If x is complex then x[n]=(a+i*b)
-    # So the real part = (1/N)*Σ(a*cos(2kpi/N)-b*sin(2kpi/N))
-    # So the imag part = (1/N)*Σ(b*cos(2kpi/N)+a*sin(2kpi/N))
+    # then real part = (1/N)*Σ(a*cos(2kpi/N)+b*sin(2kpi/N))
+    # then imag part = (1/N)*Σ(b*cos(2kpi/N)-a*sin(2kpi/N))
     cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
     sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
     cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
     sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
 
-    real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
-    imag_result = mb.add(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
+    real_result = mb.add(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
+    imag_result = mb.sub(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
 
     # Divide by N
     real_result = mb.real_div(x=real_result, y=n_fft, before_op=before_op)
@@ -472,10 +474,9 @@ def _istft(
     n_frames = mb.shape(x=real_result, before_op=before_op)[1]
     window_square = mb.mul(x=window, y=window, before_op=before_op)
     window_mtx = mb.stack(values=[window_square] * n_frames, axis=1)
-    normalization_factor = _overlap_add(x=window_mtx, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
-
-    real_result = mb.real_div(x=real_result, y=normalization_factor, before_op=before_op)
-    imag_result = mb.real_div(x=imag_result, y=normalization_factor, before_op=before_op)
+    window_envelope = _overlap_add(x=window_mtx, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
+    real_result = mb.real_div(x=real_result, y=window_envelope, before_op=before_op)
+    imag_result = mb.real_div(x=imag_result, y=window_envelope, before_op=before_op)
 
     # reduce the rank of the output
     if should_increase_rank:
@@ -490,13 +491,21 @@ def _overlap_add(
     hop_length: Var,
     before_op: Operation,
 ) -> Var:
-    n_frames = mb.shape(x=x, before_op=before_op)[1]
-    output = mb.fill(shape=(n_fft.val + hop_length.val * (n_frames - 1)), value=0., before_op=before_op)
-    signal_frames = mb.split(x=x, num_splits=n_frames, axis=1, before_op=before_op)
+    """
+    The input has shape (channels, fft_size, n_frames)
+    """
+    input_shape = mb.shape(x=x, before_op=before_op)
+    channels = input_shape.val[0]
+    n_frames = input_shape.val[2]
+
+    output = mb.fill(shape=(channels, n_fft.val + hop_length.val * (n_frames - 1)), value=0., before_op=before_op)
+    signal_frames = mb.split(x=x, num_splits=n_frames, axis=2, before_op=before_op)
     local_idx = mb.range_1d(start=0, end=n_fft, step=1, before_op=before_op)
 
     for frame_num, frame in enumerate(signal_frames):
         global_idx = mb.add(x=local_idx , y=frame_num*hop_length.val, before_op=before_op)
+        global_idx = mb.expand_dims(x=global_idx, axes=(0,), before_op=before_op)
+        global_idx = mb.stack(values=[global_idx] * channels, axis=0)
         output = mb.scatter_nd(data=output, indices=global_idx, updates=frame, before_op=before_op)
 
     return output
