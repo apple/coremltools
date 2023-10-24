@@ -454,15 +454,19 @@ def _istft(
     real_result = _overlap_add(x=real_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
     imag_result = _overlap_add(x=imag_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
 
+    # Normalize by the window square
+    n_frames = mb.shape(x=real_result, before_op=before_op)[1]
+    window_square = mb.mul(x=window, y=window, before_op=before_op)
+    window_mtx = mb.stack(values=[window_square] * n_frames, axis=1)
+    normalization_factor = _overlap_add(x=window_mtx, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
+
+    real_result = mb.real_div(x=real_result, y=normalization_factor, before_op=before_op)
+    imag_result = mb.real_div(x=imag_result, y=normalization_factor, before_op=before_op)
+
     # reduce the rank of the output
     if should_increase_rank:
         real_result = mb.squeeze(x=real_result, axes=(0,), before_op=before_op)
         imag_result = mb.squeeze(x=imag_result, axes=(0,), before_op=before_op)
-
-    if normalized and normalized.val:
-        divisor = mb.sqrt(x=mb.cast(x=n_fft, dtype="fp32", before_op=before_op), before_op=before_op)
-        real_result = mb.real_div(x=real_result, y=divisor, before_op=before_op)
-        imag_result = mb.real_div(x=imag_result, y=divisor, before_op=before_op)
 
     return real_result, imag_result
 
@@ -473,7 +477,7 @@ def _overlap_add(
     before_op: Operation,
 ) -> Var:
     n_frames = mb.shape(x=x, before_op=before_op)[1]
-    output = mb.fill(shape=(n_fft + hop_length * (n_frames - 1)), value=0., before_op=before_op)
+    output = mb.fill(shape=(n_fft.val + hop_length.val * (n_frames - 1)), value=0., before_op=before_op)
     signal_frames = mb.split(x=x, num_splits=n_frames, axis=1, before_op=before_op)
     local_idx = mb.range_1d(start=0, end=n_fft, step=1, before_op=before_op)
 
