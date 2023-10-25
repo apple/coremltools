@@ -573,7 +573,7 @@ document.write(`
 </div>
 <section id="why-use-a-compiled-model">
 <h3>Why Use a Compiled Model?<a class="headerlink" href="#why-use-a-compiled-model" title="Permalink to this heading">#</a></h3>
-<p>When you initialize a model using (in Python) <code class="docutils literal notranslate"><span class="pre">model</span> <span class="pre">ct.models.MLModel(&quot;model.mlpackge&quot;)</span></code>, the Core ML Framework is invoked and the following steps occur, as shown in the following diagram.</p>
+<p>When you initialize a model using (in Python) <code class="docutils literal notranslate"><span class="pre">model=ct.models.MLModel(&quot;model.mlpackge&quot;)</span></code>, the Core ML Framework is invoked and the following steps occur, as shown in the following diagram.</p>
 <figure class="align-center" id="id1">
 <img alt="Initialize MLModel" class="imgnoborder" src="../_images/model-lifecycle.png" />
 <figcaption>
@@ -583,7 +583,7 @@ presented at the Apple 2023 World Wide Developer Conference.</span><a class="hea
 </figure>
 <ol class="arabic simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> is <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/3929553-compilemodelaturl">compiled</a> into a file with extension <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> . This step is usually very fast.</p></li>
-<li><p>The compiled model is then <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl">instantiated</a> using the specified <code class="docutils literal notranslate"><span class="pre">compute_units</span></code>, and captured in the MLModelConfiguration config.</p></li>
+<li><p>The compiled model is then <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl">instantiated</a> using the specified <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> captured in the MLModelConfiguration config.</p></li>
 <li><p>During instantiation, another compilation occurs for backend device specialization, such as for the Neural Engine (NE), which may take a few seconds or even minutes for large models.</p></li>
 </ol>
 <p>This device specialization step creates the final compiled asset ready to be run. This final compiled model is cached so that the expensive device optimization process does not need to run again. The cache entry is linked to the full file system path of the <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> folder.</p>
@@ -600,7 +600,7 @@ presented at the Apple 2023 World Wide Developer Conference.</span><a class="hea
 </li>
 <li><p>Get the compiled model directory by calling its <code class="docutils literal notranslate"><span class="pre">get_compiled_model_path</span></code> method.</p>
 <p>For example, the following code snippet loads a saved MLModel (<code class="docutils literal notranslate"><span class="pre">&quot;regnet_y_128gf.mlpackage&quot;</span></code>) and gets the compiled path:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlpackage&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">compiled_model_path</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span>
 </pre></div>
 </div>
