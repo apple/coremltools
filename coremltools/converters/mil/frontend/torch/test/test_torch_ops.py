@@ -2744,6 +2744,25 @@ class TestAvgPool(TorchBaseTest):
 
 class TestAdaptiveMaxPool(TorchBaseTest):
     @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, output_size",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1, 64, 8), (20, 10)],
+            [3, 5]
+        )
+    )
+    def test_adaptive_max_pool1d(self, compute_unit, backend, input_shape, output_size):
+        model = nn.AdaptiveMaxPool1d(output_size)
+        self.run_compare_torch(
+            input_shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, output_size, magnification, delta, depth, n",
         itertools.product(
             compute_units,
@@ -2774,6 +2793,25 @@ class TestAdaptiveMaxPool(TorchBaseTest):
 
 
 class TestAdaptiveAvgPool(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, output_size",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1, 64, 8), (20, 10)],
+            [3, 5]
+        )
+    )
+    def test_adaptive_max_pool1d(self, compute_unit, backend, input_shape, output_size):
+        model = nn.AdaptiveAvgPool1d(output_size)
+        self.run_compare_torch(
+            input_shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
     @pytest.mark.parametrize(
         "compute_unit, backend, output_size, magnification, delta, depth, n",
         itertools.product(
