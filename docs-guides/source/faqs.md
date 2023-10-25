@@ -14,6 +14,7 @@ This page offers frequently asked questions (FAQs):
 - [Can I choose custom names for the input and outputs of the model during conversion?](#choosing-custom-names-for-input-and-outputs)
 - [If I change my fixed-shape model to use flexible inputs, will it still run on the  Neural Engine?](#neural-engine-with-flexible-input-shapes)
 - [Why use `ct.optimize.torch` rather than PyTorch's default quantization?](#why-optimizetorch-is-better-than-pytorchs-default-quantization)
+- [My model's initialization in Python takes a long time. How can I speed it up?](#use-a-compiled-model-for-faster-initialization)
 
 ***
 
@@ -171,4 +172,7 @@ For details and examples of using flexible input shapes, see [Flexible Input Sha
 
 You can use PyTorch's quantization APIs directly, and then convert the model to Core ML. However, the converted model performance may not be optimal. The PyTorch API default settings (symmetric asymmetric quantization modes and which ops are quantized) are not optimal for the Core ML stack and Apple hardware. If you use the Core ML Tools `coremltools.optimize.torch` APIs, as described in [Training-Time Quantization](data-dependent-quantization), the correct default settings are applied automatically.
 
+## Use a compiled model for faster initialization
+
+If your model initialization in python takes a long time, use a *compiled* Core ML model ([CompiledMLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.CompiledMLModel)) rather than  [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel) for making predictions. For large models, using a compiled model can save considerable time in initializing the model. For details, see [Using Compiled Python Models for Prediction](model-prediction.md#using-compiled-python-models-for-prediction).
 
