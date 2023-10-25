@@ -109,6 +109,11 @@ Full examples:
 - [Multi-array Prediction](model-prediction.md#multi-array-prediction)
 - [Image Prediction](model-prediction.md#image-prediction)
 - [Image Prediction for a Multi-array Model](model-prediction.md#image-prediction-for-a-multi-array-model)
+- [Predict From the Compiled Model](model-prediction.md#predict-from-the-compiled-model)
+
+Full example:
+- [Compiled Model Timing Example](model-prediction.md#timing-example): Demonstrates timing differences with calling a large model.
+
 
 ### Xcode Model Preview Types
 
