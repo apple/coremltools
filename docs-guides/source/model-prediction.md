@@ -173,7 +173,7 @@ You can't modify a compiled model like you can an [MLModel](https://apple.github
 
 ### Why Use a Compiled Model?
 
-When you initialize a model using (in Python) `model ct.models.MLModel("model.mlpackge")`, the Core ML Framework is invoked and the following steps occur, as shown in the following diagram.
+When you initialize a model using (in Python) `model=ct.models.MLModel("model.mlpackge")`, the Core ML Framework is invoked and the following steps occur, as shown in the following diagram.
 
 ```{figure} images/model-lifecycle.png
 :alt: Initialize MLModel
@@ -186,7 +186,7 @@ presented at the Apple 2023 World Wide Developer Conference.
 
 1. The `mlpackage` is [compiled](https://developer.apple.com/documentation/coreml/mlmodel/3929553-compilemodelaturl) into a file with extension `mlmodelc` . This step is usually very fast.
 
-2. The compiled model is then [instantiated](https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl) using the specified `compute_units`, and captured in the MLModelConfiguration config. 
+2. The compiled model is then [instantiated](https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl) using the specified `compute_units` captured in the MLModelConfiguration config. 
 
 3. During instantiation, another compilation occurs for backend device specialization, such as for the Neural Engine (NE), which may take a few seconds or even minutes for large models. 
     
@@ -211,7 +211,7 @@ To use a compiled model file, follow these steps:
     For example, the following code snippet loads a saved MLModel (`"regnet_y_128gf.mlpackage"`) and gets the compiled path:
     
 	```
-	mlmodel.save("regnet_y_128gf.mlpackage")
+	mlmodel = ct.models.MLModel("regnet_y_128gf.mlpackage")
 	compiled_model_path = mlmodel.get_compiled_model_path()
 	```
 
