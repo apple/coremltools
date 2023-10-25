@@ -7688,8 +7688,8 @@ class TestFuseLayerNormOrInstanceNorm:
             y = mb.mul(x=x2, y=x6) # (x - mean) * rsqrt(variance + eps)
 
             if with_affine:
-                y = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
-                y = mb.mul(x=y, y=np.random.rand(1,shape[1],1,1))
+                y = mb.add(x=y, y=np.random.rand(1, shape[1], 1, 1))
+                y = mb.mul(x=y, y=np.random.rand(1, shape[1], 1, 1))
 
             return y
 
@@ -7741,8 +7741,8 @@ class TestFuseLayerNormOrInstanceNorm:
             y = mb.mul(x=x3, y=x7) # (x - mean) * rsqrt(variance + eps)
 
             if with_affine:
-                y = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
-                y = mb.mul(x=y, y=np.random.rand(1,shape[1],1,1))
+                y = mb.add(x=y, y=np.random.rand(1, shape[1], 1, 1))
+                y = mb.mul(x=y, y=np.random.rand(1, shape[1], 1, 1))
 
             y = mb.sub(x=x, y=y) # use x for something after the norm
             return y
@@ -7797,9 +7797,9 @@ class TestFuseLayerNormOrInstanceNorm:
             y = x8
 
             if with_affine:
-                x9 = mb.add(x=y, y=np.random.rand(1,shape[1],1,1))
+                x9 = mb.add(x=y, y=np.random.rand(1, shape[1], 1, 1))
                 y = x9
-                y = mb.mul(x=y, y=np.random.rand(1,shape[1],1,1))
+                y = mb.mul(x=y, y=np.random.rand(1, shape[1], 1, 1))
 
             # All the same shape (3,5,1,6)
             reused = None
@@ -7856,7 +7856,7 @@ class TestFuseLayerNormOrInstanceNorm:
             x6 = mb.add(x=x5, y=1e-5) # variance + eps
             x7 = mb.rsqrt(x=x6) # rsqrt(variance + eps)
             x8 = mb.mul(x=x3, y=x7) # (x - mean) * rsqrt(variance + eps)
-            y = mb.add(x=x8, y=np.random.rand(1,shape[1],1,1)) # ambiguous add (maybe beta)
+            y = mb.add(x=x8, y=np.random.rand(1, shape[1], 1, 1)) # ambiguous add (maybe beta)
             return y
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(

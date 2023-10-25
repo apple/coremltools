@@ -884,9 +884,6 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         ops_to_remove = []
         root_var = reduce_op.x
 
-        if root_var.shape is None:
-            return False
-
         # check that root_var feeds into at least 2 ops
         if len(list(root_var.child_ops)) < 2:
             return False
