@@ -406,6 +406,12 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-array-prediction">Multi-array Prediction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-prediction">Image Prediction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-prediction-for-a-multi-array-model">Image Prediction for a Multi-array Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-compiled-python-models-for-prediction">Using Compiled Python Models for Prediction</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-use-a-compiled-model">Why Use a Compiled Model?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#predict-from-the-compiled-model">Predict From the Compiled Model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#timing-example">Timing Example</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -557,6 +563,121 @@ document.write(`
 </pre></div>
 </div>
 </section>
+<section id="using-compiled-python-models-for-prediction">
+<h2>Using Compiled Python Models for Prediction<a class="headerlink" href="#using-compiled-python-models-for-prediction" title="Permalink to this heading">#</a></h2>
+<p>You can use a <em>compiled</em> Core ML model (<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.CompiledMLModel">CompiledMLModel</a>) rather than  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel">MLModel</a> for making predictions. For large models, using a compiled model can save considerable time in initializing the model.</p>
+<p>For example, <a class="reference external" href="https://machinelearning.apple.com/research/stable-diffusion-coreml-apple-silicon">Stable Diffusion</a>, adopted by a vibrant community of artists and developers, enables the creation of unprecedented visuals from a text prompt. When using <a class="reference external" href="https://github.com/apple/ml-stable-diffusion#core-ml-stable-diffusion">Core ML Stable Diffusion</a>, you can speed up the load time after the initial load by first copying and storing the location of the <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> compiled model to a fixed location, and then initializing the model from that location.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can’t modify a compiled model like you can an <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel">MLModel</a> loaded from a non-compiled <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model file.</p>
+</div>
+<section id="why-use-a-compiled-model">
+<h3>Why Use a Compiled Model?<a class="headerlink" href="#why-use-a-compiled-model" title="Permalink to this heading">#</a></h3>
+<p>When you initialize a model using (in Python) <code class="docutils literal notranslate"><span class="pre">model=ct.models.MLModel(&quot;model.mlpackge&quot;)</span></code>, the Core ML Framework is invoked and the following steps occur, as shown in the following diagram.</p>
+<figure class="align-center" id="id1">
+<img alt="Initialize MLModel" class="imgnoborder" src="../_images/model-lifecycle.png" />
+<figcaption>
+<p><span class="caption-text">This diagram is from <a class="reference external" href="https://developer.apple.com/videos/play/wwdc2023/10049/">Improve Core ML integration with async prediction</a>,
+presented at the Apple 2023 World Wide Developer Conference.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+</figcaption>
+</figure>
+<ol class="arabic simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> is <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/3929553-compilemodelaturl">compiled</a> into a file with extension <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> . This step is usually very fast.</p></li>
+<li><p>The compiled model is then <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmodel/3022229-modelwithcontentsofurl">instantiated</a> using the specified <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> captured in the MLModelConfiguration config.</p></li>
+<li><p>During instantiation, another compilation occurs for backend device specialization, such as for the Neural Engine (NE), which may take a few seconds or even minutes for large models.</p></li>
+</ol>
+<p>This device specialization step creates the final compiled asset ready to be run. This final compiled model is cached so that the expensive device optimization process does not need to run again. The cache entry is linked to the full file system path of the <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> folder.</p>
+<p>As you create an MLModel object in Python using an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>, it uses a temporary directory in a new location to place the <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> folder. The <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> file is then deleted after you have made predictions and the Python process has ended.</p>
+<p>The next time you start a new Python process and create an MLModel, the compilation to <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> and the subsequent device specialization occurs again. The cached set can’t be used again, because the location of <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> has changed.</p>
+<p>By storing the <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> file to a fixed location first, and then initializing the MLModel from that location, you can make sure that the cache model generated remains active for subsequent loads, thereby making them faster. Let’s see how you would do that in code.</p>
+</section>
+<section id="predict-from-the-compiled-model">
+<h3>Predict From the Compiled Model<a class="headerlink" href="#predict-from-the-compiled-model" title="Permalink to this heading">#</a></h3>
+<p>To use a compiled model file, follow these steps:</p>
+<ol class="arabic">
+<li><p>Load a saved MLModel, or convert a model from a training framework (such as TensorFlow or PyTorch).</p>
+<p>For instructions on converting a model, see <a class="reference internal" href="load-and-convert-model.html"><span class="doc std std-doc">Load and Convert Model Workflow</span></a>. This example uses the <a class="reference external" href="https://pytorch.org/vision/main/models/generated/torchvision.models.regnet_y_128gf.html">regnet_y_128fg</a> torchvision model and assumes that you have already converted it to a Core ML <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>.</p>
+</li>
+<li><p>Get the compiled model directory by calling its <code class="docutils literal notranslate"><span class="pre">get_compiled_model_path</span></code> method.</p>
+<p>For example, the following code snippet loads a saved MLModel (<code class="docutils literal notranslate"><span class="pre">&quot;regnet_y_128gf.mlpackage&quot;</span></code>) and gets the compiled path:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">compiled_model_path</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span>
+</pre></div>
+</div>
+</li>
+<li><p>The returned directory in <code class="docutils literal notranslate"><span class="pre">compiled_model_path</span></code> is only temporary. Copy that directory to a new persistent location (as in the following example, <code class="docutils literal notranslate"><span class="pre">regnet_y_128gf</span></code> with the extension <code class="docutils literal notranslate"><span class="pre">.mlmodelc</span></code> in the same directory) using the <a class="reference external" href="https://docs.python.org/3/library/shutil.html"><code class="docutils literal notranslate"><span class="pre">shutil.copytree()</span></code></a> method. You can then use CompiledMLModel to load the compiled model from <code class="docutils literal notranslate"><span class="pre">&quot;regnet_y_128gf.mlmodelc&quot;</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copytree</span>
+<span class="n">copytree</span><span class="p">(</span><span class="n">compiled_model_path</span><span class="p">,</span> <span class="s2">&quot;regnet_y_128gf.mlmodelc&quot;</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlmodelc&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This step includes compiling for device specialization. Therefore, the first load can still take a long time. However, since the location of the <code class="docutils literal notranslate"><span class="pre">mlmodelc</span></code> folder is fixed, the cache is able to work, so subsequent calls to model using CompiledMLModel are quick.</p>
+</li>
+<li><p>For each prediction, use the <code class="docutils literal notranslate"><span class="pre">mlmodel</span></code> object to take advantage of this caching:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prediction</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+</pre></div>
+</div>
+</li>
+</ol>
+<p>With most large models, it should be very quick to use the compiled model again after the first call.</p>
+</section>
+<section id="timing-example">
+<h3>Timing Example<a class="headerlink" href="#timing-example" title="Permalink to this heading">#</a></h3>
+<p>This example demonstrates timing differences with calling a large model. The results are based on running the example on a MacBook Pro M1 Max with macOS Sonoma. Your timing results will vary depending on your system configuration and other factors.</p>
+<p>The following code snippet converts a relatively large model from torchvision:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="kn">import</span> <span class="nn">torchvision</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">shutil</span> <span class="kn">import</span> <span class="n">copytree</span>
+
+<span class="n">torch_model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">regnet_y_128gf</span><span class="p">()</span>
+<span class="n">torch_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+<span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+<span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">traced_model</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">example_input</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+                     <span class="p">)</span>
+
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlpackage&quot;</span><span class="p">)</span>
+
+<span class="c1"># save the mlmodelc</span>
+<span class="n">compiled_model_path</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_compiled_model_path</span><span class="p">()</span>
+<span class="n">copytree</span><span class="p">(</span><span class="n">compiled_model_path</span><span class="p">,</span> <span class="s2">&quot;regnet_y_128gf.mlmodelc&quot;</span><span class="p">,</span> <span class="n">dirs_exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+</pre></div>
+</div>
+<p>The following code snippet measures load time:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
+
+<span class="n">tick</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlpackage&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time taken to load using ct.models.MLModel: </span><span class="si">{:.1f}</span><span class="s2"> secs&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick</span><span class="p">))</span>
+
+<span class="n">tick</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlpackage&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time taken to load using ct.models.MLModel: </span><span class="si">{:.1f}</span><span class="s2"> secs&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick</span><span class="p">))</span>
+
+<span class="n">tick</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlmodelc&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time taken to load using ct.models.CompiledMLModel: </span><span class="si">{:.1f}</span><span class="s2"> secs&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick</span><span class="p">))</span>
+
+<span class="n">tick</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;regnet_y_128gf.mlmodelc&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;time taken to load using ct.models.CompiledMLModel: </span><span class="si">{:.1f}</span><span class="s2"> secs&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="n">tick</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Running the code produces the following output:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">time</span> <span class="n">taken</span> <span class="n">to</span> <span class="n">load</span> <span class="n">using</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">:</span> <span class="mf">15.3</span> <span class="n">secs</span>
+<span class="n">time</span> <span class="n">taken</span> <span class="n">to</span> <span class="n">load</span> <span class="n">using</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">:</span> <span class="mf">17.7</span> <span class="n">secs</span>
+<span class="n">time</span> <span class="n">taken</span> <span class="n">to</span> <span class="n">load</span> <span class="n">using</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">:</span> <span class="mf">14.7</span> <span class="n">secs</span>
+<span class="n">time</span> <span class="n">taken</span> <span class="n">to</span> <span class="n">load</span> <span class="n">using</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">:</span> <span class="mf">0.1</span> <span class="n">secs</span>
+</pre></div>
+</div>
+<p>These results show that it takes relatively the same time to load an MLModel after the first load, while loading a CompiledMLModel takes much less time after the first load.</p>
+</section>
+</section>
 </section>
 
 
@@ -612,6 +733,12 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#multi-array-prediction">Multi-array Prediction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-prediction">Image Prediction</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#image-prediction-for-a-multi-array-model">Image Prediction for a Multi-array Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#using-compiled-python-models-for-prediction">Using Compiled Python Models for Prediction</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#why-use-a-compiled-model">Why Use a Compiled Model?</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#predict-from-the-compiled-model">Predict From the Compiled Model</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#timing-example">Timing Example</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

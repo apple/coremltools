@@ -421,6 +421,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-custom-names-for-input-and-outputs">Choosing Custom Names for Input and Outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neural-engine-with-flexible-input-shapes">Neural Engine With Flexible Input Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization">Why <code class="docutils literal notranslate"><span class="pre">optimize.torch</span></code> is better than PyTorch’s default quantization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-a-compiled-model-for-faster-initialization">Use a compiled model for faster initialization</a></li>
 </ul>
             </nav>
         </div>
@@ -447,6 +448,7 @@ document.write(`
 <li><p><a class="reference internal" href="#choosing-custom-names-for-input-and-outputs"><span class="std std-doc">Can I choose custom names for the input and outputs of the model during conversion?</span></a></p></li>
 <li><p><a class="reference internal" href="#neural-engine-with-flexible-input-shapes"><span class="std std-doc">If I change my fixed-shape model to use flexible inputs, will it still run on the  Neural Engine?</span></a></p></li>
 <li><p><a class="reference internal" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization"><span class="std std-doc">Why use <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch</span></code> rather than PyTorch’s default quantization?</span></a></p></li>
+<li><p><a class="reference internal" href="#use-a-compiled-model-for-faster-initialization"><span class="std std-doc">My model’s initialization in Python takes a long time. How can I speed it up?</span></a></p></li>
 </ul>
 <hr class="docutils" />
 <section id="core-ml-tools-versions">
@@ -594,6 +596,10 @@ document.write(`
 <h2>Why <code class="docutils literal notranslate"><span class="pre">optimize.torch</span></code> is better than PyTorch’s default quantization<a class="headerlink" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization" title="Permalink to this heading">#</a></h2>
 <p>You can use PyTorch’s quantization APIs directly, and then convert the model to Core ML. However, the converted model performance may not be optimal. The PyTorch API default settings (symmetric asymmetric quantization modes and which ops are quantized) are not optimal for the Core ML stack and Apple hardware. If you use the Core ML Tools <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> APIs, as described in <a class="reference internal" href="data-dependent-quantization.html"><span class="doc std std-doc">Training-Time Quantization</span></a>, the correct default settings are applied automatically.</p>
 </section>
+<section id="use-a-compiled-model-for-faster-initialization">
+<h2>Use a compiled model for faster initialization<a class="headerlink" href="#use-a-compiled-model-for-faster-initialization" title="Permalink to this heading">#</a></h2>
+<p>If your model initialization in python takes a long time, use a <em>compiled</em> Core ML model (<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.CompiledMLModel">CompiledMLModel</a>) rather than  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel">MLModel</a> for making predictions. For large models, using a compiled model can save considerable time in initializing the model. For details, see <a class="reference internal" href="model-prediction.html#using-compiled-python-models-for-prediction"><span class="std std-doc">Using Compiled Python Models for Prediction</span></a>.</p>
+</section>
 </section>
 
 
@@ -664,6 +670,7 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choosing-custom-names-for-input-and-outputs">Choosing Custom Names for Input and Outputs</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#neural-engine-with-flexible-input-shapes">Neural Engine With Flexible Input Shapes</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-optimize-torch-is-better-than-pytorchs-default-quantization">Why <code class="docutils literal notranslate"><span class="pre">optimize.torch</span></code> is better than PyTorch’s default quantization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#use-a-compiled-model-for-faster-initialization">Use a compiled model for faster initialization</a></li>
 </ul>
   </nav></div>
 
