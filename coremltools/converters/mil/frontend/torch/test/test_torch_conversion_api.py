@@ -11,8 +11,17 @@ import pytest
 from PIL import Image
 
 import coremltools as ct
-from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
+from coremltools._deps import (
+    _HAS_EXECUTORCH,
+    _HAS_TORCH,
+    MSG_EXECUTORCH_NOT_FOUND,
+    MSG_TORCH_NOT_FOUND,
+)
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
+from coremltools.converters.mil.frontend.torch.torch_op_registry import (
+    _TORCH_OPS_REGISTRY,
+    register_torch_op,
+)
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import (
     assert_cast_ops_count,
@@ -26,6 +35,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     verify_prediction,
 )
+from coremltools.models import _METADATA_SOURCE_DIALECT
 from coremltools.proto import FeatureTypes_pb2 as ft
 from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
@@ -35,9 +45,228 @@ if _HAS_TORCH:
 
     torch.manual_seed(1818)
 
+if _HAS_EXECUTORCH:
+    from executorch import exir
+
+    _CAPTURE_CONFIG = exir.CaptureConfig(enable_aot=True)
+    _EDGE_COMPILE_CONFIG = exir.EdgeCompileConfig(
+        _check_ir_validity=False,
+    )
+
+
+@pytest.fixture
+def torch_model():
+    class TestModule(torch.nn.Module):
+        def __init__(self):
+            super(TestModule, self).__init__()
+            self.linear = torch.nn.Linear(10, 20)
+
+        def forward(self, x):
+            return self.linear(x)
+
+    model = TestModule()
+    model.eval()
+    return model
+
+
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+class TestTorchScriptValidation:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_no_inputs(torch_model, backend):
+
+        traced_torch_model = torch.jit.trace(torch_model, torch.rand(1, 10))
+        with pytest.raises(
+            ValueError, match=r'Expected argument "inputs" for TorchScript models not provided'
+        ):
+            ct.convert(traced_torch_model, convert_to=backend[0])
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_pth_extension(torch_model, tmpdir, backend):
+        # test for issue: https://github.com/apple/coremltools/issues/917
+
+        shape = (1, 10)
+        traced_torch_model = torch.jit.trace(torch_model, torch.rand(*shape))
+
+        model_path = os.path.join(str(tmpdir), "torch_model.pth")
+        traced_torch_model.save(model_path)
+
+        ct.convert(
+            model_path,
+            source="pytorch",
+            inputs=[
+                ct.TensorType(
+                    shape=shape,
+                )
+            ],
+            convert_to=backend[0],
+        )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_source_dialect_metadata(torch_model, backend):
+        shape = (1, 10)
+        traced_torch_model = torch.jit.trace(torch_model, torch.rand(*shape))
+
+        mlmodel = ct.convert(
+            traced_torch_model,
+            source="pytorch",
+            inputs=[
+                ct.TensorType(
+                    shape=shape,
+                )
+            ],
+            convert_to=backend[0],
+        )
+
+        assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
+
+        assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchScript"
+
+
+
+@pytest.mark.skipif(not _HAS_EXECUTORCH, reason=MSG_EXECUTORCH_NOT_FOUND)
+class TestEdgeIRValidation:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_inputs(
+        torch_model, backend
+    ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
+
+        shape = (1, 10)
+        exir_program = (
+            exir.capture(torch_model, (torch.rand(*shape),), _CAPTURE_CONFIG)
+            .to_edge(_EDGE_COMPILE_CONFIG)
+            .exported_program
+        )
+
+        with pytest.raises(
+            AssertionError, match=r"'inputs' argument should be None for ExportedProgram"
+        ):
+            ct.convert(
+                exir_program,
+                convert_to=backend[0],
+                inputs=[ct.TensorType(shape=shape)],
+            )
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_outputs(
+        torch_model, backend
+    ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
+
+        shape = (1, 10)
+        exir_program = (
+            exir.capture(torch_model, (torch.rand(*shape),), _CAPTURE_CONFIG)
+            .to_edge(_EDGE_COMPILE_CONFIG)
+            .exported_program
+        )
+
+        with pytest.raises(
+            AssertionError, match=r"'outputs' argument should be None for ExportedProgram"
+        ):
+            ct.convert(exir_program, convert_to=backend[0], outputs=[ct.TensorType(name="result")])
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_source_dialect_metadata(torch_model, backend):
+        shape = (1, 10)
+        exir_program = (
+            exir.capture(torch_model, (torch.rand(*shape),), _CAPTURE_CONFIG)
+            .to_edge(_EDGE_COMPILE_CONFIG)
+            .exported_program
+        )
+
+        mlmodel = ct.convert(
+            exir_program,
+            source="pytorch",
+            convert_to=backend[0],
+        )
+
+        assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
+
+        assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchExport::EDGE"
+
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+class TestTorchOpsRegistry:
+    @staticmethod
+    def test_api_example():
+        # Example code in https://apple.github.io/coremltools/docs-guides/source/composite-operators.html#using-composite-ops-with-pytorch-conversion
+        # Whenever this test fails, we should update API documentations
+        # This test needs to be modified after rdar://117502178 ([Infra][Pytorch] We should deprecate the direct use of _TORCH_OPS_REGISTRY in 7.2)
+        from coremltools.converters.mil import Builder as mb
+        from coremltools.converters.mil.frontend.torch.ops import _get_inputs
+        from coremltools.converters.mil.frontend.torch.torch_op_registry import (
+            _TORCH_OPS_REGISTRY,
+            register_torch_op,
+        )
+
+        default_func = _TORCH_OPS_REGISTRY.get_func("selu")
+
+        # Test ``__contains__`` and ``__delitem__``
+        assert "selu" in _TORCH_OPS_REGISTRY
+        if "selu" in _TORCH_OPS_REGISTRY:
+            del _TORCH_OPS_REGISTRY["selu"]
+        assert not "selu" in _TORCH_OPS_REGISTRY
+
+        # Test ``@register_torch_op`` decorator
+        @register_torch_op
+        def selu(context, node):
+            x = _get_inputs(context, node, expected=1)[0]
+            x = mb.elu(x=x, alpha=1.6732632423543772)
+            x = mb.mul(x=x, y=1.0507009873554805, name=node.name)
+            context.add(x)
+
+        # Test ``__getitem__``
+        assert _TORCH_OPS_REGISTRY["selu"] is not None
+
+        # Test ``__setitem__``
+        _TORCH_OPS_REGISTRY["selu"] = default_func
+
+    @staticmethod
+    def test_register_torch_op():
+        # Test ``register_torch_op`` works
+        def test_func_dummy(context, inputs):
+            return
+        register_torch_op(test_func_dummy)
+        assert _TORCH_OPS_REGISTRY.name_to_func_mapping["test_func_dummy"] is test_func_dummy
+
+        # Test error out for duplicate registration
+        with pytest.raises(ValueError, match="Torch op test_func_dummy already registered."):
+            register_torch_op(test_func_dummy)
+
+        # Test we can override the function
+        def test_func_dummy(context, inputs):
+            dummy = 1
+            return
+        register_torch_op(test_func_dummy, override=True)
+        assert _TORCH_OPS_REGISTRY.name_to_func_mapping["test_func_dummy"] is test_func_dummy
+
+        # Cleanup the test
+        del _TORCH_OPS_REGISTRY.name_to_func_mapping["test_func_dummy"]
+
 #################################################################################
-# Note: all tests are also used as examples in https://coremltools.readme.io/docs
-# as a reference.
+# Note: Starting from here, all of the following tests are also used as examples
+# in https://coremltools.readme.io/docs as a reference.
 # Whenever any of the following test fails, we should update API documentations
 #################################################################################
 
@@ -1137,11 +1366,15 @@ class TestInputOutputConversionAPI:
 
     def test_two_input_model(self, float32_two_input_model):
         # test that error is raised if only 1 input is provided
-        with pytest.raises(ValueError):
-            ct.convert(float32_two_input_model,
-                       inputs=[ct.TensorType(shape=(10, 20), dtype=np.int32)],
-                       minimum_deployment_target=ct.target.macOS12)
-
+        with pytest.raises(
+            ValueError,
+            match="Number of TorchScript inputs \(2\) must match the user provided inputs \(1\).",
+        ):
+            ct.convert(
+                float32_two_input_model,
+                inputs=[ct.TensorType(shape=(10, 20), dtype=np.int32)],
+                minimum_deployment_target=ct.target.macOS12,
+            )
 
         # test forcing 1st input to type int32
         mlmodel = ct.convert(float32_two_input_model,

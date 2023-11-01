@@ -154,10 +154,15 @@ MSG_TF2_NOT_FOUND = "TensorFlow 2.x not found."
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "2.0.0"
+_TORCH_MAX_VERSION = "2.1.0"
+_HAS_TORCH_EXPORT_API = False
 try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)
+
+    if _get_version(torch.__version__) >= _StrictVersion("2.1.0"):
+        _HAS_TORCH_EXPORT_API = True
+
 except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
@@ -170,6 +175,20 @@ except:
     _HAS_TORCH_VISION = False
 MSG_TORCH_VISION_NOT_FOUND = "TorchVision not found."
 
+_HAS_TORCH_AUDIO = True
+try:
+    import torchaudio
+except:
+    _HAS_TORCH_AUDIO = False
+MSG_TORCH_AUDIO_NOT_FOUND = "TorchAudio not found."
+
+
+_HAS_EXECUTORCH = True
+try:
+    import executorch
+except:
+    _HAS_EXECUTORCH = False
+MSG_EXECUTORCH_NOT_FOUND = "Executorch not found."
 
 # ---------------------------------------------------------------------------------------
 try:

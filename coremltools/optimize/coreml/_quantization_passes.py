@@ -3,12 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Callable, Optional, Tuple
+
 import numpy as np
 from tqdm import tqdm
 
 from coremltools import _logger as logger
-from coremltools.converters.mil.backend.mil.load import should_use_weight_file
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
+from coremltools.converters.mil.backend.mil.load import should_use_weight_file
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
@@ -165,6 +167,31 @@ class AbstractCompressionPass(AbstractQuantizationPass):
             if not isinstance(config, self._SUPPORTED_CONFIG_TYPE) and config is not None:
                 supported_type_str = get_supported_types_as_str(self._SUPPORTED_CONFIG_TYPE)
                 raise ValueError(f"{self.__class__.__name__} only accept {supported_type_str} type config. Got {config.__class__.__name__}.")
+
+    @staticmethod
+    def pick_channnel_axis(op: Operation) -> int:
+        """
+        By default, output channel is used as the channel axis. Here are some representative ops:
+        - linear: [D_out, D_in]
+        - matmul's y: [..., D_in, D_out] if transpose_y is False, else [..., D_out, D_in]
+        - conv: [C_out, C_in_div_group, KH, KW]
+        - conv_transpose: [C_in, C_out_div_group, KH, KW]
+
+        So the channel axis picking criterial is:
+        - For conv_transpose it's 1
+        - For matmul's y it's -1 (transpose_y=False) or -2 (transpose_y=True)
+        - For all other ops, it's 0
+        """
+        channel_axis = 0
+        var = op.outputs[0]
+        if len(var.child_ops) == 1:
+            child_op = var.child_ops[0]
+            if child_op.op_type == "conv_transpose":
+                channel_axis = 1
+            if child_op.op_type == "matmul" and child_op.y == var:
+                channel_axis = -1 if child_op.transpose_y else -2
+        return channel_axis
+
 
 @register_pass(namespace="compression")
 class prune_weights(AbstractCompressionPass):
@@ -424,6 +451,7 @@ class palettize_weights(AbstractCompressionPass):
     - Old ``const`` op is replaced by a newly created operation.
     """
     _SUPPORTED_CONFIG_TYPE = OpPalettizerConfig
+    _SUPPORTED_NBITS = (1, 2, 4, 6, 8)
 
     def is_valid_op(self, op: Operation):
         if op.op_type == "const" and should_use_weight_file(op.outputs[0].val):
@@ -431,8 +459,19 @@ class palettize_weights(AbstractCompressionPass):
         return False
 
     @staticmethod
-    def compress(val, mode, nbits=None, lut_function=None):
+    def _get_nbits_for_unique_mode(val: np.ndarray, allowed_nbits: Tuple[int, ...]) -> int:
+        val = val.flatten()
+        unique_vals = np.unique(val).tolist()
+        for nbits in allowed_nbits:
+            if len(unique_vals) <= 1 << nbits:
+                return nbits
+        raise ValueError("Unique values in weight cannot be represented by 8 bits palettization.")
 
+    @staticmethod
+    def _get_lut_and_indices(
+        val: np.ndarray, mode: str, nbits: Optional[int], lut_function: Optional[Callable]
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        """Calculate look-up-table (LUT) and indices."""
         def compress_kmeans(val, nbits):
             lut, indices = _get_kmeans_lookup_table_and_weight(nbits, val)
             lut = lut.astype(val.dtype)
@@ -450,16 +489,6 @@ class palettize_weights(AbstractCompressionPass):
             lut = np.array(range(0, 1 << nbits)) * scale + val_min
             lut = lut.astype(val.dtype)
             return lut, indices
-
-        def get_nbits_for_unique_mode(val):
-            val = val.flatten()
-            unique_vals = np.unique(val).tolist()
-            for nbits in (1, 2, 4, 6, 8):
-                if len(unique_vals) <= 1 << nbits:
-                    return nbits
-            msg = "weight value cannot be represented in an 8 bits palettization. Skipped."
-            logger.warning(msg)
-            return None
 
         def compress_unique(val, nbits):
             val = val.flatten()
@@ -483,6 +512,25 @@ class palettize_weights(AbstractCompressionPass):
             indices = indices.astype(np.uint8)
             return lut, indices
 
+        if mode == "KMEANS":
+            lut, indices = compress_kmeans(val, nbits)
+        elif mode == "UNIFORM":
+            lut, indices = compress_uniform(val, nbits)
+        elif mode == "UNIQUE":
+            if nbits is None:
+                nbits = palettize_weights._get_nbits_for_unique_mode(
+                    val, palettize_weights._SUPPORTED_NBITS
+                )
+            lut, indices = compress_unique(val, nbits)
+        else:
+            if mode != "CUSTOM":
+                raise AssertionError(f"Invalid mode {mode}")
+            lut, indices = lut_function(val)
+
+        return lut, indices
+
+    @staticmethod
+    def compress(val, mode, nbits=None, lut_function=None) -> LutParams:
         def check_lut_parameters_are_valid(val, lut, indices):
             if not isinstance(lut, np.ndarray) or not isinstance(indices, np.ndarray):
                 raise ValueError("LUT and indices must be type of numpy array.")
@@ -508,17 +556,7 @@ class palettize_weights(AbstractCompressionPass):
         if not isinstance(val, (np.ndarray, np.generic)):
             raise ValueError(f"Only numpy arrays are supported. Got {type(val)}")
 
-        if mode == "KMEANS":
-            lut, indices = compress_kmeans(val, nbits)
-        elif mode == "UNIFORM":
-            lut, indices = compress_uniform(val, nbits)
-        elif mode == "UNIQUE":
-            nbits = get_nbits_for_unique_mode(val)
-            if nbits is None:
-                return None
-            lut, indices = compress_unique(val, nbits)
-        elif mode == "CUSTOM":
-            lut, indices = lut_function(val)
+        lut, indices = palettize_weights._get_lut_and_indices(val, mode, nbits, lut_function)
 
         check_lut_parameters_are_valid(val, lut, indices)
 
@@ -541,15 +579,21 @@ class palettize_weights(AbstractCompressionPass):
         if not self.need_compress_const(op, self.config._is_deprecated, op_config.weight_threshold):
             return
 
+        if op_config.mode == "UNIQUE":
+            try:
+                palettize_weights._get_nbits_for_unique_mode(
+                    op.outputs[0].val, self._SUPPORTED_NBITS
+                )
+            except ValueError as e:
+                logger.warning(f"Skip op {op.name} for palettization, because {e}")
+                return
+
         lut_params = self.compress(
             op.outputs[0].val,
             op_config.mode,
             op_config.nbits,
             op_config.lut_function
         )
-
-        if lut_params is None:
-            return
 
         if not self.fake_compression:
             new_var = mb.constexpr_lut_to_dense(
@@ -591,46 +635,28 @@ class linear_quantize_weights(AbstractCompressionPass):
     - If ``fake_compression=True``, compressed value is decompressed and then encoded using the ``const`` op.
     """
     _SUPPORTED_CONFIG_TYPE = OpLinearQuantizerConfig
+    _MODE_DTYPE_TO_RANGE = {
+        (types.int8, "LINEAR"): (-128, 127),
+        (types.int8, "LINEAR_SYMMETRIC"): (-127, 127),
+        (types.uint8, "LINEAR"): (0, 255),
+        (types.uint8, "LINEAR_SYMMETRIC"): (0, 254),
+    }
 
     def is_valid_op(self, op: Operation):
         if op.op_type == "const" and should_use_weight_file(op.outputs[0].val):
             return True
         return False
 
-    @staticmethod
-    def _get_axis(op):
-        axis = 0
-        var = op.outputs[0]
-        if len(var.child_ops) == 1 and var.child_ops[0].op_type == "conv_transpose":
-            axis = 1
-        return axis
+    @classmethod
+    def _get_quantized_data(
+        cls, original_data: np.ndarray, axes: Tuple[int, ...], mode: str, dtype: type
+    ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
+        """Get quantized data along with metadata (scale, zero_point)."""
+        if not np.issubdtype(original_data.dtype, np.floating):
+            raise ValueError("Only floating numpy arrays are supported.")
 
-    @staticmethod
-    def compress(val, axis, mode, dtype):
-        def _ensure_numerical_range_and_cast(val, low, high, np_dtype):
-            '''
-            For some cases, the computed quantized data might exceed the data range.
-            For instance, after rounding and addition, we might get `128` for the int8 quantization.
-            This utility function ensures the val in the data range before doing the cast.
-            '''
-            val = np.minimum(val, high)
-            val = np.maximum(val, low)
-            return val.astype(np_dtype)
-
-        mode_dtype_to_range = {
-            (types.int8, "LINEAR"): (-128, 127),
-            (types.int8, "LINEAR_SYMMETRIC"): (-127, 127),
-            (types.uint8, "LINEAR"): (0, 255),
-            (types.uint8, "LINEAR_SYMMETRIC"): (0, 254),
-        }
-
-        if not isinstance(val, (np.ndarray, np.generic)):
-            raise ValueError("Only numpy arrays are supported")
-
-        params = AffineQuantParams()
-        axes = tuple([i for i in range(len(val.shape)) if i != axis])
-        val_min = np.amin(val, axis=axes, keepdims=True)
-        val_max = np.amax(val, axis=axes, keepdims=True)
+        val_min = np.amin(original_data, axis=axes, keepdims=True)
+        val_max = np.amax(original_data, axis=axes, keepdims=True)
 
         if mode == "LINEAR_SYMMETRIC":
             # For the linear_symmetric mode, the range is symmetrical to 0
@@ -643,39 +669,42 @@ class linear_quantize_weights(AbstractCompressionPass):
             val_min = np.minimum(0.0, val_min)
             val_max = np.maximum(0.0, val_max)
 
-        q_val_min, q_val_max = mode_dtype_to_range[(dtype, mode)]
-
-        # Set the zero point to symmetric mode
+        q_val_min, q_val_max = cls._MODE_DTYPE_TO_RANGE[(dtype, mode)]
         np_dtype = nptype_from_builtin(dtype)
+        zero_point = None
         if mode == "LINEAR_SYMMETRIC":
-            if dtype == types.int8:
-                params.zero_point = (0 * np.ones(val_min.shape)).astype(np.int8)
-            else:
-                assert dtype == types.uint8
-                params.zero_point = (127 * np.ones(val_min.shape)).astype(np.uint8)
+            if dtype.is_unsigned():
+                zero_point_shift = q_val_max // 2
+                zero_point = zero_point_shift * np.ones(val_min.shape)
         else:
             assert mode == "LINEAR"
-            params.zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
-            params.zero_point = np.round(params.zero_point)
-            params.zero_point = _ensure_numerical_range_and_cast(params.zero_point, q_val_min, q_val_max, np_dtype)
+            zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
+            zero_point = np.round(zero_point)
+            zero_point = np.clip(zero_point, q_val_min, q_val_max)
 
-        # compute the params
-        params.scale = (val_max - val_min) / (q_val_max - q_val_min)
-        params.scale = params.scale.astype(val.dtype).squeeze()
+        scale = (val_max - val_min) / (q_val_max - q_val_min)
+        quantized_data = np.round(original_data / scale)
+        if zero_point is not None:
+            quantized_data += zero_point
+            zero_point = zero_point.squeeze().astype(np_dtype)
+        quantized_data = np.clip(quantized_data, q_val_min, q_val_max).astype(np_dtype)
+        scale = scale.astype(original_data.dtype).squeeze()
 
-        params.quantized_data = np.round(
-            val * (q_val_max - q_val_min) / (val_max - val_min)
-        )
-        params.quantized_data = (params.quantized_data + params.zero_point)
-        params.quantized_data = _ensure_numerical_range_and_cast(params.quantized_data, q_val_min, q_val_max, np_dtype)
+        return quantized_data, scale, zero_point
 
-        params.zero_point = params.zero_point.squeeze()
-        params.axis = axis
-
-        return params
+    @classmethod
+    def compress(cls, val: np.ndarray, axis: int, mode: str, dtype: type) -> AffineQuantParams:
+        if not isinstance(val, (np.ndarray, np.generic)):
+            raise ValueError("Only numpy arrays are supported")
+        axes = tuple([i for i in range(len(val.shape)) if i != axis])
+        quantized_data, scale, zero_point = cls._get_quantized_data(val, axes, mode, dtype)
+        if zero_point is None:
+            # The iOS16 constexpr_affine_dequantize op requires zero_point.
+            zero_point = np.zeros_like(scale).astype(quantized_data.dtype)
+        return AffineQuantParams(quantized_data, zero_point, scale, axis)
 
     @staticmethod
-    def decompress(params):
+    def decompress(params: AffineQuantParams) -> np.ndarray:
         if not isinstance(params, AffineQuantParams):
             raise ValueError("Invalid type of params")
         return constexpr_affine_dequantize.decompress(
@@ -689,7 +718,9 @@ class linear_quantize_weights(AbstractCompressionPass):
         if not self.need_compress_const(op, self.config._is_deprecated, op_config.weight_threshold):
             return
 
-        quant_params = self.compress(op.outputs[0].val, self._get_axis(op), op_config.mode, op_config.dtype)
+        quant_params = self.compress(
+            op.outputs[0].val, self.pick_channnel_axis(op), op_config.mode, op_config.dtype
+        )
 
         if not self.fake_compression:
             new_var = mb.constexpr_affine_dequantize(

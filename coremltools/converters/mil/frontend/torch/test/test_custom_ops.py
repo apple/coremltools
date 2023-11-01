@@ -28,7 +28,7 @@ from .testing_utils import TorchBaseTest, convert_to_mlmodel
 
 
 # Log Converter supported Cosine Similarity conversion function
-default_cosine_similarity = _TORCH_OPS_REG.get("cosine_similarity", None)
+default_cosine_similarity = _TORCH_OPS_REG.get_func("cosine_similarity")
 
 
 @register_torch_op(override=True)
@@ -37,11 +37,11 @@ def cosine_similarity(context, node):
 
 
 # Log custom Cosine Similarity conversion function
-custom_cosine_similarity = _TORCH_OPS_REG["cosine_similarity"]
+custom_cosine_similarity = _TORCH_OPS_REG.get_func("cosine_similarity")
 
 
 def _set_torch_reg_op(op_type, op_func):
-    _TORCH_OPS_REG[op_type] = op_func
+    _TORCH_OPS_REG.set_func_by_name(op_func, op_type)
 
 
 class TestCompositeOp(TorchBaseTest):
@@ -69,7 +69,7 @@ class TestCustomOp:
             x_is_sparse=TensorInputType(const=True, optional=True, type_domain=types.bool),
             y_is_sparse=TensorInputType(const=True, optional=True, type_domain=types.bool),
         )
-        
+
         type_domains = {
             "T": (types.fp16, types.fp32),
         }

@@ -184,6 +184,13 @@ def assert_same_input_names(prog1, prog2, func_name="main"):
     assert prog1_input_names == prog2_input_names
 
 
+def assert_numerical_value(mil_var, expected_value):
+    if mil_var is None:
+        assert expected_value is None
+    else:
+        np.testing.assert_allclose(mil_var.val, expected_value)
+
+
 def assert_same_input_types(prog1, prog2, func_name="main"):
     prog1_input_types = [x.dtype for x in list(prog1[func_name].inputs.values())]
     prog2_input_types = [x.dtype for x in list(prog2[func_name].inputs.values())]

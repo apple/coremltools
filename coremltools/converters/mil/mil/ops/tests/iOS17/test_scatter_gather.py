@@ -11,10 +11,16 @@ import pytest
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.tests.iOS14.test_scatter_gather import (
-    TestGatherAlongAxis as _TestGatherAlongAxis_iOS14,
+    TestGatherAlongAxis as _TestGatherAlongAxisIOS14,
 )
 from coremltools.converters.mil.mil.ops.tests.iOS14.test_scatter_gather import (
-    TestScatterAlongAxis as _TestScatterAlongAxis_iOS14,
+    TestScatterAlongAxis as _TestScatterAlongAxisIOS14,
+)
+from coremltools.converters.mil.mil.ops.tests.iOS16.test_scatter_gather import (
+    TestGather as _TestGatherIOS16,
+)
+from coremltools.converters.mil.mil.ops.tests.iOS16.test_scatter_gather import (
+    TestGatherNd as _TestGatherNdIOS16,
 )
 from coremltools.converters.mil.mil.ops.tests.iOS17 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
@@ -107,7 +113,7 @@ class TestScatterAlongAxis:
         ),
     )
     def test_builder_to_backend_programmatic(self, compute_unit, backend, rank_axis):
-        _TestScatterAlongAxis_iOS14._test_builder_to_backend_programmatic(
+        _TestScatterAlongAxisIOS14._test_builder_to_backend_programmatic(
             compute_unit, backend, rank_axis, force_non_negative_indices=True
         )
 
@@ -241,7 +247,19 @@ class TestScatterNd:
             assert any([err in str(excinfo.value) for err in expected_error_msg])
 
 
-class TestGather:
+class TestGather(_TestGatherIOS16):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, x_dtype, indices_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.float32, np.float16, np.int32, np.int16, np.uint16, np.int8, np.uint8],
+            [np.int32, np.int16, np.uint16, np.int8, np.uint8],
+        ),
+    )
+    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
+        super().test_builder_to_backend_smoke(compute_unit, backend, x_dtype, indices_dtype)
+
     @pytest.mark.parametrize(
         "backend, indices_val, validate_indices",
         itertools.product(backends, [[-1, 0], [0, 3]], [True, False]),
@@ -276,16 +294,20 @@ class TestGather:
 
 class TestGatherAlongAxis:
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank_axis",
+        "compute_unit, backend, rank_axis, x_dtype, indices_dtype",
         itertools.product(
             compute_units,
             backends,
-            [(rank, axis) for rank in range(1, 5) for axis in range(-rank, rank)],
+            [(rank, axis) for rank in (3,) for axis in (-rank, 0, rank - 1)],
+            [np.float32, np.float16, np.int32, np.int16, np.uint16, np.int8, np.uint8],
+            [np.int32, np.int16, np.uint16, np.int8, np.uint8],
         ),
     )
-    def test_builder_to_backend_programmatic(self, compute_unit, backend, rank_axis):
-        _TestGatherAlongAxis_iOS14._test_builder_to_backend_programmatic(
-            compute_unit, backend, rank_axis, True
+    def test_builder_to_backend_programmatic(
+        self, compute_unit, backend, rank_axis, x_dtype, indices_dtype
+    ):
+        _TestGatherAlongAxisIOS14._test_builder_to_backend_programmatic(
+            compute_unit, backend, rank_axis, x_dtype, indices_dtype, True
         )
 
     @pytest.mark.parametrize(
@@ -327,7 +349,20 @@ class TestGatherAlongAxis:
                 opset_version=backend.opset_version,
             )(prog)
 
-class TestGatherNd:
+
+class TestGatherNd(_TestGatherNdIOS16):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, x_dtype, indices_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.float32, np.float16, np.int32, np.int16, np.uint16, np.int8, np.uint8],
+            [np.int32, np.int16, np.uint16, np.int8, np.uint8],
+        ),
+    )
+    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
+        super().test_builder_to_backend_smoke(compute_unit, backend, x_dtype, indices_dtype)
+
     @pytest.mark.parametrize(
         "backend, indices_val, validate_indices",
         itertools.product(

@@ -31,7 +31,7 @@ def _torch_tensor_assign_to_core_block(block):
 
 
 def _transform_tensor_assign(op, block):
-    shape = mb.shape(x=op.data, before_op=op)
+    shape = mb.shape(x=op.x, before_op=op)
     dim_prod = mb.reduce_prod(x=shape, before_op=op)
     ref_indices = mb.range_1d(end=dim_prod, start=0, step=1, before_op=op)
     ref_indices = mb.reshape(x=ref_indices, shape=shape, before_op=op)
@@ -47,14 +47,14 @@ def _transform_tensor_assign(op, block):
                         )
     flatten_indices = mb.reshape(x=ref_sliced_indices, shape=[-1], before_op=op)
     flatten_updates = mb.reshape(x=op.updates, shape=[-1], before_op=op)
-    flatten_data = mb.reshape(x=op.data, shape=[-1], before_op=op)
+    flatten_data = mb.reshape(x=op.x, shape=[-1], before_op=op)
     new_data = mb.scatter(
-                data=flatten_data, 
-                indices=flatten_indices, 
-                updates=flatten_updates, 
-                mode="update", 
-                before_op=op
-            )
+        data=flatten_data,
+        indices=flatten_indices,
+        updates=flatten_updates,
+        mode="update",
+        before_op=op,
+    )
     new_data = mb.reshape(x=new_data, shape=shape, before_op=op)
 
     op.enclosing_block.replace_uses_of_var_after_op(

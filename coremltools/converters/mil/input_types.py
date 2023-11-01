@@ -310,6 +310,7 @@ class RangeDim:
             self.symbol = get_new_symbol()
         else:
             from coremltools.converters.mil.mil import Symbol
+
             self.symbol = Symbol(symbol)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound

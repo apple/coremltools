@@ -5,12 +5,14 @@
 
 import copy
 from collections import Counter, OrderedDict
+from typing import Tuple
 
-from coremltools import _OPSET, _logger as logger
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as _target
+from coremltools import _OPSET
+from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 
 from . import SPACES, types
+from .operation import Operation
 from .types.symbolic import is_symbolic, k_used_symbols
 from .var import ComplexVar, InternalVar, Var
 from .visitors.dot_visitor import DotVisitor
@@ -895,3 +897,26 @@ class Function(Block):
             s += self.indented_str(SPACES)
             s += "}\n"
         return s
+
+    def get_max_opset_version_and_op(self) -> Tuple[_target, Operation]:
+        """
+        Find the max opset version among all operations in the function.
+        Returns the opset version Enum and the corresponding op.
+        """
+        max_opset_version = _target.iOS13
+        op_with_max_opset_version = None
+
+        def update_max_opset_version_block(block):
+            nonlocal max_opset_version
+            nonlocal op_with_max_opset_version
+            for op in list(block.operations):
+                for b in op.blocks:
+                    update_max_opset_version_block(b)
+                if not hasattr(op, "_op_variants") or not isinstance(op._op_variants, dict):
+                    continue
+                if op.opset_version > max_opset_version:
+                    max_opset_version = op.opset_version
+                    op_with_max_opset_version = op
+
+        update_max_opset_version_block(self)
+        return max_opset_version, op_with_max_opset_version

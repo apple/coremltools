@@ -98,10 +98,9 @@ def create_unique_weight(weight, nbits):
     size = weight.detach().numpy().size
 
     unique_number = 1 << nbits
-    weight = []
-    partition_len = size // unique_number + 1
-    for i in range(unique_number):
-        weight += [i] * (partition_len)
+    weight = list(range(unique_number))
+    if size > unique_number:
+        weight.extend([unique_number - 1] * (size - unique_number))
     weight = np.reshape(np.array(weight[:size]).astype(np.float32), shape)
     return weight
 
@@ -324,7 +323,7 @@ class TestPalettizeWeights:
         # validate parameters
         # converter should warn the user that one weight is not compressed
         mlmodel_palettized = palettize_weights(mlmodel, mode="unique")
-        warning_msg = "weight value cannot be represented in an 8 bits palettization. Skipped."
+        warning_msg = "Unique values in weight cannot be represented by 8 bits palettization."
         assert any([warning_msg in rec.message for rec in caplog.records])
 
         expected_ops = ['constexpr_lut_to_dense', 'cast', 'conv', 'conv', 'cast']

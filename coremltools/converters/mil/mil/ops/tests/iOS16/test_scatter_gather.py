@@ -11,6 +11,9 @@ import pytest
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.ops.tests.iOS14.test_scatter_gather import (
+    TestGatherAlongAxis as _TestGatherAlongAxis_iOS14,
+)
 from coremltools.converters.mil.mil.ops.tests.iOS16 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import (
     mark_api_breaking,
@@ -21,17 +24,24 @@ from coremltools.converters.mil.testing_reqs import compute_units
 
 class TestGather:
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(compute_units, backends),
+        "compute_unit, backend, x_dtype, indices_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.float32, np.float16, np.int32],
+            [np.int32, np.int16, np.uint16],
+        ),
     )
-    def test_builder_to_backend_smoke_batch_dims(self, compute_unit, backend):
-        # TODO MAKE SURE RUN ON IOS17
-        x = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]], dtype=np.float32)
-        indices = np.array([[[1, 0], [0, 1]], [[1, 0], [0, 0]]], dtype=np.int32)
+    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
+        x = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]], dtype=x_dtype)
+        indices = np.array([[[1, 0], [0, 1]], [[1, 0], [0, 0]]], dtype=indices_dtype)
 
+        builtin_x_dtype = types.numpy_type_to_builtin_type(x_dtype)
         input_placeholders = {
-            "x": mb.placeholder(shape=x.shape),
-            "indices": mb.placeholder(shape=indices.shape, dtype=types.int32),
+            "x": mb.placeholder(shape=x.shape, dtype=builtin_x_dtype),
+            "indices": mb.placeholder(
+                shape=indices.shape, dtype=types.numpy_type_to_builtin_type(indices_dtype)
+            ),
         }
 
         input_values = {"x": x, "indices": indices}
@@ -46,11 +56,11 @@ class TestGather:
             ]
 
         expected_output_types = [
-            (2, 2, 2, 2, 3, types.fp32),
-            (2, 2, 2, 3, types.fp32),
-            (2, 2, 2, 2, 2, types.fp32),
-            (2, 2, 2, 2, types.fp32),
-            (2, 2, 2, types.fp32),
+            (2, 2, 2, 2, 3, builtin_x_dtype),
+            (2, 2, 2, 3, builtin_x_dtype),
+            (2, 2, 2, 2, 2, builtin_x_dtype),
+            (2, 2, 2, 2, builtin_x_dtype),
+            (2, 2, 2, builtin_x_dtype),
         ]
 
         expected_outputs = [
@@ -65,14 +75,14 @@ class TestGather:
                         [[[10, 11, 12], [7, 8, 9]], [[7, 8, 9], [7, 8, 9]]],
                     ],
                 ],
-                dtype=np.float32,
+                dtype=x_dtype,
             ),
             np.array(
                 [
                     [[[4, 5, 6], [1, 2, 3]], [[1, 2, 3], [4, 5, 6]]],
                     [[[10, 11, 12], [7, 8, 9]], [[7, 8, 9], [7, 8, 9]]],
                 ],
-                dtype=np.float32,
+                dtype=x_dtype,
             ),
             np.array(
                 [
@@ -82,13 +92,13 @@ class TestGather:
                         [[[11, 10], [10, 11]], [[11, 10], [10, 10]]],
                     ],
                 ],
-                dtype=np.float32,
+                dtype=x_dtype,
             ),
             np.array(
                 [[[[2, 1], [1, 2]], [[5, 4], [4, 5]]], [[[8, 7], [7, 7]], [[11, 10], [10, 10]]]],
-                dtype=np.float32,
+                dtype=x_dtype,
             ),
-            np.array([[[2, 1], [4, 5]], [[8, 7], [10, 10]]], dtype=np.float32),
+            np.array([[[2, 1], [4, 5]], [[8, 7], [10, 10]]], dtype=x_dtype),
         ]
 
         run_compare_builder(
@@ -127,19 +137,57 @@ class TestGather:
         )
 
 
+class TestGatherAlongAxis(_TestGatherAlongAxis_iOS14):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, x_dtype, indices_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.float32, np.float16, np.int32],
+            [np.int32, np.int16, np.uint16],
+        ),
+    )
+    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
+        super().test_builder_to_backend_smoke(compute_unit, backend, x_dtype, indices_dtype)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank_axis, x_dtype, indices_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [(rank, axis) for rank in range(1, 5) for axis in range(-rank, rank)],
+            [np.float32, np.float16, np.int32],
+            [np.int32, np.int16, np.uint16],
+        ),
+    )
+    def test_builder_to_backend_programmatic(
+        self, compute_unit, backend, rank_axis, x_dtype, indices_dtype
+    ):
+        super()._test_builder_to_backend_programmatic(
+            compute_unit, backend, rank_axis, x_dtype, indices_dtype, True
+        )
+
+
 class TestGatherNd:
     @pytest.mark.parametrize(
-        "compute_unit, backend",
-        itertools.product(compute_units, backends),
+        "compute_unit, backend, x_dtype, indices_dtype",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.float32, np.float16, np.int32],
+            [np.int32, np.int16, np.uint16],
+        ),
     )
-    def test_builder_to_backend_smoke_batch_dims(self, compute_unit, backend):
-        # TODO MAKE SURE RUN ON IOS17
+    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
         x = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]], dtype=np.float32)
         indices = np.array([[[1, 0], [0, 1]], [[1, 0], [0, 0]]], dtype=np.int32)
+        builtin_x_dtype = types.numpy_type_to_builtin_type(x_dtype)
 
         input_placeholders = {
-            "x": mb.placeholder(shape=x.shape),
-            "indices": mb.placeholder(shape=indices.shape, dtype=types.int32),
+            "x": mb.placeholder(shape=x.shape, dtype=builtin_x_dtype),
+            "indices": mb.placeholder(
+                shape=indices.shape, dtype=types.numpy_type_to_builtin_type(indices_dtype)
+            ),
         }
 
         input_values = {"x": x, "indices": indices}
@@ -150,11 +198,11 @@ class TestGatherNd:
                 mb.gather_nd(x=x, indices=indices, batch_dims=1),
             ]
 
-        expected_output_types = [(2, 2, 3, types.fp32), (2, 2, types.fp32)]
+        expected_output_types = [(2, 2, 3, builtin_x_dtype), (2, 2, builtin_x_dtype)]
 
         expected_outputs = [
-            np.array([[[7, 8, 9], [4, 5, 6]], [[7, 8, 9], [1, 2, 3]]], dtype=np.float32),
-            np.array([[4, 2], [10, 7]], dtype=np.float32),
+            np.array([[[7, 8, 9], [4, 5, 6]], [[7, 8, 9], [1, 2, 3]]], dtype=x_dtype),
+            np.array([[4, 2], [10, 7]], dtype=x_dtype),
         ]
 
         run_compare_builder(

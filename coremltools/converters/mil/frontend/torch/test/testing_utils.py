@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from enum import Enum
+
 import numpy as np
 import pytest
 import torch
@@ -11,11 +13,27 @@ import torch.nn as nn
 import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
 from coremltools import RangeDim, TensorType
-from coremltools._deps import _IS_MACOS
+from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API, _IS_MACOS
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.testing_utils import ct_convert, validate_minimum_deployment_target
 
-from ..converter import torch_to_mil_types
+from ..torchscript_utils import torch_to_mil_types
+
+if _HAS_TORCH_EXPORT_API:
+    from torch.export import ExportedProgram
+
+if _HAS_EXECUTORCH:
+    from executorch import exir
+
+    _CAPTURE_CONFIG = exir.CaptureConfig(enable_aot=True)
+    _EDGE_COMPILE_CONFIG = exir.EdgeCompileConfig(
+        _check_ir_validity=False,
+    )
+
+
+class TorchFrontend(Enum):
+    TORCHSCRIPT = 1
+    EDGEIR = 2
 
 
 class ModuleWrapper(nn.Module):
@@ -62,7 +80,8 @@ def convert_to_coreml_inputs(input_description, inputs):
     """
     flattened_inputs = _flatten(inputs)
     coreml_inputs = {
-        str(x): inp.numpy().astype(np.float32) for x, inp in zip(input_description, flattened_inputs)
+        str(x): inp.cpu().numpy().astype(np.float32)
+        for x, inp in zip(input_description, flattened_inputs)
     }
 
     for k, v in coreml_inputs.items():
@@ -94,12 +113,16 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp3
     else:
         inputs = converter_input_type
 
+    if _HAS_EXECUTORCH and isinstance(model_spec, ExportedProgram):
+        inputs = None
+        outputs = None
+
     return ct_convert(model_spec, inputs=inputs, convert_to=backend,
                       source="pytorch", compute_units=compute_unit,
                       minimum_deployment_target=minimum_deployment_target)
 
 
-def generate_input_data(input_size, rand_range=(0, 1)):
+def generate_input_data(input_size, rand_range=(0, 1), torch_device=torch.device("cpu")):
     r1, r2 = rand_range
 
     def random_data(spec):
@@ -115,7 +138,7 @@ def generate_input_data(input_size, rand_range=(0, 1)):
 
         data = np.random.rand(*static_shape) if static_shape != () else np.random.rand()
         data = (r1 - r2) * data + r2
-        return torch.from_numpy(np.array(data).astype(dtype))
+        return torch.from_numpy(np.array(data).astype(dtype)).to(torch_device)
 
     if isinstance(input_size, list):
         return [random_data(size) for size in input_size]
@@ -135,7 +158,7 @@ def flatten_and_detach_torch_results(torch_results):
     if isinstance(torch_results, (list, tuple)):
         return [x.detach().numpy() for x in _flatten(torch_results) if x is not None]
     # Do not need to flatten
-    return [torch_results.detach().numpy()]
+    return [torch_results.detach().cpu().numpy()]
 
 
 def convert_and_compare(
@@ -220,6 +243,8 @@ class TorchBaseTest:
         converter_input_type=None,
         compute_unit=ct.ComputeUnit.CPU_ONLY,
         minimum_deployment_target=None,
+        torch_device=torch.device("cpu"),
+        frontend=TorchFrontend.TORCHSCRIPT,
     ):
         """
         Traces a model and runs a numerical test.
@@ -228,18 +253,35 @@ class TorchBaseTest:
             expected_results <iterable, optional>: Expected result from running pytorch model.
             converter_input_type: If not None, then pass it to the "inputs" argument to the
                 ct.convert() call.
+            frontend: Either TorchFrontend.TORCHSCRIPT or TorchFrontend.EDGEIR
         """
         if minimum_deployment_target is not None:
             validate_minimum_deployment_target(minimum_deployment_target, backend)
 
         model.eval()
         if input_as_shape:
-            input_data = generate_input_data(input_data, rand_range)
+            input_data = generate_input_data(input_data, rand_range, torch_device)
 
-        if use_scripting:
-            model_spec = torch.jit.script(model)
+        if frontend == TorchFrontend.TORCHSCRIPT:
+            if use_scripting:
+                model_spec = torch.jit.script(model)
+            else:
+                model_spec = trace_model(model, _copy_input_data(input_data))
+        elif frontend == TorchFrontend.EDGEIR:
+            input_data_clone = _copy_input_data(input_data)
+            if isinstance(input_data_clone, list):
+                input_data_clone = tuple(input_data_clone)
+            elif isinstance(input_data_clone, torch.Tensor):
+                input_data_clone = (input_data_clone,)
+            model_spec = (
+                exir.capture(model, input_data_clone, _CAPTURE_CONFIG)
+                .to_edge(_EDGE_COMPILE_CONFIG)
+                .exported_program
+            )
         else:
-            model_spec = trace_model(model, _copy_input_data(input_data))
+            raise ValueError(
+                f"Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT or TorchFrontend.EDGEIR. Provided: {frontend}"
+            )
 
         model_spec, mlmodel, coreml_inputs, coreml_results = convert_and_compare(
             input_data,

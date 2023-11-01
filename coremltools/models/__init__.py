@@ -31,6 +31,7 @@ from .model import (
     _QUANTIZATION_MODE_DEQUANTIZE,
     _METADATA_VERSION,
     _METADATA_SOURCE,
+    _METADATA_SOURCE_DIALECT,
 )
 
 from . import neural_network

@@ -5,15 +5,16 @@
 
 import numbers
 from collections import defaultdict
+from typing import Callable, List, Optional
 
 import numpy as np
 
 from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 from .block import Function, curr_block
-from .input_type import (InternalInputType, ListOrTensorInputType,
-                         TensorInputType, TupleInputType)
+from .input_type import InternalInputType, ListOrTensorInputType, TensorInputType, TupleInputType
 from .program import Placeholder, Program
 from .var import InternalVar, Var
 
@@ -163,6 +164,7 @@ class Builder:
             input_spec=op_cls.input_spec,
             op_name=kwargs["name"], before_op=before_op,
             candidate_kv=kwargs))
+        kwargs["enclosing_block"] = curr_block()
         new_op = op_cls(**kwargs)
 
         # Initialize optional input Vars if it wasn't in kwargs
@@ -193,21 +195,92 @@ class Builder:
         return Placeholder(shape, dtype)
 
     @staticmethod
-    def program(input_specs=None, opset_version=None):
+    def _create_function(
+        main_block: Callable,
+        input_specs: Optional[List[Placeholder]] = None,
+        opset_version: Optional[AvailableTarget] = None,
+    ):
         """
+        Utility to construct a pymil function.
+        """
+        if input_specs is None:
+            input_specs = []
 
-        The ``mb.program`` decorator creates a MIL program with a single
-        function (``main``). The input to ``main`` is a tensor.
+        # validate number of function inputs
+        num_args = main_block.__code__.co_argcount
+        arg_names = list(main_block.__code__.co_varnames)[:num_args]
+        if len(input_specs) != num_args:
+            raise ValueError(
+                f"{main_block.__name__} expects {num_args} inputs: {arg_names}. Got {len(input_specs)} input_specs."
+            )
+
+        # create the function
+        input_spec_dict = {k: v for k, v in zip(arg_names, input_specs)}
+        with Function(input_spec_dict, opset_version) as func:
+            input_vars = [func.inputs[a] for a in arg_names]
+            outputs = main_block(*input_vars)
+            if isinstance(outputs, tuple):
+                outputs = list(outputs)
+            elif not isinstance(outputs, list):
+                outputs = [outputs]
+            func.set_outputs(outputs)
+
+        # infer the opset version if not provided
+        max_opset_version, _ = func.get_max_opset_version_and_op()
+        if opset_version is None:
+            func.opset_version = max_opset_version
+
+        return func
+
+    @staticmethod
+    def function(
+        input_specs: Optional[List[Placeholder]] = None,
+        opset_version: Optional[AvailableTarget] = None,
+    ):
+        """
+        The ``mb.function`` decorator creates a MIL function.
 
         Parameters
         ----------
+        input_specs: List[TensorSpec]
+            Describes the function inputs
 
-        input_specs: TensorSpec
-            Describes a tensor.
+        opset_version: AvailableTarget enum
+            Describes the opset version of the function
+
+        Examples
+        --------
+        >>> import coremltools as ct
+        >>> @mb.function(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)
+        >>> def func(a):
+        >>>     return mb.add(x=a, y=2)
+
+        """
+        def wrapper(main_block):
+            return Builder._create_function(main_block, input_specs, opset_version)
+
+        return wrapper
+
+    @staticmethod
+    def program(
+        input_specs: Optional[List[Placeholder]] = None,
+        opset_version: Optional[AvailableTarget] = None,
+        function_name: Optional[str] = "main",
+    ):
+        """
+        The ``mb.program`` decorator creates a MIL program with a single
+        function with name ``function_name``.
+
+        Parameters
+        ----------
+        input_specs: List[TensorSpec]
+            Describes the function inputs
 
         opset_version: AvailableTarget enum
             Describes the opset version of the program
 
+        function_name: str
+            Name of the function
 
         Examples
         --------
@@ -217,30 +290,9 @@ class Builder:
         >>>     return mb.add(x=a, y=2)
 
         """
-        if input_specs is None:
-            input_specs = []
-
         def wrapper(main_block):
+            function = Builder._create_function(main_block, input_specs, opset_version)
             program = Program()
-            num_args = main_block.__code__.co_argcount
-            arg_names = list(main_block.__code__.co_varnames)[:num_args]
-            if len(input_specs) != num_args:
-                msg = "{} expects {} inputs: {}. Got {} input_specs."
-                raise ValueError(
-                    msg.format(
-                        main_block.__name__, num_args, arg_names, len(input_specs)
-                    )
-                )
-            input_spec_dict = {k: v for k, v in zip(arg_names, input_specs)}
-            with Function(input_spec_dict, opset_version) as func:
-                input_vars = [func.inputs[a] for a in arg_names]
-                outputs = main_block(*input_vars)
-                if isinstance(outputs, tuple):
-                    outputs = list(outputs)
-                elif not isinstance(outputs, list):
-                    outputs = [outputs]
-                func.set_outputs(outputs)
-                program.add_function("main", func)
+            program.add_function(function_name, function)
             return program
-
         return wrapper

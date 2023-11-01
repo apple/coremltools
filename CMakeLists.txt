@@ -191,6 +191,7 @@ else()
   message(STATUS "CoreML.framework and dependent frameworks not found. Skipping libcoremlpython build.")
 endif()
 
+
 # Build kmeans-1d
 set(KMEANS_DIR "${PROJECT_SOURCE_DIR}/deps/kmeans1d")
 execute_process(
@@ -198,11 +199,22 @@ execute_process(
   WORKING_DIRECTORY ${KMEANS_DIR}
 )
 
+# Somehow Python's setuptools is building this shared object file so that it tries to load the C++
+# standard library using an rpath that only exist on the build machine. Change that so it gets
+# loaded from the standard location.
+if(APPLE)
+  file(GLOB SO_FILE "${PROJECT_SOURCE_DIR}/deps/kmeans1d/kmeans1d/_core.*.so")
+  execute_process(
+    COMMAND install_name_tool -change @rpath/libc++.1.dylib /usr/lib/libc++.1.dylib ${SO_FILE}
+  )
+endif()
+
 # Copy kmeans-1d to Python deps folder
 execute_process(
   COMMAND cp -r kmeans1d ../../coremltools/_deps
   WORKING_DIRECTORY ${KMEANS_DIR}
 )
+
 
 set(PYTHON_TAG "cp${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
 if(APPLE)

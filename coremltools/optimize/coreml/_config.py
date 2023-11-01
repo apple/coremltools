@@ -529,6 +529,7 @@ class OpPalettizerConfig(OpCompressorConfig):
     weight_threshold: Optional[int] = field(default=2048, validator=validators.optional([validators.instance_of(int), _check_weight_threshold]))
 
     _WEIGHT_PALETTIZATION_MODES = ("KMEANS", "UNIFORM", "UNIQUE", "CUSTOM")
+    _VALID_NBITS = (1, 2, 4, 6, 8)
 
     @nbits.validator
     def check_nbits(self, attr, nbits):
@@ -540,9 +541,9 @@ class OpPalettizerConfig(OpCompressorConfig):
         if nbits is not None and mode in ("UNIQUE", "CUSTOM"):
             raise ValueError(f"\"nbits\" must NOT be provided for {self.mode} mode")
 
-        if nbits is not None and nbits not in [1, 2, 4, 6, 8]:
+        if nbits is not None and nbits not in self._VALID_NBITS:
             raise ValueError(
-                f"Invalid value of \"nbits\" ({nbits}) for palettization. Supported \"nbits\" are {{1, 2, 4, 6, 8}}"
+                f'Invalid value of "nbits" ({nbits}) for palettization. Supported "nbits" are {self._VALID_NBITS}'
             )
 
     @mode.validator

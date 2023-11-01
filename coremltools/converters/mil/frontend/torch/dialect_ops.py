@@ -4,14 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Operation, get_new_symbol, types
-from coremltools.converters.mil.mil.input_type import (DefaultInputs,
-                                                       InputSpec,
-                                                       TensorInputType)
-from coremltools.converters.mil.mil.ops.defs._utils import \
-    solve_slice_by_index_shape
+from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
+from coremltools.converters.mil.mil.ops.defs._utils import get_param_val, solve_slice_by_index_shape
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
-from coremltools.converters.mil.mil.types.symbolic import \
-    is_compatible_symbolic_vector
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 
 register_op = SSAOpRegistry.register_op
 
@@ -60,7 +56,7 @@ class torch_upsample_nearest_neighbor(Operation):
         output_height=TensorInputType(type_domain=types.int32),
         output_width=TensorInputType(type_domain=types.int32),
     )
- 
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -144,11 +140,11 @@ class torch_tensor_assign(Operation):
 
     Parameters
     ----------
-    data: tensor<*?, T> (Required)
+    x: tensor<*?, T> (Required)
         * Input tensor
     updates: tensor<\*K, T> (Required)
         * Value tensor to be inserted
-        * The shape of the updates tensor must match the slicing result of the input data.
+        * The shape of the updates tensor must match the slicing result of the input data ``x``.
     begin: tensor<[rank<x>], i32> (Required)
         * Starting index for the dimension of slicing.
     end: tensor<[rank(x)], i32> (Required)
@@ -164,7 +160,7 @@ class torch_tensor_assign(Operation):
         * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.
     squeeze_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at ``begin[i]``.
+        * If ``squeeze_mask[i]==True``, neglect ``end[i]``, and do the pure index at ``begin[i]``.
 
     Returns
     -------
@@ -177,7 +173,7 @@ class torch_tensor_assign(Operation):
     """
 
     input_spec = InputSpec(
-        data=TensorInputType(type_domain="T"),
+        x=TensorInputType(type_domain="T"),
         updates=TensorInputType(type_domain="T"),
         begin=TensorInputType(type_domain=types.int32),
         end=TensorInputType(type_domain=types.int32),
@@ -186,7 +182,7 @@ class torch_tensor_assign(Operation):
         end_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
         squeeze_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -200,20 +196,21 @@ class torch_tensor_assign(Operation):
         )
 
     def type_inference(self):
-        # Verify the updates and the data slicing have the same shape
-        begin = self.begin.val
-        end = self.end.val
-        data_rank = self.data.rank
-        stride = self.stride.val if self.stride is not None else [1] * data_rank
-        begin_mask = (
-            self.begin_mask.val if self.begin_mask is not None else [False] * data_rank
+        # solve shape
+        ret_shape = solve_slice_by_index_shape(
+            self.x.shape,
+            self.begin.val,
+            self.end.val,
+            get_param_val(self.stride),
+            get_param_val(self.begin_mask),
+            get_param_val(self.end_mask),
+            get_param_val(self.squeeze_mask),
         )
-        end_mask = self.end_mask.val if self.end_mask is not None else [False] * data_rank
-        squeeze_mask = (
-            self.squeeze_mask.val if self.squeeze_mask is not None else [False] * data_rank
-        )
-        data_shape = self.data.shape
-        expected_updates_shape = tuple(solve_slice_by_index_shape(data_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask))
-        if not is_compatible_symbolic_vector(expected_updates_shape, self.updates.shape):
-            raise ValueError("The updates tensor should have shape {}. Got {}".format(expected_updates_shape, self.updates.shape))
-        return self.data.sym_type
+        if not is_compatible_symbolic_vector(ret_shape, self.updates.shape):
+            raise ValueError(
+                "The updates tensor should have shape {}. Got {}".format(
+                    ret_shape, self.updates.shape
+                )
+            )
+
+        return self.x.sym_type

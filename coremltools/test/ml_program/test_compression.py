@@ -3,20 +3,36 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Optional
+
 import numpy as np
 import torch
 
 import coremltools as ct
+from coremltools.converters.mil.testing_utils import get_op_types_in_program
 from coremltools.models.ml_program.compression_utils import (
     affine_quantize_weights,
     decompress_weights,
     palettize_weights,
     sparsify_weights,
 )
-from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.optimize.coreml._config import OpCompressorConfig
 
 
-def get_test_model_and_data(multi_layer=False):
+def get_test_model_and_data(
+    multi_layer: bool = False, quantize_config: Optional[OpCompressorConfig] = None
+):
+    """
+    Prepare test model and data.
+
+    :param multi_layer: If set, the test model will have multiple `nn.Conv2d` layers.
+    :param quantize_config: If set, the weights in the test model will be nbits quantization-friendly,
+        which means it will be first quantized according to the config, and then dequantized, so the
+        numerical error introduced during the quantization test will be minimum.
+    """
+    if quantize_config is not None and multi_layer:
+        raise AssertionError("Multi-layer model doesn't support pre_quantize_nbits.")
+
     inputs = [ct.TensorType(name="data", shape=(1, 64, 10, 10))]
     torch_input_values = [torch.rand(*i.shape.to_list()) for i in inputs]
     coreml_input_values = {
@@ -37,6 +53,25 @@ def get_test_model_and_data(multi_layer=False):
         model = Model().eval()
     else:
         model = torch.nn.Conv2d(in_channels=64, out_channels=32, kernel_size=2)
+        if quantize_config is not None:
+            # Manually change weight to make it quantization friendly.
+            nbits_range_max = 2 ** (quantize_config.nbits - 1) - 1
+            mode_to_range = {
+                "LINEAR": (-nbits_range_max - 1, nbits_range_max),
+                "LINEAR_SYMMETRIC": (-nbits_range_max, nbits_range_max),
+            }
+            q_val_min, q_val_max = mode_to_range[quantize_config.mode]
+            original_shape = model.weight.detach().numpy().shape
+            fake_scale = 2.0
+            quantize_friendly_weight = (
+                np.random.randint(low=q_val_min, high=q_val_max + 1, size=original_shape)
+                * fake_scale
+            )
+            with torch.no_grad():
+                model.weight = torch.nn.Parameter(
+                    torch.from_numpy(quantize_friendly_weight).float()
+                )
+        model = model.eval()
 
     return model, inputs, torch_input_values, coreml_input_values
 

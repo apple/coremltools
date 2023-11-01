@@ -9,10 +9,11 @@ from typing import Tuple
 import numpy as np
 import parameterized
 import pytest
+from mock import patch
 
 import coremltools as ct
 import coremltools.converters.mil.mil.types as types
-from coremltools._deps import _IS_MACOS
+from coremltools._deps import _HAS_TORCH, _IS_MACOS, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.defs import quantization
 from coremltools.converters.mil.mil.types import numpy_type_to_builtin_type
@@ -22,7 +23,280 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
 )
 
+if _HAS_TORCH:
+    import torch
+    import torch.nn as nn
+
 np.random.seed(1818)
+
+
+class TestTensorwiseAffineDequantizeConstElimination:
+    def test_eliminate_transpose(self):
+        """
+        Input graph:
+            data -> constexpr_affine_dequantize -> transpose
+
+        Output graph:
+            new_data -> constexpr_affine_dequantize
+
+        where new_data is the value after applying transpose to data
+        """
+        quantized_data = np.random.randint(0, 256, (1, 2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            res = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            return mb.transpose(x=res, perm=(2, 0, 1, 3))
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
+
+        new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        expected_quantized_data = np.transpose(quantized_data, (2, 0, 1, 3))
+        np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
+
+    def test_eliminate_reshape(self):
+        """
+        Input graph:
+            data -> constexpr_affine_dequantize -> reshape
+
+        Output graph:
+            new_data -> constexpr_affine_dequantize
+
+        where new_data is the value after applying reshape to data
+        """
+        quantized_data = np.random.randint(0, 256, (1, 2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            res = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            return mb.reshape(x=res, shape=(3, -1))
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
+
+        new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        expected_quantized_data = np.reshape(quantized_data, (3, 8))
+        np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
+
+    def test_eliminate_expand_dims(self):
+        """
+        Input graph:
+            data -> constexpr_affine_dequantize -> expand_dims
+
+        Output graph:
+            new_data -> constexpr_affine_dequantize
+
+        where new_data is the value after applying expand_dims to data
+        """
+        quantized_data = np.random.randint(0, 256, (2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            res = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            return mb.expand_dims(x=res, axes=(0, 2, 4))
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
+
+        new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        expected_quantized_data = np.expand_dims(quantized_data, axis=(0, 2, 4))
+        np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
+
+    @pytest.mark.parametrize("axis", [(0, 3), None])
+    def test_eliminate_squeeze(self, axis):
+        """
+        Input graph:
+            data -> constexpr_affine_dequantize -> squeeze
+
+        Output graph:
+            new_data -> constexpr_affine_dequantize
+
+        where new_data is the value after applying squeeze to data
+        """
+        quantized_data = np.random.randint(0, 256, (1, 2, 3, 1, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            res = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            return mb.squeeze(x=res, axes=axis)
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
+
+        new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        expected_quantized_data = np.squeeze(quantized_data, axis=axis)
+        np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
+
+    def test_eliminate_multiple_ops(self):
+        """
+        Input graph:
+            data -> constexpr_affine_dequantize -> transpose ->
+            reshape -> expand_dims -> squeeze
+
+        Output graph:
+            new_data -> constexpr_affine_dequantize
+
+        where new_data is the value after applying the same chain of transformations to data
+        """
+        quantized_data = np.random.randint(0, 256, (1, 2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            res = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            res = mb.transpose(x=res, perm=(1, 0, 3, 2))
+            res = mb.reshape(x=res, shape=(8, 3))
+            res = mb.expand_dims(x=res, axes=(0, 2, 4))
+            return mb.squeeze(x=res, axes=(2,))
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
+
+        new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+
+        expected_quantized_data = np.transpose(quantized_data, (1, 0, 3, 2))
+        expected_quantized_data = np.reshape(expected_quantized_data, (8, 3))
+        expected_quantized_data = np.expand_dims(expected_quantized_data, (0, 2, 4))
+        expected_quantized_data = np.squeeze(expected_quantized_data, (2,))
+
+        np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
+
+    def test_negative_channel_wise_pattern(self):
+        """
+        If ``constexpr_affine_dequantize`` is not tensor-wise,
+        the graph is not changed.
+        """
+        quantized_data = np.random.randint(0, 256, (2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            x = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=[8.9, 6.5],
+                zero_point=np.int8(34),
+            )
+            y = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8([34, 56]),
+            )
+            return mb.transpose(x=x, perm=(1, 0, 2)), mb.transpose(x=y, perm=(1, 0, 2))
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == [
+            "constexpr_affine_dequantize",
+            "constexpr_affine_dequantize",
+            "transpose",
+            "transpose",
+        ]
+
+    def test_negative_non_linked_list_pattern(self):
+        """
+        If ``quantized_data`` feeds into multiple ``constexpr_affine_dequantize`` ops,
+        the graph will not be changed.
+        """
+        quantized_data = np.random.randint(0, 256, (2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            data = mb.const(val=quantized_data)
+            x = mb.constexpr_affine_dequantize(
+                quantized_data=data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            y = mb.constexpr_affine_dequantize(
+                quantized_data=data,
+                axis=0,
+                scale=8.1,
+                zero_point=np.int8(56),
+            )
+            return mb.transpose(x=x, perm=(1, 0, 2)), mb.reshape(x=y, shape=(24,))
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == [
+            "constexpr_affine_dequantize",
+            "constexpr_affine_dequantize",
+            "transpose",
+            "reshape",
+        ]
+
+    def test_eliminate_connected_outputs(self):
+        """
+        The optimization stops when the node is a block output
+        """
+        quantized_data = np.random.randint(0, 256, (2, 3, 4)).astype(np.int8)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
+        def prog():
+            x = mb.constexpr_affine_dequantize(
+                quantized_data=quantized_data,
+                axis=0,
+                scale=8.9,
+                zero_point=np.int8(34),
+            )
+            x = mb.transpose(x=x, perm=(1, 0, 2))
+            x = mb.reshape(x=x, shape=(2, 2, 3, 2))
+            y = mb.transpose(x=x, perm=(0, 3, 2, 1))
+            return x, y
+
+        apply_pass_and_basic_check(
+            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
+        )
+        assert get_op_types_in_program(prog) == [
+            "constexpr_affine_dequantize",
+            "transpose",
+        ]
+
+        new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
+        expected_quantized_data = np.transpose(quantized_data, (1, 0, 2))
+        expected_quantized_data = np.reshape(expected_quantized_data, (2, 2, 3, 2))
+        np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
+
+        transpose_op = prog.find_ops(op_type="transpose", exactly_one=True)[0]
+        assert transpose_op.perm.val.tolist() == [0, 3, 2, 1]
 
 
 class QuantizationBaseTest:
@@ -188,7 +462,10 @@ class TestIntOpCanonicalization:
             quantize_1_1 = mb.quantize(input=reshape, scale=0.1, output_dtype="int8")
             dequantize_2_1 = mb.dequantize(input=quantize_1_1, scale=0.1)
 
-            return dequantize_2_0, dequantize_2_1, 
+            return (
+                dequantize_2_0,
+                dequantize_2_1,
+            )
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::int_op_canonicalization")
         if all_are_int:
@@ -1917,3 +2194,232 @@ class TestFP16CastTransform:
             backend=("mlprogram", "fp16"),
             minimum_deployment_target=opset_version,
         )
+
+
+class TestInt32CastToInt16:
+    @pytest.mark.parametrize(
+        "x_dtype, dynamic, opset_version",
+        itertools.product(
+            [np.int32, np.float32],
+            [True, False],
+            [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17],
+        ),
+    )
+    def test_gather_int16_indices(self, x_dtype, dynamic, opset_version):
+        @mb.program(opset_version=opset_version)
+        def prog_static():
+            params = np.array([[1, 2, 3], [4, 5, 6]], dtype=x_dtype)
+            indices = np.array([1, 0], dtype=np.int32)
+            return mb.gather(x=params, indices=indices, axis=-1)
+
+        @mb.program(
+            [
+                mb.TensorSpec(shape=(2, 3), dtype=types.numpy_type_to_builtin_type(x_dtype)),
+                mb.TensorSpec(shape=(2,), dtype=types.int32),
+            ],
+            opset_version=opset_version,
+        )
+        def prog_dynamic(x, indices):
+            return mb.gather(x=x, indices=indices, axis=0)
+
+        prog = prog_dynamic if dynamic else prog_static
+        assert get_op_types_in_program(prog) == ["gather"]
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+
+        if opset_version <= ct.target.iOS16:
+            # iOS15 gather op's ``indices`` doesn't support int16, so this pass doesn't have effect.
+            # iOS16 cast op doesn't support int16, so this pass doesn't have effect.
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            # When input ``x`` is float32, the output is also float32, so no cast for output.
+            # When input ``x`` is int32 and cast to int16, the output will also be int16, so there
+            # is another cast op to cast it back to int32.
+            expected_ops = ["cast", "gather"]
+            if x_dtype == np.int32:
+                expected_ops = ["cast", "cast", "gather", "cast"]
+            assert get_op_types_in_program(prog) == expected_ops
+            indices_cast_op_idx = 1 if x_dtype == np.int32 else 0
+            cast_op = block.find_ops(op_type="cast")[indices_cast_op_idx]
+            assert cast_op.dtype.val == "int16"
+            assert len(cast_op.outputs) == 1
+            assert len(cast_op.outputs[0].child_ops) == 1
+            assert cast_op.outputs[0].child_ops[0].op_type == "gather"
+            assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
+
+        if not dynamic:
+            np.testing.assert_allclose(
+                np.array([[2, 1], [5, 4]], dtype=np.float32),
+                prog.functions["main"].find_ops(op_type="gather")[0].outputs[0].val,
+                atol=1e-04,
+                rtol=1e-05,
+            )
+
+    @pytest.mark.parametrize(
+        "x_dtype, dynamic, opset_version",
+        itertools.product(
+            [np.int32, np.float32],
+            [True, False],
+            [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17],
+        ),
+    )
+    def test_gather_along_axis_int16_indices(self, x_dtype, dynamic, opset_version):
+        @mb.program(opset_version=opset_version)
+        def prog_static():
+            params = np.array([[1, 2, 3], [4, 5, 6]], dtype=x_dtype)
+            indices = np.array([[1, 0, 1], [1, 1, 0]], dtype=np.int32)
+            return mb.gather_along_axis(x=params, indices=indices, axis=-1)
+
+        @mb.program(
+            [
+                mb.TensorSpec(shape=(2, 3), dtype=types.numpy_type_to_builtin_type(x_dtype)),
+                mb.TensorSpec(shape=(2, 3), dtype=types.int32),
+            ],
+            opset_version=opset_version,
+        )
+        def prog_dynamic(x, indices):
+            return mb.gather_along_axis(x=x, indices=indices, axis=0)
+
+        prog = prog_dynamic if dynamic else prog_static
+        assert get_op_types_in_program(prog) == ["gather_along_axis"]
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+
+        if opset_version <= ct.target.iOS16:
+            # iOS15 gather op's ``indices`` doesn't support int16, so this pass doesn't have effect.
+            # iOS16 cast op doesn't support int16, so this pass doesn't have effect.
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            # When input ``x`` is float32, the output is also float32, so no cast for output.
+            # When input ``x`` is int32 and cast to int16, the output will also be int16, so there
+            # is another cast op to cast it back to int32.
+            expected_ops = ["cast", "gather_along_axis"]
+            if x_dtype == np.int32:
+                expected_ops = ["cast", "cast", "gather_along_axis", "cast"]
+            assert get_op_types_in_program(prog) == expected_ops
+            indices_cast_op_idx = 1 if x_dtype == np.int32 else 0
+            cast_op = block.find_ops(op_type="cast")[indices_cast_op_idx]
+            assert cast_op.dtype.val == "int16"
+            assert len(cast_op.outputs) == 1
+            assert len(cast_op.outputs[0].child_ops) == 1
+            assert cast_op.outputs[0].child_ops[0].op_type == "gather_along_axis"
+            assert cast_op.outputs[0] == block.find_ops(op_type="gather_along_axis")[0].indices
+
+        if not dynamic:
+            np.testing.assert_allclose(
+                np.array([[2, 1, 2], [5, 5, 4]], dtype=np.float32),
+                prog.functions["main"].find_ops(op_type="gather_along_axis")[0].outputs[0].val,
+                atol=1e-04,
+                rtol=1e-05,
+            )
+
+    @pytest.mark.parametrize("overflow", [True, False])
+    def test_gather_dynamic_overflow_int16(self, overflow):
+        """Dynamic input indices should also be cast if x dim size doesn't overflow int16 range."""
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(32769 if overflow else 2, 3)),
+                mb.TensorSpec(shape=(2,), dtype=types.int32),
+            ],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x, indices):
+            return mb.gather(x=x, indices=indices, axis=0)
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+        if overflow:
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            assert get_op_types_in_program(prog) == ["cast", "gather"]
+            cast_op = block.find_ops(op_type="cast")[0]
+            assert cast_op.dtype.val == "int16"
+            assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
+
+    def test_gather_static_overflow_int16(self):
+        """Indices cannot be represented by int16 range, don't cast to int16."""
+
+        @mb.program(opset_version=ct.target.iOS17)
+        def prog():
+            params = np.array([[1, 2]] * 32769, dtype=np.float32)
+            indices = np.array([32768, 0], dtype=np.int32)
+            return mb.gather(x=params, indices=indices, axis=0)
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+        assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+
+    @patch(
+        "coremltools.converters.mil.mil.passes.defs.quantization.add_int16_cast._PREFER_INT16_OPS",
+        set(),
+    )
+    def test_int16_no_effect(self):
+        """After patching the pass, no op should be cast to int16"""
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(2, 3)), mb.TensorSpec(shape=(2,), dtype=types.int32)],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x, indices):
+            return mb.gather(x=x, indices=indices, axis=0)
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+        assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    @pytest.mark.parametrize(
+        "compute_precision, num_embeddings, minimum_deployment_target, symbolic",
+        itertools.product(
+            [ct.precision.FLOAT16, ct.precision.FLOAT32],
+            [10, 32769],
+            [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17],
+            [True, False],
+        ),
+    )
+    def test_int16_embedding_e2e(
+        self, compute_precision, num_embeddings, minimum_deployment_target, symbolic
+    ):
+        """End-to-end conversion from a torch embedding model."""
+
+        class EmbeddingModel(nn.Module):
+            def __init__(self):
+                super(EmbeddingModel, self).__init__()
+                self.embedding = torch.nn.Embedding(num_embeddings=num_embeddings, embedding_dim=2)
+
+            def forward(self, x):
+                return self.embedding(x)
+
+        input_data = np.random.randint(low=0, high=num_embeddings, size=(3, 5))
+        input_data = torch.from_numpy(input_data)
+        model = EmbeddingModel()
+        model.eval()
+        traced_model = torch.jit.trace(model, input_data)
+        input_shape = (ct.RangeDim(1, 32), ct.RangeDim(1, 32)) if symbolic else input_data.shape
+        converted_model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=input_shape, name="input", dtype=np.int32)],
+            convert_to="mlprogram",
+            compute_precision=compute_precision,
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+        prog = converted_model._mil_program
+
+        # The embedding layer is lowered to `gather` op.
+        expected_ops = ["gather"]
+        if (
+            compute_precision == ct.precision.FLOAT16
+            and minimum_deployment_target < ct.target.iOS16
+        ):
+            # Cast from fp16 to fp32 because fp16 is not supported in I/O before iOS16.
+            expected_ops.append("cast")
+        if (
+            minimum_deployment_target >= ct.target.iOS17
+            and compute_precision == ct.precision.FLOAT16
+            and num_embeddings <= np.iinfo(np.int16).max
+        ):
+            # The int16 cast only happens for iOS17+ with fp16 precision and there is no overflow.
+            expected_ops.insert(0, "cast")
+            cast_op = prog["main"].find_ops(op_type="cast")[0]
+            assert cast_op.dtype.val == "int16"
+            assert cast_op.outputs[0] == prog["main"].find_ops(op_type="gather")[0].indices
+        assert get_op_types_in_program(prog) == expected_ops

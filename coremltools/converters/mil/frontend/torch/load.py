@@ -4,32 +4,40 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os.path as _os_path
+from typing import List, Optional, Union
 
 import torch as _torch
+from torch.jit._script import RecursiveScriptModule
 
-from coremltools import _logger as logger
-from coremltools.converters.mil.input_types import InputType, TensorType
+from coremltools._deps import _HAS_TORCH_EXPORT_API
+from coremltools.converters.mil.frontend.torch.converter import TorchConverter
+from coremltools.converters.mil.input_types import TensorType
+from coremltools.converters.mil.mil.program import Program
 
-from .converter import TorchConverter, torch_to_mil_types
+from .converter import TorchConverter
 
+if _HAS_TORCH_EXPORT_API:
+    from torch.export import ExportedProgram
 
 def load(
-    model_spec,
-    inputs,
-    specification_version,
-    debug=False,
-    outputs=None,
-    cut_at_symbols=None,
-    use_default_fp16_io=False,
+    spec: Union[RecursiveScriptModule, "ExportedProgram", str],
+    inputs: List[TensorType],
+    specification_version: int,
+    debug: bool = False,
+    outputs: Optional[List[TensorType]] = None,
+    cut_at_symbols: Optional[List[str]] = None,
+    use_default_fp16_io: bool = False,
     **kwargs
-):
+) -> Program:
     """
     Convert PyTorch model to mil CoreML format.
 
     Parameters
     ----------
-    model_spec: String path to .pt file, or a TorchScript object representing
-        the model to convert.
+    spec: It could be one of the following:
+        - String path to .pt file containing serialized torchscript model
+        - In memory TorchScript model of type torch.jit.ScriptModule
+        - In memory EdgeIR program of type ExportedProgram
     inputs: Can be a singular element or list of elements of the following form
         1. Any subclass of InputType
         2. torch.Tensor (only shape and dtype will be used)
@@ -54,28 +62,25 @@ def load(
         and the compute precision set to fp16, this flag is True.
         When True, fp32 i/o defaults to fp16.
     """
-    torchscript = _torchscript_from_model(model_spec)
 
-    if hasattr(torchscript, 'training') and torchscript.training:
-        logger.warning("Model is not in eval mode. "
-                         "Consider calling '.eval()' on your model prior to conversion")
-    if type(torchscript) == _torch.jit._script.RecursiveScriptModule:
-        logger.warning("Support for converting Torch Script Models is experimental. "
-                         "If possible you should use a traced model for conversion.")
+    if _HAS_TORCH_EXPORT_API and isinstance(spec, ExportedProgram):
+        model = spec
+    else:
+        model = _torchscript_from_spec(spec)
 
-    inputs = _convert_to_torch_inputtype(inputs)
     converter = TorchConverter(
-        torchscript,
+        model,
         inputs,
         outputs,
         cut_at_symbols,
         specification_version,
         use_default_fp16_io,
     )
+
     return _perform_torch_convert(converter, debug)
 
 
-def _torchscript_from_model(model_spec):
+def _torchscript_from_spec(model_spec: RecursiveScriptModule) -> RecursiveScriptModule:
     if isinstance(model_spec, str) and (model_spec.endswith(".pt") or model_spec.endswith(".pth")):
         filename = _os_path.abspath(model_spec)
         return _torch.jit.load(filename)
@@ -88,28 +93,8 @@ def _torchscript_from_model(model_spec):
             )
         )
 
-def _convert_to_torch_inputtype(inputs):
-    input_type = []
-    for _input in inputs:
-        if isinstance(_input, (list, tuple)):
-            input_type.append(_convert_to_torch_inputtype(_input))
-        elif isinstance(_input, InputType):
-            if _input.shape is None:
-                raise ValueError("'shape' must be provided in the 'inputs' argument for pytorch conversion")
-            input_type.append(_input)
-        elif isinstance(_input, _torch.Tensor):
-            input_type.append(
-                TensorType(
-                    shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]
-                )
-            )
-        else:
-            raise ValueError(
-                "Unknown type {} for conversion to InputType.".format(type(_input))
-            )
-    return input_type
 
-def _perform_torch_convert(converter, debug):
+def _perform_torch_convert(converter: TorchConverter, debug: bool) -> Program:
     try:
         prog = converter.convert()
     except RuntimeError as e:

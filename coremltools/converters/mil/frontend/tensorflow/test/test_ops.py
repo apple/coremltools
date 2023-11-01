@@ -2622,6 +2622,15 @@ class TestImageResizing(TensorFlowBaseTest):
         target_shape,
         align_corners,
     ):
+        if (
+            backend == ("mlprogram", "fp16")
+            and input_shape == (2, 5, 2, 3)
+            and target_shape == (20, 60)
+        ):
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
+
         """
         Since iOS17, dynamic shape is supported by lowering to `resize` MIL op.
         """
@@ -2723,6 +2732,15 @@ class TestImageResizing(TensorFlowBaseTest):
         input_shape,
         target_shape,
     ):
+        if (
+            backend == ("mlprogram", "fp16")
+            and input_shape == (2, 5, 2, 3)
+            and target_shape == (20, 60)
+        ):
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
+
         """
         Since iOS17, dynamic shape is supported by lowering to `resize` MIL op.
         """
@@ -6742,6 +6760,15 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
     def test_programmatic(
         self, compute_unit, backend, input_block_rank, dynamic_input, dynamic_crops
     ):
+        if (
+            backend == ("mlprogram", "fp16")
+            and input_block_rank == (3, 1)
+            and dynamic_input
+            and not dynamic_crops
+        ):
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
 
         input_rank, block_rank = input_block_rank
 

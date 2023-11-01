@@ -95,7 +95,23 @@ def dequantize(context, node):
     context.quant_context.get_dequantized_var(node.inputs[0], node.name)
 
 
-def _dequantized_weight(qweight, name:str = None):
+def _construct_constexpr_affine_op(quantized_weights, zero_point, scale, axis=None, name=None):
+    """Constructs the constexpr op to represent the dequantized weight from PyTorch's data."""
+    if axis is None:
+        # It's per-tensor quantization, just use a dummy value for axis.
+        axis = _np.int32(0)
+    kwargs = {
+        "quantized_data": quantized_weights,
+        "zero_point": zero_point,
+        "scale": scale,
+        "axis": axis,
+    }
+    if name is not None:
+        kwargs["name"] = name
+    return mb.constexpr_affine_dequantize(**kwargs)
+
+
+def _dequantized_weight(qweight, name: str = None):
     """
     Given the first output (qweight) of torch.ops.quantized.conv2d/linear_unpack,
     this returns a dequantized version of the tensor to be added to the context.
@@ -105,24 +121,15 @@ def _dequantized_weight(qweight, name:str = None):
         scale = _np.float32(qweight.q_scale())
         zero_point = quant_dtype_np(qweight.q_zero_point())
         quantized_weights = _torch.int_repr(qweight).numpy()
-        # Axis doesn't matter for per-tensor quantization.
-        axis = _np.int32(0)
-        kwargs = {
-            "quantized_data": quantized_weights,
-            "zero_point": zero_point,
-            "scale": scale,
-            "axis": axis,
-        }
-        if name is not None:
-            kwargs["name"] = name
-        dequant_weights = mb.constexpr_affine_dequantize(**kwargs)
+        dequant_weights = _construct_constexpr_affine_op(
+            quantized_weights, zero_point, scale, axis=None, name=name
+        )
     # per_channel_affine_float_qparams is same as per_channel_affine except that it
     # expects both scale and zero point to be floating point values.
     elif qweight.qscheme() in {_torch.per_channel_affine, _torch.per_channel_affine_float_qparams}:
         quant_dtype_np = TORCH_QTYPE_TO_NP_TYPE[qweight.dtype]
         # TODO: How do we set the appropriate dtype here (fp16/fp32)?
         scale = qweight.q_per_channel_scales().numpy()
-        zero_point = quant_dtype_np(qweight.q_per_channel_zero_points().numpy())
         if qweight.qscheme() == _torch.per_channel_affine:
             zero_point = quant_dtype_np(qweight.q_per_channel_zero_points().numpy())
         else:
@@ -139,17 +146,10 @@ def _dequantized_weight(qweight, name:str = None):
             )
             zero_point = quant_dtype_np(val)
         quantized_weights = _torch.int_repr(qweight).numpy()
-        # Axis doesn't matter for per-tensor quantization.
-        axis = _np.int32(0)
-        kwargs = {
-            "quantized_data": quantized_weights,
-            "zero_point": zero_point,
-            "scale": scale,
-            "axis": axis,
-        }
-        if name is not None:
-            kwargs["name"] = name
-        dequant_weights = mb.constexpr_affine_dequantize(**kwargs)
+        axis = _np.int32(qweight.q_per_channel_axis())
+        dequant_weights = _construct_constexpr_affine_op(
+            quantized_weights, zero_point, scale, axis=axis, name=name
+        )
     else:
         raise ValueError(f'Unsupported quant scheme "{qweight.qscheme()}"')
     return dequant_weights

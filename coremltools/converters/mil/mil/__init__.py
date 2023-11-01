@@ -7,13 +7,30 @@ SPACES = "  "
 
 from .block import Block, Function, curr_block
 from .builder import Builder
-from .input_type import (SUPPORT_FLOAT_TYPES, SUPPORT_INT_TYPES, DefaultInputs,
-                         InputSpec, InternalVar, ListInputType,
-                         PyFunctionInputType, TensorInputType, TupleInputType)
+from .input_type import (
+    SUPPORT_FLOAT_TYPES,
+    SUPPORT_INT_TYPES,
+    DefaultInputs,
+    InputSpec,
+    InternalVar,
+    ListInputType,
+    PyFunctionInputType,
+    TensorInputType,
+    TupleInputType,
+)
 from .operation import Operation, mil_list, precondition
-from .program import (InputType, Placeholder, Program, Symbol,
-                      get_existing_symbol, get_new_symbol,
-                      get_new_variadic_symbol)
+from .program import (
+    InputType,
+    Placeholder,
+    Program,
+    Symbol,
+    get_existing_symbol,
+    get_new_symbol,
+    get_new_variadic_symbol,
+)
 from .var import ListVar, Var
-from .ops.defs._op_reqs import register_op
 
+"""
+DO NOT REMOVE THIS COMMENT, since we need to keep the import order.
+"""
+from .ops.defs._op_reqs import register_op

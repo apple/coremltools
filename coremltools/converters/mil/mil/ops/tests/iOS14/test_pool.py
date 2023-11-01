@@ -10,13 +10,49 @@ import pytest
 
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.testing_reqs import compute_units
 
 
 class TestAvgPool:
+    @pytest.mark.parametrize(
+        "backend, pad_type",
+        itertools.product(
+            backends,
+            ["valid", "same", "same_lower", "custom"],
+        ),
+    )
+    def test_type_inference_cache(self, backend, pad_type):
+        # Test the type inference has the caching mechanism to ensure
+        # same symbolic input shapes results in the same output shape
+        if pad_type == "same_lower" and backend.opset_version == ct.target.iOS15:
+            return
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=(1, 3, get_new_symbol(), get_new_symbol()), dtype=types.fp32)
+            ],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
+            # Basic pool
+            pool_1 = mb.avg_pool(x=x, kernel_sizes=[1, 2], pad_type=pad_type)
+            pool_2 = mb.avg_pool(x=x, kernel_sizes=[1, 2], pad_type=pad_type)
+            assert pool_1.shape == pool_1.shape
+
+            # With strides
+            pool_1 = mb.avg_pool(x=x, kernel_sizes=[1, 2], strides=[1, 2], pad_type=pad_type)
+            pool_2 = mb.avg_pool(x=x, kernel_sizes=[1, 2], strides=[1, 2], pad_type=pad_type)
+            assert pool_1.shape == pool_1.shape
+
+            # With padding
+            pool_1 = mb.avg_pool(x=x, kernel_sizes=[1, 2], pad_type=pad_type, pad=[2, 3, 4, 5])
+            pool_2 = mb.avg_pool(x=x, kernel_sizes=[1, 2], pad_type=pad_type, pad=[2, 3, 4, 5])
+            assert pool_1.shape == pool_2.shape
+            return pool_1
+
     @pytest.mark.parametrize(
         "compute_unit, backend, inputshape_kernelshape",
         itertools.product(

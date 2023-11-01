@@ -93,7 +93,7 @@ _LUT_BASED_QUANTIZATION = [
 
 _METADATA_VERSION = "com.github.apple.coremltools.version"
 _METADATA_SOURCE = "com.github.apple.coremltools.source"
-
+_METADATA_SOURCE_DIALECT = "com.github.apple.coremltools.source_dialect"
 
 
 class _FeatureDescription:
