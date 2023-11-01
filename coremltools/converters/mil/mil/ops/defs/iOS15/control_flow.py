@@ -235,10 +235,8 @@ class select(Operation):
     """
     Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.
 
-    The shape of ``cond``, ``a``, and ``b`` must be broadcastable.
-    You must provide ``a`` and ``b`` together, or provide neither.
-    If you provide neither, the operation returns the indices
-    of ``cond`` that are ``True``.
+    You must provide ``a``, ``b`` and ``cond``. The shape of ``cond``, ``a``,
+    and ``b`` must be broadcastable.
 
     Parameters
     ----------
