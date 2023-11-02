@@ -603,6 +603,21 @@ def _matrix_norm(x, order, dim, keep_dims, name):
 
 
 @register_torch_op
+def narrow(context, node):
+    x, dim, start, length = _get_inputs(context, node, expected=4)
+
+    begin = [0] * len(x.shape)
+    begin[dim.val] = start.val
+
+    end = list(x.shape)
+    end[dim.val] = start.val + length.val
+
+    context.add(
+        mb.slice_by_index(x=x, begin=begin, end=end, name=node.name)
+    )
+
+
+@register_torch_op
 def linalg_vector_norm(context, node):
     x, order, dim, keep_dims, _ = _get_inputs(context, node, expected=5)
     assert x is not None and keep_dims is not None and order is not None

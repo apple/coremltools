@@ -766,6 +766,42 @@ class TestNorms(TorchBaseTest):
             )
 
 
+class TestNarrow(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            COMMON_SHAPES,
+        ),
+    )
+    def test_narrow(self, compute_unit, backend, shape):
+
+        class Model(torch.nn.Module):
+            def __init__(self, dim, start, length):
+                super().__init__()
+                self.dim = dim
+                self.start = start
+                self.length = length
+
+            def forward(self, x):
+                return torch.narrow(x, self.dim, self.start, self.length)
+
+
+        for cur_dim in range(len(shape)):
+            for cur_start in range(shape[cur_dim]-1):
+                for cur_length in range(1, shape[cur_dim] - cur_start):
+
+                    m = Model(cur_dim, cur_start, cur_length)
+
+                    TorchBaseTest.run_compare_torch(
+                        shape,
+                        m,
+                        backend=backend,
+                        compute_unit=compute_unit,
+                    )
+
+
 class TestWeightNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, in_out_features",
