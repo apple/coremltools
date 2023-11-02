@@ -585,7 +585,7 @@ def narrow(context, node):
     begin[dim.val] = start.val
 
     end = list(x.shape)
-    end[dim.val] = start.val+length.val
+    end[dim.val] = start.val + length.val
 
     context.add(
         mb.slice_by_index(x=x, begin=begin, end=end, name=node.name)
