@@ -134,7 +134,7 @@ class crop_resize(_crop_resize_iOS16):
             target_width=1,
             normalized_coordinates=False,
             spatial_scale=1.0,
-            box_coordinate_mode="CONRNERS_HEIGHT_FIRST",
+            box_coordinate_mode="CORNERS_HEIGHT_FIRST",
             sampling_mode="DEFAULT",
             pad_value=0.0,
         )
