@@ -101,26 +101,16 @@ class avg_pool(Pooling):
         * ``S == len(D_in)``.
 
     pad_type: const str (Required)
+        Must be one of ``valid``, ``same``, ``custom`` or ``same_lower``.
 
-        Must be one of the following:
-
-            * ``valid``: No padding. This is equivalent to custom pad with
-              ``pad[2*i] == pad[2*i+1] == 0, for i=0,...,len(d_in)-1``.
-            * ``custom``: Specify custom padding in the parameter ``pad``.
-            * ``same``: Input is padded such that out spatial shapes are
-              ``d_out[i] = ceil(d_in[i] / strides[i])``.
-            * ``same_lower``: Similar to ``same`` but the padding
-              will place extra rows/cols on the top/left if the padding amount is odd.
-
-        Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
-        calculated as follows:
-
-            * ``dilated_kernel = (K[i] - 1) * dilate[i] + 1``
-            * If ``dilated_kernel`` is odd,
-              ``padding[2*i] = padding[2*i+1] = floor(dilated_kernel / 2)``
-            * Otherwise:
-              ``padding[2*i] = ceil((dilated_kernel - 1) / 2)``,
-              ``padding[2*i+1] = floor((dilated_kernel - 1) / 2)``
+        * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for
+          all i``.
+        * ``same`` : This is equivalent to custom pad with ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
+        * ``custom``: Specify custom padding in the parameter pad. note that ``same``
+          padding is equivalent to custom padding with
+          ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
+        * ``same_lower``: Similar to ``same`` but the padding
+          will place extra rows/cols on the top/left if the padding amount is odd.
 
     pad: const<[P],i32> (Optional. Default to all 0s)
         * ``pad`` represents the number of elements to pad before and after each
@@ -145,6 +135,7 @@ class avg_pool(Pooling):
     -------
     tensor<[n, C_out,\*D_out], T>
         * Same rank as ``x``.
+        * ``C_out`` is the number of output channels or depth dimensions.
         * When ``ceil_mode = False``:
             * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) /
               strides[i]] +1, for i = 0, .., len(D_in) - 1`` is mathematically the same
@@ -196,24 +187,24 @@ class l2_pool(Pooling):
     ----------
     x: tensor<[n,C_in,*D_in], T> (Required)
         * Only support 1d and 2d pooling.
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     kernel_sizes: const tensor<[K], T> (Required)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     strides: const tensor<[S],i32> (Optional, default to all 1s)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     pad_type: const str (Required)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     pad: const<[P],i32> (Optional, default to all 0s)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     Returns
     -------
     tensor<[n, C_out,*D_out], T>
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     Attributes
     ----------
@@ -239,27 +230,27 @@ class max_pool(Pooling):
     Parameters
     ----------
     x: tensor<[n,C_in,*D_in], T> (Required)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     kernel_sizes: const tensor<[K], T> (Required)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     strides: const tensor<[S],i32> (Optional, default to all 1s)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     pad_type: const str (Required)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     pad: const<[P],i32> (Optional, default to all 0s)
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     ceil_mode: const<bool>
-        * see ``avg_pool``.
+        * see :py:class:`avg_pool`.
 
     Returns
     -------
     tensor<[n, C_out,*D_out], T>
-        * See ``avg_pool``.
+        * See :py:class:`avg_pool`.
 
     Attributes
     ----------

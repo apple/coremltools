@@ -19,12 +19,7 @@ from coremltools.converters.mil.mil import (
 from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import SYMBOL, VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import (
-    get_param_val,
-    get_squeeze_axes,
-    solve_slice_by_index_shape,
-    solve_slice_by_index_slice,
-)
+from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     any_variadic,
@@ -167,7 +162,7 @@ class reshape(Operation):
     ----------
     x: tensor<\*?, T> (Required)
 
-        * A n-D tensor or a scalar.
+        * An n-D tensor or a scalar.
         * If ``x`` is fixed rank (and possibly contains symbolic dimension),
           shape may contain elements that are not positive integers (see below).
         * If ``x`` is variadic rank, shape can only contain positive integers.
@@ -181,7 +176,7 @@ class reshape(Operation):
               The new symbol that is not present in ``x.shape`` represent a dimension
               such that the total size remains constant. Symbol is illegal
               if ``x`` is variadic rank.
-            * ``-1``: ``-1`` introduces a new symbol (see Symbols). Therefore, ``-1`` is
+            * ``-1``: ``-1`` introduces a new symbol (see Symbols above). Therefore, ``-1`` is
               allowed if all symbols in the shape appear in ``x.shape``. ``-1`` is illegal
               if ``x`` is variadic rank.
             * ``0``: If ``K == rank(x)`` then ``0`` means inheriting from the corresponding
@@ -519,16 +514,23 @@ class slice_by_index(Operation):
             )
 
     def type_inference(self):
-        # solve shape
-        ret_shape = solve_slice_by_index_shape(
-            self.x.shape,
-            self.begin.val,
-            self.end.val,
-            get_param_val(self.stride),
-            get_param_val(self.begin_mask),
-            get_param_val(self.end_mask),
-            get_param_val(self.squeeze_mask),
+
+        # get tensor and set default value
+        begin = self.begin.val
+        end = self.end.val
+        x_rank = self.x.rank
+        stride = self.stride.val if self.stride is not None else [1] * x_rank
+        begin_mask = (
+            self.begin_mask.val if self.begin_mask is not None else [False] * x_rank
         )
+        end_mask = self.end_mask.val if self.end_mask is not None else [False] * x_rank
+        squeeze_mask = (
+            self.squeeze_mask.val if self.squeeze_mask is not None else [False] * x_rank
+        )
+
+        # solve shape
+        x_shape = self.x.shape
+        ret_shape = solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask)
 
         if len(ret_shape) == 0:
             # Scalar case.
@@ -539,21 +541,41 @@ class slice_by_index(Operation):
     def value_inference(self):
         if self.x.sym_val is None or self.begin.val is None or self.end.val is None:
             return None
-
-        # solve the data slices and slice tensor
-        slices = solve_slice_by_index_slice(
-            self.x.shape,
-            self.begin.val,
-            self.end.val,
-            get_param_val(self.stride),
-            get_param_val(self.begin_mask),
-            get_param_val(self.end_mask),
-            get_param_val(self.squeeze_mask),
+        begin = [int(i) for i in list(self.begin.val[:])]
+        end = [int(i) for i in list(self.end.val[:])]
+        stride = [1] * self.x.rank if self.stride is None else self.stride.val
+        begin_mask = (
+            [False] * self.x.rank if self.begin_mask is None else self.begin_mask.val
         )
+        end_mask = [False] * self.x.rank if self.end_mask is None else self.end_mask.val
+        squeeze_mask = (
+            [False] * self.x.rank
+            if self.squeeze_mask is None
+            else self.squeeze_mask.val
+        )
+
+        slices = []
+        for idx, mask in enumerate(begin_mask):
+            if mask:
+                begin[idx] = None
+        for idx, mask in enumerate(end_mask):
+            if mask:
+                end[idx] = None
+        squeeze_axes = []
+        for idx, mask in enumerate(squeeze_mask):
+            if mask:
+                end[idx] = None
+                stride[
+                    idx
+                ] = 2147483647  # We slice out only 1 element by setting stride to INF
+                squeeze_axes.append(idx)
+        for idx in range(self.x.rank):
+            slices.append(slice(begin[idx], end[idx], stride[idx]))
+
+        slices = tuple(slices)
         res = self.x.sym_val[slices]
 
-        # remove squeeze_axes
-        squeeze_axes = get_squeeze_axes(get_param_val(self.squeeze_mask), self.x.rank)
+        # remove squeezed axes
         if len(squeeze_axes) > 0:
             if len(squeeze_axes) == len(res.shape):
                 if len(res) == 0:
@@ -719,28 +741,28 @@ class space_to_depth(Operation):
 @register_op
 class space_to_batch(Operation):
     """
-    Rearrange elements in a tensor from spatial into batch dimension.
+    Rearrange elements in a tensor from spatial into batch dimensions.
 
     Parameters
     ----------
     x: tensor<[n, C, H, W], T> (Required)
-        * Input tensor must have rank 4.
-        * The first and the second dimension are batch, channel, respectively
-        * The remaining dimensions (H, W) are treated as "spatial dimensions"
+        * Input tensor must have rank ``4``.
+        * The first and the second dimension are batch and channel, respectively.
+        * The remaining dimensions ``(H, W)`` are treated as "spatial dimensions".
     block_shape: const tensor<[2], i32> (Required)
-        * The length of the block_shape must be `2`
-        * It defines the shapes of the block in which the spatial dimensions are divided
+        * The length of the ``block_shape`` must be ``2``.
+        * It defines the shapes of the block in which the spatial dimensions are divided.
     paddings: const tensor<[2, 2], i32> (Required)
-        * It must have shape `(2, 2)`
-        * It defines the padding for each spatial dimensions
+        * It must have shape ``(2, 2)``.
+        * It defines the padding for each spatial dimension.
 
     Returns
     -------
     tensor<[new_n, C, new_H, new_W], T>
-        * new_n = n * block_shape[0] * block_shape[1]
-        * new_H = (H + paddings[0][0] + padding[0][1])/block_shape[0]
-        * new_W = (W + paddings[1][0] + padding[1][1])/block_shape[1]
-        * The output has the same rank as the input
+        * ``new_n = n * block_shape[0] * block_shape[1]``
+        * ``new_H = (H + paddings[0][0] + padding[0][1])/block_shape[0]``
+        * ``new_W = (W + paddings[1][0] + padding[1][1])/block_shape[1]``
+        * The output has the same rank as the input.
 
     Attributes
     ----------
@@ -795,28 +817,28 @@ class space_to_batch(Operation):
 @register_op
 class batch_to_space(Operation):
     """
-    Rearrange elements in a tensor from batch into spatial dimension.
+    Rearrange elements in a tensor from batch into spatial dimensions.
 
     Parameters
     ----------
     x: tensor<[n, C, H, W], T> (Required)
-        * Input tensor must have rank 4.
-        * The first and the second dimension are batch, channel, respectively
-        * The remaining dimensions (H, W) are treated as "spatial dimensions"
+        * Input tensor must have rank ``4``.
+        * The first and the second dimension are batch and channel, respectively.
+        * The remaining dimensions ``(H, W)`` are treated as "spatial dimensions".
     block_shape: const tensor<[2], i32> (Required)
-        * The length of the block_shape must be `2`
+        * The length of the ``block_shape`` must be ``2``.
         * It defines the shapes of the block in which the spatial dimensions are multiplied
     crops: const tensor<[2, 2], i32> (Required)
-        * It must have shape `(2, 2)`
-        * It defines the amount to crop from each spatial dimensions
+        * It must have shape ``(2, 2)``.
+        * It defines the amount to crop from each spatial dimension.
 
     Returns
     -------
     tensor<[new_n, C, new_H, new_W], T>
-        * new_n = n / (block_shape[0] * block_shape[1])
-        * new_H = (H * block_shape[0]) - paddings[0][0] - padding[0][1]
-        * new_W = (W * block_shape[1]) - paddings[1][0] - padding[1][1]
-        * The output has the same rank as the input
+        * ``new_n = n / (block_shape[0] * block_shape[1])``
+        * ``new_H = (H * block_shape[0]) - paddings[0][0] - padding[0][1]``
+        * ``new_W = (W * block_shape[1]) - paddings[1][0] - padding[1][1]``
+        * The output has the same rank as the input.
 
     Attributes
     ----------
