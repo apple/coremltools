@@ -8376,13 +8376,13 @@ Otherwise, no particular ordering is guaranteed.</p></li>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n, C, H, W], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Input tensor must have rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-<li><p>The first and the second dimension are batch and channel, respectively.</p></li>
+<li><p>The first and the second dimension are batch, channel; respectively.</p></li>
 <li><p>The remaining dimensions <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code> are treated as “spatial dimensions”.</p></li>
 </ul>
 </dd>
 <dt><strong>block_shape: const tensor&lt;[2], i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>The length of the <code class="docutils literal notranslate"><span class="pre">block_shape</span></code> must be <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
-<li><p>It defines the shapes of the block in which the spatial dimensions are multiplied</p></li>
+<li><p>It defines the shapes of the block in which the spatial dimensions are multiplied.</p></li>
 </ul>
 </dd>
 <dt><strong>crops: const tensor&lt;[2, 2], i32&gt; (Required)</strong></dt><dd><ul class="simple">
@@ -8812,7 +8812,7 @@ rank.</p></li>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n, C, H, W], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Input tensor must have rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-<li><p>The first and the second dimension are batch and channel, respectively.</p></li>
+<li><p>The first and the second dimension are batch, channel; respectively.</p></li>
 <li><p>The remaining dimensions <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code> are treated as “spatial dimensions”.</p></li>
 </ul>
 </dd>
