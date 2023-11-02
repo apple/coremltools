@@ -77,6 +77,18 @@ class TestCropResize:
         "backend",
         backends,
     )
+    def test_default_value(self, backend):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=backend.opset_version)
+        def prog(a):
+            res = mb.crop_resize(x=a, boxes=np.array([1, 1, 2, 2], dtype=np.float32).reshape(1, 4), target_height=2, target_width=2)
+            assert res.op.box_coordinate_mode.val == "CORNERS_HEIGHT_FIRST"
+            assert res.op.sampling_mode.val == "DEFAULT"
+            return res
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
     def test_builder_eval_ios17_invalid(self, backend):
         x = np.arange(1, 17, dtype=np.float32).reshape(1, 1, 4, 4)
         three_boxes = np.array(

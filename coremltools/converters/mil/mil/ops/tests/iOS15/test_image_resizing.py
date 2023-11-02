@@ -356,3 +356,16 @@ class TestCropResize:
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS17)
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_default_value(self, backend):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 640, 640))], opset_version=backend.opset_version)
+        def prog(a):
+            res = mb.crop_resize(x=a, roi=np.array([[[[[0]], [[0]], [[320]], [[320]]]]], dtype=np.float32), target_height=160, target_width=160)
+            assert res.op.box_coordinate_mode.val == "CORNERS_HEIGHT_FIRST"
+            assert res.op.sampling_mode.val == "DEFAULT"
+            return res
