@@ -8,7 +8,7 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 import numpy as _np
 import numpy as np
@@ -1716,7 +1716,7 @@ def _adaptive_pool1d(context, node, reduce_op):
         out_shape = [x.shape[0], out_length]
 
     pool_results = []
-    for start, end in get_kernel_indexes_1d(x.shape[-1], out_length):
+    for start, end in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[-1], out_length):
         cur_kernel = mb.slice_by_index(
             x=x,
             begin=begin_prefix+[start],
@@ -1748,7 +1748,9 @@ def adaptive_max_pool2d(context, node):
     _adaptive_pool2d(context, node, mb.max_pool, mb.reduce_max)
 
 
-def get_kernel_indexes_1d(in_dimension, out_dimension):
+def _get_kernel_indexes_1d_for_adaptive_pooling(
+        in_dimension: int,
+        out_dimension: int) -> List[Tuple[int, int]]:
     results = []
     for i in range(out_dimension):
         start = _math.floor(i * in_dimension / out_dimension)
@@ -1765,8 +1767,8 @@ def _adaptive_pool2d_non_fixed_kernel_size_and_stride(x, output_shape, name, red
     '''
 
     pool_results = []
-    for s2, e2 in get_kernel_indexes_1d(x.shape[2], output_shape[0]):
-        for s3, e3 in get_kernel_indexes_1d(x.shape[3], output_shape[1]):
+    for s2, e2 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[2], output_shape[0]):
+        for s3, e3 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[3], output_shape[1]):
             cur_kernel = mb.slice_by_index(
                 x=x,
                 begin=[0, 0, s2, s3],
