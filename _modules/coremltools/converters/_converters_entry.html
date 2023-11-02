@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters._converters_entry &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters._converters_entry &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -109,7 +109,7 @@
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span><span class="p">,</span> <span class="n">_HAS_TORCH_EXPORT_API</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters._profile_utils</span> <span class="kn">import</span> <span class="n">_profile</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AvailableTarget</span><span class="p">,</span>
@@ -130,7 +130,7 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.quantization</span> <span class="kn">import</span> <span class="n">FP16ComputePrecision</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">PassOption</span> <span class="k">as</span> <span class="n">_PassOption</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_pipeline</span> <span class="kn">import</span> <span class="n">PassPipeline</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_SOURCE_DIALECT</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
 <span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">_MLPACKAGE_EXTENSION</span>
 
 <span class="k">if</span> <span class="n">_HAS_TF_1</span><span class="p">:</span>
@@ -145,8 +145,13 @@
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">torch</span>
 
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> \
-        <span class="n">_torchscript_from_model</span> <span class="k">as</span> <span class="n">pytorch_load</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">_torchscript_from_spec</span> <span class="k">as</span> <span class="n">try_load_torchscript</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">torch.export</span> <span class="kn">import</span> <span class="n">ExportedProgram</span>
+
 
 
 <div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../../source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">[docs]</a><span class="nd">@_profile</span>
@@ -196,8 +201,12 @@
 
 <span class="sd">        * PyTorch</span>
 
-<span class="sd">            - A `TorchScript &lt;https://pytorch.org/docs/stable/jit.html&gt;`_ object</span>
-<span class="sd">            - Path to a ``.pt`` file</span>
+<span class="sd">            - TorchScript Models:</span>
+<span class="sd">                - A `TorchScript &lt;https://pytorch.org/docs/stable/jit.html&gt;`_ object</span>
+<span class="sd">                - Path to a ``.pt`` file</span>
+
+<span class="sd">            - Torch Exported Models:</span>
+<span class="sd">                - A `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt; ` object with `EDGE` dialect</span>
 
 <span class="sd">    source : str (optional)</span>
 
@@ -255,18 +264,23 @@
 <span class="sd">              When ``inputs`` not provided or ``dtype`` not specified. The float 32 inputs defaults to float 16.</span>
 
 <span class="sd">        * PyTorch:</span>
-<span class="sd">            - The ``inputs`` parameter is required.</span>
-<span class="sd">            - Number of elements in ``inputs`` must match the number of inputs</span>
-<span class="sd">              of the PyTorch model.</span>
-<span class="sd">            - ``inputs`` may be a nested list or tuple.</span>
-<span class="sd">            - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.</span>
-<span class="sd">            - If the ``name`` argument is specified with ``TensorType`` or</span>
-<span class="sd">              ``ImageType``, the converted Core ML model will have inputs with</span>
-<span class="sd">              the same name.</span>
-<span class="sd">            - If ``dtype`` is missing:</span>
-<span class="sd">              * For ``minimum_deployment_target &lt;= ct.target.macOS12``, it defaults to float 32.</span>
-<span class="sd">              * For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
-<span class="sd">                It defaults to float 16.</span>
+
+<span class="sd">            - TorchScript Models:</span>
+<span class="sd">                - The ``inputs`` parameter is required.</span>
+<span class="sd">                - Number of elements in ``inputs`` must match the number of inputs</span>
+<span class="sd">                  of the PyTorch model.</span>
+<span class="sd">                - ``inputs`` may be a nested list or tuple.</span>
+<span class="sd">                - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.</span>
+<span class="sd">                - If the ``name`` argument is specified with ``TensorType`` or</span>
+<span class="sd">                  ``ImageType``, the converted Core ML model will have inputs with</span>
+<span class="sd">                  the same name.</span>
+<span class="sd">                - If ``dtype`` is missing:</span>
+<span class="sd">                  * For ``minimum_deployment_target &lt;= ct.target.macOS12``, it defaults to float 32.</span>
+<span class="sd">                  * For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">                    It defaults to float 16.</span>
+
+<span class="sd">            - Torch Exported Models:</span>
+<span class="sd">                - The ``inputs`` parameter is not supported. ``inputs`` parameter is inferred from Torch ExportedProgram.</span>
 
 <span class="sd">    outputs : list of ``TensorType`` or ``ImageType`` (optional)</span>
 
@@ -312,13 +326,17 @@
 
 <span class="sd">        * PyTorch:</span>
 
-<span class="sd">            - If specified, the length of the list must match the number of</span>
-<span class="sd">              outputs returned by the PyTorch model.</span>
-<span class="sd">            - If ``name`` is specified, it is applied to the output names of the</span>
-<span class="sd">              converted Core ML model.</span>
-<span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
-<span class="sd">              If ``dtype`` not specified, the outputs inferred of type float 32</span>
-<span class="sd">              defaults to float 16.</span>
+<span class="sd">            - TorchScript Models:</span>
+<span class="sd">                - If specified, the length of the list must match the number of</span>
+<span class="sd">                outputs returned by the PyTorch model.</span>
+<span class="sd">                - If ``name`` is specified, it is applied to the output names of the</span>
+<span class="sd">                converted Core ML model.</span>
+<span class="sd">                - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">                If ``dtype`` not specified, the outputs inferred of type float 32</span>
+<span class="sd">                defaults to float 16.</span>
+
+<span class="sd">            - Torch Exported Models:</span>
+<span class="sd">                - The ``outputs`` parameter is not supported. ``outputs`` parameter is inferred from Torch ExportedProgram.</span>
 
 
 <span class="sd">    classifier_config : ClassifierConfig class (optional)</span>
@@ -402,7 +420,7 @@
 <span class="sd">          The above transform iterates through all the ops, looking at each op&#39;s</span>
 <span class="sd">          inputs and outputs. If they are of type float 32, ``cast``</span>
 <span class="sd">          ops are injected to convert those tensors (also known as `vars`) to</span>
-<span class="sd">          type float 16.</span>
+<span class="sd">          type float 16. Similarly, int32 vars will also be cast to int16.</span>
 
 <span class="sd">        - ``coremltools.precision.FLOAT32`` enum: No transform is applied.</span>
 
@@ -465,9 +483,11 @@
 <span class="sd">        Defaults to ``False``.</span>
 
 <span class="sd">    compute_units: coremltools.ComputeUnit</span>
+<span class="sd">        The set of processing units the model can use to make predictions. After</span>
+<span class="sd">        conversion, the model is loaded with the provided set of compute units and</span>
+<span class="sd">        returned.</span>
 
 <span class="sd">        An enum with the following possible values.</span>
-
 <span class="sd">            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
 <span class="sd">              neural engine.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
@@ -581,15 +601,17 @@
 
 <span class="sd">    PyTorch:</span>
 
-<span class="sd">        &gt;&gt;&gt; model = torchvision.models.mobilenet_v2()</span>
-<span class="sd">        &gt;&gt;&gt; model.eval()</span>
-<span class="sd">        &gt;&gt;&gt; example_input = torch.rand(1, 3, 256, 256)</span>
-<span class="sd">        &gt;&gt;&gt; traced_model = torch.jit.trace(model, example_input)</span>
+<span class="sd">        TorchScript Models:</span>
 
-<span class="sd">        &gt;&gt;&gt; input = ct.TensorType(name=&#39;input_name&#39;, shape=(1, 3, 256, 256))</span>
-<span class="sd">        &gt;&gt;&gt; mlmodel = ct.convert(traced_model, inputs=[input])</span>
-<span class="sd">        &gt;&gt;&gt; results = mlmodel.predict({&quot;input&quot;: example_input.numpy()})</span>
-<span class="sd">        &gt;&gt;&gt; print(results[&#39;1651&#39;]) # 1651 is the node name given by PyTorch&#39;s JIT</span>
+<span class="sd">            &gt;&gt;&gt; model = torchvision.models.mobilenet_v2()</span>
+<span class="sd">            &gt;&gt;&gt; model.eval()</span>
+<span class="sd">            &gt;&gt;&gt; example_input = torch.rand(1, 3, 256, 256)</span>
+<span class="sd">            &gt;&gt;&gt; traced_model = torch.jit.trace(model, example_input)</span>
+
+<span class="sd">            &gt;&gt;&gt; input = ct.TensorType(name=&#39;input_name&#39;, shape=(1, 3, 256, 256))</span>
+<span class="sd">            &gt;&gt;&gt; mlmodel = ct.convert(traced_model, inputs=[input])</span>
+<span class="sd">            &gt;&gt;&gt; results = mlmodel.predict({&quot;input&quot;: example_input.numpy()})</span>
+<span class="sd">            &gt;&gt;&gt; print(results[&#39;1651&#39;]) # 1651 is the node name given by PyTorch&#39;s JIT</span>
 
 <span class="sd">    See `Conversion Options &lt;https://coremltools.readme.io/docs/neural-network-conversion&gt;`_ for</span>
 <span class="sd">    more advanced options.</span>
@@ -600,6 +622,7 @@
                                      <span class="n">outputs_as_strings</span><span class="p">,</span>
                                      <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
                                      <span class="n">outputs</span><span class="p">)</span>
+    <span class="n">source_dialect</span> <span class="o">=</span> <span class="n">_determine_source_dialect</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">)</span>
     <span class="n">exact_target</span> <span class="o">=</span> <span class="n">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span>
     <span class="n">_validate_conversion_arguments</span><span class="p">(</span>
         <span class="n">model</span><span class="p">,</span>
@@ -617,7 +640,7 @@
     <span class="k">if</span> <span class="n">pass_pipeline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">pass_pipeline</span> <span class="o">=</span> <span class="n">PassPipeline</span><span class="p">()</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">need_fp16_cast_pass</span><span class="p">:</span>
-        <span class="n">pass_pipeline</span><span class="o">.</span><span class="n">remove_passes</span><span class="p">({</span><span class="s2">&quot;common::add_fp16_cast&quot;</span><span class="p">})</span>
+        <span class="n">pass_pipeline</span><span class="o">.</span><span class="n">remove_passes</span><span class="p">({</span><span class="s2">&quot;common::add_fp16_cast&quot;</span><span class="p">,</span> <span class="s2">&quot;common::add_int16_cast&quot;</span><span class="p">})</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_precision</span><span class="p">,</span> <span class="n">FP16ComputePrecision</span><span class="p">):</span>
         <span class="c1"># For backward compatibility with the `op_selector` param in FP16ComputePrecision.</span>
         <span class="n">pass_pipeline</span><span class="o">.</span><span class="n">_pass_options</span><span class="p">[</span><span class="s2">&quot;common::add_fp16_cast&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
@@ -676,7 +699,7 @@
 
     <span class="n">gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
 
-    <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">)</span>
+    <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">source_dialect</span><span class="o">=</span><span class="n">source_dialect</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">mlmodel</span></div>
 
@@ -911,22 +934,64 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input should be a list of TensorType or ImageType&quot;</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Expected argument for pytorch &quot;inputs&quot; not provided&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">dialect</span> <span class="o">!=</span> <span class="s2">&quot;EDGE&quot;</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Conversion for models with only EDGE dialect is supported/tested. Provided Dialect: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">dialect</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
 
-        <span class="n">raise_if_duplicated</span><span class="p">(</span><span class="n">flat_inputs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
-            <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">flat_inputs</span><span class="p">]</span>
-        <span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType&quot;</span>
-            <span class="p">)</span>
+            <span class="c1"># TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)</span>
+            <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;&#39;inputs&#39; argument should be None for ExportedProgram&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;&#39;outputs&#39; argument should be None for ExportedProgram&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">try_load_torchscript</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+                <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">if</span> <span class="n">is_torch_load_successful</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s1">&#39;Expected argument &quot;inputs&quot; for TorchScript models not provided&#39;</span>
+                    <span class="p">)</span>
+
+                <span class="n">raise_if_duplicated</span><span class="p">(</span><span class="n">flat_inputs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
+                    <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">flat_inputs</span><span class="p">]</span>
+                <span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;@model must either be a TorchScript object (or .pt or .pth file) or an ExportedProgram object (if using torch.export based API), received: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;milinternal&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Program</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Converter was asked to convert MIL input, but input is not a MIL &quot;</span> <span class="s2">&quot;program!&quot;</span>
             <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_determine_source_dialect</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">):</span>
+
+    <span class="n">source_dialect</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;TorchExport::</span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">dialect</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;TorchScript&quot;</span>
+
+    <span class="k">return</span> <span class="n">source_dialect</span>
 
 
 <span class="k">def</span> <span class="nf">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
@@ -967,9 +1032,13 @@
             <span class="k">pass</span>
 
     <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
+            <span class="k">return</span> <span class="s2">&quot;pytorch&quot;</span>
+
         <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">pytorch_load</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="n">try_load_torchscript</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
             <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">pass</span>
@@ -1045,6 +1114,12 @@
     <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span>
     <span class="n">coremltools_version</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span>
 
+    <span class="n">src_dialect</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">_METADATA_SOURCE_DIALECT</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span>
+        <span class="k">else</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE_DIALECT</span><span class="p">]</span>
+    <span class="p">)</span>
+
     <span class="n">src_pkg_version_list</span> <span class="o">=</span> <span class="n">src_pkg_version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;==&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_pkg_version_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
@@ -1061,10 +1136,13 @@
     <span class="k">if</span> <span class="n">src_pkg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pkg_ver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">build_info</span><span class="p">[</span><span class="s1">&#39;coremltools-component-&#39;</span> <span class="o">+</span> <span class="n">src_pkg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pkg_ver</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">src_dialect</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">build_info</span><span class="p">[</span><span class="s2">&quot;coremltools-source-dialect&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_dialect</span>
+
     <span class="k">return</span> <span class="n">build_info</span>
 
 
-<span class="k">def</span> <span class="nf">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">source_dialect</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="c1"># recording metadata: coremltools version, source framework and version</span>
     <span class="k">if</span> <span class="n">exact_source</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorflow2&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="p">(</span><span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">):</span>
         <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="s2">&quot;tensorflow==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
@@ -1077,6 +1155,9 @@
 
     <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_pkg_version</span>
     <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span> <span class="o">=</span> <span class="n">_ct_version</span>
+
+    <span class="k">if</span> <span class="n">source_dialect</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE_DIALECT</span><span class="p">]</span> <span class="o">=</span> <span class="n">source_dialect</span>
 
     <span class="n">build_info</span> <span class="o">=</span> <span class="n">_get_metadata_from_mlmodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">)</span>
 

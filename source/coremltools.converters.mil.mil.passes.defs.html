@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Graph Passes &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>MIL Graph Passes &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -42,7 +42,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -957,8 +957,9 @@ is inserted.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_normalization.</span></span><span class="sig-name descname"><span class="pre">fuse_layernorm_or_instancenorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_normalization.html#fuse_layernorm_or_instancenorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm" title="Permalink to this definition"></a></dt>
 <dd><p>A graph optimization pass on PyMIL to detect and fuse several variants of <code class="docutils literal notranslate"><span class="pre">layer_norm</span></code> or
 <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. Pattern 1 corresponds to either <code class="docutils literal notranslate"><span class="pre">layer_norm</span></code> or <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. Patterns 2-4
-are <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. You can find these patterns in the methods for this class in the source code.
-To quickly view the source code, click the <strong>[source]</strong> button at the end of the class definition.</p>
+are <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. Pattern 5 is <code class="docutils literal notranslate"><span class="pre">layer_norm</span></code>. You can find these patterns in the methods for
+this class in the source code. To quickly view the source code, click the <strong>[source]</strong> button at
+the end of the class definition.</p>
 </dd></dl>
 
 </section>
