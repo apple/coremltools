@@ -8,7 +8,7 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Tuple
 
 import numpy as _np
 import numpy as np
@@ -1703,13 +1703,75 @@ def pad(context, node):
 
 
 @register_torch_op
+def adaptive_avg_pool1d(context, node):
+    _adaptive_pool1d(context, node, mb.reduce_mean)
+
+
+@register_torch_op
 def adaptive_avg_pool2d(context, node):
     _adaptive_pool2d(context, node, mb.avg_pool, mb.reduce_mean)
+
+
+def _adaptive_pool1d(context, node, reduce_op):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    assert len(inputs[1].val) == 1
+    out_length = inputs[1].val[0]
+
+    if len(x.shape) == 3:
+        # 3D input
+        begin_prefix = [0, 0]
+        end_prefix = [x.shape[0], x.shape[1]]
+        out_shape = [x.shape[0], x.shape[1], out_length]
+    else:
+        # 2D input
+        assert len(x.shape) == 2
+        begin_prefix = [0]
+        end_prefix = [x.shape[0]]
+        out_shape = [x.shape[0], out_length]
+
+    pool_results = []
+    for start, end in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[-1], out_length):
+        cur_kernel = mb.slice_by_index(
+            x=x,
+            begin=begin_prefix + [start],
+            end=end_prefix+[end],
+        )
+        cur_result = reduce_op(
+            x=cur_kernel,
+            axes=[-1],
+            keep_dims=True
+        )
+        pool_results.append(cur_result)
+        
+    context.add(
+        mb.reshape(
+            x=mb.concat(values=pool_results, axis=-1),
+            shape=out_shape,
+            name=node.name,
+        )
+    )
+
+
+@register_torch_op
+def adaptive_max_pool1d(context, node):
+    _adaptive_pool1d(context, node, mb.reduce_max)
 
 
 @register_torch_op
 def adaptive_max_pool2d(context, node):
     _adaptive_pool2d(context, node, mb.max_pool, mb.reduce_max)
+
+
+def _get_kernel_indexes_1d_for_adaptive_pooling(
+        in_dimension: int,
+        out_dimension: int) -> List[Tuple[int, int]]:
+    results = []
+    for i in range(out_dimension):
+        start = _math.floor(i * in_dimension / out_dimension)
+        end = _math.ceil((i + 1) * in_dimension / out_dimension)
+        results.append((start, end))
+    return results
 
 
 def _adaptive_pool2d_non_fixed_kernel_size_and_stride(x, output_shape, name, reduce_op):
@@ -1719,19 +1781,9 @@ def _adaptive_pool2d_non_fixed_kernel_size_and_stride(x, output_shape, name, red
     height and width dimension.
     '''
 
-    def get_kernel_indexes_1d(in_dimension, out_dimension):
-        results = []
-        for i in range(out_dimension):
-            start = _math.floor(i * in_dimension / out_dimension)
-            end = _math.ceil((i + 1) * in_dimension / out_dimension)
-            results.append((start, end))
-
-        return results
-
     pool_results = []
-
-    for s2, e2 in get_kernel_indexes_1d(x.shape[2], output_shape[0]):
-        for s3, e3 in get_kernel_indexes_1d(x.shape[3], output_shape[1]):
+    for s2, e2 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[2], output_shape[0]):
+        for s3, e3 in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[3], output_shape[1]):
             cur_kernel = mb.slice_by_index(
                 x=x,
                 begin=[0, 0, s2, s3],
