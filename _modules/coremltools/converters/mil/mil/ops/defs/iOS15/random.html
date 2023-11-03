@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.random &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.random &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../../../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -139,13 +139,13 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor with the specified shape, with random values from a Bernoulli</span>
 <span class="sd">    distribution.</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. math::</span>
 <span class="sd">       f(k) = \begin{cases}1-p  &amp;\text{if } k = 0\\</span>
 <span class="sd">                        p    &amp;\text{if } k = 1\end{cases}</span>
 
 <span class="sd">    for :math:`k` in :math:`\{0, 1\}`.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    shape: &lt;K, i32&gt; (Required)</span>
@@ -156,7 +156,7 @@
 <span class="sd">        * The probability of sampling ``1``. Defaults to ``0.5``.</span>
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Seed to create a reproducible sequence of values across multiple invokes.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*, T&gt;</span>
@@ -170,7 +170,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    random_categorical, random_normal, random_uniform</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
             <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
@@ -179,7 +179,7 @@
         <span class="p">)</span>
         <span class="o">+</span> <span class="n">RandomDistribution</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -200,23 +200,29 @@
 <span class="k">class</span> <span class="nc">random_categorical</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns random values from a categorical distribution.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    shape: &lt;\*D_in, T&gt;</span>
-<span class="sd">        * N-dimensional tensor, one of ``logits`` (event log-probabilities) or ``probs``</span>
-<span class="sd">          (event probabilities). The first ``N - 1`` dimensions specifies distributions,</span>
-<span class="sd">          and the last dimension represents a vector of probabilities.</span>
+<span class="sd">    x: &lt;\*D_in, T&gt;</span>
+<span class="sd">        * N-dimensional tensor which represents ``logits`` (event log-probabilities) or ``probs``</span>
+<span class="sd">          (event probabilities) depending on ``mode``. The first ``N - 1`` dimensions specifies</span>
+<span class="sd">          distributions, and the last dimension represents a vector of probabilities.</span>
 
 <span class="sd">    mode: const&lt;str&gt; (Optional)</span>
 <span class="sd">        One of ``[&#39;logits&#39;, &#39;probs&#39;]``. Defaults to ``logits``.</span>
+<span class="sd">        When set to ``probs``, an element-wise log layer will be added to calculate logits.</span>
 
 <span class="sd">    size: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        Number of samples to draw. Defaults to ``1``.</span>
+<span class="sd">        When set as ``1``, it&#39;s categorical distribution.</span>
+<span class="sd">        When set larger than ``1``, it&#39;s actually multinomial distribution by drawing with</span>
+<span class="sd">        replacement. It means that when a sample index is drawn, it can be drawn again.</span>
+<span class="sd">        The categorical distribution is a special case of the multinomial distribution, giving</span>
+<span class="sd">        the probabilities of potential outcomes of a single drawing rather than multiple drawings.</span>
 
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        Seed to create a reproducible sequence of values across multiple invokes.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*D_in[:-1] + [size], T&gt;</span>
@@ -230,14 +236,14 @@
 <span class="sd">    --------</span>
 <span class="sd">    random_bernoulli, random_normal, random_uniform</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
         <span class="n">size</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
         <span class="n">seed</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -260,7 +266,7 @@
 <span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor with the specified shape, with random values from a normal</span>
 <span class="sd">    distribution.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    shape: &lt;K, i32&gt; (Required)</span>
@@ -273,7 +279,7 @@
 <span class="sd">        The standard deviation (width) of the normal distribution. Defaults to ``1.0``.</span>
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        Seed to create a reproducible sequence of values across multiple invokes.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*, T&gt;</span>
@@ -287,7 +293,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    random_categorical, random_bernoulli, random_uniform</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
             <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
@@ -297,7 +303,7 @@
         <span class="p">)</span>
         <span class="o">+</span> <span class="n">RandomDistribution</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -323,15 +329,15 @@
 <span class="sd">    Returns a tensor with the specified shape with random values from a uniform</span>
 <span class="sd">    distribution. Samples are uniformly distributed over the half-open interval</span>
 <span class="sd">    ``[low, high)`` (includes low, but excludes high).</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. math::</span>
 <span class="sd">       p(x) = \frac{1}{high - low}</span>
-<span class="sd">    </span>
+
 <span class="sd">    For a real number :math:`x`.</span>
-<span class="sd">    </span>
+
 <span class="sd">    When ``high == low``, values of ``low`` will be returned. If ``high &lt; low``,</span>
 <span class="sd">    the results are officially undefined and may eventually raise an error.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    shape: &lt;K, i32&gt; (Required)</span>
@@ -344,7 +350,7 @@
 <span class="sd">        * Upper boundary of the output interval (exclusive). Defaults to ``1.0``.</span>
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Seed to create a reproducible sequence of values across multiple invokes.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*, T&gt;</span>
@@ -358,7 +364,7 @@
 <span class="sd">    --------</span>
 <span class="sd">    random_categorical, random_bernoulli, random_normal</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
             <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
@@ -368,7 +374,7 @@
         <span class="p">)</span>
         <span class="o">+</span> <span class="n">RandomDistribution</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>

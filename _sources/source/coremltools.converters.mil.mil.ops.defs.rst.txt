@@ -376,6 +376,7 @@ tensor\_transformation (iOS 15)
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation
 
+   .. autoclass:: batch_to_space
    .. autoclass:: depth_to_space
    .. autoclass:: expand_dims
    .. autoclass:: pixel_shuffle
@@ -385,6 +386,7 @@ tensor\_transformation (iOS 15)
    .. autoclass:: slice_by_index
    .. autoclass:: slice_by_size
    .. autoclass:: sliding_windows
+   .. autoclass:: space_to_batch
    .. autoclass:: space_to_depth
    .. autoclass:: squeeze
    .. autoclass:: transpose

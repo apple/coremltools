@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -404,6 +404,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">get_new_symbol</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Symbol</span>
+
             <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">Symbol</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span> <span class="o">=</span> <span class="n">lower_bound</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span> <span class="o">=</span> <span class="n">upper_bound</span>

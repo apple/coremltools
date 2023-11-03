@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Builder &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>MIL Builder &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -42,7 +42,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -130,15 +130,17 @@ For details on each op, see <a class="reference external" href="https://apple.gi
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.Builder.program">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">program</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opset_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/builder.html#Builder.program"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.Builder.program" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">program</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_specs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Placeholder</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">opset_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">AvailableTarget</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/builder.html#Builder.program"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.Builder.program" title="Permalink to this definition"></a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">mb.program</span></code> decorator creates a MIL program with a single
-function (<code class="docutils literal notranslate"><span class="pre">main</span></code>). The input to <code class="docutils literal notranslate"><span class="pre">main</span></code> is a tensor.</p>
+function with name <code class="docutils literal notranslate"><span class="pre">function_name</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>input_specs: TensorSpec</strong></dt><dd><p>Describes a tensor.</p>
+<dt><strong>input_specs: List[TensorSpec]</strong></dt><dd><p>Describes the function inputs</p>
 </dd>
 <dt><strong>opset_version: AvailableTarget enum</strong></dt><dd><p>Describes the opset version of the program</p>
+</dd>
+<dt><strong>function_name: str</strong></dt><dd><p>Name of the function</p>
 </dd>
 </dl>
 </dd>

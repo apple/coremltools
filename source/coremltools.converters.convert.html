@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Unified (TensorFlow and Pytorch) &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>Unified (TensorFlow and Pytorch) &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -42,7 +42,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -144,8 +144,21 @@ formats:</p>
 <li><p>PyTorch</p>
 <blockquote>
 <div><ul class="simple">
+<li><dl class="simple">
+<dt>TorchScript Models:</dt><dd><ul>
 <li><p>A <a class="reference external" href="https://pytorch.org/docs/stable/jit.html">TorchScript</a> object</p></li>
 <li><p>Path to a <code class="docutils literal notranslate"><span class="pre">.pt</span></code> file</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Torch Exported Models:</dt><dd><ul>
+<li><p>A <cite>ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt; ` object with `EDGE</cite> dialect</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </div></blockquote>
 </li>
@@ -205,8 +218,11 @@ When <code class="docutils literal notranslate"><span class="pre">inputs</span><
 </dd>
 </dl>
 </li>
+<li><p>PyTorch:</p>
+<blockquote>
+<div><ul>
 <li><dl>
-<dt>PyTorch:</dt><dd><ul>
+<dt>TorchScript Models:</dt><dd><ul>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is required.</p></li>
 <li><p>Number of elements in <code class="docutils literal notranslate"><span class="pre">inputs</span></code> must match the number of inputs
 of the PyTorch model.</p></li>
@@ -225,6 +241,16 @@ the same name.</p></li>
 </ul>
 </dd>
 </dl>
+</li>
+<li><dl class="simple">
+<dt>Torch Exported Models:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is not supported. <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is inferred from Torch ExportedProgram.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
 </li>
 </ul>
 </dd>
@@ -272,14 +298,27 @@ defaults to float 16.</p></li>
 </li>
 <li><p>PyTorch:</p>
 <blockquote>
-<div><ul class="simple">
-<li><p>If specified, the length of the list must match the number of
-outputs returned by the PyTorch model.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, it is applied to the output names of the
-converted Core ML model.</p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&gt;=</span> <span class="pre">ct.target.macOS13</span></code>, and with <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> in float 16 precision.
+<div><ul>
+<li><dl>
+<dt>TorchScript Models:</dt><dd><ul class="simple">
+<li><p>If specified, the length of the list must match the number of</p></li>
+</ul>
+<p>outputs returned by the PyTorch model.
+- If <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, it is applied to the output names of the
+converted Core ML model.
+- For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&gt;=</span> <span class="pre">ct.target.macOS13</span></code>, and with <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> in float 16 precision.
 If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> not specified, the outputs inferred of type float 32
-defaults to float 16.</p></li>
+defaults to float 16.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Torch Exported Models:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is not supported. <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is inferred from Torch ExportedProgram.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </div></blockquote>
 </li>
@@ -368,7 +407,7 @@ support that type).</p>
 <p>The above transform iterates through all the ops, looking at each op’s
 inputs and outputs. If they are of type float 32, <code class="docutils literal notranslate"><span class="pre">cast</span></code>
 ops are injected to convert those tensors (also known as <cite>vars</cite>) to
-type float 16.</p>
+type float 16. Similarly, int32 vars will also be cast to int16.</p>
 </li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.precision.FLOAT32</span></code> enum: No transform is applied.</p>
 <p>The original float32 tensor dtype in the source model is preserved.
@@ -429,9 +468,11 @@ ML program model on macOS 11, since an ML program can only be compiled and
 loaded from macOS12+.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><p>An enum with the following possible values.</p>
-<blockquote>
-<div><ul class="simple">
+<dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><p>The set of processing units the model can use to make predictions. After
+conversion, the model is loaded with the provided set of compute units and
+returned.</p>
+<dl class="simple">
+<dt>An enum with the following possible values.</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the
 neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
@@ -440,7 +481,8 @@ neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but
 not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </dd>
 <dt><strong>package_dir</strong><span class="classifier">str</span></dt><dd><p>Post conversion, the model is saved at a temporary location and
 loaded to form the MLModel object ready for prediction.</p>
@@ -548,6 +590,8 @@ You can use:</p>
 </pre></div>
 </div>
 <p>PyTorch:</p>
+<blockquote>
+<div><p>TorchScript Models:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">torchvision</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">mobilenet_v2</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">example_input</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
@@ -560,6 +604,7 @@ You can use:</p>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;1651&#39;</span><span class="p">])</span> <span class="c1"># 1651 is the node name given by PyTorch&#39;s JIT</span>
 </pre></div>
 </div>
+</div></blockquote>
 <p>See <a class="reference external" href="https://coremltools.readme.io/docs/neural-network-conversion">Conversion Options</a> for
 more advanced options.</p>
 </dd></dl>

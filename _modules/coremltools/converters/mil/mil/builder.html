@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.builder &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters.mil.mil.builder &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -99,15 +99,16 @@
 
 <span class="kn">import</span> <span class="nn">numbers</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
 
 <span class="kn">from</span> <span class="nn">.block</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">curr_block</span>
-<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InternalInputType</span><span class="p">,</span> <span class="n">ListOrTensorInputType</span><span class="p">,</span>
-                         <span class="n">TensorInputType</span><span class="p">,</span> <span class="n">TupleInputType</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="n">InternalInputType</span><span class="p">,</span> <span class="n">ListOrTensorInputType</span><span class="p">,</span> <span class="n">TensorInputType</span><span class="p">,</span> <span class="n">TupleInputType</span>
 <span class="kn">from</span> <span class="nn">.program</span> <span class="kn">import</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">Program</span>
 <span class="kn">from</span> <span class="nn">.var</span> <span class="kn">import</span> <span class="n">InternalVar</span><span class="p">,</span> <span class="n">Var</span>
 
@@ -257,6 +258,7 @@
             <span class="n">input_spec</span><span class="o">=</span><span class="n">op_cls</span><span class="o">.</span><span class="n">input_spec</span><span class="p">,</span>
             <span class="n">op_name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">,</span>
             <span class="n">candidate_kv</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;enclosing_block&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">curr_block</span><span class="p">()</span>
         <span class="n">new_op</span> <span class="o">=</span> <span class="n">op_cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="c1"># Initialize optional input Vars if it wasn&#39;t in kwargs</span>
@@ -286,22 +288,93 @@
     <span class="k">def</span> <span class="nf">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Builder.program"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span><span class="n">input_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opset_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_create_function</span><span class="p">(</span>
+        <span class="n">main_block</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+        <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Utility to construct a pymil function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">input_specs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_specs</span> <span class="o">=</span> <span class="p">[]</span>
 
-<span class="sd">        The ``mb.program`` decorator creates a MIL program with a single</span>
-<span class="sd">        function (``main``). The input to ``main`` is a tensor.</span>
+        <span class="c1"># validate number of function inputs</span>
+        <span class="n">num_args</span> <span class="o">=</span> <span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span>
+        <span class="n">arg_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">)[:</span><span class="n">num_args</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_args</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">main_block</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> expects </span><span class="si">{</span><span class="n">num_args</span><span class="si">}</span><span class="s2"> inputs: </span><span class="si">{</span><span class="n">arg_names</span><span class="si">}</span><span class="s2">. Got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span><span class="si">}</span><span class="s2"> input_specs.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># create the function</span>
+        <span class="n">input_spec_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">)}</span>
+        <span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_spec_dict</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span> <span class="k">as</span> <span class="n">func</span><span class="p">:</span>
+            <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg_names</span><span class="p">]</span>
+            <span class="n">outputs</span> <span class="o">=</span> <span class="n">main_block</span><span class="p">(</span><span class="o">*</span><span class="n">input_vars</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">outputs</span><span class="p">]</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+
+        <span class="c1"># infer the opset version if not provided</span>
+        <span class="n">max_opset_version</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">get_max_opset_version_and_op</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">opset_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">=</span> <span class="n">max_opset_version</span>
+
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">function</span><span class="p">(</span>
+        <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``mb.function`` decorator creates a MIL function.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        input_specs: List[TensorSpec]</span>
+<span class="sd">            Describes the function inputs</span>
 
-<span class="sd">        input_specs: TensorSpec</span>
-<span class="sd">            Describes a tensor.</span>
+<span class="sd">        opset_version: AvailableTarget enum</span>
+<span class="sd">            Describes the opset version of the function</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">        &gt;&gt;&gt; @mb.function(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)</span>
+<span class="sd">        &gt;&gt;&gt; def func(a):</span>
+<span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">Builder</span><span class="o">.</span><span class="n">_create_function</span><span class="p">(</span><span class="n">main_block</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span>
+
+<div class="viewcode-block" id="Builder.program"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span>
+        <span class="n">input_specs</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Placeholder</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">opset_version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">AvailableTarget</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">function_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The ``mb.program`` decorator creates a MIL program with a single</span>
+<span class="sd">        function with name ``function_name``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_specs: List[TensorSpec]</span>
+<span class="sd">            Describes the function inputs</span>
 
 <span class="sd">        opset_version: AvailableTarget enum</span>
 <span class="sd">            Describes the opset version of the program</span>
 
+<span class="sd">        function_name: str</span>
+<span class="sd">            Name of the function</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -311,32 +384,11 @@
 <span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">input_specs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">input_specs</span> <span class="o">=</span> <span class="p">[]</span>
-
         <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+            <span class="n">function</span> <span class="o">=</span> <span class="n">Builder</span><span class="o">.</span><span class="n">_create_function</span><span class="p">(</span><span class="n">main_block</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span>
             <span class="n">program</span> <span class="o">=</span> <span class="n">Program</span><span class="p">()</span>
-            <span class="n">num_args</span> <span class="o">=</span> <span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span>
-            <span class="n">arg_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">)[:</span><span class="n">num_args</span><span class="p">]</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_args</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> expects </span><span class="si">{}</span><span class="s2"> inputs: </span><span class="si">{}</span><span class="s2">. Got </span><span class="si">{}</span><span class="s2"> input_specs.&quot;</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                        <span class="n">main_block</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">num_args</span><span class="p">,</span> <span class="n">arg_names</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span>
-                    <span class="p">)</span>
-                <span class="p">)</span>
-            <span class="n">input_spec_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">)}</span>
-            <span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_spec_dict</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span> <span class="k">as</span> <span class="n">func</span><span class="p">:</span>
-                <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg_names</span><span class="p">]</span>
-                <span class="n">outputs</span> <span class="o">=</span> <span class="n">main_block</span><span class="p">(</span><span class="o">*</span><span class="n">input_vars</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-                    <span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-                <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-                    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">outputs</span><span class="p">]</span>
-                <span class="n">func</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
-                <span class="n">program</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+            <span class="n">program</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="n">function</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">program</span>
-
         <span class="k">return</span> <span class="n">wrapper</span></div></div>
 </pre></div>
 

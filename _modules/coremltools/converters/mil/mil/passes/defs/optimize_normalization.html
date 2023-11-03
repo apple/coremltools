@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.optimize_normalization &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters.mil.mil.passes.defs.optimize_normalization &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
@@ -118,8 +118,9 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A graph optimization pass on PyMIL to detect and fuse several variants of ``layer_norm`` or</span>
 <span class="sd">    ``instance_norm``. Pattern 1 corresponds to either ``layer_norm`` or ``instance_norm``. Patterns 2-4</span>
-<span class="sd">    are ``instance_norm``. You can find these patterns in the methods for this class in the source code.</span>
-<span class="sd">    To quickly view the source code, click the **[source]** button at the end of the class definition.</span>
+<span class="sd">    are ``instance_norm``. Pattern 5 is ``layer_norm``. You can find these patterns in the methods for</span>
+<span class="sd">    this class in the source code. To quickly view the source code, click the **[source]** button at</span>
+<span class="sd">    the end of the class definition.</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -268,10 +269,18 @@
         <span class="n">negative_axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span> <span class="o">-</span> <span class="n">rank</span> <span class="k">if</span> <span class="n">a</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">axes</span><span class="p">]</span>
         <span class="n">negative_axes</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">gamma_var</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">beta_var</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
+        <span class="n">gamma_rank</span> <span class="o">=</span> <span class="n">gamma_var</span><span class="o">.</span><span class="n">rank</span> <span class="k">if</span> <span class="n">gamma_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="n">beta_rank</span> <span class="o">=</span> <span class="n">beta_var</span><span class="o">.</span><span class="n">rank</span> <span class="k">if</span> <span class="n">beta_var</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">gamma_rank</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">)</span> <span class="ow">and</span> <span class="n">beta_rank</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">axes</span><span class="p">):</span>
             <span class="c1"># axes for layer_norm must be [-1] or [-1, -2] or [-1, -2, -3] and so on</span>
             <span class="k">if</span> <span class="n">negative_axes</span> <span class="o">==</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">negative_axes</span><span class="p">),</span> <span class="mi">0</span><span class="p">)):</span>
                 <span class="n">is_layernorm</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="n">negative_axes</span> <span class="o">==</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="n">is_layernorm</span> <span class="o">=</span> <span class="p">(</span><span class="n">gamma_var</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">beta_var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">gamma_rank</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">beta_rank</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">gamma_var</span> <span class="o">=</span> <span class="n">gamma_var</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="n">gamma_var</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="n">beta_var</span> <span class="o">=</span> <span class="n">beta_var</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="n">beta_var</span> <span class="k">else</span> <span class="kc">None</span>
 
         <span class="k">if</span> <span class="n">rank</span> <span class="o">==</span> <span class="mi">4</span> <span class="ow">and</span> <span class="p">(</span><span class="n">negative_axes</span> <span class="o">==</span> <span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="n">negative_axes</span> <span class="o">==</span> <span class="p">[</span><span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">]):</span>
             <span class="k">if</span> <span class="p">(</span>
@@ -917,6 +926,196 @@
             <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">gamma_var</span><span class="p">,</span> <span class="n">beta_var</span><span class="p">,</span> <span class="n">epsilon_var</span><span class="p">,</span> <span class="n">add_op</span><span class="p">,</span> <span class="n">ops_to_remove</span>
         <span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_try_match_and_transform_pattern_5</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Detect BC1S ``LayerNorm`` pattern as in ml-ane-transformers.</span>
+
+<span class="sd">        Identify two patterns, the first:</span>
+
+<span class="sd">        ``y = (x - mean(x)) * rsqrt(variance(X) + eps)``</span>
+
+<span class="sd">        ``y = (x - mean(x)) * rsqrt(mean((x - mean(x))^2) + eps)``</span>
+
+<span class="sd">        .. code-block::</span>
+
+<span class="sd">            x --&gt; reduce_mean --|</span>
+<span class="sd">            |                   |  |---|</span>
+<span class="sd">            |                   V  |   V</span>
+<span class="sd">            |----------------&gt; sub --&gt; mul --&gt; reduce_mean --&gt; add(epsilon) --&gt; rsqrt</span>
+<span class="sd">                                |                                                   |</span>
+<span class="sd">                                |                                                   V</span>
+<span class="sd">                                |-------------------------------------------------&gt; mul --&gt; [...]</span>
+
+<span class="sd">        If the optional elementwise weight and bias are set, the second pattern is:</span>
+
+<span class="sd">        ``y = [(x - mean(x)) * rsqrt(mean((x - mean(x))^2) + eps) + beta] * gamma``</span>
+
+<span class="sd">        Note that this is different from the torch and MIL definitions of beta and gamma</span>
+<span class="sd">        so beta is be scaled by gamma and applied before it.</span>
+
+<span class="sd">        .. code-block::</span>
+
+<span class="sd">            x --&gt; reduce_mean --|</span>
+<span class="sd">            |                   |  |---|</span>
+<span class="sd">            |                   V  |   V</span>
+<span class="sd">            |----------------&gt; sub --&gt; mul --&gt; reduce_mean --&gt; add(epsilon) --&gt; rsqrt</span>
+<span class="sd">                                |                                                   |</span>
+<span class="sd">                                |                                                   V</span>
+<span class="sd">                                |-------------------------------------------------&gt; mul</span>
+<span class="sd">                                                                                    |</span>
+<span class="sd">                                                                                    V</span>
+<span class="sd">                                                                                add(beta)</span>
+<span class="sd">                                                                                    |</span>
+<span class="sd">                                                                                    V</span>
+<span class="sd">                                                                                mul(gamma) --&gt; [...]</span>
+
+<span class="sd">        These pattern corresponds to a specific ``layer_norm``:</span>
+<span class="sd">            - ``rank`` is 4.</span>
+<span class="sd">            - ``axes`` is ``[1]``</span>
+<span class="sd">            - ``gamma`` and ``beta`` are applied as in ml-ane-transformers, in the opposite order of torch.</span>
+
+<span class="sd">         &quot;&quot;&quot;</span>
+        <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">root_var</span> <span class="o">=</span> <span class="n">reduce_op</span><span class="o">.</span><span class="n">x</span>
+
+        <span class="c1"># check that root_var feeds into at least 2 ops</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">root_var</span><span class="o">.</span><span class="n">child_ops</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># Do not enforce that the only child ops are reduce_mean and sub as in other</span>
+        <span class="c1"># patterns. There are models where the root op is used after the layer norm.</span>
+
+        <span class="c1"># check 1st reduce_mean op</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_reduce_op</span><span class="p">(</span><span class="n">reduce_op</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reduce_op</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">reduce_op</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">reduce_op</span><span class="o">.</span><span class="n">keep_dims</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reduce_op</span><span class="p">)</span>
+
+        <span class="c1"># check 1st sub op</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span><span class="n">reduce_op</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;sub&quot;</span><span class="p">],</span> <span class="n">check_order</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">child_ops_reduce_mean</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">reduce_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span>
+        <span class="n">sub_op1</span> <span class="o">=</span> <span class="n">child_ops_reduce_mean</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">sub_op1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">sub_op1</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mul&quot;</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">sub_op1</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">root_var</span> <span class="ow">and</span> <span class="n">sub_op1</span><span class="o">.</span><span class="n">y</span> <span class="o">==</span> <span class="n">reduce_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sub_op1</span><span class="p">)</span>
+
+        <span class="c1"># check mul op (equivalent to a square op)</span>
+        <span class="n">square_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">sub_op1</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">square_op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">square_op</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;reduce_mean&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">square_op</span><span class="o">.</span><span class="n">x</span> <span class="o">!=</span> <span class="n">square_op</span><span class="o">.</span><span class="n">y</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">square_op</span><span class="p">)</span>
+
+        <span class="c1"># check second reduce mean</span>
+        <span class="n">reduce_op2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">square_op</span><span class="p">,</span> <span class="s2">&quot;reduce_mean&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_reduce_op</span><span class="p">(</span><span class="n">reduce_op2</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">reduce_op2</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">reduce_op2</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">reduce_op2</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">reduce_op2</span><span class="o">.</span><span class="n">keep_dims</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">reduce_op2</span><span class="p">)</span>
+
+        <span class="c1"># check add op (with epsilon)</span>
+        <span class="n">add_op1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">reduce_op2</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">add_op1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">add_op1</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;rsqrt&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">epsilon_var</span> <span class="o">=</span> <span class="n">add_op1</span><span class="o">.</span><span class="n">y</span> <span class="k">if</span> <span class="n">add_op1</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">reduce_op2</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="n">add_op1</span><span class="o">.</span><span class="n">x</span>
+        <span class="k">if</span> <span class="n">epsilon_var</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">epsilon_var</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>  <span class="c1"># must be scalar</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_op1</span><span class="p">)</span>
+
+        <span class="c1"># check rsqrt</span>
+        <span class="n">rsqrt_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">add_op1</span><span class="p">,</span> <span class="s2">&quot;rsqrt&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">rsqrt_op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">rsqrt_op</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mul&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rsqrt_op</span><span class="p">)</span>
+
+        <span class="c1"># Last op in pattern if there is no elementwise affine.</span>
+        <span class="n">mul_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">rsqrt_op</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">mul_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">mul_op</span><span class="o">.</span><span class="n">y</span> <span class="o">!=</span> <span class="n">sub_op1</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">and</span> <span class="n">mul_op</span><span class="o">.</span><span class="n">x</span> <span class="o">!=</span> <span class="n">sub_op1</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mul_op</span><span class="p">)</span>
+
+        <span class="c1"># Default values if no gamma or beta ops.</span>
+        <span class="n">end_op</span> <span class="o">=</span> <span class="n">mul_op</span>
+        <span class="n">gamma_var</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">beta_var</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">add_beta_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">mul_op</span><span class="p">,</span> <span class="s2">&quot;add&quot;</span><span class="p">)</span>
+        <span class="n">mul_gamma_op</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_get_child_op_type</span><span class="p">(</span><span class="n">add_beta_op</span><span class="p">,</span> <span class="s2">&quot;mul&quot;</span><span class="p">)</span>
+
+        <span class="n">has_beta_and_gamma</span> <span class="o">=</span> <span class="n">add_beta_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mul_gamma_op</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+        <span class="c1"># mul_op cannot be used except as an input to add_beta_op.</span>
+        <span class="k">if</span> <span class="n">has_beta_and_gamma</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">mul_op</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;add&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="c1"># It would be possible to fuse this pattern as:</span>
+            <span class="c1"># layer_norm(x, gamma=None, beta=None) -&gt; add(beta) -&gt; mul(gamma) -&gt; ...</span>
+            <span class="c1">#                                      |-&gt; other mul_op child ops</span>
+            <span class="c1"># For simplicity don&#39;t handle this edge case.</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="c1"># add_beta_op cannot be used except as an input to mul_gamma_op.</span>
+        <span class="k">if</span> <span class="n">has_beta_and_gamma</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_child_op_types</span><span class="p">(</span>
+            <span class="n">add_beta_op</span><span class="p">,</span> <span class="n">child_op_types</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;mul&quot;</span><span class="p">]</span>
+        <span class="p">):</span>
+            <span class="c1"># It would be possible to fuse this pattern as:</span>
+            <span class="c1"># layer_norm(x, gamma=None, beta=None) -&gt; add(beta) -&gt; mul(gamma) -&gt; ...</span>
+            <span class="c1">#                                                   |-&gt; other add_beta_op child ops</span>
+            <span class="c1"># For simplicity don&#39;t handle this edge case.</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="n">has_beta_and_gamma</span><span class="p">:</span>
+            <span class="n">beta_var</span> <span class="o">=</span> <span class="n">add_beta_op</span><span class="o">.</span><span class="n">y</span> <span class="k">if</span> <span class="n">add_beta_op</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">mul_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="n">add_beta_op</span><span class="o">.</span><span class="n">x</span>
+
+            <span class="n">gamma_var</span> <span class="o">=</span> <span class="n">mul_gamma_op</span><span class="o">.</span><span class="n">y</span> <span class="k">if</span> <span class="n">mul_gamma_op</span><span class="o">.</span><span class="n">x</span> <span class="o">==</span> <span class="n">add_beta_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">else</span> <span class="n">mul_gamma_op</span><span class="o">.</span><span class="n">x</span>
+            <span class="n">gamma_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
+                <span class="n">val</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">gamma_var</span><span class="o">.</span><span class="n">val</span><span class="p">),</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;_fuse_layernorm_gamma&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Scale beta by gamma. Note: this un-scaling introduces a small amount</span>
+            <span class="c1"># of precision loss.</span>
+            <span class="c1"># https://github.com/apple/ml-ane-transformers/blob/da64000fa56cc85b0859bc17cb16a3d753b8304a/ane_transformers/huggingface/distilbert.py#L31</span>
+            <span class="n">beta_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span>
+                <span class="n">val</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">beta_var</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="o">*</span> <span class="n">gamma_var</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;_fuse_layernorm_beta&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_beta_op</span><span class="p">)</span>
+            <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mul_gamma_op</span><span class="p">)</span>
+            <span class="n">end_op</span> <span class="o">=</span> <span class="n">mul_gamma_op</span>
+
+        <span class="k">if</span> <span class="n">add_beta_op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mul_gamma_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Gamma and beta are optional in layer_norm.</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">add_beta_op</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">mul_gamma_op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If only one of gamma or beta is present, they could</span>
+            <span class="c1"># be folded into the layer_norm op. For simplicity</span>
+            <span class="c1"># don&#39;t handle this edge case.</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_apply_transform</span><span class="p">(</span>
+            <span class="n">reduce_op</span><span class="p">,</span> <span class="n">block</span><span class="p">,</span> <span class="n">gamma_var</span><span class="p">,</span> <span class="n">beta_var</span><span class="p">,</span> <span class="n">epsilon_var</span><span class="p">,</span> <span class="n">end_op</span><span class="p">,</span> <span class="n">ops_to_remove</span>
+        <span class="p">)</span>
+
     <span class="nd">@block_context_manager</span>
     <span class="k">def</span> <span class="nf">_fuse_layernorm_or_instancenorm_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
         <span class="n">fusion_status</span> <span class="o">=</span> <span class="kc">False</span>
@@ -936,6 +1135,8 @@
                     <span class="n">fusion_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_match_and_transform_pattern_2</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">fusion_status</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
                     <span class="n">fusion_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_match_and_transform_pattern_3</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">fusion_status</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                    <span class="n">fusion_status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_match_and_transform_pattern_5</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
                 <span class="c1"># has to break as the downstream iterator is affected.</span>
                 <span class="k">if</span> <span class="n">fusion_status</span><span class="p">:</span>
                     <span class="k">return</span> <span class="n">fusion_status</span>

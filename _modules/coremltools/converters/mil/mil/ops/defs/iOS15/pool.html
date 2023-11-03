@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.pool &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.pool &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../../../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -229,6 +229,7 @@
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C_out,\*D_out], T&gt;</span>
 <span class="sd">        * Same rank as ``x``.</span>
+<span class="sd">        * ``C_out`` is the number of output channels or depth dimensions.</span>
 <span class="sd">        * When ``ceil_mode = False``:</span>
 <span class="sd">            * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) /</span>
 <span class="sd">              strides[i]] +1, for i = 0, .., len(D_in) - 1`` is mathematically the same</span>
@@ -280,24 +281,24 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</span>
 <span class="sd">        * Only support 1d and 2d pooling.</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    kernel_sizes: const tensor&lt;[K], T&gt; (Required)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    strides: const tensor&lt;[S],i32&gt; (Optional, default to all 1s)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    pad_type: const str (Required)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    pad: const&lt;[P],i32&gt; (Optional, default to all 0s)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C_out,*D_out], T&gt;</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -323,27 +324,27 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    kernel_sizes: const tensor&lt;[K], T&gt; (Required)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    strides: const tensor&lt;[S],i32&gt; (Optional, default to all 1s)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    pad_type: const str (Required)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    pad: const&lt;[P],i32&gt; (Optional, default to all 0s)</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    ceil_mode: const&lt;bool&gt;</span>
-<span class="sd">        * see ``avg_pool``.</span>
+<span class="sd">        * see :py:class:`avg_pool`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C_out,*D_out], T&gt;</span>
-<span class="sd">        * See ``avg_pool``.</span>
+<span class="sd">        * See :py:class:`avg_pool`.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>

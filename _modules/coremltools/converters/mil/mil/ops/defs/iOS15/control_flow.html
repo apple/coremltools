@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.control_flow &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.control_flow &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../../../../../../../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../../../../../../../../_static/graphviz.css" type="text/css" />
@@ -39,7 +39,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -329,10 +329,8 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.</span>
 
-<span class="sd">    The shape of ``cond``, ``a``, and ``b`` must be broadcastable.</span>
-<span class="sd">    You must provide ``a`` and ``b`` together, or provide neither.</span>
-<span class="sd">    If you provide neither, the operation returns the indices</span>
-<span class="sd">    of ``cond`` that are ``True``.</span>
+<span class="sd">    You must provide ``a``, ``b`` and ``cond``. The shape of ``cond``, ``a``,</span>
+<span class="sd">    and ``b`` must be broadcastable.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

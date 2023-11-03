@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Model APIs &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>Model APIs &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -43,7 +43,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -308,8 +308,9 @@ type on an older Mac, to inspect or load/save the spec.</p>
 compiled and loaded only from macOS12+.</p>
 <p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><dl class="simple">
-<dt>An enum with three possible values:</dt><dd><ul class="simple">
+<dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><p>The set of processing units the model can use to make predictions.</p>
+<dl class="simple">
+<dt>An enum with four possible values:</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the
 neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
@@ -1626,12 +1627,37 @@ version of MLModel.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.make_pipeline">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ComputeUnit</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Permalink to this definition"></a></dt>
 <dd><p>Makes a pipeline with the given models.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>*models</strong></dt><dd><p>Two or more instances of ct.models.MLModel.</p>
+<dd class="field-odd"><dl>
+<dt><strong>*models</strong></dt><dd><p>Two or more instances of <code class="docutils literal notranslate"><span class="pre">ct.models.MLModel</span></code>.</p>
+</dd>
+<dt><strong>compute_units: ``None`` or ``coremltools.ComputeUnit``</strong></dt><dd><p>The set of processing units that all models in the pipeline can use to make predictions.</p>
+<p>If None, the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> will be infered from the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> values of the models.
+If all models do not have the same <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> values, this parameter must be specified.</p>
+<dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit</span></code> is an enum with four possible values:</dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the</dt><dd><p>neural engine.</p>
+</dd>
+</dl>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU,</dt><dd><p>but not the neural engine.</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but</dt><dd><p>not the GPU. Available only for macOS &gt;= 13.0.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
 </dd>
 </dl>
 </dd>
@@ -1646,6 +1672,11 @@ version of MLModel.</p>
 <span class="n">my_model2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;/tmp/m2.mlmodel&#39;</span><span class="p">)</span>
 
 <span class="n">my_pipeline_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">make_pipeline</span><span class="p">(</span><span class="n">my_model1</span><span class="p">,</span> <span class="n">my_model2</span><span class="p">)</span>
+
+<span class="n">y</span> <span class="o">=</span> <span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
+
+<span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/tmp/my_pipeline.mlpackage&#39;</span><span class="p">)</span>
+<span class="n">new_my_pipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;/tmp/my_pipeline.mlpackage&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

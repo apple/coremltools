@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Ops &mdash; coremltools API Reference 7.0 documentation</title>
+  <title>MIL Ops &mdash; coremltools API Reference 7.1 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
       <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
@@ -43,7 +43,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.0
+                7.1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -339,6 +339,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation">tensor_transformation (iOS 15)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.batch_to_space"><code class="docutils literal notranslate"><span class="pre">batch_to_space</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space"><code class="docutils literal notranslate"><span class="pre">depth_to_space</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims"><code class="docutils literal notranslate"><span class="pre">expand_dims</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle"><code class="docutils literal notranslate"><span class="pre">pixel_shuffle</span></code></a></li>
@@ -348,6 +349,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index"><code class="docutils literal notranslate"><span class="pre">slice_by_index</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size"><code class="docutils literal notranslate"><span class="pre">slice_by_size</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows"><code class="docutils literal notranslate"><span class="pre">sliding_windows</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_batch"><code class="docutils literal notranslate"><span class="pre">space_to_batch</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth"><code class="docutils literal notranslate"><span class="pre">space_to_depth</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze"><code class="docutils literal notranslate"><span class="pre">squeeze</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose"><code class="docutils literal notranslate"><span class="pre">transpose</span></code></a></li>
@@ -1500,10 +1502,8 @@ and the <code class="docutils literal notranslate"><span class="pre">build_neste
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.</span></span><span class="sig-name descname"><span class="pre">select</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/control_flow.html#select"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select" title="Permalink to this definition"></a></dt>
 <dd><p>Return the elements selected from either <code class="docutils literal notranslate"><span class="pre">a</span></code> or <code class="docutils literal notranslate"><span class="pre">b</span></code> depending on the <code class="docutils literal notranslate"><span class="pre">cond</span></code>.</p>
-<p>The shape of <code class="docutils literal notranslate"><span class="pre">cond</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span></code>, and <code class="docutils literal notranslate"><span class="pre">b</span></code> must be broadcastable.
-You must provide <code class="docutils literal notranslate"><span class="pre">a</span></code> and <code class="docutils literal notranslate"><span class="pre">b</span></code> together, or provide neither.
-If you provide neither, the operation returns the indices
-of <code class="docutils literal notranslate"><span class="pre">cond</span></code> that are <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>You must provide <code class="docutils literal notranslate"><span class="pre">a</span></code>, <code class="docutils literal notranslate"><span class="pre">b</span></code> and <code class="docutils literal notranslate"><span class="pre">cond</span></code>. The shape of <code class="docutils literal notranslate"><span class="pre">cond</span></code>, <code class="docutils literal notranslate"><span class="pre">a</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">b</span></code> must be broadcastable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -5130,6 +5130,7 @@ when computing the average over the kernel window.</p></li>
 <dd class="field-even"><dl>
 <dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul>
 <li><p>Same rank as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">C_out</span></code> is the number of output channels or depth dimensions.</p></li>
 <li><dl>
 <dt>When <code class="docutils literal notranslate"><span class="pre">ceil_mode</span> <span class="pre">=</span> <span class="pre">False</span></code>:</dt><dd><ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">floor[(D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">kernel_sizes[i])</span> <span class="pre">/</span>
@@ -5196,23 +5197,23 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Only support 1d and 2d pooling.</p></li>
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>kernel_sizes: const tensor&lt;[K], T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>strides: const tensor&lt;[S],i32&gt; (Optional, default to all 1s)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>pad_type: const str (Required)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>pad: const&lt;[P],i32&gt; (Optional, default to all 0s)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5220,7 +5221,7 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5249,27 +5250,27 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>kernel_sizes: const tensor&lt;[K], T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>strides: const tensor&lt;[S],i32&gt; (Optional, default to all 1s)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>pad_type: const str (Required)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>pad: const&lt;[P],i32&gt; (Optional, default to all 0s)</strong></dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 <dt><strong>ceil_mode: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
-<li><p>see <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>see <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5277,7 +5278,7 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
 <dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul class="simple">
-<li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
+<li><p>See <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool" title="coremltools.converters.mil.mil.ops.defs.iOS15.pool.avg_pool"><code class="xref py py-class docutils literal notranslate"><span class="pre">avg_pool</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5491,15 +5492,21 @@ distribution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>shape: &lt;*D_in, T&gt;</strong></dt><dd><ul class="simple">
-<li><p>N-dimensional tensor, one of <code class="docutils literal notranslate"><span class="pre">logits</span></code> (event log-probabilities) or <code class="docutils literal notranslate"><span class="pre">probs</span></code>
-(event probabilities). The first <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">-</span> <span class="pre">1</span></code> dimensions specifies distributions,
-and the last dimension represents a vector of probabilities.</p></li>
+<dt><strong>x: &lt;*D_in, T&gt;</strong></dt><dd><ul class="simple">
+<li><p>N-dimensional tensor which represents <code class="docutils literal notranslate"><span class="pre">logits</span></code> (event log-probabilities) or <code class="docutils literal notranslate"><span class="pre">probs</span></code>
+(event probabilities) depending on <code class="docutils literal notranslate"><span class="pre">mode</span></code>. The first <code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">-</span> <span class="pre">1</span></code> dimensions specifies
+distributions, and the last dimension represents a vector of probabilities.</p></li>
 </ul>
 </dd>
-<dt><strong>mode: const&lt;str&gt; (Optional)</strong></dt><dd><p>One of <code class="docutils literal notranslate"><span class="pre">['logits',</span> <span class="pre">'probs']</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">logits</span></code>.</p>
+<dt><strong>mode: const&lt;str&gt; (Optional)</strong></dt><dd><p>One of <code class="docutils literal notranslate"><span class="pre">['logits',</span> <span class="pre">'probs']</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">logits</span></code>.
+When set to <code class="docutils literal notranslate"><span class="pre">probs</span></code>, an element-wise log layer will be added to calculate logits.</p>
 </dd>
-<dt><strong>size: const&lt;i32&gt; (Optional)</strong></dt><dd><p>Number of samples to draw. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
+<dt><strong>size: const&lt;i32&gt; (Optional)</strong></dt><dd><p>Number of samples to draw. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+When set as <code class="docutils literal notranslate"><span class="pre">1</span></code>, it’s categorical distribution.
+When set larger than <code class="docutils literal notranslate"><span class="pre">1</span></code>, it’s actually multinomial distribution by drawing with
+replacement. It means that when a sample index is drawn, it can be drawn again.
+The categorical distribution is a special case of the multinomial distribution, giving
+the probabilities of potential outcomes of a single drawing rather than multiple drawings.</p>
 </dd>
 <dt><strong>seed: const&lt;i32&gt; (Optional)</strong></dt><dd><p>Seed to create a reproducible sequence of values across multiple invokes.</p>
 </dd>
@@ -6955,11 +6962,12 @@ the op updates <code class="docutils literal notranslate"><span class="pre">outp
 <dd><p>The iOS16 version.
 This section documents only the differences between this version and the
 iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather" title="coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather"><code class="xref py py-class docutils literal notranslate"><span class="pre">gather</span></code></a>.</p>
-<p>This version supports <code class="docutils literal notranslate"><span class="pre">batch_dims</span></code>, similar to <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/gather">tf.gather</a>.</p>
+<p>This version supports <code class="docutils literal notranslate"><span class="pre">batch_dims</span></code>, similar to <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/gather">tf.gather</a>.
+Input parameter <code class="docutils literal notranslate"><span class="pre">indices</span></code> now supports <code class="docutils literal notranslate"><span class="pre">int16</span></code> and <code class="docutils literal notranslate"><span class="pre">uint16</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*D, U&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>indices: tensor&lt;*N, I&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Indices values may be negative. More precisely, <code class="docutils literal notranslate"><span class="pre">-D[axis]&lt;=</span> <span class="pre">v</span> <span class="pre">&lt;</span> <span class="pre">D[axis]</span></code> for <code class="docutils literal notranslate"><span class="pre">v</span></code> in <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
 </ul>
@@ -7001,12 +7009,13 @@ iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.d
 <dd><p>The iOS16 version.
 This section documents only the differences between this version and the
 iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_nd" title="coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_nd"><code class="xref py py-class docutils literal notranslate"><span class="pre">gather_nd</span></code></a>.</p>
-<p>This version supports <code class="docutils literal notranslate"><span class="pre">batch_dims</span></code>.</p>
+<p>This version supports <code class="docutils literal notranslate"><span class="pre">batch_dims</span></code>.
+Input parameter <code class="docutils literal notranslate"><span class="pre">indices</span></code> now supports <code class="docutils literal notranslate"><span class="pre">int16</span></code> and <code class="docutils literal notranslate"><span class="pre">uint16</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>indices: tensor&lt;*K, I&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>batch_dims: const i32 (Optional. Default=``0``)</strong></dt><dd><ul class="simple">
 <li><p>The number of batch dimensions.</p></li>
 </ul>
@@ -7028,6 +7037,7 @@ iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.d
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>I: uint16, int16, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -7044,6 +7054,8 @@ similar to <a class="reference external" href="https://www.tensorflow.org/api_do
 <p>This section documents only the differences between this version and the
 iOS 16 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather" title="coremltools.converters.mil.mil.ops.defs.iOS16.scatter_gather.gather"><code class="xref py py-class docutils literal notranslate"><span class="pre">gather</span></code></a>. The major differences are as follows:</p>
 <ul>
+<li><p>Input parameter <code class="docutils literal notranslate"><span class="pre">x</span></code> adds support for <code class="docutils literal notranslate"><span class="pre">int16</span></code>, <code class="docutils literal notranslate"><span class="pre">uint16</span></code>, <code class="docutils literal notranslate"><span class="pre">int8</span></code>, and <code class="docutils literal notranslate"><span class="pre">uint8</span></code>.</p></li>
+<li><p>Input parameter <code class="docutils literal notranslate"><span class="pre">indices</span></code> adds support for <code class="docutils literal notranslate"><span class="pre">int8</span></code> and <code class="docutils literal notranslate"><span class="pre">uint8</span></code>.</p></li>
 <li><p>Input parameter <code class="docutils literal notranslate"><span class="pre">indices</span></code> now supports only positive values – negative values
 are considered out-of-bound. If support for negative indices is required, they must be
 explicitly converted to positive values, using the following:</p>
@@ -7066,7 +7078,7 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*D, U&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>indices: tensor&lt;*N, I&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Indices values may be negative. More precisely, <code class="docutils literal notranslate"><span class="pre">-D[axis]&lt;=</span> <span class="pre">v</span> <span class="pre">&lt;</span> <span class="pre">D[axis]</span></code> for <code class="docutils literal notranslate"><span class="pre">v</span></code> in <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
 </ul>
@@ -7099,8 +7111,8 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
-<dt><strong>I: uint16, int16, int32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, int32, int16, uint16, int8, uint8</strong></dt><dd></dd>
+<dt><strong>I: int32, int16, uint16, int8, uint8</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -7111,12 +7123,12 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.</span></span><span class="sig-name descname"><span class="pre">gather_along_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/scatter_gather.html#gather_along_axis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather_along_axis" title="Permalink to this definition"></a></dt>
 <dd><p>Take the values along <code class="docutils literal notranslate"><span class="pre">axis</span></code> at locations <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p>
 <p>The major differences from the previous version are illustrated in <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather" title="coremltools.converters.mil.mil.ops.defs.iOS17.scatter_gather.gather"><code class="xref py py-class docutils literal notranslate"><span class="pre">gather</span></code></a>.
-For more information, see the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_along_axis" title="coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather.gather_along_axis"><code class="xref py py-class docutils literal notranslate"><span class="pre">gather_along_axis</span></code></a>.</p>
+For more information, see the iOS 16 <code class="xref py py-class docutils literal notranslate"><span class="pre">gather_along_axis</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>indices: tensor&lt;*K, I&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">rank(indices)</span> <span class="pre">==</span> <span class="pre">rank(x)</span></code>.</p></li>
 </ul>
 </dd>
@@ -7144,7 +7156,8 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, int32, int16, uint16, int8, uint8</strong></dt><dd></dd>
+<dt><strong>I: int32, int16, uint16, int8, uint8</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -7160,7 +7173,7 @@ For more information, see the iOS 16 <a class="reference internal" href="#coreml
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>indices: tensor&lt;*K, I&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>batch_dims: const i32 (Optional. Default=``0``)</strong></dt><dd><ul class="simple">
 <li><p>The number of batch dimensions.</p></li>
 </ul>
@@ -7185,7 +7198,8 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 </dd>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, int32, int16, uint16, int8, uint8</strong></dt><dd></dd>
+<dt><strong>I: int32, int16, uint16, int8, uint8</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -8354,6 +8368,50 @@ Otherwise, no particular ordering is guaranteed.</p></li>
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation">
 <span id="tensor-transformation-ios-15"></span><h2>tensor_transformation (iOS 15)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.batch_to_space">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">batch_to_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html#batch_to_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.batch_to_space" title="Permalink to this definition"></a></dt>
+<dd><p>Rearrange elements in a tensor from batch into spatial dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[n, C, H, W], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor must have rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p>The first and the second dimension are batch, channel; respectively.</p></li>
+<li><p>The remaining dimensions <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code> are treated as “spatial dimensions”.</p></li>
+</ul>
+</dd>
+<dt><strong>block_shape: const tensor&lt;[2], i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>The length of the <code class="docutils literal notranslate"><span class="pre">block_shape</span></code> must be <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p>It defines the shapes of the block in which the spatial dimensions are multiplied.</p></li>
+</ul>
+</dd>
+<dt><strong>crops: const tensor&lt;[2, 2], i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>It must have shape <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2)</span></code>.</p></li>
+<li><p>It defines the amount to crop from each spatial dimension.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[new_n, C, new_H, new_W], T&gt;</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">new_n</span> <span class="pre">=</span> <span class="pre">n</span> <span class="pre">/</span> <span class="pre">(block_shape[0]</span> <span class="pre">*</span> <span class="pre">block_shape[1])</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">new_H</span> <span class="pre">=</span> <span class="pre">(H</span> <span class="pre">*</span> <span class="pre">block_shape[0])</span> <span class="pre">-</span> <span class="pre">paddings[0][0]</span> <span class="pre">-</span> <span class="pre">padding[0][1]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">new_W</span> <span class="pre">=</span> <span class="pre">(W</span> <span class="pre">*</span> <span class="pre">block_shape[1])</span> <span class="pre">-</span> <span class="pre">paddings[1][0]</span> <span class="pre">-</span> <span class="pre">padding[1][1]</span></code></p></li>
+<li><p>The output has the same rank as the input.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">depth_to_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html#depth_to_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space" title="Permalink to this definition"></a></dt>
 <dd><p>Rearrange elements in a tensor from depth (channel) into spatial dimensions.</p>
@@ -8470,7 +8528,7 @@ Equivalent to PyTorch’s <code class="docutils literal notranslate"><span class
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>A n-D tensor or a scalar.</p></li>
+<li><p>An n-D tensor or a scalar.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">x</span></code> is fixed rank (and possibly contains symbolic dimension),
 shape may contain elements that are not positive integers (see below).</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">x</span></code> is variadic rank, shape can only contain positive integers.</p></li>
@@ -8484,7 +8542,7 @@ shape may contain elements that are not positive integers (see below).</p></li>
 The new symbol that is not present in <code class="docutils literal notranslate"><span class="pre">x.shape</span></code> represent a dimension
 such that the total size remains constant. Symbol is illegal
 if <code class="docutils literal notranslate"><span class="pre">x</span></code> is variadic rank.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code>: <code class="docutils literal notranslate"><span class="pre">-1</span></code> introduces a new symbol (see Symbols). Therefore, <code class="docutils literal notranslate"><span class="pre">-1</span></code> is
+<li><p><code class="docutils literal notranslate"><span class="pre">-1</span></code>: <code class="docutils literal notranslate"><span class="pre">-1</span></code> introduces a new symbol (see Symbols above). Therefore, <code class="docutils literal notranslate"><span class="pre">-1</span></code> is
 allowed if all symbols in the shape appear in <code class="docutils literal notranslate"><span class="pre">x.shape</span></code>. <code class="docutils literal notranslate"><span class="pre">-1</span></code> is illegal
 if <code class="docutils literal notranslate"><span class="pre">x</span></code> is variadic rank.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">0</span></code>: If <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">==</span> <span class="pre">rank(x)</span></code> then <code class="docutils literal notranslate"><span class="pre">0</span></code> means inheriting from the corresponding
@@ -8740,6 +8798,50 @@ rank.</p></li>
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32, int32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_batch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">space_to_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_transformation.html#space_to_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_batch" title="Permalink to this definition"></a></dt>
+<dd><p>Rearrange elements in a tensor from spatial into batch dimensions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[n, C, H, W], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor must have rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p>The first and the second dimension are batch, channel; respectively.</p></li>
+<li><p>The remaining dimensions <code class="docutils literal notranslate"><span class="pre">(H,</span> <span class="pre">W)</span></code> are treated as “spatial dimensions”.</p></li>
+</ul>
+</dd>
+<dt><strong>block_shape: const tensor&lt;[2], i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>The length of the <code class="docutils literal notranslate"><span class="pre">block_shape</span></code> must be <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><p>It defines the shapes of the block in which the spatial dimensions are divided.</p></li>
+</ul>
+</dd>
+<dt><strong>paddings: const tensor&lt;[2, 2], i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>It must have shape <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2)</span></code>.</p></li>
+<li><p>It defines the padding for each spatial dimension.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[new_n, C, new_H, new_W], T&gt;</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">new_n</span> <span class="pre">=</span> <span class="pre">n</span> <span class="pre">*</span> <span class="pre">block_shape[0]</span> <span class="pre">*</span> <span class="pre">block_shape[1]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">new_H</span> <span class="pre">=</span> <span class="pre">(H</span> <span class="pre">+</span> <span class="pre">paddings[0][0]</span> <span class="pre">+</span> <span class="pre">padding[0][1])/block_shape[0]</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">new_W</span> <span class="pre">=</span> <span class="pre">(W</span> <span class="pre">+</span> <span class="pre">paddings[1][0]</span> <span class="pre">+</span> <span class="pre">padding[1][1])/block_shape[1]</span></code></p></li>
+<li><p>The output has the same rank as the input.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
