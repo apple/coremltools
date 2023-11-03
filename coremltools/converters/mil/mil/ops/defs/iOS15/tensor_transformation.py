@@ -167,7 +167,7 @@ class reshape(Operation):
     ----------
     x: tensor<\*?, T> (Required)
 
-        * A n-D tensor or a scalar.
+        * An n-D tensor or a scalar.
         * If ``x`` is fixed rank (and possibly contains symbolic dimension),
           shape may contain elements that are not positive integers (see below).
         * If ``x`` is variadic rank, shape can only contain positive integers.
@@ -181,7 +181,7 @@ class reshape(Operation):
               The new symbol that is not present in ``x.shape`` represent a dimension
               such that the total size remains constant. Symbol is illegal
               if ``x`` is variadic rank.
-            * ``-1``: ``-1`` introduces a new symbol (see Symbols). Therefore, ``-1`` is
+            * ``-1``: ``-1`` introduces a new symbol (see Symbols above). Therefore, ``-1`` is
               allowed if all symbols in the shape appear in ``x.shape``. ``-1`` is illegal
               if ``x`` is variadic rank.
             * ``0``: If ``K == rank(x)`` then ``0`` means inheriting from the corresponding
@@ -719,28 +719,28 @@ class space_to_depth(Operation):
 @register_op
 class space_to_batch(Operation):
     """
-    Rearrange elements in a tensor from spatial into batch dimension.
+    Rearrange elements in a tensor from spatial into batch dimensions.
 
     Parameters
     ----------
     x: tensor<[n, C, H, W], T> (Required)
-        * Input tensor must have rank 4.
-        * The first and the second dimension are batch, channel, respectively
-        * The remaining dimensions (H, W) are treated as "spatial dimensions"
+        * Input tensor must have rank ``4``.
+        * The first and the second dimension are batch, channel; respectively.
+        * The remaining dimensions ``(H, W)`` are treated as "spatial dimensions".
     block_shape: const tensor<[2], i32> (Required)
-        * The length of the block_shape must be `2`
-        * It defines the shapes of the block in which the spatial dimensions are divided
+        * The length of the ``block_shape`` must be ``2``.
+        * It defines the shapes of the block in which the spatial dimensions are divided.
     paddings: const tensor<[2, 2], i32> (Required)
-        * It must have shape `(2, 2)`
-        * It defines the padding for each spatial dimensions
+        * It must have shape ``(2, 2)``.
+        * It defines the padding for each spatial dimension.
 
     Returns
     -------
     tensor<[new_n, C, new_H, new_W], T>
-        * new_n = n * block_shape[0] * block_shape[1]
-        * new_H = (H + paddings[0][0] + padding[0][1])/block_shape[0]
-        * new_W = (W + paddings[1][0] + padding[1][1])/block_shape[1]
-        * The output has the same rank as the input
+        * ``new_n = n * block_shape[0] * block_shape[1]``
+        * ``new_H = (H + paddings[0][0] + padding[0][1])/block_shape[0]``
+        * ``new_W = (W + paddings[1][0] + padding[1][1])/block_shape[1]``
+        * The output has the same rank as the input.
 
     Attributes
     ----------
@@ -795,28 +795,28 @@ class space_to_batch(Operation):
 @register_op
 class batch_to_space(Operation):
     """
-    Rearrange elements in a tensor from batch into spatial dimension.
+    Rearrange elements in a tensor from batch into spatial dimensions.
 
     Parameters
     ----------
     x: tensor<[n, C, H, W], T> (Required)
-        * Input tensor must have rank 4.
-        * The first and the second dimension are batch, channel, respectively
-        * The remaining dimensions (H, W) are treated as "spatial dimensions"
+        * Input tensor must have rank ``4``.
+        * The first and the second dimension are batch, channel; respectively.
+        * The remaining dimensions ``(H, W)`` are treated as "spatial dimensions".
     block_shape: const tensor<[2], i32> (Required)
-        * The length of the block_shape must be `2`
-        * It defines the shapes of the block in which the spatial dimensions are multiplied
+        * The length of the ``block_shape`` must be ``2``.
+        * It defines the shapes of the block in which the spatial dimensions are multiplied.
     crops: const tensor<[2, 2], i32> (Required)
-        * It must have shape `(2, 2)`
-        * It defines the amount to crop from each spatial dimensions
+        * It must have shape ``(2, 2)``.
+        * It defines the amount to crop from each spatial dimension.
 
     Returns
     -------
     tensor<[new_n, C, new_H, new_W], T>
-        * new_n = n / (block_shape[0] * block_shape[1])
-        * new_H = (H * block_shape[0]) - paddings[0][0] - padding[0][1]
-        * new_W = (W * block_shape[1]) - paddings[1][0] - padding[1][1]
-        * The output has the same rank as the input
+        * ``new_n = n / (block_shape[0] * block_shape[1])``
+        * ``new_H = (H * block_shape[0]) - paddings[0][0] - padding[0][1]``
+        * ``new_W = (W * block_shape[1]) - paddings[1][0] - padding[1][1]``
+        * The output has the same rank as the input.
 
     Attributes
     ----------
