@@ -1719,7 +1719,7 @@ def _adaptive_pool1d(context, node, reduce_op):
     for start, end in _get_kernel_indexes_1d_for_adaptive_pooling(x.shape[-1], out_length):
         cur_kernel = mb.slice_by_index(
             x=x,
-            begin=begin_prefix+[start],
+            begin=begin_prefix + [start],
             end=end_prefix+[end],
         )
         cur_result = reduce_op(
