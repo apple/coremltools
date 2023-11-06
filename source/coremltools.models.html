@@ -1629,35 +1629,30 @@ version of MLModel.</p>
 <dt class="sig sig-object py" id="coremltools.models.utils.make_pipeline">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ComputeUnit</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Permalink to this definition"></a></dt>
 <dd><p>Makes a pipeline with the given models.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>*models</strong></dt><dd><p>Two or more instances of <code class="docutils literal notranslate"><span class="pre">ct.models.MLModel</span></code>.</p>
 </dd>
-<dt><strong>compute_units: ``None`` or ``coremltools.ComputeUnit``</strong></dt><dd><p>The set of processing units that all models in the pipeline can use to make predictions.</p>
-<p>If None, the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> will be infered from the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> values of the models.
-If all models do not have the same <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> values, this parameter must be specified.</p>
-<dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit</span></code> is an enum with four possible values:</dt><dd><ul class="simple">
+<dt><strong>compute_units</strong></dt><dd><p>The set of processing units that all models in the pipeline can use to make predictions.
+Can be <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit</span></code>.</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> will be infered from the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> values of the models.
+If all models do not have the same <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> values, this parameter must be specified.</p></li>
 <li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the</dt><dd><p>neural engine.</p>
-</dd>
-</dl>
-</li>
+<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit</span></code> is an enum with four possible values:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the
+neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU,</dt><dd><p>but not the neural engine.</p>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but</dt><dd><p>not the GPU. Available only for macOS &gt;= 13.0.</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU,
+but not the neural engine.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but
+not the GPU. Available only for macOS &gt;= 13.0.</p></li>
+</ul>
 </dd>
 </dl>
 </li>
 </ul>
-</dd>
-</dl>
 </dd>
 </dl>
 </dd>

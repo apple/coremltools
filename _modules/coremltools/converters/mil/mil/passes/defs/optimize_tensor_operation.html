@@ -194,10 +194,10 @@
 <span class="k">class</span> <span class="nc">expand_high_rank_reshape_and_transpose</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Detect the pattern ``reshape_1--&gt;transpose--&gt;reshape_2``, where ``reshape_1`` has</span>
-<span class="sd">    a output tensor with rank &gt;= 6, and the reshape_2 produces a tensor with rank &lt;= 5.</span>
+<span class="sd">    an output tensor with ``rank &gt;= 6``, and ``reshape_2`` produces a tensor with ``rank &lt;= 5``.</span>
 
 <span class="sd">    In general, we can expand this pattern into a sequence of rank 4 ``reshape`` and ``transpose`` ops,</span>
-<span class="sd">    which is supported by Core ML runtime.</span>
+<span class="sd">    which is supported by the Core ML runtime.</span>
 
 <span class="sd">    .. code-block::</span>
 

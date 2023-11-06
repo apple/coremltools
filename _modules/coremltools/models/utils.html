@@ -1159,23 +1159,24 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    *models</span>
+<span class="sd">    *models :</span>
 <span class="sd">        Two or more instances of ``ct.models.MLModel``.</span>
 
-<span class="sd">    compute_units: ``None`` or ``coremltools.ComputeUnit``</span>
+<span class="sd">    compute_units :</span>
 <span class="sd">        The set of processing units that all models in the pipeline can use to make predictions.</span>
+<span class="sd">        Can be ``None`` or ``coremltools.ComputeUnit``.</span>
 
-<span class="sd">        If None, the ``compute_unit`` will be infered from the ``compute_units`` values of the models.</span>
-<span class="sd">        If all models do not have the same ``compute_units`` values, this parameter must be specified.</span>
+<span class="sd">        * If ``None``, the ``compute_unit`` will be infered from the ``compute_unit`` values of the models.</span>
+<span class="sd">          If all models do not have the same ``compute_unit`` values, this parameter must be specified.</span>
 
-<span class="sd">        ``coremltools.ComputeUnit`` is an enum with four possible values:</span>
+<span class="sd">        * ``coremltools.ComputeUnit`` is an enum with four possible values:</span>
 <span class="sd">            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
-<span class="sd">                neural engine.</span>
+<span class="sd">              neural engine.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,</span>
-<span class="sd">                but not the neural engine.</span>
+<span class="sd">              but not the neural engine.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
-<span class="sd">                not the GPU. Available only for macOS &gt;= 13.0.</span>
+<span class="sd">              not the GPU. Available only for macOS &gt;= 13.0.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
