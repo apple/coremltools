@@ -154,7 +154,8 @@ formats:</p>
 </li>
 <li><dl class="simple">
 <dt>Torch Exported Models:</dt><dd><ul>
-<li><p>A <cite>ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt; ` object with `EDGE</cite> dialect</p></li>
+<li><p>An <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram">ExportedProgram</a>
+object with <code class="docutils literal notranslate"><span class="pre">EDGE</span></code> dialect.</p></li>
 </ul>
 </dd>
 </dl>
@@ -220,8 +221,8 @@ When <code class="docutils literal notranslate"><span class="pre">inputs</span><
 </li>
 <li><p>PyTorch:</p>
 <blockquote>
-<div><ul>
-<li><dl>
+<div><ul class="simple">
+<li><dl class="simple">
 <dt>TorchScript Models:</dt><dd><ul>
 <li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is required.</p></li>
 <li><p>Number of elements in <code class="docutils literal notranslate"><span class="pre">inputs</span></code> must match the number of inputs
@@ -231,20 +232,23 @@ of the PyTorch model.</p></li>
 <li><p>If the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument is specified with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or
 <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>, the converted Core ML model will have inputs with
 the same name.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is missing:
-* For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&lt;=</span> <span class="pre">ct.target.macOS12</span></code>, it defaults to float 32.
-* For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&gt;=</span> <span class="pre">ct.target.macOS13</span></code>, and with <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> in float 16 precision.</p>
-<blockquote>
-<div><p>It defaults to float 16.</p>
-</div></blockquote>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is missing:</dt><dd><ul>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&lt;=</span> <span class="pre">ct.target.macOS12</span></code>, it defaults to float 32.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&gt;=</span> <span class="pre">ct.target.macOS13</span></code>, and with <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> in float 16 precision.
+It defaults to float 16.</p></li>
+</ul>
+</dd>
+</dl>
 </li>
 </ul>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Torch Exported Models:</dt><dd><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is not supported. <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is inferred from Torch ExportedProgram.</p></li>
+<dt>Torch Exported Models:</dt><dd><ul>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is not supported. The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is
+inferred from the Torch <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram">ExportedProgram</a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -296,31 +300,27 @@ defaults to float 16.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p>PyTorch:</p>
-<blockquote>
-<div><ul>
-<li><dl>
-<dt>TorchScript Models:</dt><dd><ul class="simple">
-<li><p>If specified, the length of the list must match the number of</p></li>
+<li><dl class="simple">
+<dt>PyTorch: TorchScript Models</dt><dd><ul class="simple">
+<li><p>If specified, the length of the list must match the number of
+outputs returned by the PyTorch model.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, it is applied to the output names of the
+converted Core ML model.</p></li>
+<li><p>For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&gt;=</span> <span class="pre">ct.target.macOS13</span></code>,
+and with <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> in float 16 precision.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> not specified, the outputs inferred of type float 32
+defaults to float 16.</p></li>
 </ul>
-<p>outputs returned by the PyTorch model.
-- If <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, it is applied to the output names of the
-converted Core ML model.
-- For <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span> <span class="pre">&gt;=</span> <span class="pre">ct.target.macOS13</span></code>, and with <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> in float 16 precision.
-If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> not specified, the outputs inferred of type float 32
-defaults to float 16.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>Torch Exported Models:</dt><dd><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is not supported. <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is inferred from Torch ExportedProgram.</p></li>
+<dt>PyTorch: Torch Exported Models:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is not supported.
+The <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is inferred from Torch <a class="reference external" href="https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram">ExportedProgram</a>.</p></li>
 </ul>
 </dd>
 </dl>
-</li>
-</ul>
-</div></blockquote>
 </li>
 </ul>
 </dd>

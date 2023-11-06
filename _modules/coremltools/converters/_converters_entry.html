@@ -206,7 +206,8 @@
 <span class="sd">                - Path to a ``.pt`` file</span>
 
 <span class="sd">            - Torch Exported Models:</span>
-<span class="sd">                - A `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt; ` object with `EDGE` dialect</span>
+<span class="sd">                - An `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_</span>
+<span class="sd">                  object with ``EDGE`` dialect.</span>
 
 <span class="sd">    source : str (optional)</span>
 
@@ -275,12 +276,13 @@
 <span class="sd">                  ``ImageType``, the converted Core ML model will have inputs with</span>
 <span class="sd">                  the same name.</span>
 <span class="sd">                - If ``dtype`` is missing:</span>
-<span class="sd">                  * For ``minimum_deployment_target &lt;= ct.target.macOS12``, it defaults to float 32.</span>
-<span class="sd">                  * For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
-<span class="sd">                    It defaults to float 16.</span>
+<span class="sd">                    * For ``minimum_deployment_target &lt;= ct.target.macOS12``, it defaults to float 32.</span>
+<span class="sd">                    * For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">                      It defaults to float 16.</span>
 
 <span class="sd">            - Torch Exported Models:</span>
-<span class="sd">                - The ``inputs`` parameter is not supported. ``inputs`` parameter is inferred from Torch ExportedProgram.</span>
+<span class="sd">                - The ``inputs`` parameter is not supported. The ``inputs`` parameter is</span>
+<span class="sd">                  inferred from the Torch `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_.</span>
 
 <span class="sd">    outputs : list of ``TensorType`` or ``ImageType`` (optional)</span>
 
@@ -324,20 +326,19 @@
 <span class="sd">              If ``dtype`` not specified, the outputs inferred of type float 32</span>
 <span class="sd">              defaults to float 16.</span>
 
-<span class="sd">        * PyTorch:</span>
+<span class="sd">        * PyTorch: TorchScript Models</span>
+<span class="sd">            - If specified, the length of the list must match the number of</span>
+<span class="sd">              outputs returned by the PyTorch model.</span>
+<span class="sd">            - If ``name`` is specified, it is applied to the output names of the</span>
+<span class="sd">              converted Core ML model.</span>
+<span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``,</span>
+<span class="sd">              and with ``compute_precision`` in float 16 precision.</span>
+<span class="sd">            - If ``dtype`` not specified, the outputs inferred of type float 32</span>
+<span class="sd">              defaults to float 16.</span>
 
-<span class="sd">            - TorchScript Models:</span>
-<span class="sd">                - If specified, the length of the list must match the number of</span>
-<span class="sd">                outputs returned by the PyTorch model.</span>
-<span class="sd">                - If ``name`` is specified, it is applied to the output names of the</span>
-<span class="sd">                converted Core ML model.</span>
-<span class="sd">                - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
-<span class="sd">                If ``dtype`` not specified, the outputs inferred of type float 32</span>
-<span class="sd">                defaults to float 16.</span>
-
-<span class="sd">            - Torch Exported Models:</span>
-<span class="sd">                - The ``outputs`` parameter is not supported. ``outputs`` parameter is inferred from Torch ExportedProgram.</span>
-
+<span class="sd">        * PyTorch: Torch Exported Models:</span>
+<span class="sd">            - The ``outputs`` parameter is not supported.</span>
+<span class="sd">              The ``outputs`` parameter is inferred from Torch `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_.</span>
 
 <span class="sd">    classifier_config : ClassifierConfig class (optional)</span>
 <span class="sd">        The configuration if the MLModel is intended to be a classifier.</span>
