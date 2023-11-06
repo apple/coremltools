@@ -291,7 +291,8 @@ class einsum(Operation):
         x_shape = x.shape
         y_shape = y.shape
         assert len(x_shape) == len(y_shape), "inputs not of the same rank"
-        assert x_shape[-1] == y_shape[-3], "input shapes incompatible"
+        if not (is_symbolic(x_shape[-1]) or is_symbolic(y_shape[-3])):
+            assert x_shape[-1] == y_shape[-3], f"input shapes incompatible: {x_shape[-1]} and {y_shape[-3]}"
         if x_shape[-2] != 1 and y_shape[-2] != 1:
             assert x_shape[-2] == y_shape[-2], "input shapes incompatible"
         if len(x_shape) == 4:
