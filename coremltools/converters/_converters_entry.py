@@ -112,7 +112,8 @@ def convert(
                 - Path to a ``.pt`` file
 
             - Torch Exported Models:
-                - A `ExportedProgram <https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram> ` object with `EDGE` dialect
+                - An `ExportedProgram <https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram>`_
+                  object with ``EDGE`` dialect.
 
     source : str (optional)
 
@@ -181,12 +182,13 @@ def convert(
                   ``ImageType``, the converted Core ML model will have inputs with
                   the same name.
                 - If ``dtype`` is missing:
-                  * For ``minimum_deployment_target <= ct.target.macOS12``, it defaults to float 32.
-                  * For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
-                    It defaults to float 16.
+                    * For ``minimum_deployment_target <= ct.target.macOS12``, it defaults to float 32.
+                    * For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
+                      It defaults to float 16.
 
             - Torch Exported Models:
-                - The ``inputs`` parameter is not supported. ``inputs`` parameter is inferred from Torch ExportedProgram.
+                - The ``inputs`` parameter is not supported. The ``inputs`` parameter is
+                  inferred from the Torch `ExportedProgram <https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram>`_.
 
     outputs : list of ``TensorType`` or ``ImageType`` (optional)
 
@@ -230,20 +232,19 @@ def convert(
               If ``dtype`` not specified, the outputs inferred of type float 32
               defaults to float 16.
 
-        * PyTorch:
+        * PyTorch: TorchScript Models
+            - If specified, the length of the list must match the number of
+              outputs returned by the PyTorch model.
+            - If ``name`` is specified, it is applied to the output names of the
+              converted Core ML model.
+            - For ``minimum_deployment_target >= ct.target.macOS13``,
+              and with ``compute_precision`` in float 16 precision.
+            - If ``dtype`` not specified, the outputs inferred of type float 32
+              defaults to float 16.
 
-            - TorchScript Models:
-                - If specified, the length of the list must match the number of
-                outputs returned by the PyTorch model.
-                - If ``name`` is specified, it is applied to the output names of the
-                converted Core ML model.
-                - For ``minimum_deployment_target >= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.
-                If ``dtype`` not specified, the outputs inferred of type float 32
-                defaults to float 16.
-
-            - Torch Exported Models:
-                - The ``outputs`` parameter is not supported. ``outputs`` parameter is inferred from Torch ExportedProgram.
-
+        * PyTorch: Torch Exported Models:
+            - The ``outputs`` parameter is not supported.
+              The ``outputs`` parameter is inferred from Torch `ExportedProgram <https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram>`_.
 
     classifier_config : ClassifierConfig class (optional)
         The configuration if the MLModel is intended to be a classifier.

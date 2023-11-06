@@ -100,10 +100,10 @@ class fuse_squeeze_expand_dims(AbstractGraphPass):
 class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
     """
     Detect the pattern ``reshape_1-->transpose-->reshape_2``, where ``reshape_1`` has
-    a output tensor with rank >= 6, and the reshape_2 produces a tensor with rank <= 5.
+    an output tensor with ``rank >= 6``, and ``reshape_2`` produces a tensor with ``rank <= 5``.
 
     In general, we can expand this pattern into a sequence of rank 4 ``reshape`` and ``transpose`` ops,
-    which is supported by Core ML runtime.
+    which is supported by the Core ML runtime.
 
     .. code-block::
 

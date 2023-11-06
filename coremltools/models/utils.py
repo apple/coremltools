@@ -1065,23 +1065,24 @@ def make_pipeline(
 
     Parameters
     ----------
-    *models
+    *models :
         Two or more instances of ``ct.models.MLModel``.
 
-    compute_units: ``None`` or ``coremltools.ComputeUnit``
+    compute_units :
         The set of processing units that all models in the pipeline can use to make predictions.
+        Can be ``None`` or ``coremltools.ComputeUnit``.
 
-        If None, the ``compute_unit`` will be infered from the ``compute_units`` values of the models.
-        If all models do not have the same ``compute_units`` values, this parameter must be specified.
+        * If ``None``, the ``compute_unit`` will be infered from the ``compute_unit`` values of the models.
+          If all models do not have the same ``compute_unit`` values, this parameter must be specified.
 
-        ``coremltools.ComputeUnit`` is an enum with four possible values:
+        * ``coremltools.ComputeUnit`` is an enum with four possible values:
             - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
-                neural engine.
+              neural engine.
             - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
             - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,
-                but not the neural engine.
+              but not the neural engine.
             - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
-                not the GPU. Available only for macOS >= 13.0.
+              not the GPU. Available only for macOS >= 13.0.
 
     Returns
     -------
