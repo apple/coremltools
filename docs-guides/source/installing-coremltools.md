@@ -9,7 +9,7 @@ Support for Python 2 has been deprecated since [Core ML Tools 4.1](https://githu
 The supported MacOS versions are as follows:
 
 - Core ML Tools 4.1 supports macOS 10.13 and newer.
-- Core ML Tools 5 and 6 support macOS 10.15 and newer.
+- Core ML Tools 5, 6, and 7 support macOS 10.15 and newer.
 ```
 
 ## Prerequisites
@@ -86,7 +86,7 @@ source coremltools-venv/bin/activate
 
 ## Install Core ML Tools
 
-Use the following command to install or upgrade to [version 7.0](https://github.com/apple/coremltools) of Core ML Tools:
+Use the following command to install or upgrade to [version 7.1](https://github.com/apple/coremltools) of Core ML Tools:
 
 ```shell
 pip install -U coremltools

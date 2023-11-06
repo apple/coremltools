@@ -174,5 +174,5 @@ You can use PyTorch's quantization APIs directly, and then convert the model to 
 
 ## Use a compiled model for faster initialization
 
-If your model initialization in python takes a long time, use a *compiled* Core ML model ([CompiledMLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.CompiledMLModel)) rather than  [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel) for making predictions. For large models, using a compiled model can save considerable time in initializing the model. For details, see [Using Compiled Python Models for Prediction](model-prediction.md#using-compiled-python-models-for-prediction).
+If your model initialization in Python takes a long time, use a *compiled* Core ML model ([CompiledMLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.CompiledMLModel)) rather than  [MLModel](https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel) for making predictions. For large models, using a compiled model can save considerable time in initializing the model. For details, see [Using Compiled Python Models for Prediction](model-prediction.md#using-compiled-python-models-for-prediction).
 
