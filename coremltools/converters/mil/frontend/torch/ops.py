@@ -6448,8 +6448,11 @@ def scaled_dot_product_attention(context, node):
     See details at:
     https://pytorch.org/docs/stable/generated/torch.nn.functional.scaled_dot_product_attention.html
     """
-    inputs = _get_inputs(context, node, expected=[6, 7])
-    q, k, v, attn_mask, dropout, is_causal = inputs[:6]
+    inputs = _get_inputs(context, node, min_expected=3)
+    q, k, v = inputs[:3]
+    attn_mask = None if len(inputs) < 4 else inputs[3]
+    dropout = 0.0 if len(inputs) < 5 else inputs[4]
+    is_causal = False if len(inputs) < 6 else inputs[5].val
     
     # When len(inputs) == 7, the inputs are (q, k, v, attn_mask, dropout, is_causal, scale)
     if len(inputs) == 7 and inputs[6] is not None:
@@ -6476,8 +6479,8 @@ def scaled_dot_product_attention(context, node):
         )
 
     mask = None
-    if is_causal.val:
-        mask = _get_causal_attn_mask(is_causal.val, q, k)
+    if is_causal:
+        mask = _get_causal_attn_mask(is_causal, q, k)
     elif attn_mask is not None:
         if is_bool(attn_mask.dtype):
             mask = _cast_bool_attn_mask(attn_mask, q)
