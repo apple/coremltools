@@ -8,14 +8,15 @@ import shutil
 
 import numpy as np
 import torch
+import pytest
 
 import coremltools as ct
 from coremltools._deps import _IS_MACOS
 from coremltools.models.model import MLModel
 from coremltools.models.utils import _macos_version
 
-
-def test_mlmodel_demo(tmpdir):
+@pytest.mark.parametrize("low_precision", [False, True])
+def test_mlmodel_demo(tmpdir, low_precision):
     NUM_TOKENS = 3
     EMBEDDING_SIZE = 5
 
@@ -54,7 +55,7 @@ def test_mlmodel_demo(tmpdir):
     mlmodel.save(mlpackage_path)
 
     # Read back the saved bundle and compile
-    mlmodel2 = MLModel(mlpackage_path)
+    mlmodel2 = MLModel(mlpackage_path, low_precision_accumulation=low_precision)
 
     if not _IS_MACOS or _macos_version() < (12, 0):
         # Can not get predictions unless on macOS 12 or higher.

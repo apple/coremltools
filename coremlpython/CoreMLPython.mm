@@ -54,7 +54,7 @@ Model::~Model() {
     }
 }
 
-Model::Model(const std::string& urlStr, const std::string& computeUnits) {
+Model::Model(const std::string& urlStr, const std::string& computeUnits, bool lowPrecision) {
     @autoreleasepool {
         NSError *error = nil;
 
@@ -91,6 +91,7 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
 
         // Set compute unit
         MLModelConfiguration *configuration = [MLModelConfiguration new];
+        configuration.allowLowPrecisionAccumulationOnGPU = lowPrecision;
         if (computeUnits == "CPU_ONLY") {
             configuration.computeUnits = MLComputeUnitsCPUOnly;
         } else if (computeUnits == "CPU_AND_GPU") {
@@ -204,7 +205,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
-        .def(py::init<const std::string&, const std::string&>())
+        .def(py::init<const std::string&, const std::string&, bool>())
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
         .def("get_compiled_model_path", &Model::getCompiledModelPath)

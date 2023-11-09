@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
 import os
 import shutil
 import tempfile
@@ -151,12 +152,12 @@ class TestMLModel:
         model.save(package.name)
 
         if utils._macos_version() >= (12, 0):
-            for compute_units in coremltools.ComputeUnit:
+            for compute_units, precision in itertools.product(coremltools.ComputeUnit, [False, True]):
                 if (compute_units == coremltools.ComputeUnit.CPU_AND_NE
                     and utils._macos_version() < (13, 0)):
                     continue
 
-                loaded_model = MLModel(package.name, compute_units=compute_units)
+                loaded_model = MLModel(package.name, compute_units=compute_units, low_precision_accumulation=precision)
 
                 preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
                 assert preds is not None
