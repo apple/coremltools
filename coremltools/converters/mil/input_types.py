@@ -68,7 +68,7 @@ class InputType:
         shape: list, tuple, Shape object, EnumeratedShapes object, or None
             The shape(s) that are valid for this input.
 
-            If set to ``None``, the shape will be infered from the model itself.
+            If set to ``None``, the shape will be inferred from the model itself.
         """
 
         self.name = name

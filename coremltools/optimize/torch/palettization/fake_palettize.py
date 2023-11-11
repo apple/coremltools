@@ -438,7 +438,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             # Skip FakeQuantize._save_to_state_dict and go directly to nn.Module._save_to_state_dict
             super(_FakeQuantize, self)._save_to_state_dict(destination, prefix, keep_vars)
 
-        # State dicts can only contain tensors (for DDP), so store infos in the metatadata dict (in particular str)
+        # State dicts can only contain tensors (for DDP), so store infos in the metadata dict (in particular str)
         destination._metadata[prefix[:-1]]["cluster_dtype"] = self.cluster_dtype
         destination._metadata[prefix[:-1]][
             "buffers_are_placeholders"

@@ -240,7 +240,7 @@ int testInvalidDefaultOptionalValue() {
     // axis should be in range [-(rank + 1), rank + 1)
     Result res = Model::validate(m);
     ML_ASSERT_BAD(res);
-    ML_ASSERT(res.message().find("mistmatch between dataType and the type") != std::string::npos);
+    ML_ASSERT(res.message().find("mismatch between dataType and the type") != std::string::npos);
 
     return 0;
 }

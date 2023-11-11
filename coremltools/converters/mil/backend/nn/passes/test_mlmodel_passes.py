@@ -350,7 +350,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
     def test_output_edge_case(self):
 
-        # For now for safety purpose, the node which are output should't be merged
+        # For now for safety purpose, the node which are output shouldn't be merged
         input_shape = (1, 10, 5)
         input_features = [("data", datatypes.Array(*input_shape))]
         output_features = [("out", None)]
@@ -374,7 +374,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
 
     def test_output_edge_case_2(self):
 
-        # For now for safety purpose, the node which are output should't be merged
+        # For now for safety purpose, the node which are output shouldn't be merged
         input_shape = (1, 10, 5)
         input_features = [("data", datatypes.Array(*input_shape))]
         output_features = [("out", None)]
@@ -675,7 +675,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
                 RELU_2
         t_0, t_1, t_3 can be merged.
         t_4, t_5 can be merged.
-        The output shuld be
+        The output should be
                 INPUT
                  |
                  .------.

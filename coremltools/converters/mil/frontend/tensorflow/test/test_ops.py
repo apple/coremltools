@@ -1570,7 +1570,7 @@ class TestDepthwiseConv(TensorFlowBaseTest):
     ):
         if backend[0] == "mlprogram" and dilations == (1,1) and dynamic_weights and compute_unit != ct.ComputeUnit.CPU_ONLY:
             # in this case, there is a numerical mismatch on the GPU MIL backend. The GPU runtime tests are
-            # tracked seprately.
+            # tracked separately.
             return
 
         if np.sum(strides) != len(strides) and np.sum(dilations) != len(dilations):
@@ -1687,7 +1687,7 @@ class TestSeparableConv(TensorFlowBaseTest):
         batch_size,
     ):
         if backend[0] == "mlprogram" and dilations == (1,1) and compute_unit != ct.ComputeUnit.CPU_ONLY:
-            msg = "In this case, there is a numerical mismatch on the GPU MIL backend. The GPU runtime tests are tracked seprately."
+            msg = "In this case, there is a numerical mismatch on the GPU MIL backend. The GPU runtime tests are tracked separately."
             pytest.skip(msg)
 
         H, depthwise_filter, kH, kW = HWkHkW
@@ -2326,7 +2326,7 @@ class TestElementWiseUnary(TensorFlowBaseTest):
 
         if _get_version(tf.__version__) == StrictVersion(PREBUILT_TF1_WHEEL_VERSION):
             if mode in _PREBUILD_WHEEL_SEGFAULTING_MODE:
-                # we shuold re-enable these tests after this radar rdar://100735561 ([CI] Build a more stable TF1 Rosetta wheel for the lightning CI) is fixed
+                # we should re-enable these tests after this radar rdar://100735561 ([CI] Build a more stable TF1 Rosetta wheel for the lightning CI) is fixed
                 pytest.skip("Prebuilt wheel segfaulting on several functions.")
 
         if _macos_version() < (13, 0):
@@ -2904,7 +2904,7 @@ class TestImageResizing(TensorFlowBaseTest):
         padding,
         minimum_deployment_target,
     ):
-        # TODO: theoritically, the current extractpatches code handle batch size rather than 1,
+        # TODO: theoretically, the current extractpatches code handle batch size rather than 1,
         # but there seems to have a bug in crop_resize when using GPU and batch_size > 1.
         # We should test batch_size > 1 after the issue is fixed.
         # <rdar://problem/61602238>
@@ -4285,7 +4285,7 @@ class TestTensorScatterAdd(TensorFlowBaseTest):
         # indices shape constraint: 0 < indices_shape[-1] <= tensor_rank
         indices_shape = np.random.randint(low=1, high=tensor_rank + 1, size=indices_rank)
 
-        # updates rank and shape are infered from tensor and indices
+        # updates rank and shape are inferred from tensor and indices
         # reference https://www.tensorflow.org/api_docs/python/tf/compat/v1/scatter_nd_add
         updates_rank = indices_rank - 1 + tensor_rank - indices_shape[-1]
         updates_shape = []
@@ -4394,7 +4394,7 @@ class TestSliceByIndex(TensorFlowBaseTest):
     def test_slice_by_index_simple(self, compute_unit, backend, rank, masking_type):
         if backend[0] == "mlprogram":
             pytest.xfail(
-                "rdar://109854221 ([Bug][Regression] slice_by_index is throwing expection through E5ML - Follow up radar)"
+                "rdar://109854221 ([Bug][Regression] slice_by_index is throwing exception through E5ML - Follow up radar)"
             )
 
         if backend[0] == "neuralnetwork":

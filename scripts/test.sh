@@ -64,7 +64,7 @@ while [ $# -gt 0 ]
 done
 
 if [[ $TEST_PACKAGE == "" ]]; then
-    echo "\"--test-package\" is a required paramter."
+    echo "\"--test-package\" is a required parameter."
     exit 1
 fi
 

@@ -465,7 +465,7 @@ class Operation:
 
     def _validate_and_set_inputs(self, input_kvs, no_check_var_types=False):
         """
-        For each k, v in `input_kvs`, perform the followings:
+        For each k, v in `input_kvs`, perform the following:
 
         - Check k exists in `self.input_specs`
         - Check that v satisfies the correspodning `InputType`

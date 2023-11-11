@@ -228,7 +228,7 @@ class MLModel:
 
         # Load the model from the spec object
         spec = model.get_spec()
-        # modify spec (e.g. rename inputs/ouputs etc)
+        # modify spec (e.g. rename inputs/outputs etc)
         model = MLModel(spec)
         # if model type is mlprogram, i.e. spec.WhichOneof('Type') == "mlProgram", then:
         model = MLModel(spec, weights_dir=model.weights_dir)

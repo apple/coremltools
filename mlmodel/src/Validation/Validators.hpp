@@ -45,7 +45,7 @@ namespace CoreML {
     /*
      * Validate an individual feature description
      *
-     * @param  feture description
+     * @param  feature description
      # @param modelVersion The version of the model for backwards compatibility
      * @return Result type of this operation.
      */

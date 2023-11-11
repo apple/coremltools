@@ -14,7 +14,7 @@ class torch_tensor_assign_to_core(AbstractGraphPass):
     """
     Map Torch dialect ops `torch_tensor_assign` into core opset.
 
-    Currently, we tranform the torch_tensor_assign op using mb.scatter.
+    Currently, we transform the torch_tensor_assign op using mb.scatter.
     """
     def apply(self, prog):
         for f in prog.functions.values():

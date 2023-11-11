@@ -80,7 +80,7 @@ namespace CoreML {
      *
      * @param  allowedFeatureTypes Allowed feature types.
      * @param featureType type of this operation.
-     * @retun
+     * @return
      */
     inline Result validateSchemaTypes(const std::vector<Specification::FeatureType::TypeCase>& allowedFeatureTypes,
                  const Specification::FeatureDescription& featureDesc) {

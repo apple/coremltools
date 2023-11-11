@@ -222,7 +222,7 @@ class TestUpsampleBilinear:
         is_h_float = height - np.floor(height) > 0.001
         is_w_float = width - np.floor(width) > 0.001
 
-        # Currently, MIL is not suporting recompute_scale_factor=False + align_corners=False
+        # Currently, MIL is not supporting recompute_scale_factor=False + align_corners=False
         # with fractional output size
         if not recompute_scale_factor and not align_corners and (is_h_float or is_w_float):
             pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")

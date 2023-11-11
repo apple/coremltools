@@ -57,7 +57,7 @@ class SvrScikitTest(unittest.TestCase):
             model = SVR()
             spec = sklearn_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = sklearn_converter.convert(model, "data", "out")
@@ -173,8 +173,8 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
         num_inputs = len(data["data"][0])
         spec = libsvm.convert(self.libsvm_model, input_length=num_inputs + 1)
 
-        # Not enought input names.
-        input_names = ["this", "is", "not", "enought", "names"]
+        # Not enough input names.
+        input_names = ["this", "is", "not", "enough", "names"]
         with self.assertRaises(ValueError):
             libsvm.convert(self.libsvm_model, input_names=input_names)
         with self.assertRaises(ValueError):
@@ -188,7 +188,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
         )
 
     def test_conversion_bad_inputs(self):
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = libsvm.convert(model, "data", "out")

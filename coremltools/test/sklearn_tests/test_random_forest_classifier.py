@@ -80,7 +80,7 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
             model = RandomForestClassifier(n_estimators=10)
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):
@@ -160,7 +160,7 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
             model = RandomForestClassifier(n_estimators=10)
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         with self.assertRaises(Exception):
             from sklearn.preprocessing import OneHotEncoder
 

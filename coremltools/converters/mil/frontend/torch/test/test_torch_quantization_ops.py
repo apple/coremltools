@@ -359,7 +359,7 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         self.run_compare_torch([(2, 3)], model)
 
     @pytest.mark.xfail(
-        reason="torch.ops.quantized.matmul is not suporting mixed precision computation.",
+        reason="torch.ops.quantized.matmul is not supporting mixed precision computation.",
         strict=True,
     )
     @pytest.mark.parametrize(

@@ -456,7 +456,7 @@ class MagnitudePruner(_BasePrunerWithPruningMethod):
                 loss_fn = define_loss()  # define the loss function
 
                 # initialize pruner and configure it
-                # we only prune the fisrt conv layer
+                # we only prune the first conv layer
                 config = MagnitudePrunerConfig.from_dict(
                     {
                         "module_name_configs": {

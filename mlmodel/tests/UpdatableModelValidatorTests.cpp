@@ -107,7 +107,7 @@ int testInvalidUpdatableModelWrongLayer() {
 int testInvalidUpdatableModelWrongWeights() {
 
     /*
-     checks that updatable peroperty is true for weights if the layer is marked as updatable.
+     checks that updatable property is true for weights if the layer is marked as updatable.
      */
 
     Specification::Model m1;
@@ -154,7 +154,7 @@ int testInvalidUpdatableModelWrongWeights() {
 int testInvalidUpdatableModelWrongBiases() {
 
     /*
-     checks that updatable peroperty is true for biases if the layer is marked as updatable.
+     checks that updatable property is true for biases if the layer is marked as updatable.
      */
 
     Specification::Model m1;
@@ -200,7 +200,7 @@ int testInvalidUpdatableModelWrongBiases() {
 int testInvalidUpdatableModelNonUpdatableLayers() {
 
     /*
-     checks that updatable property is true for atleast one layer if a model is updatable.
+     checks that updatable property is true for at least one layer if a model is updatable.
      */
 
     Specification::Model m1;
@@ -244,7 +244,7 @@ int testInvalidUpdatableModelNonUpdatableLayers() {
 int testInvalidUpdatableModelwithCollidedLayerAndLossLayerNames() {
 
     /*
-     checks that updatable model has no collison on names for model layers and loss layers
+     checks that updatable model has no collision on names for model layers and loss layers
      */
 
     Specification::Model m1;
@@ -615,7 +615,7 @@ int testValidModelValidMultipleSoftmax_2() {
     // attach a CCE loss layer to softmax
     addCategoricalCrossEntropyLoss(m, nn, "cross_entropy_loss_layer", "softmax_out", "label_target");
 
-    // attch an updatable inner product layer to the softmax
+    // attach an updatable inner product layer to the softmax
     TensorAttributes inTensorAttr = { "softmax_out", 1 };
     TensorAttributes outTensorAttr = { "inner_layer_after_softmax_out", 1 };
     nn = addInnerProductLayer(m, true, "inner_layer_after_softmax", &inTensorAttr, &outTensorAttr);
@@ -2311,7 +2311,7 @@ int testValid_Classifier_PredictedFeatureNameAndTarget() {
     // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
     spec.mutable_description()->clear_traininginput();
 
-    // Re-adding model inputs and the target + predicted feature nmae to classifier's training inputs
+    // Re-adding model inputs and the target + predicted feature name to classifier's training inputs
     for (auto feature : spec.description().input()) {
         auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
         trainingInput->CopyFrom(feature);
@@ -2348,7 +2348,7 @@ int testInvalid_Classifier_PredictedFeatureNameWrongType() {
     // Clearing and then specifically adding only the predicted feature name as a training input (for the classifier)
     spec.mutable_description()->clear_traininginput();
 
-    // Re-adding model inputs and the target + predicted feature nmae to classifier's training inputs
+    // Re-adding model inputs and the target + predicted feature name to classifier's training inputs
     for (auto feature : spec.description().input()) {
         auto trainingInput = spec.mutable_description()->mutable_traininginput()->Add();
         trainingInput->CopyFrom(feature);

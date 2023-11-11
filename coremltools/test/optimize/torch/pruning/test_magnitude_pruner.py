@@ -23,7 +23,7 @@ def _zero_loss(x, y):
 
 
 def _mock_initializer(shape, dtype):
-    # Each output channel is (entirely) an integer, increaing. This makes it so
+    # Each output channel is (entirely) an integer, increasing. This makes it so
     # that we know what to expect from the LnPruner.
     output_channel_index = 0
     num_output_channels = shape[output_channel_index]

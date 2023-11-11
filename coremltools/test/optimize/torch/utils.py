@@ -34,7 +34,7 @@ def _macos_version():
             )
             return tuple([int(v) for v in ver_str.split(".")])
         except:
-            raise Exception("Unable to detemine the macOS version")
+            raise Exception("Unable to determine the macOS version")
     return ()
 
 

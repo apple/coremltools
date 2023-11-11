@@ -50,7 +50,7 @@ class SSAOpRegistry:
         - A graph pass must be customized by the developer to translate a dialect_ops into core ops
 
     (3) custom_ops: dict[str, Operation]
-        - These are the custom ops, in which an additional ``bindings`` which should be specificed in operator
+        - These are the custom ops, in which an additional ``bindings`` which should be specified in operator
     """
     SUPPORTED_OPSET_VERSIONS = (
         target.iOS13,

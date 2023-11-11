@@ -10,7 +10,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 def _match_pattern(op):
     pow_op, sqrt_op = None, None
 
-    # check the curernt op is pow(2) or sqrt
+    # check the current op is pow(2) or sqrt
     if op.op_type == "pow" and op.y.val == 2:
         pow_op = op
     if op.op_type == "sqrt":

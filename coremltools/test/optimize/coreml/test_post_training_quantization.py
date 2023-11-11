@@ -871,7 +871,7 @@ class TestErrorHandling:
         with pytest.raises(ValueError, match="\"lut_function\" must be None, if \"mode\" is not \"custom\"."):
             palettize_weights(mlmodel, mode="unique", lut_function=lambda op: True)
 
-        # Test lut_function must be a function obejct
+        # Test lut_function must be a function object
         expected_err_str = "A function object must be provided as \"lut_function\""
         with pytest.raises(ValueError, match=expected_err_str):
             palettize_weights(mlmodel, mode="custom", lut_function=1)

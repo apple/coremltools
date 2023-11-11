@@ -452,7 +452,7 @@ def ct_convert(
     """
 
     if isinstance(converter, partial):
-        raise ValueError("Partial function is not supported for function-parameter 'converter' since its keywords arguments could get overriden.")
+        raise ValueError("Partial function is not supported for function-parameter 'converter' since its keywords arguments could get overridden.")
 
     target, dtype = convert_to
 

@@ -11,7 +11,7 @@ from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 
 def generate_tensor_assignment_ops(graph):
     """
-    This graph pass handles inplace tensor assignements, specifically it handles:
+    This graph pass handles inplace tensor assignments, specifically it handles:
     `torch.Tensor.copy_` and `torch.Tensor.fill_`. There are many other inplace tensor
     assignments which are currently not handled.
 

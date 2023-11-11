@@ -792,7 +792,7 @@ class TestTorchInputs(_TestInputs):
 
             def forward(self, x, hidden_state, cell_state):
                 # LSTM takes in previous hidden and cell states. The first
-                # invokation usually have zero vectors as initial states.
+                # invocation usually have zero vectors as initial states.
                 output, (new_hidden_state, new_cell_state) = \
                     self.lstm(x, (hidden_state, cell_state))
                 # LSTM hidden / cell states are returned to be managed by the

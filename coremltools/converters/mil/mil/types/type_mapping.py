@@ -191,7 +191,7 @@ def nptype_from_builtin(btype):
 
 def builtin_to_resolution(builtin_type: type):
     """
-    Given a builtin type, return its corrsponding resolution.
+    Given a builtin type, return its corresponding resolution.
     """
     return _TYPES_TO_RESOLUTION[builtin_type]
 

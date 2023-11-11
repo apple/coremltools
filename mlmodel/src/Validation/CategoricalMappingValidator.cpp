@@ -83,7 +83,7 @@ namespace CoreML {
                               "of categorical mapping.");
             }
 
-            // Make sure the outupt is a sequence as well
+            // Make sure the output is a sequence as well
             if (interface.output(0).type().Type_case() != Specification::FeatureType::kSequenceType) {
                 return Result(ResultType::UNSUPPORTED_FEATURE_TYPE_FOR_MODEL_TYPE,
                               "Output of a sequence categorical mapping must be a sequence");

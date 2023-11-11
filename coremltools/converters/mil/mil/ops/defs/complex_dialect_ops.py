@@ -848,7 +848,7 @@ class complex_stft(Operation):
 
         # if onesided is true, the input is real valued
         # because of Hermitian symmetry, we only need to calculate the FFT
-        # for the first half of the frequences
+        # for the first half of the frequencies
         if self.onesided and self.onesided.val:
             window_length = window_length // 2 + 1
 

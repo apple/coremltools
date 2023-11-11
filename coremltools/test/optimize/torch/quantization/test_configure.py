@@ -288,7 +288,7 @@ def test_sequential_network_config_for_symmetric(mnist_model_quantization):
     """
     Tests a sequential network with multiple modules is configured correctly.
     This network has layers where input and output observers are shared. We test
-    that for these layers, we set acitvation quantizer correctly for always affine layers
+    that for these layers, we set activation quantizer correctly for always affine layers
     """
     data = torch.randn(1, 1, 28, 28)
     prepared_model, quantizer = quantize_model(mnist_model_quantization, data)

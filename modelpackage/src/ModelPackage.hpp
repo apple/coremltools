@@ -65,7 +65,7 @@ public:
     
     /** Creates an instance of model package that exists at the specified path.
         @param path Path of the model package (with extension .mlpackage).
-        @param createIfNecessary Create a new model package if one does not exist at the specificed path. Defaults to true.
+        @param createIfNecessary Create a new model package if one does not exist at the specified path. Defaults to true.
         @param readOnly The model package will not be mutated Defaults to false.
         @throw Runtime exception if an invalid model package exists at the specified path. */
     explicit ModelPackage(const std::string& path, bool createIfNecessary = true, bool readOnly = false);

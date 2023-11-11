@@ -124,7 +124,7 @@ class Var:
         self._adjust_sym_val()
 
         # Track vars constness, which requires a var to satisfy one of the following:
-        # 1. var.val is not None, whichs mean the converter already has its compile time value through value inference.
+        # 1. var.val is not None, which's mean the converter already has its compile time value through value inference.
         # 2. Is a descendant of ``constexpr_`` ops. We don't compute the value inference of those ``constexpr_`` ops,
         #    due to the fact it can potentially results in memory issue.
         self.is_descendant_of_const = Var._propagate_constness_upstream(self)

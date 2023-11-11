@@ -77,7 +77,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
         # input will be a single array
         if input_length == "auto":
             print(
-                "[WARNING] Infering an input length of %d. If this is not correct,"
+                "[WARNING] Inferring an input length of %d. If this is not correct,"
                 " use the 'input_length' parameter." % inferred_length
             )
             input_length = inferred_length
@@ -167,7 +167,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
     else:
         svm.rho = libsvm_model.rho[0]
 
-    # set coefficents
+    # set coefficients
     if svm_type_enum == _svm.C_SVC or svm_type_enum == _svm.NU_SVC:
         for _ in range(nr_class - 1):
             svm.coefficients.add()

@@ -102,7 +102,7 @@ The image feature type.
 	    // width x height is the required fixed image size
 	    //
 	    // If SizeFlexibility is present, width x height indicate a "default"
-	    // image size which must be consistent with the flexibilty specified
+	    // image size which must be consistent with the flexibility specified
 	
 	    int64 width = 1;
 	    int64 height = 2;
@@ -220,7 +220,7 @@ The array feature type.
 	    // shape is the required fixed shape
 	    //
 	    // If ShapeFlexibility is present, shape indicate a "default"
-	    // shape which must be consistent with the flexibilty specified
+	    // shape which must be consistent with the flexibility specified
 	
 	    repeated int64 shape = 1;
 	
@@ -248,7 +248,7 @@ The array feature type.
 	        //
 	        // If the shape field is specified then it must be
 	        // one of the enumerated shapes.
-	        // If shape is not specifed, the "default" shape will be considered
+	        // If shape is not specified, the "default" shape will be considered
 	        // enumeratedShapes[0]
 	        //
 	        // Must be non-empty
@@ -256,7 +256,7 @@ The array feature type.
 	        EnumeratedShapes enumeratedShapes = 21;
 	
 	        // Use shapeRange to allow the size of each dimension vary within
-	        // indpendently specified ranges
+	        // independently specified ranges
 	        //
 	        // If you specify shape above it must fall in the range
 	        // specified in shapeRanges. It will be treated as the default shape.

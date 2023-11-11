@@ -268,7 +268,7 @@ Primer: Two fundamental representations of state:
 
 Variable: Variables are *never* materialized at compile time and are only
 available at run time. Therefore, for Variables we only have ValueType,
-which may have unknown shapes in the IR. Variable encompases familiar
+which may have unknown shapes in the IR. Variable encompasses familiar
 concepts such as placeholder, output of an Op.
 
 Value: Values are ALWAYS materialized at compile time, and MAY be modified

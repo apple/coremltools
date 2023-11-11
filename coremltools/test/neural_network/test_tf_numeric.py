@@ -133,7 +133,7 @@ class StressTest(CorrectnessTest):
         print(
             "Total params to be tested: ",
             len(valid_params),
-            "out of canditates: ",
+            "out of candidates: ",
             len(all_candidates),
         )
         """
@@ -180,7 +180,7 @@ class StressTest(CorrectnessTest):
                 builder = neural_network.NeuralNetworkBuilder(
                     input_features, output_features
                 )
-                # tranlate weights : (Kh, Kw, kernel_channels, output_channels) == (Kh, Kw, Cin/g, Cout) == (Kh, Kw, 1, channel_multiplier * Cin)
+                # translate weights : (Kh, Kw, kernel_channels, output_channels) == (Kh, Kw, Cin/g, Cout) == (Kh, Kw, 1, channel_multiplier * Cin)
                 w_e = np.reshape(
                     w,
                     (
@@ -258,7 +258,7 @@ class StressTest(CorrectnessTest):
         print(
             "Total params to be tested: ",
             len(valid_params),
-            "out of canditates: ",
+            "out of candidates: ",
             len(all_candidates),
         )
         """

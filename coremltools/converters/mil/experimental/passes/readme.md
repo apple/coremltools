@@ -582,6 +582,6 @@ def transform_pattern(pattern):
 
 ## _**How to Add/Run a Pass**_
 
-* Write the passs, and save it in a file in the `coreml/coremltools/coremltools/converters/mil/experimental/passes` folder
+* Write the pass, and save it in a file in the `coreml/coremltools/coremltools/converters/mil/experimental/passes` folder
 * Add an import line to the `coreml/coremltools/coremltools/converters/mil/mil/passes/init.py` file
 * Run the experimental (generic) passes by setting the `ENABLE_EXPERIMENTAL_PASSES` environment variable to 1, which will override the regular passes with the same name

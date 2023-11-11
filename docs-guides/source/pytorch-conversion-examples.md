@@ -85,11 +85,11 @@ Right-click and choose **Save Image** to download this test image.
 	torch_predictions = output.argmax(0)
 	```
 
-3. Plot the predictions, overlayed with the original image:
+3. Plot the predictions, overlaid with the original image:
 	
 	```python
 	def display_segmentation(input_image, output_predictions):
-		# Create a color pallette, selecting a color for each class
+		# Create a color palette, selecting a color for each class
 		palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
 		colors = torch.as_tensor([i for i in range(21)])[:, None] * palette
 		colors = (colors % 255).numpy().astype("uint8")
@@ -112,11 +112,11 @@ Right-click and choose **Save Image** to download this test image.
 	```
 
 ```{figure} images/seg_pytorch.png
-:alt: Plot predictions overlayed with image
+:alt: Plot predictions overlaid with image
 :align: center
 :class: imgnoborder
 
-Plotting the predictions overlayed with the original image.
+Plotting the predictions overlaid with the original image.
 ```
 
 
@@ -302,7 +302,7 @@ with torch.no_grad():
 torch_predictions = output.argmax(0)
 
 def display_segmentation(input_image, output_predictions):
-    # Create a color pallette, selecting a color for each class
+    # Create a color palette, selecting a color for each class
     palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
     colors = torch.as_tensor([i for i in range(21)])[:, None] * palette
     colors = (colors % 255).numpy().astype("uint8")

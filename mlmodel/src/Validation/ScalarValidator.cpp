@@ -98,7 +98,7 @@ namespace CoreML {
             if(!(shift_size == 0 || shift_size == 1)) {
                 
                 return Result(ResultType::INVALID_MODEL_PARAMETERS,
-                              "For a scalar imput type, specified shift value must be empty or a scalar.");
+                              "For a scalar input type, specified shift value must be empty or a scalar.");
             }
             
                 // Now, make sure that the repeated values make sense.

@@ -79,7 +79,7 @@ class DecisionTreeRegressorScikitTest(unittest.TestCase):
             model = DecisionTreeRegressor()
             spec = skl_converter.convert(model, "data", "out")
 
-        # Check the expected class during covnersion.
+        # Check the expected class during conversion.
         from sklearn.preprocessing import OneHotEncoder
 
         with self.assertRaises(Exception):

@@ -465,7 +465,7 @@ class Block:
         :param end_op: Operation
         :param no_check_var_types: bool
         :param no_check_var_visibility: bool
-        :return: True if the old_var can be replaced by new_var. False otherwsie.
+        :return: True if the old_var can be replaced by new_var. False otherwise.
 
         This helper function guards the replace_uses_of_var_after_op function,
         by first checking if the old_var could be replaced by the new_var.

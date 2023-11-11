@@ -511,7 +511,7 @@ Result NeuralNetworkSpecValidator::validatePooling3dLayer(const Specification::N
     if (ndArrayInterpretation) {
         HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank));
 
-        // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
+        // Rank 5 for 2 spatial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
         HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank));
     }
     
@@ -547,7 +547,7 @@ Result NeuralNetworkSpecValidator::validateGlobalPooling3dLayer(const Specificat
     if (ndArrayInterpretation) {
         HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank));
 
-        // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
+        // Rank 5 for 2 spatial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
         HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank));
     }
 
@@ -2341,7 +2341,7 @@ Result NeuralNetworkSpecValidator::validateLoopLayer(const Specification::Neural
     const auto &bodyNNSpec = params.bodynetwork();
     bool isConditionNet = (conditionNNSpec.layers_size() > 0) ? true : false;
 
-    // validate some generic requirements for the existense of fields
+    // validate some generic requirements for the existence of fields
     if (bodyNNSpec.layers_size() == 0) {
         std::string err = "Loop Layer '" + std::string(layer.name()) + "' has an empty body network";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);

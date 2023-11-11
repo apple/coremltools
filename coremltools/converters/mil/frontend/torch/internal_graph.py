@@ -201,6 +201,7 @@ class InternalTorchIRNode:
             attr["value"] = bool(attr["value"])
 
         # On rare occassions, a node has no outputs. In that case, the node's
+        # On rare occasions, a node has no outputs. In that case, the node's
         # name will be its kind. However, this no longer guarantees the node's
         # name is unique. It will be up to the graph constructing the node to
         # make sure names are unique.
@@ -308,7 +309,7 @@ class InternalTorchIRGraph:
           and .outputs() functions return iterators, so the only way to
           determine the number of inputs/outputs is by counting to the end.
           There are other examples of why the torch structure is hard to work
-          with, and this structure alleviates those isses.
+          with, and this structure alleviates those issues.
         2. torch._C.graph is an internal API and so we can't count on its
           stability. By inserting a layer in between, we can handle any changes
           to torch._C.graph here and isolate the ops code that processes the

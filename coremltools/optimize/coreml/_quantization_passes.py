@@ -254,7 +254,7 @@ class prune_weights(AbstractCompressionPass):
             6. Replicate the magnitude values for each block: ``[C_out_pad // block_size, block_size, C_in, *K]``.
             7. Reshape the tensor back to ``[Cout_pad, C_in, *K]``.
             8. Crop the tensor to ``[C_out, C_in, *K]``.
-            9. If ``dim = 1``, tranpose the tensor back to the original layout.
+            9. If ``dim = 1``, transpose the tensor back to the original layout.
             """
             if dim == 1:
                 perm = [1, 0] + list(range(2, rank))
@@ -316,7 +316,7 @@ class prune_weights(AbstractCompressionPass):
         """
         The `n-m` pruning process follows these steps:
         1. Input tensor with shape of ``[C_out, C_in, *K]``, where ``K`` is the spatial dimension from ``0`` to ``3``.
-        2. If ``axis = 1``, tranpose the tensor to shape ``[*K, C_out, C_in]``; otherwise, ``(axis = 0)`` to ``[*K, C_in, C_out]``.
+        2. If ``axis = 1``, transpose the tensor to shape ``[*K, C_out, C_in]``; otherwise, ``(axis = 0)`` to ``[*K, C_in, C_out]``.
         3. For the case of ``axis = 1``, reshape input to a 2D tensor ``[*K*C_out, C_in]``. Similar for ``axis = 0``.
         4. Pad the last dimension with ``0`` so that it can be divided by ``m``: ``[*K*C_out, C_in_pad]``.
         5. Reshape the tensor to have the last dimension ``m``: ``[*K*C_out*C_in_pad//m, m]``.
@@ -324,7 +324,7 @@ class prune_weights(AbstractCompressionPass):
         7. Reshape the tensor back to the shape of ``[*K*C_out, C_in_pad]``.
         8. Crop the last dimension to match the original shape of ``[*K*C_out, C_in]``.
         9. Reshape the tensor to shape ``[*K, C_out, C_in]``.
-        10. Tranpose the tensor back to ``[C_out, C_in, K]``.
+        10. Transpose the tensor back to ``[C_out, C_in, K]``.
         """
         perm = list(range(2, rank)) + [0, 1]
         if dim == 0:

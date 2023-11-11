@@ -33,7 +33,7 @@ namespace CoreML {
             return Result(ResultType::INVALID_MODEL_PARAMETERS, out.str());
         }
 
-        // Only need to check that the length of the individual vectors are equivalent to the dimensionality (and thus eachother)
+        // Only need to check that the length of the individual vectors are equivalent to the dimensionality (and thus each other)
         for (int i = 0; i < nnIndex.floatsamples_size(); i++) {
             if (nnIndex.floatsamples(i).vector_size() != nnIndex.numberofdimensions()) {
                 std::stringstream out;

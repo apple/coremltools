@@ -46,7 +46,7 @@ Pattern 2:
        ...
 
 When taking all of the conv/conv_tranpose, transpose/no transpose, and add/sub into account,
-We end up with a total of 8 patterns (2^3). These patterns are paramaterized by the pattern_to_detect
+We end up with a total of 8 patterns (2^3). These patterns are parameterized by the pattern_to_detect
 function below.
 """
 

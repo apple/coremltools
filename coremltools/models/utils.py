@@ -130,7 +130,7 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
         If True, will always try to set specification version automatically.
 
     weights_dir: str
-        Path to the directory containing the weigths.bin file. This is required
+        Path to the directory containing the weights.bin file. This is required
         when the spec if of model type mlprogram. If the mlprogram does not contain
         any weights, this path can be an empty directory.
 
@@ -925,7 +925,7 @@ def _macos_version():
             ver_str = _subprocess.run(["sw_vers", "-productVersion"], stdout=_subprocess.PIPE).stdout.decode('utf-8').strip('\n')
             return tuple([int(v) for v in ver_str.split(".")])
         except:
-            raise Exception("Unable to detemine the macOS version")
+            raise Exception("Unable to determine the macOS version")
     return ()
 
 
@@ -1072,7 +1072,7 @@ def make_pipeline(
         The set of processing units that all models in the pipeline can use to make predictions.
         Can be ``None`` or ``coremltools.ComputeUnit``.
 
-        * If ``None``, the ``compute_unit`` will be infered from the ``compute_unit`` values of the models.
+        * If ``None``, the ``compute_unit`` will be inferred from the ``compute_unit`` values of the models.
           If all models do not have the same ``compute_unit`` values, this parameter must be specified.
 
         * ``coremltools.ComputeUnit`` is an enum with four possible values:

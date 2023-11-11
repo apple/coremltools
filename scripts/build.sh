@@ -33,7 +33,7 @@ print_help() {
   echo
   echo "Usage: build.sh"
   echo
-  echo "  --num_procs=n (default 1)       Specify the number of proceses to run in parallel."
+  echo "  --num_procs=n (default 1)       Specify the number of processes to run in parallel."
   echo "  --python=*                      Python to use for configuration."
   echo "  --protobuf                      Rebuild & overwrite the protocol buffers in MLModel."
   echo "  --debug                         Build without optimizations and stripping symbols."

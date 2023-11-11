@@ -83,7 +83,7 @@ class InputSpec:
     def validate_inputs(self, op_name, op_type, candidate_kvs):
         """
         For each key K in `candidate_kvs`, if K is found in
-        self.input_types, perform the followings:
+        self.input_types, perform the following:
 
         - check that candidate_kvs[K] is a Var and satisfies
         requirements in InputType (const, types)

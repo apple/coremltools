@@ -157,7 +157,7 @@ def _set_user_inputs(proto, inputs):
 
 
 def _set_symbolic_inputs(proto, symbolic_inputs):
-    # Set symbolic input shapes by -1 infered from graph
+    # Set symbolic input shapes by -1 inferred from graph
     for input_name, shape in symbolic_inputs.items():
         lb = [1 if is_symbolic(d) else d for d in shape]
         ub = [-1 if is_symbolic(d) else d for d in shape]

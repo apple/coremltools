@@ -557,7 +557,7 @@ def conv_helper(const_context, builder, op):
 
     if is_conv1d or is_conv2d:
         if weights is None and has_bias:
-            # weights are dyanmic.
+            # weights are dynamic.
             # In this case, bias, if present, cannot be part of the conv op
             # it needs to be added separately via an add op
             out_name += "_without_bias"
@@ -3537,7 +3537,7 @@ def _realloc_list(const_context, builder, ls_var, index_var, value_var, mode):
     # (1)
     # check if we need to re-initialize the tensorarray:
     # it happens when the elem_shape is runtime determined and the runtime shape is not equal to
-    # the default shape. Ex: elem_shape is = [i0, 10] (initilized with [1, 10]) and at the runtime we get [2, 10].
+    # the default shape. Ex: elem_shape is = [i0, 10] (initialized with [1, 10]) and at the runtime we get [2, 10].
 
     # (2)
     # If index_var >= len(ls_var), reallocate the array and copy over existing
