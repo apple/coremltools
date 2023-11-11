@@ -6460,7 +6460,7 @@ def scaled_dot_product_attention(context, node):
             "scaled_dot_product_attention op: scale parameter is not handled."
         )
     
-    if attn_mask is not None and is_causal.val:
+    if attn_mask is not None and is_causal:
         raise ValueError(
             "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
         )
