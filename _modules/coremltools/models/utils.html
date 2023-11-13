@@ -224,7 +224,7 @@
 <span class="sd">        If True, will always try to set specification version automatically.</span>
 
 <span class="sd">    weights_dir: str</span>
-<span class="sd">        Path to the directory containing the weigths.bin file. This is required</span>
+<span class="sd">        Path to the directory containing the weights.bin file. This is required</span>
 <span class="sd">        when the spec if of model type mlprogram. If the mlprogram does not contain</span>
 <span class="sd">        any weights, this path can be an empty directory.</span>
 
@@ -1019,7 +1019,7 @@
             <span class="n">ver_str</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sw_vers&quot;</span><span class="p">,</span> <span class="s2">&quot;-productVersion&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ver_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)])</span>
         <span class="k">except</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to detemine the macOS version&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to determine the macOS version&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">()</span>
 
 
@@ -1166,7 +1166,7 @@
 <span class="sd">        The set of processing units that all models in the pipeline can use to make predictions.</span>
 <span class="sd">        Can be ``None`` or ``coremltools.ComputeUnit``.</span>
 
-<span class="sd">        * If ``None``, the ``compute_unit`` will be infered from the ``compute_unit`` values of the models.</span>
+<span class="sd">        * If ``None``, the ``compute_unit`` will be inferred from the ``compute_unit`` values of the models.</span>
 <span class="sd">          If all models do not have the same ``compute_unit`` values, this parameter must be specified.</span>
 
 <span class="sd">        * ``coremltools.ComputeUnit`` is an enum with four possible values:</span>

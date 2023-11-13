@@ -804,7 +804,7 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">dequantize_x</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">dequantize_y</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">quantize_z</span><span class="p">:</span> <span class="n">Operation</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        given dequantize_x, dequantize_y, quantize_z, tranform by</span>
+<span class="sd">        given dequantize_x, dequantize_y, quantize_z, transform by</span>
 <span class="sd">            z_fp = (x - zp_x) * s_x/s_y .op. (y - zp_y) * 1.0</span>
 <span class="sd">            z = z_fp / (s_z/s_y) - zp_z</span>
 
@@ -930,7 +930,7 @@
 <span class="k">class</span> <span class="nc">dequantize_to_constexpr</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    ``dequantize`` op with constant input is equivalent to ``constexpr_affine_dequantize``.</span>
-<span class="sd">    This is one of the canoncalization pass that transforms all such</span>
+<span class="sd">    This is one of the canonicalization pass that transforms all such</span>
 <span class="sd">    ``dequantize`` ops to respective ``constexpr_affine_dequantize`` ops.</span>
 
 <span class="sd">    .. code-block::</span>

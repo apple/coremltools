@@ -532,7 +532,7 @@
             <span class="c1"># Skip FakeQuantize._save_to_state_dict and go directly to nn.Module._save_to_state_dict</span>
             <span class="nb">super</span><span class="p">(</span><span class="n">_FakeQuantize</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_save_to_state_dict</span><span class="p">(</span><span class="n">destination</span><span class="p">,</span> <span class="n">prefix</span><span class="p">,</span> <span class="n">keep_vars</span><span class="p">)</span>
 
-        <span class="c1"># State dicts can only contain tensors (for DDP), so store infos in the metatadata dict (in particular str)</span>
+        <span class="c1"># State dicts can only contain tensors (for DDP), so store infos in the metadata dict (in particular str)</span>
         <span class="n">destination</span><span class="o">.</span><span class="n">_metadata</span><span class="p">[</span><span class="n">prefix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span><span class="s2">&quot;cluster_dtype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cluster_dtype</span>
         <span class="n">destination</span><span class="o">.</span><span class="n">_metadata</span><span class="p">[</span><span class="n">prefix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]][</span>
             <span class="s2">&quot;buffers_are_placeholders&quot;</span>

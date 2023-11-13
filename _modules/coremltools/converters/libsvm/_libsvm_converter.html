@@ -171,7 +171,7 @@
         <span class="c1"># input will be a single array</span>
         <span class="k">if</span> <span class="n">input_length</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span>
-                <span class="s2">&quot;[WARNING] Infering an input length of </span><span class="si">%d</span><span class="s2">. If this is not correct,&quot;</span>
+                <span class="s2">&quot;[WARNING] Inferring an input length of </span><span class="si">%d</span><span class="s2">. If this is not correct,&quot;</span>
                 <span class="s2">&quot; use the &#39;input_length&#39; parameter.&quot;</span> <span class="o">%</span> <span class="n">inferred_length</span>
             <span class="p">)</span>
             <span class="n">input_length</span> <span class="o">=</span> <span class="n">inferred_length</span>
@@ -261,7 +261,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="n">svm</span><span class="o">.</span><span class="n">rho</span> <span class="o">=</span> <span class="n">libsvm_model</span><span class="o">.</span><span class="n">rho</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
-    <span class="c1"># set coefficents</span>
+    <span class="c1"># set coefficients</span>
     <span class="k">if</span> <span class="n">svm_type_enum</span> <span class="o">==</span> <span class="n">_svm</span><span class="o">.</span><span class="n">C_SVC</span> <span class="ow">or</span> <span class="n">svm_type_enum</span> <span class="o">==</span> <span class="n">_svm</span><span class="o">.</span><span class="n">NU_SVC</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nr_class</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
             <span class="n">svm</span><span class="o">.</span><span class="n">coefficients</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>

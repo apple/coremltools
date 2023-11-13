@@ -172,7 +172,7 @@
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a TensorFlow or PyTorch model to the Core ML model format as either</span>
-<span class="sd">    a neural network or an `ML program &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">    a neural network or an `ML program &lt;https://apple.github.io/coremltools/docs-guides/source/convert-to-ml-program.html&gt;`_.</span>
 <span class="sd">    Some parameters and requirements differ for TensorFlow and PyTorch</span>
 <span class="sd">    conversions.</span>
 
@@ -249,6 +249,7 @@
 <span class="sd">              )</span>
 
 <span class="sd">        * TensorFlow 1 and 2 (including tf.keras):</span>
+
 <span class="sd">            - The ``inputs`` parameter is optional. If not provided, the inputs</span>
 <span class="sd">              are placeholder nodes in the model (if the model is a frozen graph)</span>
 <span class="sd">              or function inputs (if the model is a ``tf.function``).</span>
@@ -257,32 +258,29 @@
 <span class="sd">              in the TF model.</span>
 <span class="sd">            - If ``name`` is specified with ``TensorType`` and ``ImageType``, it</span>
 <span class="sd">              must correspond to a placeholder op in the TF graph. The input names</span>
-<span class="sd">              in the converted Core ML model can later be modifed using the</span>
+<span class="sd">              in the converted Core ML model can later be modified using the</span>
 <span class="sd">              ``ct.utils.rename_feature`` API.</span>
 <span class="sd">            - If ``dtype`` is not specified, it defaults to the ``dtype`` of the</span>
 <span class="sd">              inputs in the TF model.</span>
 <span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
-<span class="sd">              When ``inputs`` not provided or ``dtype`` not specified. The float 32 inputs defaults to float 16.</span>
+<span class="sd">              When ``inputs`` not provided or ``dtype`` not specified, the float 32 inputs default to float 16.</span>
 
 <span class="sd">        * PyTorch:</span>
 
 <span class="sd">            - TorchScript Models:</span>
 <span class="sd">                - The ``inputs`` parameter is required.</span>
-<span class="sd">                - Number of elements in ``inputs`` must match the number of inputs</span>
-<span class="sd">                  of the PyTorch model.</span>
+<span class="sd">                - Number of elements in ``inputs`` must match the number of inputs of the PyTorch model.</span>
 <span class="sd">                - ``inputs`` may be a nested list or tuple.</span>
 <span class="sd">                - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.</span>
 <span class="sd">                - If the ``name`` argument is specified with ``TensorType`` or</span>
-<span class="sd">                  ``ImageType``, the converted Core ML model will have inputs with</span>
-<span class="sd">                  the same name.</span>
+<span class="sd">                  ``ImageType``, the converted Core ML model will have inputs with the same name.</span>
 <span class="sd">                - If ``dtype`` is missing:</span>
 <span class="sd">                    * For ``minimum_deployment_target &lt;= ct.target.macOS12``, it defaults to float 32.</span>
 <span class="sd">                    * For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
 <span class="sd">                      It defaults to float 16.</span>
-
 <span class="sd">            - Torch Exported Models:</span>
-<span class="sd">                - The ``inputs`` parameter is not supported. The ``inputs`` parameter is</span>
-<span class="sd">                  inferred from the Torch `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_.</span>
+<span class="sd">                - The ``inputs`` parameter is not supported.</span>
+<span class="sd">                - The ``inputs`` parameter is inferred from the Torch `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_.</span>
 
 <span class="sd">    outputs : list of ``TensorType`` or ``ImageType`` (optional)</span>
 
@@ -324,7 +322,7 @@
 <span class="sd">              will be converted up to that node.</span>
 <span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``, and with ``compute_precision`` in float 16 precision.</span>
 <span class="sd">              If ``dtype`` not specified, the outputs inferred of type float 32</span>
-<span class="sd">              defaults to float 16.</span>
+<span class="sd">              default to float 16.</span>
 
 <span class="sd">        * PyTorch: TorchScript Models</span>
 <span class="sd">            - If specified, the length of the list must match the number of</span>
@@ -334,11 +332,11 @@
 <span class="sd">            - For ``minimum_deployment_target &gt;= ct.target.macOS13``,</span>
 <span class="sd">              and with ``compute_precision`` in float 16 precision.</span>
 <span class="sd">            - If ``dtype`` not specified, the outputs inferred of type float 32</span>
-<span class="sd">              defaults to float 16.</span>
+<span class="sd">              default to float 16.</span>
 
 <span class="sd">        * PyTorch: Torch Exported Models:</span>
 <span class="sd">            - The ``outputs`` parameter is not supported.</span>
-<span class="sd">              The ``outputs`` parameter is inferred from Torch `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_.</span>
+<span class="sd">            - The ``outputs`` parameter is inferred from Torch `ExportedProgram &lt;https://pytorch.org/docs/stable/export.html#torch.export.ExportedProgram&gt;`_.</span>
 
 <span class="sd">    classifier_config : ClassifierConfig class (optional)</span>
 <span class="sd">        The configuration if the MLModel is intended to be a classifier.</span>
@@ -348,17 +346,21 @@
 <span class="sd">        The value of this parameter determines the type of the model</span>
 <span class="sd">        representation produced by the converter. To learn about the differences</span>
 <span class="sd">        between ML programs and neural networks, see</span>
-<span class="sd">        `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">        `ML Programs &lt;https://apple.github.io/coremltools/docs-guides/source/convert-to-ml-program.html&gt;`_.</span>
 
 <span class="sd">        - The converter produces a neural network (``neuralnetwork``) if:</span>
-<span class="sd">          ::</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
 <span class="sd">             minimum_deployment_target &lt;= coremltools.target.iOS14/</span>
 <span class="sd">                                          coremltools.target.macOS11/</span>
 <span class="sd">                                          coremltools.target.watchOS7/</span>
 <span class="sd">                                          coremltools.target.tvOS14:</span>
 
 <span class="sd">        - The converter produces an ML program (``mlprogram``) if:</span>
-<span class="sd">          ::</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
 <span class="sd">             minimum_deployment_target &gt;= coremltools.target.iOS15/</span>
 <span class="sd">                                           coremltools.target.macOS12/</span>
 <span class="sd">                                           coremltools.target.watchOS8/</span>
@@ -369,7 +371,9 @@
 <span class="sd">          model type with as minimum of a deployment target as possible.</span>
 <span class="sd">        - If this parameter is specified and ``convert_to`` is also specified,</span>
 <span class="sd">          they must be compatible. The following are examples of invalid values:</span>
-<span class="sd">          ::</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
 <span class="sd">            # Invalid:</span>
 <span class="sd">            convert_to=&quot;mlprogram&quot;, minimum_deployment_target=coremltools.target.iOS14</span>
 
@@ -381,7 +385,7 @@
 <span class="sd">        The value of this parameter determines the type of the model</span>
 <span class="sd">        representation produced by the converter. To learn about the</span>
 <span class="sd">        differences between ML programs and neural networks, see</span>
-<span class="sd">        `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">        `ML Programs &lt;https://apple.github.io/coremltools/docs-guides/source/convert-to-ml-program.html&gt;`_.</span>
 
 <span class="sd">        - ``&#39;mlprogram&#39;`` : Returns an MLModel (``coremltools.models.MLModel``)</span>
 <span class="sd">          containing a MILSpec.Program proto, which is the Core ML program format.</span>
@@ -397,7 +401,9 @@
 <span class="sd">          (``coremltools.converters.mil.Program``). An MIL program is primarily</span>
 <span class="sd">          used for debugging and inspection. It can be converted to an MLModel for</span>
 <span class="sd">          execution by using one of the following:</span>
-<span class="sd">          ::</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
 <span class="sd">             ct.convert(mil_program, convert_to=&quot;neuralnetwork&quot;)</span>
 <span class="sd">             ct.convert(mil_program, convert_to=&quot;mlprogram&quot;)</span>
 
@@ -414,7 +420,9 @@
 <span class="sd">          applied to produce a float 16 program; that is, a program in which all</span>
 <span class="sd">          the intermediate float tensors are of type float 16 (for ops that</span>
 <span class="sd">          support that type).</span>
-<span class="sd">          ::</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
 <span class="sd">              coremltools.transform.FP16ComputePrecision(op_selector=</span>
 <span class="sd">                                                         lambda op:True)</span>
 
@@ -438,7 +446,9 @@
 <span class="sd">          but you can customize this.</span>
 
 <span class="sd">          For example:</span>
-<span class="sd">          ::</span>
+
+<span class="sd">          .. sourcecode:: python</span>
+
 <span class="sd">             coremltools.transform.FP16ComputePrecision(op_selector=</span>
 <span class="sd">                                         lambda op: op.op_type != &quot;linear&quot;)</span>
 
@@ -488,14 +498,13 @@
 <span class="sd">        conversion, the model is loaded with the provided set of compute units and</span>
 <span class="sd">        returned.</span>
 
-<span class="sd">        An enum with the following possible values.</span>
-<span class="sd">            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
-<span class="sd">              neural engine.</span>
-<span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
-<span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
-<span class="sd">              neural engine.</span>
-<span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
-<span class="sd">              not the GPU. Available only for macOS &gt;= 13.0.</span>
+<span class="sd">        An enum with the following possible values:</span>
+<span class="sd">        </span>
+<span class="sd">        * ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the neural engine.</span>
+<span class="sd">        * ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
+<span class="sd">        * ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the neural engine.</span>
+<span class="sd">        * ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
+<span class="sd">          not the GPU. Available only for macOS &gt;= 13.0.</span>
 
 <span class="sd">    package_dir : str</span>
 <span class="sd">        Post conversion, the model is saved at a temporary location and</span>
@@ -509,11 +518,10 @@
 <span class="sd">    debug : bool</span>
 <span class="sd">        This flag should generally be ``False`` except for debugging purposes.</span>
 <span class="sd">        Setting this flag to ``True`` produces the following behavior:</span>
-<span class="sd">          - For Torch conversion, it will print the list of supported and</span>
-<span class="sd">            unsupported ops found in the model if conversion fails due to an</span>
-<span class="sd">            unsupported op.</span>
-<span class="sd">          - For Tensorflow conversion, it will cause to display extra logging</span>
-<span class="sd">            and visualizations.</span>
+
+<span class="sd">        * For Torch conversion, it will print the list of supported and</span>
+<span class="sd">          unsupported ops found in the model if conversion fails due to an unsupported op.</span>
+<span class="sd">        * For Tensorflow conversion, it will cause to display extra logging and visualizations.</span>
 
 <span class="sd">    pass_pipeline : PassPipeline</span>
 <span class="sd">        Manage graph passes. You can control which graph passes to run and the order of the</span>
@@ -525,18 +533,18 @@
 
 <span class="sd">          .. sourcecode:: python</span>
 
-<span class="sd">            pipeline = ct.PassPipeline()</span>
-<span class="sd">            pipeline.remove_passes({&quot;common::fuse_conv_batchnorm&quot;})</span>
-<span class="sd">            mlmodel = ct.convert(model, pass_pipeline=pipeline)</span>
+<span class="sd">             pipeline = ct.PassPipeline()</span>
+<span class="sd">             pipeline.remove_passes({&quot;common::fuse_conv_batchnorm&quot;})</span>
+<span class="sd">             mlmodel = ct.convert(model, pass_pipeline=pipeline)</span>
 
 <span class="sd">        * To avoid folding too-large ``const`` ops that lead to a large model, set pass option</span>
 <span class="sd">          as shown in the following example:</span>
 
 <span class="sd">          .. sourcecode:: python</span>
 
-<span class="sd">            pipeline = ct.PassPipeline()</span>
-<span class="sd">            pipeline.set_options(&quot;common::const_elimination&quot;, {&quot;skip_const_by_size&quot;: &quot;1e6&quot;})</span>
-<span class="sd">            mlmodel = ct.convert(model, pass_pipeline=pipeline)</span>
+<span class="sd">             pipeline = ct.PassPipeline()</span>
+<span class="sd">             pipeline.set_options(&quot;common::const_elimination&quot;, {&quot;skip_const_by_size&quot;: &quot;1e6&quot;})</span>
+<span class="sd">             mlmodel = ct.convert(model, pass_pipeline=pipeline)</span>
 
 <span class="sd">        We also provide a set of predefined pass pipelines that you can directly call.</span>
 
@@ -614,7 +622,7 @@
 <span class="sd">            &gt;&gt;&gt; results = mlmodel.predict({&quot;input&quot;: example_input.numpy()})</span>
 <span class="sd">            &gt;&gt;&gt; print(results[&#39;1651&#39;]) # 1651 is the node name given by PyTorch&#39;s JIT</span>
 
-<span class="sd">    See `Conversion Options &lt;https://coremltools.readme.io/docs/neural-network-conversion&gt;`_ for</span>
+<span class="sd">    See `Conversion Options &lt;https://apple.github.io/coremltools/docs-guides/source/conversion-options.html&gt;`_ for</span>
 <span class="sd">    more advanced options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_check_deployment_target</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">)</span>
@@ -1083,7 +1091,7 @@
             <span class="s2">&quot;ct.target.iOS15 (which is same as ct.target.macOS12). &quot;</span>
             <span class="s2">&quot;Note: the model will not run on systems older than iOS15/macOS12/watchOS8/tvOS15. &quot;</span>
             <span class="s2">&quot;In order to make your model run on older system, please set the &#39;minimum_deployment_target&#39; to iOS14/iOS13. &quot;</span>
-            <span class="s2">&quot;Details please see the link: https://coremltools.readme.io/docs/unified-conversion-api#target-conversion-formats&quot;</span>
+            <span class="s2">&quot;Details please see the link: https://apple.github.io/coremltools/docs-guides/source/target-conversion-formats.html&quot;</span>
         <span class="p">)</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">convert_to</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="ow">and</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS15</span><span class="p">:</span>
