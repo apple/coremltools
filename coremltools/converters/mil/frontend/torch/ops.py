@@ -627,6 +627,15 @@ def _array_construct(context, node, array_type):
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node)
 
+    is_all_const = all(map(lambda inp : isinstance(inp, Var) and inp.can_be_folded_to_const() and len(inp.shape) == 0, inputs))
+    if is_all_const:
+        # All the list items are compile-time scalar constants, so let's create
+        # a new const that concatenates them.
+        val = array_type([inp.val for inp in inputs])
+        const = mb.const(val=val, name=node.name)
+        context.add(const)
+        return
+
     nodes = {n.name : n for n in context.torch_graph.nodes}
     is_known_name = lambda name : name in nodes
     def dfs_graph_input_dependent(inputs, non_const=None):
@@ -648,19 +657,9 @@ def _array_construct(context, node, array_type):
                 non_const.add(i)
         return non_const
     any_inheriting = dfs_graph_input_dependent(node.inputs)
-
-    is_all_const = all(map(lambda inp : isinstance(inp, Var) and inp.can_be_folded_to_const() and len(inp.shape) == 0, inputs))
     dependent_on_graph_input = len(any_inheriting) > 0
 
-    if is_all_const:
-        # All the list items are compile-time scalar constants, so let's create
-        # a new const that concatenates them.
-        val = array_type([inp.val for inp in inputs])
-        const = mb.const(val=val, name=node.name)
-        context.add(const)
-        return
-
-    elif dependent_on_graph_input:
+    if dependent_on_graph_input:
         to_concat = []
         for input in node.inputs:
             inheriting = dfs_graph_input_dependent([input])
