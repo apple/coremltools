@@ -638,6 +638,7 @@ def _array_construct(context, node, array_type):
 
     nodes = {n.name : n for n in context.torch_graph.nodes}
     is_known_name = lambda name : name in nodes
+    inheriting_bookkeeping = {name : -1 for name in nodes.keys()}
     def dfs_graph_input_dependent(inputs, non_const=None):
         '''
         inputs would be [] if all constant
@@ -646,13 +647,15 @@ def _array_construct(context, node, array_type):
         if some name is not in context.torch_graph.nodes, then it should be a symbolic in graph input
         '''
         if non_const is None:
-            # effectively only at dfs.layer[0], mutable obj throughout dfs
+            # init, effectively only at dfs.layer[0]
             non_const = set()
 
         # len(inputs) == 0 is dfs base
         for i in inputs:
             if is_known_name(i):
-                dfs_graph_input_dependent(nodes[i].inputs, non_const)
+                if inheriting_bookkeeping[i] == -1:
+                    inheriting = dfs_graph_input_dependent(nodes[i].inputs, non_const)
+                    inheriting_bookkeeping[i] = len(inheriting)
             else:
                 non_const.add(i)
         return non_const
@@ -662,8 +665,8 @@ def _array_construct(context, node, array_type):
     if dependent_on_graph_input:
         to_concat = []
         for input in node.inputs:
-            inheriting = dfs_graph_input_dependent([input])
-            if len(inheriting) == 0:
+            inheriting = inheriting_bookkeeping[input]
+            if inheriting <= 0:
                 # is const
                 to_concat.append([context[input].val])
 
