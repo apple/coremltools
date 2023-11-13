@@ -163,7 +163,7 @@
 <dt><strong>name: (str)</strong></dt><dd><p>The name of the input.</p>
 </dd>
 <dt><strong>shape: list, tuple, Shape object, EnumeratedShapes object, or None</strong></dt><dd><p>The shape(s) that are valid for this input.</p>
-<p>If set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, the shape will be infered from the model itself.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, the shape will be inferred from the model itself.</p>
 </dd>
 </dl>
 </dd>
@@ -229,6 +229,28 @@ the metadata of the model file.</p>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<dl>
+<dt>sample_shape = ct.EnumeratedShapes(</dt><dd><dl class="simple">
+<dt>shapes=[</dt><dd><p>(2, 4, 64, 64),
+(2, 4, 48, 48),
+(2, 4, 32, 32)</p>
+</dd>
+</dl>
+<p>],
+default=(2, 4, 64, 64)</p>
+</dd>
+</dl>
+<p>)</p>
+<dl class="simple">
+<dt>my_core_ml_model = ct.convert(</dt><dd><p>my_model,
+inputs=[ct.TensorType(name=”sample”, shape=sample_shape)],</p>
+</dd>
+</dl>
+<p>)</p>
 </dd></dl>
 
 </dd></dl>

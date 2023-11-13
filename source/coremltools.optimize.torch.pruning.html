@@ -439,7 +439,7 @@ sparsity. For details on how to select these different sparsity modes, please se
 <span class="n">loss_fn</span> <span class="o">=</span> <span class="n">define_loss</span><span class="p">()</span>  <span class="c1"># define the loss function</span>
 
 <span class="c1"># initialize pruner and configure it</span>
-<span class="c1"># we only prune the fisrt conv layer</span>
+<span class="c1"># we only prune the first conv layer</span>
 <span class="n">config</span> <span class="o">=</span> <span class="n">MagnitudePrunerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">&quot;module_name_configs&quot;</span><span class="p">:</span> <span class="p">{</span>

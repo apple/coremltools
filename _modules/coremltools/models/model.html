@@ -322,7 +322,7 @@
 
 <span class="sd">        # Load the model from the spec object</span>
 <span class="sd">        spec = model.get_spec()</span>
-<span class="sd">        # modify spec (e.g. rename inputs/ouputs etc)</span>
+<span class="sd">        # modify spec (e.g. rename inputs/outputs etc)</span>
 <span class="sd">        model = MLModel(spec)</span>
 <span class="sd">        # if model type is mlprogram, i.e. spec.WhichOneof(&#39;Type&#39;) == &quot;mlProgram&quot;, then:</span>
 <span class="sd">        model = MLModel(spec, weights_dir=model.weights_dir)</span>

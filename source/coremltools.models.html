@@ -269,7 +269,7 @@ predictions for the purposes of testing (on select platforms).</p>
 
 <span class="c1"># Load the model from the spec object</span>
 <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
-<span class="c1"># modify spec (e.g. rename inputs/ouputs etc)</span>
+<span class="c1"># modify spec (e.g. rename inputs/outputs etc)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 <span class="c1"># if model type is mlprogram, i.e. spec.WhichOneof(&#39;Type&#39;) == &quot;mlProgram&quot;, then:</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">)</span>
@@ -1637,7 +1637,7 @@ version of MLModel.</p>
 <dt><strong>compute_units</strong></dt><dd><p>The set of processing units that all models in the pipeline can use to make predictions.
 Can be <code class="docutils literal notranslate"><span class="pre">None</span></code> or <code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit</span></code>.</p>
 <ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> will be infered from the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> values of the models.
+<li><p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> will be inferred from the <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> values of the models.
 If all models do not have the same <code class="docutils literal notranslate"><span class="pre">compute_unit</span></code> values, this parameter must be specified.</p></li>
 <li><dl class="simple">
 <dt><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit</span></code> is an enum with four possible values:</dt><dd><ul>
@@ -1734,7 +1734,7 @@ features)</p>
 </dd>
 <dt><strong>auto_set_specification_version: bool</strong></dt><dd><p>If True, will always try to set specification version automatically.</p>
 </dd>
-<dt><strong>weights_dir: str</strong></dt><dd><p>Path to the directory containing the weigths.bin file. This is required
+<dt><strong>weights_dir: str</strong></dt><dd><p>Path to the directory containing the weights.bin file. This is required
 when the spec if of model type mlprogram. If the mlprogram does not contain
 any weights, this path can be an empty directory.</p>
 </dd>

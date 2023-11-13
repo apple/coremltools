@@ -381,13 +381,13 @@
 
 <span class="sd">        * If set, must be greater than ``1`` to enable block sparsity.</span>
 <span class="sd">        * Block sparsity can be applied only to ``linear`` and ``conv`` layers.</span>
-<span class="sd">        * The channel will be padded with ``0`` if it is not divisble by ``block_size``.</span>
+<span class="sd">        * The channel will be padded with ``0`` if it is not divisible by ``block_size``.</span>
 
 <span class="sd">    n_m_ratio: tuple[int]</span>
 <span class="sd">        A tuple of two integers which specify the ratio for ``n:m`` pruning.</span>
 
 <span class="sd">        * ``n`` must be smaller or equal to ``m``.</span>
-<span class="sd">        * The channel would be padded with ``0`` if it is not divisble by ``m``.</span>
+<span class="sd">        * The channel would be padded with ``0`` if it is not divisible by ``m``.</span>
 
 <span class="sd">    dim: int</span>
 <span class="sd">        Dimension where the block sparsity or ``n:m`` sparsity is applied.</span>
@@ -679,7 +679,7 @@
 
 <span class="sd">    1. ``global_config``: The default configuration applied to all ops / consts.</span>
 <span class="sd">    2. ``op_type_configs``: Configurations applied to specific op type. It overrides ``global_config``.</span>
-<span class="sd">    3. ``op_name_configs``: Confgurations applied to specific constant or op instance. It overrides ``global_config`` and ``op_type_configs``.</span>
+<span class="sd">    3. ``op_name_configs``: Configurations applied to specific constant or op instance. It overrides ``global_config`` and ``op_type_configs``.</span>
 
 <span class="sd">    The following is an example that constructs an optimization config for weight palettization.</span>
 

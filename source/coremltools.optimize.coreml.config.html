@@ -286,13 +286,13 @@ Having the zeros aligned in the parameter helps gain latency/memory performance 
 <ul class="simple">
 <li><p>If set, must be greater than <code class="docutils literal notranslate"><span class="pre">1</span></code> to enable block sparsity.</p></li>
 <li><p>Block sparsity can be applied only to <code class="docutils literal notranslate"><span class="pre">linear</span></code> and <code class="docutils literal notranslate"><span class="pre">conv</span></code> layers.</p></li>
-<li><p>The channel will be padded with <code class="docutils literal notranslate"><span class="pre">0</span></code> if it is not divisble by <code class="docutils literal notranslate"><span class="pre">block_size</span></code>.</p></li>
+<li><p>The channel will be padded with <code class="docutils literal notranslate"><span class="pre">0</span></code> if it is not divisible by <code class="docutils literal notranslate"><span class="pre">block_size</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>n_m_ratio: tuple[int]</strong></dt><dd><p>A tuple of two integers which specify the ratio for <code class="docutils literal notranslate"><span class="pre">n:m</span></code> pruning.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> must be smaller or equal to <code class="docutils literal notranslate"><span class="pre">m</span></code>.</p></li>
-<li><p>The channel would be padded with <code class="docutils literal notranslate"><span class="pre">0</span></code> if it is not divisble by <code class="docutils literal notranslate"><span class="pre">m</span></code>.</p></li>
+<li><p>The channel would be padded with <code class="docutils literal notranslate"><span class="pre">0</span></code> if it is not divisible by <code class="docutils literal notranslate"><span class="pre">m</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>dim: int</strong></dt><dd><p>Dimension where the block sparsity or <code class="docutils literal notranslate"><span class="pre">n:m</span></code> sparsity is applied.</p>
@@ -426,7 +426,7 @@ Providing the following levels: <cite>global</cite>, <cite>op type</cite>, and <
 <ol class="arabic simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">global_config</span></code>: The default configuration applied to all ops / consts.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">op_type_configs</span></code>: Configurations applied to specific op type. It overrides <code class="docutils literal notranslate"><span class="pre">global_config</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">op_name_configs</span></code>: Confgurations applied to specific constant or op instance. It overrides <code class="docutils literal notranslate"><span class="pre">global_config</span></code> and <code class="docutils literal notranslate"><span class="pre">op_type_configs</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">op_name_configs</span></code>: Configurations applied to specific constant or op instance. It overrides <code class="docutils literal notranslate"><span class="pre">global_config</span></code> and <code class="docutils literal notranslate"><span class="pre">op_type_configs</span></code>.</p></li>
 </ol>
 <p>The following is an example that constructs an optimization config for weight palettization.</p>
 <blockquote>

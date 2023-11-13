@@ -180,7 +180,7 @@
     <span class="k">def</span> <span class="nf">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of lists.</span>
-<span class="sd">        Each element is a list of a subset of the child ops of var, which satisifies the following conditions:</span>
+<span class="sd">        Each element is a list of a subset of the child ops of var, which satisfies the following conditions:</span>
 <span class="sd">        - they are of the same op_type</span>
 <span class="sd">        - ops are not repeated in it. The .child_ops property of a var may sometimes contain an op repeated more than once</span>
 <span class="sd">        - the ops are ordered based on the order in which they appear in the block.operations list (which is topologically sorted),</span>
@@ -309,8 +309,8 @@
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">parent_var</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        scan the children ops to parent_var, to find and remove indentical ops, if any.</span>
-<span class="sd">        Returns True, if succesful in finding such redundant ops.</span>
+<span class="sd">        scan the children ops to parent_var, to find and remove identical ops, if any.</span>
+<span class="sd">        Returns True, if successful in finding such redundant ops.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">candidate_ops_lists</span> <span class="o">=</span> <span class="n">remove_redundant_ops</span><span class="o">.</span><span class="n">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="n">parent_var</span><span class="p">)</span>
         <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">False</span>
