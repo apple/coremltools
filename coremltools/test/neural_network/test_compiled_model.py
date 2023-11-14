@@ -6,6 +6,8 @@
 from shutil import copytree, rmtree
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from coremltools import ComputeUnit
 from coremltools.models import CompiledMLModel, MLModel
 from coremltools.models.utils import compile_model, save_spec
@@ -55,8 +57,10 @@ class TestCompiledModel:
         with TemporaryDirectory() as save_dir:
             spec_file_path = save_dir + '/spec.mlmodel'
             save_spec(self.spec, spec_file_path)
-            compiled_model_path = compile_model(spec_file_path)
-            self._test_compile_model_path(compiled_model_path)
+
+            with pytest.raises(Exception) as e:
+                compiled_model_path = compile_model(spec_file_path)
+            assert ", first load the model, " in str(e.value)
 
 
     def test_spec_input(self):
@@ -66,8 +70,9 @@ class TestCompiledModel:
 
     def test_mlmodel_input(self):
         ml_model = MLModel(self.spec)
-        compiled_model_path = compile_model(ml_model)
-        self._test_compile_model_path(compiled_model_path)
+        with pytest.raises(Exception) as e:
+            compiled_model_path = compile_model(ml_model)
+        assert " model has already been compiled." in str(e.value)
 
 
     def test_from_existing_mlmodel(self):

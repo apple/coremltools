@@ -1004,19 +1004,14 @@ def convert_double_to_float_multiarray_type(spec):
             convert_double_to_float_multiarray_type(model_spec)
 
 
-def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) -> str:
+def compile_model(model: _Model_pb2.Model) -> str:
     """
     Compiles a Core ML model.
 
     Parameters
     ----------
-    model: str, Model_pb2 or MLModel
-
-        str : Path to model to compile
-
-        Model_pb2 : Spec to model to compile
-
-        MLModel : Instantiated Core ML model to compile
+    model: Model_pb2
+        Spec to model to compile
 
     Returns
     -------
@@ -1035,25 +1030,21 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) ->
     except:
         raise Exception("Unable to compile any Core ML models.")
 
-    # Check parameter
+    # Check model parameter
     if not isinstance(model, (str, _Model_pb2.Model, _ct.models.MLModel)):
-        raise Exception("Compiling a Core ML models is only support on macOS 10.13 or higher.")
+        raise Exception("Unrecognized input for \"model\" parameter. It should be a spec.")
+    if isinstance(model, str):
+        raise Exception("To get a compiled model from a saved MLModel, first load the model, "
+                        " then call \"get_compiled_model_path\".")
+    if isinstance(model, _ct.models.MLModel):
+        raise Exception("This model has already been compiled. Call \"get_compiled_model_path\""
+                        " to get the compiled model.")
 
     # Compile model
-    if isinstance(model, (_Model_pb2.Model, _ct.models.MLModel)):
-        if isinstance(model, _ct.models.MLModel):
-            spec = model.get_spec()
-        else:
-            spec = model
-
-        with _tempfile.TemporaryDirectory() as save_dir:
-            spec_file_path = save_dir + '/spec.mlmodel'
-            save_spec(spec, spec_file_path)
-            return _MLModelProxy.compileModel(spec_file_path)
-    else:
-        assert isinstance(model, str)
-        model = _os.path.expanduser(model)
-        return _MLModelProxy.compileModel(model)
+    with _tempfile.TemporaryDirectory() as save_dir:
+        spec_file_path = save_dir + '/spec.mlmodel'
+        save_spec(model, spec_file_path)
+        return _MLModelProxy.compileModel(spec_file_path)
 
 
 def make_pipeline(
