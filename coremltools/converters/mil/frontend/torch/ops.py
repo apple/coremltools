@@ -788,7 +788,7 @@ def gt(context, node):
     context.add(greater)
 
 
-@register_torch_op(torch_alias=["t"])
+@register_torch_op(torch_alias=["t", "numpy_t"])
 def transpose(context, node):
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node)
