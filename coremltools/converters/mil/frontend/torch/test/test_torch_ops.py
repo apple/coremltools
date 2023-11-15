@@ -9566,9 +9566,8 @@ class TestSTFT(TorchBaseTest):
         class STFTModel(torch.nn.Module):
             def forward(self, x):
                 applied_window = window(win_length) if window and win_length else None
-                x = torch.complex(x, x) if complex else x
                 x = torch.stft(
-                    x,
+                    torch.complex(x, x) if complex else x,
                     n_fft=n_fft,
                     hop_length=hop_length,
                     win_length=win_length,
@@ -9596,28 +9595,26 @@ class TestISTFT(TorchBaseTest):
             compute_units,
             backends,
             [(1, 32, 9), (32, 9), (3, 32, 9)], # input shape
-            [False, True], # complex
             [16], # n_fft
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
             [None, torch.hann_window], # window
             [None, False, True], # center
-            ["constant", "reflect", "replicate"], # pad mode
             [False, True], # normalized
             [None, False, True], # onesided
             [None, 60], # length
+            [False, True], # return_complex
         )
     )
-    def test_istft(self, compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided):
-        if complex and onesided:
-            pytest.skip("Onesided stft not possible for complex inputs")
+    def test_istft(self, compute_unit, backend, input_shape, n_fft, hop_length, win_length, window, center, normalized, onesided, length, return_complex):
+        if return_complex and onesided:
+            pytest.skip("Complex output is incompatible with onesided")
 
         class ISTFTModel(torch.nn.Module):
             def forward(self, x):
                 applied_window = window(win_length) if window and win_length else None
-                x = torch.complex(x, x)
                 x = torch.istft(
-                    x,
+                    torch.complex(x, x),
                     n_fft=n_fft,
                     hop_length=hop_length,
                     win_length=win_length,
@@ -9626,8 +9623,9 @@ class TestISTFT(TorchBaseTest):
                     normalized=normalized,
                     onesided=onesided,
                     length=length,
-                    return_complex=True)
-                x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                    return_complex=return_complex)
+                if return_complex:
+                    x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
 
         TorchBaseTest.run_compare_torch(

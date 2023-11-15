@@ -893,6 +893,7 @@ class complex_istft(Operation):
 
     Attributes
     ----------
+    V: complex64
     T: fp32, complex64
 
     References
@@ -901,7 +902,7 @@ class complex_istft(Operation):
     """
 
     input_spec = InputSpec(
-        input=TensorInputType(type_domain="T"),
+        input=TensorInputType(type_domain="V"),
         n_fft=TensorInputType(const=True, type_domain=types.int32),
         hop_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
         win_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
@@ -912,7 +913,7 @@ class complex_istft(Operation):
     )
 
     type_domains = {
-        "T": (types.fp32, types.complex64),
+        "V": types.complex64,
     }
 
     def default_inputs(self):
@@ -936,7 +937,6 @@ class complex_istft(Operation):
         if self.length:
             output_shape += [self.length]
             return types.tensor(output_type, tuple(output_shape))
-
 
         n_frames = self.input.shape[-1]
         output_shape = self.n_fft.val + self.hop_length.val * (n_frames - 1)
