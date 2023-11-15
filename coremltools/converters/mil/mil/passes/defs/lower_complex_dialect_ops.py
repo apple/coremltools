@@ -764,7 +764,7 @@ def _lower_complex_istft(op: Operation):
 
     if op.return_complex:
         return _wrap_complex_output(op.outputs[0], real, imag)
-    else
+    else:
         return real
 
 
