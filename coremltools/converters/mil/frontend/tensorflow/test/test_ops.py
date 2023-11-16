@@ -5106,6 +5106,8 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
         score_threshold,
         use_V5,
     ):
+        if _macos_version() >= (14, 0) and compute_unit == ct.ComputeUnit.CPU_ONLY and backend == ("neuralnetwork", "fp32"):
+            pytest.xfail("rdar://118512264 Three specific instances are failing on at least early versions of macOS 14")
         if score_threshold > 100.0:
             pytest.xfail(
                 "When score threshold is too high, TF will return empty result, while MIL "
