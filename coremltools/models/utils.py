@@ -1011,10 +1011,10 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
     Parameters
     ----------
     model: Model_pb2
-        Spec to model to compile
+        Spec/protobuf to compile
 
     destination_path: str
-        Path to where the compiled model will be saved.
+        Path where the compiled model will be saved.
 
     Returns
     -------
