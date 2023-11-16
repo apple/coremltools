@@ -1004,7 +1004,7 @@ def convert_double_to_float_multiarray_type(spec):
             convert_double_to_float_multiarray_type(model_spec)
 
 
-def compile_model(model: _Model_pb2.Model) -> str:
+def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None) -> str:
     """
     Compiles a Core ML model.
 
@@ -1013,10 +1013,14 @@ def compile_model(model: _Model_pb2.Model) -> str:
     model: Model_pb2
         Spec to model to compile
 
+    destination_path: str
+        Path to where the compiled model will be saved.
+
     Returns
     -------
 
     str : Path to compiled model directory
+        If the destination_path is specified, that is the value that will be returned.
 
     See Also
     --------
@@ -1040,11 +1044,21 @@ def compile_model(model: _Model_pb2.Model) -> str:
         raise Exception("This model has already been compiled. Call \"get_compiled_model_path\""
                         " to get the compiled model.")
 
+    # Check file extension of destination_path parameter
+    if destination_path is not None and not destination_path.rstrip('/').endswith(".mlmodelc"):
+        raise Exception("\"destination_path\" parameter must have \".mlmodelc\" file extension.")
+
     # Compile model
     with _tempfile.TemporaryDirectory() as save_dir:
         spec_file_path = save_dir + '/spec.mlmodel'
         save_spec(model, spec_file_path)
-        return _MLModelProxy.compileModel(spec_file_path)
+        original_compiled_model_path =  _MLModelProxy.compileModel(spec_file_path)
+
+    # Move the compiled model if needed
+    if destination_path is None:
+        return original_compiled_model_path
+    _shutil.move(original_compiled_model_path, destination_path)
+    return destination_path
 
 
 def make_pipeline(

@@ -93,3 +93,18 @@ class TestCompiledModel:
         for cur_compute_unit in non_default_compute_units:
             compiled_model_path = compile_model(self.spec)
             self._test_compile_model_path(compiled_model_path, compute_units=cur_compute_unit)
+
+
+    def test_destination_path_parameter(self):
+        # Check correct usage
+        with TemporaryDirectory() as temp_dir:
+            dst_path = temp_dir + "/foo.mlmodelc"
+            compiled_model_path = compile_model(self.spec, dst_path)
+            self._test_compile_model_path(compiled_model_path)
+
+        # Check bad input
+        with TemporaryDirectory() as temp_dir:
+            dst_path = temp_dir + "/foo.badFileExtension"
+            with pytest.raises(Exception) as e:
+                compiled_model_path = compile_model(self.spec, dst_path)
+            assert " file extension." in str(e.value)
