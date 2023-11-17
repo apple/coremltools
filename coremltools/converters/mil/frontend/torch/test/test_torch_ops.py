@@ -3752,6 +3752,31 @@ class TestBoolOps(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, x_complex, y_complex",
+        itertools.product(
+            compute_units,
+            backends,
+            (True, False),
+            (True, False),
+        ),
+    )
+    def test_add_complex(self, compute_unit, backend, x_complex, y_complex):
+        class TestAddComplexModel(nn.Module):
+            def forward(self, x, y):
+                if x_complex:
+                    x = torch.complex(x, x)
+                if y_complex:
+                    y = torch.complex(y, y)
+                return torch.add(x, y).abs()
+
+        self.run_compare_torch(
+            [(2, 3), (2, 3)],
+            TestAddComplexModel(),
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
 
 class TestFull(TorchBaseTest):
     @pytest.mark.parametrize(
