@@ -214,7 +214,7 @@ def gelu_tanh_activation(x):
 
 conc_func = gelu_tanh_activation.get_concrete_function()
 
-# provide the concrete fucntion as a list
+# provide the concrete function as a list
 mlmodel = ct.convert([conc_func], convert_to="mlprogram")
 ```
 

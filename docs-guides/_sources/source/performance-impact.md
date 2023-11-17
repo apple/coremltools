@@ -56,7 +56,7 @@ for this and impact on latency for activation quantized models, learn more in th
 
 ## Examples
 
-In the tables below, we provide benchmarks on several models, compressed using various techniques in `coremltools.optmize`, to illustrate the trade-off between accuracy, model size and runtime latency. 
+In the tables below, we provide benchmarks on several models, compressed using various techniques in `coremltools.optimize`, to illustrate the trade-off between accuracy, model size and runtime latency. 
 
 The training time compressed models were obtained by fine-tuning the `float32` PyTorch models with weights initialized from the checkpoints linked in the [Model Info](performance-impact.md#model-info) table, and using methods from `coremltools.optimize.torch` to perform compression. The datasets used for fine-tuning the models are also linked in the same table, along with the accuracy metric being reported. We used fine-tuning recipes which are commonly used in literature for the task at hand, and standard data augmentations. 
 

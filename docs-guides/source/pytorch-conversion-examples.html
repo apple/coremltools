@@ -496,9 +496,9 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 </pre></div>
 </div>
 </li>
-<li><p>Plot the predictions, overlayed with the original image:</p>
+<li><p>Plot the predictions, overlaid with the original image:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">output_predictions</span><span class="p">):</span>
-	<span class="c1"># Create a color pallette, selecting a color for each class</span>
+	<span class="c1"># Create a color palette, selecting a color for each class</span>
 	<span class="n">palette</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">25</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">21</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
 	<span class="n">colors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">palette</span>
 	<span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">colors</span> <span class="o">%</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
@@ -523,9 +523,9 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 </li>
 </ol>
 <figure class="align-center" id="id2">
-<img alt="Plot predictions overlayed with image" class="imgnoborder" src="../_images/seg_pytorch.png" />
+<img alt="Plot predictions overlaid with image" class="imgnoborder" src="../_images/seg_pytorch.png" />
 <figcaption>
-<p><span class="caption-text">Plotting the predictions overlayed with the original image.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Plotting the predictions overlaid with the original image.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
@@ -677,7 +677,7 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <span class="n">torch_predictions</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">output_predictions</span><span class="p">):</span>
-    <span class="c1"># Create a color pallette, selecting a color for each class</span>
+    <span class="c1"># Create a color palette, selecting a color for each class</span>
     <span class="n">palette</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">25</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">21</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">colors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">palette</span>
     <span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">colors</span> <span class="o">%</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
