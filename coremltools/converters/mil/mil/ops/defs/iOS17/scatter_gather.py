@@ -40,12 +40,13 @@ class scatter(_scatter_iOS15):
 
         index = iOS17.select(index >= 0, index, index + max_index)
 
-    - New input parameter called ``validate_indices`` has been added to all scatter ops.
-      Its behavior is as follows:
-       - If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-         the ``indices`` parameter.
-       - If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``
-         either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.
+    - New input parameter called ``validate_indices`` has been added to all scatter ops. Its behavior is as follows:
+       - If ``True``, it raises a runtime (possibly also a compile-time) exception
+         for out-of-bound values of the ``indices`` parameter.
+       - If ``False``, absolutely no checking is performed for out-of-bound values
+         of ``indices`` either at compile or runtime. Behavior for out-of-bound indices
+         is undefined but memory safe.
+
 
     Parameters
     ----------
@@ -60,10 +61,11 @@ class scatter(_scatter_iOS15):
         * Can be the following modes: ``add``, ``div``, ``max``, ``min``, ``mul``, ``sub``, ``update``.
         * Default value is ``update``.
     validate_indices: const bool (Optional)
-        * If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-          the ``indices`` parameter.
-        * If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``
-          either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.
+        * If ``True``, it raises a runtime (possibly also a compile-time) exception
+          for out-of-bound values of the ``indices`` parameter.
+        * If ``False``, absolutely no checking is performed for out-of-bound values
+          of ``indices`` either at compile or runtime. Behavior for out-of-bound indices
+          is undefined but memory safe.
         * Default value is ``False``.
 
     Returns
@@ -129,10 +131,11 @@ class scatter_along_axis(_scatter_along_axis_iOS15):
         * Default to ``add``.
         * Can be the following modes: ``add``, ``div``, ``max``, ``min``, ``mul``, ``sub``, ``update``.
     validate_indices: const bool (Optional)
-        * If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-          the ``indices`` parameter.
-        * If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``
-          either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.
+        * If ``True``, it raises a runtime (possibly also a compile-time) exception
+          for out-of-bound values of the ``indices`` parameter.
+        * If ``False``, absolutely no checking is performed for out-of-bound values
+          of ``indices`` either at compile or runtime. Behavior for out-of-bound indices
+          is undefined but memory safe.
         * Default value is ``False``.
 
     Returns
@@ -255,8 +258,7 @@ class gather(_gather_iOS16):
 
          index = iOS17.select(index >= 0, index, index + max_index)
 
-    - New input parameter called ``validate_indices`` has been added to all gather ops.
-      Its behavior is as follows:
+    - New input parameter called ``validate_indices`` has been added to all gather ops. Its behavior is as follows:
        - If ``True``, it raises a runtime (possibly also a compile-time) exception for
          out-of-bound values of the ``indices`` parameter.
        - If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``
@@ -272,10 +274,11 @@ class gather(_gather_iOS16):
     batch_dims: const i32 (Optional. Default=``0``)
         * The number of batch dimensions.
     validate_indices: const bool (Optional)
-        * If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-          the ``indices`` parameter.
-        * If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``
-          either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.
+        * If ``True``, it raises a runtime (possibly also a compile-time) exception
+          for out-of-bound values of the ``indices`` parameter.
+        * If ``False``, absolutely no checking is performed for out-of-bound values
+          of ``indices`` either at compile or runtime. Behavior for out-of-bound indices
+          is undefined but memory safe.
         * Default value is ``False``.
 
     Returns
