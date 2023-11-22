@@ -28,7 +28,7 @@
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="MIL Builder" href="coremltools.converters.mil.html" />
-    <link rel="prev" title="affine_quantize_weights" href="coremltools.models.ml_program.html" /> 
+    <link rel="prev" title="&lt;no title&gt;" href="coremltools.models.ml_program.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -1199,22 +1199,22 @@ Each kernel group share the same weights.</p>
 <ul>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">is_deconv</span></code> is False, <code class="docutils literal notranslate"><span class="pre">W</span></code> should have
 shape <code class="docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">kernel_channels,</span> <span class="pre">output_channels)</span></code>, where:</p>
-<blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">kernel_channel</span> <span class="pre">=</span> <span class="pre">input_channels</span> <span class="pre">/</span> <span class="pre">groups</span></code></p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kernel_channel</span> <span class="o">=</span> <span class="n">input_channels</span> <span class="o">/</span> <span class="n">groups</span>
+</pre></div>
+</div>
 </li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">is_deconv</span></code> is True, <code class="docutils literal notranslate"><span class="pre">W</span></code> should have
 shape <code class="docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">kernel_channels,</span> <span class="pre">output_channels</span> <span class="pre">/</span> <span class="pre">groups)</span></code>, where:</p>
-<blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">kernel_channel</span> <span class="pre">=</span> <span class="pre">input_channels</span></code></p>
-</div></blockquote>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">kernel_channel</span> <span class="o">=</span> <span class="n">input_channels</span>
+</pre></div>
+</div>
 </li>
-</ul>
-<p>If <code class="docutils literal notranslate"><span class="pre">W</span></code> is of type <code class="docutils literal notranslate"><span class="pre">bytes()</span></code> (quantized), other quantization
-related arguments must be provided as well (see below).</p>
-<p>For Core ML specification version &gt;=4, <code class="docutils literal notranslate"><span class="pre">W</span></code> can be <code class="docutils literal notranslate"><span class="pre">None</span></code>. In this case,
+<li><p>If <code class="docutils literal notranslate"><span class="pre">W</span></code> is of type <code class="docutils literal notranslate"><span class="pre">bytes()</span></code> (quantized), other quantization-related
+arguments must be provided as well (see below).</p></li>
+<li><p>For Core ML specification version &gt;=4, <code class="docutils literal notranslate"><span class="pre">W</span></code> can be <code class="docutils literal notranslate"><span class="pre">None</span></code>. In this case,
 the convolution layer takes 2 inputs, where the 1st input represents
-the input feature map, and the 2nd input represents the weight blob.</p>
+the input feature map, and the 2nd input represents the weight blob.</p></li>
+</ul>
 </dd>
 <dt><strong>b: numpy.array</strong></dt><dd><p>Biases of the convolution kernels. <code class="docutils literal notranslate"><span class="pre">b</span></code> should have shape <code class="docutils literal notranslate"><span class="pre">(outputChannels,</span> <span class="pre">)</span></code>.</p>
 </dd>
@@ -1224,15 +1224,13 @@ the input feature map, and the 2nd input represents the weight blob.</p>
 <li><p>If False, bias is ignored.</p></li>
 </ul>
 </dd>
-<dt><strong>is_deconv: boolean</strong></dt><dd><p>Whether the convolution layer is performing a convolution or a
-transposed convolution (deconvolution).</p>
+<dt><strong>is_deconv: boolean</strong></dt><dd><p>Whether the convolution layer is performing a convolution or a transposed convolution (deconvolution).</p>
 <ul class="simple">
 <li><p>If True, the convolution layer is performing transposed convolution.</p></li>
 <li><p>If False, the convolution layer is performing regular convolution.</p></li>
 </ul>
 </dd>
-<dt><strong>output_shape: tuple or None</strong></dt><dd><p>Either <code class="docutils literal notranslate"><span class="pre">None</span></code> or a 2-tuple, specifying the output
-shape <code class="docutils literal notranslate"><span class="pre">(output_height,</span> <span class="pre">output_width)</span></code>.</p>
+<dt><strong>output_shape: tuple or None</strong></dt><dd><p>Either <code class="docutils literal notranslate"><span class="pre">None</span></code> or a 2-tuple, specifying the output shape <code class="docutils literal notranslate"><span class="pre">(output_height,</span> <span class="pre">output_width)</span></code>.</p>
 <ul class="simple">
 <li><p>Used only when <code class="docutils literal notranslate"><span class="pre">is_deconv</span> <span class="pre">==</span> <span class="pre">True</span></code>.</p></li>
 <li><p>When <code class="docutils literal notranslate"><span class="pre">is_deconv</span> <span class="pre">==</span> <span class="pre">False</span></code>, this parameter is ignored.</p></li>
@@ -1243,8 +1241,8 @@ shape <code class="docutils literal notranslate"><span class="pre">(output_heigh
 </dd>
 <dt><strong>output_name: str</strong></dt><dd><p>The output blob name of this layer.</p>
 </dd>
-<dt><strong>dilation_factors: list of int</strong></dt><dd><p>Dilation factors across height and width directions. Must be a list of two positive integers.
-Defaults to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1]</span></code>.</p>
+<dt><strong>dilation_factors: list of int</strong></dt><dd><p>Dilation factors across height and width directions. Must be a list of two
+positive integers. Defaults to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1]</span></code>.</p>
 </dd>
 <dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt><dd><p>Values of height (top, bottom) and width (left, right) padding
 to be used if <code class="docutils literal notranslate"><span class="pre">border_more</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;valid&quot;</span></code>.</p>
@@ -6160,7 +6158,7 @@ otherwise the quantized model specification is returned</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="coremltools.models.ml_program.html" class="btn btn-neutral float-left" title="affine_quantize_weights" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.models.ml_program.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="coremltools.converters.mil.html" class="btn btn-neutral float-right" title="MIL Builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

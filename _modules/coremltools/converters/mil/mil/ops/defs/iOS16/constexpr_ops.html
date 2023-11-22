@@ -116,8 +116,10 @@
 <span class="sd">    The quantized data is stored in the parameter ``quantized_data``.</span>
 <span class="sd">    The other parameters -- ``scale``, ``zero_point``, and ``axis`` -- describe how</span>
 <span class="sd">    unquantized values can be extracted from it, using the equation for affine/linear quantization:</span>
-<span class="sd">    ::</span>
-<span class="sd">                unquantized_data = scale * (quantized_data - zero_point)</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        unquantized_data = scale * (quantized_data - zero_point)</span>
 
 <span class="sd">    Although all of the parameters of this op are constants, this op is not constant folded</span>
 <span class="sd">    to a single const op at the time of model serialization. The unquantized output will</span>
@@ -132,15 +134,15 @@
 <span class="sd"> 	   * ``zero_point`` follows similar broadcasting rules and size constraints as ``scale``.</span>
 
 <span class="sd">    scale: const tensor&lt;DstT, [0..1]&gt; (Required)</span>
-<span class="sd">       * ``scale`` can be either a scalar or a vector. If ``scale`` is a vector,</span>
-<span class="sd">         for implementation it is broadcast to the following shape:</span>
-<span class="sd">           * The rank of ``scale`` becomes the same as the rank of ``quantized_data``.</span>
-<span class="sd">           * The constraint: ``size(scale-vector) == quantized_data.shape[axis]``.</span>
-<span class="sd">           * For ``i == axis``, ``scale.shape[i] == quantized_data.shape[i]``.</span>
-<span class="sd">           * For ``i != axis``, ``scale.shape == 1``.</span>
-<span class="sd">         For example, assume ``quantized_data.shape = (2, 3, 4, 5)`` and ``axis = 1``.</span>
-<span class="sd">         If ``scale`` is a vector, then ``scale.size`` needs to be equal to</span>
-<span class="sd">         ``quantized_data.shape[axis] i.e = 3``, which would be broadcast to ``(1, 3, 1, 1)``.</span>
+<span class="sd">       * ``scale`` can be either a scalar or a vector.</span>
+<span class="sd">       * If ``scale`` is a vector, for implementation it is broadcast to the following shape:</span>
+<span class="sd">          * The rank of ``scale`` becomes the same as the rank of ``quantized_data``.</span>
+<span class="sd">          * The constraint: ``size(scale-vector) == quantized_data.shape[axis]``.</span>
+<span class="sd">          * For ``i == axis``, ``scale.shape[i] == quantized_data.shape[i]``.</span>
+<span class="sd">          * For ``i != axis``, ``scale.shape == 1``.</span>
+<span class="sd">            For example, assume ``quantized_data.shape = (2, 3, 4, 5)`` and ``axis = 1``.</span>
+<span class="sd">            If ``scale`` is a vector, then ``scale.size`` needs to be equal to</span>
+<span class="sd">            ``quantized_data.shape[axis] i.e = 3``, which would be broadcast to ``(1, 3, 1, 1)``.</span>
 
 <span class="sd">    axis: const tensor&lt;int32, []&gt; (Required)</span>
 
@@ -230,8 +232,10 @@
 <span class="k">class</span> <span class="nc">constexpr_cast</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon casting its constant input.</span>
-<span class="sd">    ::</span>
-<span class="sd">                Expression: output = constexpr_cast(source_val, output_dtype=&quot;fp32&quot;)</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        Expression: output = constexpr_cast(source_val, output_dtype=&quot;fp32&quot;)</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -299,7 +303,9 @@
 <span class="sd">    bits of the same index are filled in the LSBs of the next byte.</span>
 
 <span class="sd">    For example:</span>
-<span class="sd">    ::</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
 <span class="sd">        if n_bits = 2, shape = (5,) =&gt; M = 2 bytes</span>
 
 <span class="sd">                    MSB             LSB</span>
@@ -395,14 +401,17 @@
 <span class="sd">    moving up to the most significant bit.</span>
 
 <span class="sd">    For example:</span>
-<span class="sd">    ::</span>
-<span class="sd">        shape = (5,) =&gt; M = 1 bytes</span>
 
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        shape = (5,) =&gt; M = 1 bytes</span>
+<span class="sd">        </span>
 <span class="sd">                   MSB                  LSB</span>
 <span class="sd">                    |                    |</span>
 <span class="sd">        mask    =  |x  x  x  0  1  1  0  0 |      &lt;== packed elements</span>
 <span class="sd">                   |--|--|--|i4|i3|i2|i1|i0|      &lt;== tagged element ids</span>
 <span class="sd">                   |      byte 0           |      &lt;== tagged bytes</span>
+
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

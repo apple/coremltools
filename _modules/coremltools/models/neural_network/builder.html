@@ -2420,18 +2420,21 @@
 <span class="sd">            Weight of the convolution kernels.</span>
 
 <span class="sd">            * If ``is_deconv`` is False, ``W`` should have</span>
-<span class="sd">              shape ``(height, width, kernel_channels, output_channels)``, where:</span>
-<span class="sd">                 ``kernel_channel = input_channels / groups``</span>
+<span class="sd">              shape ``(height, width, kernel_channels, output_channels)``, where::</span>
+
+<span class="sd">                 kernel_channel = input_channels / groups</span>
+
 <span class="sd">            * If ``is_deconv`` is True, ``W`` should have</span>
-<span class="sd">              shape ``(height, width, kernel_channels, output_channels / groups)``, where:</span>
-<span class="sd">                 ``kernel_channel = input_channels``</span>
+<span class="sd">              shape ``(height, width, kernel_channels, output_channels / groups)``, where::</span>
 
-<span class="sd">            If ``W`` is of type ``bytes()`` (quantized), other quantization</span>
-<span class="sd">            related arguments must be provided as well (see below).</span>
+<span class="sd">                 kernel_channel = input_channels</span>
 
-<span class="sd">            For Core ML specification version &gt;=4, ``W`` can be ``None``. In this case,</span>
-<span class="sd">            the convolution layer takes 2 inputs, where the 1st input represents</span>
-<span class="sd">            the input feature map, and the 2nd input represents the weight blob.</span>
+<span class="sd">            * If ``W`` is of type ``bytes()`` (quantized), other quantization-related</span>
+<span class="sd">              arguments must be provided as well (see below).</span>
+
+<span class="sd">            * For Core ML specification version &gt;=4, ``W`` can be ``None``. In this case,</span>
+<span class="sd">              the convolution layer takes 2 inputs, where the 1st input represents</span>
+<span class="sd">              the input feature map, and the 2nd input represents the weight blob.</span>
 
 <span class="sd">        b: numpy.array</span>
 <span class="sd">            Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.</span>
@@ -2443,15 +2446,13 @@
 <span class="sd">            - If False, bias is ignored.</span>
 
 <span class="sd">        is_deconv: boolean</span>
-<span class="sd">            Whether the convolution layer is performing a convolution or a</span>
-<span class="sd">            transposed convolution (deconvolution).</span>
+<span class="sd">            Whether the convolution layer is performing a convolution or a transposed convolution (deconvolution).</span>
 
 <span class="sd">            - If True, the convolution layer is performing transposed convolution.</span>
 <span class="sd">            - If False, the convolution layer is performing regular convolution.</span>
 
 <span class="sd">        output_shape: tuple or None</span>
-<span class="sd">            Either ``None`` or a 2-tuple, specifying the output</span>
-<span class="sd">            shape ``(output_height, output_width)``.</span>
+<span class="sd">            Either ``None`` or a 2-tuple, specifying the output shape ``(output_height, output_width)``.</span>
 
 <span class="sd">            - Used only when ``is_deconv == True``.</span>
 <span class="sd">            - When ``is_deconv == False``, this parameter is ignored.</span>
@@ -2464,8 +2465,8 @@
 <span class="sd">            The output blob name of this layer.</span>
 
 <span class="sd">        dilation_factors: list of int</span>
-<span class="sd">            Dilation factors across height and width directions. Must be a list of two positive integers.</span>
-<span class="sd">            Defaults to ``[1, 1]``.</span>
+<span class="sd">            Dilation factors across height and width directions. Must be a list of two</span>
+<span class="sd">            positive integers. Defaults to ``[1, 1]``.</span>
 
 <span class="sd">        padding_top, padding_bottom, padding_left, padding_right: int</span>
 <span class="sd">            Values of height (top, bottom) and width (left, right) padding</span>

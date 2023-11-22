@@ -1171,59 +1171,65 @@ constant weights/tensors remain compressed at serialization.</p>
 </ul>
 <p>This is a non-algebraic translation which assumes that the upcasting doesn’t change the user’s intent.</p>
 <ol class="arabic">
-<li><p>Example for redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op removal:
-.. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<li><dl>
+<dt>Example for redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op removal:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span><span class="p">(</span><span class="n">fp16</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
 <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
 </pre></div>
 </div>
-<p>The input and output tensors for the <code class="docutils literal notranslate"><span class="pre">cast</span></code> op are both with type of <code class="docutils literal notranslate"><span class="pre">fp16</span></code>. Hence, it can be removed.</p>
+<p>The input and output tensors for the <code class="docutils literal notranslate"><span class="pre">cast</span></code> op are both with type of <code class="docutils literal notranslate"><span class="pre">fp16</span></code>.
+Hence, it can be removed.</p>
+</dd>
+</dl>
 </li>
-<li><p>Example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
-.. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<li><dl>
+<dt>Example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
 <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 </pre></div>
 </div>
-<p>The data range and resolution of the above graph are limited by the int8 input, so the fusion is allowed.</p>
+<p>The data range and resolution of the above graph are limited by the int8 input,
+so the fusion is allowed.</p>
+</dd>
+</dl>
 </li>
-<li><p>Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
-.. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<li><dl>
+<dt>Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span><span class="p">(</span><span class="n">fp32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
 <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
 <span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since after the first cast, the resolution of the numerical output
-is downcasted to binary (<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1</span></code>). If we fuse them, the output would be in the range and resolution of <code class="docutils literal notranslate"><span class="pre">fp16</span></code> instead.</p>
+<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since after the first cast,
+the resolution of the numerical output is downcasted to binary (<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1</span></code>).
+If we fuse them, the output would be in the range and resolution of <code class="docutils literal notranslate"><span class="pre">fp16</span></code> instead.</p>
+</dd>
+</dl>
 </li>
-</ol>
-<ol class="arabic" start="3">
-<li><p>Another Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
-.. code-block:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+<li><dl>
+<dt>Another Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span><span class="p">(</span><span class="n">int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
 <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
 <span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since in the original graph, by going through two casts,
-the output numerical range is capped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">127]</span></code>.</p>
-<p>However, if two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops are reduced to 1 <code class="docutils literal notranslate"><span class="pre">cast(dtype=&quot;uint8&quot;)</span></code>, the output numerical would in the range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>.
-The fusion would cause numerical issue for the numbers between <code class="docutils literal notranslate"><span class="pre">[128,</span> <span class="pre">255]</span></code>, which is prohibited.</p>
+<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since in the original graph,
+by going through two casts, the output numerical range is capped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">127]</span></code>.
+However, if two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops are reduced to 1 <code class="docutils literal notranslate"><span class="pre">cast(dtype=&quot;uint8&quot;)</span></code>, the output
+numerical would in the range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>. The fusion would cause numerical
+issue for the numbers between <code class="docutils literal notranslate"><span class="pre">[128,</span> <span class="pre">255]</span></code>, which is prohibited.</p>
+</dd>
+</dl>
 </li>
 </ol>
 <p>In general, two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops can be merged if the output data range and resolution is not affected.</p>
-<p>For more examples, please see the unittests start with prefix “TestCastOptimization” in test_passes.py</p>
+<p>For more examples, please see the unittests that start with prefix <code class="docutils literal notranslate"><span class="pre">TestCastOptimization</span></code> in <code class="docutils literal notranslate"><span class="pre">test_passes.py</span></code>.</p>
 </dd></dl>
 
 <dl class="py class">

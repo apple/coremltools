@@ -180,11 +180,14 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A version of ``topk`` for iOS 17+. The differences between this version and the</span>
 <span class="sd">    iOS 16 :py:class:`~.iOS16.tensor_operation.topk` are:</span>
-<span class="sd">    - New data type support. The newly added data type is:</span>
-<span class="sd">        - int8, uint8, int16, unint16 for ``x`` and output.</span>
-<span class="sd">        - int8, int16 for ``k``.</span>
-<span class="sd">    - Validation restrictions on the optional ``indices`` output: must be either uint16 or int32. Also</span>
-<span class="sd">      a new input parameter ``output_indices_dtype`` is added to set the dtype of output ``indices``.</span>
+
+<span class="sd">       - New data type support. The newly added data types are:</span>
+<span class="sd">          - int8, uint8, int16, unint16 for ``x`` and output.</span>
+<span class="sd">          - int8, int16 for ``k``.</span>
+<span class="sd">       - Validation restrictions on the optional ``indices`` output must be either</span>
+<span class="sd">         uint16 or int32.</span>
+<span class="sd">       - A new input parameter ``output_indices_dtype`` has been added</span>
+<span class="sd">         to set the dtype of output ``indices``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

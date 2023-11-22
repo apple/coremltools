@@ -738,9 +738,7 @@
 <span class="sd">    the coordinates ``x’`` and ``y’`` with the following equation, and then computing the</span>
 <span class="sd">    value at the coordinate ``(x’,y’)`` in the input image using either bilinear or</span>
 <span class="sd">    nearest neighbor interpolation. If the ``(x’, y’)`` point falls outside the input</span>
-<span class="sd">    image, then padding information is used to compute the value.</span>
-
-<span class="sd">    ::</span>
+<span class="sd">    image, then padding information is used to compute the value::</span>
 
 <span class="sd">        x’ = a0 * x + a1 * y + a2</span>
 <span class="sd">        y’ = b0 * x + b1 * y + b2</span>
@@ -749,45 +747,41 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[B, C, H1, W1], T&gt;</span>
-<span class="sd">        * Must be rank ``4``.</span>
+<span class="sd">       * Must be rank ``4``.</span>
 <span class="sd">    transform_matrix: tensor&lt;[D, 6], T&gt;</span>
-<span class="sd">        * Must be rank ``2``.</span>
-<span class="sd">        * ``D`` can be either ``B`` or 1.</span>
-<span class="sd">            * If ``D == B``, there is a separate transform matrix for each batch.</span>
-<span class="sd">            * If ``D == 1``, the same matrix is used for all input batches.</span>
-<span class="sd">            * For each batch: ``[a0, a1, a2, b0, b1, b2]``.</span>
+<span class="sd">       * Must be rank ``2``.</span>
+<span class="sd">       * ``D`` can be either ``B`` or 1.</span>
+<span class="sd">          * If ``D == B``, there is a separate transform matrix for each batch.</span>
+<span class="sd">          * If ``D == 1``, the same matrix is used for all input batches.</span>
+<span class="sd">          * For each batch: ``[a0, a1, a2, b0, b1, b2]``.</span>
 <span class="sd">    output_height: const&lt;i32&gt;</span>
-<span class="sd">        * Target output height</span>
+<span class="sd">       * Target output height</span>
 <span class="sd">    output_width: const&lt;i32&gt;</span>
-<span class="sd">        * Target output width</span>
+<span class="sd">       * Target output width</span>
 <span class="sd">    sampling_mode: const&lt;str&gt;</span>
-<span class="sd">        * Allowed values: ``&quot;bilinear&quot;``</span>
+<span class="sd">       * Allowed values: ``&quot;bilinear&quot;``</span>
 <span class="sd">    padding_mode: const&lt;str&gt;</span>
-<span class="sd">        * Allowed values: ``&quot;constant&quot;``.</span>
-<span class="sd">        * Note that the following example is 1D case for brevity.</span>
-<span class="sd">          The op supports only 2D image input.</span>
-<span class="sd">        * If ``padding_mode == &quot;constant&quot;``:</span>
-<span class="sd">            * The input image is assumed to be padded with the padding_value.</span>
-<span class="sd">            * For example, ``|1, 2, 3| -&gt; |0, 0, 0, 1, 2, 3, 0, 0, 0|``.</span>
+<span class="sd">       * Allowed values: ``&quot;constant&quot;``.</span>
+<span class="sd">       * Note that the following example is 1D case for brevity. The op supports only 2D image input.</span>
+<span class="sd">       * If ``padding_mode == &quot;constant&quot;``:</span>
+<span class="sd">          * The input image is assumed to be padded with the padding_value.</span>
+<span class="sd">          * For example, ``|1, 2, 3| -&gt; |0, 0, 0, 1, 2, 3, 0, 0, 0|``.</span>
 <span class="sd">    padding_value: const&lt;T&gt;</span>
-<span class="sd">        * Currently non-zero values are not supported.</span>
-<span class="sd">        * To be used only when ``padding_mode == &quot;constant&quot;``, ignored in other cases.</span>
+<span class="sd">       * Currently non-zero values are not supported.</span>
+<span class="sd">       * To be used only when ``padding_mode == &quot;constant&quot;``, ignored in other cases.</span>
 <span class="sd">    coordinates_mode: const&lt;str&gt;</span>
-<span class="sd">        * Allowed values: ``&quot;normalized_minus_one_to_one&quot;``</span>
-<span class="sd">        * If ``coordinates_mode == &quot;normalized_minus_one_to_one&quot;``, in-image values are ``[-1, 1]``.</span>
-<span class="sd">        * For example, if ``coordinates_mode == &quot;normalized_minus_one_to_one&quot;``,</span>
-<span class="sd">          the in range values are ``[-1, 1]``. That is:</span>
-<span class="sd">            * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.</span>
-<span class="sd">            * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.</span>
-<span class="sd">            * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.</span>
-<span class="sd">            * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.</span>
+<span class="sd">       * Allowed values: ``&quot;normalized_minus_one_to_one&quot;``.</span>
+<span class="sd">       * If ``coordinates_mode == &quot;normalized_minus_one_to_one&quot;``, in-image values are ``[-1, 1]``.</span>
+<span class="sd">       * For example, if ``coordinates_mode == &quot;normalized_minus_one_to_one&quot;``, the in-range values are ``[-1, 1]``. That is:</span>
+<span class="sd">          * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.</span>
+<span class="sd">          * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.</span>
+<span class="sd">          * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.</span>
+<span class="sd">          * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.</span>
 <span class="sd">    align_corners: const&lt;bool&gt;</span>
-<span class="sd">        * Currently ``align_corners=False`` is not supported.</span>
-<span class="sd">        * To be used only when ``coordinates_mode != unnormalized``, ignored otherwise.</span>
-<span class="sd">        * if ``align_corners == True``, the extrema coordinates correspond</span>
-<span class="sd">          to the center of the first and last corner pixels.</span>
-<span class="sd">        * if ``align_corners == False``, the extrema coordinates correspond</span>
-<span class="sd">          to the edge of the first and last corner pixels.</span>
+<span class="sd">       * Currently ``align_corners=False`` is not supported.</span>
+<span class="sd">       * To be used only when ``coordinates_mode != unnormalized``, ignored otherwise.</span>
+<span class="sd">       * If ``align_corners == True``, the extrema coordinates correspond to the center of the first and last corner pixels.</span>
+<span class="sd">       * If ``align_corners == False``, the extrema coordinates correspond to the edge of the first and last corner pixels.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -893,20 +887,20 @@
 <span class="sd">        * Note that the following example is 1D case for brevity.</span>
 <span class="sd">          The op supports only 2D image input.</span>
 <span class="sd">        * If ``padding_mode == &quot;constant&quot;``:</span>
-<span class="sd">            * The input image is assumed to be padded with the ``padding_value``.</span>
-<span class="sd">            * For example: ``|1, 2, 3| -&gt; |0, 0, 0, 1, 2, 3, 0, 0, 0|``</span>
+<span class="sd">           * The input image is assumed to be padded with the ``padding_value``.</span>
+<span class="sd">           * For example: ``|1, 2, 3| -&gt; |0, 0, 0, 1, 2, 3, 0, 0, 0|``</span>
 <span class="sd">        * if ``padding_mode == &quot;border&quot;``:</span>
-<span class="sd">            * The input image is assumed to be padded with the values replicated</span>
-<span class="sd">              from the values at the edge. This is also referred to as the</span>
-<span class="sd">              &quot;clamped&quot; or &quot;replication&quot; mode, since the padded values are</span>
-<span class="sd">              clamped to the border values.</span>
-<span class="sd">            * For example: ``|1, 2, 3| -&gt; |1, 1, 1, 1, 2, 3, 3, 3, 3|``</span>
+<span class="sd">           * The input image is assumed to be padded with the values replicated</span>
+<span class="sd">             from the values at the edge. This is also referred to as the</span>
+<span class="sd">             &quot;clamped&quot; or &quot;replication&quot; mode, since the padded values are</span>
+<span class="sd">             clamped to the border values.</span>
+<span class="sd">           * For example: ``|1, 2, 3| -&gt; |1, 1, 1, 1, 2, 3, 3, 3, 3|``</span>
 <span class="sd">        * If ``padding_mode == &quot;reflection&quot;``:</span>
-<span class="sd">            * The border values are reflected, *not* including the values at the edge/border.</span>
-<span class="sd">            * For example: ``|1, 2, 3| -&gt; |2, 3, 2, 1, 2, 3, 2, 1, 2|``</span>
+<span class="sd">           * The border values are reflected, *not* including the values at the edge/border.</span>
+<span class="sd">           * For example: ``|1, 2, 3| -&gt; |2, 3, 2, 1, 2, 3, 2, 1, 2|``</span>
 <span class="sd">        * If ``padding_mode == &quot;symmetric&quot;``:</span>
-<span class="sd">            * Values are reflected, including the border/edge values.</span>
-<span class="sd">            * For example: ``|1, 2, 3| -&gt; |3, 2, 1 , 1, 2, 3, 3, 2, 1|``</span>
+<span class="sd">           * Values are reflected, including the border/edge values.</span>
+<span class="sd">           * For example: ``|1, 2, 3| -&gt; |3, 2, 1 , 1, 2, 3, 3, 2, 1|``</span>
 <span class="sd">    padding_value: const&lt;T&gt;</span>
 <span class="sd">        * To be used only when ``padding_mode == &quot;constant&quot;``, ignored in other cases.</span>
 <span class="sd">    coordinates_mode: const&lt;str&gt;</span>
@@ -919,17 +913,14 @@
 <span class="sd">          the in-image values are ``[-1, 1]``.</span>
 <span class="sd">        * If ``coordinates_mode == &quot;normalized_zero_to_one&quot;``,</span>
 <span class="sd">          in-image values are ``[0, 1]``.</span>
-<span class="sd">        * For example, if ``coordinates_mode == &quot;normalized_minus_one_to_one&quot;``,</span>
-<span class="sd">          the in range values are [-1, 1]. That is:</span>
-<span class="sd">            * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.</span>
-<span class="sd">            * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.</span>
-<span class="sd">            * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.</span>
-<span class="sd">            * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.</span>
+<span class="sd">        * For example, if ``coordinates_mode == &quot;normalized_minus_one_to_one&quot;``, the in range values are [-1, 1]. That is:</span>
+<span class="sd">           * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.</span>
+<span class="sd">           * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.</span>
+<span class="sd">           * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.</span>
+<span class="sd">           * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.</span>
 <span class="sd">    align_corners: const&lt;bool&gt;</span>
-<span class="sd">        * If ``align_corners == True``, the extrema coordinates correspond</span>
-<span class="sd">          to the center of the first and last corner pixels.</span>
-<span class="sd">        * If ``align_corners == False``, the extrema coordinates correspond</span>
-<span class="sd">          to the edge of the first and last corner pixels.</span>
+<span class="sd">        * If ``align_corners == True``, the extrema coordinates correspond to the center of the first and last corner pixels.</span>
+<span class="sd">        * If ``align_corners == False``, the extrema coordinates correspond to the edge of the first and last corner pixels.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

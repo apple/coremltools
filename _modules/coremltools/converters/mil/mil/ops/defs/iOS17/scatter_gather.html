@@ -134,12 +134,13 @@
 
 <span class="sd">        index = iOS17.select(index &gt;= 0, index, index + max_index)</span>
 
-<span class="sd">    - New input parameter called ``validate_indices`` has been added to all scatter ops.</span>
-<span class="sd">      Its behavior is as follows:</span>
-<span class="sd">       - If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of</span>
-<span class="sd">         the ``indices`` parameter.</span>
-<span class="sd">       - If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``</span>
-<span class="sd">         either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</span>
+<span class="sd">    - New input parameter called ``validate_indices`` has been added to all scatter ops. Its behavior is as follows:</span>
+<span class="sd">       - If ``True``, it raises a runtime (possibly also a compile-time) exception</span>
+<span class="sd">         for out-of-bound values of the ``indices`` parameter.</span>
+<span class="sd">       - If ``False``, absolutely no checking is performed for out-of-bound values</span>
+<span class="sd">         of ``indices`` either at compile or runtime. Behavior for out-of-bound indices</span>
+<span class="sd">         is undefined but memory safe.</span>
+
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -154,10 +155,11 @@
 <span class="sd">        * Can be the following modes: ``add``, ``div``, ``max``, ``min``, ``mul``, ``sub``, ``update``.</span>
 <span class="sd">        * Default value is ``update``.</span>
 <span class="sd">    validate_indices: const bool (Optional)</span>
-<span class="sd">        * If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of</span>
-<span class="sd">          the ``indices`` parameter.</span>
-<span class="sd">        * If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``</span>
-<span class="sd">          either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</span>
+<span class="sd">        * If ``True``, it raises a runtime (possibly also a compile-time) exception</span>
+<span class="sd">          for out-of-bound values of the ``indices`` parameter.</span>
+<span class="sd">        * If ``False``, absolutely no checking is performed for out-of-bound values</span>
+<span class="sd">          of ``indices`` either at compile or runtime. Behavior for out-of-bound indices</span>
+<span class="sd">          is undefined but memory safe.</span>
 <span class="sd">        * Default value is ``False``.</span>
 
 <span class="sd">    Returns</span>
@@ -223,10 +225,11 @@
 <span class="sd">        * Default to ``add``.</span>
 <span class="sd">        * Can be the following modes: ``add``, ``div``, ``max``, ``min``, ``mul``, ``sub``, ``update``.</span>
 <span class="sd">    validate_indices: const bool (Optional)</span>
-<span class="sd">        * If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of</span>
-<span class="sd">          the ``indices`` parameter.</span>
-<span class="sd">        * If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``</span>
-<span class="sd">          either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</span>
+<span class="sd">        * If ``True``, it raises a runtime (possibly also a compile-time) exception</span>
+<span class="sd">          for out-of-bound values of the ``indices`` parameter.</span>
+<span class="sd">        * If ``False``, absolutely no checking is performed for out-of-bound values</span>
+<span class="sd">          of ``indices`` either at compile or runtime. Behavior for out-of-bound indices</span>
+<span class="sd">          is undefined but memory safe.</span>
 <span class="sd">        * Default value is ``False``.</span>
 
 <span class="sd">    Returns</span>
@@ -349,8 +352,7 @@
 
 <span class="sd">         index = iOS17.select(index &gt;= 0, index, index + max_index)</span>
 
-<span class="sd">    - New input parameter called ``validate_indices`` has been added to all gather ops.</span>
-<span class="sd">      Its behavior is as follows:</span>
+<span class="sd">    - New input parameter called ``validate_indices`` has been added to all gather ops. Its behavior is as follows:</span>
 <span class="sd">       - If ``True``, it raises a runtime (possibly also a compile-time) exception for</span>
 <span class="sd">         out-of-bound values of the ``indices`` parameter.</span>
 <span class="sd">       - If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``</span>
@@ -366,10 +368,11 @@
 <span class="sd">    batch_dims: const i32 (Optional. Default=``0``)</span>
 <span class="sd">        * The number of batch dimensions.</span>
 <span class="sd">    validate_indices: const bool (Optional)</span>
-<span class="sd">        * If ``True``, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of</span>
-<span class="sd">          the ``indices`` parameter.</span>
-<span class="sd">        * If ``False``, absolutely no checking is performed for out-of-bound values of ``indices``</span>
-<span class="sd">          either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</span>
+<span class="sd">        * If ``True``, it raises a runtime (possibly also a compile-time) exception</span>
+<span class="sd">          for out-of-bound values of the ``indices`` parameter.</span>
+<span class="sd">        * If ``False``, absolutely no checking is performed for out-of-bound values</span>
+<span class="sd">          of ``indices`` either at compile or runtime. Behavior for out-of-bound indices</span>
+<span class="sd">          is undefined but memory safe.</span>
 <span class="sd">        * Default value is ``False``.</span>
 
 <span class="sd">    Returns</span>
