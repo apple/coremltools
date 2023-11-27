@@ -435,7 +435,7 @@ class EnumeratedShapes:
             * If input provided is not a :py:class:`Shape` object,
               but can be converted to a :py:class:`Shape`,
               the :py:class:`Shape` object would be stored in ``shapes`` instead.
-			
+
 
         default: tuple of int or None
             * The default shape that is used for initiating the model, and set in
@@ -447,19 +447,19 @@ class EnumeratedShapes:
         --------
         .. sourcecode:: python
 
-			sample_shape = ct.EnumeratedShapes(
-				shapes=[
-					(2, 4, 64, 64),
-					(2, 4, 48, 48),
-					(2, 4, 32, 32)
-				],
-				default=(2, 4, 64, 64)
+            sample_shape = ct.EnumeratedShapes(
+               shapes=[
+                    (2, 4, 64, 64),
+                    (2, 4, 48, 48),
+                    (2, 4, 32, 32)
+                ],
+                default=(2, 4, 64, 64)
 			)
 
-			my_core_ml_model = ct.convert(
-				my_model,
-				inputs=[ct.TensorType(name="sample", shape=sample_shape)],
-			)
+            my_core_ml_model = ct.convert(
+                my_model,
+                inputs=[ct.TensorType(name="sample", shape=sample_shape)],
+            )
         """
 
         # lazy import to avoid circular import
