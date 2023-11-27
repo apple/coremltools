@@ -441,7 +441,7 @@ class EnumeratedShapes:
             * The default shape that is used for initiating the model, and set in
               the metadata of the model file.
             * If ``None``, then the first element in ``shapes`` is used.
-			
+
 
         Examples
         --------
@@ -454,7 +454,7 @@ class EnumeratedShapes:
                     (2, 4, 32, 32)
                 ],
                 default=(2, 4, 64, 64)
-			)
+            )
 
             my_core_ml_model = ct.convert(
                 my_model,
