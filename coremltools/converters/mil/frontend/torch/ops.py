@@ -869,10 +869,17 @@ def add(context, node):
     # rdar://60175736
     if len(add_inputs) > 2 and add_inputs[2].val != 1:
         raise ValueError("ADD does not support scale factor param")
-    x, y = promote_input_dtypes(add_inputs[:2])
+    x, y = add_inputs[:2]
     if types.is_bool(x.dtype) and types.is_bool(y.dtype):
         add_node = mb.logical_or(x=x, y=y, name=node.name)
+    elif types.is_complex(x.dtype) or types.is_complex(y.dtype):
+        x_real = mb.complex_real(data=x) if types.is_complex(x.dtype) else x
+        x_imag = mb.complex_imag(data=x) if types.is_complex(x.dtype) else 0.0
+        y_real = mb.complex_real(data=y) if types.is_complex(y.dtype) else y
+        y_imag = mb.complex_imag(data=y) if types.is_complex(y.dtype) else 0.0
+        add_node = mb.complex(real_data=mb.add(x=x_real, y=y_real), imag_data=mb.add(x=x_imag, y=y_imag), name=node.name)
     else:
+        x, y = promote_input_dtypes([x, y])
         add_node = mb.add(x=x, y=y, name=node.name)
     context.add(add_node)
 
