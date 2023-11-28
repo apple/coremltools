@@ -86,11 +86,14 @@ class topk(_topk_iOS16):
     """
     A version of ``topk`` for iOS 17+. The differences between this version and the
     iOS 16 :py:class:`~.iOS16.tensor_operation.topk` are:
-    - New data type support. The newly added data type is:
-        - int8, uint8, int16, unint16 for ``x`` and output.
-        - int8, int16 for ``k``.
-    - Validation restrictions on the optional ``indices`` output: must be either uint16 or int32. Also
-      a new input parameter ``output_indices_dtype`` is added to set the dtype of output ``indices``.
+
+       - New data type support. The newly added data types are:
+          - int8, uint8, int16, unint16 for ``x`` and output.
+          - int8, int16 for ``k``.
+       - Validation restrictions on the optional ``indices`` output must be either
+         uint16 or int32.
+       - A new input parameter ``output_indices_dtype`` has been added
+         to set the dtype of output ``indices``.
 
     Parameters
     ----------

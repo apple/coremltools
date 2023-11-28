@@ -580,8 +580,8 @@ class CoreMLWeightMetaData:
         meta_data = CoreMLWeightMetaData(data)
         print(meta_data)
 
-    Outputs:
-    ::
+    Outputs::
+    
         [
             val: np.ndarray(shape=(2, 2), dtype=float32)
             sparsity: 0.5

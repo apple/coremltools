@@ -22,8 +22,10 @@ class constexpr_affine_dequantize(Operation):
     The quantized data is stored in the parameter ``quantized_data``.
     The other parameters -- ``scale``, ``zero_point``, and ``axis`` -- describe how
     unquantized values can be extracted from it, using the equation for affine/linear quantization:
-    ::
-                unquantized_data = scale * (quantized_data - zero_point)
+
+    .. sourcecode:: python
+
+        unquantized_data = scale * (quantized_data - zero_point)
 
     Although all of the parameters of this op are constants, this op is not constant folded
     to a single const op at the time of model serialization. The unquantized output will
@@ -38,15 +40,15 @@ class constexpr_affine_dequantize(Operation):
  	   * ``zero_point`` follows similar broadcasting rules and size constraints as ``scale``.
 
     scale: const tensor<DstT, [0..1]> (Required)
-       * ``scale`` can be either a scalar or a vector. If ``scale`` is a vector,
-         for implementation it is broadcast to the following shape:
-           * The rank of ``scale`` becomes the same as the rank of ``quantized_data``.
-           * The constraint: ``size(scale-vector) == quantized_data.shape[axis]``.
-           * For ``i == axis``, ``scale.shape[i] == quantized_data.shape[i]``.
-           * For ``i != axis``, ``scale.shape == 1``.
-         For example, assume ``quantized_data.shape = (2, 3, 4, 5)`` and ``axis = 1``.
-         If ``scale`` is a vector, then ``scale.size`` needs to be equal to
-         ``quantized_data.shape[axis] i.e = 3``, which would be broadcast to ``(1, 3, 1, 1)``.
+       * ``scale`` can be either a scalar or a vector.
+       * If ``scale`` is a vector, for implementation it is broadcast to the following shape:
+          * The rank of ``scale`` becomes the same as the rank of ``quantized_data``.
+          * The constraint: ``size(scale-vector) == quantized_data.shape[axis]``.
+          * For ``i == axis``, ``scale.shape[i] == quantized_data.shape[i]``.
+          * For ``i != axis``, ``scale.shape == 1``.
+            For example, assume ``quantized_data.shape = (2, 3, 4, 5)`` and ``axis = 1``.
+            If ``scale`` is a vector, then ``scale.size`` needs to be equal to
+            ``quantized_data.shape[axis] i.e = 3``, which would be broadcast to ``(1, 3, 1, 1)``.
 
     axis: const tensor<int32, []> (Required)
 
@@ -136,8 +138,10 @@ class constexpr_affine_dequantize(Operation):
 class constexpr_cast(Operation):
     """
     A compile-time operation that returns a constant output value upon casting its constant input.
-    ::
-                Expression: output = constexpr_cast(source_val, output_dtype="fp32")
+
+    .. sourcecode:: python
+
+        Expression: output = constexpr_cast(source_val, output_dtype="fp32")
 
     Parameters
     ----------
@@ -205,7 +209,9 @@ class constexpr_lut_to_dense(Operation):
     bits of the same index are filled in the LSBs of the next byte.
 
     For example:
-    ::
+
+    .. sourcecode:: python
+
         if n_bits = 2, shape = (5,) => M = 2 bytes
 
                     MSB             LSB
@@ -301,14 +307,17 @@ class constexpr_sparse_to_dense(Operation):
     moving up to the most significant bit.
 
     For example:
-    ::
-        shape = (5,) => M = 1 bytes
 
+    .. sourcecode:: python
+
+        shape = (5,) => M = 1 bytes
+        
                    MSB                  LSB
                     |                    |
         mask    =  |x  x  x  0  1  1  0  0 |      <== packed elements
                    |--|--|--|i4|i3|i2|i1|i0|      <== tagged element ids
                    |      byte 0           |      <== tagged bytes
+
 
     Returns
     -------
