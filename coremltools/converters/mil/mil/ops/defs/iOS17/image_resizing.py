@@ -263,8 +263,7 @@ class resize(Operation):
         * Available mode: ``LINEAR``, ``NEAREST_NEIGHBOR``.
 
     sampling_mode: const<str> (Optional, default="DEFAULT")
-        * Available mode: ``DEFAULT``, ``STRICT_ALIGN_CORNERS``, ``ALIGN_CORNERS``,
-        ``OFFSET_CORNERS``, ``UNALIGN_CORNERS``.
+        * Available mode: ``DEFAULT``, ``STRICT_ALIGN_CORNERS``, ``ALIGN_CORNERS``, ``OFFSET_CORNERS``, ``UNALIGN_CORNERS``.
         * For details about different sampling modes, see iOS 15 :py:class:`~.iOS15.image_resizing.resize_bilinear`.
 
     Returns

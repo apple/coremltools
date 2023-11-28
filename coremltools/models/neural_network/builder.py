@@ -2326,18 +2326,21 @@ class NeuralNetworkBuilder:
             Weight of the convolution kernels.
 
             * If ``is_deconv`` is False, ``W`` should have
-              shape ``(height, width, kernel_channels, output_channels)``, where:
-                 ``kernel_channel = input_channels / groups``
+              shape ``(height, width, kernel_channels, output_channels)``, where::
+
+                 kernel_channel = input_channels / groups
+
             * If ``is_deconv`` is True, ``W`` should have
-              shape ``(height, width, kernel_channels, output_channels / groups)``, where:
-                 ``kernel_channel = input_channels``
+              shape ``(height, width, kernel_channels, output_channels / groups)``, where::
 
-            If ``W`` is of type ``bytes()`` (quantized), other quantization
-            related arguments must be provided as well (see below).
+                 kernel_channel = input_channels
 
-            For Core ML specification version >=4, ``W`` can be ``None``. In this case,
-            the convolution layer takes 2 inputs, where the 1st input represents
-            the input feature map, and the 2nd input represents the weight blob.
+            * If ``W`` is of type ``bytes()`` (quantized), other quantization-related
+              arguments must be provided as well (see below).
+
+            * For Core ML specification version >=4, ``W`` can be ``None``. In this case,
+              the convolution layer takes 2 inputs, where the 1st input represents
+              the input feature map, and the 2nd input represents the weight blob.
 
         b: numpy.array
             Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.
@@ -2349,15 +2352,13 @@ class NeuralNetworkBuilder:
             - If False, bias is ignored.
 
         is_deconv: boolean
-            Whether the convolution layer is performing a convolution or a
-            transposed convolution (deconvolution).
+            Whether the convolution layer is performing a convolution or a transposed convolution (deconvolution).
 
             - If True, the convolution layer is performing transposed convolution.
             - If False, the convolution layer is performing regular convolution.
 
         output_shape: tuple or None
-            Either ``None`` or a 2-tuple, specifying the output
-            shape ``(output_height, output_width)``.
+            Either ``None`` or a 2-tuple, specifying the output shape ``(output_height, output_width)``.
 
             - Used only when ``is_deconv == True``.
             - When ``is_deconv == False``, this parameter is ignored.
@@ -2370,8 +2371,8 @@ class NeuralNetworkBuilder:
             The output blob name of this layer.
 
         dilation_factors: list of int
-            Dilation factors across height and width directions. Must be a list of two positive integers.
-            Defaults to ``[1, 1]``.
+            Dilation factors across height and width directions. Must be a list of two
+            positive integers. Defaults to ``[1, 1]``.
 
         padding_top, padding_bottom, padding_left, padding_right: int
             Values of height (top, bottom) and width (left, right) padding

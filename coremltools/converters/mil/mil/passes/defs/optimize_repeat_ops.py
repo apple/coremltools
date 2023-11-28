@@ -333,55 +333,60 @@ class cast_optimization(AbstractGraphPass):
     This is a non-algebraic translation which assumes that the upcasting doesn't change the user's intent.
 
     (1) Example for redundant ``cast`` op removal:
-        .. code-block::
+         .. sourcecode:: python
 
             Input graph:
             input(fp16) -> cast(dtype="fp16") -> relu -> out
-
+            
             Output graph:
             input -> relu -> out
 
-        The input and output tensors for the ``cast`` op are both with type of ``fp16``. Hence, it can be removed.
+         The input and output tensors for the ``cast`` op are both with type of ``fp16``.
+         Hence, it can be removed.
 
     (2) Example for two ``cast`` ops fusion:
-        .. code-block::
+         .. sourcecode:: python
 
             Input graph:
             input(int8) -> cast(dtype="fp16") -> cast(dtype="fp32") -> out
-
+            
             Output graph:
             input(int8) -> cast(dtype="fp32") -> out
 
-        The data range and resolution of the above graph are limited by the int8 input, so the fusion is allowed.
+         The data range and resolution of the above graph are limited by the int8 input,
+         so the fusion is allowed.
 
     (3) Negative example for two ``cast`` ops fusion:
-        .. code-block::
+         .. sourcecode:: python
+
             Input graph:
             input(fp32) -> cast(dtype="bool") -> cast(dtype="fp16") -> out
-
+            
             Output graph:
             Same as input graph.
 
-        The above two ``cast`` ops cannot be merged, since after the first cast, the resolution of the numerical output
-        is downcasted to binary (``0, 1``). If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
+         The above two ``cast`` ops cannot be merged, since after the first cast,
+         the resolution of the numerical output is downcasted to binary (``0, 1``).
+         If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
 
-    (3) Another Negative example for two ``cast`` ops fusion:
-        .. code-block::
+    (4) Another Negative example for two ``cast`` ops fusion:
+         .. sourcecode:: python
+
             Input graph:
             input(int32) -> cast(dtype="int8") -> cast(dtype="uint8") -> out
-
+            
             Output graph:
             Same as input graph.
 
-        The above two ``cast`` ops cannot be merged, since in the original graph, by going through two casts,
-        the output numerical range is capped to ``[0, 127]``.
-
-        However, if two ``cast`` ops are reduced to 1 ``cast(dtype="uint8")``, the output numerical would in the range of ``[0, 255]``.
-        The fusion would cause numerical issue for the numbers between ``[128, 255]``, which is prohibited.
+         The above two ``cast`` ops cannot be merged, since in the original graph,
+         by going through two casts, the output numerical range is capped to ``[0, 127]``.
+         However, if two ``cast`` ops are reduced to 1 ``cast(dtype="uint8")``, the output
+         numerical would in the range of ``[0, 255]``. The fusion would cause numerical
+         issue for the numbers between ``[128, 255]``, which is prohibited.
 
     In general, two ``cast`` ops can be merged if the output data range and resolution is not affected.
 
-    For more examples, please see the unittests start with prefix "TestCastOptimization" in test_passes.py
+    For more examples, please see the unittests that start with prefix ``TestCastOptimization`` in ``test_passes.py``.
     """
 
     def apply(self, prog):

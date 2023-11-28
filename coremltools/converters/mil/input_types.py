@@ -33,22 +33,21 @@ class ClassifierConfig:
         Parameters
         ----------
         class_labels: str / list of int / list of str
-            If a ``list`` is provided, the ``list`` maps the index of the output of a
-            neural network to labels in a classifier.
-
-            If a ``str`` is provided, the ``str`` points to a file which maps the index
-            to labels in a classifier.
+            * If a ``list`` is provided, the ``list`` maps the index of the output of a
+              neural network to labels in a classifier.
+            * If a ``str`` is provided, the ``str`` points to a file which maps the index
+              to labels in a classifier.
 
         predicted_feature_name: str
             Name of the output feature for the class labels exposed in the
             Core ML neural network classifier. Default: ``'classLabel'``.
 
         predicted_probabilities_output: str
-            If provided, then this is the name of the neural network blob which
-            generates the probabilities for each class label (typically the output
-            of a softmax layer).
+            * If provided, then this is the name of the neural network blob which
+              generates the probabilities for each class label (typically the output
+              of a softmax layer).
+            * If not provided, then the last output layer is assumed.
 
-            If not provided, then the last output layer is assumed.
         """
         self.class_labels = class_labels
         self.predicted_feature_name = predicted_feature_name
@@ -67,8 +66,8 @@ class InputType:
 
         shape: list, tuple, Shape object, EnumeratedShapes object, or None
             The shape(s) that are valid for this input.
-
             If set to ``None``, the shape will be inferred from the model itself.
+
         """
 
         self.name = name
@@ -172,15 +171,16 @@ class TensorType(InputType):
             The ``name`` is required except for a TensorFlow model in which there is
             exactly one input Placeholder.
 
-        shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes
-            The shape of the input.
+        shape: The shape of the input
+            - List of positive int or :py:class:`RangeDim`, or
+            - :py:class:`EnumeratedShapes`
 
             For TensorFlow:
-              * The ``shape`` is optional. If omitted, the shape is inferred from
-                TensorFlow graph's Placeholder shape.
+               * The ``shape`` is optional. If omitted, the shape is inferred from
+                 TensorFlow graph's Placeholder shape.
 
             For PyTorch:
-              * The ``shape`` is required.
+               * The ``shape`` is required.
 
         dtype: np.generic or mil.type type
             For example, ``np.int32`` or ``coremltools.converters.mil.mil.types.fp32``
@@ -194,7 +194,7 @@ class TensorType(InputType):
                  elements are required to have the same value.
 
               * The ``default_value`` may not be specified if ``shape`` is
-                ``EnumeratedShapes``.
+                :py:class:`EnumeratedShapes`.
 
         Examples
         --------
@@ -339,7 +339,7 @@ class RangeDim:
 class Shape:
     def __init__(self, shape, default=None):
         """
-        The basic shape class to be set in InputType.
+        The basic shape class to be set in :py:class:`InputType`.
 
         Parameters
         ----------
@@ -350,7 +350,7 @@ class Shape:
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
 
-            If None, then ``shape`` is used.
+            If ``None``, then ``shape`` is used.
         """
         from coremltools.converters.mil.mil import get_new_symbol
 
@@ -430,35 +430,36 @@ class EnumeratedShapes:
 
         Parameters
         ----------
-        shapes: list of Shape objects, or Shape-compatible lists.
-            The valid shapes of the inputs.
+        shapes: list of Shape objects, or Shape-compatible lists
+            * The valid shapes of the inputs.
+            * If input provided is not a :py:class:`Shape` object,
+              but can be converted to a :py:class:`Shape`,
+              the :py:class:`Shape` object would be stored in ``shapes`` instead.
 
-            If input provided is not a Shape object, but can be converted to a Shape,
-            the Shape object would be stored in ``shapes`` instead.
 
         default: tuple of int or None
-            The default shape that is used for initiating the model, and set in
-            the metadata of the model file.
+            * The default shape that is used for initiating the model, and set in
+              the metadata of the model file.
+            * If ``None``, then the first element in ``shapes`` is used.
 
-            If None, then the first element in ``shapes`` is used.
 
         Examples
         --------
         .. sourcecode:: python
 
-        sample_shape = ct.EnumeratedShapes(
-            shapes=[
-                (2, 4, 64, 64),
-                (2, 4, 48, 48),
-                (2, 4, 32, 32)
-            ],
-            default=(2, 4, 64, 64)
-        )
+            sample_shape = ct.EnumeratedShapes(
+               shapes=[
+                    (2, 4, 64, 64),
+                    (2, 4, 48, 48),
+                    (2, 4, 32, 32)
+                ],
+                default=(2, 4, 64, 64)
+            )
 
-        my_core_ml_model = ct.convert(
-            my_model,
-            inputs=[ct.TensorType(name="sample", shape=sample_shape)],
-        )
+            my_core_ml_model = ct.convert(
+                my_model,
+                inputs=[ct.TensorType(name="sample", shape=sample_shape)],
+            )
         """
 
         # lazy import to avoid circular import
