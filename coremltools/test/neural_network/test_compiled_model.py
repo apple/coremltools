@@ -10,7 +10,7 @@ import pytest
 
 from coremltools import ComputeUnit
 from coremltools.models import CompiledMLModel, MLModel
-from coremltools.models.utils import compile_model, save_spec
+from coremltools.models.utils import compile_model, load_spec, save_spec
 from coremltools.proto import Model_pb2
 
 
@@ -53,14 +53,13 @@ class TestCompiledModel:
             rmtree(compiled_model_path)
 
 
-    def test_file_input(self):
+    def test_mlmodel_file_input(self):
         with TemporaryDirectory() as save_dir:
-            spec_file_path = save_dir + '/spec.mlmodel'
-            save_spec(self.spec, spec_file_path)
+            file_path = save_dir + '/m.mlmodel'
+            MLModel(self.spec).save(file_path)
 
-            with pytest.raises(Exception) as e:
-                compiled_model_path = compile_model(spec_file_path)
-            assert ", first load the model, " in str(e.value)
+            with pytest.raises(Exception, match=", first load the model, ") as e:
+                compiled_model_path = compile_model(file_path)
 
 
     def test_spec_input(self):
@@ -70,9 +69,8 @@ class TestCompiledModel:
 
     def test_mlmodel_input(self):
         ml_model = MLModel(self.spec)
-        with pytest.raises(Exception) as e:
+        with pytest.raises(Exception, match=" model has already been compiled.") as e:
             compiled_model_path = compile_model(ml_model)
-        assert " model has already been compiled." in str(e.value)
 
 
     def test_from_existing_mlmodel(self):
@@ -108,3 +106,12 @@ class TestCompiledModel:
             with pytest.raises(Exception) as e:
                 compiled_model_path = compile_model(self.spec, dst_path)
             assert " file extension." in str(e.value)
+
+
+    def test_save_load_spec(self):
+        with TemporaryDirectory() as save_dir:
+            file_path = save_dir + '/spec.mlmodel'
+            save_spec(self.spec, file_path)
+            my_spec = load_spec(file_path)
+            compiled_model_path = compile_model(my_spec)
+        self._test_compile_model_path(compiled_model_path)

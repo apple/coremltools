@@ -131,7 +131,7 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
 
     weights_dir: str
         Path to the directory containing the weights.bin file. This is required
-        when the spec if of model type mlprogram. If the mlprogram does not contain
+        when the spec has model type mlprogram. If the mlprogram does not contain
         any weights, this path can be an empty directory.
 
     Examples
@@ -1006,7 +1006,7 @@ def convert_double_to_float_multiarray_type(spec):
 
 def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None) -> str:
     """
-    Compiles a Core ML model.
+    Compiles a Core ML model spec.
 
     Parameters
     ----------
@@ -1022,6 +1022,34 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
     str : Path to compiled model directory
         If the destination_path is specified, that is the value that will be returned.
 
+    Examples
+    --------
+    .. sourcecode:: python
+        from coremltools.models import CompiledMLModel
+        from coremltools.models.utils import compile_model
+        from coremltools.proto import Model_pb2
+
+        spec = Model_pb2.Model()
+        spec.specificationVersion = 1
+
+        input_ = spec.description.input.add()
+        input_.name = 'x'
+        input_.type.doubleType.MergeFromString(b"")
+
+        output_ = spec.description.output.add()
+        output_.name = 'y'
+        output_.type.doubleType.MergeFromString(b"")
+        spec.description.predictedFeatureName = 'y'
+
+        lr = spec.glmRegressor
+        lr.offset.append(0.1)
+        weights = lr.weights.add()
+        weights.value.append(2.0)
+
+        compiled_model_path = compile_model(spec)
+        model = CompiledMLModel(compiled_model_path)
+        y = model.predict({'x': 2})
+
     See Also
     --------
     coremltools.models.CompiledMLModel
@@ -1035,14 +1063,14 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
         raise Exception("Unable to compile any Core ML models.")
 
     # Check model parameter
-    if not isinstance(model, (str, _Model_pb2.Model, _ct.models.MLModel)):
-        raise Exception("Unrecognized input for \"model\" parameter. It should be a spec.")
     if isinstance(model, str):
         raise Exception("To get a compiled model from a saved MLModel, first load the model, "
                         " then call \"get_compiled_model_path\".")
     if isinstance(model, _ct.models.MLModel):
         raise Exception("This model has already been compiled. Call \"get_compiled_model_path\""
                         " to get the compiled model.")
+    if not isinstance(model, _Model_pb2.Model):
+        raise Exception("Unrecognized input for \"model\" parameter. It should be a spec.")
 
     # Check file extension of destination_path parameter
     if destination_path is not None and not destination_path.rstrip('/').endswith(".mlmodelc"):
