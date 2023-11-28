@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/css/norightmargin.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -529,31 +531,31 @@
 <span class="sd">            * If input provided is not a :py:class:`Shape` object,</span>
 <span class="sd">              but can be converted to a :py:class:`Shape`,</span>
 <span class="sd">              the :py:class:`Shape` object would be stored in ``shapes`` instead.</span>
-<span class="sd">			</span>
+
 
 <span class="sd">        default: tuple of int or None</span>
 <span class="sd">            * The default shape that is used for initiating the model, and set in</span>
 <span class="sd">              the metadata of the model file.</span>
 <span class="sd">            * If ``None``, then the first element in ``shapes`` is used.</span>
-<span class="sd">			</span>
+
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        .. sourcecode:: python</span>
 
-<span class="sd">			sample_shape = ct.EnumeratedShapes(</span>
-<span class="sd">				shapes=[</span>
-<span class="sd">					(2, 4, 64, 64),</span>
-<span class="sd">					(2, 4, 48, 48),</span>
-<span class="sd">					(2, 4, 32, 32)</span>
-<span class="sd">				],</span>
-<span class="sd">				default=(2, 4, 64, 64)</span>
-<span class="sd">			)</span>
+<span class="sd">            sample_shape = ct.EnumeratedShapes(</span>
+<span class="sd">               shapes=[</span>
+<span class="sd">                    (2, 4, 64, 64),</span>
+<span class="sd">                    (2, 4, 48, 48),</span>
+<span class="sd">                    (2, 4, 32, 32)</span>
+<span class="sd">                ],</span>
+<span class="sd">                default=(2, 4, 64, 64)</span>
+<span class="sd">            )</span>
 
-<span class="sd">			my_core_ml_model = ct.convert(</span>
-<span class="sd">				my_model,</span>
-<span class="sd">				inputs=[ct.TensorType(name=&quot;sample&quot;, shape=sample_shape)],</span>
-<span class="sd">			)</span>
+<span class="sd">            my_core_ml_model = ct.convert(</span>
+<span class="sd">                my_model,</span>
+<span class="sd">                inputs=[ct.TensorType(name=&quot;sample&quot;, shape=sample_shape)],</span>
+<span class="sd">            )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># lazy import to avoid circular import</span>
