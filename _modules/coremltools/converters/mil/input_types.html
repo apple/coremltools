@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>coremltools.converters.mil.input_types &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery-binder.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery-dataframe.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../_static/css/norightmargin.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -127,22 +129,21 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        class_labels: str / list of int / list of str</span>
-<span class="sd">            If a ``list`` is provided, the ``list`` maps the index of the output of a</span>
-<span class="sd">            neural network to labels in a classifier.</span>
-
-<span class="sd">            If a ``str`` is provided, the ``str`` points to a file which maps the index</span>
-<span class="sd">            to labels in a classifier.</span>
+<span class="sd">            * If a ``list`` is provided, the ``list`` maps the index of the output of a</span>
+<span class="sd">              neural network to labels in a classifier.</span>
+<span class="sd">            * If a ``str`` is provided, the ``str`` points to a file which maps the index</span>
+<span class="sd">              to labels in a classifier.</span>
 
 <span class="sd">        predicted_feature_name: str</span>
 <span class="sd">            Name of the output feature for the class labels exposed in the</span>
 <span class="sd">            Core ML neural network classifier. Default: ``&#39;classLabel&#39;``.</span>
 
 <span class="sd">        predicted_probabilities_output: str</span>
-<span class="sd">            If provided, then this is the name of the neural network blob which</span>
-<span class="sd">            generates the probabilities for each class label (typically the output</span>
-<span class="sd">            of a softmax layer).</span>
+<span class="sd">            * If provided, then this is the name of the neural network blob which</span>
+<span class="sd">              generates the probabilities for each class label (typically the output</span>
+<span class="sd">              of a softmax layer).</span>
+<span class="sd">            * If not provided, then the last output layer is assumed.</span>
 
-<span class="sd">            If not provided, then the last output layer is assumed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">class_labels</span> <span class="o">=</span> <span class="n">class_labels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted_feature_name</span> <span class="o">=</span> <span class="n">predicted_feature_name</span>
@@ -161,8 +162,8 @@
 
 <span class="sd">        shape: list, tuple, Shape object, EnumeratedShapes object, or None</span>
 <span class="sd">            The shape(s) that are valid for this input.</span>
-
 <span class="sd">            If set to ``None``, the shape will be inferred from the model itself.</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -266,15 +267,16 @@
 <span class="sd">            The ``name`` is required except for a TensorFlow model in which there is</span>
 <span class="sd">            exactly one input Placeholder.</span>
 
-<span class="sd">        shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes</span>
-<span class="sd">            The shape of the input.</span>
+<span class="sd">        shape: The shape of the input</span>
+<span class="sd">            - List of positive int or :py:class:`RangeDim`, or</span>
+<span class="sd">            - :py:class:`EnumeratedShapes`</span>
 
 <span class="sd">            For TensorFlow:</span>
-<span class="sd">              * The ``shape`` is optional. If omitted, the shape is inferred from</span>
-<span class="sd">                TensorFlow graph&#39;s Placeholder shape.</span>
+<span class="sd">               * The ``shape`` is optional. If omitted, the shape is inferred from</span>
+<span class="sd">                 TensorFlow graph&#39;s Placeholder shape.</span>
 
 <span class="sd">            For PyTorch:</span>
-<span class="sd">              * The ``shape`` is required.</span>
+<span class="sd">               * The ``shape`` is required.</span>
 
 <span class="sd">        dtype: np.generic or mil.type type</span>
 <span class="sd">            For example, ``np.int32`` or ``coremltools.converters.mil.mil.types.fp32``</span>
@@ -288,7 +290,7 @@
 <span class="sd">                 elements are required to have the same value.</span>
 
 <span class="sd">              * The ``default_value`` may not be specified if ``shape`` is</span>
-<span class="sd">                ``EnumeratedShapes``.</span>
+<span class="sd">                :py:class:`EnumeratedShapes`.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -433,7 +435,7 @@
 <div class="viewcode-block" id="Shape"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape">[docs]</a><span class="k">class</span> <span class="nc">Shape</span><span class="p">:</span>
 <div class="viewcode-block" id="Shape.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The basic shape class to be set in InputType.</span>
+<span class="sd">        The basic shape class to be set in :py:class:`InputType`.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -444,7 +446,7 @@
 <span class="sd">            The default shape that is used for initiating the model, and set in</span>
 <span class="sd">            the metadata of the model file.</span>
 
-<span class="sd">            If None, then ``shape`` is used.</span>
+<span class="sd">            If ``None``, then ``shape`` is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>
 
@@ -524,35 +526,36 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        shapes: list of Shape objects, or Shape-compatible lists.</span>
-<span class="sd">            The valid shapes of the inputs.</span>
+<span class="sd">        shapes: list of Shape objects, or Shape-compatible lists</span>
+<span class="sd">            * The valid shapes of the inputs.</span>
+<span class="sd">            * If input provided is not a :py:class:`Shape` object,</span>
+<span class="sd">              but can be converted to a :py:class:`Shape`,</span>
+<span class="sd">              the :py:class:`Shape` object would be stored in ``shapes`` instead.</span>
 
-<span class="sd">            If input provided is not a Shape object, but can be converted to a Shape,</span>
-<span class="sd">            the Shape object would be stored in ``shapes`` instead.</span>
 
 <span class="sd">        default: tuple of int or None</span>
-<span class="sd">            The default shape that is used for initiating the model, and set in</span>
-<span class="sd">            the metadata of the model file.</span>
+<span class="sd">            * The default shape that is used for initiating the model, and set in</span>
+<span class="sd">              the metadata of the model file.</span>
+<span class="sd">            * If ``None``, then the first element in ``shapes`` is used.</span>
 
-<span class="sd">            If None, then the first element in ``shapes`` is used.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        .. sourcecode:: python</span>
 
-<span class="sd">        sample_shape = ct.EnumeratedShapes(</span>
-<span class="sd">            shapes=[</span>
-<span class="sd">                (2, 4, 64, 64),</span>
-<span class="sd">                (2, 4, 48, 48),</span>
-<span class="sd">                (2, 4, 32, 32)</span>
-<span class="sd">            ],</span>
-<span class="sd">            default=(2, 4, 64, 64)</span>
-<span class="sd">        )</span>
+<span class="sd">            sample_shape = ct.EnumeratedShapes(</span>
+<span class="sd">               shapes=[</span>
+<span class="sd">                    (2, 4, 64, 64),</span>
+<span class="sd">                    (2, 4, 48, 48),</span>
+<span class="sd">                    (2, 4, 32, 32)</span>
+<span class="sd">                ],</span>
+<span class="sd">                default=(2, 4, 64, 64)</span>
+<span class="sd">            )</span>
 
-<span class="sd">        my_core_ml_model = ct.convert(</span>
-<span class="sd">            my_model,</span>
-<span class="sd">            inputs=[ct.TensorType(name=&quot;sample&quot;, shape=sample_shape)],</span>
-<span class="sd">        )</span>
+<span class="sd">            my_core_ml_model = ct.convert(</span>
+<span class="sd">                my_model,</span>
+<span class="sd">                inputs=[ct.TensorType(name=&quot;sample&quot;, shape=sample_shape)],</span>
+<span class="sd">            )</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># lazy import to avoid circular import</span>

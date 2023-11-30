@@ -3,7 +3,7 @@
 ```{eval-rst}
 .. index:: 
     single: PyTorch; combine tracing and scripting
-    single: PyTorch; convert natural language proocessing model
+    single: PyTorch; convert natural language processing model
 ```
 
 The following example demonstrates how you can combine [model tracing](model-tracing) and [model scripting](model-scripting) in order to properly convert a model that includes a data-dependent control flow, such as a loop or conditional. 
