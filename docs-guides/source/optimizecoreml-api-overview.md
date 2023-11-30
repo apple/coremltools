@@ -63,7 +63,9 @@ For details of key parameters to be set in each of the configs, see [Post-Traini
 
 ## Customizing Ops to Compress
 
-Using the `global_config` flag in the [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig) class applies the same config to all the ops with weights in the model. More granular control can be achieved by using the `op_type_configs` and `op_name_configs` flags of `OptimizationConfig`. 
+Using the `global_config` flag in the [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig) class applies the same config to all the ops with weights in the model. 
+
+For more granular control, use the `op_type_configs` and `op_name_configs` flags of `OptimizationConfig`, as described in [Get Weights Metadata](mlmodel-utilities.md#get-weights-metadata). The  `get_weights_metadata()` utility provides the weight name and the corresponding weight numpy data, along with meta information such as the sparsity. 
 
 The following example shows 6-bit palettization applied to all ops, with the exception that all the `linear` ops are set to 8 bits, and two of the `conv` ops called `conv_1` and `conv_4` are omitted from palettization.  
 
