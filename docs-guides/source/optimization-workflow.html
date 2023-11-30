@@ -412,11 +412,6 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-apis-work">How the APIs Work</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-weight-metadata">Getting Weight Metadata</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-metadata">Using the Metadata</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-a-weight-threshold">Using a Weight Threshold</a></li>
-</ul>
-</li>
 </ul>
             </nav>
         </div>
@@ -435,7 +430,7 @@ document.write(`
 <li><p><a class="reference internal" href="#post-training-compression"><span class="std std-doc"><em>Post-training data-free compression</em></span></a>. Use this faster method with a Core ML model, either created or converted from another model. You can quickly try different techniques with different configurations.</p></li>
 <li><p><a class="reference internal" href="#training-time-compression"><span class="std std-doc"><em>Training-time compression</em></span></a>. Use this method with a PyTorch model while in training. It lets you fine-tune with data for higher accuracy.</p></li>
 </ul>
-<p>Since model compression is a lossy operation, in both cases you should evaluate the model on the validation data set and compare it with the uncompressed model to ascertain the loss in accuracy and see if that is acceptable. To inspect the properties of the weights in the model, see <a class="reference internal" href="#getting-weight-metadata"><span class="std std-doc"><em>Getting Weight Metadata</em></span></a> in this section.</p>
+<p>Since model compression is a lossy operation, in both cases you should evaluate the model on the validation data set and compare it with the uncompressed model to ascertain the loss in accuracy and see if that is acceptable.</p>
 <section id="post-training-compression">
 <span id="index-1"></span><h2>Post-Training Compression<a class="headerlink" href="#post-training-compression" title="Permalink to this heading">#</a></h2>
 <p>Start with a Core ML model that uses <code class="docutils literal notranslate"><span class="pre">float</span></code> precision weights. It can be a model you created and trained yourself, or a pre-trained model, in either case converted by the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. This workflow is also commonly referred to as  <em>post-training quantization</em>.</p>
@@ -453,6 +448,10 @@ document.write(`
 <li><p>Use one of the methods available in <code class="docutils literal notranslate"><span class="pre">optimize.coreml.*</span></code> that takes the loaded model, iterates over its weights one-by-one, compresses them, and then returns an updated model with these compressed weights. For available options, see <a class="reference internal" href="optimizecoreml-api-overview.html"><span class="doc std std-doc">optimize.coreml API overview</span></a>.</p></li>
 <li><p>Save the model to disk.</p></li>
 </ol>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>To inspect the properties of the weights in the model, see <a class="reference internal" href="mlmodel-utilities.html#get-weights-metadata"><span class="std std-doc">Get Weights Metadata</span></a>. For example, if you want to compare the weights of a model showing unexpected results with the weights of a model with predictable results, you can use <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> to get a list of all the weights with their metadata. The metadata returned by the utility also offers information about the child ops the weight feeds into.</p>
+</div>
 </section>
 <section id="benefits-and-drawbacks">
 <h3>Benefits and Drawbacks<a class="headerlink" href="#benefits-and-drawbacks" title="Permalink to this heading">#</a></h3>
@@ -500,181 +499,6 @@ document.write(`
 <p>The <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch</span></code> APIs provide model optimization algorithms for <a class="reference internal" href="pruning.html"><span class="doc std std-doc">Pruning</span></a>, <a class="reference internal" href="palettization.html"><span class="doc std std-doc">Palettization</span></a>, and <a class="reference internal" href="quantization-aware-training.html"><span class="doc std std-doc">Quantization Aware Training (QAT)</span></a>. The APIs accept a PyTorch module as input and return a transformed PyTorch module as output. Optimization is incorporated seamlessly into the training process so that you can use the transformed module in your training loop.</p>
 <p>The transformations are accomplished either by wrapping the submodules with wrapper layers (as in the case of quantization-aware training), or by installing <a class="reference external" href="https://pytorch.org/tutorials/beginner/former_torchies/nnft_tutorial.html#forward-and-backward-function-hooks">hooks</a> on the submodules (for example, when mutating masks for parameter pruning). You can also combine these techniques.</p>
 <p>For more information about using the APIs, see <a class="reference internal" href="optimizetorch-api-overview.html"><span class="doc std std-doc">optimize.torch API overview</span></a>.</p>
-</section>
-</section>
-<section id="getting-weight-metadata">
-<span id="index-3"></span><h2>Getting Weight Metadata<a class="headerlink" href="#getting-weight-metadata" title="Permalink to this heading">#</a></h2>
-<p>The  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a> utility provides a convenient way to inspect the properties of the weights in the model. You may want to use it to identify weights that are larger than a certain size, or have a sparsity greater than a certain percentage, or have a certain number of unique elements.</p>
-<p>For example, if you want to compare the weights of a model showing unexpected results with the weights of a model with predictable results, you can use <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> to get a list of all the weights with their metadata. Use the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter to set which weights are returned. A weight is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
-<p>The metadata returned by the utility also offers information about the child ops the weight feeds into. The data returned by the API can then be used to customize the optimization of the model via the <code class="docutils literal notranslate"><span class="pre">ct.optimize.coreml</span></code> API.</p>
-<section id="using-the-metadata">
-<h3>Using the Metadata<a class="headerlink" href="#using-the-metadata" title="Permalink to this heading">#</a></h3>
-<p>The  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a> utility returns the weights metadata as a  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.CoreMLWeightMetaData">CoreMLWeightMetaData</a> dictionary mapping each weight’s name to its metadata. These results are useful when constructing the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig"><code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml.OptimizationConfig</span></code></a> API.</p>
-<p>For example, with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig">OptimizationConfig</a> class you have fine-grain control over applying different optimization configurations to different weights by directly setting <code class="docutils literal notranslate"><span class="pre">op_type_configs</span></code> and <code class="docutils literal notranslate"><span class="pre">op_name_configs</span></code> or using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name"><code class="docutils literal notranslate"><span class="pre">set_op_name</span></code></a> and <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type"><code class="docutils literal notranslate"><span class="pre">set_op_type</span></code></a>. When using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name"><code class="docutils literal notranslate"><span class="pre">set_op_name</span></code></a>, you need to know the name for the <code class="docutils literal notranslate"><span class="pre">const</span></code> op that produces the weight. The  <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> utility provides the weight name and the corresponding weight numpy data, along with meta information such as the sparsity.</p>
-<p>To represent weights with sparse representation whose elements are greater than 3000 and the percentage of 0s are greater than 75%, you can call <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> and iterate through all weights to filter out only those weights. The results might be two weights (such as <code class="docutils literal notranslate"><span class="pre">[&quot;weight_1&quot;,</span> <span class="pre">&quot;weight_4&quot;])</span></code>, and you can then use  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name"><code class="docutils literal notranslate"><span class="pre">set_op_name</span></code></a> or directly set  <code class="docutils literal notranslate"><span class="pre">op_name_configs</span></code> accordingly.</p>
-<p>The utility is also useful for the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type"><code class="docutils literal notranslate"><span class="pre">set_op_type()</span></code></a> API, which lets you set the optimization config for all weights that feed into the same type of op, such as <code class="docutils literal notranslate"><span class="pre">conv</span></code>. The  <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> utility provides information about what op the weight feeds into (the <code class="docutils literal notranslate"><span class="pre">child_ops</span></code> attribute of the CoreMLWeightMetaData), so that you can utilize the information to validate the intent of optimizing those weights.</p>
-</section>
-<section id="using-a-weight-threshold">
-<h3>Using a Weight Threshold<a class="headerlink" href="#using-a-weight-threshold" title="Permalink to this heading">#</a></h3>
-<p>The following example includes weights with sizes greater than 2048. The code loads the <code class="docutils literal notranslate"><span class="pre">MobileNetV2.mlpackage</span></code> converted in <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Getting Started</span></a> (from the previously trained <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/applications/mobilenet_v2">MobileNetV2</a> model, which is based on the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/applications">tensorflow.keras.applications</a>). It uses <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a>, which specifies the size threshold (<code class="docutils literal notranslate"><span class="pre">2048</span></code>) in the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;MobileNetV2.mlpackage&quot;</span><span class="p">)</span>
-<span class="n">weight_metadata_dict</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">optimize</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">get_weights_metadata</span><span class="p">(</span>
-    <span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="o">=</span><span class="mi">2048</span>
-<span class="p">)</span>
-</pre></div>
-</div>
-<p>You can then include weights in the dictionary based on their metadata:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># get the weight names with size &gt; 25600</span>
-<span class="n">large_weights</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">25600</span><span class="p">:</span>
-        <span class="n">large_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-
-<span class="c1"># get the weight names with sparsity &gt;= 50%</span>
-<span class="n">sparse_weights</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">sparsity</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
-        <span class="n">sparse_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-
-<span class="c1"># get the weight names with unique elements &lt;= 16</span>
-<span class="n">palettized_weights</span> <span class="o">=</span> <span class="p">[]</span>
-<span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-    <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">unique_values</span> <span class="o">&lt;=</span> <span class="mi">16</span><span class="p">:</span>
-        <span class="n">palettized_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Access to each weight metadata (type of CoreMLWeightMetaData).</span>
-<span class="n">weight_meta_data</span> <span class="o">=</span> <span class="n">weight_metadata_dict</span><span class="p">[</span><span class="s2">&quot;mobilenetv2_1_00_224_block_1_project_BN_FusedBatchNormV3_nchw_weight_0_to_fp16&quot;</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;numpy array data for the weight: &quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">weight_meta_data</span><span class="o">.</span><span class="n">val</span><span class="p">)</span> <span class="c1"># This is the numpy array data for the weight</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Sparsity of the weight: &quot;</span><span class="p">,</span> <span class="n">weight_meta_data</span><span class="o">.</span><span class="n">sparsity</span><span class="p">)</span> <span class="c1"># The sparsity of the weight</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Number of unique values in the weight: &quot;</span><span class="p">,</span> <span class="n">weight_meta_data</span><span class="o">.</span><span class="n">unique_values</span><span class="p">)</span> <span class="c1"># Number of unique values in the weight</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-
-<span class="c1"># Access to the child ops this weight feeds into.</span>
-<span class="c1"># In this example, the weight feeds into only one op (conv_5),</span>
-<span class="c1"># as the result, weight_meta_data.child_ops is a list of length 1.</span>
-<span class="n">child_op</span> <span class="o">=</span> <span class="n">weight_meta_data</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;name of the child op: &quot;</span><span class="p">,</span> <span class="n">child_op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="c1"># name of the child op</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;op type of the child op: &quot;</span><span class="p">,</span> <span class="n">child_op</span><span class="o">.</span><span class="n">op_type</span><span class="p">)</span> <span class="c1"># op type of the child op</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;dictionary: &quot;</span><span class="p">,</span> <span class="n">child_op</span><span class="o">.</span><span class="n">params_name_mapping</span><span class="p">)</span> <span class="c1"># this dictionary shows the input parameters of the child op and their corresponding ops&#39; names</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The output from the above example would be:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">---</span>
-<span class="n">numpy</span> <span class="n">array</span> <span class="n">data</span> <span class="k">for</span> <span class="n">the</span> <span class="n">weight</span><span class="p">:</span> 
-<span class="p">[[[[</span> <span class="mf">0.4062</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.04984</span> <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.4714</span>  <span class="p">]]</span>
-
-  <span class="o">...</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.4846</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.4563</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.001579</span><span class="p">]]]</span>
-
-
- <span class="p">[[[</span> <span class="mf">0.746</span>   <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.208</span>   <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.3416</span>  <span class="p">]]</span>
-
-  <span class="o">...</span>
-
-  <span class="p">[[</span> <span class="mf">0.1913</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.0241</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.02843</span> <span class="p">]]]</span>
-
-
- <span class="p">[[[</span> <span class="mf">0.094</span>   <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.778</span>   <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.315</span>   <span class="p">]]</span>
-
-  <span class="o">...</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.5137</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.3682</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">1.2</span>     <span class="p">]]]</span>
-
-
- <span class="o">...</span>
-
-
- <span class="p">[[[</span><span class="o">-</span><span class="mf">0.1445</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.6494</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.703</span>   <span class="p">]]</span>
-
-  <span class="o">...</span>
-
-  <span class="p">[[</span> <span class="mf">0.1827</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.2012</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.391</span>   <span class="p">]]]</span>
-
-
- <span class="p">[[[</span><span class="o">-</span><span class="mf">0.04352</span> <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">1.12</span>    <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.5605</span>  <span class="p">]]</span>
-
-  <span class="o">...</span>
-
-  <span class="p">[[</span> <span class="mf">0.4165</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.4824</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.5176</span>  <span class="p">]]]</span>
-
-
- <span class="p">[[[</span><span class="o">-</span><span class="mf">0.2922</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.3481</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.2795</span>  <span class="p">]]</span>
-
-  <span class="o">...</span>
-
-  <span class="p">[[</span><span class="o">-</span><span class="mf">0.3572</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.2546</span>  <span class="p">]]</span>
-
-  <span class="p">[[</span> <span class="mf">0.0194</span>  <span class="p">]]]]</span>
-<span class="o">---</span>
-<span class="n">Sparsity</span> <span class="n">of</span> <span class="n">the</span> <span class="n">weight</span><span class="p">:</span>  <span class="mf">0.0</span>
-<span class="o">---</span>
-<span class="n">Number</span> <span class="n">of</span> <span class="n">unique</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">weight</span><span class="p">:</span>  <span class="mi">2077</span>
-<span class="o">---</span>
-<span class="n">name</span> <span class="n">of</span> <span class="n">the</span> <span class="n">child</span> <span class="n">op</span><span class="p">:</span>  <span class="n">mobilenetv2_1_00_224_block_1_project_BN_FusedBatchNormV3_nchw_cast_fp16</span>
-<span class="o">---</span>
-<span class="n">op</span> <span class="nb">type</span> <span class="n">of</span> <span class="n">the</span> <span class="n">child</span> <span class="n">op</span><span class="p">:</span>  <span class="n">conv</span>
-<span class="o">---</span>
-<span class="n">dictionary</span><span class="p">:</span>  <span class="n">OrderedDict</span><span class="p">([(</span><span class="s1">&#39;weight&#39;</span><span class="p">,</span> <span class="s1">&#39;mobilenetv2_1_00_224_block_1_project_BN_FusedBatchNormV3_nchw_weight_0_to_fp16&#39;</span><span class="p">)])</span>
-<span class="o">---</span>
-</pre></div>
-</div>
 </section>
 </section>
 </section>
@@ -736,11 +560,6 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#incorporate-compression-into-training-workflow">Incorporate Compression Into Training Workflow</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Benefits and Drawbacks</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#how-the-apis-work">How the APIs Work</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#getting-weight-metadata">Getting Weight Metadata</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-metadata">Using the Metadata</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-a-weight-threshold">Using a Weight Threshold</a></li>
 </ul>
 </li>
 </ul>
