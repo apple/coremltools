@@ -9587,10 +9587,9 @@ class TestSTFT(TorchBaseTest):
             compute_unit=compute_unit
         )
 
-class TestISTFT(TorchBaseTest):
     @pytest.mark.slow
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, complex, n_fft, hop_length, win_length, window, center, pad_mode, normalized, onesided, length",
+        "compute_unit, backend, input_shape, n_fft, hop_length, win_length, window, center, normalized, onesided, length, return_complex",
         itertools.product(
             compute_units,
             backends,
