@@ -39,9 +39,6 @@ To directly compress the Core ML model, follow these steps:
 2. Use one of the methods available in `optimize.coreml.*` that takes the loaded model, iterates over its weights one-by-one, compresses them, and then returns an updated model with these compressed weights. For available options, see [optimize.coreml API overview](optimizecoreml-api-overview).
 3. Save the model to disk.
 
-```{tip}
-To inspect the properties of the weights in the model, see [Get Weights Metadata](mlmodel-utilities.md#get-weights-metadata). For example, if you want to compare the weights of a model showing unexpected results with the weights of a model with predictable results, you can use `get_weights_metadata()` to get a list of all the weights with their metadata. The metadata returned by the utility also offers information about the child ops the weight feeds into. 
-```
 
 ### Benefits and Drawbacks
 
