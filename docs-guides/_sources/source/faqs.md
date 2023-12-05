@@ -52,7 +52,7 @@ For details, see the following:
 
 ### coremltools 4
 
-Major upgrade. Hightlights:
+Major upgrade. Highlights:
 
 - Introduced the [Unified Conversion API](unified-conversion-api) with the `convert()` method for converting models from TensorFlow 1, TensorFlow 2 (tf.keras), and PyTorch.
 - Introduced the [Model Intermediate Language](model-intermediate-language) (MIL) as an internal intermediate representation (IR) for unifying the conversion pipeline, and added graph passes to this common IR. Passes that improve performance continue to be added, so we recommend that you always use the latest version of coremltools to convert your models.

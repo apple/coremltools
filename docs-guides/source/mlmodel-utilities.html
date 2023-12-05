@@ -404,6 +404,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rename-a-feature">Rename a Feature</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-all-double-multi-array-feature-descriptions-to-float">Convert All Double Multi-array Feature Descriptions to Float</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-classifier-regressor-and-transformer-models">Evaluate Classifier, Regressor, and Transformer Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-weights-metadata">Get Weights Metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-metadata">Using the Metadata</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+</li>
 </ul>
             </nav>
         </div>
@@ -498,6 +503,51 @@ document.write(`
 </pre></div>
 </div>
 </section>
+<section id="get-weights-metadata">
+<span id="index-1"></span><h2>Get Weights Metadata<a class="headerlink" href="#get-weights-metadata" title="Permalink to this heading">#</a></h2>
+<p>The  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a> utility provides a convenient way to inspect the properties of the weights in the model. You may want to use it for debugging, or for identifying weights that are larger than a certain size, have a sparsity greater than a certain percentage, or have a certain number of unique elements.</p>
+<p>For example, if you want to compare the weights of a model showing unexpected results with the weights of a model with predictable results, you can use <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> to get a list of all the weights with their metadata. Use the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter to set which weights are returned. A weight is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>.</p>
+<p>The metadata returned by the utility also offers information about the child ops the weight feeds into. The data returned by the API can then be used to customize the optimization of the model via the <code class="docutils literal notranslate"><span class="pre">ct.optimize.coreml</span></code> API.</p>
+<section id="using-the-metadata">
+<h3>Using the Metadata<a class="headerlink" href="#using-the-metadata" title="Permalink to this heading">#</a></h3>
+<p>The  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a> utility returns the weights metadata as a  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.CoreMLWeightMetaData">CoreMLWeightMetaData</a> dictionary mapping each weight’s name to its metadata. The results are useful when constructing <a class="reference external" href="https://apple.github.io/coremltools/docs-guides/source/optimizecoreml-api-overview.html#customizing-ops-to-compress"><code class="docutils literal notranslate"><span class="pre">cto.OptimizationConfig</span></code></a>.</p>
+<p>For example, with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig">OptimizationConfig</a> class you have fine-grain control over applying different optimization configurations to different weights by directly setting <code class="docutils literal notranslate"><span class="pre">op_type_configs</span></code> and <code class="docutils literal notranslate"><span class="pre">op_name_configs</span></code> or using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name"><code class="docutils literal notranslate"><span class="pre">set_op_name</span></code></a> and <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type"><code class="docutils literal notranslate"><span class="pre">set_op_type</span></code></a>. When using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name"><code class="docutils literal notranslate"><span class="pre">set_op_name</span></code></a>, you need to know the name for the <code class="docutils literal notranslate"><span class="pre">const</span></code> op that produces the weight. The  <code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code> utility provides the weight name and the corresponding weight numpy data, along with metadata information.</p>
+</section>
+<section id="example">
+<h3>Example<a class="headerlink" href="#example" title="Permalink to this heading">#</a></h3>
+<p>The following code loads the <code class="docutils literal notranslate"><span class="pre">MobileNetV2.mlpackage</span></code> converted in <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Getting Started</span></a> (from the previously trained <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/applications/mobilenet_v2">MobileNetV2</a> model, which is based on the <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/keras/applications">tensorflow.keras.applications</a>). It uses <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a>, which specifies the size threshold (<code class="docutils literal notranslate"><span class="pre">2048</span></code>) in the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">get_weights_metadata</span>
+
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;MobileNetV2.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">weight_metadata_dict</span> <span class="o">=</span> <span class="n">get_weights_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="o">=</span><span class="mi">2048</span><span class="p">)</span>
+
+<span class="c1"># iterate over all the weights returned </span>
+
+<span class="n">large_weights</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># get the weight names with size &gt; 25600</span>
+<span class="n">sparse_weights</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># get the weight names with sparsity &gt;= 50% </span>
+<span class="n">palettized_weights</span> <span class="o">=</span> <span class="p">[]</span> <span class="c1"># get the weight names with unique elements &lt;= 16 </span>
+
+<span class="k">for</span> <span class="n">weight_name</span><span class="p">,</span> <span class="n">weight_metadata</span> <span class="ow">in</span> <span class="n">weight_metadata_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+     <span class="c1"># weight_metadata.val: numpy array of the weight data</span>
+     <span class="k">if</span> <span class="n">weight_metadata</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;=</span> <span class="mi">25600</span><span class="p">:</span> <span class="n">large_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">weight_name</span><span class="p">)</span>
+
+     <span class="c1"># weight_metadata.sparsity: ratio of 0s in the weight, between [0,1]</span>
+     <span class="k">if</span> <span class="n">weight_metadata</span><span class="o">.</span><span class="n">sparsity</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span> <span class="n">sparse_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+     <span class="c1"># weight_metadata.unique_values : number of unique values in the weight</span>
+     <span class="k">if</span> <span class="n">weight_metadata</span><span class="o">.</span><span class="n">unique_values</span> <span class="o">&lt;=</span> <span class="mi">16</span><span class="p">:</span> <span class="n">palettized_weights</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+     <span class="c1"># Access to the child ops this weight feeds into.  </span>
+     <span class="n">child_op</span> <span class="o">=</span> <span class="n">weight_metadata</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+     <span class="c1"># child_op.name: name of the child op</span>
+     <span class="c1"># child_op.op_type:  op type of the child op</span>
+     <span class="c1"># child_op.params_name_mapping:  this dictionary shows the input parameters of the child op and their corresponding ops&#39; names</span>
+
+</pre></div>
+</div>
+</section>
+</section>
 </section>
 
 
@@ -551,6 +601,11 @@ document.write(`
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#rename-a-feature">Rename a Feature</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-all-double-multi-array-feature-descriptions-to-float">Convert All Double Multi-array Feature Descriptions to Float</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#evaluate-classifier-regressor-and-transformer-models">Evaluate Classifier, Regressor, and Transformer Models</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-weights-metadata">Get Weights Metadata</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-metadata">Using the Metadata</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
+</ul>
+</li>
 </ul>
   </nav></div>
 

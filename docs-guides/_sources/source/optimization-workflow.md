@@ -10,7 +10,7 @@ Core ML Tools offers two ways to incorporate model compression into your workflo
 - [_Post-training data-free compression_](optimization-workflow.md#post-training-compression). Use this faster method with a Core ML model, either created or converted from another model. You can quickly try different techniques with different configurations.
 - [_Training-time compression_](optimization-workflow.md#training-time-compression). Use this method with a PyTorch model while in training. It lets you fine-tune with data for higher accuracy.
 
-Since model compression is a lossy operation, in both cases you should evaluate the model on the validation data set and compare it with the uncompressed model to ascertain the loss in accuracy and see if that is acceptable. 
+Since model compression is a lossy operation, in both cases you should evaluate the model on the validation data set and compare it with the uncompressed model to ascertain the loss in accuracy and see if that is acceptable.
 
 ```{eval-rst}
 .. index:: 
@@ -38,6 +38,7 @@ To directly compress the Core ML model, follow these steps:
 1. Load the `.mlpackage` model in memory using the [`models.MLModel()`](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model) API in Core ML Tools.
 2. Use one of the methods available in `optimize.coreml.*` that takes the loaded model, iterates over its weights one-by-one, compresses them, and then returns an updated model with these compressed weights. For available options, see [optimize.coreml API overview](optimizecoreml-api-overview).
 3. Save the model to disk.
+
 
 ### Benefits and Drawbacks
 
@@ -103,6 +104,5 @@ The `ct.optimize.torch` APIs provide model optimization algorithms for [Pruning]
 The transformations are accomplished either by wrapping the submodules with wrapper layers (as in the case of quantization-aware training), or by installing [hooks](https://pytorch.org/tutorials/beginner/former_torchies/nnft_tutorial.html#forward-and-backward-function-hooks) on the submodules (for example, when mutating masks for parameter pruning). You can also combine these techniques.
 
 For more information about using the APIs, see [optimize.torch API overview](optimizetorch-api-overview).
-
 
 
