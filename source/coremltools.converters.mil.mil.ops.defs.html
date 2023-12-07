@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>MIL Ops &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/sg_gallery.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/sg_gallery-binder.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/sg_gallery-dataframe.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/sg_gallery-rendered-html.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/norightmargin.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -1241,35 +1243,35 @@ the predicted class label and the output dictionary of class names and values.</
 The quantized data is stored in the parameter <code class="docutils literal notranslate"><span class="pre">quantized_data</span></code>.
 The other parameters – <code class="docutils literal notranslate"><span class="pre">scale</span></code>, <code class="docutils literal notranslate"><span class="pre">zero_point</span></code>, and <code class="docutils literal notranslate"><span class="pre">axis</span></code> – describe how
 unquantized values can be extracted from it, using the equation for affine/linear quantization:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">unquantized_data</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="p">(</span><span class="n">quantized_data</span> <span class="o">-</span> <span class="n">zero_point</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">unquantized_data</span> <span class="o">=</span> <span class="n">scale</span> <span class="o">*</span> <span class="p">(</span><span class="n">quantized_data</span> <span class="o">-</span> <span class="n">zero_point</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Although all of the parameters of this op are constants, this op is not constant folded
 to a single const op at the time of model serialization. The unquantized output will
 be decompressed later, based on the implementation detail (either at model load time or runtime).</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>quantized_data: const tensor&lt;SrcT, [1..]&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>zero_point: const tensor&lt;ZeroPointT, [0..1]&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">zero_point</span></code> can be either a scalar or a vector.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">zero_point</span></code> follows similar broadcasting rules and size constraints as <code class="docutils literal notranslate"><span class="pre">scale</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>scale: const tensor&lt;DstT, [0..1]&gt; (Required)</strong></dt><dd><ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> can be either a scalar or a vector. If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is a vector,
-for implementation it is broadcast to the following shape:</p>
-<blockquote>
-<div><ul class="simple">
+<dt><strong>scale: const tensor&lt;DstT, [0..1]&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">scale</span></code> can be either a scalar or a vector.</p></li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is a vector, for implementation it is broadcast to the following shape:</dt><dd><ul>
 <li><p>The rank of <code class="docutils literal notranslate"><span class="pre">scale</span></code> becomes the same as the rank of <code class="docutils literal notranslate"><span class="pre">quantized_data</span></code>.</p></li>
 <li><p>The constraint: <code class="docutils literal notranslate"><span class="pre">size(scale-vector)</span> <span class="pre">==</span> <span class="pre">quantized_data.shape[axis]</span></code>.</p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">==</span> <span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">scale.shape[i]</span> <span class="pre">==</span> <span class="pre">quantized_data.shape[i]</span></code>.</p></li>
-<li><p>For <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">!=</span> <span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">scale.shape</span> <span class="pre">==</span> <span class="pre">1</span></code>.</p></li>
-</ul>
-</div></blockquote>
-<p>For example, assume <code class="docutils literal notranslate"><span class="pre">quantized_data.shape</span> <span class="pre">=</span> <span class="pre">(2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5)</span></code> and <code class="docutils literal notranslate"><span class="pre">axis</span> <span class="pre">=</span> <span class="pre">1</span></code>.
+<li><p>For <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">!=</span> <span class="pre">axis</span></code>, <code class="docutils literal notranslate"><span class="pre">scale.shape</span> <span class="pre">==</span> <span class="pre">1</span></code>.
+For example, assume <code class="docutils literal notranslate"><span class="pre">quantized_data.shape</span> <span class="pre">=</span> <span class="pre">(2,</span> <span class="pre">3,</span> <span class="pre">4,</span> <span class="pre">5)</span></code> and <code class="docutils literal notranslate"><span class="pre">axis</span> <span class="pre">=</span> <span class="pre">1</span></code>.
 If <code class="docutils literal notranslate"><span class="pre">scale</span></code> is a vector, then <code class="docutils literal notranslate"><span class="pre">scale.size</span></code> needs to be equal to
-<code class="docutils literal notranslate"><span class="pre">quantized_data.shape[axis]</span> <span class="pre">i.e</span> <span class="pre">=</span> <span class="pre">3</span></code>, which would be broadcast to <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">3,</span> <span class="pre">1,</span> <span class="pre">1)</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">quantized_data.shape[axis]</span> <span class="pre">i.e</span> <span class="pre">=</span> <span class="pre">3</span></code>, which would be broadcast to <code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">3,</span> <span class="pre">1,</span> <span class="pre">1)</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
 </li>
 </ul>
 </dd>
@@ -1295,7 +1297,7 @@ If <code class="docutils literal notranslate"><span class="pre">scale</span></co
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.</span></span><span class="sig-name descname"><span class="pre">constexpr_cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS16/constexpr_ops.html#constexpr_cast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast" title="Permalink to this definition"></a></dt>
 <dd><p>A compile-time operation that returns a constant output value upon casting its constant input.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Expression</span><span class="p">:</span> <span class="n">output</span> <span class="o">=</span> <span class="n">constexpr_cast</span><span class="p">(</span><span class="n">source_val</span><span class="p">,</span> <span class="n">output_dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Expression</span><span class="p">:</span> <span class="n">output</span> <span class="o">=</span> <span class="n">constexpr_cast</span><span class="p">(</span><span class="n">source_val</span><span class="p">,</span> <span class="n">output_dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="field-list simple">
@@ -1354,7 +1356,7 @@ moving upward to the most significant bit (MSB). It follows, naturally, that if 
 across two bytes, the LSBs of that index is filled over the MSBs of current byte, and the remaining
 bits of the same index are filled in the LSBs of the next byte.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">n_bits</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span> <span class="o">=&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">2</span> <span class="nb">bytes</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">if</span> <span class="n">n_bits</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span> <span class="o">=&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">2</span> <span class="nb">bytes</span>
 
             <span class="n">MSB</span>             <span class="n">LSB</span>
              <span class="o">|</span>               <span class="o">|</span>
@@ -1404,7 +1406,7 @@ field corresponds to one element in the output tensor.</p></li>
 <p>The bit fields are packed one byte at a time, starting with the least significant bit and
 moving up to the most significant bit.</p>
 <p>For example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span> <span class="o">=&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">1</span> <span class="nb">bytes</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">5</span><span class="p">,)</span> <span class="o">=&gt;</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">1</span> <span class="nb">bytes</span>
 
            <span class="n">MSB</span>                  <span class="n">LSB</span>
             <span class="o">|</span>                    <span class="o">|</span>
@@ -3584,14 +3586,14 @@ is <code class="docutils literal notranslate"><span class="pre">epsilon</span></
 the coordinates <code class="docutils literal notranslate"><span class="pre">x’</span></code> and <code class="docutils literal notranslate"><span class="pre">y’</span></code> with the following equation, and then computing the
 value at the coordinate <code class="docutils literal notranslate"><span class="pre">(x’,y’)</span></code> in the input image using either bilinear or
 nearest neighbor interpolation. If the <code class="docutils literal notranslate"><span class="pre">(x’,</span> <span class="pre">y’)</span></code> point falls outside the input
-image, then padding information is used to compute the value.</p>
+image, then padding information is used to compute the value:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>x’ = a0 * x + a1 * y + a2
 y’ = b0 * x + b1 * y + b2
 </pre></div>
 </div>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
 <li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
 </ul>
@@ -3623,8 +3625,7 @@ y’ = b0 * x + b1 * y + b2
 </dd>
 <dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
 <li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>.</p></li>
-<li><p>Note that the following example is 1D case for brevity.
-The op supports only 2D image input.</p></li>
+<li><p>Note that the following example is 1D case for brevity. The op supports only 2D image input.</p></li>
 <li><dl class="simple">
 <dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
 <li><p>The input image is assumed to be padded with the padding_value.</p></li>
@@ -3640,29 +3641,26 @@ The op supports only 2D image input.</p></li>
 <li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
 </ul>
 </dd>
-<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code></p></li>
+<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>, in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
-<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
-the in range values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. That is:</p>
-<blockquote>
-<div><ul class="simple">
+<li><dl class="simple">
+<dt>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>, the in-range values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. That is:</dt><dd><ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 </ul>
 </dd>
 <dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
 <li><p>Currently <code class="docutils literal notranslate"><span class="pre">align_corners=False</span></code> is not supported.</p></li>
 <li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">!=</span> <span class="pre">unnormalized</span></code>, ignored otherwise.</p></li>
-<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
-to the center of the first and last corner pixels.</p></li>
-<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
-to the edge of the first and last corner pixels.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond to the center of the first and last corner pixels.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond to the edge of the first and last corner pixels.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3832,9 +3830,9 @@ in the batch.</p></li>
 Resampling is required if the coordinates do not correspond to exact
 pixels in the input image. The <code class="docutils literal notranslate"><span class="pre">sampling_mode</span></code> determines
 the algorithm used for resampling and computing the values.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
 <li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
 </ul>
@@ -3899,7 +3897,7 @@ clamped to the border values.</p></li>
 <li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
 </ul>
 </dd>
-<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
+<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
 <li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;unnormalized&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
 <code class="docutils literal notranslate"><span class="pre">&quot;normalized_zero_to_one&quot;</span></code></p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;unnormalized&quot;</span></code>, the coordinates input values
@@ -3909,24 +3907,21 @@ corresponds to the in-image point.</p></li>
 the in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_zero_to_one&quot;</span></code>,
 in-image values are <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
-<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
-the in range values are [-1, 1]. That is:</p>
-<blockquote>
-<div><ul class="simple">
+<li><dl class="simple">
+<dt>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>, the in range values are [-1, 1]. That is:</dt><dd><ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 </ul>
 </dd>
 <dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
-to the center of the first and last corner pixels.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
-to the edge of the first and last corner pixels.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond to the center of the first and last corner pixels.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond to the edge of the first and last corner pixels.</p></li>
 </ul>
 </dd>
 </dl>
@@ -4427,9 +4422,9 @@ a tensor needs to be resized to a dynamic shape as specified by another tensor.<
 </div>
 </li>
 </ul>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[…], T&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>shape: tensor&lt;[K], U&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Restriction: <code class="docutils literal notranslate"><span class="pre">size(shape)</span></code> &lt;= <code class="docutils literal notranslate"><span class="pre">rank(x)</span></code>.</p></li>
@@ -4447,10 +4442,9 @@ corresponding element of <code class="docutils literal notranslate"><span class=
 </ul>
 </dd>
 <dt><strong>sampling_mode: const&lt;str&gt; (Optional, default=”DEFAULT”)</strong></dt><dd><ul class="simple">
-<li><p>Available mode: <code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code>, <code class="docutils literal notranslate"><span class="pre">STRICT_ALIGN_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">ALIGN_CORNERS</span></code>,</p></li>
+<li><p>Available mode: <code class="docutils literal notranslate"><span class="pre">DEFAULT</span></code>, <code class="docutils literal notranslate"><span class="pre">STRICT_ALIGN_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">ALIGN_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">OFFSET_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">UNALIGN_CORNERS</span></code>.</p></li>
+<li><p>For details about different sampling modes, see iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear" title="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a>.</p></li>
 </ul>
-<p><code class="docutils literal notranslate"><span class="pre">OFFSET_CORNERS</span></code>, <code class="docutils literal notranslate"><span class="pre">UNALIGN_CORNERS</span></code>.
-* For details about different sampling modes, see iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear" title="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear"><code class="xref py py-class docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a>.</p>
 </dd>
 </dl>
 </dd>
@@ -6498,14 +6492,14 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmax">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.reduction.</span></span><span class="sig-name descname"><span class="pre">reduce_argmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/reduction.html#reduce_argmax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmax" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the indices of the maximum value across dimensions of a tensor.
-In case of ties, the identity of the return value is not guaranteed.
-The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax" title="coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax"><code class="xref py py-class docutils literal notranslate"><span class="pre">reduce_argmax</span></code></a>:</p>
-<blockquote>
-<div><ul class="simple">
+In case of ties, the identity of the return value is not guaranteed.</p>
+<dl class="simple">
+<dt>The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax" title="coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax"><code class="xref py py-class docutils literal notranslate"><span class="pre">reduce_argmax</span></code></a> are:</dt><dd><ul class="simple">
 <li><p>The output supports uint16 dtype.</p></li>
 <li><p>New optional input <code class="docutils literal notranslate"><span class="pre">output_dtype</span></code>.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -6549,14 +6543,14 @@ specified in <code class="docutils literal notranslate"><span class="pre">axis</
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmin">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.reduction.</span></span><span class="sig-name descname"><span class="pre">reduce_argmin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/reduction.html#reduce_argmin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.reduction.reduce_argmin" title="Permalink to this definition"></a></dt>
 <dd><p>Computes the indices of the minimum value across dimensions of a tensor.
-In case of ties, the identity of the return value is not guaranteed.
-The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin" title="coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin"><code class="xref py py-class docutils literal notranslate"><span class="pre">reduce_argmin</span></code></a>:</p>
-<blockquote>
-<div><ul class="simple">
+In case of ties, the identity of the return value is not guaranteed.</p>
+<dl class="simple">
+<dt>The differences between this version and the iOS 15 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin" title="coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin"><code class="xref py py-class docutils literal notranslate"><span class="pre">reduce_argmin</span></code></a> are:</dt><dd><ul class="simple">
 <li><p>The output supports uint16 dtype.</p></li>
 <li><p>New optional input <code class="docutils literal notranslate"><span class="pre">output_dtype</span></code>.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -7063,16 +7057,15 @@ explicitly converted to positive values, using the following:</p>
 </pre></div>
 </div>
 </li>
-<li><p>New input parameter called <code class="docutils literal notranslate"><span class="pre">validate_indices</span></code> has been added to all gather ops.
-Its behavior is as follows:</p>
-<blockquote>
-<div><ul class="simple">
+<li><dl class="simple">
+<dt>New input parameter called <code class="docutils literal notranslate"><span class="pre">validate_indices</span></code> has been added to all gather ops. Its behavior is as follows:</dt><dd><ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception for
 out-of-bound values of the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values of <code class="docutils literal notranslate"><span class="pre">indices</span></code>
 either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 </ul>
 <dl class="field-list simple">
@@ -7092,10 +7085,11 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 </ul>
 </dd>
 <dt><strong>validate_indices: const bool (Optional)</strong></dt><dd><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values of <code class="docutils literal notranslate"><span class="pre">indices</span></code>
-either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception
+for out-of-bound values of the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values
+of <code class="docutils literal notranslate"><span class="pre">indices</span></code> either at compile or runtime. Behavior for out-of-bound indices
+is undefined but memory safe.</p></li>
 <li><p>Default value is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
@@ -7220,16 +7214,16 @@ explicitly converted to positive values using the following:</p>
 </pre></div>
 </div>
 </li>
-<li><p>New input parameter called <code class="docutils literal notranslate"><span class="pre">validate_indices</span></code> has been added to all scatter ops.
-Its behavior is as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values of <code class="docutils literal notranslate"><span class="pre">indices</span></code>
-either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</p></li>
+<li><dl class="simple">
+<dt>New input parameter called <code class="docutils literal notranslate"><span class="pre">validate_indices</span></code> has been added to all scatter ops. Its behavior is as follows:</dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception
+for out-of-bound values of the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values
+of <code class="docutils literal notranslate"><span class="pre">indices</span></code> either at compile or runtime. Behavior for out-of-bound indices
+is undefined but memory safe.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
 </ul>
 <dl class="field-list simple">
@@ -7254,10 +7248,11 @@ either at compile or runtime. Behavior for out-of-bound indices is undefined but
 </ul>
 </dd>
 <dt><strong>validate_indices: const bool (Optional)</strong></dt><dd><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values of <code class="docutils literal notranslate"><span class="pre">indices</span></code>
-either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception
+for out-of-bound values of the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values
+of <code class="docutils literal notranslate"><span class="pre">indices</span></code> either at compile or runtime. Behavior for out-of-bound indices
+is undefined but memory safe.</p></li>
 <li><p>Default value is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
@@ -7308,10 +7303,11 @@ For more information, see the iOS 15 <a class="reference internal" href="#coreml
 </ul>
 </dd>
 <dt><strong>validate_indices: const bool (Optional)</strong></dt><dd><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception for out-of-bound values of
-the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values of <code class="docutils literal notranslate"><span class="pre">indices</span></code>
-either at compile or runtime. Behavior for out-of-bound indices is undefined but memory safe.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, it raises a runtime (possibly also a compile-time) exception
+for out-of-bound values of the <code class="docutils literal notranslate"><span class="pre">indices</span></code> parameter.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">False</span></code>, absolutely no checking is performed for out-of-bound values
+of <code class="docutils literal notranslate"><span class="pre">indices</span></code> either at compile or runtime. Behavior for out-of-bound indices
+is undefined but memory safe.</p></li>
 <li><p>Default value is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 </ul>
 </dd>
@@ -8288,18 +8284,23 @@ less, the output is padded up to this number.</p></li>
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS17/tensor_operation.html#topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS17.tensor_operation.topk" title="Permalink to this definition"></a></dt>
 <dd><p>A version of <code class="docutils literal notranslate"><span class="pre">topk</span></code> for iOS 17+. The differences between this version and the
-iOS 16 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk" title="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk"><code class="xref py py-class docutils literal notranslate"><span class="pre">topk</span></code></a> are:
-- New data type support. The newly added data type is:</p>
+iOS 16 <a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk" title="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk"><code class="xref py py-class docutils literal notranslate"><span class="pre">topk</span></code></a> are:</p>
 <blockquote>
 <div><ul class="simple">
+<li><dl class="simple">
+<dt>New data type support. The newly added data types are:</dt><dd><ul>
 <li><p>int8, uint8, int16, unint16 for <code class="docutils literal notranslate"><span class="pre">x</span></code> and output.</p></li>
 <li><p>int8, int16 for <code class="docutils literal notranslate"><span class="pre">k</span></code>.</p></li>
 </ul>
-</div></blockquote>
-<ul class="simple">
-<li><p>Validation restrictions on the optional <code class="docutils literal notranslate"><span class="pre">indices</span></code> output: must be either uint16 or int32. Also
-a new input parameter <code class="docutils literal notranslate"><span class="pre">output_indices_dtype</span></code> is added to set the dtype of output <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
+</dd>
+</dl>
+</li>
+<li><p>Validation restrictions on the optional <code class="docutils literal notranslate"><span class="pre">indices</span></code> output must be either
+uint16 or int32.</p></li>
+<li><p>A new input parameter <code class="docutils literal notranslate"><span class="pre">output_indices_dtype</span></code> has been added
+to set the dtype of output <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
 </ul>
+</div></blockquote>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
