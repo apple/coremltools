@@ -98,3 +98,74 @@ input_data = [{'input_1': 1, 'input_2': 2}, {'input_1': 3, 'input_2': 3}]
 expected_output = [{'input_1': 2.5, 'input_2': 2.0}, {'input_1': 1.3, 'input_2': 2.3}]
 metrics = coremltools.utils.evaluate_transformer(scaler_spec, input_data, expected_output)
 ```
+
+
+```{eval-rst}
+.. index:: 
+    single: weight metadata
+```
+
+
+## Get Weights Metadata
+
+The  [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata) utility provides a convenient way to inspect the properties of the weights in the model. You may want to use it for debugging, or for identifying weights that are larger than a certain size, have a sparsity greater than a certain percentage, or have a certain number of unique elements. 
+
+For example, if you want to compare the weights of a model showing unexpected results with the weights of a model with predictable results, you can use `get_weights_metadata()` to get a list of all the weights with their metadata. Use the `weight_threshold` parameter to set which weights are returned. A weight is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`. 
+
+The metadata returned by the utility also offers information about the child ops the weight feeds into. The data returned by the API can then be used to customize the optimization of the model via the `ct.optimize.coreml` API -- for details, see [Customizing Ops to Compress](optimizecoreml-api-overview.md#customizing-ops-to-compress).
+
+
+### Using the Metadata 
+
+The  [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata) utility returns the weights metadata as an ordered dictionary that maps to strings in [CoreMLWeightMetaData](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.CoreMLWeightMetaData) and preserves the sequential order of the weights. The results are useful when constructing [`cto.OptimizationConfig`](https://apple.github.io/coremltools/docs-guides/source/optimizecoreml-api-overview.html#customizing-ops-to-compress).
+
+For example, with the [OptimizationConfig](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig) class you have fine-grain control over applying different optimization configurations to different weights by directly setting `op_type_configs` and `op_name_configs` or using [`set_op_name`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name) and [`set_op_type`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type). When using [`set_op_name`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name), you need to know the name for the `const` op that produces the weight. The  `get_weights_metadata()` utility provides the weight name and the corresponding weight numpy data, along with metadata information. 
+
+
+### Example
+
+The following code loads the `SegmentationModel_with_metadata.mlpackage` saved in [Converting a PyTorch Segmentation Model](pytorch-conversion-examples.md#open-the-model-in-xcode). It uses [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata), which specifies the size threshold (`2048`) in the `weight_threshold` parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`.
+
+The example also shows how to get the name of the last weight in the model. The code palettizes all ops except the last weight, which is a common practical scenario when the last layer is more sensitive and should be skipped from quantization:
+
+```python
+import coremltools.optimize.coreml as cto
+
+from coremltools.models import MLModel
+from coremltools.optimize.coreml import get_weights_metadata
+
+mlmodel = MLModel("SegmentationModel_with_metadata.mlpackage")
+weight_metadata_dict = get_weights_metadata(mlmodel, weight_threshold=2048)
+
+# iterate over all the weights returned 
+
+large_weights = [] # get the weight names with size > 25600
+sparse_weights = [] # get the weight names with sparsity >= 50% 
+palettized_weights = [] # get the weight names with unique elements <= 16 
+
+for weight_name, weight_metadata in weight_metadata_dict.items():
+     # weight_metadata.val: numpy array of the weight data
+     if weight_metadata.val.size >= 25600: large_weights.append(weight_name)
+
+     # weight_metadata.sparsity: ratio of 0s in the weight, between [0,1]
+     if weight_metadata.sparsity >= 0.5: sparse_weights.append(weight_name)
+
+     # weight_metadata.unique_values : number of unique values in the weight
+     if weight_metadata.unique_values <= 16: palettized_weights.append(weight_name)
+
+     # Access to the child ops this weight feeds into.  
+     child_op = weight_metadata.child_ops[0]
+     # child_op.name: name of the child op
+     # child_op.op_type:  op type of the child op
+     # child_op.params_name_mapping:  this dictionary shows the input parameters of the child op and their corresponding ops' names
+
+# Palettize all weights except for the last weight
+last_weight_name = list(weight_metadata_dict.keys())[-1]
+global_config = cto.OpPalettizerConfig(nbits=6, mode="kmeans")
+config = cto.OptimizationConfig(
+    global_config=global_config,
+    op_name_configs={last_weight_name: None},
+)
+compressed_mlmodel = cto.palettize_weights(mlmodel, config)
+
+```

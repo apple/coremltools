@@ -593,7 +593,7 @@ document.write(`
 
 <span class="n">conc_func</span> <span class="o">=</span> <span class="n">gelu_tanh_activation</span><span class="o">.</span><span class="n">get_concrete_function</span><span class="p">()</span>
 
-<span class="c1"># provide the concrete fucntion as a list</span>
+<span class="c1"># provide the concrete function as a list</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">([</span><span class="n">conc_func</span><span class="p">],</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
