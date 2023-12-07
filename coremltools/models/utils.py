@@ -1011,7 +1011,9 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
     Parameters
     ----------
     model: Model_pb2
-        Spec/protobuf to compile
+        Spec/protobuf to compile.
+
+        Note: an mlprogam which uses a blob file is not supported.
 
     destination_path: str
         Path where the compiled model will be saved.
@@ -1064,13 +1066,13 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
 
     # Check model parameter
     if isinstance(model, str):
-        raise Exception("To get a compiled model from a saved MLModel, first load the model, "
+        raise TypeError("To get a compiled model from a saved MLModel, first load the model, "
                         " then call \"get_compiled_model_path\".")
     if isinstance(model, _ct.models.MLModel):
-        raise Exception("This model has already been compiled. Call \"get_compiled_model_path\""
+        raise TypeError("This model has already been compiled. Call \"get_compiled_model_path\""
                         " to get the compiled model.")
     if not isinstance(model, _Model_pb2.Model):
-        raise Exception("Unrecognized input for \"model\" parameter. It should be a spec.")
+        raise TypeError("Unrecognized input for \"model\" parameter. It should be a spec.")
 
     # Check file extension of destination_path parameter
     if destination_path is not None and not destination_path.rstrip('/').endswith(".mlmodelc"):

@@ -58,7 +58,7 @@ class TestCompiledModel:
             file_path = save_dir + '/m.mlmodel'
             MLModel(self.spec).save(file_path)
 
-            with pytest.raises(Exception, match=", first load the model, ") as e:
+            with pytest.raises(TypeError, match=", first load the model, "):
                 compiled_model_path = compile_model(file_path)
 
 
@@ -69,7 +69,7 @@ class TestCompiledModel:
 
     def test_mlmodel_input(self):
         ml_model = MLModel(self.spec)
-        with pytest.raises(Exception, match=" model has already been compiled.") as e:
+        with pytest.raises(TypeError, match=" model has already been compiled."):
             compiled_model_path = compile_model(ml_model)
 
 
@@ -103,9 +103,8 @@ class TestCompiledModel:
         # Check bad input
         with TemporaryDirectory() as temp_dir:
             dst_path = temp_dir + "/foo.badFileExtension"
-            with pytest.raises(Exception) as e:
+            with pytest.raises(Exception, match=" file extension."):
                 compiled_model_path = compile_model(self.spec, dst_path)
-            assert " file extension." in str(e.value)
 
 
     def test_save_load_spec(self):
