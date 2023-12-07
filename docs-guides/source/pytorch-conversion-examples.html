@@ -422,13 +422,14 @@ document.write(`
                   
   <section id="converting-a-pytorch-segmentation-model">
 <span id="index-0"></span><h1>Converting a PyTorch Segmentation Model<a class="headerlink" href="#converting-a-pytorch-segmentation-model" title="Permalink to this heading">#</a></h1>
-<p>This example demonstrates how to convert a PyTorch <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/">segmentation model</a> to a Core ML neural network. The model takes an image and outputs a class prediction for each pixel of the image.</p>
+<p>This example demonstrates how to convert a PyTorch <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/">segmentation model</a> to a Core ML model (<a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML program</span></a>). The model takes an image and outputs a class prediction for each pixel of the image.</p>
 <section id="install-the-required-software">
 <h2>Install the Required Software<a class="headerlink" href="#install-the-required-software" title="Permalink to this heading">#</a></h2>
-<p>Install the following:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.6.0
-pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.7.0
-pip<span class="w"> </span>install<span class="w"> </span>coremltools
+<p>To run this example, first install the newest version of Core ML Tools (see <a class="reference internal" href="installing-coremltools.html"><span class="doc std std-doc">Installing Core ML Tools</span></a>).</p>
+<p>To run this example, first install the newest version of Core ML Tools (see <a class="reference internal" href="installing-coremltools.html"><span class="doc std std-doc">Installing Core ML Tools</span></a>).</p>
+<p>You also need PyTorch and Torchvision. Use the following commands:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+pip<span class="w"> </span>install<span class="w"> </span>torchvision
 </pre></div>
 </div>
 </section>
@@ -477,11 +478,11 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <ol class="arabic">
 <li><p>Apply normalization to the image using the <a class="reference external" href="http://host.robots.ox.ac.uk/pascal/VOC/">PASCAL VOC</a> mean and standard deviation values, which were applied to the model’s training data. The following converts the image to a form that works with the segmentation model for testing the model’s output.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">preprocess</span> <span class="o">=</span> <span class="n">transforms</span><span class="o">.</span><span class="n">Compose</span><span class="p">([</span>
-	<span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
-	<span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span>
-		<span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span>
-		<span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">],</span>
-	<span class="p">),</span>
+    <span class="n">transforms</span><span class="o">.</span><span class="n">ToTensor</span><span class="p">(),</span>
+    <span class="n">transforms</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span>
+        <span class="n">mean</span><span class="o">=</span><span class="p">[</span><span class="mf">0.485</span><span class="p">,</span> <span class="mf">0.456</span><span class="p">,</span> <span class="mf">0.406</span><span class="p">],</span>
+        <span class="n">std</span><span class="o">=</span><span class="p">[</span><span class="mf">0.229</span><span class="p">,</span> <span class="mf">0.224</span><span class="p">,</span> <span class="mf">0.225</span><span class="p">],</span>
+    <span class="p">),</span>
 <span class="p">])</span>
 
 <span class="n">input_tensor</span> <span class="o">=</span> <span class="n">preprocess</span><span class="p">(</span><span class="n">input_image</span><span class="p">)</span>
@@ -491,31 +492,31 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 </li>
 <li><p>Get predictions from the model. Running the normalized image through the model will compute a score for each object class per pixel, and the class will be assigned with a maximum score for each pixel.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
-	<span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)[</span><span class="s1">&#39;out&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">input_batch</span><span class="p">)[</span><span class="s1">&#39;out&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 <span class="n">torch_predictions</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
 <li><p>Plot the predictions, overlaid with the original image:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">output_predictions</span><span class="p">):</span>
-	<span class="c1"># Create a color palette, selecting a color for each class</span>
-	<span class="n">palette</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">25</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">21</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
-	<span class="n">colors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">palette</span>
-	<span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">colors</span> <span class="o">%</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+    <span class="c1"># Create a color palette, selecting a color for each class</span>
+    <span class="n">palette</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">25</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">21</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">palette</span>
+    <span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">colors</span> <span class="o">%</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
 
-	<span class="c1"># Plot the semantic segmentation predictions of 21 classes in each color</span>
-	<span class="n">r</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span>
-		<span class="n">output_predictions</span><span class="o">.</span><span class="n">byte</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-	<span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">input_image</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
-	<span class="n">r</span><span class="o">.</span><span class="n">putpalette</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
+    <span class="c1"># Plot the semantic segmentation predictions of 21 classes in each color</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">fromarray</span><span class="p">(</span>
+        <span class="n">output_predictions</span><span class="o">.</span><span class="n">byte</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="n">input_image</span><span class="o">.</span><span class="n">size</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">putpalette</span><span class="p">(</span><span class="n">colors</span><span class="p">)</span>
 
-	<span class="c1"># Overlay the segmentation mask on the original image</span>
-	<span class="n">alpha_image</span> <span class="o">=</span> <span class="n">input_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-	<span class="n">alpha_image</span><span class="o">.</span><span class="n">putalpha</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
-	<span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGBA&quot;</span><span class="p">)</span>
-	<span class="n">r</span><span class="o">.</span><span class="n">putalpha</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
-	<span class="n">seg_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">alpha_composite</span><span class="p">(</span><span class="n">alpha_image</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
-	<span class="n">seg_image</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="c1"># Overlay the segmentation mask on the original image</span>
+    <span class="n">alpha_image</span> <span class="o">=</span> <span class="n">input_image</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">alpha_image</span><span class="o">.</span><span class="n">putalpha</span><span class="p">(</span><span class="mi">255</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;RGBA&quot;</span><span class="p">)</span>
+    <span class="n">r</span><span class="o">.</span><span class="n">putalpha</span><span class="p">(</span><span class="mi">128</span><span class="p">)</span>
+    <span class="n">seg_image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">alpha_composite</span><span class="p">(</span><span class="n">alpha_image</span><span class="p">,</span> <span class="n">r</span><span class="p">)</span>
+    <span class="n">seg_image</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
 <span class="n">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">torch_predictions</span><span class="p">)</span>
 </pre></div>
@@ -561,10 +562,10 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <h2>Convert the Model<a class="headerlink" href="#convert-the-model" title="Permalink to this heading">#</a></h2>
 <p>Follow these steps:</p>
 <ol class="arabic">
-<li><p>Pass in the traced model to <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> to produce a neural network model, and include the inputs to provide to the model:</p>
+<li><p>Pass in the traced model to <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> to produce a Core ML model (ML program), and include the inputs to provide to the model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
-	<span class="n">trace</span><span class="p">,</span>
-	<span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
+    <span class="n">trace</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
 <span class="p">)</span>
 </pre></div>
 </div>
@@ -573,8 +574,8 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <p>This example includes a name for the output to make it easier to extract from the Core ML model’s prediction dictionary. To learn more about input options, see <a class="reference internal" href="flexible-inputs.html"><span class="doc std std-doc">Flexible Input Shapes</span></a>.</p>
 </div>
 </li>
-<li><p>Save the neural network model with the <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> extension:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlmodel&quot;</span><span class="p">)</span>
+<li><p>Save the ML program using the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -591,22 +592,22 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <li><p>Save the model.</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="n">labels_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;aeroplane&quot;</span><span class="p">,</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;board&quot;</span><span class="p">,</span> <span class="s2">&quot;bottle&quot;</span><span class="p">,</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;chair&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;diningTable&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;horse&quot;</span><span class="p">,</span> <span class="s2">&quot;motorbike&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;pottedPlant&quot;</span><span class="p">,</span> <span class="s2">&quot;sheep&quot;</span><span class="p">,</span> <span class="s2">&quot;sofa&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;tvOrMonitor&quot;</span><span class="p">]}</span>
 
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;imageSegmenter&quot;</span>
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s1">&#39;com.apple.coreml.model.preview.params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">labels_json</span><span class="p">)</span>
 
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
 <section id="open-the-model-in-xcode">
 <span id="index-2"></span><h2>Open the Model in Xcode<a class="headerlink" href="#open-the-model-in-xcode" title="Permalink to this heading">#</a></h2>
-<p>Double-click the saved <code class="docutils literal notranslate"><span class="pre">SegmentationModel_with_metadata.mlmodel</span></code> file in the Mac Finder to launch Xcode and open the model information pane:</p>
+<p>Double-click the saved <code class="docutils literal notranslate"><span class="pre">SegmentationModel_with_metadata.mlpackage</span></code> file in the Mac Finder to launch Xcode and open the model information pane:</p>
 <p><img alt="Model information pane" src="../_images/xcode-segment-metadata3.png" /></p>
-<p>The sample model offers tabs for <strong>Metadata</strong>, <strong>Preview</strong>, <strong>Predictions</strong>, and <strong>Utilities</strong>. Click the <strong>Predictions</strong> tab to see the model’s input and output:</p>
+<p>Click the <strong>Predictions</strong> tab to see the model’s input and output:</p>
 <p><img alt="Model input and output" src="../_images/xcode-segment-predictions.png" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -634,9 +635,8 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <h2>Example Code<a class="headerlink" href="#example-code" title="Permalink to this heading">#</a></h2>
 <p>The following is the full code for the segmentation model conversion.</p>
 <p>Requirements:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torch</span><span class="o">==</span><span class="m">1</span>.6.0
-pip<span class="w"> </span>install<span class="w"> </span><span class="nv">torchvision</span><span class="o">==</span><span class="m">0</span>.7.0
-pip<span class="w"> </span>install<span class="w"> </span>coremltools
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+pip<span class="w"> </span>install<span class="w"> </span>torchvision
 </pre></div>
 </div>
 <p>Python code:</p>
@@ -677,7 +677,7 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <span class="n">torch_predictions</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">display_segmentation</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">output_predictions</span><span class="p">):</span>
-    <span class="c1"># Create a color palette, selecting a color for each class</span>
+    <span class="c1"># Create a color pallette, selecting a color for each class</span>
     <span class="n">palette</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span> <span class="o">**</span> <span class="mi">25</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">15</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span> <span class="o">**</span> <span class="mi">21</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
     <span class="n">colors</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">as_tensor</span><span class="p">([</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">21</span><span class="p">)])[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">palette</span>
     <span class="n">colors</span> <span class="o">=</span> <span class="p">(</span><span class="n">colors</span> <span class="o">%</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
@@ -721,11 +721,11 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">input_batch</span><span class="o">.</span><span class="n">shape</span><span class="p">)],</span>
 <span class="p">)</span>
 
-<span class="c1"># Save the model without new metadata</span>
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="c1"># Save the ML Program model without new metadata</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="c1"># Load the saved model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="c1"># Add new metadata for preview in Xcode</span>
 <span class="n">labels_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;aeroplane&quot;</span><span class="p">,</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;board&quot;</span><span class="p">,</span> <span class="s2">&quot;bottle&quot;</span><span class="p">,</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;chair&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;diningTable&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;horse&quot;</span><span class="p">,</span> <span class="s2">&quot;motorbike&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;pottedPlant&quot;</span><span class="p">,</span> <span class="s2">&quot;sheep&quot;</span><span class="p">,</span> <span class="s2">&quot;sofa&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;tvOrMonitor&quot;</span><span class="p">]}</span>
@@ -733,7 +733,8 @@ pip<span class="w"> </span>install<span class="w"> </span>coremltools
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;imageSegmenter&quot;</span>
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s1">&#39;com.apple.coreml.model.preview.params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">labels_json</span><span class="p">)</span>
 
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlpackage&quot;</span><span class="p">)</span>
+
 </pre></div>
 </div>
 </section>

@@ -124,7 +124,7 @@ For example, with the [OptimizationConfig](https://apple.github.io/coremltools/s
 
 ### Example
 
-The following code loads the `MobileNetV2.mlpackage` converted in [Getting Started](introductory-quickstart) (from the previously trained [MobileNetV2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/mobilenet_v2) model, which is based on the [tensorflow.keras.applications](https://www.tensorflow.org/api_docs/python/tf/keras/applications)). It uses [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata), which specifies the size threshold (`2048`) in the `weight_threshold` parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`.
+The following code loads the `SegmentationModel_with_metadata.mlpackage` saved in [Converting a PyTorch Segmentation Model](pytorch-conversion-examples.md#open-the-model-in-xcode). It uses [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata), which specifies the size threshold (`2048`) in the `weight_threshold` parameter. A weight tensor is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`.
 
 The example also shows how to get the name of the last weight in the model. The code palettizes all ops except the last weight, which is a common practical scenario when the last layer is more sensitive and should be skipped from quantization:
 
@@ -134,7 +134,7 @@ import coremltools.optimize.coreml as cto
 from coremltools.models import MLModel
 from coremltools.optimize.coreml import get_weights_metadata
 
-mlmodel = MLModel("MobileNetV2.mlpackage")
+mlmodel = MLModel("SegmentationModel_with_metadata.mlpackage")
 weight_metadata_dict = get_weights_metadata(mlmodel, weight_threshold=2048)
 
 # iterate over all the weights returned 
@@ -148,10 +148,10 @@ for weight_name, weight_metadata in weight_metadata_dict.items():
      if weight_metadata.val.size >= 25600: large_weights.append(weight_name)
 
      # weight_metadata.sparsity: ratio of 0s in the weight, between [0,1]
-     if weight_metadata.sparsity >= 0.5: sparse_weights.append(k)
+     if weight_metadata.sparsity >= 0.5: sparse_weights.append(weight_name)
 
      # weight_metadata.unique_values : number of unique values in the weight
-     if weight_metadata.unique_values <= 16: palettized_weights.append(k)
+     if weight_metadata.unique_values <= 16: palettized_weights.append(weight_name)
 
      # Access to the child ops this weight feeds into.  
      child_op = weight_metadata.child_ops[0]
