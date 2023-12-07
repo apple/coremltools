@@ -1,17 +1,19 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/sg_gallery.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/sg_gallery-binder.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/sg_gallery-dataframe.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/sg_gallery-rendered-html.css" type="text/css" />
-      <link rel="stylesheet" href="../../../../../../../_static/css/norightmargin.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -427,55 +429,60 @@
 <span class="sd">    This is a non-algebraic translation which assumes that the upcasting doesn&#39;t change the user&#39;s intent.</span>
 
 <span class="sd">    (1) Example for redundant ``cast`` op removal:</span>
-<span class="sd">        .. code-block::</span>
+<span class="sd">         .. sourcecode:: python</span>
 
 <span class="sd">            Input graph:</span>
 <span class="sd">            input(fp16) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; relu -&gt; out</span>
-
+<span class="sd">            </span>
 <span class="sd">            Output graph:</span>
 <span class="sd">            input -&gt; relu -&gt; out</span>
 
-<span class="sd">        The input and output tensors for the ``cast`` op are both with type of ``fp16``. Hence, it can be removed.</span>
+<span class="sd">         The input and output tensors for the ``cast`` op are both with type of ``fp16``.</span>
+<span class="sd">         Hence, it can be removed.</span>
 
 <span class="sd">    (2) Example for two ``cast`` ops fusion:</span>
-<span class="sd">        .. code-block::</span>
+<span class="sd">         .. sourcecode:: python</span>
 
 <span class="sd">            Input graph:</span>
 <span class="sd">            input(int8) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; cast(dtype=&quot;fp32&quot;) -&gt; out</span>
-
+<span class="sd">            </span>
 <span class="sd">            Output graph:</span>
 <span class="sd">            input(int8) -&gt; cast(dtype=&quot;fp32&quot;) -&gt; out</span>
 
-<span class="sd">        The data range and resolution of the above graph are limited by the int8 input, so the fusion is allowed.</span>
+<span class="sd">         The data range and resolution of the above graph are limited by the int8 input,</span>
+<span class="sd">         so the fusion is allowed.</span>
 
 <span class="sd">    (3) Negative example for two ``cast`` ops fusion:</span>
-<span class="sd">        .. code-block::</span>
+<span class="sd">         .. sourcecode:: python</span>
+
 <span class="sd">            Input graph:</span>
 <span class="sd">            input(fp32) -&gt; cast(dtype=&quot;bool&quot;) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; out</span>
-
+<span class="sd">            </span>
 <span class="sd">            Output graph:</span>
 <span class="sd">            Same as input graph.</span>
 
-<span class="sd">        The above two ``cast`` ops cannot be merged, since after the first cast, the resolution of the numerical output</span>
-<span class="sd">        is downcasted to binary (``0, 1``). If we fuse them, the output would be in the range and resolution of ``fp16`` instead.</span>
+<span class="sd">         The above two ``cast`` ops cannot be merged, since after the first cast,</span>
+<span class="sd">         the resolution of the numerical output is downcasted to binary (``0, 1``).</span>
+<span class="sd">         If we fuse them, the output would be in the range and resolution of ``fp16`` instead.</span>
 
-<span class="sd">    (3) Another Negative example for two ``cast`` ops fusion:</span>
-<span class="sd">        .. code-block::</span>
+<span class="sd">    (4) Another Negative example for two ``cast`` ops fusion:</span>
+<span class="sd">         .. sourcecode:: python</span>
+
 <span class="sd">            Input graph:</span>
 <span class="sd">            input(int32) -&gt; cast(dtype=&quot;int8&quot;) -&gt; cast(dtype=&quot;uint8&quot;) -&gt; out</span>
-
+<span class="sd">            </span>
 <span class="sd">            Output graph:</span>
 <span class="sd">            Same as input graph.</span>
 
-<span class="sd">        The above two ``cast`` ops cannot be merged, since in the original graph, by going through two casts,</span>
-<span class="sd">        the output numerical range is capped to ``[0, 127]``.</span>
-
-<span class="sd">        However, if two ``cast`` ops are reduced to 1 ``cast(dtype=&quot;uint8&quot;)``, the output numerical would in the range of ``[0, 255]``.</span>
-<span class="sd">        The fusion would cause numerical issue for the numbers between ``[128, 255]``, which is prohibited.</span>
+<span class="sd">         The above two ``cast`` ops cannot be merged, since in the original graph,</span>
+<span class="sd">         by going through two casts, the output numerical range is capped to ``[0, 127]``.</span>
+<span class="sd">         However, if two ``cast`` ops are reduced to 1 ``cast(dtype=&quot;uint8&quot;)``, the output</span>
+<span class="sd">         numerical would in the range of ``[0, 255]``. The fusion would cause numerical</span>
+<span class="sd">         issue for the numbers between ``[128, 255]``, which is prohibited.</span>
 
 <span class="sd">    In general, two ``cast`` ops can be merged if the output data range and resolution is not affected.</span>
 
-<span class="sd">    For more examples, please see the unittests start with prefix &quot;TestCastOptimization&quot; in test_passes.py</span>
+<span class="sd">    For more examples, please see the unittests that start with prefix ``TestCastOptimization`` in ``test_passes.py``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
