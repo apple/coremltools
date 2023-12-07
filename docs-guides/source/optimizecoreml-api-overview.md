@@ -63,9 +63,11 @@ For details of key parameters to be set in each of the configs, see [Post-Traini
 
 ## Customizing Ops to Compress
 
-Using the `global_config` flag in the [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig) class applies the same config to all the ops with weights in the model. More granular control can be achieved by using the `op_type_configs` and `op_name_configs` flags of `OptimizationConfig`. 
+Using the `global_config` flag in the [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig) class applies the same config to all the ops with weights in the model. 
 
-The following example shows 6-bit palettization applied to all ops, with the exception that all the `linear` ops are set to 8 bits, and two of the `conv` ops called `conv_1` and `conv_4` are omitted from palettization.  
+More granular control can be achieved by using the `op_type_configs` and `op_name_configs` flags of `OptimizationConfig`. In order to get the names of the ops to customize, see the [`get_weights_metadata()`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.get_weights_metadata) utility, which provides detailed information about all the weights in the network, along with the ops each weight feeds into.
+
+The following example shows 6-bit palettization applied to all ops, with the exception that all the `linear` ops are set to 8 bits, and two of the `conv` ops (named `conv1` and `conv3`) are omitted from palettization.  
 
 ```python
 import coremltools.optimize.coreml as cto
