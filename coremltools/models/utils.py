@@ -131,7 +131,7 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
 
     weights_dir: str
         Path to the directory containing the weights.bin file. This is required
-        when the spec if of model type mlprogram. If the mlprogram does not contain
+        when the spec has model type mlprogram. If the mlprogram does not contain
         any weights, this path can be an empty directory.
 
     Examples
@@ -1004,24 +1004,53 @@ def convert_double_to_float_multiarray_type(spec):
             convert_double_to_float_multiarray_type(model_spec)
 
 
-def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) -> str:
+def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None) -> str:
     """
-    Compiles a Core ML model.
+    Compiles a Core ML model spec.
 
     Parameters
     ----------
-    model: str, Model_pb2 or MLModel
+    model: Model_pb2
+        Spec/protobuf to compile.
 
-        str : Path to model to compile
+        Note: an mlprogam which uses a blob file is not supported.
 
-        Model_pb2 : Spec to model to compile
-
-        MLModel : Instantiated Core ML model to compile
+    destination_path: str
+        Path where the compiled model will be saved.
 
     Returns
     -------
 
     str : Path to compiled model directory
+        If the destination_path is specified, that is the value that will be returned.
+
+    Examples
+    --------
+    .. sourcecode:: python
+        from coremltools.models import CompiledMLModel
+        from coremltools.models.utils import compile_model
+        from coremltools.proto import Model_pb2
+
+        spec = Model_pb2.Model()
+        spec.specificationVersion = 1
+
+        input_ = spec.description.input.add()
+        input_.name = 'x'
+        input_.type.doubleType.MergeFromString(b"")
+
+        output_ = spec.description.output.add()
+        output_.name = 'y'
+        output_.type.doubleType.MergeFromString(b"")
+        spec.description.predictedFeatureName = 'y'
+
+        lr = spec.glmRegressor
+        lr.offset.append(0.1)
+        weights = lr.weights.add()
+        weights.value.append(2.0)
+
+        compiled_model_path = compile_model(spec)
+        model = CompiledMLModel(compiled_model_path)
+        y = model.predict({'x': 2})
 
     See Also
     --------
@@ -1035,25 +1064,31 @@ def compile_model(model: _Union['_ct.models.MLModel', str, _Model_pb2.Model]) ->
     except:
         raise Exception("Unable to compile any Core ML models.")
 
-    # Check parameter
-    if not isinstance(model, (str, _Model_pb2.Model, _ct.models.MLModel)):
-        raise Exception("Compiling a Core ML models is only support on macOS 10.13 or higher.")
+    # Check model parameter
+    if isinstance(model, str):
+        raise TypeError("To get a compiled model from a saved MLModel, first load the model, "
+                        " then call \"get_compiled_model_path\".")
+    if isinstance(model, _ct.models.MLModel):
+        raise TypeError("This model has already been compiled. Call \"get_compiled_model_path\""
+                        " to get the compiled model.")
+    if not isinstance(model, _Model_pb2.Model):
+        raise TypeError("Unrecognized input for \"model\" parameter. It should be a spec.")
+
+    # Check file extension of destination_path parameter
+    if destination_path is not None and not destination_path.rstrip('/').endswith(".mlmodelc"):
+        raise Exception("\"destination_path\" parameter must have \".mlmodelc\" file extension.")
 
     # Compile model
-    if isinstance(model, (_Model_pb2.Model, _ct.models.MLModel)):
-        if isinstance(model, _ct.models.MLModel):
-            spec = model.get_spec()
-        else:
-            spec = model
+    with _tempfile.TemporaryDirectory() as save_dir:
+        spec_file_path = save_dir + '/spec.mlmodel'
+        save_spec(model, spec_file_path)
+        original_compiled_model_path =  _MLModelProxy.compileModel(spec_file_path)
 
-        with _tempfile.TemporaryDirectory() as save_dir:
-            spec_file_path = save_dir + '/spec.mlmodel'
-            save_spec(spec, spec_file_path)
-            return _MLModelProxy.compileModel(spec_file_path)
-    else:
-        assert isinstance(model, str)
-        model = _os.path.expanduser(model)
-        return _MLModelProxy.compileModel(model)
+    # Move the compiled model if needed
+    if destination_path is None:
+        return original_compiled_model_path
+    _shutil.move(original_compiled_model_path, destination_path)
+    return destination_path
 
 
 def make_pipeline(

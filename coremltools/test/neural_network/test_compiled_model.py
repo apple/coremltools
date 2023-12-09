@@ -6,9 +6,11 @@
 from shutil import copytree, rmtree
 from tempfile import TemporaryDirectory
 
+import pytest
+
 from coremltools import ComputeUnit
 from coremltools.models import CompiledMLModel, MLModel
-from coremltools.models.utils import compile_model, save_spec
+from coremltools.models.utils import compile_model, load_spec, save_spec
 from coremltools.proto import Model_pb2
 
 
@@ -51,12 +53,13 @@ class TestCompiledModel:
             rmtree(compiled_model_path)
 
 
-    def test_file_input(self):
+    def test_mlmodel_file_input(self):
         with TemporaryDirectory() as save_dir:
-            spec_file_path = save_dir + '/spec.mlmodel'
-            save_spec(self.spec, spec_file_path)
-            compiled_model_path = compile_model(spec_file_path)
-            self._test_compile_model_path(compiled_model_path)
+            file_path = save_dir + '/m.mlmodel'
+            MLModel(self.spec).save(file_path)
+
+            with pytest.raises(TypeError, match=", first load the model, "):
+                compiled_model_path = compile_model(file_path)
 
 
     def test_spec_input(self):
@@ -66,8 +69,8 @@ class TestCompiledModel:
 
     def test_mlmodel_input(self):
         ml_model = MLModel(self.spec)
-        compiled_model_path = compile_model(ml_model)
-        self._test_compile_model_path(compiled_model_path)
+        with pytest.raises(TypeError, match=" model has already been compiled."):
+            compiled_model_path = compile_model(ml_model)
 
 
     def test_from_existing_mlmodel(self):
@@ -88,3 +91,26 @@ class TestCompiledModel:
         for cur_compute_unit in non_default_compute_units:
             compiled_model_path = compile_model(self.spec)
             self._test_compile_model_path(compiled_model_path, compute_units=cur_compute_unit)
+
+
+    def test_destination_path_parameter(self):
+        # Check correct usage
+        with TemporaryDirectory() as temp_dir:
+            dst_path = temp_dir + "/foo.mlmodelc"
+            compiled_model_path = compile_model(self.spec, dst_path)
+            self._test_compile_model_path(compiled_model_path)
+
+        # Check bad input
+        with TemporaryDirectory() as temp_dir:
+            dst_path = temp_dir + "/foo.badFileExtension"
+            with pytest.raises(Exception, match=" file extension."):
+                compiled_model_path = compile_model(self.spec, dst_path)
+
+
+    def test_save_load_spec(self):
+        with TemporaryDirectory() as save_dir:
+            file_path = save_dir + '/spec.mlmodel'
+            save_spec(self.spec, file_path)
+            my_spec = load_spec(file_path)
+            compiled_model_path = compile_model(my_spec)
+        self._test_compile_model_path(compiled_model_path)
