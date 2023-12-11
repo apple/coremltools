@@ -13,8 +13,10 @@ if not (_HAS_EXECUTORCH and _HAS_TORCH_VISION):
 import torch
 import torchvision
 import torchaudio
+import torchsr
 
 import timm
+import transformers
 
 from .testing_utils import TorchBaseTest, TorchFrontend
 
@@ -92,6 +94,139 @@ class TestExecutorch(TorchBaseTest):
             backend=("mlprogram", "fp16"),
         )
 
+    def test_softmax(self):
+        class LinearModule(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.softmax = torch.nn.Softmax()
+
+            def forward(self, x):
+                z = self.softmax(x)
+                return z
+
+        model = LinearModule()
+        model.eval()
+
+        self.run_compare_torch(
+            [(2, 2)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+        )
+
+    @pytest.mark.xfail(reason="numerical error")
+    def test_deeplab_v3(self):
+        model = torchvision.models.segmentation.deeplabv3_resnet50(
+            weights=torchvision.models.segmentation.deeplabv3.DeepLabV3_ResNet50_Weights.DEFAULT
+        )
+        model.eval()
+
+        self.run_compare_torch(
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+        )
+
+    def test_edsr(self):
+        model = torchsr.models.edsr_r16f64(2, True)
+        model.eval()
+
+        self.run_compare_torch(
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+        )
+
+    def test_emformer_transcribe(self):
+        class EmformerRnntTranscriberExample(torch.nn.Module):
+            """
+            This is a wrapper for validating transcriber for the Emformer RNN-T architecture.
+            It does not reflect the actual usage such as beam search, but rather an example for the export workflow.
+            """
+
+            def __init__(self) -> None:
+                super().__init__()
+                bundle = torchaudio.pipelines.EMFORMER_RNNT_BASE_LIBRISPEECH
+                decoder = bundle.get_decoder()
+                self.rnnt = decoder.model
+
+            def forward(self, sources, source_lengths):
+                return self.rnnt.transcribe(sources, source_lengths)
+
+        model = EmformerRnntTranscriberExample()
+        model.eval()
+
+        self.run_compare_torch(
+            [(1, 128, 80), (128,)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+        )
+
+    def test_emformer_predict(self):
+        class EmformerRnntPredictorExample(torch.nn.Module):
+            """
+            This is a wrapper for validating predictor for the Emformer RNN-T architecture.
+            It does not reflect the actual usage such as beam search, but rather an example for the export workflow.
+            """
+
+            def __init__(self) -> None:
+                super().__init__()
+                bundle = torchaudio.pipelines.EMFORMER_RNNT_BASE_LIBRISPEECH
+                decoder = bundle.get_decoder()
+                self.rnnt = decoder.model
+
+            def forward(self, targets, target_lengths):
+                return self.rnnt.predict(targets, target_lengths, None)
+
+        model = EmformerRnntPredictorExample()
+        model.eval()
+
+        self.run_compare_torch(
+            [torch.zeros([1, 128], dtype=int), torch.tensor([128], dtype=int)],
+            model,
+            input_as_shape=False,
+            frontend=TorchFrontend.EDGEIR,
+            backend=("mlprogram", "fp16"),
+        )
+
+    @pytest.mark.xfail(reason="numerical error")
+    def test_emformer_join(self):
+        class EmformerRnntJoinerExample(torch.nn.Module):
+            """
+            This is a wrapper for validating joiner for the Emformer RNN-T architecture.
+            It does not reflect the actual usage such as beam search, but rather an example for the export workflow.
+            """
+
+            def __init__(self) -> None:
+                super().__init__()
+                bundle = torchaudio.pipelines.EMFORMER_RNNT_BASE_LIBRISPEECH
+                decoder = bundle.get_decoder()
+                self.rnnt = decoder.model
+
+            def forward(self, source_encodings, source_lengths, target_encodings, target_lengths):
+                return self.rnnt.join(source_encodings, source_lengths, target_encodings, target_lengths)
+
+        model = EmformerRnntJoinerExample()
+        model.eval()
+
+        self.run_compare_torch(
+            [(1, 128, 1024), (128,), (1, 128, 1024), (128,)],
+            model,
+            frontend=TorchFrontend.EDGEIR,
+            backend=("mlprogram", "fp16"),
+        )
+
+    # TODO: add llama2
+
+    def test_mobilebert(self):
+        model = transformers.MobileBertModel.from_pretrained(
+            "google/mobilebert-uncased", return_dict=False
+        )
+        model.eval()
+
+        tokenizer = transformers.AutoTokenizer.from_pretrained("google/mobilebert-uncased")
+        token = tokenizer("Hello, my dog is cute", return_tensors="pt")["input_ids"]
+
+        self.run_compare_torch(
+            token,
+            model,
+            input_as_shape=False,
+            frontend=TorchFrontend.EDGEIR,
+            backend=("mlprogram", "fp32"),
+            rtol=0.005,
+        )
+
     def test_mobilenet_v2(self):
         model = torchvision.models.mobilenet_v2(weights=torchvision.models.mobilenetv2.MobileNet_V2_Weights.DEFAULT)
         model.eval()
@@ -124,7 +259,6 @@ class TestExecutorch(TorchBaseTest):
             [(10, 1, 700)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
         )
 
-    @pytest.mark.xfail(reason="Nodes of type get_attr not yet implemented")
     def test_inception_v3(self):
         model = torchvision.models.inception_v3(weights="IMAGENET1K_V1")
         model.eval()

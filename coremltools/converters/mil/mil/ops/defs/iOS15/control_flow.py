@@ -172,19 +172,29 @@ class Const(Operation):
         return val
 
     def _get_type_val(self, value):
+        int32_max = np.int32(np.iinfo(np.int32).max)
+        int32_min = np.int32(np.iinfo(np.int32).min)
+
         if isinstance(value, (float, np.float64)):
             value = np.float32(value)
         elif isinstance(value, bool):
             pass
         elif isinstance(value, (int, np.int64)):
-            value = np.int32(value)
+            if value > int32_max:
+                value = int32_max
+            elif value < int32_min:
+                value = int32_min
+            else:
+                value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value) if isinstance(value, (tuple, list)) else value
             if value.dtype in [np.uint64, np.int64]:
                 logger.debug(
                     f"Downcast const op {self.name} data {builtin_to_string(numpy_type_to_builtin_type(value.dtype))} as int32"
                 )
-                value = value.astype(np.int32)
+                value_clip_max = np.where(value > int32_max, int32_max, np.int32(value))
+                value_clip_min = np.where(value_clip_max < int32_min, int32_min, np.int32(value_clip_max))
+                value = value_clip_min
             if value.dtype == np.float64:
                 logger.debug(f"Downcast const op {self.name} data fp64 as fp32")
                 value = value.astype(np.float32)
