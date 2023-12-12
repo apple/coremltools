@@ -23,10 +23,13 @@ In this example, you will do the following:
 
 ## Prerequisites
 
-To run this example, you need version 2.2.0 of TensorFlow and version 2.10.0 of H5PY. Use the following commands to install them:
+To run this example, first install the newest version of Core ML Tools (see [Installing Core ML Tools](installing-coremltools)). 
+
+You also need TensorFlow version 2.2.0, H5PY version 2.10.0, numpy version 1.21, and pillow. Use the following commands to install them:
 
 ```shell
-pip install tensorflow==2.2.0 h5py==2.10.0 coremltools pillow
+pip install tensorflow==2.2.0 h5py==2.10.0 numpy==1.21
+pip install pillow
 ```
 
 ## Download the Model
@@ -96,42 +99,22 @@ model = ct.convert(
 )
 ```
 
-The Unified Conversion API [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry "Unified Conversion API") method in the previous example produces an [ML program](convert-to-ml-program) model.
-
-If you include the `convert_to="neuralnetwork"` parameter, the method produces a neural network with the  `neuralnetwork` model type. The following is the same code as the above example, using the `convert_to` parameter in `convert()`:
-
-```python
-import coremltools as ct
-
-# Define the input type as image, 
-# set pre-processing parameters to normalize the image 
-# to have its values in the interval [-1,1] 
-# as expected by the mobilenet model
-image_input = ct.ImageType(shape=(1, 224, 224, 3,),
-                           bias=[-1,-1,-1], scale=1/127)
-
-# set class labels
-classifier_config = ct.ClassifierConfig(class_labels)
-
-# Convert the model using the Unified Conversion API to a neural network
-model = ct.convert(
-    keras_model, 
-    convert_to="neuralnetwork",
-    inputs=[image_input], 
-    classifier_config=classifier_config,
-)
-```
-
-```{admonition} ML Programs vs. Neural Networks
-
-To learn the differences between the newer ML Program model type and the neural network model type, see [Comparing ML Programs and Neural Networks](comparing-ml-programs-and-neural-networks).
-```
+The Unified Conversion API [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry "Unified Conversion API") method in this example produces an [ML program](convert-to-ml-program) model.
 
 ```{eval-rst}
 .. index:: 
     single: metadata; TensorFlow model
     single: TensorFlow; set model metadata
     single: ML program; set model metadata
+```
+
+Add code to print a message showing that the model was converted:
+
+```python
+# Print a message showing the model was converted.
+print('--------------------------------')
+print('Model converted to an ML Program')
+print('--------------------------------')
 ```
 
 ## Set the Model Metadata
@@ -155,6 +138,9 @@ model.license = "Please see https://github.com/tensorflow/tensorflow for license
 
 # Set a short description for the Xcode UI
 model.short_description = "Detects the dominant objects present in an image from a set of 1001 categories such as trees, animals, food, vehicles, person etc. The top-1 accuracy from the original publication is 74.7%."
+
+# Set the preview type
+model.user_defined_metadata["com.apple.coreml.model.preview.type"] = "imageClassifier"
 
 # Set a version for the model
 model.version = "2.0"
@@ -184,6 +170,7 @@ An example test image (`daisy.jpg`). Right-click and choose **Save Image** to do
 
 ```python Python
 # Use PIL to load and resize the image to expected size
+import PIL
 from PIL import Image
 example_image = Image.open("daisy.jpg").resize((224, 224))
 
@@ -216,29 +203,42 @@ model.save("MobileNetV2.mlpackage")
 loaded_model = ct.models.MLModel("MobileNetV2.mlpackage")
 ```
 
-If you converted the model to the neural network model type, you can save the model into either the model package format as in the previous example, or into the older `.mlmodel` file format. The following example saves the model in an `.mlmodel` file and loads the model into another session:
-
-```python
-# Save model in a Core ML mlmodel file
-model.save("MobileNetV2.mlmodel")
-                  
-# Load the saved model
-loaded_model = ct.models.MLModel("MobileNetV2.mlmodel")
-```
-
 ```{eval-rst}
 .. index:: 
     single: ML program; use with Xcode
     single: Xcode; open model
 ```
 
+## Run the Example
+
+Run the example code:
+
+```shell
+python getting-started.py
+```
+
+The output shows the following during the conversion process, followed by the prediction (``daisy``) and the model save and load message:
+
+```
+Running TensorFlow Graph Passes: 100%|██████████████████████████████████████████████████████████████| 6/6 [00:00<00:00, 11.78 passes/s]
+Converting TF Frontend ==> MIL Ops: 100%|████████████████████████████████████████████████████████| 428/428 [00:00<00:00, 1097.67 ops/s]
+Running MIL frontend_tensorflow2 pipeline: 100%|███████████████████████████████████████████████████| 7/7 [00:00<00:00, 205.06 passes/s]
+Running MIL default pipeline: 100%|███████████████████████████████████████████████████████████████| 71/71 [00:02<00:00, 24.50 passes/s]
+Running MIL backend_mlprogram pipeline: 100%|████████████████████████████████████████████████████| 12/12 [00:00<00:00, 305.78 passes/s]
+--------------------------------
+Model converted to an ML Program
+--------------------------------
+daisy
+model saved and loaded
+```
+
 ## Use the Model with Xcode
 
-Double-click the newly converted `MobileNetV2.mlpackage` or `MobileNetV2.mlmodel` file in the Mac Finder to launch Xcode and open the model information pane:
+The code creates the newly converted model as a file in the same directory titled `MobileNetV2.mlpackage`. Double-click this file in the Mac Finder to launch Xcode and open the model information pane:
 
 ![xcode-quickstart3-model-metadata3.png](images/xcode-quickstart3-model-metadata3.png)
 
-The classifier model for this example offers tabs for **Metadata**, **Preview**, **Predictions**, and **Utilities**. The **Preview** tab appears for classifier models, and for models that have added preview metadata as described in [Xcode Model Preview Types](xcode-model-preview-types).
+The **General** tab shows the model metadata. The **Preview** tab appears for models that have added preview metadata as described in [Xcode Model Preview Types](xcode-model-preview-types).
 
 ```{tip}
 To use the model with an Xcode project, drag the model file to the Xcode Project Navigator. Choose options if you like, and click **Finish**. You can then select the model in the Project Navigator to show the model information.
@@ -260,4 +260,47 @@ To preview the model’s output for a given input, follow these steps:
 ![xcode-quickstart5-model-preview-daisy.png](images/xcode-quickstart5-model-preview-daisy.png)
 
 For more information about using Xcode, see the [Xcode documentation](https://developer.apple.com/documentation/xcode "Xcode documentation").
+
+
+## Produce a Neural Network
+
+If you include the `convert_to="neuralnetwork"` parameter, the method produces a neural network with the  `neuralnetwork` model type rather than an ML program. The following is the same code as the previous example, using the `convert_to` parameter in `convert()`:
+
+```python
+import coremltools as ct
+
+# Define the input type as image, 
+# set pre-processing parameters to normalize the image 
+# to have its values in the interval [-1,1] 
+# as expected by the mobilenet model
+image_input = ct.ImageType(shape=(1, 224, 224, 3,),
+                           bias=[-1,-1,-1], scale=1/127)
+
+# set class labels
+classifier_config = ct.ClassifierConfig(class_labels)
+
+# Convert the model using the Unified Conversion API to a neural network
+model = ct.convert(
+    keras_model, 
+    convert_to="neuralnetwork",
+    inputs=[image_input], 
+    classifier_config=classifier_config,
+)
+```
+
+If you converted the model to the neural network model type, you can save the model into either the model package format as in the previous example, or into the older `.mlmodel` file format. The following example saves the model in an `.mlmodel` file and loads the model into another session:
+
+```python
+# Save model in a Core ML mlmodel file
+model.save("MobileNetV2.mlmodel")
+                  
+# Load the saved model
+loaded_model = ct.models.MLModel("MobileNetV2.mlmodel")
+```
+
+```{admonition} ML Programs vs. Neural Networks
+
+To learn the differences between the newer ML Program model type and the neural network model type, see [Comparing ML Programs and Neural Networks](comparing-ml-programs-and-neural-networks).
+```
+
 

@@ -425,11 +425,14 @@ document.write(`
 <p>This example demonstrates how to convert a PyTorch <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_deeplabv3_resnet101/">segmentation model</a> to a Core ML model (<a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML program</span></a>). The model takes an image and outputs a class prediction for each pixel of the image.</p>
 <section id="install-the-required-software">
 <h2>Install the Required Software<a class="headerlink" href="#install-the-required-software" title="Permalink to this heading">#</a></h2>
-<p>To run this example, first install the newest version of Core ML Tools (see <a class="reference internal" href="installing-coremltools.html"><span class="doc std std-doc">Installing Core ML Tools</span></a>).</p>
-<p>To run this example, first install the newest version of Core ML Tools (see <a class="reference internal" href="installing-coremltools.html"><span class="doc std std-doc">Installing Core ML Tools</span></a>).</p>
-<p>You also need PyTorch and Torchvision. Use the following commands:</p>
+<p>To run this example, first install the newest version of Core ML Tools (see <a class="reference internal" href="installing-coremltools.html"><span class="doc std std-doc">Installing Core ML Tools</span></a>):</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>coremltools
+</pre></div>
+</div>
+<p>You also need PyTorch, Torchvision, and PIL (<code class="docutils literal notranslate"><span class="pre">pillow</span></code>). Use the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
 pip<span class="w"> </span>install<span class="w"> </span>torchvision
+pip<span class="w"> </span>install<span class="w"> </span>pillow
 </pre></div>
 </div>
 </section>
