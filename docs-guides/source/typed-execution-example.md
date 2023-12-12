@@ -1,6 +1,6 @@
 # Typed Execution Workflow Example
 
-The following example demonstrates the recommended workflow when using [ML Programs](convert-to-ml-program) with [Typed Execution](typed-execution). The workflow consists of the following steps:
+The following example demonstrates the recommended workflow when using [ML programs](convert-to-ml-program) with [typed execution](typed-execution). The workflow consists of the following steps:
 
 1. Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the Neural Engine (NE), GPU and CPU.
 
@@ -14,38 +14,42 @@ The example converts a [TensorFlow 1](https://www.tensorflow.org/) pre-trained f
 
 1. [Use this download link](https://docs-assets.developer.apple.com/coremltools/models/fast_neural_style_wave.pb) to download the model file (`fast_neural_style_wave.pb`).
 
-2. Since this is a TensorFlow 1 compatible model, install TensorFlow 1:
+2. This model requires TensorFlow 1, which is deprecated and difficult to install directly with pip. You can use the appropriate [Miniconda installer](https://docs.conda.io/en/latest/miniconda.html) for your operating system and create a conda environment specifically for Python 3.7, and then use conda to install TensorFlow 1:
+    
+    ```shell
+    conda create -n tensorflow1-env python=3.7
+    conda activate tensorflow1-env
+    conda install tensorflow==1.15
+    ```
+    
+    For alternatives, see [How to pip install old version of library(tensorflow)](https://stackoverflow.com/questions/41937915/how-to-pip-install-old-version-of-librarytensorflow) on StackOverflow.
 
-```shell
-pip install tensorflow==1.15.0
-```
+3. Install the following for this conda environment:
+    
+    ```
+    pip install -U coremltools
+    pip install pillow
+    conda install matplotlib
+    ```
+
 
 ## Convert the Model to an ML Program
 
-To convert the model to an ML program, import `coremltools` and use the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert) method with the `convert_to` parameter, which specifies the converted model as an `mlprogram`:
+To convert the model to an ML program, import `coremltools` and use the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert) method:
 
 ```python
 import coremltools as ct
 
 model = ct.convert("fast_neural_style_wave.pb", 
                    inputs=[ct.ImageType(shape=[1, 512, 512, 3])],
-                   convert_to="mlprogram",
                    compute_precision=ct.precision.FLOAT16)
-```
-
-```text Output
-Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:00<00:00, 35.38 passes/s]
-Converting Frontend ==> MIL Ops: 100%|██████████| 311/311 [00:00<00:00, 1649.39 ops/s]
-Running MIL Common passes: 100%|██████████| 27/27 [00:00<00:00, 87.70 passes/s] 
-Running MIL FP16ComputePrecision pass: 100%|██████████| 1/1 [00:00<00:00,  6.89 passes/s]
-Running MIL Clean up passes: 100%|██████████| 7/7 [00:00<00:00, 39.86 passes/s]
 ```
 
 During conversion, a graph pass called `FP16ComputePrecision` is automatically applied, which casts each float 32 tensor in the original TensorFlow graph to a float 16 tensor in the ML program.
 
 ```{admonition} Compute Precision Parameter
 
-The `compute_precision=ct.precision.FLOAT16` argument sets the precision to float 16. While this was required in coremltools 5.0b1, the `FLOAT16` argument is the default setting in the 5.0b3 release, and is therefore no longer required for this example.
+The `compute_precision=ct.precision.FLOAT16` argument sets the precision to float 16. While this was required in coremltools 5.0b1, the `FLOAT16` argument is the default setting in the 5.0b3 release and newer releases, and is therefore no longer required for this example.
 ```
 
 ## Make a Prediction
@@ -54,35 +58,36 @@ To make a prediction with the newly converted Core ML model, follow these steps:
 
 1. Download and save the following sample image as `seats.jpg`.
     
-	```{figure} images/seats.jpg
-	:alt: Seats image
-	:align: center
-	:class: imgnoborder
+    ```{figure} images/seats.jpg
+    :alt: Seats image
+    :align: center
+    :class: imgnoborder
 
-	Right-click on this image and save it as `seats.jpg` before running the following code snippet.
-	```
+    Right-click on this image and save it as `seats.jpg` before running the following code snippet.
+    ```
 
-2. Load the image using the Python image library (`PIL`):
+2. Add the following code to load the image using `PIL` (the Python image library, which you installed as `pillow` in the previous section):
     
-	```python
-	from PIL import Image
-
-	img = Image.open("seats.jpg").resize((512, 512), Image.ANTIALIAS)
-	```
+    ```python
+    import PIL
+    from PIL import Image
+    
+    img = Image.open("seats.jpg").resize((512, 512), Image.ANTIALIAS)
+    ```
 
 3. Run a prediction:
     
-	```python
-	# make a prediction
-	spec = model.get_spec()
-	model_input_name = spec.description.input[0].name
-	model_output_name = spec.description.output[0].name
-
-	coreml_out = model.predict({model_input_name : img})
-	coreml_output_tensor = coreml_out[model_output_name]
-
-	print("shape of coreml output: ", coreml_output_tensor.shape)
-	```
+    ```python
+    # make a prediction
+    spec = model.get_spec()
+    model_input_name = spec.description.input[0].name
+    model_output_name = spec.description.output[0].name
+    
+    coreml_out = model.predict({model_input_name : img})
+    coreml_output_tensor = coreml_out[model_output_name]
+    
+    print("shape of coreml output: ", coreml_output_tensor.shape)
+    ```
 
 ```text Output
 shape of coreml output:  (1, 512, 512, 3)
@@ -148,7 +153,7 @@ print("SNR between the Core ML output and TF output: ", SNR)
 ```
 
 ```text Output
-SNR between the Core ML output and TF output:  69.5530673480312
+SNR between the Core ML output and TF output:  71.38136549121856
 ```
 
 ```{note}
@@ -164,7 +169,6 @@ To compare how well the converted model's output matches with the source model's
 ```python
 model_fp32 = ct.convert("fast_neural_style_wave.pb", 
                        inputs=[ct.ImageType(shape=[1, 512, 512, 3])],
-                       convert_to="mlprogram",
                        compute_precision=ct.precision.FLOAT32)
 
 coreml_out_fp32 = model_fp32.predict({model_input_name : img})
@@ -174,17 +178,10 @@ SNR = _compute_SNR(tf_out_tensor, coreml_output_tensor_fp32)
 print("SNR between the float 32 Core ML output and TF output: ", SNR)
 ```
 
-```text Output
-Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:00<00:00, 41.01 passes/s]
-Converting Frontend ==> MIL Ops: 100%|██████████| 311/311 [00:00<00:00, 1598.48 ops/s]
-Running MIL Common passes: 100%|██████████| 27/27 [00:00<00:00, 80.78 passes/s] 
-Running MIL Clean up passes: 100%|██████████| 7/7 [00:00<00:00, 306.49 passes/s]
-```
-
 This time the `FP16ComputePrecision` graph pass is skipped since the precision was set to float 32. 
 
 ```text Output
-SNR between the float 32 Core ML output and TF output:  95.7716607827026
+SNR between the float 32 Core ML output and TF output:  95.75957654819682
 ```
 
 As expected, the float 32 model is indeed more accurate and matches even better with the source pre-trained float 32 TensorFlow model.
@@ -195,14 +192,12 @@ Since the output tensor corresponds to image data, you can also plot it and test
 
 ```python
 from matplotlib import pyplot as plt 
-%matplotlib inline
 
 def _normalize(x):
     if np.amin(x) < 0:
         x = x - np.amin(x)
     x = x / np.amax(x)
     return x
-
 
 fig, ax_array = plt.subplots(1, 4)
 ax_array[0].imshow(img)
