@@ -3,8 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from enum import Enum
-
 import numpy as np
 import pytest
 import torch
@@ -17,6 +15,7 @@ from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API, _IS_MACOS
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.testing_utils import ct_convert, validate_minimum_deployment_target
 
+from ..utils import TorchFrontend
 from ..torchscript_utils import torch_to_mil_types
 
 if _HAS_TORCH_EXPORT_API:
@@ -29,11 +28,6 @@ if _HAS_EXECUTORCH:
     _EDGE_COMPILE_CONFIG = exir.EdgeCompileConfig(
         _check_ir_validity=False,
     )
-
-
-class TorchFrontend(Enum):
-    TORCHSCRIPT = 1
-    EDGEIR = 2
 
 
 class ModuleWrapper(nn.Module):

@@ -32,6 +32,7 @@ from .torchir_passes import (
     transform_inplace_ops,
 )
 from .torchscript_utils import torch_to_mil_types
+from .utils import TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
@@ -194,8 +195,13 @@ class TranscriptionContext:
     context when stepping out.
     """
 
-    def __init__(self, name: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        frontend: TorchFrontend = TorchFrontend.TORCHSCRIPT,
+    ) -> None:
         self.name = name if name else ""
+        self.frontend = frontend
         self._current_graph = [{}]
         self._torch_graph = None
         self._quant_context = QuantizationContext(self)
@@ -346,6 +352,7 @@ class TorchConverter:
         self._prog = Program()
 
         if isinstance(loaded_model, torch.jit.ScriptModule):
+            self.context.frontend = TorchFrontend.TORCHSCRIPT
             self.graph, self.params_dict, self.buffer_dict = InternalTorchIRGraph.from_torchscript(
                 torchscript=loaded_model, input_values=self.inputs, cut_at_symbols=cut_at_symbols
             )
@@ -363,6 +370,7 @@ class TorchConverter:
                 p(self.graph)
 
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
+            self.context.frontend = TorchFrontend.EDGEIR
             self.graph = InternalTorchIRGraph.from_edgeir(edgeir=loaded_model)
             self.params_dict, self.buffer_dict = None, None
         else:

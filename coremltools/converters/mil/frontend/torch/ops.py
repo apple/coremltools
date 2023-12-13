@@ -8,7 +8,7 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
-from typing import Any, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as _np
 import numpy as np
@@ -32,6 +32,7 @@ from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import build_einsum_mil, value_at
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
+from .utils import TorchFrontend
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -188,7 +189,12 @@ TYPE_TO_DTYPE_STRING = {
 }
 
 
-def _get_inputs(context, node, expected=None, min_expected=None) -> List[Var]:
+def _get_inputs(
+    context,
+    node,
+    expected: Union[int, List, Tuple, Dict[TorchFrontend, int]] = None,
+    min_expected: Union[int, Dict[TorchFrontend, int]] = None,
+) -> List[Var]:
     """
     Look up a node's inputs in @context and return them as a list. If
     @expected is not None, also verifies the number of inputs matches the
@@ -219,25 +225,39 @@ def _get_inputs(context, node, expected=None, min_expected=None) -> List[Var]:
                 raise NotImplementedError(f"Binding of inputs of type {type(i)} not handled yet")
 
         return results
+    
+    def check_if_number_of_inputs_expected(num_inputs: int, expected: Union[int, List, Tuple]) -> None:
+        expected = [expected] if isinstance(expected, int) else expected
+        if num_inputs not in expected:
+            raise ValueError(
+                "node {} ({}) got {} input(s), expected {}".format(
+                    node.name, node.kind, num_inputs, expected
+                )
+            )
+        
+    def check_if_number_of_inputs_more_than_min_expected(num_inputs: int, min_expected: int) -> None:
+        if num_inputs < min_expected:
+            raise ValueError(
+                "node {} ({}) got {} input(s), expected minimum {} inputs".format(
+                    node.name, node.kind, num_inputs, min_expected
+                )
+            )
 
     inputs = get_bindings(node.inputs)
 
     if expected is not None:
-        expected = [expected] if not isinstance(expected, (list, tuple)) else expected
+        if isinstance(expected, dict):
+            if context.frontend in expected:
+                check_if_number_of_inputs_expected(len(inputs), expected[context.frontend])
+        else:
+            check_if_number_of_inputs_expected(len(inputs), expected)
 
-        if len(inputs) not in expected:
-            raise ValueError(
-                "node {} ({}) got {} input(s), expected {}".format(
-                    node.name, node.kind, len(inputs), expected
-                )
-            )
     if min_expected is not None:
-        if len(inputs) < min_expected:
-            raise ValueError(
-                "node {} ({}) got {} input(s), expected minimum {} inputs".format(
-                    node.name, node.kind, len(inputs), min_expected
-                )
-            )
+        if isinstance(min_expected, dict):
+            if context.frontend in min_expected:
+                check_if_number_of_inputs_more_than_min_expected(len(inputs), min_expected[context.frontend])
+        else:
+            check_if_number_of_inputs_more_than_min_expected(len(inputs), min_expected)
 
     return inputs
 
@@ -4138,13 +4158,22 @@ def _avg_pool(context, node, inputs):
 
 @register_torch_op
 def avg_pool1d(context, node):
-    inputs = _get_inputs(context, node, min_expected=2)
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT : 6},
+        min_expected={TorchFrontend.EDGEIR : 2},
+    )
     _avg_pool(context, node, inputs)
 
 
 @register_torch_op
 def avg_pool2d(context, node):
-    inputs = _get_inputs(context, node, min_expected=2)
+    inputs = _get_inputs(
+        context,
+        node,
+        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EDGEIR : 2},
+    )
     divisor_override = None if len(inputs) < 7 else inputs[6]
     if divisor_override is not None:
         raise ValueError("divisor_override is not supported for avg_pool2d")
@@ -4153,7 +4182,12 @@ def avg_pool2d(context, node):
 
 @register_torch_op
 def avg_pool3d(context, node):
-    inputs = _get_inputs(context, node, min_expected=2)
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT : 7},
+        min_expected={TorchFrontend.EDGEIR : 2},
+    )
     divisor_override = inputs[6]
     if divisor_override is not None:
         raise ValueError("divisor_override is not supported for avg_pool3d")
@@ -4256,7 +4290,12 @@ def gelu(context, node):
 
 @register_torch_op(torch_alias=["_slice", "slice_copy.tensor"])
 def slice(context, node):
-    inputs = _get_inputs(context, node, min_expected=1)
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT : 5},
+        min_expected={TorchFrontend.EDGEIR : 1},
+    )
     x = inputs[0]
     dim = 0 if len(inputs) < 2 else inputs[1].val
 
