@@ -158,7 +158,7 @@ def flatten_and_detach_torch_results(torch_results):
     if isinstance(torch_results, (list, tuple)):
         return [x.detach().numpy() for x in _flatten(torch_results) if x is not None]
     elif isinstance(torch_results, dict):
-        return [torch_results[key].detach().numpy() for key in torch_results]
+        return [value.detach().numpy() for value in torch_results.values()]
     # Do not need to flatten
     return [torch_results.detach().cpu().numpy()]
 

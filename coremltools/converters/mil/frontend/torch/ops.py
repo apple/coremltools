@@ -2068,13 +2068,16 @@ def hardtanh(context, node):
 
 @register_torch_op(torch_alias=["concat"])
 def cat(context, node):
+    def is_tensor_empty(var: Var) -> bool:
+        return np.any([size == 0 for size in var.shape])
+
     inputs = _get_inputs(context, node, min_expected=1)
 
     xs = inputs[0]
     # PyTorch can have empty tensor, which is then ignored
     # However, CoreML does not allow such empty tensor, so remove them now
-    if np.any([x.rank > 1 or x.shape[0] > 0 for x in xs]):
-        xs = [x for x in xs if x.rank > 1 or x.shape[0] > 0]
+    if np.any([is_tensor_empty(x) for x in xs]):
+        xs = [x for x in xs if not is_tensor_empty(x)]
 
     axis = 0 if len(inputs) == 1 else inputs[1]
 
@@ -4251,7 +4254,7 @@ def gelu(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["slice_copy.tensor"])
+@register_torch_op(torch_alias=["_slice", "slice_copy.tensor"])
 def slice(context, node):
     inputs = _get_inputs(context, node, min_expected=1)
     x = inputs[0]
@@ -4259,7 +4262,12 @@ def slice(context, node):
 
     start = 0
     if len(inputs) > 2 and inputs[2] is not None:
-        start = inputs[2].val if inputs[2].val is not None else inputs[2]
+        if inputs[2].val is not None:
+            start = inputs[2].val
+            if start < 0:
+                start += x.shape[dim]
+        else:
+            start = inputs[2]
 
     end = None
     if len(inputs) > 3 and inputs[3] is not None:
@@ -4271,11 +4279,8 @@ def slice(context, node):
             end = inputs[3]
 
     step = 1
-    if len(inputs) > 4:
-        if inputs[4] and inputs[4].val is not None:
-            step = inputs[4].val
-        elif isinstance(inputs[4], Var):
-            step = inputs[4]
+    if len(inputs) > 4 and inputs[4] is not None:
+        step = inputs[4].val if inputs[4].val is not None else inputs[4]
 
     if start == 0 and end is None and step == 1:
         # Handling x[:], just pass through the tensor.

@@ -3546,6 +3546,20 @@ class TestConcat(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_cat_with_empty(self, compute_unit, backend):
+        class TestNet(nn.Module):
+            def forward(self, x):
+                return torch.cat((x, torch.tensor([])), axis=1)
+
+        model = TestNet()
+        self.run_compare_torch(
+            (1, 2, 3),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
     @pytest.mark.parametrize(
         "compute_unit, backend", itertools.product(compute_units, backends)
     )
@@ -6051,6 +6065,29 @@ class TestTo(TorchBaseTest):
 
 
 class TestSlice(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, start, end, step",
+        itertools.product(
+            compute_units,
+            backends,
+            (0, -5, None),
+            (7, -1, 100, None),
+            (1, 2, None)
+        ),
+    )
+    def test_slice(self, compute_unit, backend, start, end, step):
+        class SliceModel(torch.nn.Module):
+            def forward(self, x):
+                y = x[start : end : step]
+                return y
+
+        model = SliceModel()
+        model.eval()
+
+        self.run_compare_torch(
+            (9,), model, backend=backend, compute_unit=compute_unit
+        )
+
     @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "compute_unit, backend",
