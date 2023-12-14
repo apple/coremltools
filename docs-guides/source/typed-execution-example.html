@@ -421,7 +421,7 @@ document.write(`
                   
   <section id="typed-execution-workflow-example">
 <h1>Typed Execution Workflow Example<a class="headerlink" href="#typed-execution-workflow-example" title="Permalink to this heading">#</a></h1>
-<p>The following example demonstrates the recommended workflow when using <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML Programs</span></a> with <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">Typed Execution</span></a>. The workflow consists of the following steps:</p>
+<p>The following example demonstrates the recommended workflow when using <a class="reference internal" href="convert-to-ml-program.html"><span class="doc std std-doc">ML programs</span></a> with <a class="reference internal" href="typed-execution.html"><span class="doc std std-doc">typed execution</span></a>. The workflow consists of the following steps:</p>
 <ol class="arabic simple">
 <li><p>Convert the model to a float 16 typed Core ML model, which is eligible to execute on a combination of the Neural Engine (NE), GPU and CPU.</p></li>
 <li><p>Check the accuracy of the Core ML model with the source model on a set of input examples, using an error metric that is suitable for that model.</p></li>
@@ -430,36 +430,39 @@ document.write(`
 <p>The example converts a <a class="reference external" href="https://www.tensorflow.org/">TensorFlow 1</a> pre-trained float 32 <a class="reference external" href="https://medium.com/hackernoon/diy-prisma-fast-style-transfer-app-with-coreml-and-tensorflow-817c3b90dacd">neural wave style model</a> based on <a class="reference external" href="https://github.com/lengstrom/fast-style-transfer">Fast Style Transfer</a>. This model takes a color image of spatial size (512, 512) as input and returns an output of the same size.</p>
 <section id="download-the-model-and-install-tensorflow-1">
 <h2>Download the Model and Install TensorFlow 1<a class="headerlink" href="#download-the-model-and-install-tensorflow-1" title="Permalink to this heading">#</a></h2>
-<ol class="arabic simple">
+<ol class="arabic">
 <li><p><a class="reference external" href="https://docs-assets.developer.apple.com/coremltools/models/fast_neural_style_wave.pb">Use this download link</a> to download the model file (<code class="docutils literal notranslate"><span class="pre">fast_neural_style_wave.pb</span></code>).</p></li>
-<li><p>Since this is a TensorFlow 1 compatible model, install TensorFlow 1:</p></li>
-</ol>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span><span class="nv">tensorflow</span><span class="o">==</span><span class="m">1</span>.15.0
+<li><p>This model requires TensorFlow 1, which is deprecated and difficult to install directly with pip. You can use the appropriate <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda installer</a> for your operating system and create a conda environment specifically for Python 3.7, and then use conda to install TensorFlow 1:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>tensorflow1-env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
+conda<span class="w"> </span>activate<span class="w"> </span>tensorflow1-env
+conda<span class="w"> </span>install<span class="w"> </span><span class="nv">tensorflow</span><span class="o">==</span><span class="m">1</span>.15
 </pre></div>
 </div>
+<p>For alternatives, see <a class="reference external" href="https://stackoverflow.com/questions/41937915/how-to-pip-install-old-version-of-librarytensorflow">How to pip install old version of library(tensorflow)</a> on StackOverflow.</p>
+</li>
+<li><p>Install the following for this conda environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">coremltools</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">pillow</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">matplotlib</span>
+</pre></div>
+</div>
+</li>
+</ol>
 </section>
 <section id="convert-the-model-to-an-ml-program">
 <h2>Convert the Model to an ML Program<a class="headerlink" href="#convert-the-model-to-an-ml-program" title="Permalink to this heading">#</a></h2>
-<p>To convert the model to an ML program, import <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> and use the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method with the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> parameter, which specifies the converted model as an <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>:</p>
+<p>To convert the model to an ML program, import <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> and use the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;fast_neural_style_wave.pb&quot;</span><span class="p">,</span> 
                    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">3</span><span class="p">])],</span>
-                   <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
                    <span class="n">compute_precision</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:00&lt;00:00, 35.38 passes/s]
-Converting Frontend ==&gt; MIL Ops: 100%|██████████| 311/311 [00:00&lt;00:00, 1649.39 ops/s]
-Running MIL Common passes: 100%|██████████| 27/27 [00:00&lt;00:00, 87.70 passes/s] 
-Running MIL FP16ComputePrecision pass: 100%|██████████| 1/1 [00:00&lt;00:00,  6.89 passes/s]
-Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;00:00, 39.86 passes/s]
 </pre></div>
 </div>
 <p>During conversion, a graph pass called <code class="docutils literal notranslate"><span class="pre">FP16ComputePrecision</span></code> is automatically applied, which casts each float 32 tensor in the original TensorFlow graph to a float 16 tensor in the ML program.</p>
 <div class="admonition-compute-precision-parameter admonition">
 <p class="admonition-title">Compute Precision Parameter</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">compute_precision=ct.precision.FLOAT16</span></code> argument sets the precision to float 16. While this was required in coremltools 5.0b1, the <code class="docutils literal notranslate"><span class="pre">FLOAT16</span></code> argument is the default setting in the 5.0b3 release, and is therefore no longer required for this example.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">compute_precision=ct.precision.FLOAT16</span></code> argument sets the precision to float 16. While this was required in coremltools 5.0b1, the <code class="docutils literal notranslate"><span class="pre">FLOAT16</span></code> argument is the default setting in the 5.0b3 release and newer releases, and is therefore no longer required for this example.</p>
 </div>
 </section>
 <section id="make-a-prediction">
@@ -474,7 +477,7 @@ Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;
 </figcaption>
 </figure>
 </li>
-<li><p>Load the image using the Python image library (<code class="docutils literal notranslate"><span class="pre">PIL</span></code>):</p>
+<li><p>Add the following code to load the image using <code class="docutils literal notranslate"><span class="pre">PIL</span></code> (the Python image library, which you installed as <code class="docutils literal notranslate"><span class="pre">pillow</span></code> in the previous section):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
 
 <span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;seats.jpg&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">resize</span><span class="p">((</span><span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">),</span> <span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
@@ -552,7 +555,7 @@ Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SNR between the Core ML output and TF output: &quot;</span><span class="p">,</span> <span class="n">SNR</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SNR between the Core ML output and TF output:  69.5530673480312
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SNR between the Core ML output and TF output:  71.38136549121856
 </pre></div>
 </div>
 <div class="admonition note">
@@ -566,7 +569,6 @@ Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;
 <p>To compare how well the converted model’s output matches with the source model’s output at higher precision, convert the source model again, but this time with float 32 precision:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model_fp32</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s2">&quot;fast_neural_style_wave.pb&quot;</span><span class="p">,</span> 
                        <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">512</span><span class="p">,</span> <span class="mi">3</span><span class="p">])],</span>
-                       <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
                        <span class="n">compute_precision</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">precision</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">)</span>
 
 <span class="n">coreml_out_fp32</span> <span class="o">=</span> <span class="n">model_fp32</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="n">model_input_name</span> <span class="p">:</span> <span class="n">img</span><span class="p">})</span>
@@ -576,14 +578,8 @@ Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;SNR between the float 32 Core ML output and TF output: &quot;</span><span class="p">,</span> <span class="n">SNR</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:00&lt;00:00, 41.01 passes/s]
-Converting Frontend ==&gt; MIL Ops: 100%|██████████| 311/311 [00:00&lt;00:00, 1598.48 ops/s]
-Running MIL Common passes: 100%|██████████| 27/27 [00:00&lt;00:00, 80.78 passes/s] 
-Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;00:00, 306.49 passes/s]
-</pre></div>
-</div>
 <p>This time the <code class="docutils literal notranslate"><span class="pre">FP16ComputePrecision</span></code> graph pass is skipped since the precision was set to float 32.</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SNR between the float 32 Core ML output and TF output:  95.7716607827026
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>SNR between the float 32 Core ML output and TF output:  95.75957654819682
 </pre></div>
 </div>
 <p>As expected, the float 32 model is indeed more accurate and matches even better with the source pre-trained float 32 TensorFlow model.</p>
@@ -592,14 +588,12 @@ Running MIL Clean up passes: 100%|██████████| 7/7 [00:00&lt;
 <h2>Make a Visual Comparison<a class="headerlink" href="#make-a-visual-comparison" title="Permalink to this heading">#</a></h2>
 <p>Since the output tensor corresponds to image data, you can also plot it and test the match between the models visually. The following code snippet uses <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> to produce output for all three models for comparison:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">matplotlib</span> <span class="kn">import</span> <span class="n">pyplot</span> <span class="k">as</span> <span class="n">plt</span> 
-<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
 
 <span class="k">def</span> <span class="nf">_normalize</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">x</span>
-
 
 <span class="n">fig</span><span class="p">,</span> <span class="n">ax_array</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
 <span class="n">ax_array</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">img</span><span class="p">)</span>

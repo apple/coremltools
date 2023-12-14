@@ -420,9 +420,9 @@ document.write(`
 <section id="convert-the-distilbert-transformer-model">
 <h2>Convert the DistilBERT Transformer Model<a class="headerlink" href="#convert-the-distilbert-transformer-model" title="Permalink to this heading">#</a></h2>
 <p>The following example converts the <a class="reference external" href="https://huggingface.co/transformers/model_doc/distilbert.html#tfdistilbertformaskedlm">DistilBERT model from Huggingface</a> to Core ML.</p>
-<div class="admonition-install-transformers admonition">
-<p class="admonition-title">Install Transformers</p>
-<p>You may need to first install Transformers version 4.17.0.</p>
+<div class="admonition-requirements admonition">
+<p class="admonition-title">Requirements</p>
+<p>This example requires TensorFlow 2 and Transformers version 4.17.0.</p>
 </div>
 <p>Follow these steps:</p>
 <ol class="arabic">
@@ -452,7 +452,7 @@ document.write(`
 </pre></div>
 </div>
 </li>
-<li><p>Convert the <code class="docutils literal notranslate"><span class="pre">tf_model</span></code> to a Core ML neural network (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code>):</p>
+<li><p>Convert the <code class="docutils literal notranslate"><span class="pre">tf_model</span></code> to an ML program (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code>):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -474,7 +474,12 @@ document.write(`
 </section>
 <section id="convert-the-tf-hub-bert-transformer-model">
 <h2>Convert the TF Hub BERT Transformer Model<a class="headerlink" href="#convert-the-tf-hub-bert-transformer-model" title="Permalink to this heading">#</a></h2>
-<p>The following example converts the <a class="reference external" href="https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1">BERT model from TensorFlow Hub</a>. Follow these steps:</p>
+<p>The following example converts the <a class="reference external" href="https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1">BERT model from TensorFlow Hub</a>.</p>
+<div class="admonition-requirements admonition">
+<p class="admonition-title">Requirements</p>
+<p>This example requires TensorFlow 2, TensorFlow Hub, and Transformers version 4.17.0.</p>
+</div>
+<p>Follow these steps:</p>
 <ol class="arabic">
 <li><p>Add the import statements:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -490,11 +495,11 @@ document.write(`
 <span class="n">input_shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_seq_length</span><span class="p">)</span>
 
 <span class="n">input_words</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span>
-	<span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input_words&#39;</span><span class="p">)</span>
+    <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input_words&#39;</span><span class="p">)</span>
 <span class="n">input_masks</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span>
-	<span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input_masks&#39;</span><span class="p">)</span>
+    <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input_masks&#39;</span><span class="p">)</span>
 <span class="n">segment_ids</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span>
-	<span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;segment_ids&#39;</span><span class="p">)</span>
+    <span class="n">shape</span><span class="o">=</span><span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;segment_ids&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
@@ -502,20 +507,33 @@ document.write(`
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">bert_layer</span> <span class="o">=</span> <span class="n">tf_hub</span><span class="o">.</span><span class="n">KerasLayer</span><span class="p">(</span><span class="s2">&quot;https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1&quot;</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 <span class="n">pooled_output</span><span class="p">,</span> <span class="n">sequence_output</span> <span class="o">=</span> <span class="n">bert_layer</span><span class="p">(</span>
-	<span class="p">[</span><span class="n">input_words</span><span class="p">,</span> <span class="n">input_masks</span><span class="p">,</span> <span class="n">segment_ids</span><span class="p">])</span>
+    <span class="p">[</span><span class="n">input_words</span><span class="p">,</span> <span class="n">input_masks</span><span class="p">,</span> <span class="n">segment_ids</span><span class="p">])</span>
 
 <span class="n">tf_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span>
-	<span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">input_words</span><span class="p">,</span> <span class="n">input_masks</span><span class="p">,</span> <span class="n">segment_ids</span><span class="p">],</span>
-	<span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">pooled_output</span><span class="p">,</span> <span class="n">sequence_output</span><span class="p">])</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">input_words</span><span class="p">,</span> <span class="n">input_masks</span><span class="p">,</span> <span class="n">segment_ids</span><span class="p">],</span>
+    <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">pooled_output</span><span class="p">,</span> <span class="n">sequence_output</span><span class="p">])</span>
 </pre></div>
 </div>
 </li>
-<li><p>Convert the <code class="docutils literal notranslate"><span class="pre">tf_model</span></code> to a neural network:</p>
+<li><p>Convert the <code class="docutils literal notranslate"><span class="pre">tf_model</span></code> to an ML program:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="s1">&#39;TensorFlow&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 </li>
+<li><p>Define the <code class="docutils literal notranslate"><span class="pre">model.preview.type</span></code> metadata as <code class="docutils literal notranslate"><span class="pre">&quot;bertqa&quot;</span></code> so that you can preview the model in Xcode, and then save the model in an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bertQA&quot;</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;BERT_with_preview_type.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
 </ol>
+<p>To test the model, double-click the <code class="docutils literal notranslate"><span class="pre">BERT_with_preview_type.mlpackage</span></code> file in the Mac Finder to launch Xcode and open the model information pane, and then follow these steps:</p>
+<ol class="arabic simple">
+<li><p>Click the <strong>Preview</strong> tab.</p></li>
+<li><p>Copy and paste sample text, such as the BERT QA model description, into the Passage Context field.</p></li>
+<li><p>Enter a question in the Question field, such as <strong>What is BERT?</strong> The answer appears in the Answer Candidate field, and is also highlighted in the Passage Context field.</p></li>
+</ol>
+<p><img alt="Preview in Xcode" src="../_images/xcode_bert_model_preview3_preview.png" /></p>
 </section>
 </section>
 

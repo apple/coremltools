@@ -407,14 +407,9 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preview-the-model-in-xcode">Preview the Model in Xcode</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bert-qa-example">BERT QA Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#body-pose-example">Body Pose Example</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Open the Model in Xcode</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Preview the Model in Xcode</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#body-pose-example">Body Pose Example</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Open the Model in Xcode</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Preview the Model in Xcode</a></li>
 </ul>
 </li>
 </ul>
@@ -454,7 +449,7 @@ document.write(`
 <td class="text-left"><p>Image</p></td>
 <td class="text-left"><p>MultiArray</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p><a class="reference internal" href="#bert-qa-example"><span class="std std-doc">BERT QA</span></a></p></td>
+<tr class="row-odd"><td class="text-left"><p><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html#convert-the-tf-hub-bert-transformer-model"><span class="std std-doc">BERT QA</span></a></p></td>
 <td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">bertQA</span></code></p></td>
 <td class="text-left"><p></p></td>
 <td class="text-left"><p>MultiArray</p></td>
@@ -466,9 +461,9 @@ document.write(`
 <td class="text-left"><p>Image</p></td>
 <td class="text-left"><p>MultiArray</p></td>
 </tr>
-<tr class="row-odd"><td class="text-left"><p><a class="reference external" href="https://coremltools.readme.io/docs/introductory-quickstart">Image Classifier</a></p></td>
+<tr class="row-odd"><td class="text-left"><p><a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Image Classifier</span></a></p></td>
 <td class="text-left"><p></p></td>
-<td class="text-left"><p></p></td>
+<td class="text-left"><p><code class="docutils literal notranslate"><span class="pre">imageClassifier</span></code></p></td>
 <td class="text-left"><p>Image</p></td>
 <td class="text-left"><p>Dict, string</p></td>
 </tr>
@@ -480,6 +475,7 @@ document.write(`
 </tr>
 </tbody>
 </table>
+<p>For an example of previewing an Image Classifier, see <a class="reference internal" href="introductory-quickstart.html"><span class="doc std std-doc">Getting Started</span></a>. For an example of previewing a BERT QA model, see <a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html#convert-the-tf-hub-bert-transformer-model"><span class="std std-doc">Converting TensorFlow 2 BERT Transformer Models</span></a>.</p>
 </section>
 <section id="segmentation-example">
 <h2>Segmentation Example<a class="headerlink" href="#segmentation-example" title="Permalink to this heading">#</a></h2>
@@ -492,14 +488,14 @@ document.write(`
 <li><p>Save the model.</p></li>
 </ol>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># load the model</span>
-<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_no_metadata.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="n">labels_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;background&quot;</span><span class="p">,</span> <span class="s2">&quot;aeroplane&quot;</span><span class="p">,</span> <span class="s2">&quot;bicycle&quot;</span><span class="p">,</span> <span class="s2">&quot;bird&quot;</span><span class="p">,</span> <span class="s2">&quot;board&quot;</span><span class="p">,</span> <span class="s2">&quot;bottle&quot;</span><span class="p">,</span> <span class="s2">&quot;bus&quot;</span><span class="p">,</span> <span class="s2">&quot;car&quot;</span><span class="p">,</span> <span class="s2">&quot;cat&quot;</span><span class="p">,</span> <span class="s2">&quot;chair&quot;</span><span class="p">,</span> <span class="s2">&quot;cow&quot;</span><span class="p">,</span> <span class="s2">&quot;diningTable&quot;</span><span class="p">,</span> <span class="s2">&quot;dog&quot;</span><span class="p">,</span> <span class="s2">&quot;horse&quot;</span><span class="p">,</span> <span class="s2">&quot;motorbike&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;pottedPlant&quot;</span><span class="p">,</span> <span class="s2">&quot;sheep&quot;</span><span class="p">,</span> <span class="s2">&quot;sofa&quot;</span><span class="p">,</span> <span class="s2">&quot;train&quot;</span><span class="p">,</span> <span class="s2">&quot;tvOrMonitor&quot;</span><span class="p">]}</span>
 
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;imageSegmenter&quot;</span>
 <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s1">&#39;com.apple.coreml.model.preview.params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">labels_json</span><span class="p">)</span>
 
-<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;SegmentationModel_with_metadata.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="admonition note">
@@ -509,9 +505,9 @@ document.write(`
 <section id="open-the-model-in-xcode">
 <h3>Open the Model in Xcode<a class="headerlink" href="#open-the-model-in-xcode" title="Permalink to this heading">#</a></h3>
 <p>To launch Xcode and open the model information pane, double-click the saved <code class="docutils literal notranslate"><span class="pre">SegmentationModel_with_metadata.mlmodel</span></code> file in the Mac Finder.</p>
-<p><img alt="SegmentationModel_with_metadata.mlmodel" src="../_images/xcode-segment-metadata3.png" /></p>
-<p>The Segmentation model for this example offers tabs for <strong>Metadata</strong>, <strong>Preview</strong>, <strong>Predictions</strong>, and <strong>Utilities</strong>. Click the <strong>Predictions</strong> tab to see the model’s input and output.</p>
-<p><img alt="Predictions tab" src="../_images/xcode-quickstart6-model-predictions2.png" /></p>
+<p><img alt="SegmentationModel_with_metadata.mlpackage" src="../_images/xcode-segment-metadata3.png" /></p>
+<p>Click the <strong>Predictions</strong> tab to see the model’s input and output.</p>
+<p><img alt="Predictions tab" src="../_images/xcode-segment-predictions.png" /></p>
 </section>
 <section id="preview-the-model-in-xcode">
 <h3>Preview the Model in Xcode<a class="headerlink" href="#preview-the-model-in-xcode" title="Permalink to this heading">#</a></h3>
@@ -525,81 +521,51 @@ document.write(`
 <li><p>Drag an image into the image well on the left side of the model preview. The result appears in the preview pane:</p></li>
 </ol>
 <p><img alt="Preview pane" src="../_images/xcode-deeplab-model5-preview-drag.png" /></p>
-<p><img alt="Cropped preview" src="../_images/xcode-segment-preview2-crop.png" /></p>
+<p><img alt="Cropped preview" src="../_images/xcode-deeplab-model5-preview-drag2.png" /></p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>For the full code to convert the model, see <a class="reference internal" href="pytorch-conversion-examples.html"><span class="doc std std-doc">Converting a PyTorch Segmentation Model</span></a>.</p>
 </div>
 </section>
 </section>
-<section id="bert-qa-example">
-<h2>BERT QA Example<a class="headerlink" href="#bert-qa-example" title="Permalink to this heading">#</a></h2>
-<p>For a <a class="reference external" href="https://developer.apple.com/machine-learning/models/#text">BERT QA model</a>, follow these steps to add the metadata for the Xcode preview:</p>
-<ol class="arabic simple">
-<li><p>Load the converted model.</p></li>
-<li><p>Define the <code class="docutils literal notranslate"><span class="pre">model.preview.type</span></code> metadata as <code class="docutils literal notranslate"><span class="pre">&quot;bertqa&quot;</span></code>.</p></li>
-<li><p>Save the model.</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;BERT_no_preview_type.mlmodel&quot;</span><span class="p">)</span>
-<span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;bertQA&quot;</span>
-<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;BERT_with_preview_type.mlmodel&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<section id="id1">
-<h3>Open the Model in Xcode<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
-<p>Double-click the <code class="docutils literal notranslate"><span class="pre">BERT_with_preview_type.mlmodel</span></code> file in the Mac Finder to launch Xcode and open the model information pane:</p>
-<p><img alt="Model information page" src="../_images/xcode_bert_model_preview1.png" /></p>
-<p>The BERT QA model for this example offers tabs for <strong>Metadata</strong>, <strong>Preview</strong>, <strong>Predictions</strong>, and <strong>Utilities</strong>. Click the <strong>Predictions</strong> tab to see the model’s input and output.</p>
-<p><img alt="Predictions tab" src="../_images/xcode_bert_model_preview2_prediction.png" /></p>
-</section>
-<section id="id2">
-<h3>Preview the Model in Xcode<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
-<p>To preview the model’s performance, follow these steps:</p>
-<ol class="arabic simple">
-<li><p>Click the <strong>Preview</strong> tab.</p></li>
-<li><p>Copy and paste sample text, such as the BERT QA model description, into the Passage Context field.</p></li>
-<li><p>Enter a question in the Question field, such as <strong>What is BERT?</strong> The answer appears in the Answer Candidate field, and is also highlighted in the Passage Context field.</p></li>
-</ol>
-<p><img alt="Preview performance" src="../_images/xcode_bert_model_preview3_preview.png" /></p>
-</section>
-</section>
 <section id="body-pose-example">
 <h2>Body Pose Example<a class="headerlink" href="#body-pose-example" title="Permalink to this heading">#</a></h2>
-<p>For a body pose model such as <a class="reference external" href="https://developer.apple.com/documentation/coreml/detecting_human_body_poses_in_an_image?language=objc">PoseNet</a>, follow these steps to add the metadata for an Xcode preview:</p>
-<ol class="arabic simple">
-<li><p>Load the converted model.</p></li>
-<li><p>Define the <code class="docutils literal notranslate"><span class="pre">model.preview.type</span></code> metadata as <code class="docutils literal notranslate"><span class="pre">&quot;poseEstimation&quot;</span></code>.</p></li>
-<li><p>Provide the preview parameters for <code class="docutils literal notranslate"><span class="pre">{&quot;width_multiplier&quot;:</span> <span class="pre">FLOAT,</span> <span class="pre">&quot;output_stride&quot;:</span> <span class="pre">INT}</span></code>. You can learn more about these parameters in <a class="reference external" href="https://github.com/tensorflow/tfjs-models/blob/master/posenet/src/posenet_model.ts">posenet_model.ts in Pre-trained TensorFlow.js models on GitHub</a>.</p></li>
-<li><p>Save the model.</p></li>
-</ol>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;posenet_no_preview_type.mlmodel&quot;</span><span class="p">)</span> 
+<p>You can add an Xcode preview to the <a class="reference external" href="https://developer.apple.com/documentation/coreml/detecting_human_body_poses_in_an_image?language=objc">PoseNet</a> body pose model by defining the <code class="docutils literal notranslate"><span class="pre">model.preview.type</span></code> metadata as <code class="docutils literal notranslate"><span class="pre">&quot;poseEstimation&quot;</span></code>, and providing the preview parameters for <code class="docutils literal notranslate"><span class="pre">{&quot;width_multiplier&quot;:</span> <span class="pre">FLOAT,</span> <span class="pre">&quot;output_stride&quot;:</span> <span class="pre">INT}</span></code>.</p>
+<p>Click <strong>Download</strong> on the <a class="reference external" href="https://developer.apple.com/documentation/coreml/detecting_human_body_poses_in_an_image?language=objc">PoseNet page</a> to retrieve the <code class="docutils literal notranslate"><span class="pre">DetectingHumanBodyPosesInAnImage</span></code> folder that contains the neural network (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code> file), and then use the following code to add the preview type and parameters:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="c1"># Load model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;DetectingHumanBodyPosesInAnImage/PoseFinder/Model/PoseNetMobileNet075S16FP16.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s2">&quot;com.apple.coreml.model.preview.type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;poseEstimation&quot;</span>
 <span class="n">params_json</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;width_multiplier&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;output_stride&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">}</span>
 <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="s1">&#39;com.apple.coreml.model.preview.params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">params_json</span><span class="p">)</span>
 <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;posenet_with_preview_type.mlmodel&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<section id="id3">
-<h3>Open the Model in Xcode<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<p>Learn more about the preview parameters in <a class="reference external" href="https://github.com/tensorflow/tfjs-models/blob/master/posenet/src/posenet_model.ts">posenet_model.ts in Pre-trained TensorFlow.js models on GitHub</a>.</p>
+<section id="id1">
+<h3>Open the Model in Xcode<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
 <p>Double-click the <code class="docutils literal notranslate"><span class="pre">posenet_with_preview_type.mlmodel</span></code> file in the Mac Finder to launch Xcode and open the model information pane:</p>
 <p><img alt="Model information pane for PoseNet model" src="../_images/xcode-bodypose-posenet-metadata.png" /></p>
-<p>The PoseNet model for this example offers tabs for <strong>Metadata</strong>, <strong>Preview</strong>, <strong>Predictions</strong>, and <strong>Utilities</strong>. Click the <strong>Predictions</strong> tab to see the model’s input and output.</p>
+<p>Click the <strong>Predictions</strong> tab to see the model’s input and output.</p>
 <p><img alt="PoseNet model input and output" src="../_images/xcode-bodypose-posenet-predictions.png" /></p>
 </section>
-<section id="id4">
-<h3>Preview the Model in Xcode<a class="headerlink" href="#id4" title="Permalink to this heading">#</a></h3>
+<section id="id2">
+<h3>Preview the Model in Xcode<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
 <p>To preview the model’s output for a given input, follow these steps using the following sample image:</p>
-<figure class="align-center" id="id5">
+<figure class="align-center" id="id3">
 <img alt="Standing man (standing-man.jpeg)" class="imgnoborder" src="../_images/standing-man.jpeg" />
 <figcaption>
-<p><span class="caption-text">Right-click and choose <strong>Save Image</strong> to download this test image. (“Figure from a Crèche: Standing Man” is in the public domain, available from <a class="reference external" href="https://creativecommons.org">creativecommons.org</a>.)</span><a class="headerlink" href="#id5" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Right-click and choose <strong>Save Image</strong> to download this test image. (“Figure from a Crèche: Standing Man” is in the public domain, available from <a class="reference external" href="https://creativecommons.org">creativecommons.org</a>.)</span><a class="headerlink" href="#id3" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
 <ol class="arabic simple">
+<li><p>Download the sample image.</p></li>
 <li><p>Click the <strong>Preview</strong> tab.</p></li>
-<li><p>Drag the above image into the image well on the left side of the model preview.</p></li>
-<li><p>The result appears in the preview pane:</p></li>
+<li><p>Drag the sample image into the image well on the left side of the model preview.</p></li>
 </ol>
+<p>The result appears in the preview pane:</p>
 <p><img alt="Preview of result" src="../_images/xcode-bodypose-posenet-preview.png" /></p>
 <p>The result shows a single pose estimation (the key points of the body pose) under the <strong>Single</strong> tab, and estimates of multiple poses under the <strong>Multiple</strong> tab.</p>
 </section>
@@ -660,14 +626,9 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#preview-the-model-in-xcode">Preview the Model in Xcode</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bert-qa-example">BERT QA Example</a><ul class="nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#body-pose-example">Body Pose Example</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Open the Model in Xcode</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Preview the Model in Xcode</a></li>
-</ul>
-</li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#body-pose-example">Body Pose Example</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Open the Model in Xcode</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">Preview the Model in Xcode</a></li>
 </ul>
 </li>
 </ul>
