@@ -562,6 +562,62 @@ class TestQuantizeWeightsAPI:
     def test_embeddingND_quantize_CPU_and_NE(self):
         self.test_embeddingND_quantize(ComputeUnit.CPU_AND_NE)
 
+    @staticmethod
+    @pytest.mark.parametrize(
+        "compute_units", [ComputeUnit.ALL, ComputeUnit.CPU_AND_GPU, ComputeUnit.CPU_ONLY]
+    )
+    def test_loadConstantND_quantize(compute_units):
+        input_features = [("data", datatypes.Array(10, 1))]
+        output_features = [("output", None)]
+        builder = neural_network.NeuralNetworkBuilder(
+            input_features, output_features, disable_rank5_shape_mapping=True
+        )
+
+        output_shape = [10, 10]
+        ori_value = np.random.randint(0, 200, output_shape).astype(np.float32)
+        builder.add_load_constant_nd(
+            name="load_constant_nd",
+            output_name="constant",
+            constant_value=ori_value,
+            shape=output_shape)
+
+        builder.add_broadcast_to_dynamic(
+            name="broadcast_to_dynamic", input_names=["constant", "data"], output_name="output"
+        )
+
+        spec = builder.spec
+        model_fp32 = coremltools.models.MLModel(spec, compute_units=compute_units)
+        assert len(spec.neuralNetwork.layers[0].loadConstantND.data.floatValue) == 100
+
+        # quantize to FP16
+        model_fp16 = quantization_utils.quantize_weights(model_fp32, nbits=16)
+        assert model_fp16.compute_unit == compute_units
+        spec_fp16 = model_fp16.get_spec()
+        assert len(spec_fp16.neuralNetwork.layers[0].loadConstantND.data.floatValue) == 0
+        assert len(spec_fp16.neuralNetwork.layers[0].loadConstantND.data.float16Value) == 2 * 100
+
+        # quantize to uint8
+        model_uint8 = quantization_utils.quantize_weights(model_fp32, nbits=8)
+        assert model_uint8.compute_unit == compute_units
+        spec_uint8 = model_uint8.get_spec()
+        assert len(spec_uint8.neuralNetwork.layers[0].loadConstantND.data.floatValue) == 0
+        assert len(spec_uint8.neuralNetwork.layers[0].loadConstantND.data.float16Value) == 0
+        assert len(spec_uint8.neuralNetwork.layers[0].loadConstantND.data.rawValue) == 100
+
+        # quantize to uint5
+        model_uint5 = quantization_utils.quantize_weights(model_fp32, nbits=5)
+        assert model_uint5.compute_unit == compute_units
+        spec_uint5 = model_uint5.get_spec()
+        assert len(spec_uint5.neuralNetwork.layers[0].loadConstantND.data.floatValue) == 0
+        assert len(spec_uint5.neuralNetwork.layers[0].loadConstantND.data.float16Value) == 0
+        assert len(spec_uint5.neuralNetwork.layers[0].loadConstantND.data.rawValue) == 63  # 63 = ceil(5*100/8)
+
+    @unittest.skipIf(coremltools.utils._macos_version() < (13, 0),
+                     'ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
+    )
+    def test_loadConstantND_quantize_CPU_and_NE(self):
+        self.test_loadConstantND_quantize(ComputeUnit.CPU_AND_NE)
+
 
 class TestKMeansLookup:
     @pytest.mark.parametrize("weightShape, dtype",

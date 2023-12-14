@@ -78,6 +78,7 @@ class QuantizedLayerSelector:
             "scale",
             "bias",
             "loadConstant",
+            "loadConstantND",
             "simpleRecurrent",
             "gru",
             "uniDirectionalLSTM",
@@ -901,6 +902,13 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
             nw = _np.prod(layer.loadConstant.shape)
             _quantize_wp_field(
                 layer.loadConstant.data, nbits, qm, shape=(nw,), **kwargs
+            )
+
+        # LoadConstantND layer
+        elif layer_type == "loadConstantND":
+            nw = _np.prod(layer.loadConstantND.shape)
+            _quantize_wp_field(
+                layer.loadConstantND.data, nbits, qm, shape=(nw,), **kwargs
             )
 
         # Simple Recurrent
