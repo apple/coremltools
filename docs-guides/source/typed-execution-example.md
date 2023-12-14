@@ -69,7 +69,6 @@ To make a prediction with the newly converted Core ML model, follow these steps:
 2. Add the following code to load the image using `PIL` (the Python image library, which you installed as `pillow` in the previous section):
     
     ```python
-    import PIL
     from PIL import Image
     
     img = Image.open("seats.jpg").resize((512, 512), Image.ANTIALIAS)

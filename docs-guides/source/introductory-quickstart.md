@@ -21,15 +21,13 @@ In this example, you will do the following:
 - [Save and load the model](#save-and-load-the-model).
 - [Use the model with Xcode](#use-the-model-with-xcode) to incorporate the model into your app.
 
-## Prerequisites
+## Requirements
 
-To run this example, first install the newest version of Core ML Tools (see [Installing Core ML Tools](installing-coremltools)). 
-
-You also need TensorFlow version 2.2.0, H5PY version 2.10.0, numpy version 1.21, and pillow. Use the following commands to install them:
+To run this example, first install [TensorFlow](https://www.tensorflow.org/install) version 2.2.0, [H5PY](https://www.h5py.org) version 2.10.0, [NumPy](https://numpy.org) version 1.21, and [Pillow](https://pypi.org/project/Pillow/). Then install the newest version of Core ML Tools (see [Installing Core ML Tools](installing-coremltools)). Use the following commands:
 
 ```shell
-pip install tensorflow==2.2.0 h5py==2.10.0 numpy==1.21
-pip install pillow
+pip install tensorflow==2.2.0 h5py==2.10.0 numpy==1.21 Pillow
+pip install -U coremltools
 ```
 
 ## Download the Model
@@ -37,7 +35,7 @@ pip install pillow
 Download the previously trained [MobileNetV2](https://www.tensorflow.org/api_docs/python/tf/keras/applications/mobilenet_v2 "Module: tf.keras.applications.mobilenet_v2") model, which is based on the [tensorflow.keras.applications](https://www.tensorflow.org/api_docs/python/tf/keras/applications "Module: tf.keras.applications") API:
 
 ```python
-import tensorflow as tf # TF 2.2.0
+import tensorflow as tf
 
 # Download MobileNetv2 (using tf.keras)
 keras_model = tf.keras.applications.MobileNetV2(
@@ -66,7 +64,7 @@ for i, label in enumerate(class_labels):
 Now that the model is loaded and the class labels are collected, you can convert the model to Core ML.
 
 ```{tip}
-Before converting the model, a good practice for improving device performance is to know in advance the types and shapes, and to consider the model's interface, including the names and types of inputs and outputs. For this example, the application is an image classifier, and therefore the model's input is an `ImageType` of a specified size. When using inputs of an `ImageType`, it is also important to find out how the model expects its input to be preprocessed or normalized.
+Before converting the model, a good practice for improving device performance is to know in advance the types and shapes, and to consider the model's interface, including the names and types of inputs and outputs. For this example, the application is an image classifier, and therefore the model's input is an [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#imagetype) of a specified size. When using inputs of an `ImageType`, it is also important to find out how the model expects its input to be preprocessed or normalized. For details, see [Image Input and Output](image-inputs).
 ```
 
 ```{eval-rst}
@@ -112,9 +110,7 @@ Add code to print a message showing that the model was converted:
 
 ```python
 # Print a message showing the model was converted.
-print('--------------------------------')
 print('Model converted to an ML Program')
-print('--------------------------------')
 ```
 
 ## Set the Model Metadata
@@ -170,7 +166,6 @@ An example test image (`daisy.jpg`). Right-click and choose **Save Image** to do
 
 ```python Python
 # Use PIL to load and resize the image to expected size
-import PIL
 from PIL import Image
 example_image = Image.open("daisy.jpg").resize((224, 224))
 
@@ -225,9 +220,7 @@ Converting TF Frontend ==> MIL Ops: 100%|█████████████
 Running MIL frontend_tensorflow2 pipeline: 100%|███████████████████████████████████████████████████| 7/7 [00:00<00:00, 205.06 passes/s]
 Running MIL default pipeline: 100%|███████████████████████████████████████████████████████████████| 71/71 [00:02<00:00, 24.50 passes/s]
 Running MIL backend_mlprogram pipeline: 100%|████████████████████████████████████████████████████| 12/12 [00:00<00:00, 305.78 passes/s]
---------------------------------
 Model converted to an ML Program
---------------------------------
 daisy
 model saved and loaded
 ```
