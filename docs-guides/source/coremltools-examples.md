@@ -120,7 +120,6 @@ Full example:
 Full examples:
 
 - [Segmentation Example](xcode-model-preview-types.md#segmentation-example)
-- [BERT QA Example](xcode-model-preview-types.md#bert-qa-example)
 - [Body Pose Example](xcode-model-preview-types.md#body-pose-example)
 
 ### MLModel Utilities

@@ -1,6 +1,6 @@
 # Typed Execution
 
-A model’s compute precision impacts its performance and numerical accuracy, which may impact the user experience of apps using the model. Core ML models saved as [ML Programs](convert-to-ml-program) or neural networks execute with either float 32 or float 16 precision. 
+A model’s compute precision impacts its performance and numerical accuracy, which may impact the user experience of apps using the model. Core ML models saved as [ML programs](convert-to-ml-program) or neural networks execute with either float 32 or float 16 precision. 
 
 This page describes how the precision is determined by the runtime during execution of either type of model. The ability to choose this precision can give you more flexible control over computations and performance.
 
@@ -12,15 +12,14 @@ Whether you are using neural networks or ML programs, the defaults for conversio
 
 In some cases the mismatch between the source model trained using float 32 precision and the Core ML model is large enough to significantly affect the user experience. In this case, you would typically want to disable float 16 precision and execute the model with float 32 precision.
 
-With a `neuralnetwork` model type, the precision is tied to the compute unit used for execution, as described in the following section. The CPU guarantees float 32 precision, so you can use the [`.cpuOnly`](https://developer.apple.com/documentation/coreml/mlcomputeunits/cpuonly) property in your app's Swift code when loading the model to enforce the higher precision. 
+If you use `convert_to="neuralnetwork"` with the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert) method, the precision is tied to the compute unit used for execution, as described in the following section. The CPU guarantees float 32 precision, so you can use the [`.cpuOnly`](https://developer.apple.com/documentation/coreml/mlcomputeunits/cpuonly) property in your app's Swift code when loading the model to enforce the higher precision. 
 
-With an ML program you have more flexibility. You can set a compute precision of float 32 during the conversion process by using the `compute_precision` setting, as shown in the following example:
+The model format for `convert()`, by default, is an ML program, which gives you more flexibility. You can set a compute precision of float 32 during the conversion process by using the `compute_precision` setting, as shown in the following example:
 
 ```python
 import coremltools as ct
 
 model = ct.convert(source_model, 
-                   convert_to="mlprogram", 
                    compute_precision=ct.precision.FLOAT32)
 ```
 

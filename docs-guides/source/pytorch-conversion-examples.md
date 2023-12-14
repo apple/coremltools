@@ -9,15 +9,18 @@ This example demonstrates how to convert a PyTorch [segmentation model](https://
 
 ## Install the Required Software
 
-To run this example, first install the newest version of Core ML Tools (see [Installing Core ML Tools](installing-coremltools)). 
+To run this example, first install the newest version of Core ML Tools (see [Installing Core ML Tools](installing-coremltools)):
 
-To run this example, first install the newest version of Core ML Tools (see [Installing Core ML Tools](installing-coremltools)). 
+```shell
+pip install -U coremltools
+```
 
-You also need PyTorch and Torchvision. Use the following commands:
+You also need PyTorch, Torchvision, and PIL (`pillow`). Use the following commands:
 
 ```shell
 pip install torch
 pip install torchvision
+pip install pillow
 ```
 
 ## Load the Model and Image
