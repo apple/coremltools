@@ -101,8 +101,7 @@ class TestExecutorch(TorchBaseTest):
                 self.softmax = torch.nn.Softmax()
 
             def forward(self, x):
-                z = self.softmax(x)
-                return z
+                return self.softmax(x)
 
         model = LinearModule()
         model.eval()

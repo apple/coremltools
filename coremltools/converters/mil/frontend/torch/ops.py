@@ -4301,21 +4301,11 @@ def slice(context, node):
 
     start = 0
     if len(inputs) > 2 and inputs[2] is not None:
-        if inputs[2].val is not None:
-            start = inputs[2].val
-            if start < 0:
-                start += x.shape[dim]
-        else:
-            start = inputs[2]
+        start = inputs[2].val if inputs[2].val is not None else inputs[2]
 
     end = None
     if len(inputs) > 3 and inputs[3] is not None:
-        if inputs[3].val is not None:
-            end = inputs[3].val
-            if end < 0:
-                end += x.shape[dim]
-        else:
-            end = inputs[3]
+        end = inputs[3].val if inputs[3].val is not None else inputs[3]
 
     step = 1
     if len(inputs) > 4 and inputs[4] is not None:
@@ -4560,7 +4550,13 @@ def expand_as(context, node):
     context.add(res)
 
 
-def _arange(context, node_name, start, end, step):
+def _arange(
+    context,
+    node_name: str,
+    start: Var,
+    end: Var,
+    step: Var,
+):
     # torch may have mixed precision, including mixing float and int,
     # but Core ML needs these inputs to have uniform dtype
     start, end, step = promote_input_dtypes([start, end, step])
