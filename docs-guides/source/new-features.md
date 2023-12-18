@@ -78,7 +78,7 @@ In coremltools 4 and newer, the the following class and methods available in pre
 - Caffe converter
 - Keras.io and ONNX converters will be deprecated in coremltools 6. Users are recommended to transition to the TensorFlow/PyTorch conversion using the [Unified Conversion API](unified-conversion-api). 
 
-Support for Python 2 has been deprecated since [coremltools 4.1](https://github.com/apple/coremltools/releases/tag/4.1). The current version of coremltools includes wheels for Python 3.5, 3.6, 3.7, and 3.8.
+The current version of coremltools ([version 7.1](https://github.com/apple/coremltools)) includes wheels for Python 3.7, 3.8, 3.9, 3.10, and 3.11.
 
 
 
