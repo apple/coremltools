@@ -251,7 +251,7 @@ class TensorInputType(_InputType):
         class conv(Operation):
             input_spec = InputSpec(
                 x=TensorInputType(type_domain="T"),
-                weight=TensorInputType(type_domain="U"),
+                weight=TensorInputType(type_domain="T"),
             )
 
             type_domains = {
