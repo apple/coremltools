@@ -8,6 +8,7 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
+from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as _np
@@ -32,7 +33,6 @@ from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import build_einsum_mil, value_at
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
-from .utils import TorchFrontend
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -42,6 +42,11 @@ from .utils import TorchFrontend
 PYTORCH_DEFAULT_VALUE = 2**63 - 1
 
 VALUE_CLOSE_TO_INFINITY = 1e+38
+
+
+class TorchFrontend(Enum):
+    TORCHSCRIPT = 1
+    EDGEIR = 2
 
 
 def _all_outputs_present(context, graph):
@@ -4551,7 +4556,7 @@ def expand_as(context, node):
 
 
 def _arange(
-    context,
+    context: "TranscriptionContext",
     node_name: str,
     start: Var,
     end: Var,

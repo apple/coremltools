@@ -21,7 +21,7 @@ from coremltools.converters.mil.mil.var import Var
 
 from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
-from .ops import convert_nodes
+from .ops import TorchFrontend, convert_nodes
 from .quantization_ops import _dequantized_weight
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchir_passes import (
@@ -32,7 +32,6 @@ from .torchir_passes import (
     transform_inplace_ops,
 )
 from .torchscript_utils import torch_to_mil_types
-from .utils import TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
