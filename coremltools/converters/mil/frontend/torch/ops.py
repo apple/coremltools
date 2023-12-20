@@ -4556,7 +4556,7 @@ def expand_as(context, node):
 
 
 def _arange(
-    context: "TranscriptionContext",
+    context,
     node_name: str,
     start: Var,
     end: Var,
