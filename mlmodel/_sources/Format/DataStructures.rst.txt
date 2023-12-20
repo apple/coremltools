@@ -204,7 +204,7 @@ A range of double values
 PrecisionRecallCurve
 ________________________________________________________________________________
 
-The syntax comprises two tables: one to look up the confidence value threshold
+The syntax comprises two tables: one to look up the precision value threshold
 for a given precision, and the other for a given recall. 
 
 .. list-table:: Example
