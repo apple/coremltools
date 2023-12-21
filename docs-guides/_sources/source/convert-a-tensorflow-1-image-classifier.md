@@ -8,22 +8,28 @@
 
 # Converting a TensorFlow 1 Image Classifier
 
-The following example converts the TensorFlow Inception V1 image classifier to a Core ML neural network classifier model that directly predicts the class label of the input image. It demonstrates the importance of setting the image preprocessing parameters correctly to get the right results.
+The following example converts the TensorFlow Inception V1 image classifier to a Core ML classifier model that directly predicts the class label of the input image. It demonstrates the importance of setting the image preprocessing parameters correctly to get the right results.
 
-## Prerequisites
+## Requirements
 
-To use TensorFlow 1 (version 1.15) for this example, you may need to change your version of Python to one that works with TensorFlow 1. For details, see the following:
-
-- For virtual environments, see [How to manage multiple Python versions](https://www.freecodecamp.org/news/manage-multiple-python-versions-and-virtual-environments-venv-pyenv-pyvenv-a29fb00c296f/).
-- For Miniconda and Anaconda environments, see [Managing Python](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-python.html).
-
-You may also need to install [Pillow](https://pillow.readthedocs.io/en/stable/), [Requests](https://pypi.org/project/requests/), and [matplotlib](https://pypi.org/project/matplotlib/). The following commands work for a Miniconda environment:
+This model requires TensorFlow 1, which is deprecated and difficult to install directly with pip. You can use the appropriate [Miniconda installer](https://docs.conda.io/en/latest/miniconda.html) for your operating system and create a Miniconda environment specifically for Python 3.7, and then use conda to install TensorFlow 1.15:
 
 ```shell
-conda install python=3.7.9
+conda create -n tensorflow1-env python=3.7
+conda activate tensorflow1-env
 conda install tensorflow==1.15
+```
+
+```{note}
+For alternatives, see [How to pip install old version of library(tensorflow)](https://stackoverflow.com/questions/41937915/how-to-pip-install-old-version-of-librarytensorflow) on StackOverflow.
+```
+
+In addition, you need to install the following for this environment:
+
+```
+pip install -U coremltools
 pip install pillow
-conda install requests 
+conda install requests
 conda install matplotlib
 ```
 
@@ -72,7 +78,6 @@ The following code loads the TensorFlow graph to find the input and output tenso
 # Load the TF graph definition
 import tensorflow as tf # 1.x
 
-
 tf_model_path = './inception_v1_2016_08_28_frozen.pb'
 with open(tf_model_path, 'rb') as f:
     serialized = f.read()
@@ -95,67 +100,19 @@ with tf.Graph().as_default() as g:
             print("name = {}, shape: {},".format(x.name, x.get_shape())),
 ```
 
-As shown in the following results, the output of the `Placeholder` op is the input (`input:0`), and the output of the `Softmax` op (near the end of the graph) is the output (`InceptionV1/Logits/Predictions/Softmax:0`). 
-
-```text Result
-op id 0 : op type: "Placeholder"
-input(s):
-
-output(s):
-name = input:0, shape: (1, 224, 224, 3),
-
-
-op id 1 : op type: "Const"
-input(s):
-
-output(s):
-name = InceptionV1/Conv2d_1a_7x7/weights:0, shape: (7, 7, 3, 64),
-
-
-op id 2 : op type: "Identity"
-input(s):
-name = InceptionV1/Conv2d_1a_7x7/weights:0, shape: (7, 7, 3, 64), 
-
-output(s):
-name = InceptionV1/Conv2d_1a_7x7/weights/read:0, shape: (7, 7, 3, 64),
-
-
-op id 1012 : op type: "Softmax"
-input(s):
-name = InceptionV1/Logits/Predictions/Reshape:0, shape: (1, 1001), 
-
-output(s):
-name = InceptionV1/Logits/Predictions/Softmax:0, shape: (1, 1001),
-
-
-op id 1013 : op type: "Const"
-input(s):
-
-output(s):
-name = InceptionV1/Logits/Predictions/Shape:0, shape: (2,),
-
-
-op id 1014 : op type: "Reshape"
-input(s):
-name = InceptionV1/Logits/Predictions/Softmax:0, shape: (1, 1001), 
-name = InceptionV1/Logits/Predictions/Shape:0, shape: (2,), 
-
-output(s):
-name = InceptionV1/Logits/Predictions/Reshape_1:0, shape: (1, 1001),
-```
+If you run the code at this point, you can see that the output of the `Placeholder` op is the input (`input:0`), and the output of the `Softmax` op (near the end of the graph) is the output (`InceptionV1/Logits/Predictions/Softmax:0`). 
 
 ## Convert to Core ML
 
-The following code sets the `image_inputs` for `inputs` and the output name (`'InceptionV1/Logits/Predictions/Softmax'`) for `outputs` in order to use them with the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. The `convert()` method produces a neural network by default:
+The following code sets the `image_inputs` for `inputs` and the output name (`'InceptionV1/Logits/Predictions/Softmax'`) for `outputs` in order to use them with the [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. The `convert()` method produces an ML program by default:
 
 ```python
 import coremltools as ct
 
 image_inputs = ct.ImageType(shape=(1, 224, 224, 3))
 classifier_config = ct.ClassifierConfig('imagenet_slim_labels.txt')
-coreml_model_file = './inception_v1.mlmodel'
+coreml_model_file = './inception_v1.mlpackage'
 output = ['InceptionV1/Logits/Predictions/Softmax']
-
 
 coreml_model = ct.convert(tf_model_path, 
                           inputs=[image_inputs], 
@@ -165,56 +122,49 @@ coreml_model = ct.convert(tf_model_path,
 coreml_model.save(coreml_model_file)
 ```
 
-The result shows the progress of the conversion:
+The result shows the progress of the conversion, but also includes the following warning:
 
-```text Result
-Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:02<00:00,  3.24 passes/s]
-Converting Frontend ==> MIL Ops: 100%|██████████| 441/441 [00:00<00:00, 926.87 ops/s] 
-Running MIL optimization passes: 100%|██████████| 17/17 [00:00<00:00, 20.06 passes/s]
-Translating MIL ==> MLModel Ops: 100%|██████████| 839/839 [00:00<00:00, 1085.04 ops/s]
 ```
+UserWarning: Output, 'InceptionV1/Logits/Predictions/Softmax', of the source model, has been renamed to 'InceptionV1_Logits_Predictions_Softmax' in the Core ML model.
+```
+
+You will use the new name when making a prediction.
 
 ## Load a Test Image
 
-To make predictions on the same image using both the original model and the converted model, the following sample code snippet loads a test image. It uses [NumPy](https://numpy.org), [Pillow](https://pillow.readthedocs.io/en/stable/), [Requests](https://pypi.org/project/requests/), and [matplotlib](https://pypi.org/project/matplotlib/):
+To make predictions on the same image using both the original model and the converted model, right-click the following image and save it as `Golden_Retriever_Carlos.jpg` in the same folder as your Python project:
+
+```{figure} images/Golden_Retriever_Carlos_full.jpg
+:alt: Golden_Retriever_Carlos.jpg
+:align: center
+:class: imgnoborder
+
+This image of a golden retriever is from [Wikipedia](https://en.m.wikipedia.org/wiki/File:Golden_Retriever_Carlos_%2810581910556%29.jpg).
+```
+
+The following code loads the image:
 
 ```python
 # Load an image
 import numpy as np
-import PIL
-import requests
-from io import BytesIO
-from matplotlib.pyplot import imshow
-# This is an image of a golden retriever from Wikipedia
-img_url = 'https://upload.wikimedia.org/wikipedia/commons/9/93/Golden_Retriever_Carlos_%2810581910556%29.jpg'
-response = requests.get(img_url)
-%matplotlib inline
-img = PIL.Image.open(BytesIO(response.content))
-imshow(np.asarray(img))
+from PIL import Image
+img = Image.open("Golden_Retriever_Carlos.jpg")
 ```
-
-The code shows the following image:
-
-```{figure} images/Golden_Retriever_Carlos.png
-:alt: Golden Retriever image
-:align: center
-:class: imgnoborder
-
-This image of a golden retriever is from Wikipedia.
-```
-
 
 ## Input the Image and Make a Prediction
 
-The following code passes the PIL image into the Core ML model after resizing it, and uses a NumPy array of the image to make a prediction:
+The following code passes the PIL image into the Core ML model after resizing it, and uses a NumPy array of the image to make a prediction. It also fixes the output name to use the renamed output (`'InceptionV1_Logits_Predictions_Softmax'`) in the Core ML model:
 
 ```python
-# To get CoreML predictions directly pass in the PIL image after resizing
-import coremltools
-img = img.resize([224,224], PIL.Image.ANTIALIAS)
+img = img.resize([224,224], Image.LANCZOS)
 coreml_inputs = {'input': img}
+
+# Fix output name
+output = ['InceptionV1_Logits_Predictions_Softmax']
+
 coreml_output = coreml_model.predict(coreml_inputs)
 coreml_pred_dict = coreml_output[output[0]]
+
 coreml_predicted_class_label = coreml_output['classLabel']
 
 #for getting TF prediction we get the numpy array of the image
@@ -226,40 +176,35 @@ img_tf = np.expand_dims(img_np, axis = 0) #now shape is [1,224,224,3] as require
 # Evaluate TF and get the highest label 
 tf_input_name = 'input:0'
 tf_output_name = 'InceptionV1/Logits/Predictions/Softmax:0'
+# tf_output_name = 'InceptionV1_Logits_Predictions_Softmax:0'
+
+img_tf = (2.0/255.0) * img_tf - 1
 with tf.Session(graph = g) as sess:
     tf_out = sess.run(tf_output_name, 
                       feed_dict={tf_input_name: img_tf})
-tf_out = tf_out.flatten()    
+
+tf_out = tf_out.flatten()
 idx = np.argmax(tf_out)
 label_file = 'imagenet_slim_labels.txt' 
 with open(label_file) as f:
-    labels = f.readlines()
-    
-#print predictions   
-print('\n')
-print("CoreML prediction class = {}, probability = {}".format(coreml_predicted_class_label,
-                                            str(coreml_pred_dict[coreml_predicted_class_label])))  
+     labels = f.readlines()
+
+# print TF prediction
 print("TF prediction class = {}, probability = {}".format(labels[idx],
                                             str(tf_out[idx])))
+
+#print Core ML prediction
+print('\n')
+
+print("CoreML prediction class = {}, probability = {}".format(coreml_predicted_class_label,
+                                str(coreml_pred_dict[0])))
 ```
 
-The result shows that both predictions match, which ensures that the conversion is correct. However, the class labels are incorrect:
-
-```text Result
-image shape: (224, 224, 3)
-first few values:  [39. 33. 18. 42.] max value:  255.0
-
-
-CoreML prediction class = thatch, probability = 0.5372982025146484
-TF prediction class = thatch
-, probability = 0.5372873
-```
-
-The class labels are incorrect because the image was not preprocessed correctly before it was passed to the neural network. 
+The result shows that both predictions match, which ensures that the conversion is correct. However, for better results, ensure that the image is preprocessed correctly before passing it to the ML program. 
 
 ## Preprocess the Image Before Converting
 
-Preprocessing is always a crucial step when using neural networks on images. The best approach is to find the source of the pre-trained model and check for the preprocessing that the model's author used during training and evaluation.
+Preprocessing is always a crucial step when using ML programs and neural networks on images. The best approach is to find the source of the pre-trained model and check for the preprocessing that the model's author used during training and evaluation.
 
 In this case, the TensorFlow model comes from the
 [SLIM library](https://github.com/tensorflow/models/tree/edb6ed22a801665946c63d650ab9a0b23d98e1b1/research/slim "tensorflow/models/slim/"),
@@ -278,21 +223,21 @@ print("TF prediction class = {}, probability = {}".format(labels[idx],
                                             str(tf_out[idx])))
 ```
 
-The TensorFlow model now predicts a dog as the highest class:
+The TensorFlow model predicts an English Setter as the highest class, (with a probability of 0.301507):
 
 ```text Result
 TF prediction class = English setter
 , probability = 0.301507
 ```
 
-Core ML automatically handles the image preprocessing when the input is of type image. However, the image biases and scale are not correct. The channel scale should be multiplied first before adding the bias. The following code converts the model again with this correction, and saves the newly converted model:
+Core ML automatically handles the image preprocessing when the input is of type image. However, the image biases and scale are not correct. The channel scale should be multiplied first before adding the bias. The following code converts the model again with this correction, and saves the newly converted model. It also makes the prediction again with the newly converted Core ML model:
+
 
 ```python
 image_inputs = ct.ImageType(shape=(1, 224, 224, 3), bias=[-1,-1,-1], scale=2.0/255)
 classifier_config = ct.ClassifierConfig('imagenet_slim_labels.txt')
-coreml_model_file = './inception_v1.mlmodel'
+coreml_model_file = './inception_v1.mlpackage'
 output = ['InceptionV1/Logits/Predictions/Softmax']
-
 
 coreml_model = ct.convert(tf_model_path, 
                           inputs=[image_inputs], 
@@ -300,32 +245,25 @@ coreml_model = ct.convert(tf_model_path,
                           outputs=output)
 
 coreml_model.save(coreml_model_file)
-```
 
-The result shows the progress of the conversion:
-
-```text
-Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:02<00:00,  3.10 passes/s]
-Converting Frontend ==> MIL Ops: 100%|██████████| 441/441 [00:00<00:00, 998.08 ops/s] 
-Running MIL optimization passes: 100%|██████████| 17/17 [00:00<00:00, 20.62 passes/s]
-Translating MIL ==> MLModel Ops: 100%|██████████| 839/839 [00:00<00:00, 1125.96 ops/s]
-```
-
-The following code makes the prediction again with the newly converted Core ML model:
-
-```python
 # Call CoreML predict again
+
+# Fix output name
+output = ['InceptionV1_Logits_Predictions_Softmax']
+
 coreml_output = coreml_model.predict(coreml_inputs)
 coreml_pred_dict = coreml_output[output[0]]
 coreml_predicted_class_label = coreml_output['classLabel']
 print("CoreML prediction class = {}, probability = {}".format(coreml_predicted_class_label,
-                        str(coreml_pred_dict[coreml_predicted_class_label])))
+                        str(coreml_pred_dict[0])))
 
 ```
-The output now correctly matches the TensorFlow output:
+
+The output predicts the English Setter with higher probability (1.68707207e-04):
 
 ```text Result
-CoreML prediction class = English setter, probability = 0.3015042543411255
+CoreML prediction class = English setter, probability = [1.68707207e-04 4.01963953e-05 2.33356332e-04 ... 1.15576135e-04
+ 3.79885838e-04 2.21910377e-04]
 ```
 
 ```{admonition} Predictions Can Vary Slightly

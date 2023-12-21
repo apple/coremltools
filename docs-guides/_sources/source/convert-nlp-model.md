@@ -14,11 +14,6 @@ If you convert a scripted model, a warning appears explaining that support for s
 
 You can apply a [mix of scripting and tracing](model-scripting.md#mix-tracing-and-scripting) to optimize which parts of the model you want to trace, and which part you want to script. You can trace those portions of the model that are free of the control flow, and then script the control flow. In this example, the model runs the body of the code a fixed number of times inside a control loop. You can therefore trace the body of the code separately, and apply scripting to this outer control loop.
 
-```{admonition} Requires macOS Monterey
-
-This example requires macOS Monterey.
-```
-
 In this example you do the following:
 
 1. [Import libraries and set up the model](#import-libraries-and-set-up-the-model)
@@ -28,6 +23,18 @@ In this example you do the following:
 5. [Run the PyTorch model](#run-the-pytorch-model)
 6. [Run the converted Core ML model](#run-the-converted-core-ml-model)
 
+
+## Requirements
+
+This example requires macOS Monterey or newer versions, [PyTorch](https://pytorch.org/), and [Transformers](https://huggingface.co/transformers/index.html). Use the following commands:
+
+```shell
+pip install torch
+pip install transformers
+pip install -U coremltools
+```
+
+
 ## The GPT-2 NLP Model
 
 This example converts the PyTorch [GPT-2](https://huggingface.co/transformers/model_doc/gpt2.html) transformer-based natural language processing (NLP) model to Core ML.
@@ -36,12 +43,12 @@ GPT-2 was trained on a dataset of over eight million web pages, with a simple ob
 
 ## Import Libraries and Set Up the Model
 
-Import the PyTorch `torch` and [NumPy](https://numpy.org/doc/stable/index.html) `numpy` libraries, and  [`GPT2LMHeadModel`](https://huggingface.co/transformers/model_doc/gpt2.html#gpt2lmheadmodel) and [`GPT2Tokenizer`](https://huggingface.co/transformers/model_doc/gpt2.html#gpt2tokenizer) from [`transformers`](https://huggingface.co/transformers/index.html). The version of `transformers` for this example is 2.10.0.
+Import the `torch`, `numpy`, and `coremltools` libraries, and `GPT2LMHeadModel`) and `GPT2Tokenizer` from `transformers`. 
 
 ```python
 import torch
 import numpy as np
-from transformers import GPT2LMHeadModel, GPT2Tokenizer # 2.10.0 
+from transformers import GPT2LMHeadModel, GPT2Tokenizer
 import coremltools as ct
 ```
 
@@ -70,7 +77,7 @@ class FinishMySentence(torch.nn.Module):
 
 ## Trace and Script the Model
 
-Initialize the `token_predictor` from [`GPT2LMHeadModel`](https://huggingface.co/transformers/model_doc/gpt2.html#gpt2lmheadmodel), a GPT2 model transformer:
+Initialize the `token_predictor` from `GPT2LMHeadModel`, a GPT2 model transformer:
 
 ```python
 token_predictor = GPT2LMHeadModel.from_pretrained("gpt2", torchscript=True).eval()
@@ -108,7 +115,7 @@ mlmodel = ct.convert(
 
 ## Encode the Sentence Fragment as Input
 
-To test the performance of the converted model, encode the sentence fragment (`"The Manhattan bridge is"`) using the [`GPT2Tokenizer`](https://huggingface.co/transformers/model_doc/gpt2.html#gpt2tokenizer), and  convert that list of tokens into a Torch tensor.
+To test the performance of the converted model, encode the sentence fragment (`"The Manhattan bridge is"`) using the `GPT2Tokenizer`, and  convert that list of tokens into a Torch tensor.
 
 ```python
 sentence_fragment = "The Manhattan bridge is"
