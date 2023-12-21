@@ -21,7 +21,7 @@ from coremltools.converters.mil.mil.var import Var
 
 from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
-from .ops import convert_nodes
+from .ops import TorchFrontend, convert_nodes
 from .quantization_ops import _dequantized_weight
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchir_passes import (
@@ -194,8 +194,13 @@ class TranscriptionContext:
     context when stepping out.
     """
 
-    def __init__(self, name: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        name: Optional[str] = None,
+        frontend: TorchFrontend = TorchFrontend.TORCHSCRIPT,
+    ) -> None:
         self.name = name if name else ""
+        self.frontend = frontend
         self._current_graph = [{}]
         self._torch_graph = None
         self._quant_context = QuantizationContext(self)
@@ -346,6 +351,7 @@ class TorchConverter:
         self._prog = Program()
 
         if isinstance(loaded_model, torch.jit.ScriptModule):
+            self.context.frontend = TorchFrontend.TORCHSCRIPT
             self.graph, self.params_dict, self.buffer_dict = InternalTorchIRGraph.from_torchscript(
                 torchscript=loaded_model, input_values=self.inputs, cut_at_symbols=cut_at_symbols
             )
@@ -363,6 +369,7 @@ class TorchConverter:
                 p(self.graph)
 
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
+            self.context.frontend = TorchFrontend.EDGEIR
             self.graph = InternalTorchIRGraph.from_edgeir(edgeir=loaded_model)
             self.params_dict, self.buffer_dict = None, None
         else:

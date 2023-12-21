@@ -1428,7 +1428,7 @@ class TestTorchOps:
             kind="slice", inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
-            context, ops._slice, node, output_name, constants=constants
+            context, ops.slice, node, output_name, constants=constants
         )
         if end is None:
             end = test_input.shape[dim]

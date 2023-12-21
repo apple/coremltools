@@ -8,7 +8,8 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
-from typing import Any, List, Optional, Tuple
+from enum import Enum
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as _np
 import numpy as np
@@ -41,6 +42,11 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 PYTORCH_DEFAULT_VALUE = 2**63 - 1
 
 VALUE_CLOSE_TO_INFINITY = 1e+38
+
+
+class TorchFrontend(Enum):
+    TORCHSCRIPT = 1
+    EDGEIR = 2
 
 
 def _all_outputs_present(context, graph):
@@ -188,7 +194,12 @@ TYPE_TO_DTYPE_STRING = {
 }
 
 
-def _get_inputs(context, node, expected=None, min_expected=None) -> List[Var]:
+def _get_inputs(
+    context,
+    node,
+    expected: Union[int, List, Tuple, Dict[TorchFrontend, int]] = None,
+    min_expected: Union[int, Dict[TorchFrontend, int]] = None,
+) -> List[Var]:
     """
     Look up a node's inputs in @context and return them as a list. If
     @expected is not None, also verifies the number of inputs matches the
@@ -219,25 +230,39 @@ def _get_inputs(context, node, expected=None, min_expected=None) -> List[Var]:
                 raise NotImplementedError(f"Binding of inputs of type {type(i)} not handled yet")
 
         return results
+    
+    def check_if_number_of_inputs_expected(num_inputs: int, expected: Union[int, List, Tuple]) -> None:
+        expected = [expected] if isinstance(expected, int) else expected
+        if num_inputs not in expected:
+            raise ValueError(
+                "node {} ({}) got {} input(s), expected {}".format(
+                    node.name, node.kind, num_inputs, expected
+                )
+            )
+        
+    def check_if_number_of_inputs_more_than_min_expected(num_inputs: int, min_expected: int) -> None:
+        if num_inputs < min_expected:
+            raise ValueError(
+                "node {} ({}) got {} input(s), expected minimum {} inputs".format(
+                    node.name, node.kind, num_inputs, min_expected
+                )
+            )
 
     inputs = get_bindings(node.inputs)
 
     if expected is not None:
-        expected = [expected] if not isinstance(expected, (list, tuple)) else expected
+        if isinstance(expected, dict):
+            if context.frontend in expected:
+                check_if_number_of_inputs_expected(len(inputs), expected[context.frontend])
+        else:
+            check_if_number_of_inputs_expected(len(inputs), expected)
 
-        if len(inputs) not in expected:
-            raise ValueError(
-                "node {} ({}) got {} input(s), expected {}".format(
-                    node.name, node.kind, len(inputs), expected
-                )
-            )
     if min_expected is not None:
-        if len(inputs) < min_expected:
-            raise ValueError(
-                "node {} ({}) got {} input(s), expected minimum {} inputs".format(
-                    node.name, node.kind, len(inputs), min_expected
-                )
-            )
+        if isinstance(min_expected, dict):
+            if context.frontend in min_expected:
+                check_if_number_of_inputs_more_than_min_expected(len(inputs), min_expected[context.frontend])
+        else:
+            check_if_number_of_inputs_more_than_min_expected(len(inputs), min_expected)
 
     return inputs
 
@@ -847,7 +872,7 @@ def pixel_unshuffle(context, node):
     context.add(perm)
 
 
-@register_torch_op(torch_alias=["bmm", "mm"])
+@register_torch_op(torch_alias=["bmm", "mm", "mm.default"])
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     if inputs[1].val is not None and \
@@ -1460,7 +1485,7 @@ def maximum(context, node):
     context.add(out)
 
 
-@register_torch_op(torch_alias = ["div.tensor"])
+@register_torch_op(torch_alias = ["div.tensor", "div.tensor_mode"])
 def div(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     x = mb.cast(x=inputs[0], dtype="fp32")
@@ -1530,7 +1555,7 @@ def pow(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["rsub"])
+@register_torch_op(torch_alias=["sub.tensor", "rsub"])
 def sub(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     assert len(node.outputs) == 1
@@ -2068,10 +2093,21 @@ def hardtanh(context, node):
 
 @register_torch_op(torch_alias=["concat"])
 def cat(context, node):
-    inputs = _get_inputs(context, node)
+    def is_tensor_empty(var: Var) -> bool:
+        return np.any([size == 0 for size in var.shape])
+
+    inputs = _get_inputs(context, node, min_expected=1)
+
+    xs = inputs[0]
+    # PyTorch can have empty tensor, which is then ignored
+    # However, CoreML does not allow such empty tensor, so remove them now
+    if np.any([is_tensor_empty(x) for x in xs]):
+        xs = [x for x in xs if not is_tensor_empty(x)]
+
     axis = 0 if len(inputs) == 1 else inputs[1]
+
     concat = mb.concat(
-        values=promote_input_dtypes(inputs[0]), axis=axis, name=node.name
+        values=promote_input_dtypes(xs), axis=axis, name=node.name
     )
     context.add(concat)
 
@@ -3722,7 +3758,7 @@ def index_put(context, node):
     context.add(result)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["index.tensor"])
 def index(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
@@ -3962,9 +3998,18 @@ def _make_fill_op(size, val, name):
 
 @register_torch_op
 def full(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, min_expected=2)
+
     size = inputs[0]
-    val = inputs[1].val
+
+    dtype = (
+        np.float32
+        if len(inputs) < 3 or inputs[2] is None
+        else NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[inputs[2].val]]
+    )
+
+    val = dtype(inputs[1].val)
+
     result = _make_fill_op(size, val, node.name)
     context.add(result)
 
@@ -4070,16 +4115,24 @@ def logical_not(context, node):
 
 def _avg_pool(context, node, inputs):
     x = inputs[0]
+
     kernel_sizes = inputs[1]
-    strides = inputs[2]
-    if strides.op.op_type == "const" and (not list(strides.val)):
-        strides = mb.const(val=kernel_sizes.val, name=strides.name)
+
+    strides = None
+    if len(inputs) > 2:
+        strides = (
+            mb.const(val=kernel_sizes.val, name=inputs[2].name)
+            if inputs[2].op.op_type == "const" and (not list(inputs[2].val))
+            else inputs[2]
+        )
+
     pad_type = "custom"
     # Need to explicitly state L-R, T-B pad
-    pad = inputs[3]
-    pad = _np.repeat(pad.val, 2)
-    ceil_mode = inputs[4].val
-    include_pad = inputs[5].val
+    pad = None if len(inputs) < 4 else _np.repeat(inputs[3].val, 2)
+
+    ceil_mode = False if len(inputs) < 5 else inputs[4].val
+
+    include_pad = True if len(inputs) < 6 else inputs[5].val
 
     spatial_rank = len(pad) // 2
     if spatial_rank > 2 and ceil_mode is True and list(strides.val) != [1] * len(strides.val):
@@ -4110,13 +4163,22 @@ def _avg_pool(context, node, inputs):
 
 @register_torch_op
 def avg_pool1d(context, node):
-    inputs = _get_inputs(context, node, expected=6)
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT : 6},
+        min_expected={TorchFrontend.EDGEIR : 2},
+    )
     _avg_pool(context, node, inputs)
 
 
 @register_torch_op
 def avg_pool2d(context, node):
-    inputs = _get_inputs(context, node, min_expected=6)
+    inputs = _get_inputs(
+        context,
+        node,
+        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EDGEIR : 2},
+    )
     divisor_override = None if len(inputs) < 7 else inputs[6]
     if divisor_override is not None:
         raise ValueError("divisor_override is not supported for avg_pool2d")
@@ -4125,7 +4187,12 @@ def avg_pool2d(context, node):
 
 @register_torch_op
 def avg_pool3d(context, node):
-    inputs = _get_inputs(context, node, expected=7)
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT : 7},
+        min_expected={TorchFrontend.EDGEIR : 2},
+    )
     divisor_override = inputs[6]
     if divisor_override is not None:
         raise ValueError("divisor_override is not supported for avg_pool3d")
@@ -4226,27 +4293,28 @@ def gelu(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["slice"])
-def _slice(context, node):
-    inputs = _get_inputs(context, node, expected=5)
+@register_torch_op(torch_alias=["_slice", "slice_copy.tensor"])
+def slice(context, node):
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT : 5},
+        min_expected={TorchFrontend.EDGEIR : 1},
+    )
     x = inputs[0]
-    dim = inputs[1].val
+    dim = 0 if len(inputs) < 2 else inputs[1].val
 
-    if inputs[2] and inputs[2].val is not None:
-        start = inputs[2].val
-    elif isinstance(inputs[2], Var):
-        start = inputs[2]
-    else:
-        start = 0
+    start = 0
+    if len(inputs) > 2 and inputs[2] is not None:
+        start = inputs[2].val if inputs[2].val is not None else inputs[2]
 
-    if inputs[3] and inputs[3].val is not None:
-        end = inputs[3].val
-    elif isinstance(inputs[3], Var):
-        end = inputs[3]
-    else:
-        end = None
+    end = None
+    if len(inputs) > 3 and inputs[3] is not None:
+        end = inputs[3].val if inputs[3].val is not None else inputs[3]
 
-    step = inputs[4].val
+    step = 1
+    if len(inputs) > 4 and inputs[4] is not None:
+        step = inputs[4].val if inputs[4].val is not None else inputs[4]
 
     if start == 0 and end is None and step == 1:
         # Handling x[:], just pass through the tensor.
@@ -4259,7 +4327,8 @@ def _slice(context, node):
     end_mask = [True] * len(x.shape)
     if end is not None:
         end_array[dim] = end
-        end_mask[dim] = False
+        # if end >= x.shape[dim], then end can be ignored, i.e. end_mask[dim] = True
+        end_mask[dim] = True if isinstance(end, int) and end >= x.shape[dim] else False
 
     if isinstance(start, Var):
         begin_array = mb.concat(values=begin_array, axis=0)
@@ -4284,7 +4353,7 @@ def _slice(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["split_with_sizes"])
+@register_torch_op(torch_alias=["split_with_sizes", "split_with_sizes_copy"])
 def split(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]
@@ -4486,6 +4555,21 @@ def expand_as(context, node):
     context.add(res)
 
 
+def _arange(
+    context,
+    node_name: str,
+    start: Var,
+    end: Var,
+    step: Var,
+):
+    # torch may have mixed precision, including mixing float and int,
+    # but Core ML needs these inputs to have uniform dtype
+    start, end, step = promote_input_dtypes([start, end, step])
+
+    res = mb.range_1d(start=start, end=end, step=step, name=node_name)
+    context.add(res)
+
+
 @register_torch_op
 def arange(context, node):
     inputs = _get_inputs(context, node)
@@ -4512,17 +4596,18 @@ def arange(context, node):
         raise ValueError(
             "arange must have exactly 5, 6, or 7 inputs, got {}".format(len(inputs))
         )
-    # If start, end, and step don't have the same dtype, we cast them to fp32
-    int_start = isinstance(start, int) or types.is_int(start.dtype)
-    int_end = isinstance(end, int) or types.is_int(end.dtype)
-    int_step = isinstance(step, int) or types.is_int(step.dtype)
 
-    if int_start != int_end or int_start != int_step:
-        start = mb.cast(x=start, dtype="fp32")
-        end = mb.cast(x=end, dtype="fp32")
-        step = mb.cast(x=step, dtype="fp32")
-    res = mb.range_1d(start=start, end=end, step=step, name=node.name)
-    context.add(res)
+    _arange(context, node.name, start, end, step)
+
+
+@register_torch_op(torch_alias=["arange.start_step"])
+def arange_start_step(context, node):
+    inputs = _get_inputs(context, node)
+    start = inputs[0]
+    end = inputs[1]
+    step = 1 if len(inputs) < 3 else inputs[2]
+
+    _arange(context, node.name, start, end, step)
 
 
 @register_torch_op
@@ -4659,11 +4744,12 @@ def zeros_like(context, node):
     context.add(zeros_like)
 
 
-@register_torch_op(torch_alias=["empty"])
+@register_torch_op(torch_alias=["empty", "empty.memory_format"])
 def zeros(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, min_expected=1)
     size = inputs[0]
-    if inputs[1] is not None:
+
+    if len(inputs) > 1 and inputs[1] is not None:
         dtype = inputs[1].val
     else:
         dtype = torch.get_default_dtype()
@@ -4697,6 +4783,12 @@ def new_zeros(context, node):
         # we need to concat them first to get a shape.
         shape = mb.concat(values=shape, axis=0)
     context.add(mb.fill(shape=shape, value=0., name=node.name))
+
+
+@register_torch_op
+def scalar_tensor(context, node):
+    value = _get_inputs(context, node, expected=1)[0].val
+    context.add(mb.const(val=value, name=node.name))
 
 
 @register_torch_op
@@ -5285,7 +5377,7 @@ def _nonzero_as_tuple(context, node, x):
     context.add(result, node.name)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["where.self"])
 def where(context, node):
     inputs = _get_inputs(context, node)
 
