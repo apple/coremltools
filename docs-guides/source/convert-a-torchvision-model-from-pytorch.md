@@ -16,33 +16,44 @@ In this example you do the following:
 2. Trace the model to generate TorchScript using the `torch.jit.trace` command.
 3. Download the class labels.
 4. Preprocess the image input for torchvision models.
-5. Convert the traced model to a Core ML neural network using the  [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method.
+5. Convert the traced model to Core ML using the  [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method.
 6. Load an image to use for testing.
 7. Make a prediction with the converted model.
 8. Make a prediction with the original torch-traced model for comparison.
 
 Once you have converted the model, you can follow the steps in [Save and Load the Model](introductory-quickstart.md#save-and-load-the-model) and [Use the Model with Xcode](introductory-quickstart.md#use-the-model-with-xcode).
 
+## Requirements
+
+This example requires [PyTorch](https://pytorch.org/) and [Torchvision](https://pytorch.org/vision/stable/index.html#torchvision). Use the following commands:
+
+```shell
+pip install torch
+pip install torchvision
+pip install -U coremltools
+```
+
+
 ## Load the MobileNetV2 Model
 
 The example uses a pre-trained version of the [MobileNetV2](https://pytorch.org/hub/pytorch_vision_mobilenet_v2/) model from [torchvision](https://pytorch.org/vision/stable/index.html). Follow these steps:
 
 1. Load the pre-trained version of MobileNetV2:
-	
-	```python
-	import torch
-	import torchvision
+    
+    ```python
+    import torch
+    import torchvision
 
-	# Load a pre-trained version of MobileNetV2 model.
-	torch_model = torchvision.models.mobilenet_v2(pretrained=True)
-	```
+    # Load a pre-trained version of MobileNetV2 model.
+    torch_model = torchvision.models.mobilenet_v2(pretrained=True)
+    ```
 
 2. Set the model to evaluation mode:
-	
-	```python
-	# Set the model in evaluation mode.
-	torch_model.eval()
-	```
+    
+    ```python
+    # Set the model in evaluation mode.
+    torch_model.eval()
+    ```
 
 ```{admonition} Set the Model to Evaluation Mode
 
@@ -104,9 +115,9 @@ image_input = ct.ImageType(name="input_1",
 By default, the Core ML Tools converter generates a Core ML model with inputs of type [`MLMultiArray`](https://developer.apple.com/documentation/coreml/mlmultiarray). By providing an additional inputs argument, as shown in the next section, you can use either [`TensorType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype) or [`ImageType`](https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType). This example uses `ImageType`. To learn how to work with images for input and output, see [Image Input and Output](image-inputs).
 ```
 
-## Convert to a Neural Network
+## Convert to Core ML
 
-Convert the model to a Core ML neural network using the Core ML Tools   [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. Specify the `inputs` parameter with the preprocessed `image_input` from the previous section:
+Convert the model to an ML program using the Core ML Tools [`convert()`](https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry) method. Specify the `inputs` parameter with the preprocessed `image_input` from the previous section:
 
 ```python
 # Using image_input in the inputs parameter:
@@ -119,11 +130,11 @@ model = ct.convert(
 )
 ```
 
-With the converted model in memory, you can save it using the `.mlmodel` extension. It may also be helpful to display a confirmation message:
+Save the ML program using the `.mlpackage` extension. It may also be helpful to display a confirmation message:
 
 ```python
 # Save the converted model.
-model.save("mobilenet.mlmodel")
+model.save("mobilenet.mlpackage")
 # Print a confirmation message.
 print('model converted and saved')
 ```
@@ -134,13 +145,15 @@ The above example also sets the `class_labels` for classifying the image, and th
 
 ## Load the Test Image
 
-The next step is to load an image using [PIL](https://en.wikipedia.org/wiki/Python_Imaging_Library), to use as input for testing the original PyTorch model and the converted model. Resize the input image for consistency so that it is 224 x 224 pixels, and specify `ANTIALIAS` for the algorithm to use for resampling pixels from one size to another:
+The next step is to load an image using [PIL](https://en.wikipedia.org/wiki/Python_Imaging_Library), to use as input for testing the original PyTorch model and the converted model. Resize the input image for consistency so that it is 224 x 224 pixels, and specify `LANCZOS` for the algorithm to use for resampling pixels from one size to another:
 
 ```python
+from PIL import Image
+
 # Load the test image and resize to 224, 224.
 img_path = "daisy.jpg"
-img = PIL.Image.open(img_path)
-img = img.resize([224, 224], PIL.Image.ANTIALIAS)
+img = Image.open(img_path)
+img = img.resize([224, 224], Image.LANCZOS)
 ```
 
 Right-click the following image and save it as `daisy.jpg` in the same folder as your Python project.
@@ -149,8 +162,6 @@ Right-click the following image and save it as `daisy.jpg` in the same folder as
 :alt: Daisy image
 :align: center
 :class: imgnoborder
-
-Right-click this image and save it as `daisy.jpg` in the same folder as your Python project.
 ```
 
 ```{eval-rst}
@@ -181,6 +192,8 @@ for out in spec.description.output:
 You can now make a prediction with the converted model, using the test image. To learn more about making predictions, see [Model Prediction](model-prediction). The code for `coreml_out_dict["classLabel"]` returns the top-level class label.
 
 ```python
+import numpy as np
+
 # Make a prediction with the Core ML version of the model.
 coreml_out_dict = model.predict({"input_1" : img})
 print("coreml predictions: ")
@@ -203,9 +216,9 @@ When you run this example, the output should be something like the following, us
 ```text Output
 coreml predictions: 
 top class label:  daisy
-class name: daisy, raw score value: 15.690682411193848
-class name: vase, raw score value: 8.516773223876953
-class name: ant, raw score value: 8.169312477111816
+class name: daisy, raw score value: 15.685693740844727
+class name: vase, raw score value: 8.516246795654297
+class name: ant, raw score value: 8.185517311096191
 ```
 
 
@@ -264,9 +277,9 @@ When you run this example, the output should be something like the following, us
 
 ```text
 torch top 3 predictions: 
-class name: daisy, raw score value: 15.65333366394043
-class name: vase, raw score value: 8.527873992919922
-class name: ant, raw score value: 8.256473541259766
+class name: daisy, raw score value: 15.642789840698242
+class name: vase, raw score value: 8.53633975982666
+class name: ant, raw score value: 8.257798194885254
 ```
 
 As you can see from the results, the converted model performs very closely to the original model — the raw score values are very similar.
