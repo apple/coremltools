@@ -401,11 +401,12 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-mobilenetv2-model">Load the MobileNetV2 Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-model">Trace the Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-class-labels">Download the Class Labels</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocess-the-image-input-for-torchvision-models">Preprocess the Image Input for torchvision Models</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-a-neural-network">Convert to a Neural Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-core-ml">Convert to Core ML</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-test-image">Load the Test Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-protobuf-spec">Get the protobuf spec</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-core-ml-prediction">Make a Core ML Prediction</a></li>
@@ -435,12 +436,21 @@ document.write(`
 <li><p>Trace the model to generate TorchScript using the <code class="docutils literal notranslate"><span class="pre">torch.jit.trace</span></code> command.</p></li>
 <li><p>Download the class labels.</p></li>
 <li><p>Preprocess the image input for torchvision models.</p></li>
-<li><p>Convert the traced model to a Core ML neural network using the  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method.</p></li>
+<li><p>Convert the traced model to Core ML using the  <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method.</p></li>
 <li><p>Load an image to use for testing.</p></li>
 <li><p>Make a prediction with the converted model.</p></li>
 <li><p>Make a prediction with the original torch-traced model for comparison.</p></li>
 </ol>
 <p>Once you have converted the model, you can follow the steps in <a class="reference internal" href="introductory-quickstart.html#save-and-load-the-model"><span class="std std-doc">Save and Load the Model</span></a> and <a class="reference internal" href="introductory-quickstart.html#use-the-model-with-xcode"><span class="std std-doc">Use the Model with Xcode</span></a>.</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">#</a></h2>
+<p>This example requires <a class="reference external" href="https://pytorch.org/">PyTorch</a> and <a class="reference external" href="https://pytorch.org/vision/stable/index.html#torchvision">Torchvision</a>. Use the following commands:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
+pip<span class="w"> </span>install<span class="w"> </span>torchvision
+pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </span>coremltools
+</pre></div>
+</div>
+</section>
 <section id="load-the-mobilenetv2-model">
 <h2>Load the MobileNetV2 Model<a class="headerlink" href="#load-the-mobilenetv2-model" title="Permalink to this heading">#</a></h2>
 <p>The example uses a pre-trained version of the <a class="reference external" href="https://pytorch.org/hub/pytorch_vision_mobilenet_v2/">MobileNetV2</a> model from <a class="reference external" href="https://pytorch.org/vision/stable/index.html">torchvision</a>. Follow these steps:</p>
@@ -508,9 +518,9 @@ document.write(`
 <p>By default, the Core ML Tools converter generates a Core ML model with inputs of type <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlmultiarray"><code class="docutils literal notranslate"><span class="pre">MLMultiArray</span></code></a>. By providing an additional inputs argument, as shown in the next section, you can use either <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#tensortype"><code class="docutils literal notranslate"><span class="pre">TensorType</span></code></a> or <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType"><code class="docutils literal notranslate"><span class="pre">ImageType</span></code></a>. This example uses <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>. To learn how to work with images for input and output, see <a class="reference internal" href="image-inputs.html"><span class="doc std std-doc">Image Input and Output</span></a>.</p>
 </div>
 </section>
-<section id="convert-to-a-neural-network">
-<h2>Convert to a Neural Network<a class="headerlink" href="#convert-to-a-neural-network" title="Permalink to this heading">#</a></h2>
-<p>Convert the model to a Core ML neural network using the Core ML Tools   <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. Specify the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter with the preprocessed <code class="docutils literal notranslate"><span class="pre">image_input</span></code> from the previous section:</p>
+<section id="convert-to-core-ml">
+<h2>Convert to Core ML<a class="headerlink" href="#convert-to-core-ml" title="Permalink to this heading">#</a></h2>
+<p>Convert the model to an ML program using the Core ML Tools <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. Specify the <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter with the preprocessed <code class="docutils literal notranslate"><span class="pre">image_input</span></code> from the previous section:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using image_input in the inputs parameter:</span>
 <span class="c1"># Convert to Core ML using the Unified Conversion API.</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
@@ -521,9 +531,9 @@ document.write(`
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>With the converted model in memory, you can save it using the <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> extension. It may also be helpful to display a confirmation message:</p>
+<p>Save the ML program using the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension. It may also be helpful to display a confirmation message:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Save the converted model.</span>
-<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;mobilenet.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;mobilenet.mlpackage&quot;</span><span class="p">)</span>
 <span class="c1"># Print a confirmation message.</span>
 <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;model converted and saved&#39;</span><span class="p">)</span>
 </pre></div>
@@ -533,19 +543,18 @@ document.write(`
 </section>
 <section id="load-the-test-image">
 <h2>Load the Test Image<a class="headerlink" href="#load-the-test-image" title="Permalink to this heading">#</a></h2>
-<p>The next step is to load an image using <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL</a>, to use as input for testing the original PyTorch model and the converted model. Resize the input image for consistency so that it is 224 x 224 pixels, and specify <code class="docutils literal notranslate"><span class="pre">ANTIALIAS</span></code> for the algorithm to use for resampling pixels from one size to another:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the test image and resize to 224, 224.</span>
+<p>The next step is to load an image using <a class="reference external" href="https://en.wikipedia.org/wiki/Python_Imaging_Library">PIL</a>, to use as input for testing the original PyTorch model and the converted model. Resize the input image for consistency so that it is 224 x 224 pixels, and specify <code class="docutils literal notranslate"><span class="pre">LANCZOS</span></code> for the algorithm to use for resampling pixels from one size to another:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<span class="c1"># Load the test image and resize to 224, 224.</span>
 <span class="n">img_path</span> <span class="o">=</span> <span class="s2">&quot;daisy.jpg&quot;</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">([</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">],</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">img_path</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">([</span><span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">],</span> <span class="n">Image</span><span class="o">.</span><span class="n">LANCZOS</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Right-click the following image and save it as <code class="docutils literal notranslate"><span class="pre">daisy.jpg</span></code> in the same folder as your Python project.</p>
-<figure class="align-center" id="id1">
+<figure class="align-center">
 <img alt="Daisy image" class="imgnoborder" src="../_images/daisy.jpg" />
-<figcaption>
-<p><span class="caption-text">Right-click this image and save it as <code class="docutils literal notranslate"><span class="pre">daisy.jpg</span></code> in the same folder as your Python project.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
-</figcaption>
 </figure>
 </section>
 <section id="get-the-protobuf-spec">
@@ -563,7 +572,9 @@ document.write(`
 <section id="make-a-core-ml-prediction">
 <span id="index-3"></span><h2>Make a Core ML Prediction<a class="headerlink" href="#make-a-core-ml-prediction" title="Permalink to this heading">#</a></h2>
 <p>You can now make a prediction with the converted model, using the test image. To learn more about making predictions, see <a class="reference internal" href="model-prediction.html"><span class="doc std std-doc">Model Prediction</span></a>. The code for <code class="docutils literal notranslate"><span class="pre">coreml_out_dict[&quot;classLabel&quot;]</span></code> returns the top-level class label.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a prediction with the Core ML version of the model.</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="c1"># Make a prediction with the Core ML version of the model.</span>
 <span class="n">coreml_out_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;input_1&quot;</span> <span class="p">:</span> <span class="n">img</span><span class="p">})</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;coreml predictions: &quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;top class label: &quot;</span><span class="p">,</span> <span class="n">coreml_out_dict</span><span class="p">[</span><span class="s2">&quot;classLabel&quot;</span><span class="p">])</span>
@@ -583,9 +594,9 @@ document.write(`
 <p>When you run this example, the output should be something like the following, using the image of a daisy as the input:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>coreml predictions: 
 top class label:  daisy
-class name: daisy, raw score value: 15.690682411193848
-class name: vase, raw score value: 8.516773223876953
-class name: ant, raw score value: 8.169312477111816
+class name: daisy, raw score value: 15.685693740844727
+class name: vase, raw score value: 8.516246795654297
+class name: ant, raw score value: 8.185517311096191
 </pre></div>
 </div>
 </section>
@@ -637,9 +648,9 @@ class name: ant, raw score value: 8.169312477111816
 </div>
 <p>When you run this example, the output should be something like the following, using the image of a daisy as the input:</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>torch top 3 predictions: 
-class name: daisy, raw score value: 15.65333366394043
-class name: vase, raw score value: 8.527873992919922
-class name: ant, raw score value: 8.256473541259766
+class name: daisy, raw score value: 15.642789840698242
+class name: vase, raw score value: 8.53633975982666
+class name: ant, raw score value: 8.257798194885254
 </pre></div>
 </div>
 <p>As you can see from the results, the converted model performs very closely to the original model — the raw score values are very similar.</p>
@@ -695,11 +706,12 @@ class name: ant, raw score value: 8.256473541259766
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-mobilenetv2-model">Load the MobileNetV2 Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#trace-the-model">Trace the Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-class-labels">Download the Class Labels</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#preprocess-the-image-input-for-torchvision-models">Preprocess the Image Input for torchvision Models</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-a-neural-network">Convert to a Neural Network</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-core-ml">Convert to Core ML</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-test-image">Load the Test Image</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#get-the-protobuf-spec">Get the protobuf spec</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#make-a-core-ml-prediction">Make a Core ML Prediction</a></li>

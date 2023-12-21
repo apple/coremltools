@@ -401,7 +401,7 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-model">Download the Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-graph-definition">Load the Graph Definition</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-core-ml">Convert to Core ML</a></li>
@@ -421,20 +421,24 @@ document.write(`
                   
   <section id="converting-a-tensorflow-1-image-classifier">
 <span id="index-0"></span><h1>Converting a TensorFlow 1 Image Classifier<a class="headerlink" href="#converting-a-tensorflow-1-image-classifier" title="Permalink to this heading">#</a></h1>
-<p>The following example converts the TensorFlow Inception V1 image classifier to a Core ML neural network classifier model that directly predicts the class label of the input image. It demonstrates the importance of setting the image preprocessing parameters correctly to get the right results.</p>
-<section id="prerequisites">
-<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Permalink to this heading">#</a></h2>
-<p>To use TensorFlow 1 (version 1.15) for this example, you may need to change your version of Python to one that works with TensorFlow 1. For details, see the following:</p>
-<ul class="simple">
-<li><p>For virtual environments, see <a class="reference external" href="https://www.freecodecamp.org/news/manage-multiple-python-versions-and-virtual-environments-venv-pyenv-pyvenv-a29fb00c296f/">How to manage multiple Python versions</a>.</p></li>
-<li><p>For Miniconda and Anaconda environments, see <a class="reference external" href="https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-python.html">Managing Python</a>.</p></li>
-</ul>
-<p>You may also need to install <a class="reference external" href="https://pillow.readthedocs.io/en/stable/">Pillow</a>, <a class="reference external" href="https://pypi.org/project/requests/">Requests</a>, and <a class="reference external" href="https://pypi.org/project/matplotlib/">matplotlib</a>. The following commands work for a Miniconda environment:</p>
-<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>install<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7.9
+<p>The following example converts the TensorFlow Inception V1 image classifier to a Core ML classifier model that directly predicts the class label of the input image. It demonstrates the importance of setting the image preprocessing parameters correctly to get the right results.</p>
+<section id="requirements">
+<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">#</a></h2>
+<p>This model requires TensorFlow 1, which is deprecated and difficult to install directly with pip. You can use the appropriate <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda installer</a> for your operating system and create a Miniconda environment specifically for Python 3.7, and then use conda to install TensorFlow 1.15:</p>
+<div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>tensorflow1-env<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
+conda<span class="w"> </span>activate<span class="w"> </span>tensorflow1-env
 conda<span class="w"> </span>install<span class="w"> </span><span class="nv">tensorflow</span><span class="o">==</span><span class="m">1</span>.15
-pip<span class="w"> </span>install<span class="w"> </span>pillow
-conda<span class="w"> </span>install<span class="w"> </span>requests<span class="w"> </span>
-conda<span class="w"> </span>install<span class="w"> </span>matplotlib
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For alternatives, see <a class="reference external" href="https://stackoverflow.com/questions/41937915/how-to-pip-install-old-version-of-librarytensorflow">How to pip install old version of library(tensorflow)</a> on StackOverflow.</p>
+</div>
+<p>In addition, you need to install the following for this environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">U</span> <span class="n">coremltools</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="n">pillow</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">requests</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="n">matplotlib</span>
 </pre></div>
 </div>
 </section>
@@ -480,7 +484,6 @@ conda<span class="w"> </span>install<span class="w"> </span>matplotlib
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the TF graph definition</span>
 <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span> <span class="c1"># 1.x</span>
 
-
 <span class="n">tf_model_path</span> <span class="o">=</span> <span class="s1">&#39;./inception_v1_2016_08_28_frozen.pb&#39;</span>
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tf_model_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">serialized</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -503,64 +506,17 @@ conda<span class="w"> </span>install<span class="w"> </span>matplotlib
             <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;name = </span><span class="si">{}</span><span class="s2">, shape: </span><span class="si">{}</span><span class="s2">,&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">get_shape</span><span class="p">())),</span>
 </pre></div>
 </div>
-<p>As shown in the following results, the output of the <code class="docutils literal notranslate"><span class="pre">Placeholder</span></code> op is the input (<code class="docutils literal notranslate"><span class="pre">input:0</span></code>), and the output of the <code class="docutils literal notranslate"><span class="pre">Softmax</span></code> op (near the end of the graph) is the output (<code class="docutils literal notranslate"><span class="pre">InceptionV1/Logits/Predictions/Softmax:0</span></code>).</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>op id 0 : op type: &quot;Placeholder&quot;
-input(s):
-
-output(s):
-name = input:0, shape: (1, 224, 224, 3),
-
-
-op id 1 : op type: &quot;Const&quot;
-input(s):
-
-output(s):
-name = InceptionV1/Conv2d_1a_7x7/weights:0, shape: (7, 7, 3, 64),
-
-
-op id 2 : op type: &quot;Identity&quot;
-input(s):
-name = InceptionV1/Conv2d_1a_7x7/weights:0, shape: (7, 7, 3, 64), 
-
-output(s):
-name = InceptionV1/Conv2d_1a_7x7/weights/read:0, shape: (7, 7, 3, 64),
-
-
-op id 1012 : op type: &quot;Softmax&quot;
-input(s):
-name = InceptionV1/Logits/Predictions/Reshape:0, shape: (1, 1001), 
-
-output(s):
-name = InceptionV1/Logits/Predictions/Softmax:0, shape: (1, 1001),
-
-
-op id 1013 : op type: &quot;Const&quot;
-input(s):
-
-output(s):
-name = InceptionV1/Logits/Predictions/Shape:0, shape: (2,),
-
-
-op id 1014 : op type: &quot;Reshape&quot;
-input(s):
-name = InceptionV1/Logits/Predictions/Softmax:0, shape: (1, 1001), 
-name = InceptionV1/Logits/Predictions/Shape:0, shape: (2,), 
-
-output(s):
-name = InceptionV1/Logits/Predictions/Reshape_1:0, shape: (1, 1001),
-</pre></div>
-</div>
+<p>If you run the code at this point, you can see that the output of the <code class="docutils literal notranslate"><span class="pre">Placeholder</span></code> op is the input (<code class="docutils literal notranslate"><span class="pre">input:0</span></code>), and the output of the <code class="docutils literal notranslate"><span class="pre">Softmax</span></code> op (near the end of the graph) is the output (<code class="docutils literal notranslate"><span class="pre">InceptionV1/Logits/Predictions/Softmax:0</span></code>).</p>
 </section>
 <section id="convert-to-core-ml">
 <h2>Convert to Core ML<a class="headerlink" href="#convert-to-core-ml" title="Permalink to this heading">#</a></h2>
-<p>The following code sets the <code class="docutils literal notranslate"><span class="pre">image_inputs</span></code> for <code class="docutils literal notranslate"><span class="pre">inputs</span></code> and the output name (<code class="docutils literal notranslate"><span class="pre">'InceptionV1/Logits/Predictions/Softmax'</span></code>) for <code class="docutils literal notranslate"><span class="pre">outputs</span></code> in order to use them with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. The <code class="docutils literal notranslate"><span class="pre">convert()</span></code> method produces a neural network by default:</p>
+<p>The following code sets the <code class="docutils literal notranslate"><span class="pre">image_inputs</span></code> for <code class="docutils literal notranslate"><span class="pre">inputs</span></code> and the output name (<code class="docutils literal notranslate"><span class="pre">'InceptionV1/Logits/Predictions/Softmax'</span></code>) for <code class="docutils literal notranslate"><span class="pre">outputs</span></code> in order to use them with the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. The <code class="docutils literal notranslate"><span class="pre">convert()</span></code> method produces an ML program by default:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
 <span class="n">image_inputs</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 <span class="n">classifier_config</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ClassifierConfig</span><span class="p">(</span><span class="s1">&#39;imagenet_slim_labels.txt&#39;</span><span class="p">)</span>
-<span class="n">coreml_model_file</span> <span class="o">=</span> <span class="s1">&#39;./inception_v1.mlmodel&#39;</span>
+<span class="n">coreml_model_file</span> <span class="o">=</span> <span class="s1">&#39;./inception_v1.mlpackage&#39;</span>
 <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InceptionV1/Logits/Predictions/Softmax&#39;</span><span class="p">]</span>
-
 
 <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model_path</span><span class="p">,</span> 
                           <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">image_inputs</span><span class="p">],</span> 
@@ -570,48 +526,41 @@ name = InceptionV1/Logits/Predictions/Reshape_1:0, shape: (1, 1001),
 <span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">coreml_model_file</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The result shows the progress of the conversion:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:02&lt;00:00,  3.24 passes/s]
-Converting Frontend ==&gt; MIL Ops: 100%|██████████| 441/441 [00:00&lt;00:00, 926.87 ops/s] 
-Running MIL optimization passes: 100%|██████████| 17/17 [00:00&lt;00:00, 20.06 passes/s]
-Translating MIL ==&gt; MLModel Ops: 100%|██████████| 839/839 [00:00&lt;00:00, 1085.04 ops/s]
+<p>The result shows the progress of the conversion, but also includes the following warning:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="ne">UserWarning</span><span class="p">:</span> <span class="n">Output</span><span class="p">,</span> <span class="s1">&#39;InceptionV1/Logits/Predictions/Softmax&#39;</span><span class="p">,</span> <span class="n">of</span> <span class="n">the</span> <span class="n">source</span> <span class="n">model</span><span class="p">,</span> <span class="n">has</span> <span class="n">been</span> <span class="n">renamed</span> <span class="n">to</span> <span class="s1">&#39;InceptionV1_Logits_Predictions_Softmax&#39;</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">Core</span> <span class="n">ML</span> <span class="n">model</span><span class="o">.</span>
 </pre></div>
 </div>
+<p>You will use the new name when making a prediction.</p>
 </section>
 <section id="load-a-test-image">
 <h2>Load a Test Image<a class="headerlink" href="#load-a-test-image" title="Permalink to this heading">#</a></h2>
-<p>To make predictions on the same image using both the original model and the converted model, the following sample code snippet loads a test image. It uses <a class="reference external" href="https://numpy.org">NumPy</a>, <a class="reference external" href="https://pillow.readthedocs.io/en/stable/">Pillow</a>, <a class="reference external" href="https://pypi.org/project/requests/">Requests</a>, and <a class="reference external" href="https://pypi.org/project/matplotlib/">matplotlib</a>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an image</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">PIL</span>
-<span class="kn">import</span> <span class="nn">requests</span>
-<span class="kn">from</span> <span class="nn">io</span> <span class="kn">import</span> <span class="n">BytesIO</span>
-<span class="kn">from</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">import</span> <span class="n">imshow</span>
-<span class="c1"># This is an image of a golden retriever from Wikipedia</span>
-<span class="n">img_url</span> <span class="o">=</span> <span class="s1">&#39;https://upload.wikimedia.org/wikipedia/commons/9/93/Golden_Retriever_Carlos_</span><span class="si">%2810581910556%</span><span class="s1">29.jpg&#39;</span>
-<span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">img_url</span><span class="p">)</span>
-<span class="o">%</span><span class="n">matplotlib</span> <span class="n">inline</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
-<span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">img</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>The code shows the following image:</p>
+<p>To make predictions on the same image using both the original model and the converted model, right-click the following image and save it as <code class="docutils literal notranslate"><span class="pre">Golden_Retriever_Carlos.jpg</span></code> in the same folder as your Python project:</p>
 <figure class="align-center" id="id1">
-<img alt="Golden Retriever image" class="imgnoborder" src="../_images/Golden_Retriever_Carlos.png" />
+<img alt="Golden_Retriever_Carlos.jpg" class="imgnoborder" src="../_images/Golden_Retriever_Carlos_full.jpg" />
 <figcaption>
-<p><span class="caption-text">This image of a golden retriever is from Wikipedia.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">This image of a golden retriever is from <a class="reference external" href="https://en.m.wikipedia.org/wiki/File:Golden_Retriever_Carlos_%2810581910556%29.jpg">Wikipedia</a>.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </figcaption>
 </figure>
+<p>The following code loads the image:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load an image</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;Golden_Retriever_Carlos.jpg&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 <section id="input-the-image-and-make-a-prediction">
 <h2>Input the Image and Make a Prediction<a class="headerlink" href="#input-the-image-and-make-a-prediction" title="Permalink to this heading">#</a></h2>
-<p>The following code passes the PIL image into the Core ML model after resizing it, and uses a NumPy array of the image to make a prediction:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># To get CoreML predictions directly pass in the PIL image after resizing</span>
-<span class="kn">import</span> <span class="nn">coremltools</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">([</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">],</span> <span class="n">PIL</span><span class="o">.</span><span class="n">Image</span><span class="o">.</span><span class="n">ANTIALIAS</span><span class="p">)</span>
+<p>The following code passes the PIL image into the Core ML model after resizing it, and uses a NumPy array of the image to make a prediction. It also fixes the output name to use the renamed output (<code class="docutils literal notranslate"><span class="pre">'InceptionV1_Logits_Predictions_Softmax'</span></code>) in the Core ML model:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">([</span><span class="mi">224</span><span class="p">,</span><span class="mi">224</span><span class="p">],</span> <span class="n">Image</span><span class="o">.</span><span class="n">LANCZOS</span><span class="p">)</span>
 <span class="n">coreml_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;input&#39;</span><span class="p">:</span> <span class="n">img</span><span class="p">}</span>
+
+<span class="c1"># Fix output name</span>
+<span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InceptionV1_Logits_Predictions_Softmax&#39;</span><span class="p">]</span>
+
 <span class="n">coreml_output</span> <span class="o">=</span> <span class="n">coreml_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">coreml_inputs</span><span class="p">)</span>
 <span class="n">coreml_pred_dict</span> <span class="o">=</span> <span class="n">coreml_output</span><span class="p">[</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
 <span class="n">coreml_predicted_class_label</span> <span class="o">=</span> <span class="n">coreml_output</span><span class="p">[</span><span class="s1">&#39;classLabel&#39;</span><span class="p">]</span>
 
 <span class="c1">#for getting TF prediction we get the numpy array of the image</span>
@@ -623,38 +572,35 @@ Translating MIL ==&gt; MLModel Ops: 100%|██████████| 839/839
 <span class="c1"># Evaluate TF and get the highest label </span>
 <span class="n">tf_input_name</span> <span class="o">=</span> <span class="s1">&#39;input:0&#39;</span>
 <span class="n">tf_output_name</span> <span class="o">=</span> <span class="s1">&#39;InceptionV1/Logits/Predictions/Softmax:0&#39;</span>
+<span class="c1"># tf_output_name = &#39;InceptionV1_Logits_Predictions_Softmax:0&#39;</span>
+
+<span class="n">img_tf</span> <span class="o">=</span> <span class="p">(</span><span class="mf">2.0</span><span class="o">/</span><span class="mf">255.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">img_tf</span> <span class="o">-</span> <span class="mi">1</span>
 <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">Session</span><span class="p">(</span><span class="n">graph</span> <span class="o">=</span> <span class="n">g</span><span class="p">)</span> <span class="k">as</span> <span class="n">sess</span><span class="p">:</span>
     <span class="n">tf_out</span> <span class="o">=</span> <span class="n">sess</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">tf_output_name</span><span class="p">,</span> 
                       <span class="n">feed_dict</span><span class="o">=</span><span class="p">{</span><span class="n">tf_input_name</span><span class="p">:</span> <span class="n">img_tf</span><span class="p">})</span>
-<span class="n">tf_out</span> <span class="o">=</span> <span class="n">tf_out</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>    
+
+<span class="n">tf_out</span> <span class="o">=</span> <span class="n">tf_out</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">tf_out</span><span class="p">)</span>
 <span class="n">label_file</span> <span class="o">=</span> <span class="s1">&#39;imagenet_slim_labels.txt&#39;</span> 
 <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">label_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">labels</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
-    
-<span class="c1">#print predictions   </span>
-<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CoreML prediction class = </span><span class="si">{}</span><span class="s2">, probability = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">coreml_predicted_class_label</span><span class="p">,</span>
-                                            <span class="nb">str</span><span class="p">(</span><span class="n">coreml_pred_dict</span><span class="p">[</span><span class="n">coreml_predicted_class_label</span><span class="p">])))</span>  
+     <span class="n">labels</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+
+<span class="c1"># print TF prediction</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;TF prediction class = </span><span class="si">{}</span><span class="s2">, probability = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">labels</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span>
                                             <span class="nb">str</span><span class="p">(</span><span class="n">tf_out</span><span class="p">[</span><span class="n">idx</span><span class="p">])))</span>
+
+<span class="c1">#print Core ML prediction</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CoreML prediction class = </span><span class="si">{}</span><span class="s2">, probability = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">coreml_predicted_class_label</span><span class="p">,</span>
+                                <span class="nb">str</span><span class="p">(</span><span class="n">coreml_pred_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
 </pre></div>
 </div>
-<p>The result shows that both predictions match, which ensures that the conversion is correct. However, the class labels are incorrect:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>image shape: (224, 224, 3)
-first few values:  [39. 33. 18. 42.] max value:  255.0
-
-
-CoreML prediction class = thatch, probability = 0.5372982025146484
-TF prediction class = thatch
-, probability = 0.5372873
-</pre></div>
-</div>
-<p>The class labels are incorrect because the image was not preprocessed correctly before it was passed to the neural network.</p>
+<p>The result shows that both predictions match, which ensures that the conversion is correct. However, for better results, ensure that the image is preprocessed correctly before passing it to the ML program.</p>
 </section>
 <section id="preprocess-the-image-before-converting">
 <h2>Preprocess the Image Before Converting<a class="headerlink" href="#preprocess-the-image-before-converting" title="Permalink to this heading">#</a></h2>
-<p>Preprocessing is always a crucial step when using neural networks on images. The best approach is to find the source of the pre-trained model and check for the preprocessing that the model’s author used during training and evaluation.</p>
+<p>Preprocessing is always a crucial step when using ML programs and neural networks on images. The best approach is to find the source of the pre-trained model and check for the preprocessing that the model’s author used during training and evaluation.</p>
 <p>In this case, the TensorFlow model comes from the
 <a class="reference external" href="https://github.com/tensorflow/models/tree/edb6ed22a801665946c63d650ab9a0b23d98e1b1/research/slim">SLIM library</a>,
 and the preprocessing steps are defined in the <code class="docutils literal notranslate"><span class="pre">preprocess_for_eval</span></code> definition in <a class="reference external" href="https://github.com/tensorflow/models/blob/edb6ed22a801665946c63d650ab9a0b23d98e1b1/research/slim/preprocessing/inception_preprocessing.py#L243">inception_preprocessing.py</a>. The image pixels have to be scaled to lie within the interval <code class="docutils literal notranslate"><span class="pre">[-1,1]</span></code>.
@@ -670,17 +616,16 @@ The following code preprocesses the image and makes a new prediction:</p>
                                             <span class="nb">str</span><span class="p">(</span><span class="n">tf_out</span><span class="p">[</span><span class="n">idx</span><span class="p">])))</span>
 </pre></div>
 </div>
-<p>The TensorFlow model now predicts a dog as the highest class:</p>
+<p>The TensorFlow model predicts an English Setter as the highest class, (with a probability of 0.301507):</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>TF prediction class = English setter
 , probability = 0.301507
 </pre></div>
 </div>
-<p>Core ML automatically handles the image preprocessing when the input is of type image. However, the image biases and scale are not correct. The channel scale should be multiplied first before adding the bias. The following code converts the model again with this correction, and saves the newly converted model:</p>
+<p>Core ML automatically handles the image preprocessing when the input is of type image. However, the image biases and scale are not correct. The channel scale should be multiplied first before adding the bias. The following code converts the model again with this correction, and saves the newly converted model. It also makes the prediction again with the newly converted Core ML model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">image_inputs</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">bias</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">scale</span><span class="o">=</span><span class="mf">2.0</span><span class="o">/</span><span class="mi">255</span><span class="p">)</span>
 <span class="n">classifier_config</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">ClassifierConfig</span><span class="p">(</span><span class="s1">&#39;imagenet_slim_labels.txt&#39;</span><span class="p">)</span>
-<span class="n">coreml_model_file</span> <span class="o">=</span> <span class="s1">&#39;./inception_v1.mlmodel&#39;</span>
+<span class="n">coreml_model_file</span> <span class="o">=</span> <span class="s1">&#39;./inception_v1.mlpackage&#39;</span>
 <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InceptionV1/Logits/Predictions/Softmax&#39;</span><span class="p">]</span>
-
 
 <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">tf_model_path</span><span class="p">,</span> 
                           <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">image_inputs</span><span class="p">],</span> 
@@ -688,27 +633,23 @@ The following code preprocesses the image and makes a new prediction:</p>
                           <span class="n">outputs</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
 
 <span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">coreml_model_file</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The result shows the progress of the conversion:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Running TensorFlow Graph Passes: 100%|██████████| 7/7 [00:02&lt;00:00,  3.10 passes/s]
-Converting Frontend ==&gt; MIL Ops: 100%|██████████| 441/441 [00:00&lt;00:00, 998.08 ops/s] 
-Running MIL optimization passes: 100%|██████████| 17/17 [00:00&lt;00:00, 20.62 passes/s]
-Translating MIL ==&gt; MLModel Ops: 100%|██████████| 839/839 [00:00&lt;00:00, 1125.96 ops/s]
-</pre></div>
-</div>
-<p>The following code makes the prediction again with the newly converted Core ML model:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Call CoreML predict again</span>
+
+<span class="c1"># Call CoreML predict again</span>
+
+<span class="c1"># Fix output name</span>
+<span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;InceptionV1_Logits_Predictions_Softmax&#39;</span><span class="p">]</span>
+
 <span class="n">coreml_output</span> <span class="o">=</span> <span class="n">coreml_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">coreml_inputs</span><span class="p">)</span>
 <span class="n">coreml_pred_dict</span> <span class="o">=</span> <span class="n">coreml_output</span><span class="p">[</span><span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
 <span class="n">coreml_predicted_class_label</span> <span class="o">=</span> <span class="n">coreml_output</span><span class="p">[</span><span class="s1">&#39;classLabel&#39;</span><span class="p">]</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;CoreML prediction class = </span><span class="si">{}</span><span class="s2">, probability = </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">coreml_predicted_class_label</span><span class="p">,</span>
-                        <span class="nb">str</span><span class="p">(</span><span class="n">coreml_pred_dict</span><span class="p">[</span><span class="n">coreml_predicted_class_label</span><span class="p">])))</span>
+                        <span class="nb">str</span><span class="p">(</span><span class="n">coreml_pred_dict</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
 
 </pre></div>
 </div>
-<p>The output now correctly matches the TensorFlow output:</p>
-<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CoreML prediction class = English setter, probability = 0.3015042543411255
+<p>The output predicts the English Setter with higher probability (1.68707207e-04):</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>CoreML prediction class = English setter, probability = [1.68707207e-04 4.01963953e-05 2.33356332e-04 ... 1.15576135e-04
+ 3.79885838e-04 2.21910377e-04]
 </pre></div>
 </div>
 <div class="admonition-predictions-can-vary-slightly admonition">
@@ -766,7 +707,7 @@ Translating MIL ==&gt; MLModel Ops: 100%|██████████| 839/839
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#requirements">Requirements</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#download-the-model">Download the Model</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#load-the-graph-definition">Load the Graph Definition</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#convert-to-core-ml">Convert to Core ML</a></li>
