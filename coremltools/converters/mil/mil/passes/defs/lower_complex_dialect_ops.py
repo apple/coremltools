@@ -511,11 +511,11 @@ def _overlap_add(
 
     # Create empty output with final shape
     if input_shape.rank == 3:
-        channels, n_frames = input_shape.val
-        output = mb.fill(shape=(channels, int(n_fft.val + hop_length.val * (n_frames - 1))), value=0., before_op=before_op)
+        channels, n_frames, _= input_shape.val
+        output = mb.fill(shape=(channels, int(n_fft.val + hop_length.val * (n_frames - 1)),), value=0., before_op=before_op)
     else:
         channels = None
-        n_frames= input_shape.val
+        n_frames, _ = input_shape.val
         output = mb.fill(shape=(int(n_fft.val + hop_length.val * (n_frames - 1)),), value=0., before_op=before_op)
 
     # Create an index used later on overlap add
