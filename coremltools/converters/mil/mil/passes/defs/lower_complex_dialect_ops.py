@@ -397,6 +397,7 @@ def _istft(
     hop_length: Optional[Var],
     win_length: Optional[Var],
     window: Optional[Var],
+    center: Optional[Var],
     normalized: Optional[Var],
     onesided: Optional[Var],
     length: Optional[Var],
@@ -435,12 +436,10 @@ def _istft(
         cos_base = mb.mul(x=window, y=cos_base, before_op=before_op)
         sin_base = mb.mul(x=window, y=sin_base, before_op=before_op)
 
-    cos_base = mb.expand_dims(x=cos_base, axes=(1,), before_op=before_op)
-    sin_base = mb.expand_dims(x=sin_base, axes=(1,), before_op=before_op)
     hop_size = mb.expand_dims(x=hop_length, axes=(0,), before_op=before_op)
 
-    signal_real = mb.expand_dims(x=input_real, axes=(1,), before_op=before_op)
-    signal_imaginary = mb.expand_dims(x=input_imaginary, axes=(1,), before_op=before_op)
+    signal_real = input_real
+    signal_imaginary = input_imaginary
 
     # De-normalized signal before applying the IFT
     if normalized and normalized.val:
@@ -455,15 +454,16 @@ def _istft(
     # So using the definition in stft function, we get:
     #   real(x[n]) = Σ(a[k]*cos(2π*k/K*n)+b[k]*sin(2π*k/K*n))
     #   imag(x[n]) = Σ(b[k]*cos(2π*k/K*n)-a[k]*sin(2π*k/K*n))
-    cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
-    sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
-    cos_windows_imag = mb.conv(x=signal_imaginary, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
-    sin_windows_imag = mb.conv(x=signal_imaginary, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
+    cos_windows_real = mb.matmul(x=signal_real, y=cos_base, transpose_x=True, before_op=before_op)
+    sin_windows_real = mb.matmul(x=signal_real, y=sin_base, transpose_x=True, before_op=before_op)
+    cos_windows_imag = mb.matmul(x=signal_imaginary, y=cos_base, transpose_x=True, before_op=before_op)
+    sin_windows_imag = mb.matmul(x=signal_imaginary, y=sin_base, transpose_x=True, before_op=before_op)
 
     real_result = mb.add(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
     imag_result = mb.sub(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
 
     # Divide by N
+    n_fft = mb.cast(x=n_fft, dtype="fp32", before_op=before_op)
     real_result = mb.real_div(x=real_result, y=n_fft, before_op=before_op)
     imag_result = mb.real_div(x=imag_result, y=n_fft, before_op=before_op)
 
@@ -472,9 +472,9 @@ def _istft(
     imag_result = _overlap_add(x=imag_result, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
 
     # Normalize by the window square
-    n_frames = mb.shape(x=real_result, before_op=before_op)[1]
     window_square = mb.mul(x=window, y=window, before_op=before_op)
-    window_mtx = mb.stack(values=[window_square] * n_frames, axis=1)
+    window_mtx = mb.stack(values=[window_square] * n_frames, axis=0, before_op=before_op)
+    window_mtx = mb.expand_dims(x=window_mtx, axes=(0,), before_op=before_op)
     window_envelope = _overlap_add(x=window_mtx, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
     real_result = mb.real_div(x=real_result, y=window_envelope, before_op=before_op)
     imag_result = mb.real_div(x=imag_result, y=window_envelope, before_op=before_op)
@@ -502,17 +502,27 @@ def _overlap_add(
     """
     input_shape = mb.shape(x=x, before_op=before_op)
     channels = input_shape.val[0]
-    n_frames = input_shape.val[2]
+    n_frames = input_shape.val[1]
 
-    output = mb.fill(shape=(channels, n_fft.val + hop_length.val * (n_frames - 1)), value=0., before_op=before_op)
-    signal_frames = mb.split(x=x, num_splits=n_frames, axis=2, before_op=before_op)
+    # Create empty output with final shape
+    output = mb.fill(shape=(channels, int(n_fft.val + hop_length.val * (n_frames - 1))), value=0., before_op=before_op)
+
+    # Create an index used later on overlap add
+    n_fft = mb.cast(x=n_fft, dtype="int32", before_op=before_op)
     local_idx = mb.range_1d(start=0, end=n_fft, step=1, before_op=before_op)
 
+    # Split data into frames and iterate
+    signal_frames = mb.split(x=x, num_splits=n_frames, axis=1, before_op=before_op)
+
     for frame_num, frame in enumerate(signal_frames):
+        frame = mb.squeeze(x=frame, axes=[1], before_op=before_op)
+
+        # Create index to align data frames
         global_idx = mb.add(x=local_idx , y=frame_num*hop_length.val, before_op=before_op)
-        global_idx = mb.expand_dims(x=global_idx, axes=(0,), before_op=before_op)
-        global_idx = mb.stack(values=[global_idx] * channels, axis=0)
-        output = mb.scatter_nd(data=output, indices=global_idx, updates=frame, before_op=before_op)
+        global_idx = mb.stack(values=[global_idx] * channels, axis=0, before_op=before_op)
+
+        # Add data frame
+        output = mb.scatter_along_axis(data=output, indices=global_idx, updates=frame, axis=1, mode="add", before_op=before_op)
 
     return output
 
@@ -748,11 +758,10 @@ def _lower_complex_stft(op: Operation):
 
 @LowerComplex.register_lower_func(op_type="complex_istft")
 def _lower_complex_istft(op: Operation):
-    is_complex = types.is_complex(op.input.dtype)
 
     # check parameters for validity
-    if is_complex:
-        raise ValueError("Only complex inputs are allowed")
+    if not types.is_complex(op.input.dtype):
+        raise TypeError("Input type must be complex")
     if op.win_length and op.win_length.val > op.n_fft.val:
         raise ValueError("Window length must be less than or equal to n_fft")
     if op.return_complex and op.onesided and op.onesided.val:
@@ -760,7 +769,7 @@ def _lower_complex_istft(op: Operation):
 
     real, imag = _istft(
         op.input.real, op.input.imag,
-        op.n_fft, op.hop_length, op.win_length, op.window, op.normalized, op.onesided, op.length, before_op=op)
+        op.n_fft, op.hop_length, op.win_length, op.window, op.center, op.normalized, op.onesided, op.length, before_op=op)
 
     if op.return_complex:
         return _wrap_complex_output(op.outputs[0], real, imag)

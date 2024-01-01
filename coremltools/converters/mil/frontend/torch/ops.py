@@ -6362,6 +6362,7 @@ def stft(context, node):
     Lowers torch.stft with the dialect op `complex_stft` from complex_dialect_ops.py
     """
     input_data, n_fft, hop_length, win_length, window, normalized, onesided, _ = _get_inputs(context, node, min_expected=2)
+
     if types.is_complex(input_data.dtype):
         onesided = False # pytorch defaults onesided to False for complex inputs
     stft_res = mb.complex_stft(
@@ -6371,8 +6372,31 @@ def stft(context, node):
         win_length=win_length,
         window=window,
         normalized=normalized,
-        onesided=onesided)
+        onesided=onesided
+    )
     context.add(stft_res, node.name)
+
+@register_torch_op
+def istft(context, node):
+    """
+    Lowers torch.istft with the dialect op `complex_istft` from complex_dialect_ops.py
+    """
+    input_data, n_fft, hop_length, win_length, window, center, normalized, onesided, length, _ = _get_inputs(context, node, min_expected=2)
+
+    if types.is_complex(input_data.dtype):
+        onesided = False # pytorch defaults onesided to False for complex inputs
+    istft_res = mb.complex_istft(
+        input=input_data,
+        n_fft=n_fft,
+        hop_length=hop_length,
+        win_length=win_length,
+        window=window,
+        center=center,
+        normalized=normalized,
+        onesided=onesided,
+        length=length,
+    )
+    context.add(istft_res, node.name)
 
 @register_torch_op(torch_alias=["torchvision::nms"])
 def torchvision_nms(context, node):

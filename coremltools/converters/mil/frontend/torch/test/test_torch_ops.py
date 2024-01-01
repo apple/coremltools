@@ -9589,12 +9589,11 @@ class TestSTFT(TorchBaseTest):
 
     @pytest.mark.slow
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, n_fft, hop_length, win_length, window, center, normalized, onesided, length, return_complex",
+        "compute_unit, backend, input_shape, hop_length, win_length, window, center, normalized, onesided, length, return_complex",
         itertools.product(
             compute_units,
             backends,
             [(1, 32, 9), (32, 9), (3, 32, 9)], # input shape
-            [16], # n_fft
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
             [None, torch.hann_window], # window
@@ -9605,9 +9604,11 @@ class TestSTFT(TorchBaseTest):
             [False, True], # return_complex
         )
     )
-    def test_istft(self, compute_unit, backend, input_shape, n_fft, hop_length, win_length, window, center, normalized, onesided, length, return_complex):
+    def test_istft(self, compute_unit, backend, input_shape, hop_length, win_length, window, center, normalized, onesided, length, return_complex):
         if return_complex and onesided:
             pytest.skip("Complex output is incompatible with onesided")
+
+        n_fft = input_shape[1]
 
         class ISTFTModel(torch.nn.Module):
             def forward(self, x):

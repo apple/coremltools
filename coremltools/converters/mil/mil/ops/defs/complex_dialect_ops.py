@@ -893,7 +893,6 @@ class complex_istft(Operation):
 
     Attributes
     ----------
-    V: complex64
     T: fp32, complex64
 
     References
@@ -902,19 +901,17 @@ class complex_istft(Operation):
     """
 
     input_spec = InputSpec(
-        input=TensorInputType(type_domain="V"),
+        input=TensorInputType(type_domain=types.complex),
         n_fft=TensorInputType(const=True, type_domain=types.int32),
         hop_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
         win_length=TensorInputType(const=True, optional=True, type_domain=types.int32),
         window=TensorInputType(const=True, optional=True, type_domain=types.fp32),
-        normalized=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        center=TensorInputType(const=True, type_domain=types.bool),
+        normalized=TensorInputType(const=True, optional=False, type_domain=types.bool),
         onesided=TensorInputType(const=True, optional=True, type_domain=types.bool),
         length=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        return_complex=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-
-    type_domains = {
-        "V": types.complex64,
-    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -923,23 +920,21 @@ class complex_istft(Operation):
             window = None,
             normalized = False,
             onesided = True,
-            length = None
+            length = None,
+            return_complex = True,
         )
 
     def type_inference(self):
-        output_type = (types.fp32)
-        output_shape = []
+        output_type = (types.complex64) if self.return_complex else (types.fp32)
 
-        # add back rank if needed
-        if self.input.rank == 2:
-            output_shape += [self.input.shape[0]]
+        # add batch size if given
+        output_shape = [self.input.shape[0] if self.input.rank == 3 else 1]
 
         if self.length:
             output_shape += [self.length]
-            return types.tensor(output_type, tuple(output_shape))
+        else:
+            n_frames = self.input.shape[-1]
+            output_shape += [self.n_fft.val + self.hop_length.val * (n_frames - 1)]
 
-        n_frames = self.input.shape[-1]
-        output_shape = self.n_fft.val + self.hop_length.val * (n_frames - 1)
 
         return types.tensor(output_type, tuple(output_shape))
-
