@@ -934,7 +934,6 @@ class complex_istft(Operation):
             output_shape += [self.length]
         else:
             n_frames = self.input.shape[-1]
-
             hop_length = self.hop_length.val if self.hop_length else self.n_fft.val // 4
             output_shape += [self.n_fft.val + hop_length * (n_frames - 1)]
 

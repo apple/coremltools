@@ -419,7 +419,7 @@ def _istft(
     win_length = win_length or n_fft
 
     input_shape = mb.shape(x=input_real, before_op=before_op)
-    if input_shape.rank == 3:
+    if input_real.rank == 3:
         channels, fft_size, n_frames = input_shape.val
     else:
         channels = None
@@ -510,7 +510,7 @@ def _overlap_add(
     input_shape = mb.shape(x=x, before_op=before_op)
 
     # Create empty output with final shape
-    if input_shape.rank == 3:
+    if x.rank == 3:
         channels, n_frames, _= input_shape.val
         output = mb.fill(shape=(channels, int(n_fft.val + hop_length.val * (n_frames - 1)),), value=0., before_op=before_op)
     else:
@@ -523,10 +523,10 @@ def _overlap_add(
     local_idx = mb.range_1d(start=0, end=n_fft, step=1, before_op=before_op)
 
     # Split data into frames and iterate
-    signal_frames = mb.split(x=x, num_splits=n_frames, axis=1, before_op=before_op)
+    signal_frames = mb.split(x=x, num_splits=n_frames, axis=1 if channels else 0, before_op=before_op)
 
     for frame_num, frame in enumerate(signal_frames):
-        frame = mb.squeeze(x=frame, axes=[1], before_op=before_op)
+        frame = mb.squeeze(x=frame, axes=[1] if channels else [0], before_op=before_op)
 
         # Create index to align data frames
         global_idx = mb.add(x=local_idx , y=frame_num*hop_length.val, before_op=before_op)
@@ -534,7 +534,7 @@ def _overlap_add(
             global_idx = mb.stack(values=[global_idx] * channels, axis=0, before_op=before_op)
 
         # Add data frame
-        output = mb.scatter_along_axis(data=output, indices=global_idx, updates=frame, axis=1, mode="add", before_op=before_op)
+        output = mb.scatter_along_axis(data=output, indices=global_idx, updates=frame, axis=1 if channels else 0, mode="add", before_op=before_op)
 
     return output
 
