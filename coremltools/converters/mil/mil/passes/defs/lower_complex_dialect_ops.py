@@ -419,9 +419,12 @@ def _istft(
     win_length = win_length or n_fft
 
     input_shape = mb.shape(x=input_real, before_op=before_op)
-    channels = input_shape.val[0]
-    fft_size = input_shape.val[1]
-    n_frames = input_shape.val[2]
+    if input_shape.rank == 3:
+        channels, fft_size, n_frames = input_shape.val
+    else:
+        channels = None
+        fft_size, n_frames = input_shape.val
+
     expected_output_signal_len = n_fft.val + hop_length.val * (n_frames - 1)
 
     is_onesided = onesided.val if onesided else fft_size != n_fft
@@ -482,12 +485,16 @@ def _istft(
     # We need to adapt last dimension
     if length is not None:
         if length.val > expected_output_signal_len:
-            right_pad = mb.fill(shape=(channels, expected_output_signal_len - length), value=0., before_op=before_op)
+            if channels:
+                right_pad = mb.fill(shape=(channels, expected_output_signal_len - length), value=0., before_op=before_op)
+            else:
+                right_pad = mb.fill(shape=(expected_output_signal_len - length,), value=0., before_op=before_op)
+
             real_result = mb.stack(x=(real_result, right_pad), axis=1, before_op=before_op)
             imag_result = mb.stack(x=(imag_result, right_pad), axis=1, before_op=before_op)
         elif length.val < expected_output_signal_len:
-            real_result = mb.slice_by_size(x=real_result, begin=[0], size=[length], before_op=before_op)
-            imag_result = mb.slice_by_size(x=imag_result, begin=[0], size=[length], before_op=before_op)
+            real_result = mb.slice_by_size(x=real_result, begin=[0], size=[length.val], before_op=before_op)
+            imag_result = mb.slice_by_size(x=imag_result, begin=[0], size=[length.val], before_op=before_op)
 
     return real_result, imag_result
 
@@ -498,14 +505,18 @@ def _overlap_add(
     before_op: Operation,
 ) -> Var:
     """
-    The input has shape (channels, fft_size, n_frames)
+    The input has shape (channels, n_frames, fft_size)
     """
     input_shape = mb.shape(x=x, before_op=before_op)
-    channels = input_shape.val[0]
-    n_frames = input_shape.val[1]
 
     # Create empty output with final shape
-    output = mb.fill(shape=(channels, int(n_fft.val + hop_length.val * (n_frames - 1))), value=0., before_op=before_op)
+    if input_shape.rank == 3:
+        channels, n_frames = input_shape.val
+        output = mb.fill(shape=(channels, int(n_fft.val + hop_length.val * (n_frames - 1))), value=0., before_op=before_op)
+    else:
+        channels = None
+        n_frames= input_shape.val
+        output = mb.fill(shape=(int(n_fft.val + hop_length.val * (n_frames - 1)),), value=0., before_op=before_op)
 
     # Create an index used later on overlap add
     n_fft = mb.cast(x=n_fft, dtype="int32", before_op=before_op)
@@ -519,7 +530,8 @@ def _overlap_add(
 
         # Create index to align data frames
         global_idx = mb.add(x=local_idx , y=frame_num*hop_length.val, before_op=before_op)
-        global_idx = mb.stack(values=[global_idx] * channels, axis=0, before_op=before_op)
+        if channels:
+            global_idx = mb.stack(values=[global_idx] * channels, axis=0, before_op=before_op)
 
         # Add data frame
         output = mb.scatter_along_axis(data=output, indices=global_idx, updates=frame, axis=1, mode="add", before_op=before_op)

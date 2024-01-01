@@ -938,5 +938,4 @@ class complex_istft(Operation):
             hop_length = self.hop_length.val if self.hop_length else self.n_fft.val // 4
             output_shape += [self.n_fft.val + hop_length * (n_frames - 1)]
 
-
         return types.tensor(output_type, tuple(output_shape))
