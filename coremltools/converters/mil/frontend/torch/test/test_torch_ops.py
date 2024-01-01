@@ -9597,7 +9597,7 @@ class TestSTFT(TorchBaseTest):
             [None, 4, 5], # hop_length
             [None, 16, 9], # win_length
             [None, torch.hann_window], # window
-            [None, False, True], # center
+            [False, True], # center
             [False, True], # normalized
             [None, False, True], # onesided
             [None, 60], # length
