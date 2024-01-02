@@ -9597,7 +9597,7 @@ class TestSTFT(TorchBaseTest):
             [16, 32], # n_fft
             [5, 9], # num_frames
             [None, 4, 5], # hop_length
-            [None, 16, 9], # win_length
+            [None, 10, 8], # win_length
             [None, torch.hann_window], # window
             [False, True], # center
             [False, True], # normalized
@@ -9609,6 +9609,9 @@ class TestSTFT(TorchBaseTest):
     def test_istft(self, compute_unit, backend, channels, n_fft, num_frames, hop_length, win_length, window, center, normalized, onesided, length, return_complex):
         if return_complex and onesided:
             pytest.skip("Complex output is incompatible with onesided")
+
+        if hop_length is None and win_length is not None:
+            pytest.skip("If win_length is set then we must set hop_length and 0 < hop_length <= win_length")
 
         freq = n_fft//2+1 if onesided else n_fft
         input_shape = (channels, freq, num_frames) if channels else (freq, num_frames)
@@ -9628,24 +9631,13 @@ class TestSTFT(TorchBaseTest):
                     length=length,
                     return_complex=return_complex)
                 if return_complex:
-                    x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
-                return x
+                    return torch.stack([torch.real(x), torch.imag(x)], dim=0)
+                else:
+                    return torch.real(x)
 
-        if length is not None or center is False:
+        if win_length and center is False:
             # For some reason Pytorch raises an error https://github.com/pytorch/audio/issues/427#issuecomment-1829593033
-            with pytest.raises(
-                RuntimeError, match="istft\(.*\) window overlap add min: 1"
-            ):
-                TorchBaseTest.run_compare_torch(
-                    input_shape,
-                    ISTFTModel(),
-                    backend=backend,
-                    compute_unit=compute_unit
-                )
-        elif return_complex is False:
-            with pytest.raises(
-                ValueError, match="MIL doesn't support complex data as model's output"
-            ):
+            with pytest.raises(RuntimeError, match="istft\(.*\) window overlap add min: 1"):
                 TorchBaseTest.run_compare_torch(
                     input_shape,
                     ISTFTModel(),
