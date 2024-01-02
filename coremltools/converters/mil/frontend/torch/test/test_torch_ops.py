@@ -9610,7 +9610,7 @@ class TestSTFT(TorchBaseTest):
         if return_complex and onesided:
             pytest.skip("Complex output is incompatible with onesided")
 
-        freq = n_fft*2+1 if onesided else n_fft
+        freq = n_fft//2+1 if onesided else n_fft
         input_shape = (channels, freq, num_frames) if channels else (freq, num_frames)
 
         class ISTFTModel(torch.nn.Module):
@@ -9631,12 +9631,34 @@ class TestSTFT(TorchBaseTest):
                     x = torch.stack([torch.real(x), torch.imag(x)], dim=0)
                 return x
 
-        TorchBaseTest.run_compare_torch(
-            input_shape,
-            ISTFTModel(),
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        if length is not None or center is False:
+            # For some reason Pytorch raises an error https://github.com/pytorch/audio/issues/427#issuecomment-1829593033
+            with pytest.raises(
+                RuntimeError, match="istft\(.*\) window overlap add min: 1"
+            ):
+                TorchBaseTest.run_compare_torch(
+                    input_shape,
+                    ISTFTModel(),
+                    backend=backend,
+                    compute_unit=compute_unit
+                )
+        elif return_complex is False:
+            with pytest.raises(
+                ValueError, match="MIL doesn't support complex data as model's output"
+            ):
+                TorchBaseTest.run_compare_torch(
+                    input_shape,
+                    ISTFTModel(),
+                    backend=backend,
+                    compute_unit=compute_unit
+                )
+        else:
+            TorchBaseTest.run_compare_torch(
+                input_shape,
+                ISTFTModel(),
+                backend=backend,
+                compute_unit=compute_unit
+            )
 
 if _HAS_TORCH_AUDIO:
 

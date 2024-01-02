@@ -486,12 +486,12 @@ def _istft(
     if length is not None:
         if length.val > expected_output_signal_len:
             if channels:
-                right_pad = mb.fill(shape=(channels, expected_output_signal_len - length), value=0., before_op=before_op)
+                right_pad = mb.fill(shape=(channels, length.val - expected_output_signal_len ), value=0., before_op=before_op)
             else:
-                right_pad = mb.fill(shape=(expected_output_signal_len - length,), value=0., before_op=before_op)
+                right_pad = mb.fill(shape=(length.val - expected_output_signal_len,), value=0., before_op=before_op)
 
-            real_result = mb.stack(x=(real_result, right_pad), axis=1, before_op=before_op)
-            imag_result = mb.stack(x=(imag_result, right_pad), axis=1, before_op=before_op)
+            real_result = mb.stack(values=(real_result, right_pad), axis=1, before_op=before_op)
+            imag_result = mb.stack(values=(imag_result, right_pad), axis=1, before_op=before_op)
         elif length.val < expected_output_signal_len:
             real_result = mb.slice_by_size(x=real_result, begin=[0], size=[length.val], before_op=before_op)
             imag_result = mb.slice_by_size(x=imag_result, begin=[0], size=[length.val], before_op=before_op)
