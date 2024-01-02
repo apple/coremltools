@@ -9596,13 +9596,13 @@ class TestSTFT(TorchBaseTest):
             [None, 1, 3], # channels
             [16, 32], # n_fft
             [5, 9], # num_frames
-            [None, 4, 5], # hop_length
+            [None, 5], # hop_length
             [None, 10, 8], # win_length
             [None, torch.hann_window], # window
             [False, True], # center
             [False, True], # normalized
             [None, False, True], # onesided
-            [None, 30, 40], # length
+            [None, "shorter", "larger"], # length
             [False, True], # return_complex
         )
     )
@@ -9613,8 +9613,18 @@ class TestSTFT(TorchBaseTest):
         if hop_length is None and win_length is not None:
             pytest.skip("If win_length is set then we must set hop_length and 0 < hop_length <= win_length")
 
+        # Compute input_shape to generate test case
         freq = n_fft//2+1 if onesided else n_fft
         input_shape = (channels, freq, num_frames) if channels else (freq, num_frames)
+
+        # If not set,c ompute hop_length for capturing errors
+        if hop_length is None:
+            hop_length = n_fft // 4
+
+        if length == "shorter":
+            length = n_fft//2 + hop_length * (num_frames - 1)
+        elif length == "larger":
+            length = n_fft*3//2 + hop_length * (num_frames - 1)
 
         class ISTFTModel(torch.nn.Module):
             def forward(self, x):
@@ -9635,7 +9645,7 @@ class TestSTFT(TorchBaseTest):
                 else:
                     return torch.real(x)
 
-        if win_length and center is False:
+        if (center is False and win_length) or (center and win_length and length):
             # For some reason Pytorch raises an error https://github.com/pytorch/audio/issues/427#issuecomment-1829593033
             with pytest.raises(RuntimeError, match="istft\(.*\) window overlap add min: 1"):
                 TorchBaseTest.run_compare_torch(
@@ -9644,7 +9654,7 @@ class TestSTFT(TorchBaseTest):
                     backend=backend,
                     compute_unit=compute_unit
                 )
-        elif length is not None and return_complex is True:
+        elif length and return_complex:
             with pytest.raises(ValueError, match="New var type `<class 'coremltools.converters.mil.mil.types.type_tensor.tensor.<locals>.tensor'>` not a subtype of existing var type `<class 'coremltools.converters.mil.mil.types.type_tensor.tensor.<locals>.tensor'>`"):
                 TorchBaseTest.run_compare_torch(
                     input_shape,
