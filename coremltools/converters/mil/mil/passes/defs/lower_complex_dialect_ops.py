@@ -479,6 +479,8 @@ def _istft(
     window_mtx = mb.stack(values=[window_square] * n_frames, axis=0, before_op=before_op)
     window_mtx = mb.expand_dims(x=window_mtx, axes=(0,), before_op=before_op)
     window_envelope = _overlap_add(x=window_mtx, n_fft=n_fft, hop_length=hop_length, before_op=before_op)
+
+    # After this operation if it didn't have any channels dimention it adds one
     real_result = mb.real_div(x=real_result, y=window_envelope, before_op=before_op)
     imag_result = mb.real_div(x=imag_result, y=window_envelope, before_op=before_op)
     # We need to adapt last dimension
@@ -487,12 +489,8 @@ def _istft(
             real_result = mb.pad(x=real_result, pad=(0, length.val - expected_output_signal_len), before_op=before_op)
             imag_result = mb.pad(x=imag_result, pad=(0, length.val - expected_output_signal_len), before_op=before_op)
         elif length.val < expected_output_signal_len:
-            if channels:
-                real_result = mb.slice_by_size(x=real_result, begin=[0,0], size=[-1, length.val], before_op=before_op)
-                imag_result = mb.slice_by_size(x=imag_result, begin=[0,0], size=[-1, length.val], before_op=before_op)
-            else:
-                real_result = mb.slice_by_size(x=real_result, begin=[0], size=[length.val], before_op=before_op)
-                imag_result = mb.slice_by_size(x=imag_result, begin=[0], size=[length.val], before_op=before_op)
+            real_result = mb.slice_by_size(x=real_result, begin=[0,0], size=[-1, length.val], before_op=before_op)
+            imag_result = mb.slice_by_size(x=imag_result, begin=[0,0], size=[-1, length.val], before_op=before_op)
 
     return real_result, imag_result
 

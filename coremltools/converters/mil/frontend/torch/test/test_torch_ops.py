@@ -9602,7 +9602,7 @@ class TestSTFT(TorchBaseTest):
             [False, True], # center
             [False, True], # normalized
             [None, False, True], # onesided
-            [None, 60], # length
+            [None, 30, 40], # length
             [False, True], # return_complex
         )
     )
@@ -9638,6 +9638,14 @@ class TestSTFT(TorchBaseTest):
         if win_length and center is False:
             # For some reason Pytorch raises an error https://github.com/pytorch/audio/issues/427#issuecomment-1829593033
             with pytest.raises(RuntimeError, match="istft\(.*\) window overlap add min: 1"):
+                TorchBaseTest.run_compare_torch(
+                    input_shape,
+                    ISTFTModel(),
+                    backend=backend,
+                    compute_unit=compute_unit
+                )
+        elif length is not None and return_complex is True:
+            with pytest.raises(ValueError, match="New var type `<class 'coremltools.converters.mil.mil.types.type_tensor.tensor.<locals>.tensor'>` not a subtype of existing var type `<class 'coremltools.converters.mil.mil.types.type_tensor.tensor.<locals>.tensor'>`"):
                 TorchBaseTest.run_compare_torch(
                     input_shape,
                     ISTFTModel(),
