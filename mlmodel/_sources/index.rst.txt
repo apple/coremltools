@@ -1,5 +1,5 @@
 .. Core ML Format Reference documentation master file, created by
-   sphinx-quickstart on Mon Jun 28 11:26:31 2021.
+   sphinx-quickstart on Mon Jun 28 11:26:31 2021. Edited Jan. 3 2024.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
@@ -8,7 +8,7 @@ Core ML Model Format Specification
 ##################################
 
 This document contains the protobuf message definitions
-that comprise the Core ML model document (``.mlmodel``) format. The top-level
+that comprise the Core ML model format. The top-level
 message is `Model`, which is defined in :file:`Model.proto`.
 Other message types describe data structures, feature types,
 feature engineering model types, and predictive model types.
