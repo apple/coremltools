@@ -6,6 +6,7 @@ and can be any one of the following types:
 
 Neural Networks
   - ``NeuralNetwork``
+  - ``mlprogram``
 
 Regressors
   - ``GLMRegressor``

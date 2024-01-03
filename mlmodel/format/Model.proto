@@ -9,7 +9,8 @@
  * and can be any one of the following types:
  *
  * Neural Networks
- *   - `NeuralNetwork`
+ *   - ``NeuralNetwork``
+ *   - ``mlprogram``
  *
  * Regressors
  *   - ``GLMRegressor``
@@ -19,42 +20,42 @@
  *   - ``BayesianProbitRegressor``
  *
  * Classifiers
- *   - `NeuralNetworkClassifier`
- *   - `TreeEnsembleClassifier`
- *   - `GLMClassifier`
- *   - `SupportVectorClassifier`
- *   - `KNearestNeighborsClassifier`
+ *   - ``NeuralNetworkClassifier``
+ *   - ``TreeEnsembleClassifier``
+ *   - ``GLMClassifier``
+ *   - ``SupportVectorClassifier``
+ *   - ``KNearestNeighborsClassifier``
  *
  * Other models
- *   - `CustomModel`
- *   - `TextClassifier`
- *   - `WordTagger`
- *   - `Gazetteer`
- *   - `WordEmbedding`
- *   - `VisionFeaturePrint`
- *   - `LinkedModel`
- *   - `SoundAnalysisPreprocessing`
- *   - `ItemSimilarityRecommender`
- *   - `ClassConfidenceThresholding`
+ *   - ``CustomModel``
+ *   - ``TextClassifier``
+ *   - ``WordTagger``
+ *   - ``Gazetteer``
+ *   - ``WordEmbedding``
+ *   - ``VisionFeaturePrint``
+ *   - ``LinkedModel``
+ *   - ``SoundAnalysisPreprocessing``
+ *   - ``ItemSimilarityRecommender``
+ *   - ``ClassConfidenceThresholding``
  *
  * Feature Engineering
- *   - `Imputer`
- *   - `Scaler`
- *   - `Normalizer`
- *   - `OneHotEncoder`
- *   - `CategoricalMapping`
- *   - `FeatureVectorizer`
- *   - `DictVectorizer`
- *   - `ArrayFeatureExtractor`
- *   - `NonMaximumSuppression`
+ *   - ``Imputer``
+ *   - ``Scaler``
+ *   - ``Normalizer``
+ *   - ``OneHotEncoder``
+ *   - ``CategoricalMapping``
+ *   - ``FeatureVectorizer``
+ *   - ``DictVectorizer``
+ *   - ``ArrayFeatureExtractor``
+ *   - ``NonMaximumSuppression``
  *
  * Pipelines
- *   - `PipelineClassifier`
- *   - `PipelineRegressor`
- *   - `Pipeline`
+ *   - ``PipelineClassifier``
+ *   - ``PipelineRegressor``
+ *   - ``Pipeline``
  *
  * Simple Mathematical Functions
- *   - `Identity`
+ *   - ``Identity``
  */
 
 syntax = "proto3";
@@ -95,7 +96,7 @@ import public "ClassConfidenceThresholding.proto";
 package CoreML.Specification;
 
 /*
- * A pipeline consisting of one or more models.
+ * A pipeline consists of one or more models.
  */
 message Pipeline {
     repeated Model models = 1;
@@ -121,7 +122,7 @@ message PipelineRegressor {
 }
 
 /*
- * A feature description,
+ * A feature description 
  * consisting of a name, short description, and type.
  */
 message FeatureDescription {
