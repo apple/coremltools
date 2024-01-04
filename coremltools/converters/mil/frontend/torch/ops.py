@@ -217,7 +217,10 @@ def _get_inputs(
 
         for i in alist:
             if isinstance(i, str):
-                results.append(context[i])
+                try:
+                    results.append(context[i])
+                except ValueError:
+                    results.append(None)
             elif isinstance(i, (list, tuple)) and all(isinstance(j, int) for j in i):
                 results.append(mb.const(val=i))
             elif isinstance(i, (list, tuple)):
@@ -962,7 +965,7 @@ def linear(context, node):
     context.add(res, torch_name=node.name)
 
 
-@register_torch_op(torch_alias=["conv2d", "convolution"])
+@register_torch_op(torch_alias=["convolution", "conv1d", "conv2d", "conv3d", "conv_transpose1d", "conv_transpose2d", "conv_transpose3d"])
 def _convolution(context, node):
     inputs = _get_inputs(context, node)
 
@@ -980,11 +983,25 @@ def _convolution(context, node):
     # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
     pad = inputs[4].val
 
-    if len(weight.shape) in (3, 4):
-        # 1D and 2D: Need to explicitly state L-R, T-B pad
+    if type(pad) == str:
+        if pad == "same":
+            pad = 1
+        elif pad == "valid":
+            pad = 0
+        else:
+            raise ValueError(f"Unkown padding string value: '{pad}'")
+
+    if len(weight.shape) == 3:
+        # 1D padding: needs explicitly state L-R for x dim
         pad = _np.repeat(pad, 2)
+    elif len(weight.shape) == 4:
+        # 2D padding: needs explicitly state L-R for x,y dims
+        if type(pad) == int:
+            pad = _np.repeat(pad, 4)
+        elif len(pad) == 2:
+            pad = _np.repeat(pad, 2)
     elif len(weight.shape) == 5:
-        # 3D: Need to explicitly state F-Bk, L-R, T-B pad
+        # 3D padding: needs explicitly state L-R for x,y,z dims
         if type(pad) == int:
             pad = _np.repeat(pad, 6)
         elif len(pad) == 3:
@@ -1000,6 +1017,11 @@ def _convolution(context, node):
         transposed = inputs[6].val
         out_pad = inputs[7].val
         group = inputs[8]
+    elif len(inputs) == 8:
+        transposed = True
+        out_pad = inputs[5].val
+        dilations = inputs[7]
+        group = inputs[6]
     elif len(inputs) == 7:
         transposed = False
         group = inputs[6]

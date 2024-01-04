@@ -226,29 +226,6 @@ class TestScriptedModels(TorchBaseTest):
             use_scripting=True,
         )
 
-    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
-    def test_conv(self, compute_unit, backend):
-        pytest.xfail(
-            "rdar://88194776 ([Converter] coremltools is not working with scripted torch convolution model)"
-        )
-        model = torch.nn.Conv2d(
-            in_channels=2,
-            out_channels=3,
-            kernel_size=1,
-            padding="same",
-            stride=1,
-            dilation=1,
-            groups=1,
-            bias=False,
-        )
-        self.run_compare_torch(
-            (1, 2, 4, 5),
-            model,
-            backend=backend,
-            compute_unit=compute_unit,
-            use_scripting=True,
-        )
-
 
 class TestMean(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -1456,6 +1433,7 @@ class TestConv(TorchBaseTest):
             [
                 "compute_unit",
                 "backend",
+                "scripting",
                 "padding",
                 "stride",
                 "length",
@@ -1467,10 +1445,11 @@ class TestConv(TorchBaseTest):
             ]
         ),
         [
-            (compute_unit, backend, padding, stride, *param)
-            for compute_unit, backend, padding, stride, param in itertools.product(
+            (compute_unit, backend, scripting, padding, stride, *param)
+            for compute_unit, backend, scripting, padding, stride, param in itertools.product(
                 [ct.ComputeUnit.CPU_ONLY],
                 backends,
+                [True, False],
                 ["same", "valid", 0, 1],
                 [1, 2, 3],
                 [
@@ -1490,6 +1469,7 @@ class TestConv(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        scripting,
         padding,
         stride,
         length,
@@ -1503,6 +1483,7 @@ class TestConv(TorchBaseTest):
         if padding == "same" and stride != 1:
             # configuration not supported
             return
+
         model = nn.Conv1d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -1511,12 +1492,14 @@ class TestConv(TorchBaseTest):
             padding=padding,
             dilation=dilation,
             bias=bias,
+            groups=groups,
         )
         self.run_compare_torch(
             (1, in_channels, length),
             model,
             backend=backend,
             compute_unit=compute_unit,
+            use_scripting=scripting,
         )
 
     @pytest.mark.parametrize(
@@ -1524,6 +1507,7 @@ class TestConv(TorchBaseTest):
             [
                 "compute_unit",
                 "backend",
+                "scripting",
                 "padding",
                 "stride",
                 "height",
@@ -1536,10 +1520,11 @@ class TestConv(TorchBaseTest):
             ]
         ),
         [
-            (compute_unit, backend, padding, stride, *param)
-            for compute_unit, backend, padding, stride, param in itertools.product(
+            (compute_unit, backend, scripting, padding, stride, *param)
+            for compute_unit, backend, scripting, padding, stride, param in itertools.product(
                 [ct.ComputeUnit.CPU_ONLY],
                 backends,
+                [True, False],
                 ["same", "valid", 1, 0],
                 [1, 2, 3],
                 [
@@ -1559,6 +1544,7 @@ class TestConv(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        scripting,
         padding,
         stride,
         height,
@@ -1571,7 +1557,9 @@ class TestConv(TorchBaseTest):
         groups=1,
     ):
         if padding == "same" and stride != 1:
+            # configuration not supported
             return
+
         model = nn.Conv2d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -1580,12 +1568,14 @@ class TestConv(TorchBaseTest):
             padding=padding,
             dilation=dilation,
             bias=bias,
+            groups=groups,
         )
         self.run_compare_torch(
             (1, in_channels, height, width),
             model,
             backend=backend,
             compute_unit=compute_unit,
+            use_scripting=scripting,
         )
 
     @pytest.mark.parametrize(
@@ -1593,6 +1583,7 @@ class TestConv(TorchBaseTest):
             [
                 "compute_unit",
                 "backend",
+                "scripting",
                 "padding",
                 "stride",
                 "depth",
@@ -1606,10 +1597,11 @@ class TestConv(TorchBaseTest):
             ]
         ),
         [
-            (compute_unit, backend, padding, stride, *param)
-            for compute_unit, backend, padding, stride, param in itertools.product(
+            (compute_unit, backend, scripting, padding, stride, *param)
+            for compute_unit, backend, scripting, padding, stride, param in itertools.product(
                 [ct.ComputeUnit.CPU_ONLY],
                 backends,
+                [True, False],
                 ["same", "valid", 1, 0],
                 [1, 2, 3],
                 [
@@ -1629,6 +1621,7 @@ class TestConv(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        scripting,
         padding,
         stride,
         depth,
@@ -1642,52 +1635,57 @@ class TestConv(TorchBaseTest):
         groups=1,
     ):
         if padding == "same" and stride != 1:
+            # configuration not supported
             return
+
         model = nn.Conv3d(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
+            bias=bias,
             stride=stride,
             padding=padding,
             dilation=dilation,
-            bias=bias,
+            groups=groups,
         )
         self.run_compare_torch(
             (1, in_channels, depth, height, width),
             model,
             backend=backend,
             compute_unit=compute_unit,
+            use_scripting=scripting,
         )
 
 
-class TestDynamicConv(TorchBaseTest):
+class TestFunctionalConv(TorchBaseTest):
     @pytest.mark.parametrize(
         ",".join(
             [
                 "compute_unit",
                 "backend",
+                "padding",
                 "width",
                 "in_channels",
                 "out_channels",
                 "kernel_size",
                 "stride",
-                "padding",
             ]
         ),
         [
-            (compute_unit, backend, *param)
-            for compute_unit, backend, param in itertools.product(
+            (compute_unit, backend, padding, *param)
+            for compute_unit, backend, padding, param in itertools.product(
                 compute_units,
                 backends,
+                ["same", "valid", 1, 0],
                 [
-                    (5, 1, 1, 1, 2, 1),
-                    (3, 1, 1, 1, 2, 3),
-                    (4, 3, 3, 1, 2, 1),
-                    (7, 3, 3, 1, 3, 1),
-                    (5, 3, 3, 2, 2, 1),
-                    (3, 3, 3, 1, 3, 1),
-                    (3, 3, 3, 1, 3, 3),
-                    (7, 3, 3, 3, 1, 3),
+                    (5, 1, 1, 1, 2),
+                    (3, 1, 1, 1, 2),
+                    (4, 3, 3, 1, 2),
+                    (7, 3, 3, 1, 3),
+                    (5, 3, 3, 2, 2),
+                    (3, 3, 3, 1, 3),
+                    (3, 3, 3, 1, 3),
+                    (7, 3, 3, 3, 1),
                 ],
             )
         ],
