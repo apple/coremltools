@@ -174,6 +174,7 @@
             <span class="s2">&quot;scale&quot;</span><span class="p">,</span>
             <span class="s2">&quot;bias&quot;</span><span class="p">,</span>
             <span class="s2">&quot;loadConstant&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;loadConstantND&quot;</span><span class="p">,</span>
             <span class="s2">&quot;simpleRecurrent&quot;</span><span class="p">,</span>
             <span class="s2">&quot;gru&quot;</span><span class="p">,</span>
             <span class="s2">&quot;uniDirectionalLSTM&quot;</span><span class="p">,</span>
@@ -997,6 +998,13 @@
             <span class="n">nw</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">loadConstant</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="n">_quantize_wp_field</span><span class="p">(</span>
                 <span class="n">layer</span><span class="o">.</span><span class="n">loadConstant</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nw</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span>
+            <span class="p">)</span>
+
+        <span class="c1"># LoadConstantND layer</span>
+        <span class="k">elif</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;loadConstantND&quot;</span><span class="p">:</span>
+            <span class="n">nw</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">loadConstantND</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="n">_quantize_wp_field</span><span class="p">(</span>
+                <span class="n">layer</span><span class="o">.</span><span class="n">loadConstantND</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">nw</span><span class="p">,),</span> <span class="o">**</span><span class="n">kwargs</span>
             <span class="p">)</span>
 
         <span class="c1"># Simple Recurrent</span>

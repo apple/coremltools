@@ -227,7 +227,7 @@
 
 <span class="sd">    weights_dir: str</span>
 <span class="sd">        Path to the directory containing the weights.bin file. This is required</span>
-<span class="sd">        when the spec if of model type mlprogram. If the mlprogram does not contain</span>
+<span class="sd">        when the spec has model type mlprogram. If the mlprogram does not contain</span>
 <span class="sd">        any weights, this path can be an empty directory.</span>
 
 <span class="sd">    Examples</span>
@@ -1100,24 +1100,54 @@
             <span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="compile_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.compile_model">[docs]</a><span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="s1">&#39;_ct.models.MLModel&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<div class="viewcode-block" id="compile_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.compile_model">[docs]</a><span class="k">def</span> <span class="nf">compile_model</span><span class="p">(</span><span class="n">model</span><span class="p">:</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Compiles a Core ML model.</span>
+<span class="sd">    Compiles a Core ML model spec.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    model: str, Model_pb2 or MLModel</span>
+<span class="sd">    model: Model_pb2</span>
+<span class="sd">        Spec/protobuf to compile.</span>
 
-<span class="sd">        str : Path to model to compile</span>
+<span class="sd">        Note: an mlprogam which uses a blob file is not supported.</span>
 
-<span class="sd">        Model_pb2 : Spec to model to compile</span>
-
-<span class="sd">        MLModel : Instantiated Core ML model to compile</span>
+<span class="sd">    destination_path: str</span>
+<span class="sd">        Path where the compiled model will be saved.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 
 <span class="sd">    str : Path to compiled model directory</span>
+<span class="sd">        If the destination_path is specified, that is the value that will be returned.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        from coremltools.models import CompiledMLModel</span>
+<span class="sd">        from coremltools.models.utils import compile_model</span>
+<span class="sd">        from coremltools.proto import Model_pb2</span>
+
+<span class="sd">        spec = Model_pb2.Model()</span>
+<span class="sd">        spec.specificationVersion = 1</span>
+
+<span class="sd">        input_ = spec.description.input.add()</span>
+<span class="sd">        input_.name = &#39;x&#39;</span>
+<span class="sd">        input_.type.doubleType.MergeFromString(b&quot;&quot;)</span>
+
+<span class="sd">        output_ = spec.description.output.add()</span>
+<span class="sd">        output_.name = &#39;y&#39;</span>
+<span class="sd">        output_.type.doubleType.MergeFromString(b&quot;&quot;)</span>
+<span class="sd">        spec.description.predictedFeatureName = &#39;y&#39;</span>
+
+<span class="sd">        lr = spec.glmRegressor</span>
+<span class="sd">        lr.offset.append(0.1)</span>
+<span class="sd">        weights = lr.weights.add()</span>
+<span class="sd">        weights.value.append(2.0)</span>
+
+<span class="sd">        compiled_model_path = compile_model(spec)</span>
+<span class="sd">        model = CompiledMLModel(compiled_model_path)</span>
+<span class="sd">        y = model.predict({&#39;x&#39;: 2})</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -1131,25 +1161,31 @@
     <span class="k">except</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to compile any Core ML models.&quot;</span><span class="p">)</span>
 
-    <span class="c1"># Check parameter</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">)):</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Compiling a Core ML models is only support on macOS 10.13 or higher.&quot;</span><span class="p">)</span>
+    <span class="c1"># Check model parameter</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;To get a compiled model from a saved MLModel, first load the model, &quot;</span>
+                        <span class="s2">&quot; then call </span><span class="se">\&quot;</span><span class="s2">get_compiled_model_path</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;This model has already been compiled. Call </span><span class="se">\&quot;</span><span class="s2">get_compiled_model_path</span><span class="se">\&quot;</span><span class="s2">&quot;</span>
+                        <span class="s2">&quot; to get the compiled model.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unrecognized input for </span><span class="se">\&quot;</span><span class="s2">model</span><span class="se">\&quot;</span><span class="s2"> parameter. It should be a spec.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Check file extension of destination_path parameter</span>
+    <span class="k">if</span> <span class="n">destination_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">destination_path</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;.mlmodelc&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">destination_path</span><span class="se">\&quot;</span><span class="s2"> parameter must have </span><span class="se">\&quot;</span><span class="s2">.mlmodelc</span><span class="se">\&quot;</span><span class="s2"> file extension.&quot;</span><span class="p">)</span>
 
     <span class="c1"># Compile model</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">)):</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="k">with</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">save_dir</span><span class="p">:</span>
+        <span class="n">spec_file_path</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">+</span> <span class="s1">&#39;/spec.mlmodel&#39;</span>
+        <span class="n">save_spec</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">spec_file_path</span><span class="p">)</span>
+        <span class="n">original_compiled_model_path</span> <span class="o">=</span>  <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">spec_file_path</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">save_dir</span><span class="p">:</span>
-            <span class="n">spec_file_path</span> <span class="o">=</span> <span class="n">save_dir</span> <span class="o">+</span> <span class="s1">&#39;/spec.mlmodel&#39;</span>
-            <span class="n">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">spec_file_path</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">spec_file_path</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">compileModel</span><span class="p">(</span><span class="n">model</span><span class="p">)</span></div>
+    <span class="c1"># Move the compiled model if needed</span>
+    <span class="k">if</span> <span class="n">destination_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">original_compiled_model_path</span>
+    <span class="n">_shutil</span><span class="o">.</span><span class="n">move</span><span class="p">(</span><span class="n">original_compiled_model_path</span><span class="p">,</span> <span class="n">destination_path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">destination_path</span></div>
 
 
 <div class="viewcode-block" id="make_pipeline"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.make_pipeline">[docs]</a><span class="k">def</span> <span class="nf">make_pipeline</span><span class="p">(</span>
