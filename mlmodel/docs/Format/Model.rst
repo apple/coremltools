@@ -5,6 +5,7 @@ A Core ML model consists of a specification version and a model description,
 and can be any one of the following types:
 
 Neural Networks
+  - ``MILSpec.Program``
   - ``NeuralNetwork``
 
 Regressors
