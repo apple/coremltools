@@ -3,8 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Callable
+from typing import Callable, List
 
+import torch
+
+from coremltools import _logger as logger
 from coremltools.models._deprecation import deprecated as _deprecated
 
 
@@ -127,3 +130,40 @@ def register_torch_op(_func=None, torch_alias=None, override=False):
         # decorator called without argument
         return func_wrapper
     return func_wrapper(_func)
+
+
+def is_torch_fx_node_supported(torch_fx_node: torch.fx.Node) -> bool:
+    # There are many types of torch fx node:
+    #     1. call_function
+    #     2. call_module
+    #     3. call_method
+    #     4. get_attr
+    #     5. placeholder
+    #     6. output
+    #     ...
+    # Only "call_*" nodes contain PyTorch ops,
+    # among them we only support "call_function" node for now
+    if torch_fx_node.op != "call_function":
+        logger.warning(
+            "For now, among all types of torch fx nodes, CoreML only supports call_function node"
+        )
+        return False
+
+    # Get the target in torch fx node, and canonicalize it to lower-case string
+    torch_fx_node_target = torch_fx_node.target
+    if isinstance(torch_fx_node_target, str):
+        torch_fx_node_target_name = torch_fx_node_target.lower()
+    else:
+        torch_fx_node_target_name = torch_fx_node.target.__name__.lower()
+    # Since we are only dealing with "call_function" node,
+    # the contained PyTorch op must be functional, i.e. not in-place
+    assert not torch_fx_node_target_name.endswith("_")
+    # Target name may or may not contain prefix "aten.":
+    #     1. For usual fx node, target is a PyTorch function, i.e. no prefix
+    #     2. For executorch exported fx node, target is executorch.exir.dialects.edge._ops.EdgeOp,
+    #        whose name has format "aten.xx.yy"
+    _ATEN_NODE_PREFIX = "aten."
+    if torch_fx_node_target_name.startswith(_ATEN_NODE_PREFIX):
+        torch_fx_node_target_name = torch_fx_node_target_name[len(_ATEN_NODE_PREFIX):]
+
+    return torch_fx_node_target_name in _TORCH_OPS_REGISTRY
