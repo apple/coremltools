@@ -965,7 +965,8 @@ def linear(context, node):
     context.add(res, torch_name=node.name)
 
 
-@register_torch_op(torch_alias=["convolution", "conv1d", "conv2d", "conv3d", "conv_transpose1d", "conv_transpose2d", "conv_transpose3d"])
+# NOTE: This function is also an alias of: ["conv_transpose1d", "conv_transpose2d", "conv_transpose3d"] but we lack tests for those
+@register_torch_op(torch_alias=["convolution", "conv1d", "conv2d", "conv3d"])
 def _convolution(context, node):
     inputs = _get_inputs(context, node)
 
