@@ -1027,6 +1027,7 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
     Examples
     --------
     .. sourcecode:: python
+
         from coremltools.models import CompiledMLModel
         from coremltools.models.utils import compile_model
         from coremltools.proto import Model_pb2
