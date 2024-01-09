@@ -361,9 +361,6 @@ def _stft(
     # DFT(x[n]) --> X[k] = Σx[n]*e^(-2π*n/N*k), then if x is complex x[n]=(a[n]+i*b[n])
     #   real(X[k]) = Σ(a[n]*cos(2π*n/N*k)+b[n]*sin(2π*n/N*k))
     #   imag(X[k]) = Σ(b[n]*cos(2π*n/N*k)-a[n]*sin(2π*n/N*k))
-    # But because our DFT matrix is obtained with the conjugate --> e^(2π*n/N*k):
-    #   real(X[k]) = Σ(a[n]*cos(2π*n/N*k)-b[n]*sin(2π*n/N*k))
-    #   imag(X[k]) = Σ(b[n]*cos(2π*n/N*k)+a[n]*sin(2π*n/N*k))
     cos_windows_real = mb.conv(x=signal_real, weight=cos_base, strides=hop_size, pad_type='valid', before_op=before_op)
     sin_windows_real = mb.conv(x=signal_real, weight=sin_base, strides=hop_size, pad_type='valid', before_op=before_op)
     if input_imaginary:
@@ -372,11 +369,11 @@ def _stft(
 
     # add everything together
     if input_imaginary:
-        real_result = mb.sub(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
-        imag_result = mb.add(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
+        real_result = mb.add(x=cos_windows_real, y=sin_windows_imag, before_op=before_op)
+        imag_result = mb.sub(x=cos_windows_imag, y=sin_windows_real, before_op=before_op)
     else:
         real_result = cos_windows_real
-        imag_result = sin_windows_real
+        imag_result = mb.sub(x=0., y=sin_windows_real, before_op=before_op)
 
     # reduce the rank of the output
     if should_increase_rank:
