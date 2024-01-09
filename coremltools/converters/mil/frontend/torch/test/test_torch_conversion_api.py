@@ -269,6 +269,12 @@ class TestTorchOpsRegistry:
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestFxNodeSupport:
+    """
+    The API ``ct.converters.mil.frontend.torch.is_torch_fx_node_supported`` is used
+    by 3rd-party code ExecuTorch: https://github.com/pytorch/executorch/pull/1415,
+    so we cannot break it
+    """
+
     @staticmethod
     def test_simple_case():
         class Model(torch.nn.Module):

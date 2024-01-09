@@ -157,7 +157,12 @@ def is_torch_fx_node_supported(torch_fx_node: torch.fx.Node) -> bool:
         torch_fx_node_target_name = torch_fx_node.target.__name__.lower()
     # Since we are only dealing with "call_function" node,
     # the contained PyTorch op must be functional, i.e. not in-place
-    assert not torch_fx_node_target_name.endswith("_")
+    assert (
+        not torch_fx_node_target_name.endswith("_")
+    ), (
+        "For now, since CoreML only supports call_function torch fx node, "
+        "all ops should be functional, i.e. there should not be any in-place op"
+    )
     # Target name may or may not contain prefix "aten.":
     #     1. For usual fx node, target is a PyTorch function, i.e. no prefix
     #     2. For executorch exported fx node, target is executorch.exir.dialects.edge._ops.EdgeOp,
