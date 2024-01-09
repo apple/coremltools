@@ -5,6 +5,7 @@
 
 import itertools
 import os
+from unittest.mock import patch
 
 import numpy as np
 import pytest
@@ -19,6 +20,7 @@ from coremltools._deps import (
 )
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
 from coremltools.converters.mil.frontend.torch.torch_op_registry import (
+    TorchOpsRegistry,
     _TORCH_OPS_REGISTRY,
     register_torch_op,
 )
@@ -263,6 +265,71 @@ class TestTorchOpsRegistry:
 
         # Cleanup the test
         del _TORCH_OPS_REGISTRY.name_to_func_mapping["test_func_dummy"]
+
+
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+class TestFxNodeSupport:
+    """
+    The API ``ct.converters.mil.frontend.torch.is_torch_fx_node_supported`` is used
+    by 3rd-party code ExecuTorch: https://github.com/pytorch/executorch/pull/1415,
+    so we cannot break it
+    """
+
+    @staticmethod
+    def test_simple_case():
+        class Model(torch.nn.Module):
+            def forward(self, a, x, b):
+                y = torch.mm(a, x)
+                z = y + b
+                a.sub_(z)
+                y = torch.mm(a, x)
+                z = y + b
+                return z
+
+        model = Model()
+        model.eval()
+        symbolic_traced = torch.fx.symbolic_trace(model)
+
+        for node in symbolic_traced.graph.nodes:
+            # There are many types of torch fx node,
+            # we only support "call_function" node for now
+            if node.op == "call_function":
+                # All PyTorch ops in the example model are supported, so they should all return true
+                assert ct.converters.mil.frontend.torch.is_torch_fx_node_supported(node)
+            # Other types of torch fx node are not supported
+            else:
+                assert not ct.converters.mil.frontend.torch.is_torch_fx_node_supported(node)
+
+    @staticmethod
+    def test_unsupported_op():
+        class Model(torch.nn.Module):
+            def forward(self, x, y):
+                z = x + y
+                return torch.nn.functional.softmax(z)
+
+        model = Model()
+        model.eval()
+        symbolic_traced = torch.fx.symbolic_trace(model)
+
+        # Mock our torch ops registry, pretending that only "add" is supported
+        with patch.object(
+            TorchOpsRegistry,
+            "__contains__",
+            side_effect=(lambda op_name: op_name == "add"),
+        ):
+            for node in symbolic_traced.graph.nodes:
+                # There are many types of torch fx node,
+                # we only support "call_function" node for now
+                if node.op == "call_function":
+                    # Only "add" is supported
+                    assert (
+                        (node.target.__name__.lower() == "add")
+                        == ct.converters.mil.frontend.torch.is_torch_fx_node_supported(node)
+                    )
+                # Other types of torch fx node are not supported
+                else:
+                    assert not ct.converters.mil.frontend.torch.is_torch_fx_node_supported(node)
+
 
 #################################################################################
 # Note: Starting from here, all of the following tests are also used as examples

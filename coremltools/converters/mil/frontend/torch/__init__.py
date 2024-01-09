@@ -11,4 +11,4 @@ if _HAS_TORCH:
     from . import ops, quantization_ops
     from .dialect_ops import (torch_tensor_assign, torch_upsample_bilinear,
                               torch_upsample_nearest_neighbor)
-    from .torch_op_registry import register_torch_op
+    from .torch_op_registry import register_torch_op, is_torch_fx_node_supported
