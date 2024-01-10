@@ -446,7 +446,7 @@ class PassPipelineManager:
             desc=f"Running MIL {pass_pipeline} pipeline",
             unit=" passes",
         ):
-            logger.info(f'Performing pass: "{pass_name}"')
+            logger.debug(f'Performing pass: "{pass_name}"')
             pass_options = pass_pipeline.get_options(pass_name)
             if pass_options is not None:
                 logger.debug(
