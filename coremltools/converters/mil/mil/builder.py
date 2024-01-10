@@ -154,7 +154,7 @@ class Builder:
         Add an op of type `op_cls` (e.g., convolution) to current block.
         """
         kwargs = cls._maybe_set_name(kwargs, op_cls.__name__)
-        logger.info(
+        logger.debug(
             "Adding op '{}' of type {}".format(kwargs["name"], op_cls.__name__)
         )
         before_op = kwargs.get("before_op", None)
