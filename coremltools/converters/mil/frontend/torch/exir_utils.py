@@ -19,7 +19,7 @@ def to_coreml_tensor_type(name: str, tensor: Tensor) -> "ct.TensorType":
     return ct.TensorType(name=name, dtype=torch_to_mil_types[tensor.dtype], shape=tensor.shape)
 
 
-def extract_inputs_from_edge_program(exported_program) -> List["ct.TensorType"]:
+def extract_inputs_from_exir_program(exported_program) -> List["ct.TensorType"]:
     module = exported_program.graph_module
     inputs_to_parameters = exported_program.graph_signature.inputs_to_parameters
     inputs_to_buffers = exported_program.graph_signature.inputs_to_buffers

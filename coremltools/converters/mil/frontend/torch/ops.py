@@ -46,7 +46,7 @@ VALUE_CLOSE_TO_INFINITY = 1e+38
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1
-    EDGEIR = 2
+    EXIR = 2
 
 
 def _all_outputs_present(context, graph):
@@ -209,7 +209,7 @@ def _get_inputs(
     def get_bindings(alist) -> List[Any]:
         """
         This utility is needed in order to handle following cases:
-            With EdgeIR,
+            With EXIR,
             - Some of the inputs can be literals (like axis, perms) and thus can be of types: list, int etc.
             - An Input Parameter of an op could be a list/tuple similar to our concat layer
         """
@@ -4167,7 +4167,7 @@ def avg_pool1d(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 6},
-        min_expected={TorchFrontend.EDGEIR : 2},
+        min_expected={TorchFrontend.EXIR : 2},
     )
     _avg_pool(context, node, inputs)
 
@@ -4177,7 +4177,7 @@ def avg_pool2d(context, node):
     inputs = _get_inputs(
         context,
         node,
-        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EDGEIR : 2},
+        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EXIR : 2},
     )
     divisor_override = None if len(inputs) < 7 else inputs[6]
     if divisor_override is not None:
@@ -4191,7 +4191,7 @@ def avg_pool3d(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 7},
-        min_expected={TorchFrontend.EDGEIR : 2},
+        min_expected={TorchFrontend.EXIR : 2},
     )
     divisor_override = inputs[6]
     if divisor_override is not None:
@@ -4299,7 +4299,7 @@ def slice(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 5},
-        min_expected={TorchFrontend.EDGEIR : 1},
+        min_expected={TorchFrontend.EXIR : 1},
     )
     x = inputs[0]
     dim = 0 if len(inputs) < 2 else inputs[1].val

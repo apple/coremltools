@@ -36,7 +36,7 @@ class TestExecutorch(TorchBaseTest):
         self.run_compare_torch(
             [(3, 2), (3, 2)],
             model,
-            frontend=TorchFrontend.EDGEIR,
+            frontend=TorchFrontend.EXIR,
         )
 
     def test_linear(self):
@@ -52,7 +52,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(3, 3)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(3, 3)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_add(self):
@@ -71,7 +71,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1,), (1,)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1,), (1,)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_add_mul(self):
@@ -90,7 +90,7 @@ class TestExecutorch(TorchBaseTest):
         self.run_compare_torch(
             [(2, 2), (2, 2), (2, 2)],
             model,
-            frontend=TorchFrontend.EDGEIR,
+            frontend=TorchFrontend.EXIR,
             backend=("mlprogram", "fp16"),
         )
 
@@ -107,7 +107,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(2, 2)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(2, 2)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     @pytest.mark.xfail(reason="numerical error")
@@ -118,7 +118,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_edsr(self):
@@ -126,7 +126,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_emformer_transcribe(self):
@@ -149,7 +149,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 128, 80), (128,)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 128, 80), (128,)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_emformer_predict(self):
@@ -175,7 +175,7 @@ class TestExecutorch(TorchBaseTest):
             [torch.zeros([1, 128], dtype=int), torch.tensor([128], dtype=int)],
             model,
             input_as_shape=False,
-            frontend=TorchFrontend.EDGEIR,
+            frontend=TorchFrontend.EXIR,
             backend=("mlprogram", "fp16"),
         )
 
@@ -202,7 +202,7 @@ class TestExecutorch(TorchBaseTest):
         self.run_compare_torch(
             [(1, 128, 1024), (128,), (1, 128, 1024), (128,)],
             model,
-            frontend=TorchFrontend.EDGEIR,
+            frontend=TorchFrontend.EXIR,
             backend=("mlprogram", "fp16"),
         )
 
@@ -221,7 +221,7 @@ class TestExecutorch(TorchBaseTest):
             token,
             model,
             input_as_shape=False,
-            frontend=TorchFrontend.EDGEIR,
+            frontend=TorchFrontend.EXIR,
             backend=("mlprogram", "fp32"),
             rtol=0.005,
         )
@@ -231,7 +231,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_mobilenet_v3(self):
@@ -239,7 +239,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_vit(self):
@@ -247,7 +247,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_wav2letter(self):
@@ -255,7 +255,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(10, 1, 700)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(10, 1, 700)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_inception_v3(self):
@@ -263,7 +263,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_inception_v4(self):
@@ -271,7 +271,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 299, 299)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 299, 299)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_resnet18(self):
@@ -279,7 +279,7 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )
 
     def test_resnet50(self):
@@ -287,5 +287,5 @@ class TestExecutorch(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EDGEIR, backend=("mlprogram", "fp16")
+            [(1, 3, 224, 224)], model, frontend=TorchFrontend.EXIR, backend=("mlprogram", "fp16")
         )

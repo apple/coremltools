@@ -249,7 +249,7 @@ class TorchBaseTest:
             expected_results <iterable, optional>: Expected result from running pytorch model.
             converter_input_type: If not None, then pass it to the "inputs" argument to the
                 ct.convert() call.
-            frontend: Either TorchFrontend.TORCHSCRIPT or TorchFrontend.EDGEIR
+            frontend: Either TorchFrontend.TORCHSCRIPT or TorchFrontend.EXIR
         """
         if minimum_deployment_target is not None:
             validate_minimum_deployment_target(minimum_deployment_target, backend)
@@ -263,7 +263,7 @@ class TorchBaseTest:
                 model_spec = torch.jit.script(model)
             else:
                 model_spec = trace_model(model, _copy_input_data(input_data))
-        elif frontend == TorchFrontend.EDGEIR:
+        elif frontend == TorchFrontend.EXIR:
             input_data_clone = _copy_input_data(input_data)
             if isinstance(input_data_clone, list):
                 input_data_clone = tuple(input_data_clone)
@@ -276,7 +276,7 @@ class TorchBaseTest:
             )
         else:
             raise ValueError(
-                f"Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT or TorchFrontend.EDGEIR. Provided: {frontend}"
+                f"Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT or TorchFrontend.EXIR. Provided: {frontend}"
             )
 
         model_spec, mlmodel, coreml_inputs, coreml_results = convert_and_compare(

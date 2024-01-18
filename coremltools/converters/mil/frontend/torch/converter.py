@@ -106,7 +106,7 @@ class QuantizationContext:
             return
 
         for input in node.inputs:
-            # In Edge IR, input can be a literal and thus have no name
+            # In EXIR, input can be a literal and thus have no name
             if not isinstance(input, str) or self.get_quantization_info(input) is None:
                 # Not a quantized tensor
                 continue
@@ -318,7 +318,7 @@ class TorchConverter:
         Arguments:
             loaded_model: It could be one of the following:
                     - In-memory TorchScript model of type torch.jit.ScriptModule
-                    - In-memory EdgeIR program of type ExportedProgram
+                    - In-memory EXIR program of type ExportedProgram
             inputs: Input values and optional names. See kwarg in load.py for full description.
             outputs: List of outputs as ct.InputType. See kwarg in load.py for full description.
             cut_at_symbols: A list of internal symbol name strings. Graph conversion will
@@ -369,8 +369,8 @@ class TorchConverter:
                 p(self.graph)
 
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
-            self.context.frontend = TorchFrontend.EDGEIR
-            self.graph = InternalTorchIRGraph.from_edgeir(edgeir=loaded_model)
+            self.context.frontend = TorchFrontend.EXIR
+            self.graph = InternalTorchIRGraph.from_exir(exir=loaded_model)
             self.params_dict, self.buffer_dict = None, None
         else:
             raise ValueError(
