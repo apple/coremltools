@@ -921,34 +921,29 @@ def cumsum(context, node):
 
 @register_torch_op
 def addmm(context, node):
-    # addmm(Tensor input, Tensor mat1, Tensor mat2, Scalar beta=1, Scalar alpha=1)
-    # output = beta * input + alpha * mat1 * mat2
+    # addmm(Tensor x, Tensor mat1, Tensor mat2, Scalar beta=1, Scalar alpha=1)
+    # output = beta * x + alpha * (mat1 @ mat2)
 
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node, expected=[3, 4, 5])
-    bias = inputs[0]
+    x = inputs[0]
     mat1 = inputs[1]
     mat2 = inputs[2]
     beta = inputs[3] if len(inputs) > 3 else mb.const(val=1.0)
     alpha = inputs[4] if len(inputs) > 4 else mb.const(val=1.0)
 
     if beta.val != 1.0:
-        # Apply scaling factor beta to the bias.
-        bias = mb.mul(x=beta, y=bias, name=bias.name + "_scaled")
-        context.add(bias)
+        # Apply beta scaling factor to the input.
+        x = mb.mul(x=x, y=beta)
+
+    matmul = mb.matmul(x=mat1, y=mat2)
 
     if alpha.val != 1.0:
-        # Apply scaling factor alpha to the input.
-        mat1 = mb.mul(x=alpha, y=mat1, name=mat1.name + "_scaled")
-        context.add(mat1)
+        # Apply alpha scaling factor to the matrix multiplicaiton
+        matmul = mb.mul(x=alpha, y=matmul)
 
-    # MIL linear will transpose mat2, but addmm expects that mat1 and mat2
-    # can multiply as is. So we add a transpose.
-    mat2 = mb.transpose(x=mat2, perm=[1, 0], name=mat2.name + "_transposed")
-    context.add(mat2)
-
-    addmm_node = mb.linear(x=mat1, weight=mat2, bias=bias, name=node.name)
-    context.add(addmm_node)
+    result = mb.add(x=x, y=matmul, name=node.name)
+    context.add(result)
 
 
 @register_torch_op

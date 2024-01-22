@@ -8505,6 +8505,37 @@ class TestMeshgrid(TorchBaseTest):
         )
 
 
+class TestAddmm(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shapes, beta, alpha",
+        itertools.product(
+            compute_units,
+            backends,
+            ((2, 2, 2), (4, 5, 9)),
+            (1., 2.),
+            (1., 3.),
+        )
+    )
+    def test_addmm(self, compute_unit, backend, shapes, beta, alpha):
+
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.addmm(x, m1, m2, beta=beta, alpha=alpha)
+
+
+        m, n, p = shapes
+
+        # m1 @ m2 must be legal
+        m1 = torch.randn(m, n)
+        m2 = torch.randn(n, p)
+        # x must be the same shape as m1 @ m2
+        x_shape = (m, p)
+
+        self.run_compare_torch(
+            x_shape, TestModel(), backend=backend, compute_unit=compute_unit,
+        )
+
+
 class TestScatter(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shapes_dims, minimum_deployment_target",
