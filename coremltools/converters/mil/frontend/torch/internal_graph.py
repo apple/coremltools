@@ -10,10 +10,9 @@ from torch.fx.node import Node
 
 from coremltools import _logger as logger
 
+from .utils import sanitize_op_kind
 from .exir_utils import extract_inputs_from_exir_program
 from .torchscript_utils import _expand_and_optimize_ir
-
-_DEFAULT_OP_NAMESPACES = set(["aten", "prim"])
 
 
 def _make_ssa_name(name):
@@ -185,12 +184,7 @@ class InternalTorchIRNode:
     def from_torchscript_node(cls, node, parent):
         inputs = [_input.debugName() for _input in node.inputs()]
         outputs = [output.debugName() for output in node.outputs()]
-        namespace = node.kind().split("::")[0].lower()
-        if namespace in _DEFAULT_OP_NAMESPACES:
-            # We conventionally skip the aten/prim namespaces in our naming.
-            kind = node.kind().split("::")[-1].lower()
-        else:
-            kind = node.kind().lower()
+        kind = sanitize_op_kind(node.kind())
 
         attr = {name: getattr(node, node.kindOf(name))(name) for name in node.attributeNames()}
         if "value" not in attr:
@@ -251,13 +245,7 @@ class InternalTorchIRNode:
                 kind = node.target.__name__
             else:
                 kind = str(node.target)
-
-        namespace = kind.split("::")[0].lower()
-        if namespace in _DEFAULT_OP_NAMESPACES:
-            # We conventionally skip the aten/prim namespaces in our naming.
-            kind = kind.split("::")[-1].lower()
-        else:
-            kind = kind.lower()
+        kind = sanitize_op_kind(kind)
 
         name = node.name
         return cls(
