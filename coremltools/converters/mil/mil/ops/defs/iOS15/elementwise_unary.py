@@ -890,7 +890,4 @@ class cast(Operation):
                 return np.array(result)
             return None
 
-        if isinstance(input_var.val, float) or types.is_tensor(input_var.sym_type):
-            return np.array(input_var.val).astype(dtype=string_to_nptype(dtype_val))
-        else:
-            return input_var.val.astype(dtype=string_to_nptype(dtype_val))
+        return string_to_nptype(dtype_val)(input_var.val)
