@@ -10,10 +10,9 @@ from torch.fx.node import Node
 
 from coremltools import _logger as logger
 
-from .edgeir_utils import extract_inputs_from_edge_program
+from .utils import sanitize_op_kind
+from .exir_utils import extract_inputs_from_exir_program
 from .torchscript_utils import _expand_and_optimize_ir
-
-_DEFAULT_OP_NAMESPACES = set(["aten", "prim"])
 
 
 def _make_ssa_name(name):
@@ -77,10 +76,10 @@ class InternalTorchIRBlock:
         self.parent = parent
 
     @classmethod
-    def from_edgeir_block(cls, block, parent):
+    def from_exir_block(cls, block, parent):
         raise NotImplementedError(
-            "EdgeIR: Support for Ops containing blocks not implemented yet"
-        )  # TODO: rdar://115846569 ([Executorch] Handle control flow ops from edge ir)
+            "EXIR: Support for Ops containing blocks not implemented yet"
+        )  # TODO: rdar://115846569 ([Executorch] Handle control flow ops from EXIR)
 
     @classmethod
     def from_torchscript_block(cls, block, parent):
@@ -185,12 +184,7 @@ class InternalTorchIRNode:
     def from_torchscript_node(cls, node, parent):
         inputs = [_input.debugName() for _input in node.inputs()]
         outputs = [output.debugName() for output in node.outputs()]
-        namespace = node.kind().split("::")[0].lower()
-        if namespace in _DEFAULT_OP_NAMESPACES:
-            # We conventionally skip the aten/prim namespaces in our naming.
-            kind = node.kind().split("::")[-1].lower()
-        else:
-            kind = node.kind().lower()
+        kind = sanitize_op_kind(node.kind())
 
         attr = {name: getattr(node, node.kindOf(name))(name) for name in node.attributeNames()}
         if "value" not in attr:
@@ -223,7 +217,7 @@ class InternalTorchIRNode:
         return internal_node
 
     @classmethod
-    def from_edgeir_node(cls, node):
+    def from_exir_node(cls, node):
         def get_arguments(alist):
             args = []
             for i in alist:
@@ -251,13 +245,7 @@ class InternalTorchIRNode:
                 kind = node.target.__name__
             else:
                 kind = str(node.target)
-
-        namespace = kind.split("::")[0].lower()
-        if namespace in _DEFAULT_OP_NAMESPACES:
-            # We conventionally skip the aten/prim namespaces in our naming.
-            kind = kind.split("::")[-1].lower()
-        else:
-            kind = kind.lower()
+        kind = sanitize_op_kind(kind)
 
         name = node.name
         return cls(
@@ -420,8 +408,8 @@ class InternalTorchIRGraph:
         return internal_graph, params_dict, buffer_dict
 
     @classmethod
-    def from_edgeir(cls, edgeir):
-        exported_program = edgeir
+    def from_exir(cls, exir):
+        exported_program = exir
 
         nodes = []
         params = {}
@@ -429,7 +417,7 @@ class InternalTorchIRGraph:
         inputs = OrderedDict(
             [
                 (i.name, i)
-                for i in extract_inputs_from_edge_program(exported_program=exported_program)
+                for i in extract_inputs_from_exir_program(exported_program=exported_program)
             ]
         )
 
@@ -456,7 +444,7 @@ class InternalTorchIRGraph:
         outputs = []
         for node in graph.nodes:
             if node.op == "call_function":
-                nodes.append(InternalTorchIRNode.from_edgeir_node(node=node))
+                nodes.append(InternalTorchIRNode.from_exir_node(node=node))
             elif node.op == "placeholder":
                 continue
             elif node.op == "output":
