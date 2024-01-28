@@ -890,4 +890,7 @@ class cast(Operation):
                 return np.array(result)
             return None
 
-        return string_to_nptype(dtype_val)(input_var.val)
+        if hasattr(input_var.val, "astype"):
+            return input_var.val.astype(dtype=string_to_nptype(dtype_val))
+        else:
+            return string_to_nptype(dtype_val)(input_var.val)
