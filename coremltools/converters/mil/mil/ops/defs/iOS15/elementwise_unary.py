@@ -890,7 +890,7 @@ class cast(Operation):
                 return np.array(result)
             return None
 
-        if not types.is_tensor(input_var.sym_type):
+        if hasattr(input_var.val, "astype"):
             return input_var.val.astype(dtype=string_to_nptype(dtype_val))
         else:
-            return np.array(input_var.val).astype(dtype=string_to_nptype(dtype_val))
+            return string_to_nptype(dtype_val)(input_var.val)
