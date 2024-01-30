@@ -194,6 +194,13 @@ TYPE_TO_DTYPE_STRING = {
 }
 
 
+def _assert_torch_dtype_num_is_not_complex_number(num):
+    # 9 is torch.complex64 or torch.cfloat
+    # 10 is torch.complex128 or torch.cdouble
+    assert num is None or num.val is None or num.val not in (9, 10), \
+        "This op does not support complex number dtype."
+
+
 def _get_inputs(
     context,
     node,
@@ -4060,7 +4067,10 @@ def rand(context, node):
 @register_torch_op
 def randn(context, node):
     inputs = _get_inputs(context, node, expected=[5, 6])
+
     shape = inputs[0]
+    dtype = inputs[1]
+    _assert_torch_dtype_num_is_not_complex_number(dtype)
     rand_normal = mb.random_normal(shape=shape)
     rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)
     context.add(rand_fp32)
@@ -4069,6 +4079,8 @@ def randn(context, node):
 def randn_like(context, node):
     inputs = _get_inputs(context, node, expected=6)
     x = inputs[0]
+    dtype = inputs[1]
+    _assert_torch_dtype_num_is_not_complex_number(dtype)
     shape = mb.shape(x=x)
     rand_normal = mb.random_normal(shape=shape)
     rand_fp32 = mb.cast(x=rand_normal, dtype="fp32", name=node.name)

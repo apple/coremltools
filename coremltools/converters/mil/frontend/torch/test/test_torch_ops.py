@@ -4202,6 +4202,19 @@ class TestRandn(TorchBaseTest):
         )
 
 
+    @pytest.mark.parametrize(
+        "dtype",
+        [torch.complex64, torch.cfloat, torch.complex128, torch.cdouble]
+    )
+    def test_invalid_complex_dtype(self, dtype):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.randn((5, 4), dtype=torch.cfloat)
+
+        with pytest.raises(AssertionError, match="complex number dtype"):
+            self.run_compare_torch((5, 4), TestModel())
+
+
 class TestRandnLike(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -4220,6 +4233,19 @@ class TestRandnLike(TorchBaseTest):
         self.run_compare_torch(
             shape, TestModel(), backend=backend, compute_unit=compute_unit
         )
+
+
+    @pytest.mark.parametrize(
+        "dtype",
+        [torch.complex64, torch.cfloat, torch.complex128, torch.cdouble]
+    )
+    def test_invalid_complex_dtype(self, dtype):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.randn_like(x, dtype=torch.cfloat)
+
+        with pytest.raises(AssertionError, match="complex number dtype"):
+            self.run_compare_torch((5, 4), TestModel())
 
 
 class TestTypeAs(TorchBaseTest):
