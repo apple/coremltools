@@ -53,7 +53,7 @@ if _HAS_TORCH_VISION:
 frontends = [TorchFrontend.TORCHSCRIPT]
 
 if _HAS_EXECUTORCH:
-    frontends.append(TorchFrontend.EXIR)
+    frontends.append(TorchFrontend.EDGEIR)
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units

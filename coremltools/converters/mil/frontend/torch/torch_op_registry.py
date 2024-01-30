@@ -10,8 +10,6 @@ import torch
 from coremltools import _logger as logger
 from coremltools.models._deprecation import deprecated as _deprecated
 
-from .utils import sanitize_op_kind, unify_inplace_and_functional
-
 
 class TorchOpsRegistry:
     def __init__(self):
@@ -20,12 +18,17 @@ class TorchOpsRegistry:
     def get_func(self, op_lookup: str) -> Callable:
         """
         Given a op type key, return the according translation function.
-        Note that we will not distinguish in-place and functional,
-        since we mostly use functional CoreML ops to translate.
-        For instance, ``sub_`` -> ``sub``
+        Note that the key is sanitized by removing suffix and prefix ``_`` before query.
+        For instance, ``__add__`` -> ``add``, ``sub_`` -> ``sub``.
         """
-        op_lookup = sanitize_op_kind(op_lookup)
-        op_lookup = unify_inplace_and_functional(op_lookup)
+        if op_lookup.startswith("__") and op_lookup.endswith("__"):
+            # Some ops may have double underscore, such as `__and__`.
+            op_lookup = op_lookup[2:-2]
+        elif op_lookup.endswith("_"):
+            # This is an "in place" op.
+            # Look up the standard op instead by removing underscore.
+            op_lookup = op_lookup[:-1]
+
         return self.name_to_func_mapping.get(op_lookup, None)
 
     def register_func(self, func=None, torch_alias=None, override=False):
@@ -146,14 +149,12 @@ def is_torch_fx_node_supported(torch_fx_node: torch.fx.Node) -> bool:
         )
         return False
 
-    # Get the target in torch fx node, then sanitize its name
+    # Get the target in torch fx node, and canonicalize it to lower-case string
     torch_fx_node_target = torch_fx_node.target
     if isinstance(torch_fx_node_target, str):
-        torch_fx_node_target_name = torch_fx_node_target
+        torch_fx_node_target_name = torch_fx_node_target.lower()
     else:
-        torch_fx_node_target_name = torch_fx_node.target.__name__
-    torch_fx_node_target_name = sanitize_op_kind(torch_fx_node_target_name)
-
+        torch_fx_node_target_name = torch_fx_node.target.__name__.lower()
     # Since we are only dealing with "call_function" node,
     # the contained PyTorch op must be functional, i.e. not in-place
     assert (
@@ -162,5 +163,12 @@ def is_torch_fx_node_supported(torch_fx_node: torch.fx.Node) -> bool:
         "For now, since CoreML only supports call_function torch fx node, "
         "all ops should be functional, i.e. there should not be any in-place op"
     )
+    # Target name may or may not contain prefix "aten.":
+    #     1. For usual fx node, target is a PyTorch function, i.e. no prefix
+    #     2. For executorch exported fx node, target is executorch.exir.dialects.edge._ops.EdgeOp,
+    #        whose name has format "aten.xx.yy"
+    _ATEN_NODE_PREFIX = "aten."
+    if torch_fx_node_target_name.startswith(_ATEN_NODE_PREFIX):
+        torch_fx_node_target_name = torch_fx_node_target_name[len(_ATEN_NODE_PREFIX):]
 
     return torch_fx_node_target_name in _TORCH_OPS_REGISTRY

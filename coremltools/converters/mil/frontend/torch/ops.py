@@ -8,6 +8,7 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
+from enum import Enum
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import numpy as _np
@@ -32,7 +33,6 @@ from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import build_einsum_mil, value_at
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
-from .utils import TorchFrontend
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -42,6 +42,11 @@ from .utils import TorchFrontend
 PYTORCH_DEFAULT_VALUE = 2**63 - 1
 
 VALUE_CLOSE_TO_INFINITY = 1e+38
+
+
+class TorchFrontend(Enum):
+    TORCHSCRIPT = 1
+    EDGEIR = 2
 
 
 def _all_outputs_present(context, graph):
@@ -204,7 +209,7 @@ def _get_inputs(
     def get_bindings(alist) -> List[Any]:
         """
         This utility is needed in order to handle following cases:
-            With EXIR,
+            With EdgeIR,
             - Some of the inputs can be literals (like axis, perms) and thus can be of types: list, int etc.
             - An Input Parameter of an op could be a list/tuple similar to our concat layer
         """
@@ -4157,7 +4162,7 @@ def avg_pool1d(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 6},
-        min_expected={TorchFrontend.EXIR : 2},
+        min_expected={TorchFrontend.EDGEIR : 2},
     )
     _avg_pool(context, node, inputs)
 
@@ -4167,7 +4172,7 @@ def avg_pool2d(context, node):
     inputs = _get_inputs(
         context,
         node,
-        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EXIR : 2},
+        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EDGEIR : 2},
     )
     divisor_override = None if len(inputs) < 7 else inputs[6]
     if divisor_override is not None:
@@ -4181,7 +4186,7 @@ def avg_pool3d(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 7},
-        min_expected={TorchFrontend.EXIR : 2},
+        min_expected={TorchFrontend.EDGEIR : 2},
     )
     divisor_override = inputs[6]
     if divisor_override is not None:
@@ -4289,7 +4294,7 @@ def slice(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 5},
-        min_expected={TorchFrontend.EXIR : 1},
+        min_expected={TorchFrontend.EDGEIR : 1},
     )
     x = inputs[0]
     dim = 0 if len(inputs) < 2 else inputs[1].val

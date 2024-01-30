@@ -138,7 +138,7 @@ class TestTorchScriptValidation:
 
 
 @pytest.mark.skipif(not _HAS_EXECUTORCH, reason=MSG_EXECUTORCH_NOT_FOUND)
-class TestEXIRValidation:
+class TestEdgeIRValidation:
     @staticmethod
     @pytest.mark.parametrize(
         "backend",

@@ -37,7 +37,7 @@ def load(
     spec: It could be one of the following:
         - String path to .pt file containing serialized torchscript model
         - In memory TorchScript model of type torch.jit.ScriptModule
-        - In memory EXIR program of type ExportedProgram
+        - In memory EdgeIR program of type ExportedProgram
     inputs: Can be a singular element or list of elements of the following form
         1. Any subclass of InputType
         2. torch.Tensor (only shape and dtype will be used)
