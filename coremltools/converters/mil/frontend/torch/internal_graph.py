@@ -10,7 +10,7 @@ from torch.fx.node import Node
 
 from coremltools import _logger as logger
 
-from .utils import sanitize_op_kind
+from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
 from .exir_utils import extract_inputs_from_exir_program
 from .torchscript_utils import _expand_and_optimize_ir
 
@@ -227,6 +227,8 @@ class InternalTorchIRNode:
                     args.append(get_arguments(i))
                 elif isinstance(i, (int, float)):
                     args.append(i)
+                elif isinstance(i, torch.dtype):
+                    args.append(TORCH_DTYPE_TO_NUM[i])
                 elif i is None:
                     args.append(None)
                 else:

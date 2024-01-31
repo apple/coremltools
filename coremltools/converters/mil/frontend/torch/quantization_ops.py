@@ -10,12 +10,23 @@ from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Var, types
 
-from .ops import NUM_TO_TORCH_DTYPE, _create_linear_layer, _get_inputs, promote_input_dtypes
+from .utils import NUM_TO_TORCH_DTYPE, TorchFrontend
+from .ops import _create_linear_layer, _get_inputs, promote_input_dtypes
 from .torch_op_registry import register_torch_op
 
-TORCH_QTYPE_TO_NP_TYPE = {_torch.qint8: _np.int8, _torch.quint8: _np.uint8}
+TORCH_QTYPE_TO_NP_TYPE = {
+    _torch.int8: _np.int8,
+    _torch.qint8: _np.int8,
+    _torch.uint8: _np.uint8,
+    _torch.quint8: _np.uint8,
+}
 
-TORCH_QTYPE_TO_STR = {_torch.qint8: "int8", _torch.quint8: "uint8"}
+TORCH_QTYPE_TO_STR = {
+    _torch.int8: "int8",
+    _torch.qint8: "int8",
+    _torch.uint8: "uint8",
+    _torch.quint8: "uint8",
+}
 
 
 def _quantize_general(
@@ -73,9 +84,18 @@ def _quantize_general(
     context.quant_context.add_quantization_info(node.name, torch_dtype, scale, zero_point, axis)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["quantized_decomposed::quantize_per_tensor"])
 def quantize_per_tensor(context, node):
-    input, scale, zero_point, torch_dtype = _get_inputs(context, node, expected=[4])
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={TorchFrontend.TORCHSCRIPT: 4, TorchFrontend.EXIR: 6},
+    )
+    assert context.frontend in (TorchFrontend.TORCHSCRIPT, TorchFrontend.EXIR)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        input, scale, zero_point, torch_dtype = inputs
+    elif context.frontend == TorchFrontend.EXIR:
+        input, scale, zero_point, _, _, torch_dtype = inputs
 
     _quantize_general(context, node, input, scale, zero_point, torch_dtype)
 
@@ -90,7 +110,7 @@ def quantize_per_channel(context, node):
     _quantize_general(context, node, input, scale, zero_point, torch_dtype, axis.val)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["quantized_decomposed::dequantize_per_tensor"])
 def dequantize(context, node):
     context.quant_context.get_dequantized_var(node.inputs[0], node.name)
 

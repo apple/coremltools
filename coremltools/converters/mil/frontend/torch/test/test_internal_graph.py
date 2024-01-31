@@ -18,6 +18,7 @@ from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_utils import random_gen
 
 from .. import ops
+from .. import utils
 from ..converter import TranscriptionContext
 from ..internal_graph import InternalTorchIRNode
 
@@ -1685,7 +1686,7 @@ class TestTorchOps:
         ssa = self._construct_test_graph(
             context, ops.zeros, node, output_name, constants=constants
         )
-        expected_result = torch.zeros(size, dtype=ops.NUM_TO_TORCH_DTYPE[dtype])
+        expected_result = torch.zeros(size, dtype=utils.NUM_TO_TORCH_DTYPE[dtype])
         np.testing.assert_allclose(expected_result, ssa.val)
 
     @pytest.mark.parametrize("input_size", [(1, 2, 3, 4), (1,)])

@@ -32,7 +32,15 @@ from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import build_einsum_mil, value_at
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
-from .utils import TorchFrontend
+from .utils import (
+    NUM_TO_TORCH_DTYPE,
+    TORCH_DTYPE_TO_NUM,
+    NUMPY_DTYPE_TO_TORCH_NUM,
+    NUM_TO_NUMPY_DTYPE,
+    NUM_TO_DTYPE_STRING,
+    TYPE_TO_DTYPE_STRING,
+    TorchFrontend,
+)
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -83,7 +91,8 @@ def convert_nodes(context, graph):
 
         logger.info("Converting op {} : {}".format(node.name, op_lookup))
 
-        context.quant_context.maybe_handle_quantized_inputs(node)
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            context.quant_context.maybe_handle_quantized_inputs(node)
         context.prepare_for_conversion(node)
 
         add_op(context, node)
@@ -123,70 +132,6 @@ def convert_block(context, block, inputs):
     # Return to the previous context frame.
     context.pop()
     return outputs
-
-
-# Some ops will receive a dtype input as an integer
-# which maps to a torch dtype. The below mapping was found by
-# converting test models with different dtypes passed to ones.
-NUM_TO_TORCH_DTYPE = {
-    0: torch.uint8,
-    1: torch.int8,
-    2: torch.int16,
-    3: torch.int32,
-    4: torch.int32,
-    5: torch.float16,
-    6: torch.float32,
-    7: torch.float32,
-    11: torch.bool,
-    12: torch.qint8,
-    13: torch.quint8,
-    14: torch.qint32,
-}
-
-TORCH_DTYPE_TO_NUM = {
-    dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
-}
-
-NUMPY_DTYPE_TO_TORCH_NUM = {
-    _np.uint8: 0,
-    _np.int8: 1,
-    _np.int16: 2,
-    _np.int32: 3,
-    _np.int64: 4,
-    _np.float16: 5,
-    _np.float32: 6,
-    _np.float64: 7,
-    bool: 11,
-}
-
-NUM_TO_NUMPY_DTYPE = {
-    0: _np.uint8,
-    1: _np.int8,
-    2: _np.int16,
-    3: _np.int32,
-    4: _np.int32,
-    5: _np.float16,
-    6: _np.float32,
-    7: _np.float32,
-    11: bool,
-}
-
-NUM_TO_DTYPE_STRING = {
-    2: "int16",
-    3: "int32",
-    4: "int32",
-    5: "fp16",
-    6: "fp32",
-    7: "fp32",
-    11: "bool",
-}
-
-TYPE_TO_DTYPE_STRING = {
-    types.bool: "bool",
-    types.fp16: "fp16",
-    types.fp32: "fp32",
-    types.int32: "int32",
-}
 
 
 def _get_inputs(
