@@ -51,9 +51,7 @@ if _HAS_TF_2:
 if _HAS_TORCH:
     import torch
 
-    from coremltools.converters.mil.frontend.torch.load import (
-        _torchscript_from_spec as try_load_torchscript,
-    )
+    from coremltools.converters.mil.frontend.torch.load import is_torch_model
 
     if _HAS_TORCH_EXPORT_API:
         from torch.export import ExportedProgram
@@ -733,7 +731,7 @@ def _validate_conversion_arguments(
     compute_precision,
     convert_to,
     minimum_deployment_target,
-):
+) -> None:
     """
     Validate and process model, inputs, classifier_config based on
     `exact_source` (which cannot be `auto`) and `exact_target`.
@@ -863,13 +861,7 @@ def _validate_conversion_arguments(
                 raise AssertionError("'outputs' argument should be None for ExportedProgram")
 
         else:
-            is_torch_load_successful = False
-            try:
-                try_load_torchscript(model)
-                is_torch_load_successful = True
-            except:
-                pass
-            if is_torch_load_successful:
+            if is_torch_model(model):
                 if inputs is None:
                     raise ValueError(
                         'Expected argument "inputs" for TorchScript models not provided'
@@ -884,7 +876,7 @@ def _validate_conversion_arguments(
                     )
             else:
                 raise TypeError(
-                    "@model must either be a TorchScript object (or .pt or .pth file) or an ExportedProgram object (if using torch.export based API), received: {}".format(
+                    "Model must either be a TorchScript object (or .pt or .pth file) or an ExportedProgram object (if using torch.export based API), received: {}".format(
                         type(model)
                     )
                 )
@@ -912,14 +904,14 @@ def _determine_source_dialect(model, exact_source):
 def _determine_source(model, source,
                       output_names,
                       outputs_as_tensor_or_image_types,
-                      output_argument_as_specified_by_user):
+                      output_argument_as_specified_by_user) -> str:
     """
     Infer source (which can be auto) to the precise framework.
     """
     source = source.lower()
     if source not in {"auto", "tensorflow", "pytorch", "milinternal"}:
         raise ValueError(
-            f'Unrecognized value of argument "source": {source}. It must be one of ["auto", "tensorflow", "pytorch"].'
+            f'Unrecognized value of argument "source": {source}. It must be one of ["auto", "tensorflow", "pytorch", "milinternal"].'
         )
 
     # Determine tensorflow version
@@ -951,13 +943,7 @@ def _determine_source(model, source,
         if _HAS_TORCH_EXPORT_API and isinstance(model, ExportedProgram):
             return "pytorch"
 
-        is_torch_load_successful = False
-        try:
-            try_load_torchscript(model)
-            is_torch_load_successful = True
-        except:
-            pass
-        if is_torch_load_successful:
+        if is_torch_model(model):
             # validate that the outputs passed by the user are of type ImageType/TensorType
             if output_argument_as_specified_by_user is not None and not all(
                 [
@@ -986,7 +972,7 @@ def _determine_source(model, source,
     raise ValueError(msg)
 
 
-def _determine_target(convert_to, minimum_deployment_target):
+def _determine_target(convert_to, minimum_deployment_target) -> str:
     """
     Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``
     """

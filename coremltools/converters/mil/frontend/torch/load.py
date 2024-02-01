@@ -9,6 +9,7 @@ from typing import List, Optional, Union
 import torch as _torch
 from torch.jit._script import RecursiveScriptModule
 
+from coremltools import _logger as logger
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil.frontend.torch.converter import TorchConverter
 from coremltools.converters.mil.input_types import TensorType
@@ -18,6 +19,7 @@ from .converter import TorchConverter
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
+
 
 def load(
     spec: Union[RecursiveScriptModule, "ExportedProgram", str],
@@ -80,15 +82,30 @@ def load(
     return _perform_torch_convert(converter, debug)
 
 
-def _torchscript_from_spec(model_spec: RecursiveScriptModule) -> RecursiveScriptModule:
+def is_torch_model(model_spec: Union[str, RecursiveScriptModule]) -> bool:
+    if isinstance(model_spec, str) and (model_spec.endswith(".pt") or model_spec.endswith(".pth")):
+        # PyTorch file path
+        return True
+    elif isinstance(model_spec, _torch.jit.ScriptModule):
+        # PyTorch object
+        return True
+    return False
+
+
+def _torchscript_from_spec(model_spec: Union[str, RecursiveScriptModule]) -> RecursiveScriptModule:
     if isinstance(model_spec, str) and (model_spec.endswith(".pt") or model_spec.endswith(".pth")):
         filename = _os_path.abspath(model_spec)
-        return _torch.jit.load(filename)
+        try:
+            return _torch.jit.load(filename)
+        except Exception as e:
+            logger.error("\n\nERROR - Could not load the PyTorch model. Got the following error:\n")
+            raise e
+
     elif isinstance(model_spec, _torch.jit.ScriptModule):
         return model_spec
     else:
         raise TypeError(
-            "@model must either be a PyTorch .pt or .pth file or a TorchScript object, received: {}".format(
+            "A PyTorch model must either be a .pt or .pth file, or a TorchScript object. Received: {}".format(
                 type(model_spec)
             )
         )
