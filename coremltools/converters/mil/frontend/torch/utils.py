@@ -5,8 +5,6 @@
 
 from enum import Enum
 
-_DEFAULT_OP_NAMESPACES = set(["aten", "prim"])
-
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1
@@ -21,9 +19,15 @@ def sanitize_op_kind(op_kind: str) -> str:
     3. Lower-case characters only: e.g. ``mul.Tensor`` -> ``mul.tensor``
     """
     # 1. Skip the aten/prim namespace prefix
-    namespace = op_kind.split("::")[0].lower()
-    if namespace in _DEFAULT_OP_NAMESPACES:
-        op_kind = op_kind.split("::")[-1]
+    def skip_default_namespaces_with_deliminator(op_kind: str, deliminator: str) -> str:
+        split = op_kind.split(deliminator)
+        namespace = split[0].lower()
+        if namespace in {"aten", "prim"}:
+            op_kind = deliminator.join(split[1:])
+        return op_kind
+
+    op_kind = skip_default_namespaces_with_deliminator(op_kind, "::")
+    op_kind = skip_default_namespaces_with_deliminator(op_kind, ".")
 
     # 2. Remove underscore prefix and suffix
     if op_kind.startswith("__") and op_kind.endswith("__"):
