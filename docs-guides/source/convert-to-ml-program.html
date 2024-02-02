@@ -456,15 +456,14 @@ document.write(`
 </section>
 <section id="save-ml-programs-as-model-packages">
 <span id="index-2"></span><h2>Save ML Programs as Model Packages<a class="headerlink" href="#save-ml-programs-as-model-packages" title="Permalink to this heading">#</a></h2>
-<p>The ML program type uses the <a class="reference external" href="https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package">Core ML model package</a> container format that separates the model into components and offers more flexible metadata editing. Since an ML program decouples the weights from the program architecture, it cannot be saved as an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> file.</p>
-<p>Use the <code class="docutils literal notranslate"><span class="pre">save()</span></code> method to save a file with the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension, as shown in the following example:</p>
+<p>An ML program decouples the weights from the program architecture, so it cannot be saved as an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> file. The ML program type uses the <a class="reference external" href="https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package">Core ML model package</a> container format that separates the model into components and offers more flexible metadata editing.</p>
+<p>To save an ML program, use the <code class="docutils literal notranslate"><span class="pre">save()</span></code> method to save a file with the <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> extension, as shown in the following example:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>Requires Xcode 13 and Newer</p>
-<p>The model package format is supported on Xcode 13</p>
+<div class="admonition-requires-xcode-13-or-newer admonition">
+<p class="admonition-title">Requires Xcode 13 or Newer</p>
+<p>The model package format (<code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code>) is supported in Xcode 13 and newer versions.</p>
 </div>
 </section>
 <section id="find-the-model-type-in-a-model-package">

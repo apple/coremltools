@@ -66,17 +66,17 @@ For ML programs, Core ML Tools version 5.0b3 and newer produces a model with flo
 
 ## Save ML Programs as Model Packages
 
-The ML program type uses the [Core ML model package](https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package) container format that separates the model into components and offers more flexible metadata editing. Since an ML program decouples the weights from the program architecture, it cannot be saved as an `.mlmodel` file.
+An ML program decouples the weights from the program architecture, so it cannot be saved as an `.mlmodel` file. The ML program type uses the [Core ML model package](https://developer.apple.com/documentation/coreml/updating_a_model_file_to_a_model_package) container format that separates the model into components and offers more flexible metadata editing. 
 
-Use the `save()` method to save a file with the `.mlpackage` extension, as shown in the following example:
+To save an ML program, use the `save()` method to save a file with the `.mlpackage` extension, as shown in the following example:
 
 ```python
 model.save("my_model.mlpackage")
 ```
 
-```{warning} Requires Xcode 13 and Newer
+```{admonition} Requires Xcode 13 or Newer
 
-The model package format is supported on Xcode 13
+The model package format (`.mlpackage`) is supported in Xcode 13 and newer versions.
 
 ```
 
