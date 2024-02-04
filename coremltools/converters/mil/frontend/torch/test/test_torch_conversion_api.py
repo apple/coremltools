@@ -48,12 +48,7 @@ if _HAS_TORCH:
     torch.manual_seed(1818)
 
 if _HAS_EXECUTORCH:
-    from executorch import exir
-
-    _CAPTURE_CONFIG = exir.CaptureConfig(enable_aot=True)
-    _EDGE_COMPILE_CONFIG = exir.EdgeCompileConfig(
-        _check_ir_validity=False,
-    )
+    import executorch.exir
 
 
 @pytest.fixture
@@ -149,17 +144,14 @@ class TestEXIRValidation:
     ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
 
         shape = (1, 10)
-        exir_program = (
-            exir.capture(torch_model, (torch.rand(*shape),), _CAPTURE_CONFIG)
-            .to_edge(_EDGE_COMPILE_CONFIG)
-            .exported_program
-        )
+        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
+        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
         with pytest.raises(
             AssertionError, match=r"'inputs' argument should be None for ExportedProgram"
         ):
             ct.convert(
-                exir_program,
+                exir_program_edge,
                 convert_to=backend[0],
                 inputs=[ct.TensorType(shape=shape)],
             )
@@ -174,16 +166,17 @@ class TestEXIRValidation:
     ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
 
         shape = (1, 10)
-        exir_program = (
-            exir.capture(torch_model, (torch.rand(*shape),), _CAPTURE_CONFIG)
-            .to_edge(_EDGE_COMPILE_CONFIG)
-            .exported_program
-        )
+        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
+        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
         with pytest.raises(
             AssertionError, match=r"'outputs' argument should be None for ExportedProgram"
         ):
-            ct.convert(exir_program, convert_to=backend[0], outputs=[ct.TensorType(name="result")])
+            ct.convert(
+                exir_program_edge,
+                convert_to=backend[0],
+                outputs=[ct.TensorType(name="result")],
+            )
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -192,14 +185,11 @@ class TestEXIRValidation:
     )
     def test_source_dialect_metadata(torch_model, backend):
         shape = (1, 10)
-        exir_program = (
-            exir.capture(torch_model, (torch.rand(*shape),), _CAPTURE_CONFIG)
-            .to_edge(_EDGE_COMPILE_CONFIG)
-            .exported_program
-        )
+        exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
+        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
         mlmodel = ct.convert(
-            exir_program,
+            exir_program_edge,
             source="pytorch",
             convert_to=backend[0],
         )
