@@ -1537,7 +1537,7 @@ def mul(context, node):
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["pow.tensor_scalar"])
 def pow(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
