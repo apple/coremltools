@@ -13,7 +13,6 @@ import coremltools as ct
 from .torchscript_utils import torch_to_mil_types
 
 
-
 def to_coreml_tensor_type(name: str, tensor: Tensor) -> "ct.TensorType":
     # TODO: rdar://115845948 ([Executorch] Handle inputs of shapes with dynamic dimensions)
     return ct.TensorType(name=name, dtype=torch_to_mil_types[tensor.dtype], shape=tensor.shape)
