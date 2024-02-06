@@ -445,8 +445,8 @@ class InternalTorchIRGraph:
         graph = graph_module.graph
 
         outputs = []
-        for node_without_typing in graph.nodes:
-            node: torch.fx.Node = node_without_typing
+        for node in graph.nodes:
+            node: torch.fx.Node
             if node.op == "call_function":
                 nodes.append(InternalTorchIRNode.from_exir_node(node=node))
             elif node.op == "get_attr":

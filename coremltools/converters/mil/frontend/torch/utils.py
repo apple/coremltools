@@ -24,15 +24,11 @@ def sanitize_op_kind(op_kind: str) -> str:
            ``slice_copy.tensor`` -> ``slice_copy``
            ``mul.scalar`` -> ``mul``
     """
-    # 1. Lower case
-    op_kind = op_kind.lower()
 
-    # 2. Remove underscore prefix and suffix
-    if op_kind.startswith("__") and op_kind.endswith("__"):
-        op_kind = op_kind[2:-2]
-
-    # 3. Skip the aten/prim namespace prefix, and default/tensor/scalar suffix
-    def skip_default_prefix_and_suffix_with_deliminator(op_kind: str, deliminator: str) -> str:
+    def skip_default_prefix_and_suffix_with_deliminator(
+        op_kind: str,
+        deliminator: str,
+    ) -> str:
         split = op_kind.split(deliminator)
         start = 1 if split[0] in {"aten", "prim"} else 0
         stop = -1 if split[-1] in {
@@ -45,6 +41,14 @@ def sanitize_op_kind(op_kind: str) -> str:
         op_kind = deliminator.join(split[start : stop])
         return op_kind
 
+    # 1. Lower case
+    op_kind = op_kind.lower()
+
+    # 2. Remove underscore prefix and suffix
+    if op_kind.startswith("__") and op_kind.endswith("__"):
+        op_kind = op_kind[2:-2]
+
+    # 3. Skip the aten/prim namespace prefix, and default/tensor/scalar suffix
     op_kind = skip_default_prefix_and_suffix_with_deliminator(op_kind, "::")
     op_kind = skip_default_prefix_and_suffix_with_deliminator(op_kind, ".")
 
