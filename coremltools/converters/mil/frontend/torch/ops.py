@@ -874,7 +874,7 @@ def pixel_unshuffle(context, node):
     context.add(perm)
 
 
-@register_torch_op(torch_alias=["bmm", "mm", "mm.default"])
+@register_torch_op(torch_alias=["bmm", "mm"])
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     if inputs[1].val is not None and \
@@ -886,7 +886,7 @@ def matmul(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["add.tensor"])
+@register_torch_op
 def add(context, node):
     add_inputs = _get_inputs(context, node)
     assert len(node.outputs) == 1
@@ -1482,7 +1482,7 @@ def maximum(context, node):
     context.add(out)
 
 
-@register_torch_op(torch_alias = ["div.tensor", "div.tensor_mode"])
+@register_torch_op
 def div(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     x = mb.cast(x=inputs[0], dtype="fp32")
@@ -1533,7 +1533,7 @@ def true_divide(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["mul.tensor", "mul.scalar"])
+@register_torch_op
 def mul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = promote_input_dtypes(inputs)
@@ -1552,7 +1552,7 @@ def pow(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["sub.tensor", "rsub"])
+@register_torch_op(torch_alias=["rsub"])
 def sub(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     assert len(node.outputs) == 1
@@ -3755,7 +3755,7 @@ def index_put(context, node):
     context.add(result)
 
 
-@register_torch_op(torch_alias=["index.tensor"])
+@register_torch_op
 def index(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
@@ -4295,7 +4295,7 @@ def gelu(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["_slice", "slice_copy.tensor"])
+@register_torch_op(torch_alias=["_slice", "slice_copy"])
 def slice(context, node):
     inputs = _get_inputs(
         context,

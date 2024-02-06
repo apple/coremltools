@@ -6,7 +6,9 @@
 from collections import OrderedDict
 
 import torch
-from torch.fx.node import Node
+import torch.fx
+import torch.fx.immutable_collections
+import torch.export
 
 from coremltools import _logger as logger
 
@@ -221,7 +223,7 @@ class InternalTorchIRNode:
         def get_arguments(alist):
             args = []
             for i in alist:
-                if isinstance(i, Node):
+                if isinstance(i, torch.fx.Node):
                     args.append(i.name)
                 elif isinstance(i, torch.fx.immutable_collections.immutable_list):
                     args.append(get_arguments(i))
@@ -408,7 +410,7 @@ class InternalTorchIRGraph:
         return internal_graph, params_dict, buffer_dict
 
     @classmethod
-    def from_exir(cls, exir):
+    def from_exir(cls, exir: torch.export.ExportedProgram):
         exported_program = exir
 
         nodes = []
@@ -439,12 +441,23 @@ class InternalTorchIRGraph:
 
             params[name if name not in parameters_to_inputs else parameters_to_inputs[name]] = value
 
-        graph = exported_program.graph
+        graph_module = exported_program.graph_module
+        graph = graph_module.graph
 
         outputs = []
         for node in graph.nodes:
+            node: torch.fx.Node
             if node.op == "call_function":
                 nodes.append(InternalTorchIRNode.from_exir_node(node=node))
+            elif node.op == "get_attr":
+                name = node.target
+                attr = graph_module.__getattr__(name)
+                # Only handle simple tensor attribute for now
+                # There may be unconvertible advanced attributes,
+                # e.g. higher-level callables such as "call_delegate"
+                if not isinstance(attr, torch.Tensor):
+                    raise NotImplementedError("Only torch.Tensor attr handled yet")
+                params[name] = attr.detach().cpu().numpy()
             elif node.op == "placeholder":
                 continue
             elif node.op == "output":
