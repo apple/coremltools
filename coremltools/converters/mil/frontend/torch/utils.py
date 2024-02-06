@@ -30,14 +30,14 @@ def sanitize_op_kind(op_kind: str) -> str:
         deliminator: str,
     ) -> str:
         split = op_kind.split(deliminator)
-        start = 1 if split[0] in {"aten", "prim"} else 0
+        start = 1 if split[0] in {"aten", "prim"} and len(split) > 1 else 0
         stop = -1 if split[-1] in {
             "default",
             "tensor",
             "tensor_mode",
             "scalar",
             "tensor_scalar",
-        } else len(split)
+        } and len(split) - start > 1 else len(split)
         op_kind = deliminator.join(split[start : stop])
         return op_kind
 
