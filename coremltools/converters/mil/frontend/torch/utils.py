@@ -5,8 +5,6 @@
 
 from enum import Enum
 
-_DEFAULT_OP_NAMESPACES = set(["aten", "prim"])
-
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1
@@ -16,21 +14,41 @@ class TorchFrontend(Enum):
 def sanitize_op_kind(op_kind: str) -> str:
     """
     In our torch converter, we register torch ops only by its "canonical" name:
-    1. No namespace prefix if it is the common aten/prim: e.g. ``aten::softmax`` -> ``softmax``
-    2. No double underscore prefix and suffix: e.g. ``__add__`` -> ``add``
-    3. Lower-case characters only: e.g. ``mul.Tensor`` -> ``mul.tensor``
+    1. Lower-case characters only, e.g. ``div.Tensor`` -> ``div.tensor``
+    2. No double underscore prefix and suffix, e.g. ``__add__`` -> ``add``
+    3. No namespace prefix if it is the common aten/prim, e.g. 
+           ``aten::softmax`` -> ``softmax``
+            ``aten.pow`` -> ``pow``
+       and no type trait suffix if it is not distinguished in CoreML, e.g.
+           ``bmm.default`` -> ``bmm``
+           ``slice_copy.tensor`` -> ``slice_copy``
+           ``mul.scalar`` -> ``mul``
     """
-    # 1. Skip the aten/prim namespace prefix
-    namespace = op_kind.split("::")[0].lower()
-    if namespace in _DEFAULT_OP_NAMESPACES:
-        op_kind = op_kind.split("::")[-1]
+    # 1. Lower case
+    op_kind = op_kind.lower()
 
     # 2. Remove underscore prefix and suffix
     if op_kind.startswith("__") and op_kind.endswith("__"):
         op_kind = op_kind[2:-2]
 
-    # 3. Lower case
-    return op_kind.lower()
+    # 3. Skip the aten/prim namespace prefix, and default/tensor/scalar suffix
+    def skip_default_prefix_and_suffix_with_deliminator(op_kind: str, deliminator: str) -> str:
+        split = op_kind.split(deliminator)
+        start = 1 if split[0] in {"aten", "prim"} else 0
+        stop = -1 if split[-1] in {
+            "default",
+            "tensor",
+            "tensor_mode",
+            "scalar",
+            "tensor_scalar",
+        } else len(split)
+        op_kind = deliminator.join(split[start : stop])
+        return op_kind
+
+    op_kind = skip_default_prefix_and_suffix_with_deliminator(op_kind, "::")
+    op_kind = skip_default_prefix_and_suffix_with_deliminator(op_kind, ".")
+
+    return op_kind
 
 
 def unify_inplace_and_functional(op_kind: str) -> str:
