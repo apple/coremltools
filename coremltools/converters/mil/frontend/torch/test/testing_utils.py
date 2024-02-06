@@ -22,12 +22,7 @@ if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
 
 if _HAS_EXECUTORCH:
-    from executorch import exir
-
-    _CAPTURE_CONFIG = exir.CaptureConfig(enable_aot=True)
-    _EDGE_COMPILE_CONFIG = exir.EdgeCompileConfig(
-        _check_ir_validity=False,
-    )
+    import executorch.exir
 
 
 class ModuleWrapper(nn.Module):
@@ -269,11 +264,8 @@ class TorchBaseTest:
                 input_data_clone = tuple(input_data_clone)
             elif isinstance(input_data_clone, torch.Tensor):
                 input_data_clone = (input_data_clone,)
-            model_spec = (
-                exir.capture(model, input_data_clone, _CAPTURE_CONFIG)
-                .to_edge(_EDGE_COMPILE_CONFIG)
-                .exported_program
-            )
+            exir_program_aten = torch.export.export(model, input_data_clone)
+            model_spec = executorch.exir.to_edge(exir_program_aten).exported_program()
         else:
             raise ValueError(
                 f"Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT or TorchFrontend.EXIR. Provided: {frontend}"
