@@ -91,7 +91,8 @@ def convert_nodes(context, graph):
 
         logger.info("Converting op {} : {}".format(node.name, op_lookup))
 
-        context.quant_context.maybe_handle_quantized_inputs(node)
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            context.quant_context.maybe_handle_quantized_inputs(node)
         context.prepare_for_conversion(node)
 
         add_op(context, node)
