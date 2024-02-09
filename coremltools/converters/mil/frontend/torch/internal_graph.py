@@ -230,11 +230,12 @@ class InternalTorchIRNode:
                 elif isinstance(i, (int, float)):
                     args.append(i)
                 # This is necessitated by backward compatibility:
-                # * TorchScript used to store dtype as integers
+                # * TorchScript used to store dtype as integers/enums
                 # * Subsequently, we built our PyTorch converter based on numbered dtypes
                 # * Now EXIR uses dtype directly...
-                # * Until refactoring our converter for EXIR,
-                #   we have to map dtype to number ourselves to leverage our existing infra
+                # * Until refactoring EXIR converter to be independent from TorchScript converter,
+                #   we have to map dtype to number ourselves
+                #   to leverage the existing TorchScript converter infra
                 elif isinstance(i, torch.dtype):
                     args.append(TORCH_DTYPE_TO_NUM[i])
                 elif i is None:

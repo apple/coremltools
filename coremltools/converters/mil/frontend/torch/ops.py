@@ -33,11 +33,11 @@ from coremltools.converters.mil.mil.var import ListVar, Var
 from .._utils import build_einsum_mil, value_at
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 from .utils import (
-    NUM_TO_TORCH_DTYPE,
-    TORCH_DTYPE_TO_NUM,
-    NUMPY_DTYPE_TO_TORCH_NUM,
-    NUM_TO_NUMPY_DTYPE,
     NUM_TO_DTYPE_STRING,
+    NUM_TO_NUMPY_DTYPE,
+    NUM_TO_TORCH_DTYPE,
+    NUMPY_DTYPE_TO_TORCH_NUM,
+    TORCH_DTYPE_TO_NUM,
     TYPE_TO_DTYPE_STRING,
     TorchFrontend,
 )
