@@ -10,23 +10,14 @@ from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Var, types
 
-from .utils import NUM_TO_TORCH_DTYPE, TorchFrontend
+from .utils import (
+    NUM_TO_TORCH_DTYPE,
+    TORCH_QTYPE_TO_NP_TYPE,
+    TORCH_QTYPE_TO_STR,
+    TorchFrontend,
+)
 from .ops import _create_linear_layer, _get_inputs, promote_input_dtypes
 from .torch_op_registry import register_torch_op
-
-TORCH_QTYPE_TO_NP_TYPE = {
-    _torch.int8: _np.int8,
-    _torch.qint8: _np.int8,
-    _torch.uint8: _np.uint8,
-    _torch.quint8: _np.uint8,
-}
-
-TORCH_QTYPE_TO_STR = {
-    _torch.int8: "int8",
-    _torch.qint8: "int8",
-    _torch.uint8: "uint8",
-    _torch.quint8: "uint8",
-}
 
 
 def _quantize_general(

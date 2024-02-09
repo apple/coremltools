@@ -65,6 +65,20 @@ TYPE_TO_DTYPE_STRING = {
     types.int32: "int32",
 }
 
+TORCH_QTYPE_TO_NP_TYPE = {
+    torch.int8: np.int8,
+    torch.qint8: np.int8,
+    torch.uint8: np.uint8,
+    torch.quint8: np.uint8,
+}
+
+TORCH_QTYPE_TO_STR = {
+    torch.int8: "int8",
+    torch.qint8: "int8",
+    torch.uint8: "uint8",
+    torch.quint8: "uint8",
+}
+
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1
