@@ -1727,6 +1727,7 @@ def pad(context, node):
         real, imag = (mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name) for x in (mb.complex_real(data=x), mb.complex_imag(data=x)))
         res = mb.complex(real_data=real, imag_data=imag, name=node.name)
     else:
+        x, scalar_val = promote_input_dtypes([x, scalar_val])
         res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
     context.add(res)
 

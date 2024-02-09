@@ -285,6 +285,8 @@ class Builder:
         Examples
         --------
         >>> import coremltools as ct
+        >>> from coremltools.converters.mil.mil import Builder as mb
+        >>>
         >>> @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)
         >>> def prog(a):
         >>>     return mb.add(x=a, y=2)
