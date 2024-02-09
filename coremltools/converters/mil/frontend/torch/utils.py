@@ -5,6 +5,80 @@
 
 from enum import Enum
 
+import numpy as np
+import torch
+
+from coremltools.converters.mil.mil import types
+
+# Some ops will receive a dtype input as an integer
+# which maps to a torch dtype. The below mapping was found by
+# converting test models with different dtypes passed to ones.
+NUM_TO_TORCH_DTYPE = {
+    0: torch.uint8,
+    1: torch.int8,
+    2: torch.int16,
+    3: torch.int32,
+    4: torch.int32,
+    5: torch.float16,
+    6: torch.float32,
+    7: torch.float32,
+    11: torch.bool,
+    12: torch.qint8,
+    13: torch.quint8,
+    14: torch.qint32,
+}
+
+TORCH_DTYPE_TO_NUM = {
+    dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
+}
+
+NUMPY_DTYPE_TO_TORCH_NUM = {
+    np.uint8: 0,
+    np.int8: 1,
+    np.int16: 2,
+    np.int32: 3,
+    np.int64: 4,
+    np.float16: 5,
+    np.float32: 6,
+    np.float64: 7,
+    bool: 11,
+}
+
+NUM_TO_NUMPY_DTYPE = {
+    val: dtype for dtype, val in NUMPY_DTYPE_TO_TORCH_NUM.items()
+}
+
+NUM_TO_DTYPE_STRING = {
+    2: "int16",
+    3: "int32",
+    4: "int32",
+    5: "fp16",
+    6: "fp32",
+    7: "fp32",
+    11: "bool",
+}
+
+TYPE_TO_DTYPE_STRING = {
+    types.bool: "bool",
+    types.fp16: "fp16",
+    types.fp32: "fp32",
+    types.int32: "int32",
+}
+
+TORCH_QTYPE_TO_NP_TYPE = {
+    torch.int8: np.int8,
+    torch.qint8: np.int8,
+    torch.uint8: np.uint8,
+    torch.quint8: np.uint8,
+}
+
+TORCH_QTYPE_TO_STR = {
+    torch.int8: "int8",
+    torch.qint8: "int8",
+    torch.uint8: "uint8",
+    torch.quint8: "uint8",
+}
+
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1

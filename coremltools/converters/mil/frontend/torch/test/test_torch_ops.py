@@ -21,7 +21,7 @@ from coremltools._deps import (
     version_lt,
 )
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.frontend.torch.ops import (
+from coremltools.converters.mil.frontend.torch.utils import (
     NUM_TO_TORCH_DTYPE,
     NUMPY_DTYPE_TO_TORCH_NUM,
 )

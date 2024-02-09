@@ -10,7 +10,7 @@ import torch.nn as nn
 
 import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
-from coremltools import RangeDim, TensorType
+from coremltools import RangeDim, TensorType, _logger as logger
 from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API, _IS_MACOS
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.testing_utils import ct_convert, validate_minimum_deployment_target
@@ -249,16 +249,21 @@ class TorchBaseTest:
         if minimum_deployment_target is not None:
             validate_minimum_deployment_target(minimum_deployment_target, backend)
 
-        model.eval()
         if input_as_shape:
             input_data = generate_input_data(input_data, rand_range, torch_device)
 
         if frontend == TorchFrontend.TORCHSCRIPT:
+            model.eval()
             if use_scripting:
                 model_spec = torch.jit.script(model)
             else:
                 model_spec = trace_model(model, _copy_input_data(input_data))
         elif frontend == TorchFrontend.EXIR:
+            try:
+                model.eval()
+            except NotImplementedError:
+                # Some torch.export stuff, e.g. quantization, has not implemented eval() yet
+                logger.warning("PyTorch EXIR converter received a model without .eval method")
             input_data_clone = _copy_input_data(input_data)
             if isinstance(input_data_clone, list):
                 input_data_clone = tuple(input_data_clone)
