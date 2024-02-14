@@ -1,0 +1,16 @@
+name: CoreML Tools CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  run_build_script:
+    runs-on: ubuntu-latest  # Linux Runner
+    steps:
+      - uses: actions/checkout@v4
+      - name: Execute build script
+        run: zsh -i scripts/build.sh
+
