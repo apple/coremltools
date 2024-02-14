@@ -8,7 +8,7 @@ on:
 
 jobs:
   run_build_script:
-    runs-on: ubuntu-latest  # Linux Runner
+    runs-on: [ubuntu-latest, macos-14]
     steps:
       - uses: actions/checkout@v4
       - name: Execute build script
