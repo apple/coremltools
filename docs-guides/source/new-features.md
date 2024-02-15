@@ -67,7 +67,7 @@ To deploy the Core ML model to a target that is iOS 12, macOS 10.13, watchOS 5, 
 
 ### Deprecated Methods and Support
 
-In coremltools 4 and newer, the the following class and methods available in previous versions are deprecated:
+In coremltools 4 and newer, the following class and methods available in previous versions are deprecated:
 
 - `convert_neural_network_weights_to_fp16()`, `convert_neural_network_spec_weights_to_fp16()`, and `quantize_spec_weights()`. Use the `quantize_weights()` method instead. For instructions, see [Quantization](quantization-overview).
 - The NeuralNetworkShaper class. 
