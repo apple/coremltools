@@ -107,10 +107,6 @@ While the new ML program model type supports most of the functionality supported
     
     While custom layers may be useful for new layer types, in most cases [composite operators](composite-operators) built using the MIL builder library are sufficient for converter to handle unsupported layer types. Composite layers, which are built with existing layers, perform better than custom operators and work seamlessly with both neural network and ML program model types. 
 
-- [Integer and LUT weight-only quantization](quantization-overview):
-    
-    ML programs currently support both float 16 and float 32 typed weights and activations.
-
 ```{eval-rst}
 .. index:: MIL, Model Intermediate Language
 ```
