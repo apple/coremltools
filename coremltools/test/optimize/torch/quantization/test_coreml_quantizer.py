@@ -9,19 +9,24 @@ from typing import Dict, Optional
 import pytest
 import torch
 import torch.nn as nn
-from torch._export import capture_pre_autograd_graph
-from torch.ao.quantization.quantize_pt2e import (
-    convert_pt2e,
-    prepare_pt2e,
-    prepare_qat_pt2e,
-)
+
 from torch.fx import Node
+
 
 from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig,
     QuantizationScheme,
 )
+from coremltools._deps import _HAS_TORCH_EXPORT_API
+if _HAS_TORCH_EXPORT_API:
+    from torch._export import capture_pre_autograd_graph
+    from torch.ao.quantization.quantize_pt2e import (
+        convert_pt2e,
+        prepare_pt2e,
+        prepare_qat_pt2e,
+    )
+
 
 activations = {
     nn.ReLU: {
@@ -173,6 +178,7 @@ def quantize_model(
     indirect=True,
 )
 @pytest.mark.parametrize("is_qat", [True, False])
+@pytest.mark.skipif(not _HAS_TORCH_EXPORT_API, reason="This test requires PyTorch Export APIs.")
 def test_weight_module_act_fusion(model_for_quant, is_qat, config):
     model = model_for_quant
     data = torch.randn(2, 1, 28, 28)
