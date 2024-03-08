@@ -12,7 +12,6 @@ import torch.nn as nn
 
 from torch.fx import Node
 
-
 from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig,
