@@ -428,15 +428,15 @@ def annotate_weighted_mod_pattern(
         # Validate mod args
         if mod_node.args[0] is not input_node:
             raise ValueError(
-                f"Weighted module arg did not contain input node ", input_node
+                f"Weighted module arg did not contain input node {input_node}"
             )
         if mod_node.args[1] is not weight_node:
             raise ValueError(
-                f"Weighted module arg did not contain weight node ", weight_node
+                f"Weighted module arg did not contain weight node {weight_node}"
             )
         if len(mod_node.args) > 2 and mod_node.args[2] is not bias_node:
             raise ValueError(
-                f"Weighted module arg did not contain bias node ", bias_node
+                f"Weighted module arg did not contain bias node {bias_node}"
             )
 
         # Skip if the partition is already annotated or is filtered out by the user
