@@ -12,7 +12,6 @@ import torch.nn as nn
 
 from torch.fx import Node
 
-from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig,
     QuantizationScheme,
@@ -25,6 +24,11 @@ if _HAS_TORCH_EXPORT_API:
         prepare_pt2e,
         prepare_qat_pt2e,
     )
+
+_TORCH_VERSION = torch.__version__
+_EXPECTED_TORCH_VERSION = '2.2.0'
+if _TORCH_VERSION >= _EXPECTED_TORCH_VERSION:
+    from coremltools.optimize.torch.quantization._coreml_quantizer import CoreMLQuantizer
 
 
 activations = {
@@ -177,7 +181,8 @@ def quantize_model(
     indirect=True,
 )
 @pytest.mark.parametrize("is_qat", [True, False])
-@pytest.mark.skipif(not _HAS_TORCH_EXPORT_API, reason="This test requires PyTorch Export APIs.")
+@pytest.mark.skipif(not _HAS_TORCH_EXPORT_API or _TORCH_VERSION < _EXPECTED_TORCH_VERSION,
+                    reason="This test requires PyTorch Export APIs and PyTorch >= 2.2.0.")
 def test_weight_module_act_fusion(model_for_quant, is_qat, config):
     model = model_for_quant
     data = torch.randn(2, 1, 28, 28)
