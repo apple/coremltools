@@ -34,13 +34,13 @@ tqdm
 pytest-timeout
 
 # TensorFlow (x86) related package
-tensorflow==2.16.0; platform_machine != "arm64"
-tensorflow-estimator==2.16.0; platform_machine != "arm64"
+tensorflow==2.16.1; platform_machine != "arm64"
+tensorflow-estimator==2.15.0; platform_machine != "arm64"
 keras==3.0.5; platform_machine != "arm64"
 
 # TensorFlow (arm64) related package. Currently no Python 3.13 support.
-tensorflow-macos==2.16.0; platform_machine == "arm64" and python_version < "3.13"
-tensorflow-estimator==2.16.0; platform_machine == "arm64" and python_version < "3.13"
+tensorflow-macos==2.16.1; platform_machine == "arm64" and python_version < "3.13"
+tensorflow-estimator==2.15.0; platform_machine == "arm64" and python_version < "3.13"
 keras==3.0.5; platform_machine == "arm64" and python_version < "3.13"
 
 tensorflow-addons==0.23.0; python_version < "3.13"
