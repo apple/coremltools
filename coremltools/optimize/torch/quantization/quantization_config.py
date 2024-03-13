@@ -189,7 +189,7 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
         converter=_maybe_convert_str_to_dtype,
         validator=[
             _validators.instance_of(_torch.dtype),
-            _validators.in_([_torch.qint8, _torch.quint8, _torch.float32]),
+            _validators.in_([_torch.qint8, _torch.quint8, _torch.int8, _torch.uint8, _torch.float32]),
         ],
     )
     weight_observer: ObserverType = _field(
@@ -206,7 +206,7 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
         converter=_maybe_convert_str_to_dtype,
         validator=[
             _validators.instance_of(_torch.dtype),
-            _validators.in_([_torch.quint8, _torch.float32]),
+            _validators.in_([_torch.quint8, _torch.uint8, _torch.float32]),
         ],
     )
     activation_observer: ObserverType = _field(
