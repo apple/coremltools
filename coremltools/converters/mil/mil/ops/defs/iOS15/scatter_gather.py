@@ -6,15 +6,11 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import Operation, types
-from coremltools.converters.mil.mil.input_type import (DefaultInputs,
-                                                       InputSpec,
-                                                       TensorInputType)
-from coremltools.converters.mil.mil.operation import (SYMBOL, VALUE,
-                                                      precondition)
+from coremltools.converters.mil.mil.input_type import DefaultInputs, InputSpec, TensorInputType
+from coremltools.converters.mil.mil.operation import SYMBOL, VALUE, precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import compute_gather
-from coremltools.converters.mil.mil.types.symbolic import (
-    is_compatible_symbolic_vector)
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector, is_symbolic
 
 
 @register_op
@@ -78,7 +74,7 @@ class gather(Operation):
         indices=TensorInputType(type_domain=types.int32),
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -96,11 +92,8 @@ class gather(Operation):
             # only allow x to be symbolic. indices cannot.
             return None
         return compute_gather(
-                params=self.x.sym_val, 
-                indices=self.indices.val, 
-                axis=self.axis.val,
-                batch_dims=0
-            )
+            params=self.x.sym_val, indices=self.indices.val, axis=self.axis.val, batch_dims=0
+        )
 
     def type_inference(self):
         out_type = self.x.dtype
@@ -204,7 +197,7 @@ class scatter(Operation):
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
         mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -270,7 +263,7 @@ class gather_along_axis(Operation):
         indices=TensorInputType(type_domain=types.int32),
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -308,8 +301,14 @@ class gather_along_axis(Operation):
         axis = axis if axis >= 0 else axis + self.x.rank
 
         for i in range(self.x.rank):
-            if i != axis:
-                assert self.x.shape[i] == self.indices.shape[i]
+            x_size = self.x.shape[i]
+            indices_size = self.indices.shape[i]
+            if i != axis and not is_symbolic(x_size) and not is_symbolic(indices_size):
+                if x_size != indices_size:
+                    raise AssertionError(
+                        "The input data and indices should have the same size at "
+                        f"axis {i}, but got {x_size} vs {indices_size}"
+                    )
 
         return types.tensor(self.x.dtype, self.indices.shape)
 
@@ -469,7 +468,7 @@ class gather_nd(Operation):
         x=TensorInputType(type_domain="T"),
         indices=TensorInputType(type_domain=types.int32),
         )
-        
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -528,7 +527,7 @@ class scatter_nd(Operation):
         updates=TensorInputType(type_domain="T"),
         mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }

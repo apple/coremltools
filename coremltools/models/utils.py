@@ -7,24 +7,24 @@
 Utilities for the entire package.
 """
 
-from collections.abc import Iterable as _Iterable
-from functools import lru_cache as _lru_cache
 import math as _math
 import os as _os
 import shutil as _shutil
 import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
-from typing import Optional as _Optional, Union as _Union
 import warnings as _warnings
+from collections.abc import Iterable as _Iterable
+from functools import lru_cache as _lru_cache
+from typing import Optional as _Optional
+from typing import Union as _Union
 
 import numpy as _np
 
 import coremltools as _ct
 from coremltools import ComputeUnit as _ComputeUnit
+from coremltools import proto as _proto
 from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer as _NameSanitizer
-from coremltools.proto import Model_pb2 as _Model_pb2
-import coremltools.proto.MIL_pb2 as _mil_proto
 
 from .._deps import _HAS_SCIPY
 
@@ -62,7 +62,7 @@ def _remove_invalid_keys(input_dict, model):
 
 
 def _create_mlpackage(
-    proto_spec: _Model_pb2,
+    proto_spec: _proto.Model_pb2,
     weights_dir: _Optional[str] = None,
     package_path: _Optional[str] = None,
 ) -> str:
@@ -190,7 +190,7 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
             f.write(spec.SerializeToString())
 
 
-def load_spec(model_path: str) -> _Model_pb2:
+def load_spec(model_path: str) -> _proto.Model_pb2:
     """
     Load a protobuf model specification from file (mlmodel) or directory (mlpackage).
 
@@ -221,7 +221,7 @@ def load_spec(model_path: str) -> _Model_pb2:
     else:
         specfile = model_path
 
-    spec = _Model_pb2.Model()
+    spec = _proto.Model_pb2.Model()
     with open(specfile, "rb") as f:
         spec.ParseFromString(f.read())
     return spec
@@ -304,7 +304,9 @@ def _wp_to_fp16wp(wp):
 
 def _convert_neural_network_spec_weights_to_fp16(fp_spec):
     from .neural_network.quantization_utils import (
-        _QUANTIZATION_MODE_LINEAR_QUANTIZATION, _quantize_spec_weights)
+        _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+        _quantize_spec_weights,
+    )
 
     qspec = _quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
     return qspec
@@ -343,7 +345,6 @@ def _get_model(spec, compute_units=_ComputeUnit.ALL):
         return spec
     else:
         return MLModel(spec, compute_units=compute_units)
-
 
 def evaluate_regressor(model, data, target="target", verbose=False):
     """
@@ -982,13 +983,8 @@ def convert_double_to_float_multiarray_type(spec):
 
     def _convert_to_float(feature):
         if feature.type.HasField("multiArrayType"):
-            if (
-                feature.type.multiArrayType.dataType
-                == _Model_pb2.ArrayFeatureType.DOUBLE
-            ):
-                feature.type.multiArrayType.dataType = (
-                    _Model_pb2.ArrayFeatureType.FLOAT32
-                )
+            if feature.type.multiArrayType.dataType == _proto.Model_pb2.ArrayFeatureType.DOUBLE:
+                feature.type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.FLOAT32
 
     for feature in spec.description.input:
         _convert_to_float(feature)
@@ -1004,7 +1000,7 @@ def convert_double_to_float_multiarray_type(spec):
             convert_double_to_float_multiarray_type(model_spec)
 
 
-def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None) -> str:
+def compile_model(model: _proto.Model_pb2.Model, destination_path: _Optional[str] = None) -> str:
     """
     Compiles a Core ML model spec.
 
@@ -1036,13 +1032,13 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
         spec.specificationVersion = 1
 
         input_ = spec.description.input.add()
-        input_.name = 'x'
+        input_.name = "x"
         input_.type.doubleType.MergeFromString(b"")
 
         output_ = spec.description.output.add()
-        output_.name = 'y'
+        output_.name = "y"
         output_.type.doubleType.MergeFromString(b"")
-        spec.description.predictedFeatureName = 'y'
+        spec.description.predictedFeatureName = "y"
 
         lr = spec.glmRegressor
         lr.offset.append(0.1)
@@ -1051,7 +1047,7 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
 
         compiled_model_path = compile_model(spec)
         model = CompiledMLModel(compiled_model_path)
-        y = model.predict({'x': 2})
+        y = model.predict({"x": 2})
 
     See Also
     --------
@@ -1072,7 +1068,7 @@ def compile_model(model: _Model_pb2.Model, destination_path: _Optional[str]=None
     if isinstance(model, _ct.models.MLModel):
         raise TypeError("This model has already been compiled. Call \"get_compiled_model_path\""
                         " to get the compiled model.")
-    if not isinstance(model, _Model_pb2.Model):
+    if not isinstance(model, _proto.Model_pb2.Model):
         raise TypeError("Unrecognized input for \"model\" parameter. It should be a spec.")
 
     # Check file extension of destination_path parameter
@@ -1128,20 +1124,20 @@ def make_pipeline(
     --------
     .. sourcecode:: python
 
-        my_model1 = ct.models.MLModel('/tmp/m1.mlpackage')
-        my_model2 = ct.models.MLModel('/tmp/m2.mlmodel')
-        
+        my_model1 = ct.models.MLModel("/tmp/m1.mlpackage")
+        my_model2 = ct.models.MLModel("/tmp/m2.mlmodel")
+
         my_pipeline_model = ct.utils.make_pipeline(my_model1, my_model2)
 
-        y = my_pipeline_model.predict({'x': 12})
+        y = my_pipeline_model.predict({"x": 12})
 
-        my_pipeline_model.save('/tmp/my_pipeline.mlpackage')
-        new_my_pipeline = ct.model.MLModel('/tmp/my_pipeline.mlpackage')
+        my_pipeline_model.save("/tmp/my_pipeline.mlpackage")
+        new_my_pipeline = ct.model.MLModel("/tmp/my_pipeline.mlpackage")
 
     """
 
     def updateBlobFileName(proto_message, new_path):
-        if type(proto_message) == _mil_proto.Value:
+        if type(proto_message) == _proto.MIL_pb2.Value:
             # Value protobuf message. This is what might need to be updated.
             if proto_message.WhichOneof('value') == 'blobFileValue':
                 assert proto_message.blobFileValue.fileName == "@model_path/weights/weight.bin"

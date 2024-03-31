@@ -7,6 +7,7 @@ from typing import Set
 
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types as types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
@@ -14,6 +15,7 @@ from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
+# TODO: rdar://122845072 ([Infra] Refactor the transform_function_signatures, adjust_io_to_supported_types and update_output_dtypes using a shared graph pass)
 @register_pass(namespace="mil_backend")
 class adjust_io_to_supported_types(AbstractGraphPass):
     """
@@ -182,8 +184,10 @@ def _adjust_main_outputs(func):
 
             output_var_name = output_var.name
             output_var.set_name(f"{output_var_name}__pre__output__{target_dtype}__cast")
+            old_output_var = output_var
             output_var = mb.cast(x=output_var, dtype=target_dtype)
             output_var.set_name(output_var_name)
+            Block._copy_scope_info(old_output_var, output_var)
         new_outputs.append(output_var)
     func.set_outputs(new_outputs)
 

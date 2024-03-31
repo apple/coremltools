@@ -9,9 +9,11 @@ from collections import OrderedDict
 
 from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import EnumeratedShapes, ImageType, Shape
+from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, types
+from coremltools.converters.mil.mil import Function, Program, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -48,7 +50,7 @@ class image_input_preprocess(AbstractGraphPass):
             else:
                 return shape[:-3] + [shape[-1]] + shape[-3:-1]
 
-        main_input_types = list(prog.main_input_types)
+        main_input_types = list(prog.functions["main"].input_types)
         for idx, input_type in enumerate(main_input_types):
             if isinstance(input_type, ImageType) and not input_type.channel_first:
                 name = input_type.name
@@ -88,9 +90,6 @@ class image_input_preprocess(AbstractGraphPass):
 
                 # Update Function input var
                 prog.functions["main"]._input_dict[name] = placeholder_op.outputs[0]
-                prog.functions["main"].function_inputs = tuple(
-                    prog.functions["main"]._input_dict.values()
-                )
 
                 # Add transpose into graph (Transpose from NCHW back to NHWC)
                 curr_block = prog.functions["main"]
@@ -108,7 +107,7 @@ class image_input_preprocess(AbstractGraphPass):
                 curr_block.replace_uses_of_var_after_op(
                     anchor_op=None, old_var=old_var, new_var=new_input
                 )
-        prog.main_input_types = tuple(main_input_types)
+        prog.functions["main"].input_types = tuple(main_input_types)
 
 
 class NameSanitizer:
@@ -311,26 +310,30 @@ class sanitize_input_output_names(AbstractGraphPass):
             prog.functions["main"],
             sanitizer_vars,
             sanitizer_ops,
-            prog.main_input_types,
+            prog.functions["main"].input_types,
             sanitize_model_inputs_outputs_only=True,
         )
 
 
+# TODO: rdar://122845072 ([Infra] Refactor the transform_function_signatures, adjust_io_to_supported_types and update_output_dtypes using a shared graph pass)
 @register_pass(namespace="common")
 class update_output_dtypes(AbstractGraphPass):
     """
-    Update the dtypes of output vars of the main block to match the dtypes
-    provided in ``prog.main_output_types``, which in turn is populated by the
-    ``outputs`` argument provided by the user in the ``coremltools.convert()`` API.
-    This graph pass assumes that the list of outputs in ``prog.main_output_types`` (if not ``None``),
+    Update the dtypes of output vars of each function block to match the dtypes
+    provided in ``function.output_types``. The output types for the main function
+    is populated by the ``outputs`` argument provided by the user in the ``coremltools.convert()`` API.
+    This graph pass assumes that the list of outputs in ``function.output_types`` (if not ``None``),
     are in the same order as the output vars.
     """
 
-    def apply(self, prog):
-        user_provided_output_types = prog.main_output_types
-        main_func = prog.functions["main"]
-        output_vars = main_func.outputs
-        input_vars = list(main_func.inputs.values())
+    @block_context_manager
+    def adjust_function_output_types(self, func: Function) -> None:
+        """
+        Adjust output dtypes for a pymil function.
+        """
+        user_provided_output_types = func.output_types
+        output_vars = func.outputs
+        input_vars = list(func.inputs.values())
         if user_provided_output_types is None or len(user_provided_output_types) == 0:
             return
         if len(output_vars) != len(user_provided_output_types):
@@ -367,11 +370,15 @@ class update_output_dtypes(AbstractGraphPass):
                 output_var.set_name(
                     output_var_name + "_type_" + types.builtin_to_string(output_var.dtype)
                 )
-                with main_func:
-                    output_var = mb.cast(
-                        x=output_var, dtype=types.builtin_to_string(required_output_dtype)
-                    )
-                    output_var.set_name(output_var_name)
-                new_outputs.append(output_var)
+                new_output_var = mb.cast(
+                    x=output_var, dtype=types.builtin_to_string(required_output_dtype)
+                )
+                new_output_var.set_name(output_var_name)
+                Block._copy_scope_info(output_var, new_output_var)
+                new_outputs.append(new_output_var)
 
-        main_func.set_outputs(new_outputs)
+        func.set_outputs(new_outputs)
+
+    def apply(self, prog: Program):
+        for func in prog.functions.values():
+            self.adjust_function_output_types(func)

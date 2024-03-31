@@ -12,10 +12,13 @@ from torch.jit._script import RecursiveScriptModule
 
 from coremltools import _logger as logger
 from coremltools._deps import _HAS_TORCH_EXPORT_API
+from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import ImageType, InputType, TensorType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Placeholder, Program, types
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 from coremltools.converters.mil.mil.types import is_float
 from coremltools.converters.mil.mil.var import Var
 
@@ -28,6 +31,7 @@ from .torchir_passes import (
     flatten_graph_input_values,
     flatten_graph_output_values,
     generate_tensor_assignment_ops,
+    populate_native_const_model_hierarchy,
     remove_getattr_nodes,
     transform_inplace_ops,
 )
@@ -57,12 +61,17 @@ def _convert_to_torch_inputtype(inputs: List[TensorType]) -> List[TensorType]:
             raise ValueError("Unknown type {} for conversion to InputType.".format(type(_input)))
     return input_type
 
+
 class QuantizationContext:
     """
     Utilities to manage information pertaining to quantization of tensors in a PyTorch graph.
+
+    This is necessary only for TorchScript (not ExecuTorch)
     """
 
     def __init__(self, context: "TranscriptionContext") -> None:
+        if context.frontend != TorchFrontend.TORCHSCRIPT:
+            raise ValueError("QuantizationContext is necessary only for TorchScript")
         self._context = context
 
         # Maps var name to tuple of (torch dtype, scale, zero_point)
@@ -204,7 +213,8 @@ class TranscriptionContext:
         self.frontend = frontend
         self._current_graph = [{}]
         self._torch_graph = None
-        self._quant_context = QuantizationContext(self)
+        if frontend == TorchFrontend.TORCHSCRIPT:
+            self._quant_context = QuantizationContext(self)
 
     @property
     def torch_graph(self):
@@ -348,13 +358,12 @@ class TorchConverter:
         self.outputs = outputs
         self.output_names = get_output_names(self.outputs)
         self.opset_version = _target(opset_version) if opset_version is not None else None
-        self.context = TranscriptionContext()
-        self._prog = Program()
+        self._prog = mil.Program()
 
         if isinstance(loaded_model, torch.jit.ScriptModule):
-            self.context.frontend = TorchFrontend.TORCHSCRIPT
-            self.graph, self.params_dict, self.buffer_dict = InternalTorchIRGraph.from_torchscript(
-                torchscript=loaded_model, input_values=self.inputs, cut_at_symbols=cut_at_symbols
+            self.context = TranscriptionContext(frontend=TorchFrontend.TORCHSCRIPT)
+            self.graph = InternalTorchIRGraph.from_torchscript(
+                torchscript=loaded_model, inputs=self.inputs, cut_at_symbols=cut_at_symbols
             )
 
             # TODO (rdar://106161395): Register Torch IR passes and unify them into the pass pipeline.
@@ -365,14 +374,14 @@ class TorchConverter:
                 flatten_graph_output_values,
                 remove_getattr_nodes,
                 generate_tensor_assignment_ops,
+                populate_native_const_model_hierarchy,
             ]
             for p in passes:
                 p(self.graph)
 
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
-            self.context.frontend = TorchFrontend.EXIR
+            self.context = TranscriptionContext(frontend=TorchFrontend.EXIR)
             self.graph = InternalTorchIRGraph.from_exir(exir=loaded_model)
-            self.params_dict, self.buffer_dict = None, None
         else:
             raise ValueError(
                 "Model should be an instance of either torch.jit.ScriptModule or ExportedProgram"
@@ -452,13 +461,27 @@ class TorchConverter:
             dtype = types.fp32
         return mb.placeholder(shape, dtype=dtype)
 
-    @staticmethod
-    def _preprocess_input_vars(input_var):
-        if (
-            types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)
-        ) and input_var.dtype == types.fp16:
-            input_var = mb.cast(x=input_var, dtype="fp32")
-        return input_var
+    def _add_const(self, name: str, val: Union[torch.Tensor, torch._C.ScriptObject]) -> None:
+        """Create a const op and add it to the graph."""
+        if isinstance(val, torch._C.ScriptObject):
+            logger.info(f"Encountered constant {name} of type _torch._C.ScriptObject")
+            return
+        elif isinstance(val, torch.Tensor) and val.is_quantized:
+            const = _dequantized_weight(val.cpu(), name)
+            self.context.add(const)
+            return
+        elif not isinstance(val, torch.Tensor):
+            raise ValueError(f"unsupported class for {name} in PyTorch graph: {type(val)}")
+        val = val.detach().cpu().numpy()
+        # TODO (rdar://107718371): support uint8 activation quantization in torchscript
+        # Some torchscript models store indices with uint8, which are unrelated to quantization and
+        # need to be cast to int32 since many non-quantized Core ML ops do not support int8.
+        # We need a way to distinguish whether an uint8 is quantization (so should be kept)
+        # or not (so should be cast to int32).
+        if self.context.frontend == TorchFrontend.TORCHSCRIPT and val.dtype == np.uint8:
+            val = val.astype(np.int32)
+        const = mb.const(val=val, name=name)
+        self.context.add(const)
 
     def check_ops(self):
         """
@@ -469,24 +492,24 @@ class TorchConverter:
 
     def convert_const(self) -> None:
         for name, val in self.graph.params.items():
-            if isinstance(val, torch._C.ScriptObject):
-                logger.info(f"Encountered constant {name} of type _torch._C.ScriptObject")
-                continue
-            elif isinstance(val, torch.Tensor) and val.is_quantized:
-                const = _dequantized_weight(val.cpu(), name)
-                self.context.add(const)
-                continue
-            elif not isinstance(val, np.ndarray):
-                raise ValueError(f"unsupported class for {name} in PyTorch graph: {type(val)}")
-            # TODO (rdar://107718371): support uint8 quantization
-            # Some torch models store indices with uint8, which are unrelated to quantization and
-            # need to be cast to int32 since Core ML does not support int8.
-            # We need a way to distinguish whether an uint8 is quantization (so should be kept)
-            # or not (so should be cast to int32).
-            if val.dtype == np.uint8:
-                val = val.astype(np.int32)
-            const = mb.const(val=val, name=name)
-            self.context.add(const)
+            if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+                scope_name, scope_type = self.graph.params_scope[name]
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=scope_type),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
+                ):
+                    self._add_const(name, val)
+            elif self.context.frontend == TorchFrontend.EXIR:
+                # ExecuTorch has constants lifted as inputs, yet we have not sorted out
+                # how to support IO metadata, so for now just put a dummy metadata
+                # since inputs/constants will not contribute to debugging/profiling
+                # TODO (rdar://125572392): Support torch.export IO metadata
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
+                ):
+                    self._add_const(name, val)
+            else:
+                raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
 
     def convert(self) -> Program:
         logger.info("Converting graph.")
@@ -499,7 +522,6 @@ class TorchConverter:
 
         # This will hold the converted model.
         prog = self._prog
-        prog.set_main_input_types(tuple(self.inputs))
 
         # Construct placeholder for input to SSA function
         ssa_func_inputs = OrderedDict()
@@ -517,7 +539,39 @@ class TorchConverter:
             internal_names = list(self.graph.inputs.keys())
             internal_names.extend(user_names[len(internal_names) :])
             for torch_name, ssa_name in zip(internal_names, user_names):
-                input_var = self._preprocess_input_vars(ssa_func.inputs[ssa_name])
+                input_var = ssa_func.inputs[ssa_name]
+                if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+                    # To create fp16 Core ML model from fp32 torch model, we
+                    # 1. Cast input to fp32 (if specified fp16 input)
+                    # 2. Convert fp32 torch model to fp32 Core ML model
+                    # 3. Graph passes `add_fp16_cast` and `cast_optimization`
+                    #    then cast fp32 Core ML model to fp16
+                    # So here we perform the "cast input to fp32" step
+                    if (
+                        types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)
+                    ) and input_var.dtype == types.fp16:
+                        # This cast should have placeholder scope
+                        with mb.scope(
+                            ScopeInfo(
+                                source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="placeholder"
+                            ),
+                            ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=torch_name),
+                        ):
+                            input_var = mb.cast(x=input_var, dtype="fp32")
+                elif self.context.frontend == TorchFrontend.EXIR:
+                    # EXIR has dtypes all determined, so for now we just stick to EXIR dtypes
+                    # TODO (rdar://115845792): Handle fp16 IO dtypes
+                    # When handle user provided IO dtypes, we will also need to handle IO metadata
+                    # TODO (rdar://125572392): Support torch.export IO metadata
+                    if (
+                        input_var.dtype == types.fp16
+                        and not is_current_opset_version_compatible_with(_target.iOS16)
+                    ):
+                        raise ValueError(
+                            "To use fp16 input, please set minimum deployment target to iOS16+"
+                        )
+                else:
+                    raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
                 self.context.add(input_var, torch_name=torch_name)
 
             # Convert constants
@@ -554,5 +608,21 @@ class TorchConverter:
                 # is True. Make the default output type to fp16
                 self._adjust_default_output_to_fp16(graph_outputs)
             if self.outputs is not None:
-                prog.set_main_output_types(self.outputs)
+                prog.functions["main"].set_output_types(self.outputs)
+
+            prog.functions["main"].set_input_types(tuple(self.inputs))
+
+            # Make sure the prog is not missing any scope information
+            essential_scope_sources = []
+            if self.context.frontend == TorchFrontend.TORCHSCRIPT:
+                essential_scope_sources = [
+                    ScopeSource.TORCHSCRIPT_MODULE_NAME,
+                    ScopeSource.TORCHSCRIPT_MODULE_TYPE,
+                ]
+            elif self.context.frontend == TorchFrontend.EXIR:
+                essential_scope_sources = [ScopeSource.EXIR_DEBUG_HANDLE]
+            else:
+                raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
+            prog._add_essential_scope_source(essential_scope_sources)
+            prog.validate(check_essential_scope=True)
         return prog

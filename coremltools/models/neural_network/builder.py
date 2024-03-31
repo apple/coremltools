@@ -10,18 +10,16 @@ from math import floor as _math_floor
 
 import numpy as _np
 
-from ... import (_MINIMUM_NDARRAY_SPEC_VERSION,
-                 _MINIMUM_UPDATABLE_SPEC_VERSION,
-                 _SPECIFICATION_VERSION_IOS_14)
+from ... import (
+    _MINIMUM_NDARRAY_SPEC_VERSION,
+    _MINIMUM_UPDATABLE_SPEC_VERSION,
+    _SPECIFICATION_VERSION_IOS_14,
+)
 from ... import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
-from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
-from ...proto import Model_pb2 as _Model_pb2
-from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
+from ... import proto as _proto
 from .. import datatypes
-from .._interface_management import (set_training_features,
-                                     set_transform_interface_params)
-from .quantization_utils import (_convert_array_to_nbit_quantized_bytes,
-                                 _unpack_to_bytes)
+from .._interface_management import set_training_features, set_transform_interface_params
+from .quantization_utils import _convert_array_to_nbit_quantized_bytes, _unpack_to_bytes
 from .spec_inspection_utils import _summarize_network_layer_info
 from .update_optimizer_utils import AdamParams, SgdParams
 
@@ -146,7 +144,7 @@ def _get_nn_spec(spec):
 def _get_lstm_weight_fields(lstm_wp):
     """
     Get LSTM weight fields.
-    lstm_wp: _NeuralNetwork_pb2.LSTMWeightParams
+    lstm_wp: _proto.NeuralNetwork_pb2.LSTMWeightParams
     """
     return [
         lstm_wp.inputGateWeightMatrix,
@@ -387,7 +385,7 @@ class NeuralNetworkBuilder:
 
         # Set the interface params.
         if self.spec is None:
-            self.spec = _Model_pb2.Model()
+            self.spec = _proto.Model_pb2.Model()
         self.spec.specificationVersion = _SPECIFICATION_VERSION
         if disable_rank5_shape_mapping:
             self.spec.specificationVersion = _MINIMUM_NDARRAY_SPEC_VERSION
@@ -408,9 +406,9 @@ class NeuralNetworkBuilder:
             del self.spec.description.output[:]
 
         if use_float_arraytype:
-            array_datatype = _Model_pb2.ArrayFeatureType.FLOAT32
+            array_datatype = _proto.Model_pb2.ArrayFeatureType.FLOAT32
         else:
-            array_datatype = _Model_pb2.ArrayFeatureType.DOUBLE
+            array_datatype = _proto.Model_pb2.ArrayFeatureType.DOUBLE
 
         self.spec = set_transform_interface_params(
             self.spec,
@@ -439,11 +437,13 @@ class NeuralNetworkBuilder:
             self.nn_spec = nn_spec
 
         if disable_rank5_shape_mapping and self.nn_spec:
-            self.nn_spec.arrayInputShapeMapping = _NeuralNetwork_pb2.NeuralNetworkMultiArrayShapeMapping.Value(
-                "EXACT_ARRAY_MAPPING"
+            self.nn_spec.arrayInputShapeMapping = (
+                _proto.NeuralNetwork_pb2.NeuralNetworkMultiArrayShapeMapping.Value(
+                    "EXACT_ARRAY_MAPPING"
+                )
             )
-            self.nn_spec.imageInputShapeMapping = _NeuralNetwork_pb2.NeuralNetworkImageShapeMapping.Value(
-                "RANK4_IMAGE_MAPPING"
+            self.nn_spec.imageInputShapeMapping = (
+                _proto.NeuralNetwork_pb2.NeuralNetworkImageShapeMapping.Value("RANK4_IMAGE_MAPPING")
             )
 
     def set_input(self, input_names, input_dims):
@@ -503,7 +503,7 @@ class NeuralNetworkBuilder:
             # TODO: if it's an embedding, this should be integer
             spec.description.input[
                 idx
-            ].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+            ].type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.DOUBLE
 
             spec.description.input[idx].name = input_names[idx]
 
@@ -542,7 +542,7 @@ class NeuralNetworkBuilder:
             spec.description.output[idx].type.multiArrayType.shape.extend(dim)
             spec.description.output[
                 idx
-            ].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+            ].type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.DOUBLE
 
             spec.description.output[idx].name = output_names[idx]
 
@@ -735,11 +735,11 @@ class NeuralNetworkBuilder:
         for idx in range(len_before_in, len(spec.description.input)):
             spec.description.input[
                 idx
-            ].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+            ].type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.DOUBLE
         for idx in range(len_before_out, len(spec.description.output)):
             spec.description.output[
                 idx
-            ].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+            ].type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.DOUBLE
 
 
     def _check_fp16_weight_params_lstms(self, lstm_wp, has_peephole=True):
@@ -939,11 +939,11 @@ class NeuralNetworkBuilder:
             typed_layer = getattr(spec_layer, spec_layer.WhichOneof("layer"))
             for fd in typed_layer.DESCRIPTOR.fields:
                 field = getattr(typed_layer, fd.name)
-                if type(field) == _NeuralNetwork_pb2.LSTMWeightParams:
+                if type(field) == _proto.NeuralNetwork_pb2.LSTMWeightParams:
                     wfs = _get_lstm_weight_fields(field)
                     for wf in wfs:
                         wf.isUpdatable = True
-                elif type(field) == _NeuralNetwork_pb2.WeightParams:
+                elif type(field) == _proto.NeuralNetwork_pb2.WeightParams:
                     field.isUpdatable = True
                 else:
                     pass
@@ -1042,9 +1042,7 @@ class NeuralNetworkBuilder:
         else:
             training_input.name = target
             datatypes._set_datatype(training_input.type, datatypes.Array(1))
-            training_input.type.multiArrayType.dataType = (
-                _Model_pb2.ArrayFeatureType.INT32
-            )
+            training_input.type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.INT32
 
         print(
             "Now adding input {} as target for categorical cross-entropy loss layer.".format(
@@ -1112,7 +1110,7 @@ class NeuralNetworkBuilder:
         training_input.name = target
 
         datatypes._set_datatype(training_input.type, input_feature[1])
-        training_input.type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
+        training_input.type.multiArrayType.dataType = _proto.Model_pb2.ArrayFeatureType.DOUBLE
         print(
             "Now adding input {} as target for mean squared error loss layer.".format(
                 target
@@ -2097,11 +2095,13 @@ class NeuralNetworkBuilder:
             spec_layer_params.scalingFactor.append(int(scaling_factor_h))
             spec_layer_params.scalingFactor.append(int(scaling_factor_w))
 
-        spec_layer_params.mode = _NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value(
-            mode
+        spec_layer_params.mode = (
+            _proto.NeuralNetwork_pb2.UpsampleLayerParams.InterpolationMode.Value(mode)
         )
-        spec_layer_params.linearUpsampleMode = _NeuralNetwork_pb2.UpsampleLayerParams.LinearUpsampleMode.Value(
-            linear_upsample_mode
+        spec_layer_params.linearUpsampleMode = (
+            _proto.NeuralNetwork_pb2.UpsampleLayerParams.LinearUpsampleMode.Value(
+                linear_upsample_mode
+            )
         )
 
         return spec_layer
@@ -2469,8 +2469,10 @@ class NeuralNetworkBuilder:
                     "Invalid value %d of same_padding_asymmetry_mode parameter"
                     % same_padding_asymmetry_mode
                 )
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(
-                same_padding_asymmetry_mode
+            spec_layer_params.same.asymmetryMode = (
+                _proto.NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(
+                    same_padding_asymmetry_mode
+                )
             )
         else:
             raise NotImplementedError(
@@ -2722,8 +2724,10 @@ class NeuralNetworkBuilder:
             spec_layer_params.customPaddingBottom = padding_bottom
             spec_layer_params.customPaddingLeft = padding_left
             spec_layer_params.customPaddingRight = padding_right
-        spec_layer_params.paddingType = _NeuralNetwork_pb2.Convolution3DLayerParams.PaddingType.Value(
-            padding_mode.upper()
+        spec_layer_params.paddingType = (
+            _proto.NeuralNetwork_pb2.Convolution3DLayerParams.PaddingType.Value(
+                padding_mode.upper()
+            )
         )
 
         spec_layer_params.dilationDepth = dilation_depth
@@ -2837,7 +2841,7 @@ class NeuralNetworkBuilder:
         spec_layer_params = spec_layer.pooling
 
         # Set the parameters
-        spec_layer_params.type = _NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Value(
+        spec_layer_params.type = _proto.NeuralNetwork_pb2.PoolingLayerParams.PoolingType.Value(
             layer_type.upper()
         )
 
@@ -2868,8 +2872,10 @@ class NeuralNetworkBuilder:
                     "Invalid value %d of same_padding_asymmetry_mode parameter"
                     % same_padding_asymmetry_mode
                 )
-            spec_layer_params.same.asymmetryMode = _NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(
-                same_padding_asymmetry_mode
+            spec_layer_params.same.asymmetryMode = (
+                _proto.NeuralNetwork_pb2.SamePadding.SamePaddingMode.Value(
+                    same_padding_asymmetry_mode
+                )
             )
         elif padding_type == "INCLUDE_LAST_PIXEL":
             if padding_top != padding_bottom or padding_left != padding_right:
@@ -2968,7 +2974,7 @@ class NeuralNetworkBuilder:
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.pooling3d
 
-        spec_layer_params.type = _NeuralNetwork_pb2.Pooling3DLayerParams.PoolingType3D.Value(
+        spec_layer_params.type = _proto.NeuralNetwork_pb2.Pooling3DLayerParams.PoolingType3D.Value(
             pooling_type.upper()
         )
 
@@ -2993,8 +2999,10 @@ class NeuralNetworkBuilder:
             spec_layer_params.customPaddingBottom = custom_padding_bottom
             spec_layer_params.customPaddingLeft = custom_padding_left
             spec_layer_params.customPaddingRight = custom_padding_right
-        spec_layer_params.paddingType = _NeuralNetwork_pb2.Pooling3DLayerParams.Pooling3DPaddingType.Value(
-            padding_mode.upper()
+        spec_layer_params.paddingType = (
+            _proto.NeuralNetwork_pb2.Pooling3DLayerParams.Pooling3DPaddingType.Value(
+                padding_mode.upper()
+            )
         )
 
         spec_layer_params.countExcludePadding = average_pooling_count_excludes_padding
@@ -3034,8 +3042,10 @@ class NeuralNetworkBuilder:
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.globalPooling3d
 
-        spec_layer_params.type = _NeuralNetwork_pb2.GlobalPooling3DLayerParams.GlobalPoolingType3D.Value(
-            pooling_type.upper()
+        spec_layer_params.type = (
+            _proto.NeuralNetwork_pb2.GlobalPooling3DLayerParams.GlobalPoolingType3D.Value(
+                pooling_type.upper()
+            )
         )
 
         return spec_layer
@@ -3743,11 +3753,11 @@ class NeuralNetworkBuilder:
 
         # Set the parameters
         if mode == 0:
-            spec_layer_params.mode = _NeuralNetwork_pb2.FlattenLayerParams.FlattenOrder.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.FlattenLayerParams.FlattenOrder.Value(
                 "CHANNEL_FIRST"
             )
         elif mode == 1:
-            spec_layer_params.mode = _NeuralNetwork_pb2.FlattenLayerParams.FlattenOrder.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.FlattenLayerParams.FlattenOrder.Value(
                 "CHANNEL_LAST"
             )
         else:
@@ -3803,15 +3813,15 @@ class NeuralNetworkBuilder:
 
         axis = axis.lower() if isinstance(axis, str) else axis
         if axis == "channel":
-            spec_layer_params.axis = _NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value(
                 "CHANNEL_AXIS"
             )
         elif axis == "height":
-            spec_layer_params.axis = _NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value(
                 "HEIGHT_AXIS"
             )
         elif axis == "width":
-            spec_layer_params.axis = _NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.SliceLayerParams.SliceAxis.Value(
                 "WIDTH_AXIS"
             )
         else:
@@ -3909,12 +3919,16 @@ class NeuralNetworkBuilder:
 
         mode = mode.upper() if isinstance(mode, str) else mode
         if mode == "SPACE_TO_DEPTH":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value(
-                "SPACE_TO_DEPTH"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value(
+                    "SPACE_TO_DEPTH"
+                )
             )
         elif mode == "DEPTH_TO_SPACE":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value(
-                "DEPTH_TO_SPACE"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value(
+                    "DEPTH_TO_SPACE"
+                )
             )
         elif mode == "PIXEL_SHUFFLE":
             if self.spec and (
@@ -3922,8 +3936,10 @@ class NeuralNetworkBuilder:
                 or self.spec.specificationVersion < _SPECIFICATION_VERSION_IOS_14
             ):
                 self.spec.specificationVersion = _SPECIFICATION_VERSION_IOS_14
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value(
-                "PIXEL_SHUFFLE"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReorganizeDataLayerParams.ReorganizationType.Value(
+                    "PIXEL_SHUFFLE"
+                )
             )
         else:
             raise NotImplementedError("Unknown reorganization mode %s." % mode)
@@ -4085,11 +4101,11 @@ class NeuralNetworkBuilder:
         spec_layer_params = spec_layer.reshape
         spec_layer_params.targetShape.extend(target_shape)
         if mode == 0:
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value(
                 "CHANNEL_FIRST"
             )
         else:
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ReshapeLayerParams.ReshapeOrder.Value(
                 "CHANNEL_LAST"
             )
 
@@ -4139,67 +4155,67 @@ class NeuralNetworkBuilder:
 
         mode = mode.lower() if isinstance(mode, str) else mode
         if mode == "sum":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "SUM"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("SUM")
             )
         elif mode == "avg":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "AVG"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("AVG")
             )
         elif mode == "prod":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "PROD"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("PROD")
             )
         elif mode == "logsum":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "LOGSUM"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("LOGSUM")
             )
         elif mode == "sumsquare":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "SUMSQUARE"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("SUMSQUARE")
             )
         elif mode == "l1":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "L1"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("L1")
             )
         elif mode == "l2":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "L2"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("L2")
             )
         elif mode == "max":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "MAX"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("MAX")
             )
         elif mode == "min":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "MIN"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("MIN")
             )
         elif mode == "argmax":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value(
-                "ARGMAX"
+            spec_layer_params.mode = (
+                _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceOperation.Value("ARGMAX")
             )
         else:
             raise NotImplementedError("Unknown reduction operation %s." % mode)
 
         axis = axis.upper() if isinstance(axis, str) else axis
         if axis == "CHW":
-            spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
                 "CHW"
             )
         elif axis == "HW":
-            spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
                 "HW"
             )
         elif axis == "C":
-            spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
                 "C"
             )
         elif axis == "H":
-            spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
                 "H"
             )
         elif axis == "W":
-            spec_layer_params.axis = _NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
+            spec_layer_params.axis = _proto.NeuralNetwork_pb2.ReduceLayerParams.ReduceAxis.Value(
                 "W"
             )
         else:
@@ -4377,36 +4393,36 @@ class NeuralNetworkBuilder:
 
         mode = mode.lower() if isinstance(mode, str) else mode
         if mode == "sqrt":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "SQRT"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("SQRT")
             )
         elif mode == "rsqrt":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "RSQRT"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("RSQRT")
             )
         elif mode == "inverse":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "INVERSE"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("INVERSE")
             )
         elif mode == "power":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "POWER"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("POWER")
             )
         elif mode == "exp":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "EXP"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("EXP")
             )
         elif mode == "log":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "LOG"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("LOG")
             )
         elif mode == "abs":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "ABS"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("ABS")
             )
         elif mode == "threshold":
-            spec_layer_params.type = _NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value(
-                "THRESHOLD"
+            spec_layer_params.type = (
+                _proto.NeuralNetwork_pb2.UnaryFunctionLayerParams.Operation.Value("THRESHOLD")
             )
         else:
             raise NotImplementedError("Unknown unary function %s " % mode)
@@ -4552,20 +4568,20 @@ class NeuralNetworkBuilder:
         mode = mode.upper() if isinstance(mode, str) else mode
         if mode == "ALIGN_ENDPOINTS_MODE":
 
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "ALIGN_ENDPOINTS_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("ALIGN_ENDPOINTS_MODE")
             )
         elif mode == "STRICT_ALIGN_ENDPOINTS_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "STRICT_ALIGN_ENDPOINTS_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("STRICT_ALIGN_ENDPOINTS_MODE")
             )
         elif mode == "UPSAMPLE_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "UPSAMPLE_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("UPSAMPLE_MODE")
             )
         elif mode == "ROI_ALIGN_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "ROI_ALIGN_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("ROI_ALIGN_MODE")
             )
         else:
             raise ValueError("Unsupported resize bilinear mode %s" % mode)
@@ -4669,39 +4685,45 @@ class NeuralNetworkBuilder:
         )
 
         if mode == "ALIGN_ENDPOINTS_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "ALIGN_ENDPOINTS_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("ALIGN_ENDPOINTS_MODE")
             )
         elif mode == "STRICT_ALIGN_ENDPOINTS_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "STRICT_ALIGN_ENDPOINTS_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("STRICT_ALIGN_ENDPOINTS_MODE")
             )
         elif mode == "UPSAMPLE_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "UPSAMPLE_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("UPSAMPLE_MODE")
             )
         elif mode == "ROI_ALIGN_MODE":
-            spec_layer_params.mode.samplingMethod = _NeuralNetwork_pb2.SamplingMode.Method.Value(
-                "ROI_ALIGN_MODE"
+            spec_layer_params.mode.samplingMethod = (
+                _proto.NeuralNetwork_pb2.SamplingMode.Method.Value("ROI_ALIGN_MODE")
             )
         else:
             raise ValueError("Unsupported crop resize mode %s" % mode)
 
         if box_indices_mode == "CORNERS_HEIGHT_FIRST":
-            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
-                "CORNERS_HEIGHT_FIRST"
+            spec_layer_params.boxIndicesMode.boxMode = (
+                _proto.NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
+                    "CORNERS_HEIGHT_FIRST"
+                )
             )
         elif box_indices_mode == "CORNERS_WIDTH_FIRST":
-            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
-                "CORNERS_WIDTH_FIRST"
+            spec_layer_params.boxIndicesMode.boxMode = (
+                _proto.NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value("CORNERS_WIDTH_FIRST")
             )
         elif box_indices_mode == "CENTER_SIZE_HEIGHT_FIRST":
-            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
-                "CENTER_SIZE_HEIGHT_FIRST"
+            spec_layer_params.boxIndicesMode.boxMode = (
+                _proto.NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
+                    "CENTER_SIZE_HEIGHT_FIRST"
+                )
             )
         elif box_indices_mode == "CENTER_SIZE_WIDTH_FIRST":
-            spec_layer_params.boxIndicesMode.boxMode = _NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
-                "CENTER_SIZE_WIDTH_FIRST"
+            spec_layer_params.boxIndicesMode.boxMode = (
+                _proto.NeuralNetwork_pb2.BoxCoordinatesMode.Coordinates.Value(
+                    "CENTER_SIZE_WIDTH_FIRST"
+                )
             )
         else:
             raise ValueError(
@@ -4892,22 +4914,22 @@ class NeuralNetworkBuilder:
                     # TODO: If input is not rank 3 or 4, then accordingly handle
                     # e.g. for rank-2 input, squeeze additional dimension in case of Gray scale image
                     if channels == 1:
-                        input_.type.imageType.colorSpace = _FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value(
-                            "GRAYSCALE"
+                        input_.type.imageType.colorSpace = (
+                            _proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value("GRAYSCALE")
                         )
                     elif channels == 3:
                         if input_.name in is_bgr:
                             if is_bgr[input_.name]:
-                                input_.type.imageType.colorSpace = _FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value(
-                                    "BGR"
+                                input_.type.imageType.colorSpace = (
+                                    _proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value("BGR")
                                 )
                             else:
-                                input_.type.imageType.colorSpace = _FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value(
-                                    "RGB"
+                                input_.type.imageType.colorSpace = (
+                                    _proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value("RGB")
                                 )
                         else:
-                            input_.type.imageType.colorSpace = _FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value(
-                                "RGB"
+                            input_.type.imageType.colorSpace = (
+                                _proto.FeatureTypes_pb2.ImageFeatureType.ColorSpace.Value("RGB")
                             )
                     else:
                         raise ValueError(
@@ -5058,15 +5080,15 @@ class NeuralNetworkBuilder:
         spec_layer_params = spec_layer.gelu
 
         if mode == "EXACT":
-            spec_layer_params.mode = _NeuralNetwork_pb2.GeluLayerParams.GeluMode.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.GeluLayerParams.GeluMode.Value(
                 "EXACT"
             )
         elif mode == "TANH_APPROXIMATION":
-            spec_layer_params.mode = _NeuralNetwork_pb2.GeluLayerParams.GeluMode.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.GeluLayerParams.GeluMode.Value(
                 "TANH_APPROXIMATION"
             )
         elif mode == "SIGMOID_APPROXIMATION":
-            spec_layer_params.mode = _NeuralNetwork_pb2.GeluLayerParams.GeluMode.Value(
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.GeluLayerParams.GeluMode.Value(
                 "SIGMOID_APPROXIMATION"
             )
         else:
@@ -6530,21 +6552,19 @@ class NeuralNetworkBuilder:
 
         mode = mode.upper() if isinstance(mode, str) else mode
         if mode == "UPDATE":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value(
-                "SCATTER_UPDATE"
-            )
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_UPDATE")
         elif mode == "ADD":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_ADD")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_ADD")
         elif mode == "SUB":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_SUB")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_SUB")
         elif mode == "MUL":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MUL")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MUL")
         elif mode == "DIV":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_DIV")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_DIV")
         elif mode == "MAX":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MAX")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MAX")
         elif mode == "MIN":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MIN")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MIN")
         else:
             raise ValueError("Unsupported Scatter mode %s" % mode)
 
@@ -6611,21 +6631,19 @@ class NeuralNetworkBuilder:
 
         mode = mode.upper() if isinstance(mode, str) else mode
         if mode == "UPDATE":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value(
-                "SCATTER_UPDATE"
-            )
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_UPDATE")
         elif mode == "ADD":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_ADD")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_ADD")
         elif mode == "SUB":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_SUB")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_SUB")
         elif mode == "MUL":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MUL")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MUL")
         elif mode == "DIV":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_DIV")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_DIV")
         elif mode == "MAX":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MAX")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MAX")
         elif mode == "MIN":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MIN")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MIN")
         else:
             raise ValueError("Unsupported scatter_along_axis mode %s" % mode)
 
@@ -6690,21 +6708,19 @@ class NeuralNetworkBuilder:
 
         mode = mode.upper() if isinstance(mode, str) else mode
         if mode == "UPDATE":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value(
-                "SCATTER_UPDATE"
-            )
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_UPDATE")
         elif mode == "ADD":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_ADD")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_ADD")
         elif mode == "SUB":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_SUB")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_SUB")
         elif mode == "MUL":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MUL")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MUL")
         elif mode == "DIV":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_DIV")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_DIV")
         elif mode == "MAX":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MAX")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MAX")
         elif mode == "MIN":
-            spec_layer_params.mode = _NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MIN")
+            spec_layer_params.mode = _proto.NeuralNetwork_pb2.ScatterMode.Value("SCATTER_MIN")
         else:
             raise ValueError("Unsupported scatter mode %s" % mode)
 

@@ -30,7 +30,7 @@ class backfill_make_list_elem_type(AbstractGraphPass):
 @block_context_manager
 def _backfill_make_list_elem_type_block(block):
     # shallow copy hides changes on f.operations during the loop
-    for op in block.operations:
+    for op in list(block.operations):
         for b in op.blocks:
             _backfill_make_list_elem_type_block(b)
 

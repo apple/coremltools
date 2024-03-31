@@ -38,7 +38,7 @@ class dedup_op_and_var_names(AbstractGraphPass):
     def apply(self, prog):
         for func in prog.functions.values():
             # Handle function input/outputs as they cannot be changed (to maintain user interface)
-            inputs = list(func.function_inputs)
+            inputs = list(func.inputs.values())
             io_vars = set(inputs + func.outputs)
             self._ensure_unique_var_names(io_vars)
             seen_var_names = set([v.name for v in io_vars])

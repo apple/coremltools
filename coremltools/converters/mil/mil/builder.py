@@ -5,17 +5,25 @@
 
 import numbers
 from collections import defaultdict
-from typing import Callable, List, Optional
+from typing import Any, Callable, List, Optional, Tuple, Type
 
 import numpy as np
 
 from coremltools import _logger as logger
+from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 from .block import Function, curr_block
 from .input_type import InternalInputType, ListOrTensorInputType, TensorInputType, TupleInputType
-from .program import Placeholder, Program
+from .program import Placeholder
+from .scope import (
+    SCOPE_STACK,
+    VALID_OPS_TO_COPY_SCOPE_INFO,
+    ScopeContextManger,
+    ScopeInfo,
+    ScopeSource,
+)
 from .var import InternalVar, Var
 
 
@@ -131,6 +139,8 @@ class Builder:
             new_var_name = op_name + "_" + k
             if isinstance(in_type, TupleInputType):
                 var = []
+                if not isinstance(val, (list, tuple)):
+                    raise ValueError(f"Invalid type {type(val)} for TupleInputType param.")
                 for i, v in enumerate(val):
                     if isinstance(v, Var):
                         var.append(v)
@@ -165,7 +175,15 @@ class Builder:
             op_name=kwargs["name"], before_op=before_op,
             candidate_kv=kwargs))
         kwargs["enclosing_block"] = curr_block()
+
+        # Add scope information
+        current_scopes = SCOPE_STACK.get_curr_scopes()
+        kwargs["scopes"] = current_scopes
         new_op = op_cls(**kwargs)
+
+        # We record if the op is created under graph pass
+        if len(current_scopes) == 1 and ScopeSource.COREMLTOOLS_GRAPH_PASS in current_scopes:
+            VALID_OPS_TO_COPY_SCOPE_INFO[-1].add(new_op)
 
         # Initialize optional input Vars if it wasn't in kwargs
         default_inputs = new_op.default_inputs()
@@ -187,8 +205,13 @@ class Builder:
         return new_op.outputs
 
     @staticmethod
-    def placeholder(shape, dtype=None, allow_rank0_input=False):
-        return Placeholder(shape, dtype, allow_rank0_input=allow_rank0_input)
+    def placeholder(
+        shape: Tuple[Any],
+        dtype: Optional[Type] = None,
+        allow_rank0_input: Optional[bool] = False,
+        name: Optional[str] = None,
+    ) -> Placeholder:
+        return Placeholder(shape, dtype, allow_rank0_input=allow_rank0_input, name=name)
 
     @staticmethod
     def TensorSpec(shape, dtype=None):
@@ -294,7 +317,65 @@ class Builder:
         """
         def wrapper(main_block):
             function = Builder._create_function(main_block, input_specs, opset_version)
-            program = Program()
+            program = mil.Program()
             program.add_function(function_name, function)
             return program
         return wrapper
+
+    @staticmethod
+    def scope(
+        *scopes: List[ScopeInfo],
+    ) -> ScopeContextManger:
+        """
+        The ``mb.scope`` creates a context manager, which makes the operations created within it have the corresponding scope information.
+
+        Parameters
+        ----------
+        scopes: Optional[List[ScopeInfo]] (Optional)
+            * A list of ScopeInfo under the context manager.
+            * The source in each ScopeInfo cannot be duplicated.
+            * If not provided, this context manager does no affects.
+
+        Examples
+        --------
+        Here is an example of creating a scope for torchscript module heirarchy with type and name information.
+
+        .. sourcecode:: python
+
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+            def prog(x):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1"]),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+                ):
+                    return mb.add(x=x, y=4.3, name="add_1")
+
+
+        In the above example, the "add_1" op will have two scope attributes, for torchscipt module type and name:
+            * TORCHSCRIPT_MODULE_TYPE: ["Module1"]
+            * TORCHSCRIPT_MODULE_NAME: ["module_1"]
+
+        Here is an example of creating nested scopes:
+
+        .. sourcecode:: python
+
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+            def prog(x):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1"]),
+                ):
+                    x = mb.add(x=x, y=4.3, name="add_1")
+                    with mb.scope(
+                        ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module2"]),
+                        ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_2"]),
+                    ):
+                        return mb.add(x=x, y=3.2, name="add_2")
+
+        In the above example, the "add_1" op would have a scope attribute:
+            * TORCHSCRIPT_MODULE_TYPE: ["Module1"]
+
+        while the "add_2" op would have scope attributes:
+            * TORCHSCRIPT_MODULE_TYPE: ["Module1", "Module2"]
+            * TORCHSCRIPT_MODULE_NAME: ["module_2"]
+        """
+        return ScopeContextManger(*scopes)

@@ -22,7 +22,7 @@ class torch_tensor_assign_to_core(AbstractGraphPass):
 
 @block_context_manager
 def _torch_tensor_assign_to_core_block(block):
-    for op in block.operations[:]:
+    for op in list(block.operations):
         for b in op.blocks:
             _torch_tensor_assign_to_core_block(b)
 

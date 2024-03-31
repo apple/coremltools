@@ -37,9 +37,12 @@ def make_int(width, unsigned):
                                        numpy_type_to_builtin_type)
 
             if not isinstance(v, (np.generic, np.ndarray, sm.Basic)):
-                raise ValueError(
-                    f"types should have value of numpy type or Symbols, got {type(v)} instead"
-                )
+                try:
+                    v = np.array(v)
+                except Exception:
+                    raise ValueError(
+                        f"types should have value of numpy type or Symbols, got {type(v)} instead"
+                    )
 
             if isinstance(v, sm.Basic):
                 self._val = v

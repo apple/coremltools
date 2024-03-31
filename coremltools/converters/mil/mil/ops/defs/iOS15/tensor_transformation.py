@@ -585,9 +585,9 @@ class slice_by_size(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
-    begin: tensor<[rank(x)], i32> Required
+    begin: tensor<[rank(x)], i32> (Required)
         * The begin index for slice.
-    size: tensor<[rank(x)], i32> Required
+    size: tensor<[rank(x)], i32> (Required)
         * The size that is to be sliced. If ``size`` is ``-1``,
           all the remaining elements starting with "begin" are sliced.
 
@@ -884,6 +884,9 @@ class squeeze(Operation):
         * Must be at least 1-D.
     axes: const<K,i32> (Optional)
         * Axes to squeeze out.
+        * The behaviour of squeezing non-single dimensions follow PyTorch instead of NumPy, where
+          it ignores non-single dimensions instead of erroring out. More specifically, if x has
+          shape (2, 3, 4) and axes is [0, 1], the output will be a tensor with shape (2, 3, 4).
         * Default to remove all single-dimensions.
 
     Returns
@@ -923,9 +926,11 @@ class squeeze(Operation):
             for i in sorted(axes)[::-1]:  # descending order
                 if len(squeezed_shape) <= i:
                     raise ValueError(
-                        "Cannot squeeze dim {} for shape {}".format(i, squeezed_shape)
+                        f"Invalid axis {i} in squeeze. The axis should be smaller than {len(squeezed_shape)}"
                     )
-                squeezed_shape.pop(i)
+                if squeezed_shape[i] == 1:
+                    # Only remove the dim_size=1 dimension.
+                    squeezed_shape.pop(i)
 
         return types.tensor(x_type, tuple(squeezed_shape)) if len(squeezed_shape) != 0 else x_type
 

@@ -150,6 +150,26 @@ class TestLoadAPIUsage:
 
         assert op_names == new_op_names
 
+    def test_mil_uint16(self):
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(2, 2, 3))],
+            opset_version=ct.target.iOS17,
+        )
+        def prog(x):
+            indices = np.array([[[1, 0], [0, 1]], [[1, 0], [0, 0]]], dtype=np.uint16)
+            res = mb.gather(x=x, indices=indices, axis=2, batch_dims=2)
+            return res
+
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            minimum_deployment_target=ct.target.iOS17,
+        )
+        loaded_pymil_prog = get_pymil_prog_from_mlmodel(mlmodel)
+        assert get_op_types_in_program(loaded_pymil_prog) == get_op_types_in_program(prog)
+
+
 @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
 class TestE2ENumericalCorrectness:
     @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")

@@ -3,12 +3,13 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import List
+from typing import Callable, List, Optional
 
 import numpy as np
 
 from coremltools.converters.mil.mil import Block, Operation
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+
 
 class classproperty(property):
     """
@@ -17,7 +18,8 @@ class classproperty(property):
     def __get__(self, owner, cls):
         return self.fget(cls)
 
-def block_context_manager(func):
+
+def block_context_manager(_func: Optional[Callable] = None):
     """
     This decorator executes a function under the context manager `with block`.
     For instance, given a function `func` with an input block and other arguments:
@@ -44,6 +46,7 @@ def block_context_manager(func):
     since when the code exit `block`, an expensive _propagate_nonreplaceable_vars() is invoked.
     The decorator reduces the amount of calling `with block` overally.
     """
+
     def wrapper(*args):
         # Make it compatible with class method.
         if isinstance(args[0], AbstractGraphPass):
@@ -56,8 +59,10 @@ def block_context_manager(func):
                 "The function decorated with block_context_manager must have a Block "
                 "type argument as the first input."
             )
+
         with block:
-            return func(*args)
+            return _func(*args)
+
     return wrapper
 
 

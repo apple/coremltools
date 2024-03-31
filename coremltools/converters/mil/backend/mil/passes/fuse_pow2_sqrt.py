@@ -29,7 +29,7 @@ def _match_pattern(op):
     # if we have sqrt, check for pow(2)
     elif sqrt_op and child_ops[0].op_type == "pow" and child_ops[0].y.val == 2:
         pow_op = child_ops[0]
-    
+
     # if we don't have both ops, fast fail
     if not pow_op or not sqrt_op:
         return None
@@ -59,8 +59,10 @@ def _try_to_transform(op1, op2, block):
 
 @block_context_manager
 def _fuse_pow2_sqrt(block):
-    fusion_status = False
+    fusion_occurred = False
     for op in list(block.operations):
+        if op.enclosing_block is None:
+            continue
         for b in op.blocks:
             block_changed = True
             while block_changed:
@@ -70,11 +72,9 @@ def _fuse_pow2_sqrt(block):
 
         op2 = _match_pattern(op)
         if op2 is not None:
-            fusion_status = _try_to_transform(op, op2, block)
-            # has to break as the downstream iterator is affected.
-            if fusion_status:
-                return fusion_status
-    return fusion_status
+            if _try_to_transform(op, op2, block):
+                fusion_occurred = True
+    return fusion_occurred
 
 
 @register_pass(namespace="mil_backend")

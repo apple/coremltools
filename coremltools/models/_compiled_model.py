@@ -16,6 +16,21 @@ except:
 
 
 class CompiledMLModel:
+
+    @staticmethod
+    def _init_check(path: str, compute_units: _ComputeUnit):
+        if _macos_version() < (10, 13):
+            raise Exception("Loading compiled Core ML models is only support on macOS 10.13 or higher.")
+        if _MLModelProxy is None:
+            raise Exception("Unable to load any compiled models. This is most likely because"
+                            " coremltools was installed from an egg rather than a wheel.")
+
+        if not isinstance(path, str):
+            raise TypeError('The "path" parameter must be of type "str".')
+        if not isinstance(compute_units, _ComputeUnit):
+            raise TypeError('The "compute_units" parameter must be of type: "coremltools.ComputeUnit".')
+
+
     def __init__(self, path: str, compute_units: _ComputeUnit =_ComputeUnit.ALL):
         """
         Loads a compiled Core ML model.
@@ -46,19 +61,9 @@ class CompiledMLModel:
         --------
         predict
         """
-        if _macos_version() < (10, 13):
-            raise Exception("Loading compiled Core ML models is only support on macOS 10.13 or higher.")
-        if _MLModelProxy is None:
-            raise Exception("Unable to load any compiled models. This is most likely because"
-                            " coremltools was installed from an egg rather than a wheel.")
-
-        if not isinstance(path, str):
-            raise TypeError('The "path" parameter must be of type "str".')
-        if not isinstance(compute_units, _ComputeUnit):
-            raise TypeError('The "compute_units" parameter must be of type: "coremltools.ComputeUnit".')
+        self._init_check(path, compute_units)
 
         path = _expanduser(path)
-
         self._proxy = _MLModelProxy(path, compute_units.name)
 
 

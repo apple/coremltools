@@ -93,11 +93,11 @@ class quantize(Operation):
                   ``input.shape[axis]``; that is, equal to ``3``.
                 - This is broadcasted to ``(1, 3, 1, 1)``.
 
-    axis: const tensor<int32, []> (Optional)
-
     output_dtype: const tensor<string, []> (Required)
         * This parameter can take ``"uint8"``, ``"int8"`` as values.
         * The ``output_dtype`` value must match the ``zero_point`` dtype.
+
+    axis: const tensor<int32, []> (Optional)
 
     Returns
     -------
@@ -224,8 +224,21 @@ class dequantize(Operation):
         _check_scale_zp_shapes(self.input, self.scale, self.zero_point, self.axis)
         return types.tensor(self.scale.dtype, self.input.shape)
 
-    @precondition(allow=VALUE)
-    def value_inference(self):
+    def can_materialize_val(self) -> bool:
+        if self.input.val is None:
+            return False
+        if self.scale.val is None:
+            return False
+        if self.zero_point is not None and self.zero_point.val is None:
+            return False
+        if self.axis is not None and self.axis.val is None:
+            return False
+        return True
+
+    def materialized_val_inference(self) -> np.ndarray:
+        if not self.can_materialize_val():
+            return None
+
         quantized_data = self.input.val
         if self.zero_point is not None:
             zero_point = self.zero_point.val

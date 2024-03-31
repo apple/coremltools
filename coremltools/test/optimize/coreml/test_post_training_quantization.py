@@ -114,7 +114,7 @@ def create_sparse_weight(weight, target_sparsity):
     return np.reshape(weight, shape).astype(np.float32)
 
 
-def verify_model_outputs(model, compressed_model, input_values):
+def verify_model_outputs(model, compressed_model, input_values, rtol=1e-7, atol=0):
     """
     This utility functions does the following checks:
 
@@ -144,7 +144,8 @@ def verify_model_outputs(model, compressed_model, input_values):
     de_output_dict = decompressed_model.predict(input_values)
     for k, v in de_output_dict.items():
         assert k in output_dict
-        np.testing.assert_allclose(v, output_dict[k])
+        np.testing.assert_allclose(v, output_dict[k], rtol=rtol, atol=atol)
+
 
 class TestLinearQuantizeWeights:
     @staticmethod
@@ -720,7 +721,9 @@ class TestDecompressWeights:
 
         pipeline = ct.PassPipeline.DEFAULT_PRUNING
 
-        pipeline.insert_pass(1, "compression::palettize_weights")
+        # Add a palettization pass after the pruning pass.
+        prune_pass_idx = pipeline.passes.index("compression::prune_weights")
+        pipeline.insert_pass(prune_pass_idx + 1, "compression::palettize_weights")
         config = cto.coreml.OptimizationConfig(
             global_config=cto.coreml.OpPalettizerConfig(mode="unique"),
         )
@@ -773,7 +776,9 @@ class TestConvertMixedCompression:
 
         pipeline = ct.PassPipeline.DEFAULT_PRUNING
 
-        pipeline.insert_pass(1, "compression::palettize_weights")
+        # Add a palettization pass after the pruning pass.
+        prune_pass_idx = pipeline.passes.index("compression::prune_weights")
+        pipeline.insert_pass(prune_pass_idx + 1, "compression::palettize_weights")
         config = cto.coreml.OptimizationConfig(
             global_config=cto.coreml.OpPalettizerConfig(mode="unique"),
         )

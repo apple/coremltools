@@ -80,9 +80,15 @@ def convert_to_coreml_inputs(input_description, inputs):
     return coreml_inputs
 
 
-def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"),
-                       converter_input_type=None, compute_unit=ct.ComputeUnit.CPU_ONLY,
-                       minimum_deployment_target=None):
+def convert_to_mlmodel(
+    model_spec,
+    tensor_inputs,
+    backend=("neuralnetwork", "fp32"),
+    converter_input_type=None,
+    compute_unit=ct.ComputeUnit.CPU_ONLY,
+    minimum_deployment_target=None,
+    converter=ct.convert,
+):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
             return [_convert_to_inputtype(x) for x in inputs]
@@ -106,9 +112,15 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp3
         inputs = None
         outputs = None
 
-    return ct_convert(model_spec, inputs=inputs, convert_to=backend,
-                      source="pytorch", compute_units=compute_unit,
-                      minimum_deployment_target=minimum_deployment_target)
+    return ct_convert(
+        model_spec,
+        inputs=inputs,
+        convert_to=backend,
+        source="pytorch",
+        compute_units=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
+        converter=converter,
+    )
 
 
 def generate_input_data(input_size, rand_range=(0, 1), torch_device=torch.device("cpu")):
@@ -162,6 +174,7 @@ def convert_and_compare(
     converter_input_type=None,
     compute_unit=ct.ComputeUnit.CPU_ONLY,
     minimum_deployment_target=None,
+    converter=ct.convert,
 ):
     """
     If expected results is not set, it will by default
@@ -175,6 +188,9 @@ def convert_and_compare(
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec
+    if _HAS_TORCH_EXPORT_API:
+        if isinstance(torch_model, ExportedProgram):
+            torch_model = torch_model.module()
 
     if not isinstance(input_data, (list, tuple)):
         input_data = [input_data]
@@ -183,10 +199,15 @@ def convert_and_compare(
         torch_input = _copy_input_data(input_data)
         expected_results = torch_model(*torch_input)
     expected_results = flatten_and_detach_torch_results(expected_results)
-    mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend,
-                                 converter_input_type=converter_input_type,
-                                 compute_unit=compute_unit,
-                                 minimum_deployment_target=minimum_deployment_target,)
+    mlmodel = convert_to_mlmodel(
+        model_spec,
+        input_data,
+        backend=backend,
+        converter_input_type=converter_input_type,
+        compute_unit=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
+        converter=converter,
+    )
 
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
 
@@ -236,6 +257,7 @@ class TorchBaseTest:
         minimum_deployment_target=None,
         torch_device=torch.device("cpu"),
         frontend=TorchFrontend.TORCHSCRIPT,
+        converter=ct.convert,
     ):
         """
         Traces a model and runs a numerical test.
@@ -286,6 +308,7 @@ class TorchBaseTest:
             converter_input_type=converter_input_type,
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
+            converter=converter,
         )
 
         return model_spec, mlmodel, coreml_inputs, coreml_results, \

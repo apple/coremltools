@@ -8,9 +8,11 @@ import pytest
 
 import coremltools as ct
 from coremltools import _logger as logger
+from coremltools.converters.mil import mil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
+from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource, add_graph_pass_scope
 
 np.random.seed(0)
 
@@ -375,7 +377,7 @@ class TestMILBuilderAPI:
         def func_3(x):
             return x
 
-        prog = Program()
+        prog = mil.Program()
         prog.add_function("func_1", func_1)
         prog.add_function("func_2", func_2)
         prog.add_function("func_3", func_3)
@@ -397,12 +399,12 @@ class TestMILBuilderAPI:
 
         err_msg = "all functions must have the same opset_version."
 
-        prog = Program()
+        prog = mil.Program()
         prog.add_function("func_1", func_1)
         with pytest.raises(ValueError, match=err_msg):
             prog.add_function("func_2", func_2)
 
-        prog = Program()
+        prog = mil.Program()
         prog.add_function("func_2", func_2)
         with pytest.raises(ValueError, match=err_msg):
             prog.add_function("func_1", func_1)
@@ -553,21 +555,1422 @@ class TestMILBasic:
                     prog,
                     convert_to="mlprogram",
                     minimum_deployment_target=ct.target.iOS16,
+                    pass_pipeline=ct.PassPipeline.EMPTY,
                     compute_units=ct.ComputeUnit.CPU_ONLY,
                     compute_precision=compute_precision,
                 )
 
-        # If the transpose is removed by optimization passes, the conversion goes through
+        # If the transpose is removed by graph pass merge_affine_dequantize_with_consecutive_ops,
+        # the conversion goes through
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
         def prog(x):
             constexpr = CONSTEXPR_FUNCS["constexpr_affine_dequantize"]((4, 3))
             constexpr = mb.transpose(x=constexpr, perm=[0, 1])
             return mb.linear(x=x, weight=constexpr)
 
-            mlmodel = ct.convert(
-                prog,
-                convert_to="mlprogram",
-                minimum_deployment_target=ct.target.iOS16,
-                compute_units=ct.ComputeUnit.CPU_ONLY,
-                compute_precision=compute_precision,
-            )
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS16,
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            compute_precision=compute_precision,
+        )
+
+class TestScope:
+    @staticmethod
+    def test_basic_single_TorchScript_scope():
+        # single scope with scope_name and scope_type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data="module_1"),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="Module1"),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["module_1"]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["Module1"]
+
+        # single scope with scope_name and scope_type with list type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1"]),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["module_1"]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["Module1"]
+
+        # single scope with scope_type and no scope_name
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["module_1"]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op.scopes
+
+        # nested scope in a single mb.scope call. Both scope_name and scope_type provided
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1", "module_2"]
+                ),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1", "Module2"]),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == [
+            "module_1",
+            "module_2",
+        ]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "Module1",
+            "Module2",
+        ]
+
+        # nested scope in a single mb.scope call. Only scope_type provided
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1", "module_2"]
+                ),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+        ]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op.scopes
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["", ""]),
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1", "module_2"]
+                ),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["", ""]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+        ]
+
+    @staticmethod
+    def test_basic_nested_TorchScript_scope():
+        # nested scope with scope_name and scope_type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data="module_1"),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="Module1"),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data="module_2"),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="Module2"),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == [
+            "module_1",
+            "module_2",
+        ]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "Module1",
+            "Module2",
+        ]
+
+        add_op_2 = prog.find_ops(op_type="add")[1]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["module_1"]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["Module1"]
+
+        # nested scope with scope_name and scope_type with list type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1"]),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_2"]),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module2"]),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == [
+            "module_1",
+            "module_2",
+        ]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "Module1",
+            "Module2",
+        ]
+
+        add_op_2 = prog.find_ops(op_type="add")[1]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["module_1"]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["Module1"]
+
+        # nested scope with scope_name and no scope_type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_2"]),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op_1.scopes
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+        ]
+
+        add_op_2 = prog.find_ops(op_type="add")[1]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op_2.scopes
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["module_1"]
+
+        # nested scope in a nested mb.scope call. Both scope_name and scope_type provided
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1", "module_2"]
+                ),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1", "Module2"]),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data="module_3"),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="Module3"),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == [
+            "module_1",
+            "module_2",
+            "module_3",
+        ]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "Module1",
+            "Module2",
+            "Module3",
+        ]
+
+        add_op_2 = prog.find_ops(op_type="add")[1]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == [
+            "module_1",
+            "module_2",
+        ]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "Module1",
+            "Module2",
+        ]
+
+        # nested scope in a single mb.scope call. Only scope_type provided
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1", "module_2"]
+                ),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op_1.scopes
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+            "module_3",
+        ]
+
+        add_op_2 = prog.find_ops(op_type="add")[1]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op_2.scopes
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+        ]
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1", "module_2"]
+                ),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["", ""]),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+            "module_3",
+        ]
+        assert add_op_1.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["", ""]
+
+        add_op_2 = prog.find_ops(op_type="add")[1]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+        ]
+        assert add_op_2.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["", ""]
+
+    @staticmethod
+    def test_graph_pass_scope_handling():
+        # default list type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.COREMLTOOLS_GRAPH_PASS,
+                    data="pass_1",
+                ),
+            ):
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.COREMLTOOLS_GRAPH_PASS] == [
+            "pass_1",
+        ]
+
+        # data cannot have len > 1
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(
+                ValueError, match="COREMLTOOLS_GRAPH_PASS scope cannot have len > 1."
+            ):
+                with mb.scope(
+                    ScopeInfo(
+                        source=ScopeSource.COREMLTOOLS_GRAPH_PASS,
+                        data=["pass_1", "pass_2"],
+                    ),
+                ):
+                    return mb.add(x=x, y=0.0)
+            return x
+
+        # nested graph pass scope is allowed
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.COREMLTOOLS_GRAPH_PASS,
+                    data="pass_1",
+                ),
+            ):
+                with mb.scope(
+                    ScopeInfo(
+                        source=ScopeSource.COREMLTOOLS_GRAPH_PASS,
+                        data="pass_2",
+                    ),
+                ):
+                    return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.COREMLTOOLS_GRAPH_PASS] == [
+            "pass_1",
+            "pass_2",
+        ]
+
+    @staticmethod
+    def test_EXIR_scope_handling():
+        # default list type
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[1])):
+                return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.EXIR_DEBUG_HANDLE] == [1]
+
+        # data cannot have len > 1
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(ValueError, match="EXIR_DEBUG_HANDLE scope cannot have len > 1."):
+                with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[2, 3])):
+                    return mb.add(x=x, y=0.0)
+            return x
+
+        # nested graph pass scope is allowed
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None])):
+                with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[0])):
+                    return mb.add(x=x, y=0.0)
+
+        add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.EXIR_DEBUG_HANDLE] == [None, 0]
+
+    @staticmethod
+    def test_invalid_dtype_error_out():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(
+                ValueError,
+                match="Scope must be type of List\[str\]. Got element 9 with type \<class 'int'\>.",
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["m1", 9]),
+                    ScopeInfo(
+                        source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1", "Module2"]
+                    ),
+                ):
+                    return mb.add(x=x, y=5.4)
+
+            with pytest.raises(
+                ValueError,
+                match="Scope must be type of List\[str\]. Got element 0 with type \<class 'int'\>.",
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["m1", "m2"]),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1", 0]),
+                ):
+                    return mb.add(x=x, y=5.4)
+            return x
+
+    @staticmethod
+    def test_empty_scope():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope():
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert ScopeSource.TORCHSCRIPT_MODULE_TYPE not in add_op.scopes
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op.scopes
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope():
+                with mb.scope():
+                    return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert ScopeSource.TORCHSCRIPT_MODULE_TYPE not in add_op.scopes
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op.scopes
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope():
+                with mb.scope(ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="m1")):
+                    with mb.scope():
+                        return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == ["m1"]
+        assert ScopeSource.TORCHSCRIPT_MODULE_NAME not in add_op.scopes
+
+
+    @staticmethod
+    def test_empty_scope_type_error_out():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(
+                ValueError, match="TORCHSCRIPT_MODULE_TYPE scope info cannot contains empty string."
+            ):
+                with mb.scope(ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="")):
+                    with mb.scope():
+                        return mb.add(x=x, y=5.4)
+
+            with pytest.raises(
+                ValueError, match="TORCHSCRIPT_MODULE_TYPE scope info cannot contains empty string."
+            ):
+                with mb.scope(
+                    ScopeInfo(
+                        source=ScopeSource.TORCHSCRIPT_MODULE_TYPE,
+                        data=["a", ""],
+                    )
+                ):
+                    with mb.scope():
+                        return mb.add(x=x, y=5.4)
+            return x
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_TYPE,
+                    data=["module_1"],
+                )
+            ):
+                with pytest.raises(
+                    ValueError,
+                    match="TORCHSCRIPT_MODULE_TYPE scope info cannot contains empty string.",
+                ):
+                    with mb.scope(
+                        ScopeInfo(
+                            source=ScopeSource.TORCHSCRIPT_MODULE_TYPE,
+                            data=[""],
+                        )
+                    ):
+                        return mb.add(x=x, y=5.4)
+                with pytest.raises(
+                    ValueError,
+                    match="TORCHSCRIPT_MODULE_TYPE scope info cannot contains empty string.",
+                ):
+                    with mb.scope(
+                        ScopeInfo(
+                            source=ScopeSource.TORCHSCRIPT_MODULE_TYPE,
+                            data=["a", "", ""],
+                        )
+                    ):
+                        return mb.add(x=x, y=5.4)
+            return x
+
+    @staticmethod
+    def test_white_space_handling():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=[" module_1  "]),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=[" Module1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=[" pass_1"]),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == [
+            "module_1",
+        ]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "Module1",
+        ]
+        assert add_op.scopes[ScopeSource.COREMLTOOLS_GRAPH_PASS] == [
+            "pass_1",
+        ]
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=[" Module1   ", " "]),
+                ScopeInfo(
+                    source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=[" module_1 ", " module_2 "]
+                ),
+            ):
+                return mb.add(x=x, y=5.4)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
+            "module_1",
+            "module_2",
+        ]
+        assert add_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME] == ["Module1", ""]
+
+    @staticmethod
+    def test_duplicated_scope_source_error_out():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(
+                ValueError, match="Scope source ScopeSource.TORCHSCRIPT_MODULE_TYPE duplicated."
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="a1"),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data="a2"),
+                ):
+                    return mb.add(x=x, y=5.4)
+            return x
+
+    @staticmethod
+    def test_check_prog_has_scope_error_out():
+        def get_prog():
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+            def prog(x):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["Module1"]),
+                ):
+                    x = mb.add(x=x, y=5.4)
+                x = mb.relu(x=x, name="invalid_op")
+                return x
+
+            return prog
+
+        prog = get_prog()
+        prog._add_essential_scope_source(
+            [ScopeSource.TORCHSCRIPT_MODULE_TYPE, ScopeSource.TORCHSCRIPT_MODULE_NAME]
+        )
+        with pytest.raises(
+            ValueError, match="is missing essential scopes ScopeSource.TORCHSCRIPT_MODULE_TYPE"
+        ):
+            prog.validate(check_essential_scope=True)
+
+        # If check_essential_scope is not passes, it will not error out
+        prog.validate()
+
+        # No error if no essential scope source are set
+        prog = get_prog()
+        prog.validate(check_essential_scope=True)
+
+    @staticmethod
+    def test_invalid_scope_source_type():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(TypeError, match="'source' must be \<enum 'ScopeSource'\>"):
+                with mb.scope(
+                    ScopeInfo(source="invalid_source", data="a1"),
+                ):
+                    return mb.add(x=x, y=5.4)
+            return x
+
+    @staticmethod
+    def test_invalid_scope_info_type():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with pytest.raises(
+                ValueError,
+                match="mb.scope only accepts inputs of type ScopeInfo. Got \<class 'str'\>.",
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+                    "invalid",
+                ):
+                    return mb.add(x=x, y=5.4)
+            return x
+
+    @staticmethod
+    def test_scope_setter_immutable():
+        """
+        When setting the `scopes` property for an op, the value should be deep copied.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+            ):
+                x = mb.add(x=x, y=5.4)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_2"]),
+            ):
+                y = mb.add(x=x, y=5.4)
+
+            x.scopes = y.scopes
+            y.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME][0] = "invalid"
+            assert x.scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME][0] == "module_2"
+
+            return x
+
+    @staticmethod
+    def test_scopes_for_function_inputs():
+        """
+        If a var's parent op is a placeholder, we cannot set its scopes.
+        And its scopes is an empty dictionary.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            assert len(x.scopes) == 0
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+            ):
+                y = mb.add(x=x, y=5.4)
+
+            with pytest.raises(
+                ValueError,
+                match="Cannot set scopes to a function input var",
+            ):
+                x.scopes = y.scopes
+
+            return y
+
+    @staticmethod
+    def test_add_graph_pass_scope():
+        """
+        Test the rules of merging two scopes.
+        """
+        # Rule of merging COREMLTOOLS_GRAPH_PASS
+        old_scopes = {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        new_scopes = {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2", "pass_3"],
+        }
+        res = dict(add_graph_pass_scope(old_scopes, new_scopes))
+
+        assert res == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2", "pass_3"],
+        }
+
+        # Ensure we make a copy of the list
+        old_scopes[ScopeSource.COREMLTOOLS_GRAPH_PASS][0] = "invalid"
+        assert res == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2", "pass_3"],
+        }
+        new_scopes[ScopeSource.COREMLTOOLS_GRAPH_PASS][0] = "invalid"
+        assert res == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2", "pass_3"],
+        }
+
+        # Another test
+        old_scopes = {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.TORCHSCRIPT_MODULE_NAME: ["a1"],
+        }
+        new_scopes = {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        res = add_graph_pass_scope(old_scopes, new_scopes)
+
+        assert res == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.TORCHSCRIPT_MODULE_NAME: ["a1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+        # Ensure we make a copy of the list
+        old_scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE][0] = "invalid"
+        assert res == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.TORCHSCRIPT_MODULE_NAME: ["a1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        old_scopes[ScopeSource.TORCHSCRIPT_MODULE_NAME][0] = "invalid"
+        assert res == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.TORCHSCRIPT_MODULE_NAME: ["a1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+        # Test for other scope source
+        old_scopes = {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.TORCHSCRIPT_MODULE_NAME: ["a1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        new_scopes = {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+        }
+
+        with pytest.raises(
+            AssertionError,
+            match="Only ScopeSource.COREMLTOOLS_GRAPH_PASS is allowed in the graph_pass_scopes.",
+        ):
+            add_graph_pass_scope(old_scopes, new_scopes)
+
+    @staticmethod
+    def test_scope_preservation_when_reconnect_graph():
+        """
+        If the _replace_var is doing reconnection of the graph, without any new op introduced,
+        no scope information is going to change.
+        """
+
+        def get_prog():
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+            def prog(x):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ):
+                    relu = mb.relu(x=x)
+
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_2"]),
+                ):
+                    sin = mb.sin(x=x)
+
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+                ):
+                    return mb.relu(x=relu)
+
+            return prog
+
+        # Case 1: No graph pass is involved, and only reconnect graph is done.
+        # Scope information will not change.
+        prog = get_prog()
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+        }
+
+        block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+        }
+
+        # Case 2: Even the reconnection happens under graph pass, nothing will change.
+        prog = get_prog()
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["dummy_pass"])):
+            block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+        }
+
+        # Case 3: old_var and new_var are created under a graph pass, and the reconnection happens under the
+        # same graph pass. Nothing will change still.
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["dummy_pass"])):
+            prog = get_prog()
+            block = prog.functions["main"]
+            ops = list(block.operations)
+            var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+            assert var_1.scopes == {
+                ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+            }
+            assert var_2.scopes == {
+                ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+            }
+
+            block._replace_var(var_1, var_2)
+            assert var_2.scopes == {
+                ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+            }
+
+        # Case 4: Ops are created under a graph pass, and the reconnection happens outside the graph pass.
+        # Nothing happens.
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["dummy_pass"])):
+            prog = get_prog()
+            block = prog.functions["main"]
+            ops = list(block.operations)
+            var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+
+        block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+
+        # Case 5: Ops are created under a graph pass 1, and the reconnection happens under graph pass2.
+        # Nothing happens.
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["dummy_pass"])):
+            prog = get_prog()
+            block = prog.functions["main"]
+            ops = list(block.operations)
+            var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["dummy_pass_2"])):
+            block._replace_var(var_1, var_2)
+
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["dummy_pass"],
+        }
+
+        # Case 6. old_var and new_var are created under the same graph pass
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                sin = mb.sin(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"])):
+            block._replace_var(var_1, var_2)
+
+        assert var_1.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+    @staticmethod
+    def test_scope_passdown_when_new_var_created_under_graph_pass():
+        """
+        If a new_var is created by a graph pass, and the _replace_var happens under the same graph pass,
+        the scope information from the old_var is passed to new_var.
+        """
+
+        def get_prog():
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+            def prog(x):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                    ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+                ):
+                    # This op is created by pass_1
+                    relu = mb.relu(x=x)
+
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+                ):
+                    # This op is newly created by a pass_2
+                    sin = mb.sin(x=x)
+
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+                ):
+                    return mb.relu(x=relu)
+
+            return prog
+
+        # Case 1: _replace_var happens outside the graph pass. Nothing happens
+        prog = get_prog()
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        # Case 2: new_var created under a pass_2, and _replace_var happens under pass_2. Scope info is passed from the old_var
+        # to the new_var
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        with prog.functions["main"] as block:
+            op_1, op_2 = list(block.operations)
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                # This op is newly created by a pass_2
+                sin = mb.sin(x=block.inputs["x"], before_op=op_2)
+                block._replace_var(op_1.outputs[0], sin)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2"],
+        }
+
+        # Case 3: new_var created under a pass_2, but _replace_var happens under pass_3.
+        # Nothing happens.
+        prog = get_prog()
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_3"])):
+            block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        # Case 4: new_var created under pass_2, and be passed down some scope info,
+        # so even though _replace_var happens under pass_2 again, nothing happens.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_2"]),
+            ):
+                # This op is newly created by a pass_2, and other scope info already passed down
+                sin = mb.sin(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"])):
+            block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_2"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        # Case 5: new_var created under pass_2, but the graph pass already finished,
+        # so even though _replace_var happens under pass_2 again, nothing happens.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                # This op is newly created by a pass_2, and other scope info already passed down
+                sin = mb.sin(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"])):
+            block._replace_var(var_1, var_2)
+        assert var_1.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2"],
+        }
+
+        # Case 6: new_var created under nested graph passes scope. And graph pass happens under pass_3.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_3"]),
+                ):
+                    sin = mb.sin(x=block.inputs["x"], before_op=ops[1])
+                    block._replace_var(ops[0].outputs[0], sin)
+
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2", "pass_3"],
+        }
+
+        # Case 7: new_var created under nested graph passes scope. And graph pass happens under pass_2. Nothing will happen in this case, since new_var is created under pass_3.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_3"]),
+                ):
+                    sin = mb.sin(x=block.inputs["x"], before_op=ops[1])
+                block._replace_var(ops[0].outputs[0], sin)
+
+        ops = list(block.operations)
+        var_1, var_2 = ops[0].outputs[0], ops[1].outputs[0]
+        assert var_1.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+        assert var_2.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_2", "pass_3"],
+        }
+
+    @staticmethod
+    def test_scope_passdown_resursive():
+        """
+        Test the resursive back propagation when passing down scope info.
+        """
+        # Case 1
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_3"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                # The subgraph is constructed under pass_2
+                y = mb.leaky_relu(x=block.inputs["x"], alpha=0.8, before_op=ops[1])
+                y = mb.add(x=y, y=y, before_op=ops[1])
+                y = mb.leaky_relu(x=y, alpha=0.4, before_op=ops[1])
+
+                block._replace_var(ops[0].outputs[0], y)
+
+        ops = list(block.operations)
+        assert ops[0].outputs[0].scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+        add_ops = block.find_ops(op_type="add")
+        const_ops = block.find_ops(op_type="const")
+        leaky_relu_ops = block.find_ops(op_type="leaky_relu")
+
+        assert len(add_ops) == 1
+        assert len(const_ops) == 2
+        assert len(leaky_relu_ops) == 2
+
+        for op in leaky_relu_ops + add_ops + const_ops:
+            assert op.scopes == {
+                ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2"],
+            }
+
+        # Case 2: Test for VALID_OPS_TO_COPY_SCOPE_INFO in the scope back propagation
+        # The same var cannot be visited twice
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                # The subgraph is constructed under pass_2
+                relu = ops[0].outputs[0]
+
+                y = mb.leaky_relu(x=relu, alpha=0.8, before_op=ops[1])
+                y = mb.concat(values=[y, y, relu, y], axis=0, before_op=ops[1])
+                y1, y2, y3, y4 = mb.split(x=y, axis=0, num_splits=4, before_op=ops[1])
+
+                block._replace_var(relu, y1, anchor_op=y1.op)
+
+        ops = list(block.operations)
+        relu_ops = block.find_ops(op_type="relu")
+        leaky_relu_op = block.find_ops(op_type="leaky_relu")[0]
+        concat_op = block.find_ops(op_type="concat")[0]
+        split_op = block.find_ops(op_type="split")[0]
+
+        for op in [leaky_relu_op, concat_op, split_op]:
+            assert op.scopes == {
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2"],
+            }
+
+        for op in relu_ops:
+            assert op.scopes == {
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+            }
+
+        # Case 3: Similar to case 2, but the relu op has torch scope.
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=x)
+
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                return mb.relu(x=relu)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_2"]),
+            ):
+                # The subgraph is constructed under pass_2
+                relu = ops[0].outputs[0]
+
+                y = mb.leaky_relu(x=relu, alpha=0.8, before_op=ops[1])
+                y = mb.concat(values=[y, y, relu, y], axis=0, before_op=ops[1])
+                y1, y2, y3, y4 = mb.split(x=y, axis=0, num_splits=4, before_op=ops[1])
+
+                block._replace_var(relu, y1, anchor_op=y1.op)
+
+        ops = list(block.operations)
+        relu_ops = block.find_ops(op_type="relu")
+        leaky_relu_op = block.find_ops(op_type="leaky_relu")[0]
+        concat_op = block.find_ops(op_type="concat")[0]
+        split_op = block.find_ops(op_type="split")[0]
+
+        for op in [leaky_relu_op, concat_op, split_op]:
+            assert op.scopes == {
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1", "pass_2"],
+                ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            }
+
+        for op in relu_ops:
+            assert op.scopes == {
+                ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+                ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["module_1"],
+            }
+
+    @staticmethod
+    def test_scope_passdown_function_input_var():
+        """
+        If the old_var is function input var, and then the converter sets some default value for each scope source.
+        """
+        # Case 1: with no essential scope set, no scope information is passed down
+        def get_prog():
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+            def prog(x):
+                with mb.scope(
+                    ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=["module_1"]),
+                ):
+                    return mb.sin(x=x)
+            return prog
+
+        prog = get_prog()
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=block.inputs["x"], before_op=ops[0])
+                block._replace_var(block.inputs["x"], relu)
+
+        assert relu.scopes == {
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+        # Case 2: essential scope set to TORCHSCRIPT_MODULE_TYPE
+        prog = get_prog()
+        prog._add_essential_scope_source(ScopeSource.TORCHSCRIPT_MODULE_TYPE)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=block.inputs["x"], before_op=ops[0])
+                block._replace_var(block.inputs["x"], relu)
+
+        assert relu.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_TYPE: ["__COREML__::TORCHSCRIPT_PLACEHOLDER"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+        # Case 3: essential scope set to TORCHSCRIPT_MODULE_NAME
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=["module_1"]),
+            ):
+                return mb.sin(x=x)
+
+        prog._add_essential_scope_source(ScopeSource.TORCHSCRIPT_MODULE_NAME)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=block.inputs["x"], before_op=ops[0])
+                block._replace_var(block.inputs["x"], relu)
+
+        assert relu.scopes == {
+            ScopeSource.TORCHSCRIPT_MODULE_NAME: ["__COREML__::TORCHSCRIPT_PLACEHOLDER_x"],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }
+
+        # Case 4: essential scope set to EXIR_DEBUG_HANDLE
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+        def prog(x):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[1]),
+            ):
+                return mb.sin(x=x)
+
+        prog._add_essential_scope_source(ScopeSource.EXIR_DEBUG_HANDLE)
+
+        block = prog.functions["main"]
+        ops = list(block.operations)
+
+        with block:
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=["pass_1"]),
+            ):
+                # This op is created by pass_1
+                relu = mb.relu(x=block.inputs["x"], before_op=ops[0])
+                block._replace_var(block.inputs["x"], relu)
+
+        assert relu.scopes == {
+            ScopeSource.EXIR_DEBUG_HANDLE: [None],
+            ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
+        }

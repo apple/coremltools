@@ -313,7 +313,11 @@ class TestDequantize(TestQuantizationBase):
             zero_point=np.uint8(1),
             scale=np.float32(2),
         )
-        np.testing.assert_allclose(np.float32([[0, 2, 4], [0, 2, 4]]), v.val)
+        assert v.val is None
+        np.testing.assert_allclose(
+            np.float32([[0, 2, 4], [0, 2, 4]]),
+            v.op.materialized_val_inference(),
+        )
 
     @ssa_fn
     def test_builder_eval_vector_params(self):
@@ -323,8 +327,10 @@ class TestDequantize(TestQuantizationBase):
             scale=np.array([1, 2]).astype(np.float32),
             axis=3,
         )
+        assert v.val is None
         np.testing.assert_allclose(
-            np.array([1, 2, 3, 4]).reshape(1, 1, 2, 2).astype(np.float32), v.val
+            np.array([1, 2, 3, 4]).reshape(1, 1, 2, 2).astype(np.float32),
+            v.op.materialized_val_inference(),
         )
 
     @ssa_fn
@@ -333,7 +339,11 @@ class TestDequantize(TestQuantizationBase):
             input=np.array([[0, 1, 2], [0, 1, 2]]).astype(np.int8),
             scale=np.float32(2),
         )
-        np.testing.assert_allclose(np.float32([[0, 2, 4], [0, 2, 4]]), v.val)
+        assert v.val is None
+        np.testing.assert_allclose(
+            np.float32([[0, 2, 4], [0, 2, 4]]),
+            v.op.materialized_val_inference(),
+        )
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_smoke_builder_to_backend_dequantize_per_tensor(self, compute_unit, backend):

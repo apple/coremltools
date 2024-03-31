@@ -3,21 +3,24 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
 import numpy as _np
 import torch as _torch
 
 from coremltools import _logger as logger
+from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Var, types
 
+from .ops import _create_linear_layer, _get_inputs, promote_input_dtypes
+from .torch_op_registry import register_torch_op
 from .utils import (
     NUM_TO_TORCH_DTYPE,
     TORCH_QTYPE_TO_NP_TYPE,
     TORCH_QTYPE_TO_STR,
+    TYPE_TO_DTYPE_STRING,
     TorchFrontend,
 )
-from .ops import _create_linear_layer, _get_inputs, promote_input_dtypes
-from .torch_op_registry import register_torch_op
 
 
 def _quantize_general(
@@ -72,10 +75,16 @@ def _quantize_general(
         axis=axis,
     )
     context.add(result, node.name)
-    context.quant_context.add_quantization_info(node.name, torch_dtype, scale, zero_point, axis)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        context.quant_context.add_quantization_info(node.name, torch_dtype, scale, zero_point, axis)
 
 
-@register_torch_op(torch_alias=["quantized_decomposed::quantize_per_tensor"])
+@register_torch_op(
+    torch_alias=[
+        "quantized_decomposed::quantize_per_tensor",
+        "quantized_decomposed.quantize_per_tensor",
+    ]
+)
 def quantize_per_tensor(context, node):
     inputs = _get_inputs(
         context,
@@ -101,25 +110,81 @@ def quantize_per_channel(context, node):
     _quantize_general(context, node, input, scale, zero_point, torch_dtype, axis.val)
 
 
-@register_torch_op(torch_alias=["quantized_decomposed::dequantize_per_tensor"])
+def _dequantize_general(
+    context,
+    node,
+    input: Var,
+    scale: Var,
+    zero_point: Var,
+    axis: Var = None,
+) -> None:
+    # torch may use different dtype for input and zero_point,
+    # but Core ML requires input and zero_point to have a same dtype,
+    # so cast zero_point dtype to input dtype
+    if input.dtype != zero_point.dtype:
+        zero_point = mb.cast(x=zero_point, dtype=TYPE_TO_DTYPE_STRING[input.dtype])
+    # Not sure why torch may quantize a scalar... does not make sense,
+    # since the floating point scale is as big as the original floating point input data scalar
+    if input.rank == 0:
+        # For const input, translate to the const floating point scalar output
+        if input.val is not None:
+            output_value = scale.val * (input.val - zero_point.val)
+            output = mb.const(val=output_value)
+        # For variable input, we have no choice but to expand and squeeze,
+        # since CoreML dequantize op requires tensor input
+        else:
+            expanded_input = mb.expand_dims(x=input, axes=(0,))
+            dequantize_output = mb.dequantize(
+                input=expanded_input,
+                zero_point=zero_point,
+                scale=scale,
+                axis=axis,
+            )
+            output = mb.squeeze(x=dequantize_output)
+    else:
+        output = mb.dequantize(
+            input=input,
+            zero_point=zero_point,
+            scale=scale,
+            axis=axis,
+        )
+    context.add(output, node.name)
+
+
+@register_torch_op(
+    torch_alias=[
+        "quantized_decomposed::dequantize_per_tensor",
+        "quantized_decomposed.dequantize_per_tensor",
+        "quantized_decomposed::dequantize_per_channel",
+        "quantized_decomposed.dequantize_per_channel",
+    ]
+)
 def dequantize(context, node):
-    context.quant_context.get_dequantized_var(node.inputs[0], node.name)
-
-
-def _construct_constexpr_affine_op(quantized_weights, zero_point, scale, axis=None, name=None):
-    """Constructs the constexpr op to represent the dequantized weight from PyTorch's data."""
-    if axis is None:
-        # It's per-tensor quantization, just use a dummy value for axis.
-        axis = _np.int32(0)
-    kwargs = {
-        "quantized_data": quantized_weights,
-        "zero_point": zero_point,
-        "scale": scale,
-        "axis": axis,
-    }
-    if name is not None:
-        kwargs["name"] = name
-    return mb.constexpr_affine_dequantize(**kwargs)
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        context.quant_context.get_dequantized_var(node.inputs[0], node.name)
+    elif context.frontend == TorchFrontend.EXIR:
+        # ExecuTorch intends to use `min` and `max` to indicate quantization dtype, e.g.
+        #     min = -64, max = 63, torch_dtype = torch.int8
+        # means int4 quantization (torch_dtype = torch.int8 due to there is no torch.int4 yet)
+        # For now (2024-02-27), 2 issues preventing us from translating `min` and `max`
+        #     1. ExecuTorch has not fully added 4-bit quantization support yet, so no way to test
+        #     2. CoreML supports only 8-bit quantization yet, so no way to translate
+        # TODO(rdar://123421506): Translate `min` and `max` once the above 2 issues get resolved
+        inputs = _get_inputs(context, node, min_expected={TorchFrontend.EXIR: 6})
+        num_inputs = len(inputs)
+        if num_inputs == 6:
+            input, scale, zero_point, min, max, torch_dtype_number = inputs
+            axis = None
+        elif num_inputs == 7:
+            input, scale, zero_point, axis, min, max, torch_dtype_number = inputs
+        else:
+            raise ValueError(f"dequantize should have 6 or 7 inputs, but got {num_inputs}")
+        _dequantize_general(context, node, input, scale, zero_point, axis)
+    else:
+        raise ValueError(
+            "dequantize is supported only in TorchScript and EXIR frontends, "
+            f"but got {context.frontend}"
+        )
 
 
 def _dequantized_weight(qweight, name: str = None):
@@ -132,7 +197,7 @@ def _dequantized_weight(qweight, name: str = None):
         scale = _np.float32(qweight.q_scale())
         zero_point = quant_dtype_np(qweight.q_zero_point())
         quantized_weights = _torch.int_repr(qweight).numpy()
-        dequant_weights = _construct_constexpr_affine_op(
+        dequant_weights = _utils._construct_constexpr_affine_op(
             quantized_weights, zero_point, scale, axis=None, name=name
         )
     # per_channel_affine_float_qparams is same as per_channel_affine except that it
@@ -158,7 +223,7 @@ def _dequantized_weight(qweight, name: str = None):
             zero_point = quant_dtype_np(val)
         quantized_weights = _torch.int_repr(qweight).numpy()
         axis = _np.int32(qweight.q_per_channel_axis())
-        dequant_weights = _construct_constexpr_affine_op(
+        dequant_weights = _utils._construct_constexpr_affine_op(
             quantized_weights, zero_point, scale, axis=axis, name=name
         )
     else:

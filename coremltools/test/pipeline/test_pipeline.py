@@ -12,6 +12,7 @@ import pytest
 
 import coremltools as ct
 from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
+from coremltools.converters.mil import mil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program
 from coremltools.models.pipeline import PipelineClassifier, PipelineRegressor
@@ -238,7 +239,7 @@ class TestMakePipeline:
         weight_tensor = np.arange(input_length * output_length, dtype='float32')
         weight_tensor = weight_tensor.reshape(output_length, input_length)
 
-        prog = Program()
+        prog = mil.Program()
         func_inputs = {input_name: mb.placeholder(shape=(input_length,))}
         with Function(func_inputs) as ssa_fun:
             input = ssa_fun.inputs[input_name]
@@ -319,7 +320,7 @@ class TestMakePipeline:
     @staticmethod
     def test_second_model_needs_pipeline_input():
         # First model takes one parameter
-        p1 = Program()
+        p1 = mil.Program()
         func_inputs = {'x1': mb.placeholder(shape=(2,))}
         with Function(func_inputs) as ssa_fun:
             x1 = ssa_fun.inputs['x1']
@@ -330,7 +331,7 @@ class TestMakePipeline:
 
         # Second model takes two parameters. One will be from previous model in pipeline.
         # The other as pipeline input.
-        p2 = Program()
+        p2 = mil.Program()
         func_inputs = {
             'y1': mb.placeholder(shape=(2,)),
             'x2': mb.placeholder(shape=(2,)),

@@ -2,14 +2,20 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import itertools
 
-from typing import List, Optional
+import itertools
+import math as math
+from typing import List, Optional, Union
+
+import numpy as _np
 
 from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Var, types
-from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
+from coremltools.converters.mil.mil import Operation, Var, types
+from coremltools.converters.mil.mil.ops.defs._utils import (
+    parse_einsum_equation,
+    promote_input_dtypes,
+)
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 
@@ -230,6 +236,31 @@ def get_output_names(outputs) -> Optional[List[str]]:
     return output_names
 
 
+# This is a workaround in Core ML for topk with dynamic `k`:
+#     * Core ML topk supports only constant `k`
+#     * Luckily, Core ML gather supports dynamic `end`, so we workaround by argsort then gather
+# This leads to a slightly different behaviour, though: top-k elements are always sorted
+def dynamic_topk(
+    x: Var, k: Var, axis: int, ascending: Optional[bool] = False, name: Optional[str] = None
+):
+    assert k.val is None, "Please use mb.topk directly if k is compile time known"
+
+    indices = mb.argsort(x=x, axis=axis, ascending=ascending)
+    if name is None:
+        values = mb.gather_along_axis(x=x, indices=indices, axis=axis)
+    else:
+        values = mb.gather_along_axis(x=x, indices=indices, axis=axis, name=name)
+
+    k_indices = mb.range_1d(end=k, start=0, step=1)
+    values = mb.gather(x=values, indices=k_indices, axis=axis)
+    if name is None:
+        indices = mb.gather(x=indices, indices=k_indices, axis=axis)
+    else:
+        indices = mb.gather(x=indices, indices=k_indices, axis=axis, name=name)
+
+    return values, indices
+
+
 def solve_diagonal_einsum(parsed_vectors, vars):
     def solve_diagonal_einsum_one_step(parsed_vector, x):
         for i in range(len(parsed_vector)):
@@ -436,3 +467,80 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
         else:
             ab = mb.transpose(x=ab, perm=get_perm_transpose_einsum(ab_reshaped_axes, out_axes), name=name)
         return ab
+
+
+def _lower_scaled_dot_product_attention(q: Var, k: Var, v: Var, mask: Var, name: str) -> Var:
+    # scale the query input
+    embed_size = q.shape[-1]
+    if is_symbolic(embed_size):
+        raise ValueError(
+            "The embedding size, i.e. last dimension of the shape of query tensor"
+            " cannot be symbolic, in scaled_dot_product_attention op"
+        )
+    multiplicative_scale_factor = 1 / math.sqrt(embed_size)
+    q, k, v, multiplicative_scale_factor = promote_input_dtypes(
+        [q, k, v, multiplicative_scale_factor]
+    )
+    q = mb.mul(x=q, y=multiplicative_scale_factor)
+
+    # multiply query and key input tensors
+    # shape of output: (target_seq, source_seq) or (B,...,target_seq, source_seq)
+    attn_weights = mb.matmul(x=q, y=k, transpose_y=True)
+
+    # add mask if applicable
+    if mask is not None:
+        attn_weights = mb.add(x=attn_weights, y=mask)
+
+    # do softmax
+    attn_weights_normalized = mb.softmax(x=attn_weights, axis=-1)
+
+    # multiply attn_weights and value tensor
+    res = mb.matmul(x=attn_weights_normalized, y=v, name=name)
+    return res
+
+
+def _construct_constexpr_affine_op(
+    quantized_weights: _np.ndarray,
+    zero_point: Optional[Union[Var, _np.ndarray, _np.generic]],
+    scale: Union[Var, _np.ndarray, _np.generic],
+    axis: Optional[Union[Var, int]] = None,
+    name: Optional[str] = None,
+    before_op: Optional[Operation] = None,
+) -> Operation:
+    """Constructs the constexpr op to represent the dequantized weight from PyTorch's data."""
+    # The constexpr_affine_dequantize op requires axis.
+    if axis is None:
+        # Infer the axis based on scale's shape.
+        non_single_dim = [dim for dim, dim_size in enumerate(scale.shape) if dim_size > 1]
+        if len(non_single_dim) > 2:
+            raise ValueError(
+                "The constexpr_affine_dequantize op doesn't support scale which "
+                "have more than one non-single dimensions. Got scale with shape "
+                f"{scale.shape}"
+            )
+        # If non_single_dim is empty, it means it's per-tensor quantization, just use a dummy axis.
+        axis = 0 if len(non_single_dim) == 0 else non_single_dim[0]
+    if isinstance(axis, int):
+        axis = _np.int32(axis)
+
+    # The constexpr_affine_dequantize op requires zero_point.
+    if zero_point is None:
+        zero_point = _np.zeros_like(scale).astype(quantized_weights.dtype)
+
+    # The constexpr_affine_dequantize op requires scale and zero_point to have rank 0 or 1.
+    if isinstance(scale, (_np.ndarray, _np.generic)):
+        scale = _np.squeeze(scale)
+    if isinstance(zero_point, (_np.ndarray, _np.generic)):
+        zero_point = _np.squeeze(zero_point)
+
+    kwargs = {
+        "quantized_data": quantized_weights,
+        "zero_point": zero_point,
+        "scale": scale,
+        "axis": axis,
+    }
+    if name is not None:
+        kwargs["name"] = name
+    if before_op is not None:
+        kwargs["before_op"] = before_op
+    return mb.constexpr_affine_dequantize(**kwargs)

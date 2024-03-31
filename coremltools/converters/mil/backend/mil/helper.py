@@ -3,21 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
 
 import numpy as np
 
-import coremltools.proto.FeatureTypes_pb2 as ft
-import coremltools.proto.MIL_pb2 as pm
+from coremltools import proto
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types import (
-    BUILTIN_TO_PROTO_TYPES,
-    builtin_to_string,
-    numpy_type_to_builtin_type,
-    type_to_builtin_type,
-)
-from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
-from coremltools.models.utils import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 
 # For immediate values, those types are stored in bytes (MIL parser reads those types from bytes).
 IMMEDIATE_VALUE_TYPES_IN_BYTES = (types.fp16, types.int8, types.uint8, types.uint32)
@@ -25,9 +15,9 @@ IMMEDIATE_VALUE_TYPES_IN_BYTES = (types.fp16, types.int8, types.uint8, types.uin
 
 def create_valuetype_scalar(data_type):
     """
-    Return pm.ValueType with DataType set
+    Return proto.MIL_pb2.ValueType with DataType set
     """
-    v_type = pm.ValueType()
+    v_type = proto.MIL_pb2.ValueType()
     update_tensortype(v_type.tensorType, (), data_type)
     return v_type
 
@@ -45,18 +35,18 @@ def update_listtype(l_type, length, elem_shape, dtype):
 
 def create_valuetype_list(length, elem_shape, dtype):
     """
-    Return pm.ValueType with List (ListType) set.
+    Return proto.MIL_pb2.ValueType with List (ListType) set.
     length: length of list (int)
     """
-    v_type = pm.ValueType()
+    v_type = proto.MIL_pb2.ValueType()
     update_listtype(v_type.listType, length, elem_shape, dtype)
     return v_type
 
 def create_valuetype_dict(key_type, value_type):
     """
-    Return pm.ValueType with dict (dictionaryType) set
+    Return proto.MIL_pb2.ValueType with dict (dictionaryType) set
     """
-    v_type = pm.ValueType()
+    v_type = proto.MIL_pb2.ValueType()
     v_type.dictionaryType.keyType.CopyFrom(types_to_proto(key_type))
     v_type.dictionaryType.valueType.CopyFrom(types_to_proto(value_type))
     return v_type
@@ -64,10 +54,10 @@ def create_valuetype_dict(key_type, value_type):
 
 def create_valuetype_tensor(shape, data_type):
     """
-    Return pm.ValueType with tensor (TensorType) set.
+    Return proto.MIL_pb2.ValueType with tensor (TensorType) set.
     shape: list of ints
     """
-    v_type = pm.ValueType()
+    v_type = proto.MIL_pb2.ValueType()
     update_tensortype(v_type.tensorType, shape, data_type)
     return v_type
 
@@ -123,7 +113,10 @@ def _tensor_field_by_type(tensor_val, builtin_type):
             return tensor_val.bytes.values
         else:
             raise TypeError(
-                "Unsupported float dtype for MIL proto serialization: {}".format(builtin_to_string(builtin_type)))
+                "Unsupported float dtype for MIL proto serialization: {}".format(
+                    types.builtin_to_string(builtin_type)
+                )
+            )
     elif builtin_type == types.str:
         return tensor_val.strings.values
     else:
@@ -147,7 +140,11 @@ def _set_empty_tensor_field_by_type(tensor_val, builtin_type):
         elif (builtin_type == types.fp16):
             tensor_val.bytes.SetInParent()
         else:
-            raise TypeError("Unsupported float dtype for MIL proto serialization: {}".format(builtin_to_string(builtin_type)))
+            raise TypeError(
+                "Unsupported float dtype for MIL proto serialization: {}".format(
+                    types.builtin_to_string(builtin_type)
+                )
+            )
     elif builtin_type == types.str:
         tensor_val.strings.SetInParent()
     else:
@@ -157,10 +154,10 @@ def create_tensor_value(np_tensor):
     """
     Return TensorValue.
     """
-    builtin_type = numpy_type_to_builtin_type(np_tensor.dtype)
+    builtin_type = types.numpy_type_to_builtin_type(np_tensor.dtype)
 
     value_type = create_valuetype_tensor(np_tensor.shape, types_to_proto_primitive(builtin_type))
-    val = pm.Value(type=value_type)
+    val = proto.MIL_pb2.Value(type=value_type)
     t_val = val.immediateValue.tensor
 
     # Copy the tensor values from the input tensor
@@ -171,10 +168,10 @@ def create_tensor_value(np_tensor):
             for x in np.nditer(np_tensor):
                 t_field.append(x.encode("utf-8"))
         elif builtin_type in IMMEDIATE_VALUE_TYPES_IN_BYTES:
-            val.immediateValue.tensor.bytes.values = np_val_to_py_type(np_tensor)
+            val.immediateValue.tensor.bytes.values = types.type_mapping.np_val_to_py_type(np_tensor)
         else:
             for x in np_tensor.flatten():
-                t_field.append(np_val_to_py_type(x))
+                t_field.append(types.type_mapping.np_val_to_py_type(x))
     else:  # This is an "empty" tensor (tensor with a dimension being size 0)
         _set_empty_tensor_field_by_type(t_val, builtin_type)
     return val
@@ -185,20 +182,20 @@ def create_scalar_value(py_scalar):
     Return TensorValue (since there's no ScalarValue)
     """
     # Create the "scalar" (rank 0) tensor
-    builtin_type = type_to_builtin_type(type(py_scalar))
+    builtin_type = types.type_to_builtin_type(type(py_scalar))
     value_type = create_valuetype_scalar(types_to_proto_primitive(builtin_type))
-    val = pm.Value(type=value_type)
+    val = proto.MIL_pb2.Value(type=value_type)
     t_val = val.immediateValue.tensor
 
     # Set the tensor value
     t_field = _tensor_field_by_type(t_val, builtin_type)
     if builtin_type in IMMEDIATE_VALUE_TYPES_IN_BYTES:
         # Serialize to bytes because MIL read them from the "bytes" field in TensorValue.
-        val.immediateValue.tensor.bytes.values = np_val_to_py_type(py_scalar)
+        val.immediateValue.tensor.bytes.values = types.type_mapping.np_val_to_py_type(py_scalar)
     else:
         if builtin_type == types.str:
             py_scalar = py_scalar.encode("utf-8")
-        t_field.append(np_val_to_py_type(py_scalar))
+        t_field.append(types.type_mapping.np_val_to_py_type(py_scalar))
 
     return val
 
@@ -207,7 +204,7 @@ def create_tuple_value(py_tuple):
     """
     Return type of Tuple
     """
-    tp_val = pm.TupleValue()
+    tp_val = proto.MIL_pb2.TupleValue()
     for t in py_tuple:
         item_val = tp_val.values.add()
         item_type = item_val.type  # ValueType
@@ -227,11 +224,11 @@ def create_list_scalarvalue(py_list, np_type):
     """
     Return a Value of type List, which holds scalar values
     """
-    builtin_type = numpy_type_to_builtin_type(np_type)
+    builtin_type = types.numpy_type_to_builtin_type(np_type)
     value_type = create_valuetype_list(length=len(py_list),
                                        elem_shape=(),
                                        dtype=types_to_proto_primitive(builtin_type))
-    val = pm.Value(type=value_type)
+    val = proto.MIL_pb2.Value(type=value_type)
 
     list_val = val.immediateValue.list
     for v in py_list:
@@ -244,15 +241,15 @@ def create_file_value_tensor(file_name, offset, dim, data_type):
     """
     Create a Value Type to store File Value
     """
-    val = pm.Value(
-        blobFileValue=pm.Value.BlobFileValue(fileName=file_name, offset=offset),
+    val = proto.MIL_pb2.Value(
+        blobFileValue=proto.MIL_pb2.Value.BlobFileValue(fileName=file_name, offset=offset),
         type=create_valuetype_tensor(dim, data_type),
     )
     return val
 
 
 def types_to_proto_primitive(valuetype):
-    if valuetype not in BUILTIN_TO_PROTO_TYPES:
+    if valuetype not in types.BUILTIN_TO_PROTO_TYPES:
         additional_error_msg = ""
         if valuetype in (types.complex64, types.complex128):
             additional_error_msg = (
@@ -262,7 +259,7 @@ def types_to_proto_primitive(valuetype):
         raise ValueError(
             f"Unknown map from SSA type {valuetype} to Proto type. {additional_error_msg}"
         )
-    return BUILTIN_TO_PROTO_TYPES[valuetype]
+    return types.BUILTIN_TO_PROTO_TYPES[valuetype]
 
 
 def types_to_proto(valuetype):
@@ -270,7 +267,7 @@ def types_to_proto(valuetype):
         primitive = types_to_proto_primitive(valuetype.get_primitive())
         return create_valuetype_tensor(valuetype.get_shape(), primitive)
     elif types.is_tuple(valuetype):
-        v_type = pm.ValueType()
+        v_type = proto.MIL_pb2.ValueType()
         t_type = v_type.tupleType
         for t in valuetype.T:
             new_v_type = t_type.types.add()
@@ -321,17 +318,6 @@ def _get_offset_by_writing_data(output_var, blob_writer):
 
     return offset
 
-
-def create_file_value(output_var, blob_writer):
-    offset = _get_offset_by_writing_data(output_var, blob_writer)
-
-    return create_file_value_tensor(
-        file_name=os.path.join(os.path.join('@model_path', _WEIGHTS_DIR_NAME), _WEIGHTS_FILE_NAME),
-        offset=offset,
-        dim=output_var.val.shape,
-        data_type=types_to_proto_primitive(output_var.sym_type.get_primitive()),
-    )
-
 def create_immediate_value(var):
     if types.is_tensor(var.sym_type):
         return create_tensor_value(var.val)
@@ -347,13 +333,20 @@ def create_immediate_value(var):
 
 def cast_to_framework_io_dtype(var, is_output):
     if var.dtype == types.fp32:
-        return ft.ArrayFeatureType.ArrayDataType.FLOAT32
+        return proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.FLOAT32
     elif var.dtype == types.int32:
-        return ft.ArrayFeatureType.ArrayDataType.INT32
+        return proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.INT32
     elif var.dtype == types.fp16:
-        return ft.ArrayFeatureType.ArrayDataType.FLOAT16
+        return proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.FLOAT16
     else:
         ioname = "Output " if is_output else "Input "
         ioname2 = "outputs" if is_output else "inputs"
-        raise NotImplementedError(ioname + var.name + " has data type " + builtin_to_string(var.dtype) + \
-                                  ". ML Program models only support fp32 and int32 " + ioname2 + ".")
+        raise NotImplementedError(
+            ioname
+            + var.name
+            + " has data type "
+            + types.builtin_to_string(var.dtype)
+            + ". ML Program models only support fp32 and int32 "
+            + ioname2
+            + "."
+        )

@@ -10,6 +10,7 @@ import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS
+from coremltools.converters.mil.mil.utils import CacheDoublyLinkedList
 from coremltools.converters.mil.testing_utils import (
     assert_same_output_names,
     assert_same_output_shapes,
@@ -61,7 +62,7 @@ def test_add_op():
     print("after:\n{}".format(prog))
     assert block.inputs["x0"] == block.find_ops(op_type="log")[0].inputs["x"]
     assert len(block.operations) == 2 # const op for epsilon + log
-    assert block.operations[1].op_type == "log"
+    assert list(block.operations)[1].op_type == "log"
     assert block.outputs[0] == x1
 
 
@@ -492,3 +493,58 @@ def test_duplicate_outputs_substituion():
     assert block.outputs[0].op.name == "new_output"
     assert block.outputs[1].op.name == "new_output"
     assert len(block.outputs[0].consuming_blocks) == 1
+
+
+class TestCacheDoublyLinkedList:
+    def test_basic(self):
+        operations = CacheDoublyLinkedList()
+
+        operations.insert_op_before(1)
+        assert list(operations) == [1]
+
+        operations.insert_op_before(2, before_op=1)
+        assert list(operations) == [2, 1]
+
+        operations.insert_op_before(3)
+        assert list(operations) == [2, 1, 3]
+
+        operations.insert_op_before(4, before_op=1)
+        assert list(operations) == [2, 4, 1, 3]
+
+        operations.remove(2)
+        assert list(operations) == [4, 1, 3]
+
+        operations.remove(3)
+        assert list(operations) == [4, 1]
+
+        operations.remove(4)
+        assert list(operations) == [1]
+
+        node = operations._get_node_from_op(1)
+        operations.remove(1)
+        assert list(operations) == []
+        assert node.prev is CacheDoublyLinkedList.INVALID_NODE
+        assert node.next is CacheDoublyLinkedList.INVALID_NODE
+
+        operations.insert_op_before(0)
+        assert list(operations) == [0]
+
+        operations = CacheDoublyLinkedList([1, 2, 3])
+        assert list(operations) == [1, 2, 3]
+
+        operations = CacheDoublyLinkedList([])
+        assert list(operations) == []
+
+    def test_reversed(self):
+        operations = CacheDoublyLinkedList([1, 2, 3])
+        assert list(reversed(operations)) == [3, 2, 1]
+
+    def test_error(self):
+        operations = CacheDoublyLinkedList([1, 2, 3])
+        assert operations[0] == 1
+        assert operations[-1] == 3
+        # Indexing doubly linked list is super expensive, we need to error out.
+        with pytest.raises(
+            ValueError, match="Doubly linked list does not support indexing other than 0, -1."
+        ):
+            operations[1]

@@ -11,7 +11,7 @@ import pytest
 import coremltools as ct
 from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import (
     mark_api_breaking,
@@ -488,6 +488,31 @@ class TestGather:
                 opset_version=backend.opset_version,
             )(prog)
 
+    @staticmethod
+    def test_gather_value_inference_on_symbolic_input():
+
+        s1, s2 = get_new_symbol(), get_new_symbol()
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(2, 3, s1, s2, 5))],
+        )
+        def prog(x):
+            shape = mb.shape(x=x)
+            gather_1 = mb.gather(x=shape, indices=0, axis=0)
+            gather_2 = mb.gather(x=shape, indices=[0, 1], axis=0)
+            gather_3 = mb.gather(x=shape, indices=[1, 2, 3], axis=0)
+
+            # Test value inference
+            assert gather_1.val == 2
+            assert gather_1.sym_val == 2
+
+            assert gather_2.val.tolist() == [2, 3]
+            assert gather_2.sym_val.tolist() == [2, 3]
+
+            assert gather_3.val is None
+            assert gather_3.sym_val.tolist() == [3, s1, s2]
+
+            return x
 
 class TestGatherAlongAxis:
     @pytest.mark.parametrize(

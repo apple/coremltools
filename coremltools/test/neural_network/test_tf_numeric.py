@@ -396,6 +396,8 @@ class StressTest(CorrectnessTest):
 
     @unittest.skipUnless(_macos_version() >= (10, 14), "Only supported on MacOS 10.14+")
     def test_crop_resize(self, cpu_only=False):
+        # This test can be stochastically failing, so we set the below seed:
+        np.random.seed(0)
         if _macos_version()[0] == 12:
             pytest.xfail("rdar://110274216")
 

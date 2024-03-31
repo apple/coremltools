@@ -790,8 +790,8 @@ class OptimizationConfig:
         if not isinstance(op, Operation):
             raise TypeError(f"op must be type of Operation. Got {type(op)}")
 
-        if op.op_type != "const":
-            raise TypeError(f"op must be of type const. Got {op.op_type}")
+        if not (op.op_type == "const" or op.op_type.startswith("constexpr_")):
+            raise TypeError(f"op must be of type const or constexpr. Got {op.op_type}")
 
         if op.name in self.op_name_configs:
             return self.op_name_configs[op.name]
