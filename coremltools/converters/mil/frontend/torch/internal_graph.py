@@ -73,7 +73,7 @@ class InternalTorchIRBlock:
         """
         Arguments:
             parent: The InternalTorchIRNode this block belongs to.
-            nodes: list of InternalTorchIRNodes in the block
+            nodes: list of InternalTorchIRNode in the block
             inputs: list of input symbols.
             outputs: list of output symbols.
         """
@@ -415,7 +415,7 @@ class InternalTorchIRGraph:
         params: Dict[str, np.ndarray],
         inputs: Dict[str, TensorType],
         outputs: List[str],
-        nodes: Optional[List["InternalTorchIRNodes"]] = None,
+        nodes: Optional[List["InternalTorchIRNode"]] = None,
         buffers: Optional[Dict[str, torch.Tensor]] = None,
     ):
         """
@@ -423,7 +423,7 @@ class InternalTorchIRGraph:
             params: dict mapping parameter names to their numpy value.
             inputs: OrderedDict mapping input names to their input types.
             outputs: list[str], list of outputs from the graph.
-            nodes: list of InternalTorchIRNodes in the graph.
+            nodes: list of InternalTorchIRNode in the graph.
             buffers: Dict mapping torch model buffers to their names.
         """
         self.nodes = nodes

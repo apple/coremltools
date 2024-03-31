@@ -52,11 +52,9 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
         "squeeze",
     }
     SUPPORTED_OP_TYPES_PER_CHANNEL = {"transpose"}
-    assert (
-        SUPPORTED_OP_TYPES_PER_CHANNEL.issubset(SUPPORTED_OP_TYPES_PER_TENSOR),
-        "If an op can merge with channel-wise quantization, "
-        "then it must also be able to merge with tensor-wise quantization",
-    )
+    assert SUPPORTED_OP_TYPES_PER_CHANNEL.issubset(
+        SUPPORTED_OP_TYPES_PER_TENSOR
+    ), "If an op can merge with channel-wise quantization, then it must also be able to merge with tensor-wise quantization"
 
     def apply(self, prog):
         for f in prog.functions.values():
@@ -126,10 +124,8 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
     @staticmethod
     def _try_to_transform_per_tensor(op: Operation, block: Block) -> bool:
         assert (
-            op.scale.rank == 0 and op.zero_point.rank == 0,
-            "The _try_to_transform_per_tensor method should only be used "
-            "for per-tensor dequantization case",
-        )
+            op.scale.rank == 0 and op.zero_point.rank == 0
+        ), "The _try_to_transform_per_tensor method should only be used for per-tensor dequantization case"
 
         ops_to_fold = merge_affine_dequantize_with_consecutive_ops.search_for_ops_to_fold(
             op, block, merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_PER_TENSOR

@@ -243,7 +243,7 @@ class ScopeInfo:
         if self.source == ScopeSource.TORCHSCRIPT_MODULE_TYPE:
             if "" in self.data:
                 raise ValueError(
-                    f"TORCHSCRIPT_MODULE_TYPE scope info cannot contains empty string."
+                    "TORCHSCRIPT_MODULE_TYPE scope info cannot contains empty string."
                 )
 
         if self.source == ScopeSource.EXIR_DEBUG_HANDLE:

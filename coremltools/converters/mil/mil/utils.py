@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from .operation import Operation
 
@@ -47,7 +47,7 @@ class CacheDoublyLinkedList:
          then the new op is appended in the end.
         """
         if new_op in self.op_to_node:
-            raise ValueError(f"{op} already exisits.")
+            raise ValueError(f"{new_op} already exisits.")
 
         new_node = OpNode(new_op)
 
