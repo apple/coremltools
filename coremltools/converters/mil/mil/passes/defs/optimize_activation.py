@@ -154,19 +154,21 @@ class fuse_gelu_exact(AbstractGraphPass):
     def _fuse_gelu_exact_block(self, block):
         fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
                     block_changed = self._fuse_gelu_exact_block(b)
+
             if len(op.blocks) > 0:
                 # This op can't be real_div or mul
                 continue
 
             if op.op_type in ["mul", "real_div"]:
-                fusion_occurred = self._try_to_transform(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
+                if self._try_to_transform(op, block):
+                    fusion_occurred = True
         return fusion_occurred
 
 
@@ -179,21 +181,21 @@ class fuse_gelu_tanh_approximation(AbstractGraphPass):
     The implementation of this pass uses the generic graph pattern matching and transform algorithm
     implemented in ``coremltools.converters.mil.experimental.passes.generic_pass_infrastructure`` and
     documented in ``coremltools/converters/mil/experimental/passes/readme.md``.
-    
+
     `Graph for` ``get_gelu_pattern1()``
-    
+
     ``y = x * (0.5 * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1))``
 
     .. code-block::
 
-	    [...] -----> pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) ----> mul (0.5) -----> mul ---> [...]
-	      |                                            ^                                                                          ^
-	      |                                            |                                                                          |
-	      |------------------------------------------------------------------------------------------------------------------------
+            [...] -----> pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) ----> mul (0.5) -----> mul ---> [...]
+              |                                            ^                                                                          ^
+              |                                            |                                                                          |
+              |------------------------------------------------------------------------------------------------------------------------
 
 
     `Graph for` ``get_gelu_pattern2()``
-    
+
     ``y = (0.5 * x) * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1)``
 
     .. code-block::
@@ -311,7 +313,7 @@ class fuse_gelu_tanh_approximation(AbstractGraphPass):
               |                        ^                               ^
               |                        |                               |
               |---------------------------------------------------------
-		
+
         """
 
         @mb.program(
@@ -339,7 +341,7 @@ class fuse_leaky_relu(AbstractGraphPass):
     Detect the ``mul`` ---> ``max`` pattern than can be mapped to ``leaky_relu``.
 
     `In code form - Input`
-    
+
     .. code-block::
 
        %2 = const(value = alpha) # where 0 <= alpha <= 1
@@ -348,14 +350,14 @@ class fuse_leaky_relu(AbstractGraphPass):
 
 
     `In code form - Output`
-    
+
     .. code-block::
 
        %4 = leaky_relu(x=%1, alpha=%2)
 
 
     `In graphical form - Input graph`
-    
+
     .. code-block::
 
                  const (val = alpha)
@@ -366,7 +368,7 @@ class fuse_leaky_relu(AbstractGraphPass):
 
 
     `In graphical form - Output graph`
-    
+
     .. code-block::
 
         input --------> leaky_relu ---------> output
@@ -423,22 +425,24 @@ class fuse_leaky_relu(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_leaky_relu_block(self, block):
-        fusion_status = False
-        for i, op in enumerate(list(block.operations)):
+        fusion_occurred = False
+        for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
                     block_changed = self._fuse_leaky_relu_block(b)
+
             if len(op.blocks) > 0:
                 continue
 
             # start pattern match if mul op is encountered
             if op.op_type == "mul":
-                fusion_status = self._try_to_transform(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(op, block):
+                    fusion_occurred = True
+        return fusion_occurred
 
 
 class FusePreluPattern1:
@@ -557,7 +561,7 @@ class FusePreluPattern2:
     def get_prelu_pattern():
         """
         ``x1 = transpose(perm=(0,2,3,1))(x)``
-        
+
         ``y = a * relu(-1 * x1) + relu(x1)``
 
         When ``x`` is rank 4, and ``a`` is of shape (``C,)``, ``(1, C)``, ``(1,1,C)``, or ``(1,1,1,C)``,
@@ -585,7 +589,7 @@ class fuse_prelu(AbstractGraphPass):
     """
     Detect the following patterns that can be mapped to a ``prelu`` op.
     Essentially, the ``prelu`` op can be broken down into the following ops:
-    
+
     ``y = a * relu(-1 * x) + relu(x)``
 
     `Pattern 1`

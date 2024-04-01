@@ -52,7 +52,7 @@ class TestApiVisibilities:
 
     def test_top_level(self):
         if not ct.utils._is_macos():
-             EXPECTED_MODULES.remove("libcoremlpython")
+            EXPECTED_MODULES.remove("libcoremlpython")
         _check_visible_modules(_get_visible_items(ct), EXPECTED_MODULES)
 
     def test_utils(self):

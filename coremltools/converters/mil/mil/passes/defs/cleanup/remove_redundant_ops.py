@@ -4,10 +4,11 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import collections
+from typing import Dict, List
 
 import numpy as np
 
-from coremltools.converters.mil.mil import Var
+from coremltools.converters.mil.mil import Block, Operation, Var
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -54,7 +55,14 @@ class remove_redundant_ops(AbstractGraphPass):
 
     _NON_REDUNDANT_OPS = tuple()
 
+    def __init__(self):
+        self._num_of_visited_ops: int = (
+            0  # Testing purpose, making sure the algorithm performs in O(N)
+        )
+        self._ops_order: Dict[Block, Dict[Operation, int]] = {}
+
     def apply(self, prog):
+        self._num_of_visited_ops = 0
         for f in prog.functions.values():
             self._remove_redundant_ops_in_block_wrapper(f)
 
@@ -69,21 +77,20 @@ class remove_redundant_ops(AbstractGraphPass):
         else:
             return True
 
-    @staticmethod
-    def _get_candidate_ops_list(prospective_ops_list):
+    def _get_candidate_ops_list(self, prospective_ops_list: List[Operation]) -> List[Operation]:
         od = collections.OrderedDict()
-        enclosing_block = [op.enclosing_block for op in prospective_ops_list]
-        if len(set(enclosing_block)) > 1:  # all candidate ops must belong to the same block
+        enclosing_blocks = [op.enclosing_block for op in prospective_ops_list]
+        if len(set(enclosing_blocks)) > 1:  # all candidate ops must belong to the same block
             return []
         for op in prospective_ops_list:
             if remove_redundant_ops._is_op_eligible_to_be_removed(op):
-                od[op] = enclosing_block[0].operations.index(op)
+                od[op] = self._ops_order[enclosing_blocks[0]][op]
+
         # Sort the ops according to their index of appearing in block.operations, which is
         # topologically sorted
         return [x[0] for x in sorted(od.items(), key=lambda t: t[1])]
 
-    @staticmethod
-    def _get_candidate_ops_lists_from_var(var):
+    def _get_candidate_ops_lists_from_var(self, var: Var) -> List[List[Operation]]:
         """
         Return a list of lists.
         Each element is a list of a subset of the child ops of var, which satisfies the following conditions:
@@ -103,7 +110,7 @@ class remove_redundant_ops(AbstractGraphPass):
 
         for v in op_types_to_ops.values():
             if len(v) > 1:
-                candidate_ops_list = remove_redundant_ops._get_candidate_ops_list(v)
+                candidate_ops_list = self._get_candidate_ops_list(v)
                 if len(candidate_ops_list) > 1:
                     candidate_ops_lists.append(candidate_ops_list)
 
@@ -184,6 +191,9 @@ class remove_redundant_ops(AbstractGraphPass):
         first_op = candidate_ops_list[0]
         block = first_op.enclosing_block
 
+        if block is None:
+            return False
+
         # currently, we only consider the cases when the op has 1 output.
         # The replace var logic below only handles the single output case.
         if len(first_op.outputs) > 1:
@@ -191,6 +201,8 @@ class remove_redundant_ops(AbstractGraphPass):
 
         ops_to_remove = []
         for op in candidate_ops_list[1:]:
+            if op.enclosing_block is None:
+                continue
             if op.outputs[0] not in block.outputs:  # to make sure we don't remove an output op
                 if remove_redundant_ops._are_ops_identical(first_op, op):
                     ops_to_remove.append(op)
@@ -212,25 +224,44 @@ class remove_redundant_ops(AbstractGraphPass):
         block.remove_ops(ops_removed)
         return True
 
-    @staticmethod
-    def _try_to_transform(parent_var):
+    def _try_to_transform(self, parent_var: Var) -> bool:
         """
         scan the children ops to parent_var, to find and remove identical ops, if any.
         Returns True, if successful in finding such redundant ops.
         """
-        candidate_ops_lists = remove_redundant_ops._get_candidate_ops_lists_from_var(parent_var)
+        candidate_ops_lists = self._get_candidate_ops_lists_from_var(parent_var)
         block_changed = False
         for ops_list in candidate_ops_lists:
             # Iterate through the child ops list, to make sure that we check all possible combinations.
             for idx in range(len(ops_list)):
                 if remove_redundant_ops._try_to_remove_ops(ops_list[idx:]):
+                    # We shoud not break right alway, so that we can keep
+                    # the time complexity low.
                     block_changed = True
-                    break
+
         return block_changed
 
     @block_context_manager
     def _remove_redundant_ops_in_block_wrapper(self, block):
+        def _cache_topological_order_of_ops_in_block(block: Block):
+            if block in self._ops_order:
+                return
+
+            self._ops_order[block] = {}
+            for i, op in enumerate(block.operations):
+                for b in op.blocks:
+                    _cache_topological_order_of_ops_in_block(b)
+                self._ops_order[block][op] = i
+
         def _remove_redundant_ops_in_block(block):
+            # cache the topological order of the ops,
+            # so that we would not to query the index every single time.
+            # Note that, the transformation in this particular graph pass
+            # is going to preserve the topological order. And that is the
+            # reason why we can do the cache in the very beginning.
+            _cache_topological_order_of_ops_in_block(block)
+
+            # iterate over the block inputs
             if isinstance(block.inputs, dict):
                 block_input_var_list = list(block.inputs.values())
             elif isinstance(block.inputs, (list, tuple)):
@@ -238,16 +269,18 @@ class remove_redundant_ops(AbstractGraphPass):
             else:
                 raise ValueError("Unrecognized type of block.inputs, its neither a list nor dict.")
 
-            # iterate over the block inputs
             for input_var in block_input_var_list:
                 if len(input_var.child_ops) > 1:
                     self._try_to_transform(input_var)
 
             # iterate over the ops in the block
             graph_updated = False
-            for op in block.operations:
+            for op in list(block.operations):
+
                 if op.op_type == "const":
                     continue
+
+                self._num_of_visited_ops += 1
 
                 for b in op.blocks:
                     block_changed = True
@@ -257,12 +290,13 @@ class remove_redundant_ops(AbstractGraphPass):
                 if len(op.outputs) > 0 and len(op.outputs[0].child_ops) > 1:
                     # currently, we only check the first output of the op
                     # this can be extended, if required, to check for other outputs.
-                    graph_updated = self._try_to_transform(op.outputs[0])
-                    # has to break as the downstream iterator is affected.
-                    if graph_updated:
-                        return graph_updated
+                    if self._try_to_transform(op.outputs[0]):
+                        # we don't need to break right away, in order to
+                        # keep the time complexity fast.
+                        graph_updated = True
             return graph_updated
 
         block_changed = True
         while block_changed:
+            self._ops_order = {}
             block_changed = _remove_redundant_ops_in_block(block)

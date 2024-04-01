@@ -10,8 +10,9 @@ import pytest
 
 import coremltools as ct
 from coremltools import _logger as logger
+from coremltools.converters.mil import mil
 from coremltools.converters.mil.input_types import TensorType
-from coremltools.converters.mil.mil import Function, Placeholder, Program
+from coremltools.converters.mil.mil import Function, Placeholder
 from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.testing_reqs import BackendConfig
@@ -119,7 +120,7 @@ def run_compare_builder(
     if expected_outputs is not None and not isinstance(expected_outputs, list):
         expected_outputs = [expected_outputs]
 
-    prog = Program()
+    prog = mil.Program()
     with Function(input_placeholders, opset_version=minimum_deployment_target) as ssa_func:
         output_vars = build(**ssa_func.inputs)
         if isinstance(output_vars, tuple):

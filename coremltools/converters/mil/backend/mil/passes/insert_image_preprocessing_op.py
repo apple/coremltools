@@ -26,7 +26,7 @@ class insert_image_preprocessing_ops(AbstractGraphPass):
 
 @block_context_manager
 def _insert_image_preprocessing_ops(block, prog):
-    input_types = list(prog.main_input_types)
+    input_types = list(prog.functions["main"].input_types)
 
     for input_type in input_types:
         if isinstance(input_type, ImageType):

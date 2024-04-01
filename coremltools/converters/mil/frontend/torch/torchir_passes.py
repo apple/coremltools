@@ -2,14 +2,16 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 from collections import OrderedDict, defaultdict
+from typing import Dict, Optional
 
 from coremltools import _logger as logger
 
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 
 
-def generate_tensor_assignment_ops(graph):
+def generate_tensor_assignment_ops(graph: InternalTorchIRGraph) -> None:
     """
     This graph pass handles inplace tensor assignments, specifically it handles:
     `torch.Tensor.copy_` and `torch.Tensor.fill_`. There are many other inplace tensor
@@ -174,6 +176,7 @@ def generate_tensor_assignment_ops(graph):
                 outputs=outputs,
                 kind=kind,
                 blocks=[],
+                model_hierarchy=node.model_hierarchy,
             )
             graph.nodes[i] = tensor_assign_node
 
@@ -183,7 +186,50 @@ def generate_tensor_assignment_ops(graph):
         graph.outputs[idx] = _get_updated_name(output, updated_tensor_count, out_alias)
 
 
-def remove_getattr_nodes(graph):
+def populate_native_const_model_hierarchy(graph: InternalTorchIRGraph) -> None:
+    """
+    Torchscript doesn't capture the model hierarchy of those python native consts.
+    For instance:
+
+    class Submodule(torch.nn.Module):
+        def forward(self, x):
+            x = x + 0.9
+            x = x * 0.9
+            return torch.relu(x)
+
+    class Model(torch.nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.submodule_1 = Submodule()
+
+        def forward(self, x):
+            return self.submodule_1(x)
+
+    The two ``0.9`` constants don't have the scope of Submodule.
+    In this graph pass, we make the model hierarchy of such constants inherited from
+    their child ops.
+    """
+
+    cached_model_hierarchy = {}
+    child_ops = defaultdict(list)
+
+    for node in graph.nodes:
+        for b in node.blocks:
+            populate_native_const_model_hierarchy(b)
+
+    for node in graph.nodes:
+        cached_model_hierarchy[node.name] = node.model_hierarchy
+        for val in node.inputs:
+            child_ops[val].append(node.name)
+
+    for node in graph.nodes:
+        if node.kind != "constant":
+            continue
+        if node.model_hierarchy == "" and len(child_ops[node.name]) == 1:
+            node.model_hierarchy = cached_model_hierarchy[child_ops[node.name][0]]
+
+
+def remove_getattr_nodes(graph: InternalTorchIRGraph) -> None:
     """
     Remove the getattr nodes in the graph
     """
@@ -210,7 +256,9 @@ def remove_getattr_nodes(graph):
     graph.nodes = new_nodes
 
 
-def transform_inplace_ops(graph, name_remap_dict=None):
+def transform_inplace_ops(
+    graph: InternalTorchIRGraph, name_remap_dict: Optional[Dict[str, str]] = None
+) -> None:
 
     # As we modify ops, we'll need to remap symbols.
     if name_remap_dict is None:
@@ -272,7 +320,7 @@ def transform_inplace_ops(graph, name_remap_dict=None):
             graph.outputs[idx] = v
 
 
-def flatten_graph_input_values(graph):
+def flatten_graph_input_values(graph: InternalTorchIRGraph) -> None:
     """CoreML can't handle nested iterables of tensors, so we flatten the
     inputs of any graph that expects them.
     """
@@ -317,7 +365,7 @@ def flatten_graph_input_values(graph):
     graph.nodes = all_new_nodes + graph.nodes
 
 
-def flatten_graph_output_values(graph):
+def flatten_graph_output_values(graph: InternalTorchIRGraph) -> None:
     """
     CoreML can't handle nested iterables of tensors, so we flatten the
     outputs of any graph that produces them.

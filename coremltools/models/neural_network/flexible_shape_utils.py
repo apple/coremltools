@@ -7,8 +7,12 @@
 Utilities to annotate Neural Network Features with flexible shape information.
 """
 
-from ... import (_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION,
-                 _MINIMUM_NDARRAY_SPEC_VERSION)
+from typing import List as _List
+from typing import Tuple as _Tuple
+
+from coremltools.proto import Model_pb2 as _ml
+
+from ... import _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION, _MINIMUM_NDARRAY_SPEC_VERSION
 from ..utils import _get_feature
 
 _SEQUENCE_KEY = "S"
@@ -296,6 +300,150 @@ class NeuralNetworkImageSizeRange:
         return self._height_range
 
 
+def _set_multiarray_ndshape_range_for_feature(
+    feature: _ml.FeatureDescription,
+    lower_bounds: _List[int],
+    upper_bounds: _List[int],
+):
+
+    if not isinstance(lower_bounds, list):
+        raise Exception("lower_bounds must be a list")
+    if not isinstance(upper_bounds, list):
+        raise Exception("upper_bounds must be a list")
+
+    if feature.type.WhichOneof("Type") != "multiArrayType":
+        raise Exception("Trying to update shape range for " "a non-multiArray feature type")
+
+    shape = feature.type.multiArrayType.shape
+
+    if len(shape) != len(lower_bounds):
+        raise Exception(
+            "Length of lower_bounds is not equal to the number of dimensions in the default shape"
+        )
+    if len(shape) != len(upper_bounds):
+        raise Exception(
+            "Length of upper_bounds is not equal to the number of dimensions in the default shape"
+        )
+
+    feature.type.multiArrayType.ClearField("ShapeFlexibility")
+
+    for i in range(len(lower_bounds)):
+        if shape[i] < lower_bounds[i]:
+            raise Exception(
+                "Default shape in %d-th dimension, which is %d, is smaller"
+                " than the lower bound of %d" % (i, int(shape[i]), lower_bounds[i])
+            )
+        if upper_bounds[i] != -1:
+            if shape[i] > upper_bounds[i]:
+                raise Exception(
+                    "Default shape in %d-th dimension, which is %d, is greater"
+                    " than the upper bound of %d" % (i, int(shape[i]), upper_bounds[i])
+                )
+
+        s = feature.type.multiArrayType.shapeRange.sizeRanges.add()
+        s.lowerBound = lower_bounds[i]
+        s.upperBound = upper_bounds[i]
+
+
+def _update_image_size_range_for_feature(
+    feature: _ml.FeatureDescription,
+    size_range: NeuralNetworkImageSizeRange,
+):
+    if not isinstance(size_range, NeuralNetworkImageSizeRange):
+        raise Exception("Shape ranges should be of type NeuralNetworkImageSizeRange")
+
+    if feature.type.WhichOneof("Type") != "imageType":
+        raise Exception("Trying to add size ranges for " "a non-image feature type")
+
+    feature.type.imageType.ClearField("SizeFlexibility")
+    feature.type.imageType.imageSizeRange.heightRange.lowerBound = (
+        size_range.get_height_range().lowerBound
+    )
+    feature.type.imageType.imageSizeRange.heightRange.upperBound = (
+        size_range.get_height_range().upperBound
+    )
+
+    feature.type.imageType.imageSizeRange.widthRange.lowerBound = (
+        size_range.get_width_range().lowerBound
+    )
+    feature.type.imageType.imageSizeRange.widthRange.upperBound = (
+        size_range.get_width_range().upperBound
+    )
+
+
+def _add_multiarray_ndshape_enumeration_for_feature(
+    feature: _ml.FeatureDescription,
+    enumerated_shapes: _List[_Tuple[int]],
+):
+    if not isinstance(enumerated_shapes, list):
+        raise Exception("enumerated_shapes must be a list")
+    if len(enumerated_shapes) == 0:
+        raise Exception("enumerated_shapes is empty")
+
+    if feature.type.WhichOneof("Type") != "multiArrayType":
+        raise Exception("Trying to update shape range for " "a non-multiArray feature type")
+
+    shape = feature.type.multiArrayType.shape
+
+    if feature.type.multiArrayType.WhichOneof("ShapeFlexibility") != "enumeratedShapes":
+        feature.type.multiArrayType.ClearField("ShapeFlexibility")
+
+    eshape_len = len(feature.type.multiArrayType.enumeratedShapes.shapes)
+
+    shapes_added_so_far = []
+
+    # Add default array shape to list of enumerated shapes if enumerated shapes
+    # field is currently empty
+    if eshape_len == 0:
+        fixed_shape = feature.type.multiArrayType.shape
+        s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
+        s.shape.extend(fixed_shape)
+        shapes_added_so_far.append(list(fixed_shape))
+
+    for shape in enumerated_shapes:
+        if not isinstance(shape, tuple):
+            raise Exception("An element in 'enumerated_shapes' is not a tuple")
+        if list(shape) not in shapes_added_so_far:
+            s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
+            s.shape.extend(list(shape))
+            shapes_added_so_far.append(list(shape))
+
+
+def _add_enumerated_image_sizes_for_feature(
+    feature: _ml.FeatureDescription,
+    sizes: _List[NeuralNetworkImageSize],
+):
+    if not isinstance(sizes, list):
+        sizes = [sizes]
+
+    for size in sizes:
+        if not isinstance(size, NeuralNetworkImageSize):
+            raise Exception("Shape ranges should be of type NeuralNetworkImageSize")
+
+    if feature.type.WhichOneof("Type") != "imageType":
+        raise Exception("Trying to add enumerated sizes to " "a non-image feature type")
+
+    if feature.type.imageType.WhichOneof("SizeFlexibility") != "enumeratedSizes":
+        feature.type.imageType.ClearField("SizeFlexibility")
+
+    esizes_len = len(feature.type.imageType.enumeratedSizes.sizes)
+
+    # Add default image size to list of enumerated sizes if enumerated sizes
+    # field is currently empty
+    if esizes_len == 0:
+        fixed_height = feature.type.imageType.height
+        fixed_width = feature.type.imageType.width
+        sizes.append(NeuralNetworkImageSize(fixed_height, fixed_width))
+
+    shapes_added_so_far = []
+    for size in sizes:
+        if [size.height, size.width] not in shapes_added_so_far:
+            s = feature.type.imageType.enumeratedSizes.sizes.add()
+            s.height = size.height
+            s.width = size.width
+            shapes_added_so_far.append([s.height, s.width])
+
+
 def add_enumerated_multiarray_shapes(spec, feature_name, shapes):
     """
     Annotate an input or output multiArray feature in a Neural Network spec to
@@ -317,16 +465,19 @@ def add_enumerated_multiarray_shapes(spec, feature_name, shapes):
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import flexible_shape_utils
-        >>> spec = coremltools.utils.load_spec('mymodel.mlmodel')
-        >>> array_shapes = [flexible_shape_utils.NeuralNetworkMultiArrayShape(3)]
-        >>> second_shape = flexible_shape_utils.NeuralNetworkMultiArrayShape()
-        >>> second_shape.set_channel_shape(3)
-        >>> second_shape.set_height_shape(10)
-        >>> second_shape.set_width_shape(15)
-        >>> array_shapes.append(second_shape)
-        >>> flexible_shape_utils.add_enumerated_multiarray_shapes(spec, feature_name='my_multiarray_featurename', shapes=array_shapes)
+        import coremltools
+        from coremltools.models.neural_network import flexible_shape_utils
+
+        spec = coremltools.utils.load_spec("mymodel.mlmodel")
+        array_shapes = [flexible_shape_utils.NeuralNetworkMultiArrayShape(3)]
+        second_shape = flexible_shape_utils.NeuralNetworkMultiArrayShape()
+        second_shape.set_channel_shape(3)
+        second_shape.set_height_shape(10)
+        second_shape.set_width_shape(15)
+        array_shapes.append(second_shape)
+        flexible_shape_utils.add_enumerated_multiarray_shapes(
+            spec, feature_name="my_multiarray_featurename", shapes=array_shapes
+        )
 
     :return:
         None. The spec object is updated
@@ -380,7 +531,6 @@ def add_enumerated_multiarray_shapes(spec, feature_name, shapes):
         _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION, spec.specificationVersion
     )
 
-
 def add_enumerated_image_sizes(spec, feature_name, sizes):
     """
     Annotate an input or output image feature in a Neural Network spec to
@@ -402,12 +552,15 @@ def add_enumerated_image_sizes(spec, feature_name, sizes):
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import flexible_shape_utils
-        >>> spec = coremltools.utils.load_spec('mymodel.mlmodel')
-        >>> image_sizes = [flexible_shape_utils.NeuralNetworkImageSize(128, 128)]
-        >>> image_sizes.append(flexible_shape_utils.NeuralNetworkImageSize(256, 256))
-        >>> flexible_shape_utils.add_enumerated_image_sizes(spec, feature_name='my_multiarray_featurename', sizes=image_sizes)
+        import coremltools
+        from coremltools.models.neural_network import flexible_shape_utils
+
+        spec = coremltools.utils.load_spec("mymodel.mlmodel")
+        image_sizes = [flexible_shape_utils.NeuralNetworkImageSize(128, 128)]
+        image_sizes.append(flexible_shape_utils.NeuralNetworkImageSize(256, 256))
+        flexible_shape_utils.add_enumerated_image_sizes(
+            spec, feature_name="my_multiarray_featurename", sizes=image_sizes
+        )
 
     :return:
         None. The spec object is updated
@@ -448,7 +601,6 @@ def add_enumerated_image_sizes(spec, feature_name, sizes):
         _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION, spec.specificationVersion
     )
 
-
 def update_image_size_range(spec, feature_name, size_range):
     """
     Annotate an input or output Image feature in a Neural Network spec to
@@ -470,38 +622,22 @@ def update_image_size_range(spec, feature_name, size_range):
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import flexible_shape_utils
-        >>> spec = coremltools.utils.load_spec('mymodel.mlmodel')
-        >>> img_size_ranges = flexible_shape_utils.NeuralNetworkImageSizeRange()
-        >>> img_size_ranges.add_height_range(64, 128)
-        >>> img_size_ranges.add_width_range(128, -1)
-        >>> flexible_shape_utils.update_image_size_range(spec, feature_name='my_multiarray_featurename', size_range=img_size_ranges)
+        import coremltools
+        from coremltools.models.neural_network import flexible_shape_utils
+
+        spec = coremltools.utils.load_spec("mymodel.mlmodel")
+        img_size_ranges = flexible_shape_utils.NeuralNetworkImageSizeRange()
+        img_size_ranges.add_height_range(64, 128)
+        img_size_ranges.add_width_range(128, -1)
+        flexible_shape_utils.update_image_size_range(
+            spec, feature_name="my_multiarray_featurename", size_range=img_size_ranges
+        )
 
     :return:
         None. The spec object is updated
     """
-    if not isinstance(size_range, NeuralNetworkImageSizeRange):
-        raise Exception("Shape ranges should be of type NeuralNetworkImageSizeRange")
-
     feature = _get_feature(spec, feature_name)
-    if feature.type.WhichOneof("Type") != "imageType":
-        raise Exception("Trying to add size ranges for " "a non-image feature type")
-
-    feature.type.imageType.ClearField("SizeFlexibility")
-    feature.type.imageType.imageSizeRange.heightRange.lowerBound = (
-        size_range.get_height_range().lowerBound
-    )
-    feature.type.imageType.imageSizeRange.heightRange.upperBound = (
-        size_range.get_height_range().upperBound
-    )
-
-    feature.type.imageType.imageSizeRange.widthRange.lowerBound = (
-        size_range.get_width_range().lowerBound
-    )
-    feature.type.imageType.imageSizeRange.widthRange.upperBound = (
-        size_range.get_width_range().upperBound
-    )
+    _update_image_size_range_for_feature(feature, size_range)
 
     # Bump up specification version
     spec.specificationVersion = max(
@@ -532,14 +668,17 @@ def update_multiarray_shape_range(spec, feature_name, shape_range):
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import flexible_shape_utils
-        >>> spec = coremltools.utils.load_spec('mymodel.mlmodel')
-        >>> shape_range = flexible_shape_utils.NeuralNetworkMultiArrayShapeRange()
-        >>> shape_range.add_channel_range((1, 3))
-        >>> shape_range.add_width_range((128, 256))
-        >>> shape_range.add_height_range((128, 256))
-        >>> flexible_shape_utils.update_multiarray_shape_range(spec, feature_name='my_multiarray_featurename', shape_range=shape_range)
+        import coremltools
+        from coremltools.models.neural_network import flexible_shape_utils
+
+        spec = coremltools.utils.load_spec("mymodel.mlmodel")
+        shape_range = flexible_shape_utils.NeuralNetworkMultiArrayShapeRange()
+        shape_range.add_channel_range((1, 3))
+        shape_range.add_width_range((128, 256))
+        shape_range.add_height_range((128, 256))
+        flexible_shape_utils.update_multiarray_shape_range(
+            spec, feature_name="my_multiarray_featurename", shape_range=shape_range
+        )
 
     :return:
         None. The spec is updated
@@ -606,62 +745,28 @@ def set_multiarray_ndshape_range(spec, feature_name, lower_bounds, upper_bounds)
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import flexible_shape_utils
-        >>> spec = coremltools.utils.load_spec('mymodel.mlmodel')
-        >>> # say, the default shape of "my_multiarray_featurename" is (2,3)
-        >>> flexible_shape_utils.set_multiarray_ndshape_range(spec, feature_name='my_multiarray_featurename', lower_bounds=[1,2], upper_bounds=[10,-1])
+        import coremltools
+        from coremltools.models.neural_network import flexible_shape_utils
+
+        spec = coremltools.utils.load_spec("mymodel.mlmodel")
+        # say, the default shape of "my_multiarray_featurename" is (2,3)
+        flexible_shape_utils.set_multiarray_ndshape_range(
+            spec,
+            feature_name="my_multiarray_featurename",
+            lower_bounds=[1, 2],
+            upper_bounds=[10, -1],
+        )
 
     :return:
         None. The spec is updated
     """
-    if not isinstance(lower_bounds, list):
-        raise Exception("lower_bounds must be a list")
-    if not isinstance(upper_bounds, list):
-        raise Exception("upper_bounds must be a list")
-
     feature = _get_feature(spec, feature_name)
-
-    if feature.type.WhichOneof("Type") != "multiArrayType":
-        raise Exception(
-            "Trying to update shape range for " "a non-multiArray feature type"
-        )
-
-    shape = feature.type.multiArrayType.shape
-
-    if len(shape) != len(lower_bounds):
-        raise Exception(
-            "Length of lower_bounds is not equal to the number of dimensions in the default shape"
-        )
-    if len(shape) != len(upper_bounds):
-        raise Exception(
-            "Length of upper_bounds is not equal to the number of dimensions in the default shape"
-        )
-
-    feature.type.multiArrayType.ClearField("ShapeFlexibility")
-
-    for i in range(len(lower_bounds)):
-        if shape[i] < lower_bounds[i]:
-            raise Exception(
-                "Default shape in %d-th dimension, which is %d, is smaller"
-                " than the lower bound of %d" % (i, int(shape[i]), lower_bounds[i])
-            )
-        if upper_bounds[i] != -1:
-            if shape[i] > upper_bounds[i]:
-                raise Exception(
-                    "Default shape in %d-th dimension, which is %d, is greater"
-                    " than the upper bound of %d" % (i, int(shape[i]), upper_bounds[i])
-                )
-
-        s = feature.type.multiArrayType.shapeRange.sizeRanges.add()
-        s.lowerBound = lower_bounds[i]
-        s.upperBound = upper_bounds[i]
+    _set_multiarray_ndshape_range_for_feature(feature, lower_bounds, upper_bounds)
 
     # Bump up specification version
     spec.specificationVersion = max(
         _MINIMUM_NDARRAY_SPEC_VERSION, spec.specificationVersion
     )
-
 
 def add_multiarray_ndshape_enumeration(spec, feature_name, enumerated_shapes):
     """
@@ -687,50 +792,20 @@ def add_multiarray_ndshape_enumeration(spec, feature_name, enumerated_shapes):
     --------
     .. sourcecode:: python
 
-        >>> import coremltools
-        >>> from coremltools.models.neural_network import flexible_shape_utils
-        >>> spec = coremltools.utils.load_spec('mymodel.mlmodel')
-        >>> # say, the default shape of "my_multiarray_featurename" is (2,3)
-        >>> flexible_shape_utils.add_multiarray_ndshape_enumeration(spec, feature_name='my_multiarray_featurename', enumerated_shapes=[(2,4), (2,6)])
+        import coremltools
+        from coremltools.models.neural_network import flexible_shape_utils
+
+        spec = coremltools.utils.load_spec("mymodel.mlmodel")
+        # say, the default shape of "my_multiarray_featurename" is (2,3)
+        flexible_shape_utils.add_multiarray_ndshape_enumeration(
+            spec, feature_name="my_multiarray_featurename", enumerated_shapes=[(2, 4), (2, 6)]
+        )
 
     :return:
         None. The spec is updated
     """
-    if not isinstance(enumerated_shapes, list):
-        raise Exception("enumerated_shapes must be a list")
-    if len(enumerated_shapes) == 0:
-        raise Exception("enumerated_shapes is empty")
-
     feature = _get_feature(spec, feature_name)
-    if feature.type.WhichOneof("Type") != "multiArrayType":
-        raise Exception(
-            "Trying to update shape range for " "a non-multiArray feature type"
-        )
-
-    shape = feature.type.multiArrayType.shape
-
-    if feature.type.multiArrayType.WhichOneof("ShapeFlexibility") != "enumeratedShapes":
-        feature.type.multiArrayType.ClearField("ShapeFlexibility")
-
-    eshape_len = len(feature.type.multiArrayType.enumeratedShapes.shapes)
-
-    shapes_added_so_far = []
-
-    # Add default array shape to list of enumerated shapes if enumerated shapes
-    # field is currently empty
-    if eshape_len == 0:
-        fixed_shape = feature.type.multiArrayType.shape
-        s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
-        s.shape.extend(fixed_shape)
-        shapes_added_so_far.append(list(fixed_shape))
-
-    for shape in enumerated_shapes:
-        if not isinstance(shape, tuple):
-            raise Exception("An element in 'enumerated_shapes' is not a tuple")
-        if list(shape) not in shapes_added_so_far:
-            s = feature.type.multiArrayType.enumeratedShapes.shapes.add()
-            s.shape.extend(list(shape))
-            shapes_added_so_far.append(list(shape))
+    _add_multiarray_ndshape_enumeration_for_feature(feature, enumerated_shapes)
 
     # Bump up specification version
     spec.specificationVersion = max(

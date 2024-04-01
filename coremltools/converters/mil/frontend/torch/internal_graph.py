@@ -4,20 +4,20 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import OrderedDict
+from typing import Any, Dict, List, Optional, Tuple, Union
 
+import numpy as np
 import torch
-import torch.fx
-import torch.fx.immutable_collections
-import torch.export
 
 from coremltools import _logger as logger
+from coremltools.converters.mil.input_types import TensorType
 
 from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
 from .exir_utils import extract_inputs_from_exir_program
 from .torchscript_utils import _expand_and_optimize_ir
 
 
-def _make_ssa_name(name):
+def _make_ssa_name(name: str) -> str:
     """
     Converts a symbol name (string) into an SSA name, by prepending '%'.
     Only used for pretty printing the graph.
@@ -27,7 +27,7 @@ def _make_ssa_name(name):
     return "%" + name
 
 
-def _ssa_name_list(names):
+def _ssa_name_list(names: List[str]) -> List[str]:
     """
     Take a list of symbol names (strings) and return them as SSA names. Only
     used for pretty printing the graph.
@@ -35,7 +35,7 @@ def _ssa_name_list(names):
     return [_make_ssa_name(x) for x in names]
 
 
-def _find_new_name(old_name, node_names):
+def _find_new_name(old_name: str, node_names: List[str]) -> str:
     """
     Disambiguate a node's name from a list of existing node names by adding
     successively larger integers.
@@ -48,7 +48,7 @@ def _find_new_name(old_name, node_names):
     return new_name
 
 
-def _replace_in_list(ls, old_val, new_val):
+def _replace_in_list(ls: List[Any], old_val: Any, new_val: Any) -> None:
     """Helper function to replace a value in a list."""
     try:
         idx = ls.index(old_val)
@@ -63,11 +63,17 @@ class InternalTorchIRBlock:
     coremltools internal representation of a torch IR block.
     """
 
-    def __init__(self, parent=None, nodes=None, inputs=None, outputs=None):
+    def __init__(
+        self,
+        parent: Optional["InternalTorchIRNode"] = None,
+        nodes: Optional[List["InternalTorchIRNode"]] = None,
+        inputs: Optional[List[str]] = None,
+        outputs: Optional[List[str]] = None,
+    ):
         """
         Arguments:
             parent: The InternalTorchIRNode this block belongs to.
-            nodes: list of InternalTorchIRNodes in the block
+            nodes: list of InternalTorchIRNode in the block
             inputs: list of input symbols.
             outputs: list of output symbols.
         """
@@ -152,13 +158,15 @@ class InternalTorchIRNode:
 
     def __init__(
         self,
-        kind,
-        inputs,
-        outputs,
-        name=None,
-        parent=None,
-        attr=None,
-        blocks=None,
+        kind: str,
+        inputs: List[str],
+        outputs: List[str],
+        name: Optional[str] = None,
+        parent: Optional[Union["InternalTorchIRGraph", "InternalTorchIRBlock"]] = None,
+        attr: Optional[Dict[str, Any]] = None,
+        blocks: Optional[List["InternalTorchIRBlock"]] = None,
+        model_hierarchy: Optional[str] = None,
+        meta: Optional[Dict] = None,
     ):
         """
         Arguments:
@@ -169,6 +177,8 @@ class InternalTorchIRNode:
             parent: The InternalTorchIRGraph/Block this node belongs to.
             attr:  dict of named attributes.
             blocks: list of InternalTorchIRBlock.
+            model_hierarchy: str represents TorchScript node's model hierarchy.
+            meta: A dictionary of torch fx node metadata inherited from torch.fx.Node.meta
         """
         if not name and not outputs:
             self.name = ""
@@ -181,6 +191,8 @@ class InternalTorchIRNode:
         self.parent = parent
         self.attr = attr if attr is not None else {"value": None}
         self.blocks = blocks if blocks is not None else []
+        self.model_hierarchy = model_hierarchy
+        self.meta = meta
 
     @classmethod
     def from_torchscript_node(cls, node, parent):
@@ -211,6 +223,7 @@ class InternalTorchIRNode:
             outputs=outputs,
             attr=attr,
             blocks=None,
+            model_hierarchy=node.getModuleHierarchy(),
         )
         internal_node.blocks = [
             InternalTorchIRBlock.from_torchscript_block(block=b, parent=internal_node)
@@ -267,6 +280,7 @@ class InternalTorchIRNode:
             parent=None,
             attr=None,
             blocks=None,
+            meta=node.meta,
         )
 
     def __str__(self, indent=2):
@@ -297,13 +311,89 @@ class InternalTorchIRNode:
         for block in self.blocks:
             block.replace_name(old_name, new_name)
 
+    def get_scope_info(self) -> Tuple[List[str], List[str]]:
+        """
+        Get the scope information (``scope_name``, ``scope_type``) of a TorchScript node.
+        In a TorchScript node, a model hierarchy is represented in a string of format:
+            ``scope_name_1(scope_type_1).scope_name_2(scope_type_1).<...>.scope_name_n(scope_type_n)``
+        For instance, given a torch model:
+
+            class SubModule(torch.nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    self.linear_1 = torch.nn.Linear(2, 3)
+
+                def forward(self, x):
+                    x_1 = self.linear(x)
+                    x_2 = torch.relu(x_1)
+                    return x_2
+
+            class Model(torch.nn.Module):
+                def __init__(self):
+                    super().__init__()
+                    self.submodule_1 = SubModule()
+
+                def forward(self, x):
+                    return self.submodule_1(x)
+
+        The model hierarchy of ``x_1`` is ``submodule_1(SubModule).linear_1(Linear)``,
+        and ``x_2`` has ``submodule_1(SubModule)``.
+
+        We consider the ``node.name`` as the most inner ``scope_name``, and
+        ``node.kind`` (aten op type) as the most inner ``scope_type``.
+
+        ``x_1`` results in:
+            {
+                "scope_name": ["submodule_1", "linear_1", "x_1"],
+                "scope_type": ["SubModule", "Linear", "linear"],
+            },
+        and ``x_2`` gets:
+            {
+                "scope_name": ["submodule_1", "x_2"],
+                "scope_type": ["SubModule", "relu"],
+            }.
+
+        Note that, for the model weight const ops, the names are in the following format:
+        "submodule_1.linear_1.weight", which would result in a long ``scope_name``:
+        ``["submodule_1", "linear_1", "submodule_1.linear_1.weight"]``.
+        This function does a special handling to trim it to:
+        ``["submodule_1", "linear_1", "weight"]``
+        """
+
+        def _trim_scopename_for_weight(scope_names: List[str]) -> List[str]:
+            weight_name = scope_names[-1]
+            if scope_names[:-1] != weight_name.split(".")[:-1]:
+                return scope_names
+            scope_names[-1] = weight_name.split(".")[-1]
+            return scope_names
+
+        if self.model_hierarchy == "" or self.model_hierarchy is None:
+            scopes = []
+        else:
+            scopes = self.model_hierarchy.split(".")
+        scope_names, scope_types = [], []
+        for val in scopes:
+            if val == "":
+                scope_names.append("UNKNOWN_SCOPE_NAME")
+                scope_types.append("UNKNOWN_SCOPE_TYPE")
+                continue
+            if val.count("(") != 1 or val.count(")") != 1:
+                raise ValueError(f"{val} is not a valid model hierarchy string.")
+            lower_idx, upper_idx = val.index("("), val.index(")")
+            scope_names.append(val[:lower_idx])
+            scope_types.append(val[lower_idx + 1 : upper_idx])
+        scope_names.append(self.name)
+        scope_types.append(self.kind)
+        if self.kind == "getattr":
+            scope_names = _trim_scopename_for_weight(scope_names)
+        return scope_names, scope_types
 
 class InternalTorchIRGraph:
     """
-    CoreML internal representation of a torch IR graph. A torch._C.Graph
+    Core ML internal representation of a torch IR graph. A torch._C.Graph
     object is not an ideal structure to use in converting to CoreML. Conversion
     to an InternalTorchIRGraph is inserted between the original graph and the
-    final CoreML model to address several issues:
+    final Core ML model to address several issues:
         1. A torch._C.graph is hard to work with. For example, its .inputs()
           and .outputs() functions return iterators, so the only way to
           determine the number of inputs/outputs is by counting to the end.
@@ -322,33 +412,35 @@ class InternalTorchIRGraph:
 
     def __init__(
         self,
-        params,
-        inputs,
-        outputs,
-        nodes=None,
+        params: Dict[str, np.ndarray],
+        inputs: Dict[str, TensorType],
+        outputs: List[str],
+        nodes: Optional[List["InternalTorchIRNode"]] = None,
+        buffers: Optional[Dict[str, torch.Tensor]] = None,
     ):
         """
         Arguments:
             params: dict mapping parameter names to their numpy value.
-            inputs: OrderedDict mapping input names to their example values.
+            inputs: OrderedDict mapping input names to their input types.
             outputs: list[str], list of outputs from the graph.
-            nodes: list of InternalTorchIRNodes in the graph.
+            nodes: list of InternalTorchIRNode in the graph.
+            buffers: Dict mapping torch model buffers to their names.
         """
         self.nodes = nodes
         self.params = params
         self.inputs = inputs
         self.outputs = outputs
+        self.buffers = buffers
+        self.params_scope = {}
 
     @classmethod
-    def from_torchscript(cls, torchscript, input_values=None, cut_at_symbols=None):
+    def from_torchscript(cls, torchscript, inputs=None, cut_at_symbols=None):
         """
         Arguments:
             torchscript: TorchScript object representing the model to convert.
-            input_values: A list of inputs to the graph. Must be given is
-                @raw_graph if not None.
+            inputs: A list of input types to the graph.
             cut_at_symbols: The list of desired outputs from the graph. Symbols
-                must be present in the graph. For debugging use only. Can only
-                be given if @raw_graph is not None.
+                must be present in the graph. For debugging use only.
         """
         if not isinstance(torchscript, torch.jit.ScriptModule):
             raise AssertionError(
@@ -367,34 +459,21 @@ class InternalTorchIRGraph:
             )
 
         nodes = []
-        params = {}
-        inputs = OrderedDict()
+        inputs_name_to_type = OrderedDict()
         outputs = []
 
-        raw_graph, params_dict, buffer_dict = _expand_and_optimize_ir(torchscript)
-
-        # Add params
-        for name, param in params_dict.items():
-            if isinstance(param, torch.Tensor):
-                if param.is_quantized:
-                    value = param
-                else:
-                    value = param.detach().cpu().numpy()
-            else:
-                value = param
-            params[name] = value
+        raw_graph, params, buffers = _expand_and_optimize_ir(torchscript)
 
         # Add inputs
         # The first element of the raw_graph.inputs() is the 'self' of the module, which is not used.
         graph_inputs = list(raw_graph.inputs())[1:]
-        if len(graph_inputs) != len(input_values):
-                raise ValueError(
-                    f"Number of TorchScript inputs ({len(graph_inputs)}) must match the user provided inputs ({len(input_values)})."
-                )
+        if len(graph_inputs) != len(inputs):
+            raise ValueError(
+                f"Number of TorchScript inputs ({len(graph_inputs)}) must match the user provided inputs ({len(inputs)})."
+            )
         for index, _input in enumerate(graph_inputs):
             name = _input.debugName()
-            value = input_values[index]
-            inputs[name] = value
+            inputs_name_to_type[name] = inputs[index]
 
         # Add outputs, cutting if @cut_at_symbols is set
         output_names = cut_at_symbols
@@ -403,10 +482,16 @@ class InternalTorchIRGraph:
         for output in output_names:
             outputs.append(output)
 
-        internal_graph = cls(nodes=nodes, params=params, inputs=inputs, outputs=outputs)
+        internal_graph = cls(
+            nodes=nodes,
+            params=params,
+            inputs=inputs_name_to_type,
+            outputs=outputs,
+            buffers=buffers,
+        )
 
-        node_names = set()
         # Add nodes
+        node_names = set()
         for raw_node in raw_graph.nodes():
             new_node = InternalTorchIRNode.from_torchscript_node(
                 node=raw_node, parent=internal_graph
@@ -416,10 +501,24 @@ class InternalTorchIRGraph:
             internal_graph.nodes.append(new_node)
             node_names.add(new_node.name)
 
-        return internal_graph, params_dict, buffer_dict
+        internal_graph._cache_model_hierarchy_for_params()
+
+        return internal_graph
+
+    def _cache_model_hierarchy_for_params(self) -> None:
+        # We cache the model hierarchy information for model weights in self.params_scope,
+        # since self.params doesn't contain the information.
+        def cache_model_hierarchy_block(block):
+            for node in block.nodes:
+                for b in node.blocks:
+                    cache_model_hierarchy_block(b)
+                if node.name in self.params:
+                    self.params_scope[node.name] = node.get_scope_info()
+        cache_model_hierarchy_block(self)
 
     @classmethod
-    def from_exir(cls, exir: torch.export.ExportedProgram):
+    def from_exir(cls, exir):
+        # exir: torch.export.ExportedProgram
         exported_program = exir
 
         nodes = []
@@ -436,19 +535,29 @@ class InternalTorchIRGraph:
         inputs_to_buffers = exported_program.graph_signature.inputs_to_buffers
 
         inputs_to_consts = {**inputs_to_parameters, **inputs_to_buffers}
-
-        parameters_to_inputs = {
+        consts_to_inputs = {
             v: k if not k.startswith("%") else k[1:] for k, v in inputs_to_consts.items()
         }
 
         # Add params
         for name, param in exported_program.state_dict.items():
-            if isinstance(param, torch.Tensor):
-                value = param.detach().cpu().numpy()
+            if not isinstance(param, torch.Tensor):
+                raise NotImplementedError(
+                    f"For ExecuTorch paramter, only support torch.Tensor, but got {type(param)}"
+                )
+            params[name if name not in consts_to_inputs else consts_to_inputs[name]] = param
+        # Non-persistent buffers may be missing from state_dict, but we still need their values
+        # Reference: https://github.com/pytorch/executorch/pull/1802
+        for name, buffer in zip(exported_program.graph_signature.buffers, exported_program.buffers()):
+            if not isinstance(buffer, torch.Tensor):
+                raise NotImplementedError(
+                    f"For ExecuTorch buffer, only support torch.Tensor, but got {type(buffer)}"
+                )
+            params_name = consts_to_inputs[name]
+            if params_name in params:
+                assert torch.equal(params[params_name], buffer)
             else:
-                raise NotImplementedError("Only torch.Tensor handled yet")
-
-            params[name if name not in parameters_to_inputs else parameters_to_inputs[name]] = value
+                params[params_name] = buffer
 
         graph_module = exported_program.graph_module
         graph = graph_module.graph
@@ -466,7 +575,7 @@ class InternalTorchIRGraph:
                 # e.g. higher-level callables such as "call_delegate"
                 if not isinstance(attr, torch.Tensor):
                     raise NotImplementedError("Only torch.Tensor attr handled yet")
-                params[name] = attr.detach().cpu().numpy()
+                params[name] = attr
             elif node.op == "placeholder":
                 continue
             elif node.op == "output":

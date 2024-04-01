@@ -912,7 +912,8 @@ class TestSoftmax:
             def prog():
                 return mb.softmax(x=x, axis=axis)
 
-            op = list(prog.functions.values())[0].operations[2]
+            ops = list(prog.functions.values())[0].operations
+            op = list(ops)[2]
             assert op.op_type == "softmax"
             np.testing.assert_allclose(
                 op.value_inference(),

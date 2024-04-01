@@ -125,7 +125,11 @@ class compose_conv1d(AbstractGraphPass):
     @block_context_manager
     def _compose_conv1d_block(self, block: Block):
         def help_compose_conv1d_block(block: Block) -> bool:
+            fusion_occurred = False
             for op in list(block.operations):
+                if op.enclosing_block is None:
+                    continue
+
                 for b in op.blocks:
                     self._compose_conv1d_block(b)
 
@@ -141,10 +145,9 @@ class compose_conv1d(AbstractGraphPass):
 
                 # try pattern `expand_dim` -> `transpose` -> `conv2d` -> `transpose` -> `squeeze`
                 if self._try_match_and_transform_pattern_channel_last(op, block):
-                    # has to break as the downstream iterator is affected
-                    return True
+                    fusion_occurred = True
 
-            return False
+            return fusion_occurred
 
         block_changed = True
         while block_changed:
@@ -168,8 +171,10 @@ class compose_conv1d(AbstractGraphPass):
             return False
         squeeze_op = conv_op.outputs[0].child_ops[0]
 
-        # abort composition if not squeezing the dummy height
+        # Abort composition if not squeezing the dummy height (the extended dim_size=1 dimension)
         if squeeze_op.axes.rank != 1 or squeeze_op.axes.val[0] not in (-2, 2):
+            return False
+        elif squeeze_op.x.shape[squeeze_op.axes.val[0]] != 1:
             return False
 
         # everything looks good
@@ -498,6 +503,9 @@ class fuse_conv_batchnorm(AbstractGraphPass):
 
         fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -508,10 +516,8 @@ class fuse_conv_batchnorm(AbstractGraphPass):
 
             bn_op = _match_pattern(op)
             if bn_op is not None:
-                fusion_occurred = self._try_to_transform(op, bn_op)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
+                if self._try_to_transform(op, bn_op):
+                    fusion_occurred = True
         return fusion_occurred
 
 
@@ -796,8 +802,11 @@ class fuse_conv_bias(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_conv_bias_block(self, block):
-        fusion_status = False
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -809,17 +818,14 @@ class fuse_conv_bias(AbstractGraphPass):
             # pattern 1 : conv + add/sub
             add_op = self._match_pattern(op)
             if add_op is not None:
-                fusion_status = self._try_to_transform(op, add_op)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
+                if self._try_to_transform(op, add_op):
+                    fusion_occurred = True
 
             # pattern 2 : conv + transpose + add/sub
-            fusion_status = self._try_to_transform_transpose_pattern(op, block)
-            if fusion_status:
-                return fusion_status
+            elif self._try_to_transform_transpose_pattern(op, block):
+                fusion_occurred = True
 
-        return fusion_status
+        return fusion_occurred
 
 
 @register_pass(namespace="common")
@@ -1005,6 +1011,9 @@ class fuse_conv_scale(AbstractGraphPass):
 
         fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -1016,10 +1025,9 @@ class fuse_conv_scale(AbstractGraphPass):
             scale_op = _match_pattern(op)
 
             if scale_op is not None:
-                fusion_occurred = self._try_to_transform(op, scale_op)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
+                if self._try_to_transform(op, scale_op):
+                    fusion_occurred = True
+
         return fusion_occurred
 
 
@@ -1125,8 +1133,11 @@ class fuse_pad_conv(AbstractGraphPass):
 
     @block_context_manager
     def _pad_conv_connect_block(self, block):
-        fusion_status = False
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -1137,8 +1148,6 @@ class fuse_pad_conv(AbstractGraphPass):
 
             transpose_ops = self._match_pattern(op)
             if transpose_ops is not None:
-                fusion_status = self._try_to_transform(op, transpose_ops, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(op, transpose_ops, block):
+                    fusion_occurred = True
+        return fusion_occurred

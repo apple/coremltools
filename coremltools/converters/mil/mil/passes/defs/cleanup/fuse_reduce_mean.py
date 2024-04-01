@@ -108,8 +108,11 @@ class fuse_reduce_mean(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_reduce_mean_block(self, block):
-        fusion_status = False
-        for i, op in enumerate(list(block.operations)):
+        fusion_occurred = False
+        for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -119,8 +122,6 @@ class fuse_reduce_mean(AbstractGraphPass):
 
             # start pattern match if mul op is encountered
             if op.op_type == "reduce_sum":
-                fusion_status = self._try_to_transform(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(op, block):
+                    fusion_occurred = True
+        return fusion_occurred

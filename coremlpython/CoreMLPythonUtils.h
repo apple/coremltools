@@ -23,6 +23,7 @@ namespace CoreML {
     namespace Python {
         namespace Utils {
 
+            bool isCompiledModelPath(const std::string& path);
             NSURL * stringToNSURL(const std::string& str);
             void handleError(NSError *error);
             

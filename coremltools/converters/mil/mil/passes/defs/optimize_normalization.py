@@ -27,7 +27,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
     are ``instance_norm``. Pattern 5 is ``layer_norm``. You can find these patterns in the methods for
     this class in the source code. To quickly view the source code, click the **[source]** button at
     the end of the class definition.
-    
+
     """
 
     _DEBUG = False  # set to true to plot the block before and after the transformation
@@ -93,13 +93,13 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         """
         Returns ``True`` for child op types matching ``child_op_types``, otherwise returns ``False``.
 
-		Parameters
-		----------
+                Parameters
+                ----------
 
         param op : Current op.
-        
+
         param child_op_type : Expected child op type.
-        
+
         param check_order : Ensure child in given order, defaults to ``True``.
         """
         if op is None or len(op.outputs) != 1:
@@ -120,13 +120,13 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         """
         Returns child op if type matches, otherwise returns ``None``.
 
-		Parameters
-		----------
+                Parameters
+                ----------
 
         param op : Current op.
-        
+
         param child_op_type : Expected child op type.
-        
+
         param index : Child op index.
         """
         if op is None:
@@ -185,8 +185,18 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
         if rank == 4 and negative_axes == [-3]:
             is_layernorm = (gamma_var is None and beta_var is None) or (gamma_rank == 1 and beta_rank == 1)
-            gamma_var = gamma_var.val if gamma_var else None
-            beta_var = beta_var.val if beta_var else None
+
+            if gamma_var:
+                ops_to_remove.append(gamma_var.op)
+                gamma_var = gamma_var.val
+            else:
+                gamma_var = None
+
+            if beta_var:
+                ops_to_remove.append(beta_var.op)
+                beta_var = beta_var.val
+            else:
+                beta_var = None
 
         if rank == 4 and (negative_axes == [-2, -1] or negative_axes == [-3, -2]):
             if (
@@ -219,6 +229,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                 name=out_name + "_instancenorm" if is_require_rank4_transpose else out_name,
                 before_op=end_op,
             )
+            ops_to_remove.extend([gamma_var.op, beta_var.op])
         else:  # is_layernorm
             x = mb.layer_norm(
                 x=x if is_require_rank4_transpose else reduce_op.x,
@@ -251,7 +262,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         ``y = gamma * (x - mean) / sqrt(variance + epsilon) + beta``
 
         ``y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])``
-        
+
         .. code-block::
 
             x --> reduce_mean --> sub --> square --> reduce_mean --> add(epsilon) --> rsqrt
@@ -282,8 +293,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         It is ``layer_norm`` if all of the following are true:
             - ``axes`` is either ``[-1]``, ``[-1, -2]``, or ``[-1, -2, -3]``, and so on.
             - ``rank`` of ``gamma`` and ``beta`` is equal to the length of the ``axes``.
-        
-         """
+
+        """
         ops_to_remove = []
         root_var = reduce_op.x
 
@@ -398,18 +409,18 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
     def _try_match_and_transform_pattern_2(self, reduce_op, block) -> bool:
         """
         Identify the pattern:
-        
+
         ``y = (x - mean) / pow(variance + epsilon) * gamma + beta``
 
         This pattern corresponds to, and should be fused as, ``instance_norm``.
-        
+
         All of the following conditions must be satisfied:
-        
+
         1. ``input`` is rank 4 tensor.
         2. ``reduce`` operates on spatial dimensions ``axes=[-2, -1]``, or ``axes=[-3, -2]`` (a
            channel first to channel last transpose would be inserted in such cases).
         3. ``gamma`` and ``beta`` are both shape ``(C,)`` after ``squeeze``, where ``C`` is number of channels.
-        
+
         .. code-block::
 
             |----> sub -----|                            const (0.5)
@@ -523,14 +534,14 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         Detect ``InstanceNorm`` pattern in TensorFlow-Addons.
 
         This pattern corresponds to, and should be fused as, ``instance_norm``.
-        
+
         All of the following conditions must be satisfied:
-        
+
         1. ``input`` is rank 4 tensor.
         2. ``reduce`` operates on spatial dimensions ``axes=[-2, -1]``, or ``axes=[-3, -2]`` (a
            channel first to channel last transpose would be inserted in such cases).
         3. ``gamma`` and ``beta`` are absent. Default values for ``gamma`` and ``beta`` would be used.
-        
+
         .. code-block::
 
                    |-------------------------------------------------|
@@ -661,18 +672,18 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
     def _try_match_and_transform_pattern_4(self, reduce_op: Operation, block: Block) -> bool:
         """
         Identify the pattern:
-        
+
         ``y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])``
 
         This pattern corresponds to, and should be fused as, ``instance_norm``.
-        
+
         All of the following conditions must be satisfied:
-        
+
         1. ``input`` is rank 4 tensor.
         2. ``reduce`` operates on spatial dimensions ``axes=[-2, -1]`` or ``axes=[-3, -2]`` (a
            channel first to channel last transpose would be inserted in such cases).
         3. ``gamma`` and ``beta`` are both shape ``(C,)`` after ``squeeze``, where ``C`` is number of channels.
-        
+
         .. code-block::
 
             |-----------|
@@ -704,8 +715,17 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
         # check that root_var feeds into exactly 4 ops
         if len(root_var.child_ops) != 4:
             return False
-        if root_var.op is not None and not self._check_child_op_types(
-            root_var.op, child_op_types=["mul", "mul", "reduce_sum", "mul"]
+
+        if (
+            root_var.op is not None
+            and not self._check_child_op_types(
+                root_var.op, child_op_types=["mul", "mul", "reduce_sum", "mul"]
+            )
+            and not self._check_child_op_types(
+                # The _check_child_op_types checks for the exact order of the child_ops.
+                root_var.op,
+                child_op_types=["mul", "mul", "mul", "reduce_sum"],
+            )
         ):
             return False
 
@@ -988,6 +1008,15 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
             # For simplicity don't handle this edge case.
             return False
 
+        if add_beta_op is None and mul_gamma_op is None:
+            # Gamma and beta are optional in layer_norm.
+            pass
+        elif add_beta_op is None or mul_gamma_op is None:
+            # If only one of gamma or beta is present, they could
+            # be folded into the layer_norm op. For simplicity
+            # don't handle this edge case.
+            return False
+
         if has_beta_and_gamma:
             beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
 
@@ -1005,18 +1034,8 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                 name="_fuse_layernorm_beta"
             )
 
-            ops_to_remove.append(add_beta_op)
-            ops_to_remove.append(mul_gamma_op)
+            ops_to_remove.extend([add_beta_op, mul_gamma_op])
             end_op = mul_gamma_op
-
-        if add_beta_op is None and mul_gamma_op is None:
-            # Gamma and beta are optional in layer_norm.
-            pass
-        elif add_beta_op is None or mul_gamma_op is None:
-            # If only one of gamma or beta is present, they could
-            # be folded into the layer_norm op. For simplicity
-            # don't handle this edge case.
-            return False
 
         return self._try_apply_transform(
             reduce_op, block, gamma_var, beta_var, epsilon_var, end_op, ops_to_remove
@@ -1024,8 +1043,11 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_layernorm_or_instancenorm_block(self, block: Block):
-        fusion_status = False
-        for i, op in enumerate(list(block.operations)):
+        fusion_occurred = False
+        for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -1035,21 +1057,15 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
             # start pattern match if reduce_mean op is encountered
             if op.op_type == "reduce_mean":
-                if fusion_status is False:
-                    fusion_status = self._try_match_and_transform_pattern_1(op, block)
-                if fusion_status is False:
-                    fusion_status = self._try_match_and_transform_pattern_2(op, block)
-                if fusion_status is False:
-                    fusion_status = self._try_match_and_transform_pattern_3(op, block)
-                if fusion_status is False:
-                    fusion_status = self._try_match_and_transform_pattern_5(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
+                if self._try_match_and_transform_pattern_1(op, block):
+                    fusion_occurred = True
+                elif self._try_match_and_transform_pattern_2(op, block):
+                    fusion_occurred = True
+                elif self._try_match_and_transform_pattern_3(op, block):
+                    fusion_occurred = True
+                elif self._try_match_and_transform_pattern_5(op, block):
+                    fusion_occurred = True
             elif op.op_type == "reduce_sum":
-                if fusion_status is False:
-                    fusion_status = self._try_match_and_transform_pattern_4(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_match_and_transform_pattern_4(op, block):
+                    fusion_occurred = True
+        return fusion_occurred

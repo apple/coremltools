@@ -68,11 +68,8 @@ class loop_invariant_elimination(AbstractGraphPass):
             # this block output is a var from outside of the block
 
             enclosing_block = while_op.enclosing_block
-            while_op_id = enclosing_block.find_op_id_in_block(while_op)
-            output_from_outside_of_block = (
-                True
-                if enclosing_block.is_var_visible_in_block(vx_out, upto_op_with_id=while_op_id)
-                else False
+            output_from_outside_of_block = enclosing_block.is_var_visible_in_block(
+                vx_out, upto_op=while_op
             )
             if return_input_as_output or output_from_outside_of_block:
                 loop_invariant_ids.append(i)

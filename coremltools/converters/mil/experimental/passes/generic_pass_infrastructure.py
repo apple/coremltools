@@ -7,7 +7,9 @@ import itertools
 import warnings
 from functools import partial
 
+from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 
 from ...mil.passes import pass_registry
 
@@ -172,24 +174,26 @@ def _detect_pattern(program_op, ops_arrangement_root_var, block):
 
 @block_context_manager
 def _fuse_one_block(block, ops_arrangement, var_constraints, transform_pattern):
-    fusion_status = False
+    fusion_occurred = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
                 block_changed = _fuse_one_block(b, ops_arrangement, var_constraints, transform_pattern)
 
-        ops_arrangement_root_var = list(ops_arrangement.functions.values())[0].function_inputs[0]
-        fusion_status, pattern = _detect_pattern(op, ops_arrangement_root_var, block)
+        ops_arrangement_root_var = list(
+            list(ops_arrangement.functions.values())[0].inputs.values()
+        )[0]
+        fusion_occurred, pattern = _detect_pattern(op, ops_arrangement_root_var, block)
 
-        if fusion_status:
-            fusion_status &= var_constraints(pattern)
+        if fusion_occurred:
+            fusion_occurred &= var_constraints(pattern)
 
-        if fusion_status:
+        if fusion_occurred:
             transform_pattern(pattern)
-            return fusion_status
+            return fusion_occurred
 
-    return fusion_status
+    return fusion_occurred
 
 
 def fuse_all_blocks(ops_arrangement, var_constraints, transform_pattern, prog):
@@ -208,9 +212,10 @@ class PassContainer():
         if len(self.passes) == 0:
             raise ValueError("no pass functions associated with " + self.pass_name)
 
-        for one_pass in self.passes:
-            one_pass(prog)
-            prog.validate()
+        with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=[self.pass_name])):
+            for one_pass in self.passes:
+                one_pass(prog)
+                prog.validate(check_essential_scope=True)
 
     def add(self, pass_function):
         self.passes.append(pass_function)

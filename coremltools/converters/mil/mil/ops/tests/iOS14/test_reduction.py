@@ -335,7 +335,8 @@ class TestReduction:
             def prog():
                 return mb.reduce_log_sum_exp(x=x, axes=(axis,))
 
-            op = list(prog.functions.values())[0].operations[3]
+            ops = list(prog.functions.values())[0].operations
+            op = list(ops)[3]
             assert op.op_type == "reduce_log_sum_exp"
             np.testing.assert_allclose(
                 op.value_inference(), scipy.special.logsumexp(x, axis=axis), atol=1e-04, rtol=1e-05

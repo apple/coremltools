@@ -83,6 +83,7 @@ _COMMON_PASSES: List[Text] = [
     "common::merge_consecutive_relus",
     "common::merge_consecutive_reshapes",
     "common::merge_consecutive_transposes",
+    "common::fuse_transpose_matmul",
     # "expand_high_rank_reshape_and_transpose" must come after "common::merge_consecutive_transposes"
     "common::expand_high_rank_reshape_and_transpose",
     "common::reduce_transposes",
@@ -93,6 +94,8 @@ _COMMON_PASSES: List[Text] = [
     "common::remove_redundant_ops",
     "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
     "common::add_int16_cast",  # Will be removed if compute precision is not FP16.
+    "common::update_output_dtypes",  # Must run again after `add_fp16_cast` and `add_int16_cast`.
+    "common::const_elimination",
     "common::dead_code_elimination",  # always end with dce
 ]
 
@@ -103,8 +106,12 @@ _CLEANUP_PASSES: List[Text] = [
     "common::dead_code_elimination",  # must follow cast_optimization
     "common::const_elimination",
     "common::const_deduplication",  # after all consts have been settled
-    "common::dead_code_elimination",  # come before merge_tensorwise_affine_dequantize_with_consecutive_ops
-    "common::merge_tensorwise_affine_dequantize_with_consecutive_ops",  # after const_deduplication and dead_code_elimination
+    "common::dead_code_elimination",  # come before merge_affine_dequantize_with_consecutive_ops
+    "common::merge_affine_dequantize_with_consecutive_ops",  # after const_deduplication and dead_code_elimination
+    "common::expand_dynamic_linear",  # if weight or bias were not merged into constexpr, then expand linear to matmul + add
+    "common::fuse_transpose_matmul",  # there might be left over transpose that got created in hoping to use linear, but now can be fused back with matmul
+    "common::dead_code_elimination",  # fused transposes become orphans thus can be elimianted
+    "common::const_deduplication",  # additional consts may be introduced during merging dequantize and expanding linear
     "common::loop_invariant_elimination",
     "common::noop_elimination",
     "common::dedup_op_and_var_names",
@@ -250,6 +257,7 @@ class PassPipeline:
         )
     """
 
+    # TODO: rdar://121242189 ([Infra] Have a better way to handle predefined pass pipeline)
     _PIPELINE_NAME_TO_PASSES = {
         "default": _COMMON_PASSES + _CLEANUP_PASSES,
         "cleanup": _CLEANUP_PASSES,
@@ -453,8 +461,23 @@ class PassPipelineManager:
                     f"The graph pass options for {pass_name} is set to {pass_options}. "
                     f"It will change the pass behavior. Make sure the option is intended."
                 )
+            if pass_name.startswith("experimental::"):
+                logger.warning(
+                    f"The graph pass {pass_name} is under experimental development, "
+                    f"and the API could be changed in the future."
+                )
             graph_pass = PASS_REGISTRY[pass_name]
             graph_pass.set_options(pass_options)
-            graph_pass(prog)
-            prog.validate()
+
+            try:
+                graph_pass(prog)
+            except Exception as e:
+                logger.error(
+                    f"\n\nERROR - '{pass_name}' graph pass produces the following error:\n"
+                )
+                raise e  # re-raise exception
+
+            # After dead code elimination, we should check if the program misses any essential scope info
+            check_essential_scope = pass_name == "common::dead_code_elimination"
+            prog.validate(check_essential_scope=check_essential_scope)
         logger.debug(f"Program after {pass_pipeline} pipeline:\n{prog}")

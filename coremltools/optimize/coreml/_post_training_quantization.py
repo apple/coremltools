@@ -16,6 +16,8 @@ from coremltools.converters.mil.frontend.milproto import load as _milproto_to_py
 from coremltools.converters.mil.mil.passes.defs.quantization import (
     AbstractQuantizationPass as _AbstractQuantizationPass,
 )
+from coremltools.converters.mil.mil.passes.graph_pass import PassOption
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.models import MLModel as _MLModel
 from coremltools.optimize.coreml import OptimizationConfig as _OptimizationConfig
 from coremltools.optimize.coreml._config import _MetaDataDict
@@ -23,7 +25,6 @@ from coremltools.optimize.coreml._config import _MetaDataDict
 from ._quantization_passes import WeightDecompressor as _WeightDecompressor
 from ._quantization_passes import linear_quantize_weights as _linear_quantize_weights
 from ._quantization_passes import palettize_weights as _palettize_weights
-from ._quantization_passes import prune_weights as _prune_weights
 
 
 def _convert_model_spec_to_pymil_prog(
@@ -319,8 +320,8 @@ def prune_weights(mlmodel: _MLModel, config: _OptimizationConfig):
         compressed_model = cto.coreml.prune_weights(model, config)
 
     """
-
-    weight_pruner = _prune_weights(config, fake_compression=False)
+    weight_pruner = PASS_REGISTRY["compression::prune_weights"]
+    weight_pruner.set_options([PassOption("config", config)])
     return _apply_graph_pass(mlmodel, weight_pruner)
 
 def decompress_weights(mlmodel: _MLModel):
@@ -477,7 +478,7 @@ def get_weights_metadata(mlmodel: _MLModel, weight_threshold: int = 2048):
     def get_weights_meta_block(block):
         # get the candidates ops with the given op_type
         candidate_ops = []
-        for op in list(block.operations):
+        for op in block.operations:
             for b in op.blocks:
                 get_weights_meta_block(b)
 

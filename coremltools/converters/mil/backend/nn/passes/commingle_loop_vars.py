@@ -9,7 +9,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _commingle_loop_vars_block(block):
-    for op in list(block.operations):
+    for op in block.operations:
         for b in op.blocks:
             _commingle_loop_vars_block(b)
 
@@ -23,7 +23,6 @@ def _commingle_loop_vars_block(block):
                     anchor_op=None,
                     old_var=vx_in,
                     new_var=v_out,
-                    no_check_var_visibility=True,
                 )
 
             # replace block inputs

@@ -1268,6 +1268,63 @@ class TestSqueeze:
             assert const.val[0, 0, 0] == 112
             return x
 
+    @staticmethod
+    def test_squeeze_invalid_axis():
+        with pytest.raises(
+            ValueError, match="Invalid axis 3 in squeeze. The axis should be smaller than 3"
+        ):
+
+            @mb.program()
+            def prog():
+                const = mb.const(val=[[[2, 3], [4, 5]]])
+                x = mb.squeeze(x=const, axes=(3,))
+                return x
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, is_symbolic",
+        itertools.product(
+            compute_units,
+            backends,
+            (True, False),
+        ),
+    )
+    def test_non_single_element_dim(self, compute_unit, backend, is_symbolic):
+        if backend.backend == "neuralnetwork":
+            pytest.skip("neuralnetwork backend doesn't support squeeze a not-1 dimension")
+        if compute_unit == ct.ComputeUnit.CPU_ONLY:
+            pytest.xfail("CPU failed non-single-dim squeeze (rdar://124555262)")
+
+        x = np.arange(2 * 3 * 4, dtype=np.int32).reshape(2, 3, 4)
+        input_shape = (
+            [get_new_symbol(), get_new_symbol(), get_new_symbol()] if is_symbolic else x.shape
+        )
+        input_placeholders = {"x": mb.placeholder(shape=input_shape)}
+        input_values = {"x": x}
+
+        def build(x):
+            return [
+                mb.squeeze(x=x, axes=(-1,)),
+                mb.squeeze(x=x, axes=(-2, 0)),
+                mb.squeeze(x=x, axes=(0, 1, 2)),
+                mb.squeeze(x=x),
+            ]
+
+        # The symbolic dim won't be squeezed, so it doesn't affect the output.
+        expected_output_types = [tuple(input_shape) + (types.int32,)] * 4
+        expected_outputs = [x] * 4
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            inputs=construct_inputs_from_placeholders(input_placeholders, 10)
+            if backend.backend == "mlprogram"
+            else None,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
 
 class TestTranspose:
     @pytest.mark.parametrize(

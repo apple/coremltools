@@ -17,6 +17,8 @@ from tqdm import tqdm as _tqdm
 
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+from coremltools.converters.mil.frontend import _utils
+from coremltools.converters.mil.frontend._utils import dynamic_topk
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Symbol, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
@@ -25,6 +27,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import (
     promote_input_dtypes,
     solve_slice_by_index_shape,
 )
+from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 from coremltools.converters.mil.mil.types.type_mapping import builtin_to_string
@@ -75,34 +78,63 @@ def convert_nodes(context, graph):
         graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
     for node in _tqdm(graph.nodes, desc="Converting PyTorch Frontend ==> MIL Ops", unit=" ops"):
-        op_lookup = node.kind
-        add_op = _TORCH_OPS_REGISTRY.get_func(op_lookup)
-        if add_op is None:
-            if re.match(r".*_dynamic", op_lookup):
-                raise RuntimeError(
-                    f"PyTorch convert function for op '{op_lookup}' not implemented.\n"
-                    "Dynamic quantized models are not supported by Core ML.\n"
-                    "Please use static quantization or the APIs in coremltools.optimize to quantize/compress models."
-                )
-            else:
-                raise RuntimeError(
-                    f"PyTorch convert function for op '{op_lookup}' not implemented."
-                )
+        try:
+            convert_single_node(context, node)
+        except Exception as e:
+            scope_names = node.get_scope_info()[0]
+            op_location = '/'.join(scope_names[:-1])
+            logger.error(f"\n\nERROR - converting '{node.kind}' op (located at: '{op_location}'):\n")
+            raise e     # re-raise exception
 
-        logger.info("Converting op {} : {}".format(node.name, op_lookup))
+        if _all_outputs_present(context, graph):
+            # We've generated all the outputs the graph needs, terminate conversion.
+            break
 
+
+def convert_single_node(context, node):
+    """
+    Converts a single lowered PyTorch op to MIL.
+
+    Arguments:
+        context: A TranscriptionContext object to pull node inputs and
+            assign node outputs.
+        node: lowered PyTorch op to convert.
+    """
+    op_lookup = node.kind
+    add_op = _TORCH_OPS_REGISTRY.get_func(op_lookup)
+    if add_op is None:
+        if re.match(r".*_dynamic", op_lookup):
+            raise RuntimeError(
+                f"PyTorch convert function for op '{op_lookup}' not implemented.\n"
+                "Dynamic quantized models are not supported by Core ML.\n"
+                "Please use static quantization or the APIs in coremltools.optimize to quantize/compress models."
+            )
+        else:
+            raise RuntimeError(
+                f"PyTorch convert function for op '{op_lookup}' not implemented."
+            )
+
+    logger.info("Converting op {} : {}".format(node.name, op_lookup))
+
+    scopes = []
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        scope_name, scope_type = node.get_scope_info()
+        scopes = [
+            ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=scope_type),
+            ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
+        ]
+    elif context.frontend == TorchFrontend.EXIR:
+        scopes = [ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[node.meta["debug_handle"]])]
+    else:
+        raise ValueError(f"Invalid PyTorch frontend {context.frontend}")
+
+    with mb.scope(*scopes):
         if context.frontend == TorchFrontend.TORCHSCRIPT:
             context.quant_context.maybe_handle_quantized_inputs(node)
         context.prepare_for_conversion(node)
-
         add_op(context, node)
-
         if _TORCH_OPS_REGISTRY.is_inplace_op(op_lookup):
             context.process_inplace_op(node)
-
-        # We've generated all the outputs the graph needs, terminate conversion.
-        if _all_outputs_present(context, graph):
-            break
 
 
 def convert_block(context, block, inputs):
@@ -177,7 +209,7 @@ def _get_inputs(
                 raise NotImplementedError(f"Binding of inputs of type {type(i)} not handled yet")
 
         return results
-    
+
     def check_if_number_of_inputs_expected(num_inputs: int, expected: Union[int, List, Tuple]) -> None:
         expected = [expected] if isinstance(expected, int) else expected
         if num_inputs not in expected:
@@ -186,7 +218,7 @@ def _get_inputs(
                     node.name, node.kind, num_inputs, expected
                 )
             )
-        
+
     def check_if_number_of_inputs_more_than_min_expected(num_inputs: int, min_expected: int) -> None:
         if num_inputs < min_expected:
             raise ValueError(
@@ -242,7 +274,16 @@ def _is_const(var, optional=False):
         return True
     if isinstance(var, np.ndarray):
         return True
-    return var is not None and (var.val is not None or var.op.op_type.startswith("constexpr_"))
+    return (
+        var is not None
+        and isinstance(var, Var)
+        and var.op is not None
+        and (
+            var.op.op_type.startswith("constexpr_")
+            or (var.op.op_type == "dequantize" and var.op.can_materialize_val())
+            or var.val is not None
+        )
+    )
 
 def _create_linear_layer(x, w, bias):
     """
@@ -285,6 +326,15 @@ def _construct_constant(val, name):
         return None
     else:
         return mb.const(val=val, name=name)
+
+
+@register_torch_op
+def native_dropout(context, node):
+    if context.frontend == TorchFrontend.EXIR:
+        inputs = _get_inputs(context, node, min_expected=2)
+        context.add((inputs[0],), node.name)
+    else:
+        raise ValueError(f"native_dropout should only appear in EXIR, but got {context.frontend}")
 
 
 @register_torch_op
@@ -822,9 +872,12 @@ def pixel_unshuffle(context, node):
 @register_torch_op(torch_alias=["bmm", "mm"])
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    if inputs[1].val is not None and \
-            len(inputs[1].shape) == 2 and len(inputs[0].shape) <= 3:
-        res = mb.linear(x=inputs[0], weight=_np.transpose(inputs[1].val), name=node.name)
+    if (len(inputs[1].shape) == 2 and len(inputs[0].shape) <= 3) and (
+        _is_const(inputs[1]) or inputs[1].is_descendant_of_const
+    ):
+        linear_x, weight = inputs
+        transposed_weight = mb.transpose(x=weight, perm=(1, 0))
+        res = mb.linear(x=linear_x, weight=transposed_weight, name=node.name)
     else:
         x, y = promote_input_dtypes([inputs[0], inputs[1]])
         res = mb.matmul(x=x, y=y, name=node.name)
@@ -1403,9 +1456,9 @@ def max_pool3d(context, node):
 @register_torch_op
 def minimum(context, node):
     inputs = _get_inputs(context, node, expected=2)
+    x, y = promote_input_dtypes(inputs)
     assert len(node.outputs) == 1
-    x = context[node.inputs[0]]
-    y = context[node.inputs[1]]
+
     out = mb.minimum(x=x, y=y, name=node.name)
     context.add(out)
 
@@ -1420,9 +1473,9 @@ def clamp_min(context, node):
 @register_torch_op
 def maximum(context, node):
     inputs = _get_inputs(context, node, expected=2)
+    x, y = promote_input_dtypes(inputs)
     assert len(node.outputs) == 1
-    x = context[node.inputs[0]]
-    y = context[node.inputs[1]]
+
     out = mb.maximum(x=x, y=y, name=node.name)
     context.add(out)
 
@@ -1532,7 +1585,7 @@ def sub(context, node):
     ]
 )
 def mean(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, min_expected=1)
 
     x = inputs[0]
     if types.is_bool(x.dtype):
@@ -1542,7 +1595,7 @@ def mean(context, node):
     kwargs = {"x": x, "name": node.name}
 
     # @axes is optional, so omit if None.
-    axes = inputs[1]
+    axes = None if len(inputs) < 2 else inputs[1]
     if axes is not None:
         # @axes needs to be a list, but if only one axis was specified in the
         # model, it will be constructed as an int. Construct a new constant as a
@@ -1718,7 +1771,7 @@ def _adaptive_pool1d(context, node, reduce_op):
             keep_dims=True
         )
         pool_results.append(cur_result)
-        
+
     context.add(
         mb.reshape(
             x=mb.concat(values=pool_results, axis=-1),
@@ -3333,6 +3386,63 @@ def loop(context, node):
         context.add(output_var, torch_name=output_name)
 
 
+@register_torch_op
+def _unique2(context, node):
+    (x, sorted, return_inverse, return_counts)  = _get_inputs(context, node, expected=4)
+
+    # Unsupported case
+    if sorted.val is not True:
+        raise NotImplementedError("sorted=False not supported for unique op")
+
+    x_flatten = mb.reshape(x=x, shape=[-1])
+
+    # Sort flattened input
+    indices = mb.argsort(x=x_flatten, ascending=True)
+    x_sorted = mb.gather_along_axis(x=x_flatten, indices=indices)
+
+    # Subtract n_th+1 element from n_th element
+    neg_inf = np.float32(-np.inf)
+    x_sorted = mb.cast(x=x_sorted, dtype="fp32")
+    x_sorted_shifted  = mb.pad(x=x_sorted, pad=[1, 0], constant_val=neg_inf)
+    x_sorted_padded = mb.pad(x=x_sorted, pad=[0, 1], mode="replicate")
+    diff = mb.sub(x=x_sorted_padded, y=x_sorted_shifted)
+
+    # Get non-zero element after subtraction to determine unique values
+    non_zero_indices = mb.non_zero(x=diff)
+    unique_values_unsqueeze = mb.gather(x=x_sorted, indices=non_zero_indices)
+    unique_values = mb.squeeze(x = unique_values_unsqueeze)
+
+    # Add unique values to output and see if we're done.
+    context.add(unique_values, torch_name=node.outputs[0])
+    if return_counts.val is False and return_inverse.val is False:
+        # only the unique values are needed
+        return
+
+    # Calculate a UxN boolean tensor, where:
+    #     U - number of unique values
+    #     N - number of input elements
+    num_unique_values = mb.shape(x=unique_values)
+    x_tile = mb.tile(x=x_flatten, reps=num_unique_values)
+    tile_shape = mb.concat(values=(num_unique_values, mb.shape(x=x_flatten)), axis=0)
+    x_tile = mb.reshape(x=x_tile, shape=tile_shape)
+    unique_values_unsqueeze = mb.cast(x=unique_values_unsqueeze, dtype="int32")
+    x_tile, unique_values_unsqueeze = promote_input_dtypes([x_tile, unique_values_unsqueeze])
+    diff = mb.sub(x=x_tile, y=unique_values_unsqueeze)
+    bool_tensor = mb.logical_not(x=mb.cast(x=diff, dtype="bool"))
+
+    if return_inverse.val is True:
+        # Get indices
+        range = mb.range_1d(start=0, end=mb.squeeze(x=num_unique_values), step=1)
+        indices = mb.matmul(x=range, y=mb.cast(x=bool_tensor, dtype="int32"))
+        indices = mb.reshape(x=indices, shape=mb.shape(x=x))
+        context.add(indices, torch_name=node.outputs[1])
+
+    if return_counts.val is True:
+        # Get counts
+        counts = mb.reduce_sum(x=mb.cast(x=bool_tensor, dtype='int32'), axes=(-1,))
+        context.add(counts, torch_name=node.outputs[2])
+
+
 @register_torch_op(torch_alias=["if"])
 def _if(context, node):
     """ In TorchIR, a conditional looks like:
@@ -3959,9 +4069,10 @@ def full(context, node):
 
 @register_torch_op
 def full_like(context, node):
-    inputs = _get_inputs(context, node, expected=7)
+    inputs = _get_inputs(context, node, min_expected=2)
     x = inputs[0]
     val = inputs[1].val
+
     if is_current_opset_version_compatible_with(target.iOS16):
         result = mb.fill_like(ref_tensor=x, value=val, name=node.name)
     else:
@@ -4066,13 +4177,13 @@ def _avg_pool(context, node, inputs):
 
     kernel_sizes = inputs[1]
 
-    strides = None
+    strides = kernel_sizes  # default strides = kernel sizes
     if len(inputs) > 2:
-        strides = (
-            mb.const(val=kernel_sizes.val, name=inputs[2].name)
-            if inputs[2].op.op_type == "const" and (not list(inputs[2].val))
-            else inputs[2]
-        )
+        strides = inputs[2]
+        # TorchScript may give us empty stride, in such case
+        # we still default strides to kernel sizes, but name conform to TorchScript
+        if strides.op.op_type == "const" and (not list(strides.val)):
+            strides = mb.const(val=kernel_sizes.val, name=strides.name)
 
     pad_type = "custom"
     # Need to explicitly state L-R, T-B pad
@@ -4082,7 +4193,7 @@ def _avg_pool(context, node, inputs):
 
     include_pad = True if len(inputs) < 6 else inputs[5].val
 
-    spatial_rank = len(pad) // 2
+    spatial_rank = 0 if pad is None else len(pad) // 2
     if spatial_rank > 2 and ceil_mode is True and list(strides.val) != [1] * len(strides.val):
         # since MIL does not support ceil_mode for 3D pool,
         # need to adjust padding values if ceil_mode is True
@@ -4390,8 +4501,14 @@ def to(context, node):
         casted_input = torch.tensor(_input.val).type(torch_dtype).cpu().numpy()
         res = mb.const(val=casted_input, name=node.name)
     else:
-        if dtype in NUM_TO_DTYPE_STRING:
-            res = mb.cast(x=_input, dtype=NUM_TO_DTYPE_STRING[dtype], name=node.name)
+        dtype_str = NUM_TO_DTYPE_STRING[dtype]
+        valid_dtypes = (
+            {"int8", "uint8", "int16", "uint16", "int32", "fp16", "fp32", "bool"}
+            if is_current_opset_version_compatible_with(target.iOS17)
+            else {"int32", "fp16", "fp32", "bool"}
+        )
+        if dtype_str in valid_dtypes:
+            res = mb.cast(x=_input, dtype=dtype_str, name=node.name)
         else:
             # For dtype that is not supported by mb.cast, we do it in best-effort to cast it to int
             # or float based on the dtype.
@@ -4648,7 +4765,7 @@ def meshgrid(context, node):
     ]
 )
 def noop(context, node):
-    logger.info("Setting pytorch op: {} to no-op.".format(node))
+    logger.info(f"Setting pytorch op: {node.kind} to no-op.")
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     context.add(_input, torch_name=node.name)
@@ -4892,8 +5009,7 @@ def _abs(context, node):
 
 @register_torch_op
 def repeat(context, node):
-    x = context[node.inputs[0]]
-    reps = context[node.inputs[1]]
+    x, reps = _get_inputs(context, node, expected=2)
     if isinstance(reps, list):
         reps = mb.concat(values=reps, axis=0)
 
@@ -5334,21 +5450,15 @@ def where(context, node):
         return
 
     assert len(inputs) == 3
-    cond = inputs[0]
+    cond, a, b = inputs
+    a, b = promote_input_dtypes([a, b])
     if not types.is_bool(cond.dtype):
         # cond must be bool type
         cond = mb.cast(x=cond, dtype="bool")
-    if not any([any_symbolic(x.shape) for x in inputs[:3]]):
+    if not any([any_symbolic(x.shape) for x in (cond, a, b)]):
         # broadcast all tensors to the same shape
-        broadcast_inputs = _broadcast_tensors([cond, inputs[1], inputs[2]])
-        result = mb.select(
-            cond=broadcast_inputs[0],
-            a=broadcast_inputs[1],
-            b=broadcast_inputs[2],
-            name=node.name,
-        )
-    else:
-        result = mb.select(cond=cond, a=inputs[1], b=inputs[2], name=node.name)
+        cond, a, b = _broadcast_tensors([cond, a, b])
+    result = mb.select(cond=cond, a=a, b=b, name=node.name)
     context.add(result)
 
 
@@ -5366,17 +5476,6 @@ def neg(context, node):
 
 @register_torch_op
 def topk(context, node):
-    def dynamic_topk(x, k, axis, ascending):
-        assert k.val is None, "Please use mb.topk directly if k is compile time known"
-        indices = mb.argsort(x=x, axis=axis, ascending=ascending)
-        values = mb.gather_along_axis(x=x, indices=indices, axis=axis)
-
-        k_indices = mb.range_1d(end=k, start=0, step=1)
-        values = mb.gather(x=values, indices=k_indices, axis=axis)
-        indices = mb.gather(x=indices, indices=k_indices, axis=axis)
-
-        return values, indices
-
     inputs = _get_inputs(context, node)
     kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
 
@@ -6447,33 +6546,6 @@ def _cast_bool_attn_mask(attn_mask: Var, query_var: Var) -> Var:
     compliment_of_mask = mb.mul(x=negative_inf, y=compliment_of_mask)
     return mb.add(x=mask, y=compliment_of_mask)
 
-
-def _lower_scaled_dot_product_attention(q: Var, k: Var, v: Var, mask: Var, name: str) -> Var:
-    # scale the query input
-    embed_size = q.shape[-1]
-    if is_symbolic(embed_size):
-        raise ValueError(
-            "The embedding size, i.e. last dimension of the shape of query tensor"
-            " cannot be symbolic, in scaled_dot_product_attention op"
-        )
-    multiplicative_scale_factor = 1 / _math.sqrt(embed_size)
-    q = mb.mul(x=q, y=multiplicative_scale_factor)
-
-    # multiply query and key input tensors
-    # shape of output: (target_seq, source_seq) or (B,...,target_seq, source_seq)
-    attn_weights = mb.matmul(x=q, y=k, transpose_y=True)
-
-    # add mask if applicable
-    if mask is not None:
-        attn_weights = mb.add(x=attn_weights, y=mask)
-
-    # do softmax
-    attn_weights_normalized = mb.softmax(x=attn_weights, axis=-1)
-
-    # multiply attn_weights and value tensor
-    res = mb.matmul(x=attn_weights_normalized, y=v, name=name)
-    return res
-
 @register_torch_op
 def scaled_dot_product_attention(context, node):
     """
@@ -6500,13 +6572,13 @@ def scaled_dot_product_attention(context, node):
     attn_mask = None if len(inputs) < 4 else inputs[3]
     dropout = 0.0 if len(inputs) < 5 else inputs[4]
     is_causal = False if len(inputs) < 6 else inputs[5].val
-    
+
     # When len(inputs) == 7, the inputs are (q, k, v, attn_mask, dropout, is_causal, scale)
     if len(inputs) == 7 and inputs[6] is not None:
         raise NotImplementedError(
             "scaled_dot_product_attention op: scale parameter is not handled."
         )
-    
+
     if attn_mask is not None and is_causal:
         raise ValueError(
             "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
@@ -6534,7 +6606,7 @@ def scaled_dot_product_attention(context, node):
         else:
             mask = attn_mask
 
-    res = _lower_scaled_dot_product_attention(q, k, v, mask, node.name)
+    res = _utils._lower_scaled_dot_product_attention(q, k, v, mask, node.name)
     context.add(res)
 
 

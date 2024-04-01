@@ -10,9 +10,17 @@ import torch
 
 from coremltools.converters.mil.mil import types
 
-# Some ops will receive a dtype input as an integer
-# which maps to a torch dtype. The below mapping was found by
-# converting test models with different dtypes passed to ones.
+# NOTE [represent torch dtype by integer]
+# In TorchScript, some ops will receive a dtype input as an integer which maps to a torch dtype.
+# The below mapping was found by converting test models with different dtypes passed to ones.
+# There is one modification to original torch mapping, though, due to CoreML lacks 64-bit dtype
+# When mapping from torch dtype to integer number, we map
+#     * int64 to int32's number
+#     * float64 to float32's number
+# When mapping from integer number back to torch dtype, we map
+#     * int64's number to int32
+#     * float64's number to float32
+# TODO(https://github.com/apple/coremltools/issues/2153): This is confusing... we should refactor
 NUM_TO_TORCH_DTYPE = {
     0: torch.uint8,
     1: torch.int8,
@@ -31,24 +39,30 @@ NUM_TO_TORCH_DTYPE = {
 TORCH_DTYPE_TO_NUM = {
     dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
 }
-
-NUMPY_DTYPE_TO_TORCH_NUM = {
-    np.uint8: 0,
-    np.int8: 1,
-    np.int16: 2,
-    np.int32: 3,
-    np.int64: 4,
-    np.float16: 5,
-    np.float32: 6,
-    np.float64: 7,
-    bool: 11,
-}
+TORCH_DTYPE_TO_NUM[torch.int64] = TORCH_DTYPE_TO_NUM[torch.int32]
+TORCH_DTYPE_TO_NUM[torch.float64] = TORCH_DTYPE_TO_NUM[torch.float32]
 
 NUM_TO_NUMPY_DTYPE = {
-    val: dtype for dtype, val in NUMPY_DTYPE_TO_TORCH_NUM.items()
+    0: np.uint8,
+    1: np.int8,
+    2: np.int16,
+    3: np.int32,
+    4: np.int32,
+    5: np.float16,
+    6: np.float32,
+    7: np.float32,
+    11: bool, 
 }
 
+NUMPY_DTYPE_TO_TORCH_NUM = {
+    dtype: val for val, dtype in NUM_TO_NUMPY_DTYPE.items()
+}
+NUMPY_DTYPE_TO_TORCH_NUM[np.int64] = NUMPY_DTYPE_TO_TORCH_NUM[np.int32]
+NUMPY_DTYPE_TO_TORCH_NUM[np.float64] = NUMPY_DTYPE_TO_TORCH_NUM[np.float32]
+
 NUM_TO_DTYPE_STRING = {
+    0: "uint8",
+    1: "int8",
     2: "int16",
     3: "int32",
     4: "int32",
@@ -59,10 +73,12 @@ NUM_TO_DTYPE_STRING = {
 }
 
 TYPE_TO_DTYPE_STRING = {
-    types.bool: "bool",
+    types.uint8: "uint8",
+    types.int8: "int8",
+    types.int32: "int32",
     types.fp16: "fp16",
     types.fp32: "fp32",
-    types.int32: "int32",
+    types.bool: "bool",
 }
 
 TORCH_QTYPE_TO_NP_TYPE = {

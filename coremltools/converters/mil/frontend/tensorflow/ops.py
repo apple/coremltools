@@ -8,6 +8,7 @@ import numpy as np
 
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+from coremltools.converters.mil.frontend._utils import dynamic_topk
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
@@ -2292,34 +2293,40 @@ def Tanh(context, node):
 @register_tf_op(tf_alias=["TopKV2"])
 def TopK(context, node):
     x = context[node.inputs[0]]
-    k = context[node.inputs[1]].val
-    sort = node.attr["sorted"]
+    k = context[node.inputs[1]]
 
-    kwargs = {
-        "x": x,
-        "k": k,
-        "axis": -1,
-        "name": node.name
-    }
+    if k.val is not None:
+        sort = node.attr["sorted"]
 
-    if is_current_opset_version_compatible_with(target.iOS16):
-        kwargs["sort"] = sort
-    elif not sort:
-        raise ValueError("For opset <= iOS16, only sorted=True supported for the topk")
+        kwargs = {"x": x, "k": k, "axis": -1, "name": node.name}
 
-    context.add(node.name, mb.topk(**kwargs))
+        if is_current_opset_version_compatible_with(target.iOS16):
+            kwargs["sort"] = sort
+        elif not sort:
+            raise ValueError("For opset <= iOS16, only sorted=True supported for the topk")
+
+        context.add(node.name, mb.topk(**kwargs))
+
+    else:
+        context.add(node.name, dynamic_topk(x, k, -1, name=node.name))
+
 
 @register_tf_op(tf_alias=["InTopKV2"])
 def InTopK(context, node):
     x = context[node.inputs[0]]
     target = context[node.inputs[1]]
-    k = context[node.inputs[2]].val
+    k = context[node.inputs[2]]
 
     _, class_num = x.shape
-    if not is_symbolic(class_num):
-        k = min(k, class_num)
+    if k.val is not None and not is_symbolic(class_num):
+        k = min(k.val, class_num)
+        _, indices = mb.topk(x=x, k=k, axis=-1)
+    else:
+        x_shape = mb.shape(x=x)
+        class_num = mb.slice_by_index(x=x_shape, begin=(-1,), end=(-1,), squeeze_mask=(True,))
+        k = mb.minimum(x=k, y=class_num)
+        _, indices = dynamic_topk(x, k, -1)
 
-    _, indices = mb.topk(x=x, k=k, axis=-1)
     target = mb.expand_dims(x=target, axes=[-1])
     x = mb.equal(x=target, y=indices)
     x = mb.cast(x=x, dtype="fp32")

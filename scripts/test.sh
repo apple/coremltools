@@ -32,6 +32,7 @@ print_help() {
   echo "  --wheel-path=*          Specify which wheel to test. Otherwise, test the current coremltools dir."
   echo "  --xml-path=*            Path to test xml file."
   echo "  --test-package=*        Test package to run."
+  echo "  --ignores=*             Test packages to ignore"
   echo "  --python=*              Python to use for configuration."
   echo "  --requirements=*        [Optional] Path to the requirements.txt file."
   echo "  --cov=*                 Generate coverage report for these dirs."
@@ -50,6 +51,7 @@ while [ $# -gt 0 ]
     --requirements=*)    REQUIREMENTS=${1##--requirements=} ;;
     --python=*)          PYTHON=${1##--python=} ;;
     --test-package=*)    TEST_PACKAGE=${1##--test-package=} ;;
+    --ignores=*)         IGNORES=${1##--ignores=} ;;
     --wheel-path=*)      WHEEL_PATH=${1##--wheel-path=} ;;
     --xml-path=*)        XML_PATH=${1##--xml-path=} ;;
     --cov=*)             COV=${1##--cov=} ;;
@@ -102,21 +104,29 @@ fi
 # Now run the tests
 echo "Running tests"
 
-TEST_CMD=($PYTEST_EXECUTABLE -v -ra -W "ignore::UserWarning" -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" -W "ignore::ResourceWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${XML_PATH} --timeout=${TIME_OUT})
+TEST_CMD=$PYTEST_EXECUTABLE" -v -ra -W \"ignore::UserWarning\" -W \"ignore::FutureWarning\" -W \"ignore::DeprecationWarning\" -W \"ignore::ResourceWarning\" --durations=100"
+TEST_CMD+=" --junitxml="${XML_PATH}
+TEST_CMD+=" --timeout="${TIME_OUT}
+TEST_CMD+=" --pyargs "${TEST_PACKAGE//,/ }
+
+IFS=',' read -A ignore_array <<< "${IGNORES}"
+for ignore in ${ignore_array[@]}; do
+    TEST_CMD+=" --ignore "${CONDA_PREFIX}"/lib/python"${PYTHON}"/site-packages/"${ignore}
+done
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then
     if [[ $SLOW == 1 ]]; then
-        TEST_CMD+=(-m "slow")
+        TEST_CMD+=" -m \"slow\""
     elif [[ $FAST == 1 ]]; then
-        TEST_CMD+=(-m "not slow")
+        TEST_CMD+=" -m \"not slow\""
     fi
 fi
 
 if [[ $COV != "" ]]; then
-    TEST_CMD+=(--cov $COV)
+    TEST_CMD+=" --cov ${COV}"
 fi
 
-echo $TEST_CMD
-${TEST_CMD[@]}
+echo ${TEST_CMD}
+eval ${TEST_CMD}
 
 pip uninstall -y coremltools

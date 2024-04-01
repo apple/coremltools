@@ -65,14 +65,13 @@ class const_deduplication(AbstractGraphPass):
             for duplicate in unique2duplicates[unique]:
                 if duplicate in block.outputs:
                     continue
-                op = duplicate.op
                 block.replace_uses_of_var_after_op(
-                    anchor_op=op,
+                    anchor_op=duplicate.op,
                     old_var=duplicate,
                     new_var=unique,
                     force_replace=force_replace,
                 )
-                block.remove_ops([op])
+                block.remove_ops([duplicate.op])
 
     @block_context_manager
     def _constant_deduplication_block(self, block: Block) -> None:

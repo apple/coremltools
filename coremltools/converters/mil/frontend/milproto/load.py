@@ -4,10 +4,13 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
+from typing import Tuple
 
 import numpy as np
 
 from coremltools import _logger as logger
+from coremltools import proto
+from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.backend.mil import helper
 from coremltools.converters.mil.mil import Block
@@ -16,7 +19,6 @@ from coremltools.converters.mil.mil import (
     Function,
     ListVar,
     Placeholder,
-    Program,
     TupleInputType,
     Var,
     mil_list,
@@ -24,8 +26,6 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil.mil.block import curr_block
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry as _SSAOpRegistry
-from coremltools.proto import MIL_pb2 as pm
-from coremltools.proto import Model_pb2 as ml
 
 from .helper import proto_to_types
 
@@ -63,7 +63,7 @@ class TranscriptionContext:
 
 
 def _load_tensorvalue(tensorvalue_spec):
-    if not isinstance(tensorvalue_spec, pm.TensorValue):
+    if not isinstance(tensorvalue_spec, proto.MIL_pb2.TensorValue):
         raise TypeError("Invalid TensorValue spec object")
 
     if tensorvalue_spec.WhichOneof("value") == "floats":
@@ -85,7 +85,7 @@ def _load_tensorvalue(tensorvalue_spec):
 
 
 def _load_immediate_value(immediatevalue_spec):
-    if not isinstance(immediatevalue_spec, pm.Value.ImmediateValue):
+    if not isinstance(immediatevalue_spec, proto.MIL_pb2.Value.ImmediateValue):
         raise TypeError("Invalid ImmedidateValue spec object")
 
     if immediatevalue_spec.WhichOneof("value") == "tensor":
@@ -101,7 +101,7 @@ def _load_immediate_value(immediatevalue_spec):
 def _load_file_value(context, filevalue_spec, dtype):
     if BlobReader is None:
         raise RuntimeError("BlobReader not loaded")
-    if not isinstance(filevalue_spec, pm.Value.BlobFileValue):
+    if not isinstance(filevalue_spec, proto.MIL_pb2.Value.BlobFileValue):
         raise TypeError("Invalid BlobFileValue spec object")
 
     filename = os.path.join(context.weights_dir, filevalue_spec.fileName.split("/")[-1])
@@ -132,13 +132,18 @@ def _load_file_value(context, filevalue_spec, dtype):
     return np_value
 
 
+def _restore_np_from_bytes_value(value: bytes, dtype: types, shape: Tuple[int]) -> np.ndarray:
+    return np.frombuffer(value, types.nptype_from_builtin(dtype)).reshape(shape)
+
+
 def _load_value(context, value_spec):
-    if not isinstance(value_spec, pm.Value):
+    if not isinstance(value_spec, proto.MIL_pb2.Value):
         raise TypeError("Invalid Value spec object")
 
     if value_spec.docString:
         raise ValueError("Docstring would get lost in the process.")
 
+    value_spec_type = value_spec.type.WhichOneof("type")
     if value_spec.type.WhichOneof("type") == "tensorType":
         valuetype = proto_to_types(value_spec.type)
 
@@ -152,16 +157,21 @@ def _load_value(context, value_spec):
         else:
             value = _load_file_value(context, value_spec.blobFileValue, dtype)
 
+        target_np_dtype = types.nptype_from_builtin(dtype)
         if dtype in helper.IMMEDIATE_VALUE_TYPES_IN_BYTES:
-            value = np.frombuffer(value, types.nptype_from_builtin(dtype)).reshape(
-                shape
-            )
+            value = _restore_np_from_bytes_value(value, dtype, shape).astype(target_np_dtype)
         elif dtype == types.str and shape == ():
             value = str(value[0])
-        elif dtype in (types.fp32, types.str, types.bool, types.int32, types.int64):
-            value = (
-                np.array(value).astype(types.nptype_from_builtin(dtype)).reshape(shape)
-            )
+        elif dtype in (
+            types.fp32,
+            types.str,
+            types.bool,
+            types.int16,
+            types.uint16,
+            types.int32,
+            types.int64,
+        ):
+            value = np.array(value).astype(target_np_dtype).reshape(shape)
         else:
             raise ValueError("Invalid dtype for tensor value")
     else:
@@ -178,7 +188,7 @@ def _create_var_from_spec(spec):
     This helper function is used for creating PyMIL Var/ListVar from the proto spec.
     Mainly used for the construction of the control flow ops.
     """
-    assert isinstance(spec, pm.NamedValueType)
+    assert isinstance(spec, proto.MIL_pb2.NamedValueType)
     sym_type = proto_to_types(spec.type)
     name = spec.name
     if types.is_list(sym_type):
@@ -255,20 +265,44 @@ def _set_inputs_for_control_flow_op(inputs, blocks, op_type):
 
 def _load_const_op(context, op_spec):
     inputs = {k: _load_value(context, v) for k, v in op_spec.attributes.items()}
-    pymil_var = getattr(mb, op_spec.type)(**inputs)
-    context.register_var_with_name(op_spec.outputs[0].name, pymil_var)
+    if len(op_spec.inputs) > 0:
+        for param_name, argument in op_spec.inputs.items():
+            vars = []
+            for binding in argument.arguments:
+                binding_type = binding.WhichOneof("binding")
+                if binding_type == "name":
+                    vars.append(context.get_var_from_name(binding.name))
+                elif binding_type == "value":
+                    vars.append(_load_value(context, binding.value))
+                else:
+                    raise ValueError(f"Invalid binding_type {binding_type}")
+            if len(vars) == 1:
+                inputs[param_name] = vars[0]
+            else:
+                inputs[param_name] = vars
+
+    output_var = getattr(mb, op_spec.type)(**inputs)
+
+    if not isinstance(output_var, (tuple, list)):
+        output_var = [output_var]
+    if len(output_var) != len(op_spec.outputs):
+        raise AssertionError(
+            "Mismatch between number of outputs in operation specification vs PyMIL outputs"
+        )
+    for spec, var in zip(op_spec.outputs, output_var):
+        context.register_var_with_name(spec.name, var)
 
 
-def _load_operation(context, op_spec):
-    if not isinstance(op_spec, pm.Operation):
+def _load_operation(context: TranscriptionContext, op_spec: proto.MIL_pb2.Operation):
+    if not isinstance(op_spec, proto.MIL_pb2.Operation):
         raise TypeError("Invalid Operation spec object")
 
     op_type = op_spec.type
     if op_type == "const" or "constexpr_" in op_type:
         if op_spec.blocks:
             raise ValueError("const / constexpr operation can't have any block")
-        if op_spec.inputs:
-            raise ValueError("const / constexpr operation can't have any input")
+        if op_type == "const" and op_spec.inputs:
+            raise ValueError("const operation can't have any input")
         _load_const_op(context, op_spec)
 
     else:
@@ -363,7 +397,7 @@ def _load_operation(context, op_spec):
 
 
 def _load_block(context, block_spec):
-    if not isinstance(block_spec, pm.Block):
+    if not isinstance(block_spec, proto.MIL_pb2.Block):
         raise TypeError("Invalid Block spec object")
 
     if block_spec.attributes:
@@ -383,7 +417,7 @@ def _load_block(context, block_spec):
 
 
 def _load_function(context, func_spec, spec_version):
-    if not isinstance(func_spec, pm.Function):
+    if not isinstance(func_spec, proto.MIL_pb2.Function):
         raise TypeError("Invalid Function spec object")
 
     if func_spec.attributes:
@@ -415,7 +449,7 @@ def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
     """
     Load in-memory Proto specification of MILSpec.Program(.Proto) object to PyMIL
     """
-    if not isinstance(program_spec, pm.Program):
+    if not isinstance(program_spec, proto.MIL_pb2.Program):
         raise TypeError("Invalid Program spec object")
 
     if program_spec.docString:
@@ -425,7 +459,7 @@ def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
         raise ValueError("Invalid program version")
 
     context = TranscriptionContext(file_weights_dir)
-    pymil_program = Program()
+    pymil_program = mil.Program()
     for func_name, func_spec in program_spec.functions.items():
         pymil_program.add_function(
             func_name, _load_function(context, func_spec, specification_version)
@@ -433,7 +467,7 @@ def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
 
     for attr_name, attr_spec in program_spec.attributes.items():
         if attr_name not in ("buildInfo",):
-            raise ValueError("Invalid attribute for program")
+            raise ValueError(f"Invalid attribute {attr_name} for program")
 
     return pymil_program
 
@@ -444,7 +478,7 @@ def load(model_spec, specification_version, file_weights_dir="", **kwargs):
 
     Set force_spec_version to force override the spec version.
     """
-    if not isinstance(model_spec, ml.Model):
+    if not isinstance(model_spec, proto.Model_pb2.Model):
         raise TypeError("Invalid Model sepc object")
 
     if specification_version < model_spec.specificationVersion:

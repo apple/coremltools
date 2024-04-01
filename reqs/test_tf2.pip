@@ -1,0 +1,16 @@
+-r ./test.pip
+
+# TODO(rdar://123269464): Support a recent version of TensorFlow
+
+# TensorFlow (x86) related package
+tensorflow==2.12.0; platform_machine != "arm64"
+tensorflow-estimator==2.12.0; platform_machine != "arm64"
+keras==2.12.0; platform_machine != "arm64"
+
+# TensorFlow (arm64) related package. Currently no Python 3.11 support.
+tensorflow-macos==2.11.0; platform_machine == "arm64" and python_version < "3.11"
+tensorflow-estimator==2.11.0; platform_machine == "arm64" and python_version < "3.11"
+keras==2.11.0; platform_machine == "arm64" and python_version < "3.11"
+
+tensorflow-addons==0.19.0; python_version < "3.11"
+tensorflow-hub==0.12.0

@@ -224,10 +224,10 @@ class matmul(Operation):
     def value_inference(self):
         x = self.x.val
         if self.transpose_x.val:
-            x = np.transpose(x)
+            x = np.swapaxes(x, -1, -2)
         y = self.y.val
         if self.transpose_y.val:
-            y = np.transpose(y)
+            y = np.swapaxes(y, -1, -2)
         return np.matmul(x, y)
 
 

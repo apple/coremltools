@@ -43,8 +43,11 @@ def _try_to_transform(sigmoid_op, mul_op, block):
 
 @block_context_manager
 def _fuse_activation_silu_block(block):
-    fusion_status = False
+    fusion_occurred = False
     for op in list(block.operations):
+        if op.enclosing_block is None:
+            continue
+
         for b in op.blocks:
             block_changed = True
             while block_changed:
@@ -54,11 +57,9 @@ def _fuse_activation_silu_block(block):
 
         mul_op = _match_pattern(op)
         if mul_op is not None:
-            fusion_status = _try_to_transform(op, mul_op, block)
-            # has to break as the downstream iterator is affected.
-            if fusion_status:
-                return fusion_status
-    return fusion_status
+            if _try_to_transform(op, mul_op, block):
+                fusion_occurred = True
+    return fusion_occurred
 
 
 @register_pass(namespace="mil_backend")

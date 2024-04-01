@@ -33,18 +33,6 @@ bool usingMacOS13OrHigher() {
     return (NSProtocolFromString(@"MLProgram") != nil);
 }
 
-bool isCompiledModelPath(const std::string& path) {
-    const std::string fileExtension = ".mlmodelc";
-
-    size_t start = path.length() - fileExtension.length();
-    if (path.back() == '/') {
-        start--;
-    }
-    const std::string match = path.substr(start, fileExtension.length());
-
-    return (match == fileExtension);
-}
-
 Model::~Model() {
     @autoreleasepool {
         NSFileManager *fileManager = [NSFileManager defaultManager];
@@ -58,7 +46,7 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
     @autoreleasepool {
         NSError *error = nil;
 
-        if (! isCompiledModelPath(urlStr)) {
+        if (! Utils::isCompiledModelPath(urlStr)) {
             // Compile the model
             NSURL *specUrl = Utils::stringToNSURL(urlStr);
 
@@ -89,29 +77,21 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
             compiledUrl = Utils::stringToNSURL(urlStr);
         }
 
-        // Set compute unit
         MLModelConfiguration *configuration = [MLModelConfiguration new];
-        if (computeUnits == "CPU_ONLY") {
-            configuration.computeUnits = MLComputeUnitsCPUOnly;
-        } else if (computeUnits == "CPU_AND_GPU") {
-            configuration.computeUnits = MLComputeUnitsCPUAndGPU;
-        } else if (computeUnits == "CPU_AND_NE") {
-            if (usingMacOS13OrHigher()) {
-#if BUILT_WITH_MACOS13_SDK
-                configuration.computeUnits = MLComputeUnitsCPUAndNeuralEngine;
-#endif // BUILT_WITH_MACOS13_SDK
-            } else {
-                throw std::runtime_error("CPU_AND_NE is only available on macOS >= 13.0");
-            }
-        } else {
-            assert(computeUnits == "ALL");
-            configuration.computeUnits = MLComputeUnitsAll;
-        }
+        setComputeUnit(configuration, computeUnits);
 
         // Create MLModel
         m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
         Utils::handleError(error);
     }
+}
+
+
+Model::Model(MLModel* mlModel, NSURL* compiledUrl, bool deleteCompiledModelOnExit)
+    : m_model(mlModel),
+      compiledUrl(compiledUrl),
+      m_deleteCompiledModelOnExit(deleteCompiledModelOnExit)
+{
 }
 
 py::dict Model::predict(const py::dict& input) const {
@@ -123,6 +103,26 @@ py::dict Model::predict(const py::dict& input) const {
                                                                       error:&error];
         Utils::handleError(error);
         return Utils::featuresToDict(outFeatures);
+    }
+}
+
+
+void Model::setComputeUnit(MLModelConfiguration *configuration, const std::string& computeUnits) {
+    if (computeUnits == "CPU_ONLY") {
+        configuration.computeUnits = MLComputeUnitsCPUOnly;
+    } else if (computeUnits == "CPU_AND_GPU") {
+        configuration.computeUnits = MLComputeUnitsCPUAndGPU;
+    } else if (computeUnits == "CPU_AND_NE") {
+        if (usingMacOS13OrHigher()) {
+#if BUILT_WITH_MACOS13_SDK
+            configuration.computeUnits = MLComputeUnitsCPUAndNeuralEngine;
+#endif // BUILT_WITH_MACOS13_SDK
+        } else {
+            throw std::runtime_error("CPU_AND_NE is only available on macOS >= 13.0");
+        }
+    } else {
+        assert(computeUnits == "ALL");
+        configuration.computeUnits = MLComputeUnitsAll;
     }
 }
 
@@ -156,6 +156,9 @@ py::list Model::batchPredict(const py::list& batch) const {
 
 
 py::str Model::getCompiledModelPath() const {
+    if (this->compiledUrl == nil) {
+        return nil;
+    }
     return [this->compiledUrl.path UTF8String];
 }
 

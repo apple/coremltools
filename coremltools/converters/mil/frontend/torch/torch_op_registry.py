@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Callable, List
+from typing import Callable
 
 import torch
 
@@ -129,7 +129,7 @@ def register_torch_op(_func=None, torch_alias=None, override=False):
     return func_wrapper(_func)
 
 
-def is_torch_fx_node_supported(torch_fx_node: torch.fx.Node) -> bool:
+def is_torch_fx_node_supported(torch_fx_node: "torch.fx.Node") -> bool:
     # There are many types of torch fx node:
     #     1. call_function
     #     2. call_module

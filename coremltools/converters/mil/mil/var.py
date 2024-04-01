@@ -3,12 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Optional, Union
+import copy
+from collections import defaultdict
+from typing import Dict, List, Optional, Union
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
+from .scope import ScopeSource
 
 class Var:
     """
@@ -153,7 +156,11 @@ class Var:
         op = var.op
         if op is None:
             return False
-        if op.op_type.startswith("constexpr_") or var.val is not None:
+        if (
+            op.op_type.startswith("constexpr_")
+            or (op.op_type == "dequantize" and op.can_materialize_val())
+            or var.val is not None
+        ):
             return True
         flattened_inputs = op.get_flattened_inputs()
         return all([x.is_descendant_of_const for x in flattened_inputs])
@@ -166,6 +173,10 @@ class Var:
         """
         op = self.op
         if op is None:
+            return
+        if op.op_type == "shape":
+            # For the meta data ops, like shape, we stop propogate the nonreplaceable_vars.
+            self.nonreplaceable_vars_upstream = set()
             return
         if Var._is_nonreplaceable_var(self):
             self.nonreplaceable_vars_upstream = set([self])
@@ -282,6 +293,19 @@ class Var:
 
     def __str__(self):
         return "%" + self.name + ": " + self.shape_str() + self.type_str()
+
+    @property
+    def scopes(self) -> Dict[ScopeSource, List[str]]:
+        if self.op is None:
+            # An empty dictionary is returned for function input vars.
+            return defaultdict(list)
+        return self.op.scopes
+
+    @scopes.setter
+    def scopes(self, scopes: Dict[ScopeSource, List[str]]):
+        if self.op is None:
+            raise ValueError(f"Cannot set scopes to a function input var {self}.")
+        self.op.scopes = copy.deepcopy(scopes)
 
 
 class ListVar(Var):

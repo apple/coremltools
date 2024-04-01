@@ -7,6 +7,7 @@ enum MLDataType: int {
     MLDataTypeFLOAT16 = 10,
     MLDataTypeFLOAT32 = 11,
     MLDataTypeFLOAT64 = 12,
+    MLDataTypeBFLOAT16 = 13,
     MLDataTypeINT8 = 21,
     MLDataTypeINT16 = 22,
     MLDataTypeINT32 = 23,

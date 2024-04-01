@@ -11,7 +11,7 @@ import pytest
 
 import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.ops.tests.iOS14.test_elementwise_unary import (
     TestElementwiseUnary as _TestElementwiseUnary_iOS14,
 )
@@ -62,6 +62,28 @@ class TestElementwiseUnary:
         main_func = prog.functions["main"]
         cast_op = main_func.find_ops(op_type="cast")[0]
         np.testing.assert_allclose(expected_res, cast_op.outputs[0].val, atol=1e-04, rtol=1e-05)
+
+    @pytest.mark.parametrize(
+        "backend, dtype",
+        itertools.product(
+            backends,
+            ["int8", "uint8", "int16", "uint16"],
+        ),
+    )
+    def test_cast_with_symbolic_value_iOS17(self, backend, dtype):
+        s1 = get_new_symbol()
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(s1, 1))],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
+            shape = mb.shape(x=x)
+            out = mb.cast(x=shape, dtype=dtype)
+            assert out.val is None
+            sym_val = out.sym_val
+            assert sym_val.tolist() == [s1, 1]
+            return out
 
     @pytest.mark.parametrize(
         "compute_unit, backend, src_dtype, dst_dtype",

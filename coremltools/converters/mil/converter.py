@@ -72,7 +72,7 @@ class MILFrontend:
                 # natively supported by MIL ops (ex. Conv/Pool/etc.)
                 if isinstance(inp, ImageType) and inputs[idx].channel_first is None:
                     inputs[idx].channel_first = True
-            model.set_main_input_types(tuple(inputs))
+            model.functions["main"].set_input_types(tuple(inputs))
         return model
 
 
@@ -236,10 +236,12 @@ def _mil_convert(
             compute_units=compute_units,
         )
 
-    return modelClass(proto,
-                      mil_program=mil_program,
-                      skip_model_load=kwargs.get('skip_model_load', False),
-                      compute_units=compute_units)
+    return modelClass(
+        proto,
+        mil_program=mil_program,
+        skip_model_load=kwargs.get("skip_model_load", False),
+        compute_units=compute_units,
+    )
 
 
 def mil_convert_to_proto(

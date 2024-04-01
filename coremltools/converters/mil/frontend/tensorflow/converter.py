@@ -5,12 +5,13 @@
 
 from coremltools import _logger as logger
 from coremltools.converters._profile_utils import _profile
+from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import ImageType, InputType, RangeDim
 from coremltools.converters.mil.input_types import Shape as InputShape
 from coremltools.converters.mil.input_types import TensorType, _get_shaping_class
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, Program, get_new_symbol, types
+from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.var import Var
 
@@ -407,7 +408,6 @@ class TFConverter:
             func_inputs[input_type.name] = mb.placeholder(
                 input_type.shape.symbolic_shape, dtype=dtype
             )
-        prog.set_main_input_types(self.inputs)
 
         with Function(func_inputs, opset_version=self.opset_version) as ssa_func:
             # Get the input Var
@@ -421,6 +421,8 @@ class TFConverter:
             outputs = convert_graph(self.context, graph, self.output_names)
             ssa_func.set_outputs(outputs)
             prog.add_function("main", ssa_func)
+            prog.functions["main"].set_input_types(self.inputs)
+
         # check duplicate output
         # Note: sometimes two outputs are pointing to the same Var, we should
         # create mb.identity for those cases
@@ -506,11 +508,11 @@ class TFConverter:
                     main_output_types.append(TensorType(name=val.name, dtype=dtype))
                 self.main_output_types = main_output_types
 
-        prog.set_main_output_types(self.main_output_types)
+        prog.functions["main"].set_output_types(self.main_output_types)
 
     @_profile
     def convert(self):
-        prog = Program()
+        prog = mil.Program()
         if len(self.graph_stack) == 0:
             raise ValueError("At least one TF function must be present")
         if self.graph_stack[0] != "main":

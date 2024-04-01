@@ -178,6 +178,7 @@ enum DataType {
   FLOAT16 = 10,
   FLOAT32 = 11,
   FLOAT64 = 12,
+  BFLOAT16 = 13,
   INT8 = 21,
   INT16 = 22,
   INT32 = 23,

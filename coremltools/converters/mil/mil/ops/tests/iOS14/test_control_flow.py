@@ -331,7 +331,7 @@ class TestWhileLoop:
     def test_builder_to_backend_nested(self, compute_unit, backend):
         if backend.backend == "neuralnetwork":
             pytest.xfail(
-                "rdar://96862073 (test_control_folw::TestWhileLoop::test_builder_to_backend_nested failing on nnv1)"
+                "rdar://96862073 (test_control_flow::TestWhileLoop::test_builder_to_backend_nested failing on nnv1)"
             )
 
         input_placeholders = {

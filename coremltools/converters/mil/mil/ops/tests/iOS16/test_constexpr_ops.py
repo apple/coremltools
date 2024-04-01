@@ -8,6 +8,7 @@ import itertools
 import numpy as np
 import pytest
 
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
@@ -58,6 +59,40 @@ class TestConstexprAffineDequantize:
         # validate that the constexpr op is not removed by any graph pass
         prog = mlmodel._mil_program
         assert "constexpr_affine_dequantize" in get_op_types_in_program(prog)
+
+    def test_is_all_zeros(self):
+        @mb.program(opset_version=ct.target.iOS16)
+        def prog_0_scalar():
+            return mb.constexpr_affine_dequantize(
+                quantized_data=np.array([[0, 0, 0], [0, 0, 0]]).astype(np.int8),
+                zero_point=np.int8(0),
+                scale=np.float32(1.2),
+                axis=0,
+            )
+
+        assert prog_0_scalar.find_ops(op_type="constexpr_affine_dequantize")[0].is_all_zeros()
+
+        @mb.program(opset_version=ct.target.iOS16)
+        def prog_0_vector():
+            return mb.constexpr_affine_dequantize(
+                quantized_data=np.array([[1, 2, 3], [1, 2, 3]]).astype(np.uint8),
+                zero_point=np.uint8([1, 2, 3]),
+                scale=np.float32(2),
+                axis=1,
+            )
+
+        assert prog_0_vector.find_ops(op_type="constexpr_affine_dequantize")[0].is_all_zeros()
+
+        @mb.program(opset_version=ct.target.iOS16)
+        def prog_none0():
+            return mb.constexpr_affine_dequantize(
+                quantized_data=np.array([[1, 2, 3], [1, 2, 3]]).astype(np.uint8),
+                zero_point=np.uint8([1, 2]),
+                scale=np.float32(2),
+                axis=0,
+            )
+
+        assert not prog_none0.find_ops(op_type="constexpr_affine_dequantize")[0].is_all_zeros()
 
     @ssa_fn
     def test_builder_eval(self):
@@ -349,6 +384,45 @@ class TestConstexprLutToDense:
         # validate that the constexpr op is not removed by any graph pass
         prog = mlmodel._mil_program
         assert "constexpr_lut_to_dense" in get_op_types_in_program(prog)
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_shape_of_constexpr_is_replaceable(self, backend):
+        @mb.program(input_specs=[], opset_version=backend.opset_version)
+        def prog():
+            lut_data = np.array(
+                [
+                    -19.0,
+                    4.0,
+                    0.0,
+                    -1.0,
+                    1.0,
+                    3.0,
+                    5.0,
+                    -8.0,
+                    19,
+                    13,
+                    42,
+                    4.5,
+                    5.4,
+                    2.0,
+                    -6,
+                    -7,
+                ]
+            ).astype(np.float32)
+            indices = np.array([212, 21]).astype(np.uint8)
+            shape = np.array([4, 1]).astype(np.uint32)
+            y = mb.constexpr_lut_to_dense(lut=lut_data, indices=indices, shape=shape)
+            shape = mb.shape(x=y)
+            assert len(shape.nonreplaceable_vars_upstream) == 0
+            gather = mb.gather(
+                x=shape,
+                indices=[
+                    0,
+                ],
+                axis=0,
+            )
+            assert len(gather.nonreplaceable_vars_upstream) == 0
+            return gather
 
     @ssa_fn
     def test_builder_eval(self):

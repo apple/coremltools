@@ -29,6 +29,18 @@
 
 using namespace CoreML::Python;
 
+bool Utils::isCompiledModelPath(const std::string& path) {
+    const std::string fileExtension = ".mlmodelc";
+
+    size_t start = path.length() - fileExtension.length();
+    if (path.back() == '/') {
+        start--;
+    }
+    const std::string match = path.substr(start, fileExtension.length());
+
+    return (match == fileExtension);
+}
+
 NSURL * Utils::stringToNSURL(const std::string& str) {
     NSString *nsstr = [NSString stringWithUTF8String:str.c_str()];
     return [NSURL fileURLWithPath:nsstr];

@@ -8,6 +8,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.utils import CacheDoublyLinkedList
 
 
 @register_pass(namespace="common")
@@ -67,7 +68,7 @@ class topological_reorder(AbstractGraphPass):
     """
 
     def apply(self, prog):
-        for f_name, f in prog.functions.items():
+        for f in prog.functions.values():
             self._move_operations_to_the_end_block(f, ["cast", "transpose"])
 
     @staticmethod
@@ -84,9 +85,10 @@ class topological_reorder(AbstractGraphPass):
         #  - set[Var]: Set of vars consumed in block (or returned as block output)
 
         # first_use maps var to (index, op) representing the first op in block.operation that consumes this var.
+        block.operations = list(block.operations)
         first_use = {}  # var -> op
         ops_to_remove = []  # list of ops to be deleted at the end of pass
-        for index, op in enumerate(reversed(block.operations[:])):
+        for op in reversed(block.operations):
             current_op = op
 
             if op.op_type in op_type_to_move:
@@ -118,7 +120,7 @@ class topological_reorder(AbstractGraphPass):
 
                 for old_output_var, new_output_var in zip(op.outputs, new_var):
                     block.replace_uses_of_var_after_op(
-                        anchor_op=None, old_var=old_output_var, new_var=new_output_var
+                        anchor_op=op, old_var=old_output_var, new_var=new_output_var
                     )
 
             # Collect input vars from sub-block if present
@@ -161,6 +163,7 @@ class topological_reorder(AbstractGraphPass):
                     first_use[v] = current_op
 
         # Remove ops that are reordered
+        block.operations = CacheDoublyLinkedList(block.operations)
         block.remove_ops(ops_to_remove)
 
         # Returns set of vars consumed in current block

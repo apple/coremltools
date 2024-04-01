@@ -24,29 +24,31 @@ from coremltools.converters.mil.testing_reqs import compute_units
 
 class TestGather:
     @pytest.mark.parametrize(
-        "compute_unit, backend, x_dtype, indices_dtype",
+        "compute_unit, backend, x_dtype, indices_dtype, indices_dynamic",
         itertools.product(
             compute_units,
             backends,
             [np.float32, np.float16, np.int32],
             [np.int32, np.int16, np.uint16],
+            [True, False],
         ),
     )
-    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
+    def test_builder_to_backend_smoke(
+        self, compute_unit, backend, x_dtype, indices_dtype, indices_dynamic
+    ):
         x = np.array([[[1, 2, 3], [4, 5, 6]], [[7, 8, 9], [10, 11, 12]]], dtype=x_dtype)
         indices = np.array([[[1, 0], [0, 1]], [[1, 0], [0, 0]]], dtype=indices_dtype)
 
         builtin_x_dtype = types.numpy_type_to_builtin_type(x_dtype)
-        input_placeholders = {
-            "x": mb.placeholder(shape=x.shape, dtype=builtin_x_dtype),
-            "indices": mb.placeholder(
+        input_placeholders = {"x": mb.placeholder(shape=x.shape, dtype=builtin_x_dtype)}
+        input_values = {"x": x}
+        if indices_dynamic:
+            input_placeholders["indices"] = mb.placeholder(
                 shape=indices.shape, dtype=types.numpy_type_to_builtin_type(indices_dtype)
-            ),
-        }
+            )
+            input_values["indices"] = indices
 
-        input_values = {"x": x, "indices": indices}
-
-        def build(x, indices):
+        def build_dynamic(x, indices):
             return [
                 mb.gather(x=x, indices=indices, axis=1, batch_dims=0),
                 mb.gather(x=x, indices=indices, axis=1, batch_dims=1),
@@ -54,6 +56,17 @@ class TestGather:
                 mb.gather(x=x, indices=indices, axis=2, batch_dims=1),
                 mb.gather(x=x, indices=indices, axis=2, batch_dims=2),
             ]
+
+        def build_static(x):
+            return [
+                mb.gather(x=x, indices=indices, axis=1, batch_dims=0),
+                mb.gather(x=x, indices=indices, axis=1, batch_dims=1),
+                mb.gather(x=x, indices=indices, axis=2, batch_dims=0),
+                mb.gather(x=x, indices=indices, axis=2, batch_dims=1),
+                mb.gather(x=x, indices=indices, axis=2, batch_dims=2),
+            ]
+
+        build = build_dynamic if indices_dynamic else build_static
 
         expected_output_types = [
             (2, 2, 2, 2, 3, builtin_x_dtype),
