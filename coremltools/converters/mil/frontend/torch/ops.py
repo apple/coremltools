@@ -18,7 +18,6 @@ from tqdm import tqdm as _tqdm
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.frontend import _utils
-from coremltools.converters.mil.frontend._utils import dynamic_topk
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Symbol, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
@@ -3844,7 +3843,7 @@ def index(context, node):
         # transpose the masked axes to the beginning
         perm = axes + [i for i in range(rank) if i not in axes]
         x = mb.transpose(x=x, perm=perm)
-        x = mb.gather_nd(x=x, indices=index)
+        x = _utils._construct_gather_op("gather_nd", x, index)
 
         # transpose the tensor back
         perm_back = list(range(1, x.rank))
@@ -3949,7 +3948,7 @@ def index(context, node):
                 a=indices,
                 b=mb.add(x=indices, y=value_at(mb.shape(x=x), axis)),
             )
-        x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
+        x = _utils._construct_gather_op("gather", x, indices, axis, name=node.name)
         context.add(x)
         return
 
@@ -3992,7 +3991,7 @@ def index(context, node):
             a=indices,
             b=mb.add(x=indices, y=slice_shape),
         )
-    x = mb.gather_nd(x=x, indices=indices, name=name)
+    x = _utils._construct_gather_op("gather_nd", x, indices, name=name)
 
     # if the index axes are connect, we need to transpose it back
     if is_connected:
@@ -4377,7 +4376,8 @@ def slice(context, node):
 
     if start == 0 and end is None and step == 1:
         # Handling x[:], just pass through the tensor.
-        context.add(x, node.name)
+        x_identity = mb.identity(x=x, name=node.name)
+        context.add(x_identity)
         return
 
     begin_array = [0] * len(x.shape)
@@ -5509,7 +5509,7 @@ def topk(context, node):
         kwargs["sort"] = sort
 
     if kwargs["k"].val is None:
-        res = dynamic_topk(
+        res = _utils.dynamic_topk(
                 x=kwargs["x"],
                 k=kwargs["k"],
                 axis=kwargs["axis"],

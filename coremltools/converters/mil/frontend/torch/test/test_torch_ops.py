@@ -8040,10 +8040,11 @@ class TestIndexPut(TorchBaseTest):
 
 class TestIndex(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (10,),
                 (3, 4, 5, 6),
@@ -8051,7 +8052,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_bool_indices(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_bool_indices(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         rank = len(shape)
         class IndexModel(torch.nn.Module):
             def __init__(self, axis):
@@ -8072,7 +8073,7 @@ class TestIndex(TorchBaseTest):
 
         for index_rank in range(1, rank + 1):
             for axis in range(rank + 1 - index_rank):
-                input_data = torch.randn(*shape, dtype=torch.float32)
+                input_data = generate_input_data(shape, rand_range=(0, 2), dtype=input_dtype)
                 ref_data_shape = shape[axis:axis+index_rank]
                 ref_data = torch.rand(ref_data_shape)
                 # We set the first element to 0.6, so that we can make sure at least one element is selected,
@@ -8090,10 +8091,11 @@ class TestIndex(TorchBaseTest):
                 )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2),
                 (3, 4, 5, 6),
@@ -8101,7 +8103,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_1(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_1(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         # all elements are selected
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8116,14 +8118,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2),
                 (3, 4, 5, 6),
@@ -8131,7 +8136,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_2(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_2(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Only one axis is sliced."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8148,14 +8153,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8163,7 +8171,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_3(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_3(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Only two axes are sliced, and connected."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8183,14 +8191,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8198,7 +8209,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_4(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_4(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Only two axes are sliced, and not connected."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8218,14 +8229,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8233,7 +8247,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_5(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_5(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """All axes are sliced."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8256,14 +8270,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2),
                 (3, 4, 5, 6),
@@ -8271,7 +8288,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_6(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_6(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Only one axis is sliced + nd mode."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8290,14 +8307,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8305,7 +8325,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_7(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_7(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Two axes are sliced, and connected + nd mode."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8325,14 +8345,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8340,7 +8363,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_8(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_8(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Two axes are sliced, and not connected + nd mode."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8360,14 +8383,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8375,7 +8401,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_9(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_9(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """One axis is sliced through bool mask."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8391,14 +8417,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8406,7 +8435,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_10(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_10(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Multiple axes are sliced through bool masks with possible broadcasting."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8437,14 +8466,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (3, 4),
                 (3, 4, 5, 6)
@@ -8452,7 +8484,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_11(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_11(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Broadcastable indices."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8473,14 +8505,17 @@ class TestIndex(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8488,7 +8523,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_12(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_12(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Another broadcastable indices test case."""
         class IndexModel(torch.nn.Module):
             def forward(self, x):
@@ -8505,14 +8540,17 @@ class TestIndex(TorchBaseTest):
             IndexModel(),
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape, minimum_deployment_target",
+        "compute_unit, backend, input_dtype, shape, minimum_deployment_target",
         itertools.product(
             compute_units,
             backends,
+            (np.float32, np.int32, np.bool_),
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
@@ -8520,7 +8558,7 @@ class TestIndex(TorchBaseTest):
             [None, ct.target.iOS17],
         ),
     )
-    def test_index_int_index_case_13(self, compute_unit, backend, shape, minimum_deployment_target):
+    def test_index_int_index_case_13(self, compute_unit, backend, input_dtype, shape, minimum_deployment_target):
         """Another broadcastable indices (negative) test case."""
 
         class IndexModel(torch.nn.Module):
@@ -8534,6 +8572,8 @@ class TestIndex(TorchBaseTest):
             IndexModel(),
             backend=backend,
             compute_unit=compute_unit,
+            rand_range=(0, 2),
+            input_dtype=input_dtype,
             minimum_deployment_target=minimum_deployment_target,
         )
 
