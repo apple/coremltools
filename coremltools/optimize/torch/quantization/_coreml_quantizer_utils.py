@@ -11,9 +11,15 @@ from typing import Tuple as _Tuple
 
 import torch as _torch
 import torch.nn.functional as _F
-from torch.ao.quantization.pt2e.utils import (
-    get_aten_graph_module as _get_aten_graph_module,
-)
+_IS_TORCH_OLDER_THAN_2_4 = tuple(map(int, _torch.__version__.split(".")[:2])) < (2, 4)
+if _IS_TORCH_OLDER_THAN_2_4:
+    from torch.ao.quantization.pt2e.utils import (
+        get_aten_graph_module as _get_aten_graph_module,
+    )
+else:
+    from torch.ao.quantization.pt2e.utils import (
+        _get_aten_graph_module_for_pattern as _get_aten_graph_module,
+    )
 from torch.ao.quantization.quantizer.quantizer import (
     FixedQParamsQuantizationSpec as _FixedQParamsQuantizationSpec,
 )
@@ -212,7 +218,14 @@ def _get_weighted_mod_pattern(
             node_dict["output"] = output
         return output, node_dict
 
-    return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    if _IS_TORCH_OLDER_THAN_2_4:
+        return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    else:
+        class Pattern(_torch.nn.Module):
+            def forward(self, input, weight, bias):
+                return pattern(input, weight, bias)
+
+        return _get_aten_graph_module(Pattern(), example_inputs, is_cuda=False)
 
 
 def _get_weighted_mod_bn_pattern(
@@ -248,7 +261,14 @@ def _get_weighted_mod_bn_pattern(
             "output": output,
         }
 
-    return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    if _IS_TORCH_OLDER_THAN_2_4:
+        return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    else:
+        class Pattern(_torch.nn.Module):
+            def forward(self, input, weight, bias, bn_weight, bn_bias, bn_run_mean, bn_run_var):
+                return pattern(input, weight, bias, bn_weight, bn_bias, bn_run_mean, bn_run_var)
+
+        return _get_aten_graph_module(Pattern(), example_inputs, is_cuda=False)
 
 
 def get_binary_op_act_pattern(
@@ -284,7 +304,14 @@ def get_binary_op_act_pattern(
         return output, node_dict
 
     example_inputs = (_torch.randn(1), _torch.randn(1))
-    return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    if _IS_TORCH_OLDER_THAN_2_4:
+        return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    else:
+        class Pattern(_torch.nn.Module):
+            def forward(self, input_1, input_2):
+                return pattern(input_1, input_2)
+
+        return _get_aten_graph_module(Pattern(), example_inputs, is_cuda=False)
 
 
 def get_conv_pattern(
