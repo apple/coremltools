@@ -315,13 +315,14 @@ class TestMLModel:
         coreml_model = coremltools.convert(
             exir_program_edge, compute_precision=coremltools.precision.FLOAT32
         )
-        debug_handle_mapping = [
-            {_METADATA_VERSION: coreml_model.user_defined_metadata[_METADATA_VERSION]},
-            {
+        debug_handle_mapping = {
+            "version" : coreml_model.user_defined_metadata[_METADATA_VERSION],
+            "mapping" : {
                 str(k): v
                 for k, v in coreml_model._mil_program.construct_debug_handle_to_ops_mapping().items()
             },
-        ]
+        }
+
 
         with tempfile.TemporaryDirectory(suffix=".mlpackage") as package0:
             coreml_model.save(package0)
