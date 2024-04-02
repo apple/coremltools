@@ -524,10 +524,10 @@ class MLModel:
                 )
                 if len(debug_handle_to_ops_mapping) > 0:
                     debug_handle_to_ops_mapping_as_json = json.dumps(
-                        [
-                            {_METADATA_VERSION: self.user_defined_metadata[_METADATA_VERSION]},
-                            debug_handle_to_ops_mapping,
-                        ]
+                        {
+                            "version" : self.user_defined_metadata[_METADATA_VERSION],
+                            "mapping" : debug_handle_to_ops_mapping,
+                        }
                     )
                     saved_debug_handle_to_ops_mapping_path = _os.path.join(
                         save_path, "executorch_debug_handle_mapping.json"
