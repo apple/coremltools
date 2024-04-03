@@ -365,7 +365,7 @@ class one_hot(Operation):
     ----------
     indices: tensor<[D], i32> (Required)
         * Tensor, values indicate the locations for each one-hot vector to take the ``on_value``.
-    one_got_vector_size: i32 (Required)
+    one_hot_vector_size: i32 (Required)
         * Indicates the number of returning vectors.
     axis: const i32 (Optional)
         * Indicates which dimension to append the new axis.
@@ -444,7 +444,7 @@ class one_hot(Operation):
 @register_op
 class pad(Operation):
     """
-    Pad a tensor.
+    Pads a tensor.
 
     Parameters
     ----------
@@ -570,10 +570,10 @@ class range_1d(Operation):
 
     Parameters
     ----------
-    end: <T> (Required)
-        * The upper limit of the sequence, exclusive.
     start: <T> (Required)
         * The start point of the sequence.
+    end: <T> (Required)
+        * The upper limit of the sequence, exclusive.
     step: <T> (Required)
         * Number that increments ``start``.
 
@@ -1117,6 +1117,10 @@ class split(Operation):
         * The tensors may be variadic, but the number of tensors must be determined
           at compile time (i.e. a tuple).
 
+    axis: const<i32> (Required)
+        * The dimension along which to concatenate. Must be in the
+          range ``[-rank(x), rank(x))``.
+
     num_splits: <i32> (Optional)
         If specified, divide ``x`` into ``num_splits`` tensors along ``axis``.
         Its behavior depends on ``split_sizes``:
@@ -1133,10 +1137,6 @@ class split(Operation):
     split_sizes: const<S, i32> (Optional)
         * Sizes to split to. The sum of ``split_sizes`` must equal to
           ``value.shape[axis]``.
-
-    axis: const<i32> (Required)
-        * The dimension along which to concatenate. Must be in the
-          range ``[-rank(x), rank(x))``.
 
     Returns
     -------

@@ -249,16 +249,21 @@ class TestScatterNd:
 
 class TestGather(_TestGatherIOS16):
     @pytest.mark.parametrize(
-        "compute_unit, backend, x_dtype, indices_dtype",
+        "compute_unit, backend, x_dtype, indices_dtype, indices_dynamic",
         itertools.product(
             compute_units,
             backends,
             [np.float32, np.float16, np.int32, np.int16, np.uint16, np.int8, np.uint8],
             [np.int32, np.int16, np.uint16, np.int8, np.uint8],
+            [True, False],
         ),
     )
-    def test_builder_to_backend_smoke(self, compute_unit, backend, x_dtype, indices_dtype):
-        super().test_builder_to_backend_smoke(compute_unit, backend, x_dtype, indices_dtype)
+    def test_builder_to_backend_smoke(
+        self, compute_unit, backend, x_dtype, indices_dtype, indices_dynamic
+    ):
+        super().test_builder_to_backend_smoke(
+            compute_unit, backend, x_dtype, indices_dtype, indices_dynamic
+        )
 
     @pytest.mark.parametrize(
         "backend, indices_val, validate_indices",
@@ -290,6 +295,25 @@ class TestGather(_TestGatherIOS16):
                 input_specs=[mb.TensorSpec(shape=(1,), dtype=types.fp32)],
                 opset_version=backend.opset_version,
             )(prog)
+
+    @pytest.mark.parametrize(
+        "backend, indices_val",
+        itertools.product(backends, [0, 1]),
+    )
+    def test_builder_scalar_indices(self, backend, indices_val):
+        @mb.program(input_specs=[], opset_version=backend.opset_version)
+        def prog():
+            params = np.array([1, 2, 3, 4], dtype=np.int32)
+            indices = np.array(indices_val, dtype=np.int32)
+            res = mb.gather(
+                x=params, indices=indices_val, axis=0, batch_dims=0, validate_indices=False
+            )
+            return res
+
+        main_func = prog.functions["main"]
+        gather_op = main_func.find_ops(op_type="gather")[0]
+        assert gather_op.outputs[0].val == 1 if indices_val == 0 else 2
+        assert gather_op.outputs[0].dtype == types.int32
 
 
 class TestGatherAlongAxis:

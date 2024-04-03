@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import json
 import os
 import shutil
 import tempfile
@@ -12,15 +13,18 @@ import pytest
 
 import coremltools
 from coremltools import ComputeUnit, utils
-from coremltools._deps import _HAS_TORCH
+from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
 from coremltools.libmodelpackage import ModelPackage
-from coremltools.models import MLModel
+from coremltools.models import _METADATA_VERSION, MLModel
 from coremltools.models.utils import _MLPACKAGE_AUTHOR_NAME, _WEIGHTS_DIR_NAME
 from coremltools.proto import Model_pb2
 
 if _HAS_TORCH:
     import torch
+
+if _HAS_EXECUTORCH:
+    import executorch.exir
 
 
 def _remove_path(path):
@@ -264,6 +268,78 @@ class TestMLModel:
                 assert preds["output"] == 3.1
 
         _remove_path(package.name)
+
+    @pytest.mark.skipif(not _HAS_EXECUTORCH, reason="requires ExecuTorch")
+    def test_save_EXIR_debug_handle(self):
+        """
+        If we update EXIR debug handle serialization, we should update this test as well
+        """
+        INPUT_SHAPE = (2, 10)
+        LINEAR_SHAPE = (INPUT_SHAPE[-1], 20)
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(*LINEAR_SHAPE)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        def _compare_loaded_debug_handle_mapping_with_original(package):
+            debug_handle_mapping_json_path = os.path.join(
+                package, "executorch_debug_handle_mapping.json"
+            )
+            assert os.path.exists(debug_handle_mapping_json_path)
+            with open(debug_handle_mapping_json_path, "r") as f:
+                loaded_debug_handle_mapping = json.load(f)
+            assert loaded_debug_handle_mapping == debug_handle_mapping
+
+        def _compare_prediction_with_torch(coreml_model, torch_model):
+            x = torch.rand(2, 10)
+            coreml_x = {list(coreml_model.input_description)[0]: x.numpy()}
+
+            coreml_preds = coreml_model.predict(coreml_x)
+            assert coreml_preds is not None
+            coreml_y = list(coreml_preds.values())[0]
+
+            torch_y = torch_model(x).detach().numpy()
+            np.testing.assert_allclose(coreml_y, torch_y, rtol=1e-6, atol=1e-6)
+
+        torch_model = TestModule()
+        torch_model.eval()
+
+        example_input = (torch.rand(*INPUT_SHAPE),)
+        exir_program_aten = torch.export.export(torch_model, example_input)
+        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
+
+        coreml_model = coremltools.convert(
+            exir_program_edge, compute_precision=coremltools.precision.FLOAT32
+        )
+        debug_handle_mapping = {
+            "version" : coreml_model.user_defined_metadata[_METADATA_VERSION],
+            "mapping" : {
+                str(k): v
+                for k, v in coreml_model._mil_program.construct_debug_handle_to_ops_mapping().items()
+            },
+        }
+
+
+        with tempfile.TemporaryDirectory(suffix=".mlpackage") as package0:
+            coreml_model.save(package0)
+            loaded_model0 = MLModel(package0)
+            if utils._macos_version() >= (12, 0):
+                _compare_prediction_with_torch(loaded_model0, torch_model)
+            _compare_loaded_debug_handle_mapping_with_original(package0)
+
+            with tempfile.TemporaryDirectory(suffix=".mlpackage") as package1:
+                loaded_model0.save(package1)
+                loaded_model1 = MLModel(package1)
+                if utils._macos_version() >= (12, 0):
+                    _compare_prediction_with_torch(loaded_model1, torch_model)
+                # Although debug handle info will be lost in loaded model due to we do not
+                # deserialize executorch_debug_handle_mapping.json, package1 will still have
+                # executorch_debug_handle_mapping.json, which is copied from package0
+                _compare_loaded_debug_handle_mapping_with_original(package1)
 
     @pytest.mark.skipif(not _HAS_TORCH, reason="requires torch")
     def test_mil_as_package(self):

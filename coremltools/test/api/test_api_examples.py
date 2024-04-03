@@ -6,6 +6,7 @@
 import copy
 import os
 import tempfile
+from collections import Counter
 
 import numpy as np
 import pytest
@@ -13,7 +14,8 @@ import pytest
 import coremltools as ct
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, Program, get_new_symbol
+from coremltools.converters.mil import mil
+from coremltools.converters.mil.mil import Function, get_new_symbol
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
 if _HAS_TORCH:
@@ -57,7 +59,7 @@ class TestInputs:
         '''
         input name : "x/0" becomes "x_0" due to name sanitization applied during conversion
         '''
-        prog = Program()
+        prog = mil.Program()
         func_inputs = {"x/0": mb.placeholder(shape=[2, 3]),
                        "y": mb.placeholder(shape=[2, 3])}
         with Function(func_inputs) as ssa_fun:
@@ -79,7 +81,7 @@ class TestInputs:
 
     @staticmethod
     def _test_variant_input_type_prediction(to_tensor, convert_to):
-        prog = Program()
+        prog = mil.Program()
         func_inputs = {"x": mb.placeholder(shape=[2, 3]),
                        "y": mb.placeholder(shape=[2, 3])}
         with Function(func_inputs) as ssa_fun:
@@ -167,7 +169,7 @@ class TestMLProgramConverterExamples:
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
     def test_deepcopy_error_with_symbols_in_prog():
-        prog = Program()
+        prog = mil.Program()
         func_inputs = {"x": mb.placeholder(shape=[get_new_symbol(), 3]),
                        "y": mb.placeholder(shape=[2, 3])}
         with Function(func_inputs) as ssa_fun:
@@ -390,12 +392,21 @@ class TestGraphPassManagement:
             convert_to="mlprogram",
             pass_pipeline=pipeline,
         )
-        assert (
-            get_op_types_in_program(
-                model_converted._get_mil_internal(), skip_const_ops=False
-            ).count("const")
-            == 24
-        )
+
+        op_types = get_op_types_in_program(model_converted._mil_program, skip_const_ops=False)
+        expected_counts = {
+            "const": 26,
+            "cast": 7,
+            "conv": 1,
+            "matmul": 1,
+            "add": 1,
+            "shape": 1,
+            "slice_by_index": 2,
+            "concat": 1,
+            "reshape": 1,
+            "leaky_relu": 1,
+        }
+        assert Counter(op_types) == expected_counts
 
     def test_empty_pipeline(self):
         model = self._get_test_model()
@@ -491,7 +502,7 @@ class TestGraphPassManagement:
             get_op_types_in_program(
                 model_converted._get_mil_internal(), skip_const_ops=False
             ).count("const")
-            == 23
+            == 25
         )
 
     def test_pass_unsupported_option(self):

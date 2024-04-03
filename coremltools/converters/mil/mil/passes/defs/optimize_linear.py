@@ -5,8 +5,9 @@
 
 import numpy as np
 
+from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Program
+from coremltools.converters.mil.mil import Operation, Program, Var
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -130,6 +131,9 @@ class fuse_linear_bias(AbstractGraphPass):
 
         fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -140,10 +144,8 @@ class fuse_linear_bias(AbstractGraphPass):
 
             add_or_sub_op = _find_candicate_op(op)
             if add_or_sub_op is not None:
-                fusion_occurred = self._try_to_transform(op, add_or_sub_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
+                if self._try_to_transform(op, add_or_sub_op, block):
+                    fusion_occurred = True
         return fusion_occurred
 
 
@@ -290,8 +292,11 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_matmul_weight_bias_block(self, block):
-        fusion_status = False
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -303,8 +308,114 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
             add_op = self._find_candidate_op(op)
 
             if add_op is not None:
-                fusion_status = self._try_to_transform(op, add_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(op, add_op, block):
+                    fusion_occurred = True
+        return fusion_occurred
+
+
+@register_pass(namespace="common")
+class fuse_transpose_matmul(AbstractGraphPass):
+    """
+    Fuse ``transpose + matmul`` to ``matmul`` if possible,
+    since ``matmul`` has args ``transpose_x`` and ``transpose_y`` to transpose last 2 dims
+
+    .. code-block::
+
+        Positive example:
+            Input graph:
+                transpose(x=x, perm=(1, 0)) -|
+                                             |-> matmul(x=transposed_x, y=transposed_y)
+                transpose(x=y, perm=(1, 0)) -|
+
+            Output graph:
+                matmul(x=x, y=y, transpose_x=True, transpose_y=True)
+
+        Negative example:
+            Input graph:
+                transpose(x=x, perm=(1, 0, 2)) -|
+                                                |-> matmul(x=transposed_x, y=transposed_y)
+                transpose(x=y, perm=(1, 0, 2)) -|
+
+            Output graph:
+                Same to input graph, nothing changes
+    """
+
+    def apply(self, prog: Program) -> None:
+        for f in prog.functions.values():
+            self._fuse_transpose_matmul_block(f)
+
+    @block_context_manager
+    def _fuse_transpose_matmul_block(self, block: Block) -> None:
+        # use shallow copy to hide changes on block.operations during the loop,
+        # since we try fusion when loop to matmul, which will not affect downstream
+        for op in list(block.operations):
+            for b in op.blocks:
+                self._fuse_transpose_matmul_block(b)
+
+            if op.op_type == "matmul":
+                self._try_fuse_transpose_matmul(op, block)
+
+    @staticmethod
+    def is_transposed_and_fusable_to_matmul(x: Var) -> bool:
+        """
+        1. check if x is transposed
+        2. check if x is transposed in the last 2 dimensions,
+           since the transpose arg in matmul only transposes the last 2 dimensions
+        """
+
+        # x is not transposed, False
+        if x.op is None or x.op.op_type != "transpose":
+            return False
+
+        rank = x.rank
+        # if transposing a rank < 2 tensor, it is a noop and will be elimianted by noop_elimination
+        if rank < 2:
+            return False
+
+        # canonicalize the input permutation to compare with last-2-dim permutation below
+        perm = x.op.perm.val
+        perm[np.where(perm < 0)] += rank
+        perm[-2:] -= rank
+
+        # permuting only last 2 dims should look like (0, 1, ..., -1, -2)
+        perm_only_last_2_dims = np.arange(rank)
+        perm_only_last_2_dims[-2] = -1
+        perm_only_last_2_dims[-1] = -2
+
+        return np.all(perm == perm_only_last_2_dims)
+
+    def _try_fuse_transpose_matmul(self, op: Operation, block: Block) -> None:
+        assert op.op_type == "matmul"
+
+        x = op.x
+        y = op.y
+        transpose_x = False if op.transpose_x is None else op.transpose_x.val
+        transpose_y = False if op.transpose_y is None else op.transpose_y.val
+
+        is_x_transposed_and_fusable_to_matmul = self.is_transposed_and_fusable_to_matmul(x)
+        is_y_transposed_and_fusable_to_matmul = self.is_transposed_and_fusable_to_matmul(y)
+        # if neither x nor y is transposed and fuseable with matmul, nothing we need to do
+        if not is_x_transposed_and_fusable_to_matmul and not is_y_transposed_and_fusable_to_matmul:
+            return
+
+        if is_x_transposed_and_fusable_to_matmul:
+            x = x.op.x
+            transpose_x = not transpose_x
+        if is_y_transposed_and_fusable_to_matmul:
+            y = y.op.x
+            transpose_y = not transpose_y
+
+        fused_transpose_matmul = mb.matmul(
+            x=x,
+            y=y,
+            transpose_x=transpose_x,
+            transpose_y=transpose_y,
+            before_op=op,
+            name=op.name,
+        )
+        block.replace_uses_of_var_after_op(
+            anchor_op=op,
+            old_var=op.outputs[0],
+            new_var=fused_transpose_matmul,
+        )
+        op.remove_from_block()

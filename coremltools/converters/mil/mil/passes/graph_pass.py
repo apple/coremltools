@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Text, Union
 
 from coremltools.converters.mil import Operation, Program
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 
 
 class PassOption:
@@ -48,7 +50,10 @@ class AbstractGraphPass(ABC):
 
     def __call__(self, prog: Program):
         if not prog.skip_all_passes:
-            self.apply(prog)
+            # we use the scope context manager to populate the graph pass information to the ops
+            # constructed by the pass.
+            with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=[str(self)])):
+                self.apply(prog)
 
     def __str__(self):
         return type(self).__name__

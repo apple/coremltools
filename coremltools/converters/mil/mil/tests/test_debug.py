@@ -35,7 +35,7 @@ def compute_ground_truth_answer(input):
     square = x * x
     tanh = np.tanh(square)
     return {"output_0": square, "output_1":tanh}
-    
+
 class TestExtractSubModel:
 
     def test_extract_submodel_error_handling(self):
@@ -48,16 +48,16 @@ class TestExtractSubModel:
 
         invalid_outputs = ["output_1", 1]
         with pytest.raises(ValueError, match="outputs must be a list of str. Got element 1 with type <class 'int'>."):
-            extract_submodel(mlmodel, outputs=invalid_outputs) 
+            extract_submodel(mlmodel, outputs=invalid_outputs)
 
         invalid_outputs = ["output_1", "output_1"]
         with pytest.raises(ValueError, match="outputs must be a list of unique elements. 'output_1' occurs 2 times"):
             extract_submodel(mlmodel, outputs=invalid_outputs)
-            
+
         invalid_outputs = ["error"]
         with pytest.raises(ValueError, match="outputs \['error'\] not found in the function."):
             extract_submodel(mlmodel, outputs=invalid_outputs)
-            
+
         model_dir = tempfile.TemporaryDirectory()
         mlmodel_path = os.path.join(model_dir.name, "model.mlmodel")
         mlmodel.save(mlmodel_path)
@@ -72,7 +72,7 @@ class TestExtractSubModel:
                   |
                   v
                  mul -> tan -> output_2
-                 
+
         If x has symbolic shape, then the subgraph mil -> tan should also have symbolic shape
         """
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, get_new_symbol()))])
@@ -85,15 +85,15 @@ class TestExtractSubModel:
         model = ct.convert(prog, convert_to="neuralnetwork")
         submodel = extract_submodel(model, outputs=["tan"], inputs=["mul"])
         func = submodel._mil_program.functions["main"]
-        
+
         input = list(func.inputs.values())[0]
         assert input.shape[0] == 1
         assert is_symbolic(input.shape[1])
-        
+
         output = func.outputs[0]
         assert output.shape[0] == 1
         assert is_symbolic(output.shape[1])
-        
+
     def test_extract_submodel_complex(self):
         """
         Input graph:
@@ -117,7 +117,7 @@ class TestExtractSubModel:
         Case 1:
         inputs = None
         outputs = [sin, mul]
-        
+
         Output graph:
         x -> sin ------> output_1
               |      |
@@ -126,12 +126,12 @@ class TestExtractSubModel:
         """
         submodel = extract_submodel(model, outputs=["sin", "mul"])
         assert get_op_types_in_program(submodel._mil_program) == ["sin", "add", "mul"]
-        
+
         """
         Case 2:
         inputs = None
         outputs = [sin, add]
-        
+
         Output graph:
         x -> sin -> output_1
               |
@@ -140,12 +140,12 @@ class TestExtractSubModel:
         """
         submodel = extract_submodel(model, outputs=["sin", "add"])
         assert get_op_types_in_program(submodel._mil_program) == ["sin", "add"]
-        
+
         """
         Case 3:
         inputs = None
         outputs = [mul]
-        
+
         Output graph:
         x -> sin -----
               |      |
@@ -154,12 +154,12 @@ class TestExtractSubModel:
         """
         submodel = extract_submodel(model, outputs=["mul"])
         assert get_op_types_in_program(submodel._mil_program) == ["sin", "add", "mul"]
-        
+
         """
         Case 4:
         inputs = None
         outputs = [sin, sub]
-        
+
         Output graph:
         x -> sin -> sub -> output_2
               |
@@ -168,14 +168,13 @@ class TestExtractSubModel:
         y
         """
         submodel = extract_submodel(model, outputs=["sin", "sub"])
-        print(submodel._mil_program)
         assert get_op_types_in_program(submodel._mil_program) == ["sin", "sub"]
-        
+
         """
         Case 5:
         inputs = [x, y]
         outputs = [mul]
-        
+
         Output graph:
         x -> sin -----
               |      |
@@ -184,12 +183,12 @@ class TestExtractSubModel:
         """
         submodel = extract_submodel(model, outputs=["mul"], inputs=["x", "y"])
         assert get_op_types_in_program(submodel._mil_program) == ["sin", "add", "mul"]
-        
+
         """
         Case 6:
         inputs = [mul]
         outputs = [tan]
-        
+
         mul -> tan -> output_1
         """
         submodel = extract_submodel(model, outputs=["tan"], inputs=["mul"])
@@ -207,22 +206,22 @@ class TestExtractSubModel:
         """
         submodel = extract_submodel(model, outputs=["sub", "mul"], inputs=["sin", "add"])
         assert get_op_types_in_program(submodel._mil_program) == ["sub", "mul"]
-        
+
         """
         Case 8 (Negative):
         inputs = [sin]
         outputs = [mul]
-        
+
         mul not reachable merely through sin
         """
         with pytest.raises(ValueError, match="output mul not reachable from inputs"):
             submodel = extract_submodel(model, outputs=["mul"], inputs=["sin"])
-            
+
         """
         Case 9 (Negative):
         inputs = [mul]
         outputs = [sin]
-        
+
         sin not reachable merely through sin
         """
         with pytest.raises(ValueError, match="output sin not reachable from inputs"):
@@ -242,7 +241,7 @@ class TestExtractSubModel:
 
         # check that the submodel retains the same backend
         assert submodel.get_spec().WhichOneof("Type") == "neuralNetwork"
-        
+
         # check that the submodel retains the same compute unit
         assert submodel.compute_unit == compute_unit
 
@@ -286,7 +285,7 @@ class TestExtractSubModel:
 
         # check that the submodel retains the same backend
         assert submodel.get_spec().WhichOneof("Type") == "mlProgram"
-        
+
         # check that the submodel retains the same compute unit
         assert submodel.compute_unit == compute_unit
 

@@ -2,13 +2,12 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import itertools
-
 import copy
+import itertools
 import os
 from functools import partial
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import pytest
@@ -17,10 +16,12 @@ from PIL import Image
 import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
 from coremltools._deps import _IS_MACOS
+from coremltools.converters.mil import mil
 from coremltools.converters.mil.mil import Block, Function, Program
 from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer as _NameSanitizer
-from coremltools.converters.mil.mil.passes.defs.quantization import AbstractQuantizationPass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil.mil.scope import ScopeSource
 from coremltools.proto import FeatureTypes_pb2 as ft
 
 np.random.seed(10)
@@ -289,7 +290,7 @@ def ssa_fn(func):
     """
 
     def wrapper(*args, **kwargs):
-        prog = Program()
+        prog = mil.Program()
         with Function({}) as ssa_func:
             func(*args, **kwargs)
 
@@ -489,7 +490,7 @@ def get_core_ml_prediction(
     Return predictions of the given model.
     """
     minimum_deployment_target = backend.opset_version
-    program = Program()
+    program = mil.Program()
     with Function(input_placeholders, opset_version=minimum_deployment_target) as ssa_func:
         output_vars = build(**ssa_func.inputs)
         if isinstance(output_vars, tuple):
@@ -509,33 +510,88 @@ def get_core_ml_prediction(
     return mlmodel.predict(input_values)
 
 
+def _decorate_prog_with_scope_if_not_present(prog: Program):
+    """
+    For a program without any scope info, we manually add scopes to every op,
+    in ordere to test that all graph passes can preserve the source scope info.
+    """
+
+    def _is_scopes_present_in_program(prog: Program) -> bool:
+        """
+        Return True is any op already has the scopes info.
+        """
+
+        def _is_scopes_present_in_block(block: Block) -> bool:
+            for op in block.operations:
+                for b in op.blocks:
+                    if _is_scopes_present_in_block(b):
+                        return True
+                if len(op.scopes) > 0:
+                    return True
+
+        for func in prog.functions.values():
+            if _is_scopes_present_in_block(func):
+                return True
+
+    def _decorate_prog_with_default_torch_scope(prog: Program):
+        """
+        Decorate every op in the program with a default TORCHSCRIPT_MODULE_TYPE scope info.
+        """
+
+        def _decorate_block_with_default_torch_scope(block: Block):
+            for op in block.operations:
+                for b in op.blocks:
+                    _decorate_block_with_default_torch_scope(b)
+                assert ScopeSource.TORCHSCRIPT_MODULE_TYPE not in op.scopes
+                op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] = ["dummy"]
+
+        for func in prog.functions.values():
+            _decorate_block_with_default_torch_scope(func)
+
+        prog._add_essential_scope_source(ScopeSource.TORCHSCRIPT_MODULE_TYPE)
+
+    if not _is_scopes_present_in_program(prog):
+        _decorate_prog_with_default_torch_scope(prog)
+
 def apply_pass_and_basic_check(
-    prog,
-    pass_name,
-    skip_output_name_check=False,
-    skip_output_type_check=False,
-    skip_input_name_check=False,
-    skip_input_type_check=False,
-):
+    prog: Program,
+    pass_name: Union[str, AbstractGraphPass],
+    skip_output_name_check: Optional[bool] = False,
+    skip_output_type_check: Optional[bool] = False,
+    skip_input_name_check: Optional[bool] = False,
+    skip_input_type_check: Optional[bool] = False,
+    skip_function_name_check: Optional[bool] = False,
+    func_name: Optional[str] = "main",
+    skip_essential_scope_check: Optional[bool] = False,
+) -> Tuple[Program, Block, Block]:
     """
     Apply pass to the program
     """
     prev_prog = copy.deepcopy(prog)
-    graph_pass = pass_name if isinstance(pass_name, AbstractQuantizationPass) else PASS_REGISTRY[pass_name]
-    graph_pass(prog)
-    block = prog.functions["main"]
-    prev_block = prev_prog.functions["main"]
-    if not skip_output_name_check:
-        assert_same_output_names(prev_prog, prog)
-    if not skip_output_type_check:
-        assert_same_output_types(prev_prog, prog)
-    assert_same_output_shapes(prev_prog, prog)
 
-    if not skip_input_name_check:
-        assert_same_input_names(prev_prog, prog)
-    if not skip_input_type_check:
-        assert_same_input_types(prev_prog, prog)
-    return prev_prog, prev_block, block
+    graph_pass = pass_name if isinstance(pass_name, AbstractGraphPass) else PASS_REGISTRY[pass_name]
+
+    _decorate_prog_with_scope_if_not_present(prog)
+    graph_pass(prog)
+    prog.validate(check_essential_scope=not skip_essential_scope_check)
+
+    if not skip_function_name_check:
+        if prev_prog.functions.keys() != prog.functions.keys():
+            raise ValueError("function names changed during {pass_name}.")
+
+    for name in prev_prog.functions:
+        if not skip_output_name_check:
+            assert_same_output_names(prev_prog, prog, name)
+        if not skip_output_type_check:
+            assert_same_output_types(prev_prog, prog, name)
+        assert_same_output_shapes(prev_prog, prog, name)
+
+        if not skip_input_name_check:
+            assert_same_input_names(prev_prog, prog, name)
+        if not skip_input_type_check:
+            assert_same_input_types(prev_prog, prog, name)
+
+    return prev_prog, prev_prog.functions[func_name], prog.functions[func_name]
 
 
 def assert_prog_input_type(prog, expected_dtype_str, expected_name=None, index=0):
@@ -644,7 +700,9 @@ def verify_prediction(mlmodel, multiarray_type=None):
         input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
         if multiarray_type is not None:
             input_dict[input_desc.name] = input_dict[input].astype(multiarray_type)
-    mlmodel.predict(input_dict)
+    res = mlmodel.predict(input_dict)
+    assert isinstance(res, dict)
+    assert len(res) >= 1
 
 def assert_spec_input_image_type(spec, expected_feature_type):
     assert spec.description.input[0].type.imageType.colorSpace == expected_feature_type

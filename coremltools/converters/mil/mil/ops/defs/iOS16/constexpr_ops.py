@@ -116,20 +116,37 @@ class constexpr_affine_dequantize(Operation):
             self.quantized_data.val, self.zero_point.val, self.scale.val, self.axis.val
         )
 
+    def is_all_zeros(self) -> bool:
+        zero_point = self.promote_rank_to_same_as_quantized_data(
+            self.zero_point.val, self.quantized_data.val, self.axis.val
+        )
+        return np.all(self.quantized_data.val == zero_point)
+
     @staticmethod
-    def decompress(quantized_data, zero_point, scale, axis):
+    def promote_rank_to_same_as_quantized_data(
+        param: np.ndarray, quantized_data: np.ndarray, axis: int
+    ) -> np.ndarray:
+        """
+        Promote param (i.e. zero point or scale) rank to same as quantized data,
+        so subtraction or multiplication can happen properly on the specified axis
+        """
+        if len(param.shape) == 0:
+            return np.reshape(param, np.ones(len(quantized_data.shape), np.int32))
+        else:
+            axes = [i for i in range(len(quantized_data.shape)) if i != axis]
+            return np.expand_dims(param, axis=tuple(axes))
 
+    @staticmethod
+    def decompress(
+        quantized_data: np.ndarray, zero_point: np.ndarray, scale: np.ndarray, axis: int
+    ) -> np.ndarray:
         axis = axis if axis >= 0 else axis + len(quantized_data.shape)
-
-        def rank_promoted_to_same_as_quantized_data(param):
-            if len(param.shape) == 0:
-                return np.reshape(param, np.ones(len(quantized_data.shape), np.int32))
-            else:
-                axes = [i for i in range(len(quantized_data.shape)) if i != axis]
-                return np.expand_dims(param, axis=tuple(axes))
-
-        sc = rank_promoted_to_same_as_quantized_data(scale)
-        zp = rank_promoted_to_same_as_quantized_data(zero_point)
+        sc = constexpr_affine_dequantize.promote_rank_to_same_as_quantized_data(
+            scale, quantized_data, axis
+        )
+        zp = constexpr_affine_dequantize.promote_rank_to_same_as_quantized_data(
+            zero_point, quantized_data, axis
+        )
         val = sc * (quantized_data.astype(np.float32) - zp.astype(np.float32))
         return val.astype(scale.dtype)
 
@@ -296,8 +313,8 @@ class constexpr_sparse_to_dense(Operation):
 
     shape: const tensor<uint32, [K]> (Required)
 
-	Notes
-	-----
+        Notes
+        -----
     * Any data is packed and read in a row-major order.
     * ``mask`` contains ``M`` bytes, where ``M = ceil( product(shape) / 8)``. That is, each bit
       field corresponds to one element in the output tensor.
@@ -311,7 +328,7 @@ class constexpr_sparse_to_dense(Operation):
     .. sourcecode:: python
 
         shape = (5,) => M = 1 bytes
-        
+
                    MSB                  LSB
                     |                    |
         mask    =  |x  x  x  0  1  1  0  0 |      <== packed elements

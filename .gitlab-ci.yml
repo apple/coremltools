@@ -114,7 +114,7 @@ test_py39_tf2_intel-1:
     PYTHON: "3.9"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp39*10_15*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_tf2.pip
 
 test_py39_tf2_intel-2:
   <<: *test_macos_pkg
@@ -126,7 +126,7 @@ test_py39_tf2_intel-2:
     PYTHON: "3.9"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
     WHEEL_PATH: build/dist/*cp39*10_15*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_tf2.pip
 
 test_py39_mil_intel:
   <<: *test_macos_pkg
@@ -174,7 +174,7 @@ test_py39_milproto_intel:
     WHEEL_PATH: build/dist/*cp39*10_15*
     TEST_PACKAGE: coremltools.converters.mil.frontend.milproto
     PYTHON: "3.9"
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_tf2.pip
 
 
 
@@ -212,7 +212,7 @@ test_py310_tf2-1:
     PYTHON: "3.10"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp310*11*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_tf2.pip
 
 test_py310_tf2-2:
   <<: *test_macos_pkg
@@ -224,7 +224,7 @@ test_py310_tf2-2:
     PYTHON: "3.10"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
     WHEEL_PATH: build/dist/*cp310*11*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_tf2.pip
 
 test_py310_mil:
   <<: *test_macos_pkg
@@ -272,7 +272,7 @@ test_py310_milproto:
     PYTHON: "3.10"
     TEST_PACKAGE: coremltools.converters.mil.frontend.milproto
     WHEEL_PATH: build/dist/*cp310*11*
-    REQUIREMENTS: reqs/test.pip
+    REQUIREMENTS: reqs/test_tf2.pip
 
 
 

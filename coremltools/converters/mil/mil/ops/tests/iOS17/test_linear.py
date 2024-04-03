@@ -13,8 +13,11 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.tests.iOS17 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
-from coremltools.converters.mil.mil.types import builtin_to_string, nptype_from_builtin
-from coremltools.converters.mil.mil.types.type_mapping import numpy_type_to_builtin_type
+from coremltools.converters.mil.mil.types import (
+    builtin_to_string,
+    nptype_from_builtin,
+    numpy_type_to_builtin_type,
+)
 from coremltools.converters.mil.testing_reqs import compute_units
 
 

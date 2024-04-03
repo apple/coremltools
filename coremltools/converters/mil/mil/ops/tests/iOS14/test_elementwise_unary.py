@@ -10,10 +10,9 @@ import pytest
 import scipy
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, get_new_symbol, types
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.ops.tests.iOS14 import backends
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
-from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 from coremltools.converters.mil.testing_reqs import compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
 
@@ -514,19 +513,35 @@ class TestElementwiseUnary:
 
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
-    def test_cast_with_symbolic_value(self):
-        input_shape = [get_new_symbol(), 1]
-        input_placeholders = {
-            "x": mb.placeholder(shape=input_shape),
-        }
+    @pytest.mark.parametrize(
+        "backend, dtype",
+        itertools.product(
+            backends,
+            ["bool", "int32", "fp16", "fp32"],
+        ),
+    )
+    def test_cast_with_symbolic_value(self, backend, dtype):
+        s1 = get_new_symbol()
 
-        def build(x):
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(s1, 1))],
+            opset_version=backend.opset_version,
+        )
+        def prog(x):
             shape = mb.shape(x=x)
-            return mb.cast(x=shape, dtype="int32")
-
-        with Function(input_placeholders) as ssa_func:
-            output_vars = build(**ssa_func.inputs)
-            assert is_compatible_symbolic_vector(output_vars.sym_val, [get_new_symbol(), 1])
+            out = mb.cast(x=shape, dtype=dtype)
+            assert out.val is None
+            sym_val = out.sym_val
+            if dtype == "bool":
+                assert sym_val.tolist() == [s1, True]
+            elif dtype == "int32":
+                assert sym_val.tolist() == [s1, 1]
+            elif dtype == "fp16":
+                assert sym_val.tolist() == [s1, np.float16(1.0)]
+            else:
+                assert dtype == "fp32"
+                assert sym_val.tolist() == [s1, np.float32(1.0)]
+            return out
 
     @staticmethod
     def _test_builder_to_backend_stress_with_epsilon(
@@ -634,6 +649,7 @@ class TestElementwiseUnary:
             return mb.erf(x=x)
 
         ops = list(prog.functions.values())[0].operations
+        ops = list(ops)
         assert len(ops) == 2
         assert ops[0].op_type == "const"
         erf_op = ops[1]

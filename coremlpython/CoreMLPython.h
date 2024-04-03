@@ -3,6 +3,8 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
+// Disable a few warnings and include pybind first, then re-enable warnings
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wexit-time-destructors"
 #pragma clang diagnostic ignored "-Wdocumentation"
@@ -28,11 +30,13 @@ namespace CoreML {
             static py::bytes autoSetSpecificationVersion(const py::bytes& modelBytes);
             static py::str compileModel(const std::string& urlStr);
             static int32_t maximumSupportedSpecificationVersion();
+            static void setComputeUnit(MLModelConfiguration *configuration, const std::string& computeUnits);
 
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
             ~Model();
             explicit Model(const std::string& urlStr, const std::string& computeUnits);
+            explicit Model(MLModel* m_model, NSURL* compiledUrl, bool deleteCompiledModelOnExit);
 
             py::dict predict(const py::dict& input) const;
             py::list batchPredict(const py::list& batch) const;

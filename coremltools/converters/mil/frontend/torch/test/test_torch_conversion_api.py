@@ -20,10 +20,11 @@ from coremltools._deps import (
 )
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
 from coremltools.converters.mil.frontend.torch.torch_op_registry import (
-    TorchOpsRegistry,
     _TORCH_OPS_REGISTRY,
+    TorchOpsRegistry,
     register_torch_op,
 )
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import (
     assert_cast_ops_count,
@@ -131,19 +132,48 @@ class TestTorchScriptValidation:
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchScript"
 
 
-
 @pytest.mark.skipif(not _HAS_EXECUTORCH, reason=MSG_EXECUTORCH_NOT_FOUND)
 class TestEXIRValidation:
     @staticmethod
-    @pytest.mark.parametrize(
-        "backend",
-        backends,
-    )
+    @pytest.mark.parametrize("backend", backends)
+    def test_fp16_io(torch_model, backend):  # TODO (rdar://115845792): Handle fp16 IO dtypes
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.linear = torch.nn.Linear(10, 20, dtype=torch.float16)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = TestModule()
+        model.eval()
+
+        shape = (1, 10)
+        example_inputs = (torch.rand(*shape, dtype=torch.float16),)
+        exir_program_aten = torch.export.export(model, example_inputs)
+        exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
+
+        # Default deployment target is iOS14 for neuralnetwork and iOS15 for mlprogram,
+        # both are too old to support fp16 io
+        with pytest.raises(
+            ValueError, match=r"To use fp16 input, please set minimum deployment target to iOS16\+"
+        ):
+            ct.convert(exir_program_edge, convert_to=backend[0])
+
+        # fp16 io should work fine for iOS16+
+        if backend[0] == "mlprogram":
+            ct.convert(
+                exir_program_edge,
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS16,
+            )
+
+    @staticmethod
+    @pytest.mark.parametrize("backend", backends)
     def test_inputs(
         torch_model, backend
     ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-
-        shape = (1, 10)
+        shape = (2, 10)
         exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
         exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
@@ -157,15 +187,11 @@ class TestEXIRValidation:
             )
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "backend",
-        backends,
-    )
+    @pytest.mark.parametrize("backend", backends)
     def test_outputs(
         torch_model, backend
     ):  # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
-
-        shape = (1, 10)
+        shape = (3, 10)
         exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
         exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
@@ -179,12 +205,9 @@ class TestEXIRValidation:
             )
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "backend",
-        backends,
-    )
+    @pytest.mark.parametrize("backend", backends)
     def test_source_dialect_metadata(torch_model, backend):
-        shape = (1, 10)
+        shape = (4, 10)
         exir_program_aten = torch.export.export(torch_model, (torch.rand(*shape),))
         exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
@@ -197,6 +220,7 @@ class TestEXIRValidation:
         assert _METADATA_SOURCE_DIALECT in mlmodel.user_defined_metadata
 
         assert mlmodel.user_defined_metadata[_METADATA_SOURCE_DIALECT] == "TorchExport::EDGE"
+
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestTorchOpsRegistry:
@@ -1239,7 +1263,7 @@ def rank3_input_model():
 def rank4_input_model():
     class Model(torch.nn.Module):
         def forward(self, x):
-            return x + 5.5
+            return x + 5.0
     example_input = torch.randint(0, 100, (1, 3, 10, 20), dtype=torch.float32)
     return torch.jit.trace(Model().eval(), example_input)
 
@@ -1674,6 +1698,35 @@ class TestInputOutputConversionAPI:
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.BGR)
         verify_prediction(mlmodel)
 
+        # check mlprogram can have dynamic shape image output
+        shape = ct.Shape((1, 3, ct.RangeDim(5, 10), ct.RangeDim(5, 10)))
+        mlmodel = ct.convert(
+            rank4_input_model,
+            inputs=[ct.TensorType(shape=shape, dtype=np.float32)],
+            outputs=[ct.ImageType(name="output_image", color_layout=ct.colorlayout.RGB)],
+            minimum_deployment_target=ct.target.macOS13,
+        )
+        assert_ops_in_mil_program(mlmodel, expected_op_list=["cast", "add", "cast"])
+        assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.RGB)
+        assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
+        assert any_symbolic(mlmodel._mil_program.functions["main"].outputs[0].shape)
+        verify_prediction(mlmodel)
+
+        # Test output image numerical
+        sample_input = np.random.randint(low=0, high=200, size=(1, 3, 10, 10)).astype(np.float32)
+        model_output_pil_image = mlmodel.predict({"x": sample_input})["output_image"]
+        assert isinstance(model_output_pil_image, Image.Image)
+        assert model_output_pil_image.mode == "RGBA"
+        model_output_as_numpy = np.array(model_output_pil_image)[:, :, :3]  # last A channel is 255
+        model_output_as_numpy = np.transpose(model_output_as_numpy, axes=[2, 0, 1])
+        reference_output = rank4_input_model(torch.from_numpy(sample_input)).detach().numpy()
+        reference_output = np.squeeze(reference_output)
+        np.testing.assert_allclose(reference_output, model_output_as_numpy, rtol=1e-2, atol=1e-2)
+
+        a_channel = np.array(model_output_pil_image)[:, :, 3].flatten()
+        assert np.all(a_channel == 255)
+
     def test_grayscale_output(self, rank4_grayscale_input_model):
         with pytest.raises(TypeError, match="float16 dtype for outputs is only supported for deployment target >= iOS16/macOS13"):
             ct.convert(rank4_grayscale_input_model,
@@ -1811,15 +1864,24 @@ class TestGrayscaleImagePredictions:
         reference_output = rank4_grayscale_input_model(torch.from_numpy(sample_input.astype(np.float32))).detach().numpy()
         np.testing.assert_allclose(reference_output, model_output, rtol=1e-2, atol=1e-2)
 
-    def test_grayscale_output_image(self, rank4_grayscale_input_model):
-        mlmodel = ct.convert(rank4_grayscale_input_model,
-                             inputs=[ct.TensorType(name="input",
-                                                  shape=(1, 1, 10, 20))],
-                             outputs=[ct.ImageType(name="output_image",
-                                                   color_layout=ct.colorlayout.GRAYSCALE)],
-                             minimum_deployment_target=ct.target.macOS13,
-                             compute_precision=ct.precision.FLOAT32,
-                             )
+    @pytest.mark.parametrize(
+        "dynamic_shape",
+        [True, False],
+    )
+    def test_grayscale_output_image(self, rank4_grayscale_input_model, dynamic_shape):
+
+        if dynamic_shape:
+            shape = ct.Shape((1, 1, ct.RangeDim(5, 10), ct.RangeDim(5, 20)))
+        else:
+            shape = (1, 1, 10, 20)
+
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.TensorType(name="input", shape=shape)],
+            outputs=[ct.ImageType(name="output_image", color_layout=ct.colorlayout.GRAYSCALE)],
+            minimum_deployment_target=ct.target.macOS13,
+            compute_precision=ct.precision.FLOAT32,
+        )
         sample_input = np.random.randint(low=0, high=200, size=(1, 1, 10, 20)).astype(np.float32)
         model_output_pil_image = mlmodel.predict({"input": sample_input})['output_image']
         assert isinstance(model_output_pil_image, Image.Image)
@@ -1829,15 +1891,27 @@ class TestGrayscaleImagePredictions:
         reference_output = np.squeeze(reference_output)
         np.testing.assert_allclose(reference_output, model_output_as_numpy, rtol=1e-2, atol=1e-2)
 
-    def test_grayscale_fp16_output_image(self, rank4_grayscale_input_model):
-        mlmodel = ct.convert(rank4_grayscale_input_model,
-                             inputs=[ct.TensorType(name="input",
-                                                  shape=(1, 1, 10, 20))],
-                             outputs=[ct.ImageType(name="output_image",
-                                                   color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
-                             minimum_deployment_target=ct.target.macOS13,
-                             compute_precision=ct.precision.FLOAT32,
-                             )
+    @pytest.mark.parametrize(
+        "dynamic_shape",
+        [True, False],
+    )
+    def test_grayscale_fp16_output_image(self, rank4_grayscale_input_model, dynamic_shape):
+
+        if dynamic_shape:
+            shape = ct.Shape((1, 1, ct.RangeDim(5, 10), ct.RangeDim(5, 20)))
+        else:
+            shape = (1, 1, 10, 20)
+
+        mlmodel = ct.convert(
+            rank4_grayscale_input_model,
+            inputs=[ct.TensorType(name="input", shape=shape)],
+            outputs=[
+                ct.ImageType(name="output_image", color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)
+            ],
+            minimum_deployment_target=ct.target.macOS13,
+            compute_precision=ct.precision.FLOAT32,
+        )
+
         sample_input = np.random.randint(low=0, high=200, size=(1, 1, 10, 20)).astype(np.float32)
         model_output_pil_image = mlmodel.predict({"input": sample_input})['output_image']
         assert isinstance(model_output_pil_image, Image.Image)

@@ -19,4 +19,6 @@ class sanitize_name_strings(AbstractGraphPass):
         for f in prog.functions.values():
             sanitizer_vars = NameSanitizer(prefix="var_")
             sanitizer_ops = NameSanitizer(prefix="op_")
-            NameSanitizer.sanitize_block(f, sanitizer_vars, sanitizer_ops, prog.main_input_types)
+            NameSanitizer.sanitize_block(
+                f, sanitizer_vars, sanitizer_ops, prog.functions["main"].input_types
+            )

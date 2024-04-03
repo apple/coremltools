@@ -316,6 +316,7 @@ bool DataType_IsValid(int value) {
     case 10:
     case 11:
     case 12:
+    case 13:
     case 21:
     case 22:
     case 23:

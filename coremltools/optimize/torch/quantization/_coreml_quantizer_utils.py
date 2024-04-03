@@ -11,9 +11,11 @@ from typing import Tuple as _Tuple
 
 import torch as _torch
 import torch.nn.functional as _F
-from torch.ao.quantization.pt2e.utils import (
-    get_aten_graph_module as _get_aten_graph_module,
-)
+_IS_TORCH_OLDER_THAN_2_4 = tuple(map(int, _torch.__version__.split(".")[:2])) < (2, 4)
+if _IS_TORCH_OLDER_THAN_2_4:
+    from torch.ao.quantization.pt2e.utils import get_aten_graph_module
+else:
+    from torch.ao.quantization.pt2e.utils import _get_aten_graph_module_for_pattern
 from torch.ao.quantization.quantizer.quantizer import (
     FixedQParamsQuantizationSpec as _FixedQParamsQuantizationSpec,
 )
@@ -68,6 +70,15 @@ _supported_activations_no_inplace = (_F.gelu, _F.sigmoid, _F.logsigmoid, _F.tanh
 
 # Map of dimension to convolution function
 _conv_fn_map = {1: _F.conv1d, 2: _F.conv2d, 3: _F.conv3d}
+
+
+def _get_aten_graph_module(
+    pattern: _torch.nn.Module, example_inputs: _Tuple[_torch.Tensor], is_cuda: bool = False
+):
+    if _IS_TORCH_OLDER_THAN_2_4:
+        return get_aten_graph_module(pattern.forward, example_inputs, is_cuda)
+    else:
+        return _get_aten_graph_module_for_pattern(pattern, example_inputs, is_cuda)
 
 
 def _adjust_activation_qspec(
@@ -197,22 +208,23 @@ def _get_weighted_mod_pattern(
     _supported_activations_no_inplace
     """
 
-    def pattern(input, weight, bias):
-        mod_out = mod_fn(input, weight, bias)
-        output = mod_out
-        node_dict = {
-            "input": input,
-            "mod": mod_out,
-            "weight": weight,
-            "bias": bias,
-        }
-        if act_fn is not None:
-            # Only add output if activation function is applied to model output
-            output = act_fn(output, inplace=True) if act_in_place else act_fn(output)
-            node_dict["output"] = output
-        return output, node_dict
+    class Pattern(_torch.nn.Module):
+        def forward(self, input, weight, bias):
+            mod_out = mod_fn(input, weight, bias)
+            output = mod_out
+            node_dict = {
+                "input": input,
+                "mod": mod_out,
+                "weight": weight,
+                "bias": bias,
+            }
+            if act_fn is not None:
+                # Only add output if activation function is applied to model output
+                output = act_fn(output, inplace=True) if act_in_place else act_fn(output)
+                node_dict["output"] = output
+            return output, node_dict
 
-    return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    return _get_aten_graph_module(Pattern(), example_inputs)
 
 
 def _get_weighted_mod_bn_pattern(
@@ -233,22 +245,23 @@ def _get_weighted_mod_bn_pattern(
     _supported_activations_no_inplace
     """
 
-    def pattern(input, weight, bias, bn_weight, bn_bias, bn_run_mean, bn_run_var):
-        mod_out = mod_fn(input, weight, bias)
-        output = _F.batch_norm(
-            mod_out, bn_run_mean, bn_run_var, bn_weight, bn_bias, training=True
-        )
-        if act_fn is not None:
-            output = act_fn(output, inplace=True) if act_in_place else act_fn(output)
-        return output, {
-            "input": input,
-            "mod": mod_out,
-            "weight": weight,
-            "bias": bias,
-            "output": output,
-        }
+    class Pattern(_torch.nn.Module):
+        def forward(self, input, weight, bias, bn_weight, bn_bias, bn_run_mean, bn_run_var):
+            mod_out = mod_fn(input, weight, bias)
+            output = _F.batch_norm(
+                mod_out, bn_run_mean, bn_run_var, bn_weight, bn_bias, training=True
+            )
+            if act_fn is not None:
+                output = act_fn(output, inplace=True) if act_in_place else act_fn(output)
+            return output, {
+                "input": input,
+                "mod": mod_out,
+                "weight": weight,
+                "bias": bias,
+                "output": output,
+            }
 
-    return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    return _get_aten_graph_module(Pattern(), example_inputs)
 
 
 def get_binary_op_act_pattern(
@@ -272,19 +285,20 @@ def get_binary_op_act_pattern(
     _supported_activations_no_inplace
     """
 
-    def pattern(input_1, input_2):
-        binary_op_out = binary_op(input_1, input_2)
-        node_dict = {
-            "binary_op": binary_op_out,
-        }
-        output = binary_op_out
-        if act_fn is not None:
-            output = act_fn(output, inplace=True) if act_in_place else act_fn(output)
-            node_dict["output"] = output
-        return output, node_dict
+    class Pattern(_torch.nn.Module):
+        def forward(self, input_1, input_2):
+            binary_op_out = binary_op(input_1, input_2)
+            node_dict = {
+                "binary_op": binary_op_out,
+            }
+            output = binary_op_out
+            if act_fn is not None:
+                output = act_fn(output, inplace=True) if act_in_place else act_fn(output)
+                node_dict["output"] = output
+            return output, node_dict
 
     example_inputs = (_torch.randn(1), _torch.randn(1))
-    return _get_aten_graph_module(pattern, example_inputs, is_cuda=False)
+    return _get_aten_graph_module(Pattern(), example_inputs)
 
 
 def get_conv_pattern(

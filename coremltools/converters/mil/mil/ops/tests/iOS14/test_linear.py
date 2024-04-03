@@ -261,6 +261,28 @@ class TestMatMul:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_builder_transpose_y(self, compute_unit, backend):
+        x_val = np.random.rand(3, 2, 7, 16)
+        y_val = np.random.rand(3, 2, 5, 16)
+
+        def build(x):
+            return mb.matmul(x=x, y=y_val, transpose_x=False, transpose_y=True)
+
+        expected_output = np.matmul(x_val, np.transpose(y_val, (0, 1, 3, 2)))
+        run_compare_builder(
+            build,
+            input_placeholders={"x": mb.placeholder(shape=x_val.shape)},
+            input_values={"x": x_val},
+            expected_output_types=expected_output.shape + (types.fp32,),
+            expected_outputs=expected_output,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
 
 class TestEinsum:
     @pytest.mark.parametrize(

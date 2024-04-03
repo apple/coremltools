@@ -85,10 +85,8 @@ class noop_elimination(AbstractGraphPass):
 
             if has_all_elements_equal_to(op.x, x):
                 input_var = op.y
-                input_op = input_var.op
             elif has_all_elements_equal_to(op.y, y):
                 input_var = op.x
-                input_op = input_var.op
             else:
                 return False
 
@@ -100,7 +98,7 @@ class noop_elimination(AbstractGraphPass):
                 return False
 
             if op.enclosing_block.try_replace_uses_of_var_after_op(
-                anchor_op=input_op,
+                anchor_op=op,
                 old_var=op.outputs[0],
                 new_var=input_var,
             ):
@@ -132,13 +130,10 @@ class noop_elimination(AbstractGraphPass):
                 if any([x < 0 for x in stride]):
                     return False
 
-            input_var = op.x
-            input_op = input_var.op
-
             if op.enclosing_block.try_replace_uses_of_var_after_op(
-                anchor_op=input_op,
+                anchor_op=op,
                 old_var=op.outputs[0],
-                new_var=input_var,
+                new_var=op.x,
             ):
                 op.enclosing_block.remove_ops([op])
                 return True
@@ -151,13 +146,10 @@ class noop_elimination(AbstractGraphPass):
             if input_shape != output_shape:
                 return False
 
-            input_var = op.x
-            input_op = input_var.op
-
             if op.enclosing_block.try_replace_uses_of_var_after_op(
-                anchor_op=input_op,
+                anchor_op=op,
                 old_var=op.outputs[0],
-                new_var=input_var,
+                new_var=op.x,
             ):
                 op.enclosing_block.remove_ops([op])
                 return True
@@ -167,13 +159,10 @@ class noop_elimination(AbstractGraphPass):
             if op.alpha.val != 1 or op.beta.val != 0:
                 return False
 
-            input_var = op.x
-            input_op = input_var.op
-
             if op.enclosing_block.try_replace_uses_of_var_after_op(
-                anchor_op=input_op,
+                anchor_op=op,
                 old_var=op.outputs[0],
-                new_var=input_var,
+                new_var=op.x,
             ):
                 op.enclosing_block.remove_ops([op])
                 return True
@@ -185,13 +174,10 @@ class noop_elimination(AbstractGraphPass):
             if (perm != sorted_perm).any():
                 return False
 
-            input_var = op.x
-            input_op = input_var.op
-
             if op.enclosing_block.try_replace_uses_of_var_after_op(
-                anchor_op=input_op,
+                anchor_op=op,
                 old_var=op.outputs[0],
-                new_var=input_var,
+                new_var=op.x,
             ):
                 op.enclosing_block.remove_ops([op])
                 return True
@@ -218,7 +204,6 @@ class noop_elimination(AbstractGraphPass):
             "crop": remove_same_shape,
             "linear_activation": remove_linear,
         }
-
         # abort if op output is a block output
         if op.outputs[0] in op.enclosing_block.outputs:
             return None
@@ -234,7 +219,11 @@ class noop_elimination(AbstractGraphPass):
     @block_context_manager
     def _noop_elimination_block_wrapper(self, block):
         def _noop_elimination_block(block):
+            status = False
             for op in list(block.operations):
+                if op.enclosing_block is None:
+                    continue
+
                 for b in op.blocks:
                     block_changed = True
                     while block_changed:
@@ -243,12 +232,9 @@ class noop_elimination(AbstractGraphPass):
                     continue
 
                 remove_fn = noop_elimination._match_pattern(op)
-                if remove_fn is not None:
-                    status = remove_fn(op)
-                    # has to break as the downstream iterator is affected.
-                    if status:
-                        return status
-            return False
+                if remove_fn is not None and remove_fn(op):
+                    status = True
+            return status
 
         block_changed = True
         while block_changed:

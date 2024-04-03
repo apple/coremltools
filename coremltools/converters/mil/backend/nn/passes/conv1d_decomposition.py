@@ -39,7 +39,11 @@ class decompose_conv1d(AbstractGraphPass):
     @block_context_manager
     def _decompose_conv1d_block(self, block: Block):
         def help_decompose_conv1d_block(block: Block) -> bool:
+            fusion_occurred = False
             for op in list(block.operations):
+                if op.enclosing_block is None:
+                    continue
+
                 for b in op.blocks:
                     block_changed = True
                     while block_changed:
@@ -50,10 +54,9 @@ class decompose_conv1d(AbstractGraphPass):
                     continue
 
                 if self._try_apply_transform(op, block):
-                    # has to break as the downstream iterator is affected
-                    return True
+                    fusion_occurred = True
 
-            return False
+            return fusion_occurred
 
         block_changed = True
         while block_changed:

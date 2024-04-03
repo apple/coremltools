@@ -20,7 +20,6 @@ from .input_type import (
 )
 from .operation import Operation, mil_list, precondition
 from .program import (
-    InputType,
     Placeholder,
     Program,
     Symbol,

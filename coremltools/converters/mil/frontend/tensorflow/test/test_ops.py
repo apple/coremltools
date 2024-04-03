@@ -5607,7 +5607,7 @@ class TestTopK(TensorFlowBaseTest):
             compute_units,
             backends,
             [1, 3, 5],
-            [1, 3],
+            [1, 3, None],  # None denotes dynamic k
             [True, False],
         ),
     )
@@ -5616,19 +5616,38 @@ class TestTopK(TensorFlowBaseTest):
             pytest.skip("iOS16 version topk needed for sort = False")
         if not sort and _macos_version() < (13, 0):
             pytest.skip("New functionality in macOS13/iOS16")
+        if rank == 5 and k is None and sort and (
+            backend[0] == "neuralnetwork" or (
+                platform.machine() == "x86_64" and _macos_version() < (15, 0)
+            )
+        ):
+            pytest.xfail("rdar://120891130: TopK failing randomly")
 
         # TensorFlow only supports last dimension (axis = -1).
         shape = np.random.randint(low=3, high=4, size=rank)
 
-        @make_tf_graph([shape])
-        def build_model(x):
-            ref = tf.math.top_k(x, k=k, sorted=sort)
-            if not sort:
-                ref =  (tf.sort(ref[0]), tf.sort(ref[1]))
-            return ref
+        if k is None:
+
+            @make_tf_graph([shape, (1, tf.int32)])
+            def build_model(x, k):
+                ref = tf.math.top_k(x, k=k[0], sorted=sort)
+                if not sort:
+                    ref = (tf.sort(ref[0]), tf.sort(ref[1]))
+                return ref
+
+        else:
+
+            @make_tf_graph([shape])
+            def build_model(x):
+                ref = tf.math.top_k(x, k=k, sorted=sort)
+                if not sort:
+                    ref = (tf.sort(ref[0]), tf.sort(ref[1]))
+                return ref
 
         model, inputs, outputs = build_model
         input_values = [random_gen(shape, rand_min=-100, rand_max=100)]
+        if k is None:
+            input_values.append(np.random.randint(low=1, high=shape[-1], size=1, dtype=np.int32))
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
             model,
@@ -5645,21 +5664,31 @@ class TestTopK(TensorFlowBaseTest):
             compute_units,
             backends,
             [(1, 3), (1, 10), (3, 50)],
-            [1, 3, 20],
+            [1, 3, 20, None],  # None denotes dynamic k
         ),
     )
     def test_in_top_k(self, compute_unit, backend, shape, k):
         # TensorFlow only supports last dimension (axis = -1).
         batch_size, class_num = shape
 
-        @make_tf_graph([shape, (batch_size, tf.int32)])
-        def build_model(predictions, targets):
-            return tf.math.in_top_k(predictions=predictions, targets=targets, k=k)
+        if k is None:
+
+            @make_tf_graph([shape, (batch_size, tf.int32), (1, tf.int32)])
+            def build_model(predictions, targets, k):
+                return tf.math.in_top_k(predictions=predictions, targets=targets, k=k[0])
+
+        else:
+
+            @make_tf_graph([shape, (batch_size, tf.int32)])
+            def build_model(predictions, targets):
+                return tf.math.in_top_k(predictions=predictions, targets=targets, k=k)
 
         model, inputs, outputs = build_model
         pred_values = random_gen(shape, rand_min=-2, rand_max=2)
         target_values = np.random.randint(class_num, size=batch_size).astype(np.int32)
         input_values = [pred_values, target_values]
+        if k is None:
+            input_values.append(np.random.randint(low=1, high=shape[-1], size=1, dtype=np.int32))
 
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
@@ -5669,6 +5698,52 @@ class TestTopK(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, dynamic",
+        itertools.product(
+            compute_units,
+            backends,
+            (1, 3, 5),
+            (True, False),
+        ),
+    )
+    def test_sort(self, compute_unit, backend, rank, dynamic):
+        """
+        tf.sort dispatches to tf.math.top_k, and k = size of the axis to be sorted
+        """
+        if backend[0] == "mlprogram" and dynamic:
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
+
+        # Here we test the conversion of tf.sort(x, axis=0)
+        # If dynamic, we prepend None to x shape as the dynamic shape axis
+        if rank == 5 and dynamic:
+            rank -= 1
+        shape = tuple(np.random.randint(low=3, high=8, size=rank))
+
+        tf_input_shape = (None,) + shape if dynamic else shape
+        @make_tf_graph([tf_input_shape])
+        def build_model(x):
+            return tf.sort(x, axis=0)
+
+        model, inputs, outputs = build_model
+
+        if dynamic:
+            input_values = [random_gen((5,) + shape, rand_min=-100, rand_max=100)]
+        else:
+            input_values = [random_gen(shape, rand_min=-100, rand_max=100)]
+
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+
 
 class TestConcat(TensorFlowBaseTest):
     @pytest.mark.parametrize(

@@ -47,7 +47,7 @@ class tf_lstm_to_core_lstm(AbstractGraphPass):
 @block_context_manager
 def _tf_lstm_to_core_lstm_block(block: Block):
     # shallow copy hides changes on f.operations during the loop
-    for op in block.operations:
+    for op in list(block.operations):
         for b in op.blocks:
             _tf_lstm_to_core_lstm_block(b)
 

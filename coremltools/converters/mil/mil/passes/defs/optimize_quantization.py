@@ -3,15 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Tuple
+from typing import List, Set, Tuple
 
 import numpy as np
 
-import coremltools.converters.mil.mil.types as types
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
+from coremltools.converters.mil.frontend import _utils
 from coremltools.converters.mil.mil import Block
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Operation, Var
+from coremltools.converters.mil.mil import Operation, Var, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
     _check_child_op_type,
@@ -22,11 +22,11 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 @register_pass(namespace="common")
-class merge_tensorwise_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
+class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
     """
     This graph pass does const folding to a chain of supported ops starts with a
-    tensor-wise ``constexpr_affine_dequantize`` op. i.e., both ``scale`` and
-    ``zero_point`` are scalar (rank 0).
+    ``constexpr_affine_dequantize`` op. More types of op are supported when quantization
+    is tensor-wise, and only a subset is supported for channel-wise
 
     For example:
     Input graph:
@@ -45,43 +45,48 @@ class merge_tensorwise_affine_dequantize_with_consecutive_ops(AbstractGraphPass)
               --> constexpr_affine_dequantize -> reshape -> out_2
     """
 
-    SUPPORTED_OPS = [
+    SUPPORTED_OP_TYPES_PER_TENSOR = {
         "transpose",
         "reshape",
         "expand_dims",
         "squeeze",
-    ]
+    }
+    SUPPORTED_OP_TYPES_PER_CHANNEL = {"transpose"}
+    assert SUPPORTED_OP_TYPES_PER_CHANNEL.issubset(
+        SUPPORTED_OP_TYPES_PER_TENSOR
+    ), "If an op can merge with channel-wise quantization, then it must also be able to merge with tensor-wise quantization"
 
     def apply(self, prog):
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = self.merge_tensorwise_affine_dequantize_with_consecutive_ops_block(
-                    f
-                )
+                block_changed = self.merge_affine_dequantize_with_consecutive_ops_block(f)
 
     @block_context_manager
-    def merge_tensorwise_affine_dequantize_with_consecutive_ops_block(self, block):
-        fusion_status = False
+    def merge_affine_dequantize_with_consecutive_ops_block(self, block: Block):
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
-                    block_changed = (
-                        self.merge_tensorwise_affine_dequantize_with_consecutive_ops_block(b)
-                    )
+                    block_changed = self.merge_affine_dequantize_with_consecutive_ops_block(b)
 
             if op.op_type != "constexpr_affine_dequantize":
                 continue
 
-            fusion_status = self._try_to_transform(op, block)
-            if fusion_status:
-                return fusion_status
-        return fusion_status
+            if self._try_to_transform(op, block):
+                fusion_occurred = True
+        return fusion_occurred
 
     @staticmethod
-    def _apply_equivalent_transform(val, op):
-        if op.op_type not in merge_tensorwise_affine_dequantize_with_consecutive_ops.SUPPORTED_OPS:
+    def _apply_equivalent_transform(val: np.ndarray, op: Operation) -> np.ndarray:
+        if (
+            op.op_type
+            not in merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_PER_TENSOR
+        ):
             raise ValueError(f"unsupported op_type {op.op_type}")
 
         if op.op_type == "transpose":
@@ -97,15 +102,9 @@ class merge_tensorwise_affine_dequantize_with_consecutive_ops(AbstractGraphPass)
             return np.squeeze(val, axis=tuple(op.axes.val.tolist()))
 
     @staticmethod
-    def _try_to_transform(op, block):
-        # first check if it is tensorwise quantization
-        if op.scale.rank != 0 or op.zero_point.rank != 0:
-            return False
-
-        # first check if quantized_data only feeds into a single op
-        if len(op.quantized_data.child_ops) != 1:
-            return False
-
+    def search_for_ops_to_fold(
+        op: Operation, block: Block, supported_op_types: Set[str]
+    ) -> List[Operation]:
         # traverse the graph to get a chain of applicable ops to fold
         ops_to_fold = []
         cursor = op
@@ -113,32 +112,40 @@ class merge_tensorwise_affine_dequantize_with_consecutive_ops(AbstractGraphPass)
             prev_cursor = cursor
             if cursor.outputs[0] in block.outputs:
                 break
-            for val in merge_tensorwise_affine_dequantize_with_consecutive_ops.SUPPORTED_OPS:
-                if _check_child_op_type(cursor, val):
+            for supported_op_type in supported_op_types:
+                if _check_child_op_type(cursor, supported_op_type):
                     ops_to_fold.append(cursor.outputs[0].child_ops[0])
                     cursor = ops_to_fold[-1]
                     break
             if prev_cursor == cursor:
                 break
+        return ops_to_fold
 
+    @staticmethod
+    def _try_to_transform_per_tensor(op: Operation, block: Block) -> bool:
+        assert (
+            op.scale.rank == 0 and op.zero_point.rank == 0
+        ), "The _try_to_transform_per_tensor method should only be used for per-tensor dequantization case"
+
+        ops_to_fold = merge_affine_dequantize_with_consecutive_ops.search_for_ops_to_fold(
+            op, block, merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_PER_TENSOR
+        )
         if len(ops_to_fold) == 0:
             return False
 
         # do the same transformation on the source quantized data
         cursor = op.quantized_data.val
-        for val in ops_to_fold:
-            cursor = (
-                merge_tensorwise_affine_dequantize_with_consecutive_ops._apply_equivalent_transform(
-                    cursor, val
-                )
+        for op_to_fold in ops_to_fold:
+            cursor = merge_affine_dequantize_with_consecutive_ops._apply_equivalent_transform(
+                cursor, op_to_fold
             )
 
         # after transformation, we create a new constexpr_affine_dequantize op and do the replacement
-        new_var = mb.constexpr_affine_dequantize(
-            quantized_data=cursor,
-            zero_point=op.zero_point,
-            scale=op.scale,
-            axis=op.axis,
+        new_var = _utils._construct_constexpr_affine_op(
+            cursor,
+            op.zero_point,
+            op.scale,
+            op.axis,
             name=ops_to_fold[-1].outputs[0].name,
             before_op=ops_to_fold[-1],
         )
@@ -150,6 +157,59 @@ class merge_tensorwise_affine_dequantize_with_consecutive_ops(AbstractGraphPass)
         )
         block.remove_ops([op] + ops_to_fold)
         return True
+
+    @staticmethod
+    def _try_to_transform_per_channel(op: Operation, block: Block) -> bool:
+        scale = op.scale
+        zero_point = op.zero_point
+        # positively canonicalize axis for easier manipulation later on
+        axis = op.axis.val if op.axis.val >= 0 else op.axis.val + op.quantized_data.rank
+
+        ops_to_fold = merge_affine_dequantize_with_consecutive_ops.search_for_ops_to_fold(
+            op,
+            block,
+            merge_affine_dequantize_with_consecutive_ops.SUPPORTED_OP_TYPES_PER_CHANNEL,
+        )
+        if len(ops_to_fold) == 0:
+            return False
+
+        # do the same transformation on the source quantized data
+        cursor = op.quantized_data.val
+        for op_to_fold in ops_to_fold:
+            cursor = merge_affine_dequantize_with_consecutive_ops._apply_equivalent_transform(
+                cursor, op_to_fold
+            )
+            if op_to_fold.op_type == "transpose":
+                axis = np.where(op_to_fold.perm.val == axis)[0][0]
+
+        # after transformation, we create a new constexpr_affine_dequantize op and do the replacement
+        new_var = mb.constexpr_affine_dequantize(
+            quantized_data=cursor,
+            zero_point=zero_point,
+            scale=scale,
+            axis=axis,
+            name=ops_to_fold[-1].outputs[0].name,
+            before_op=ops_to_fold[-1],
+        )
+        block.replace_uses_of_var_after_op(
+            anchor_op=ops_to_fold[-1],
+            old_var=ops_to_fold[-1].outputs[0],
+            new_var=new_var,
+            force_replace=True,
+        )
+        block.remove_ops([op] + ops_to_fold)
+        return True
+
+    def _try_to_transform(self, op: Operation, block: Block) -> bool:
+        # make sure quantized_data only feeds into a single op
+        if len(op.quantized_data.child_ops) != 1:
+            return False
+
+        if op.scale.rank == 0 and op.zero_point.rank == 0:
+            return self._try_to_transform_per_tensor(op, block)
+        else:
+            return self._try_to_transform_per_channel(op, block)
+
 
 @register_pass(namespace="common")
 class int_op_canonicalization(AbstractGraphPass):
@@ -315,7 +375,11 @@ class nullify_redundant_quantization_zero_point(AbstractGraphPass):
     @block_context_manager
     def _nullify_redundant_quantization_zero_point_block(self, block: Block):
         def apply_block(block: Block) -> bool:
+            fusion_occurred = False
             for op in list(block.operations):
+                if op.enclosing_block is None:
+                    continue
+
                 for b in op.blocks:
                     self._nullify_redundant_quantization_zero_point_block(b)
 
@@ -325,9 +389,9 @@ class nullify_redundant_quantization_zero_point(AbstractGraphPass):
 
                 # has to break as the downstream iterator is affected
                 if self.try_transform_zp128_quantize_dequantize(op):
-                    return True
+                    fusion_occurred = True
 
-            return False
+            return fusion_occurred
 
         need_transformation = True
         while need_transformation:
@@ -507,15 +571,18 @@ class dequantize_quantize_pair_elimination(AbstractGraphPass):
     @block_context_manager
     def _dequantize_quantize_pair_elimination_block(self, block):
         def apply_block(block: Block) -> bool:
+            fusion_occurred = False
             for op in list(block.operations):
+                if op.enclosing_block is None:
+                    continue
+
                 for b in op.blocks:
                     self._dequantize_quantize_pair_elimination_block(b)
 
                 # has to break as the downstream iterator is affected
                 if self.try_dequantize_quantize_pair_elimination(op):
-                    return True
-
-            return False
+                    fusion_occurred = True
+            return fusion_occurred
 
         need_transformation = True
         while need_transformation:
@@ -869,7 +936,7 @@ class dequantize_to_constexpr(AbstractGraphPass):
             apply_block(f)
 
     def is_valid_op(self, op):
-        return op.op_type == "dequantize" and op.outputs[0].val is not None
+        return op.op_type == "dequantize" and op.can_materialize_val()
 
     def transform_op(self, op):
         quantized_data = op.input.val
@@ -882,22 +949,15 @@ class dequantize_to_constexpr(AbstractGraphPass):
         else:
             zero_point = np.int8(0) if op.input.dtype == types.int8 else np.uint8(0)
 
-        # In dequantize semantics, axis may be None:
-        #     when scale is a scalar, axis is None
-        #
-        # In constexpr_affine_dequantize semantics, None axis is not allowed;
-        # since axis is not referred to when scale is a scalar, we pass a dummy
-        axis = 0
-        if op.axis is not None:
-            axis = op.axis.val
+        axis = None if op.axis is None else op.axis.val
 
-        new_var = mb.constexpr_affine_dequantize(
-            quantized_data=quantized_data,
-            zero_point=zero_point,
-            scale=scale,
-            axis=axis,
-            before_op=op,
+        new_var = _utils._construct_constexpr_affine_op(
+            quantized_data,
+            zero_point,
+            scale,
+            axis,
             name=op.name + "_affine_dequantized",
+            before_op=op,
         )
 
         block = op.enclosing_block

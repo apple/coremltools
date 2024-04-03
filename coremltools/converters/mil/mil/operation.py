@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import numpy as np
 
@@ -167,6 +167,7 @@ class Operation:
         self._input_vars = {}
         self.blocks = []
         self.enclosing_block = kwargs["enclosing_block"]
+        self.scopes = kwargs["scopes"]
 
         # Initialize inputs as object attributes (all None)
         for k in self._input_types.keys():
@@ -205,10 +206,10 @@ class Operation:
             "value",
             "version",
             "before_op",
-            "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
             "no_check_var_types",
             # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
             "enclosing_block",
+            "scopes",
         ]
         for k in kwargs.keys():
             if k not in non_attributes and k not in self._input_types:
@@ -542,6 +543,13 @@ class Operation:
         }
 
     @property
+    def internal_inputs(self) -> Dict[str, InternalVar]:
+        """
+        Get internal var inputs of an op.
+        """
+        return {k: v for k, v in self._input_vars.items() if isinstance(v, InternalVar)}
+
+    @property
     def outputs(self):
         return self._output_vars
 
@@ -584,23 +592,26 @@ class Operation:
 
         return "%" + v.name
 
-    def indented_str(self, indent=""):
+    def indented_str(self, indent: Optional[str] = "", print_attr: Optional[bool] = False) -> str:
         if self.op_type == "const":
             return ""
         s = indent
         if self.outputs is not None:
             s += ", ".join([str(o) for o in self.outputs])
-        s += " = " + self.op_type + "("
-        s += ", ".join(
-            [
-                k + "=" + Operation.var_to_str(self.inputs[k])
-                for k in self._input_types.keys()
-                if k in self.inputs and not is_internal_input(k)
-            ]
-        )
+
+        if print_attr:
+            attr = "["
+            for k, v in self.scopes.items():
+                attr += f"{k}: {v}, "
+            attr = attr[:-2] + "]"
+        else:
+            attr = ""
+
+        s += " = " + self.op_type + attr + "("
+        s += ", ".join([k + "=" + Operation.var_to_str(v) for k, v in self.inputs.items()])
         s += ', name="{}")\n'.format(self.name)
         for b in self.blocks:
-            s += b.indented_str(indent=indent + SPACES)
+            s += b.indented_str(indent=indent + SPACES, print_attr=print_attr)
         return s
 
     def __repr__(self):

@@ -4,11 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import namedtuple
+from typing import Optional, Union
 
 import numpy as _np
 import numpy as np
 import sympy as sm
 
+import coremltools.converters.mil.backend.mil.helper as mil_helper
 import coremltools.proto.MIL_pb2 as _mil_pm
 
 from .get_type_info import get_type_info
@@ -196,7 +198,7 @@ def builtin_to_resolution(builtin_type: type):
     return _TYPES_TO_RESOLUTION[builtin_type]
 
 
-def builtin_to_range(builtin_type: type):
+def builtin_to_range(builtin_type: type) -> RangeTuple:
     """
     Given a builtin type, return its corresponding range.
     """
@@ -341,9 +343,22 @@ def is_builtin(t):
     return is_scalar(t) or is_tensor(t) or is_str(t) or is_tuple(t)
 
 
-# Converts a numpy type to its types equivalent.
-# Supports both dtypes and numpy primitive types.
-def numpy_type_to_builtin_type(nptype):
+def _numpy_dtype_instance_to_builtin_type(np_dtype: np.dtype) -> Optional[type]:
+    if np_dtype in _NPTYPES_TO_STRINGS:
+        return string_to_builtin(_NPTYPES_TO_STRINGS[np_dtype])
+    return None
+
+
+def numpy_type_to_builtin_type(nptype) -> type:
+    """
+    Converts a numpy type to its builtin `types` equivalent.
+    Supports Python native types and numpy types.
+    """
+    if isinstance(nptype, np.dtype):
+        builtin_type = _numpy_dtype_instance_to_builtin_type(nptype)
+        if builtin_type is not None:
+            return builtin_type
+
     # If this is a data type object, use the corresponding scalar data type.
     if np.issubclass_(type(nptype), np.dtype):
         nptype = nptype.type
@@ -473,11 +488,14 @@ def is_subtype(type1, type2):
     return type1 == type2
 
 
+def _numpy_val_to_bytes(val: Union[np.ndarray, np.generic]) -> bytes:
+    return val.tobytes()
+
 def np_val_to_py_type(val):
     """Convert numpy val to python primitive equivalent. Ex:
 
     Given: val = np.array([True, False])
-    Returns: [True, False]
+    Returns: (True, False)
 
     Given: val = np.array(32, dtype=np.int32)
     Returns 32
@@ -485,9 +503,9 @@ def np_val_to_py_type(val):
     if not isinstance(val, (_np.ndarray, _np.generic)):
         return val
 
-    if val.dtype in (_np.float16, _np.uint8, _np.int8, _np.uint32):
-        # Serialize to bytes because MIL read them from bytes field (see TensorValue in MIL.proto).
-        return val.tobytes()
+    builtin_type = numpy_type_to_builtin_type(val.dtype)
+    if builtin_type in mil_helper.IMMEDIATE_VALUE_TYPES_IN_BYTES:
+        return _numpy_val_to_bytes(val)
     else:
         if val.dtype in (_np.uint16, _np.int16):
             # TODO (rdar://111797203): Serialize to byte after MIL changes to read from byte field.

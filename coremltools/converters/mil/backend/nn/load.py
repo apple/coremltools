@@ -204,8 +204,8 @@ def load(prog, **kwargs):
         )
         raise ValueError(msg.format(prog))
 
-    input_types = prog.main_input_types
-    output_types = prog.main_output_types
+    input_types = prog.functions["main"].input_types
+    output_types = prog.functions["main"].output_types
 
     v1_inputs = []
     symbolic_inputs = {}

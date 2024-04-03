@@ -4,14 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import defaultdict
-from typing import Dict, List
+from typing import Dict, List, Optional, Union
 
 import numpy as _np
 import sympy as _sm
 
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil.input_type import InternalInputType
 from coremltools.converters.mil.mil.ops.helper import _get_version_of_op
 from coremltools.converters.mil.mil.var import ListVar
@@ -19,6 +18,7 @@ from coremltools.converters.mil.mil.var import ListVar
 from . import types
 from .block import Function
 from .operation import Operation
+from .scope import ScopeSource
 from .types.symbolic import k_num_internal_syms, k_used_symbols
 from .var import Var
 
@@ -28,19 +28,18 @@ class Program:
     def _get_opset_str_value(op):
         return f"coremltools.target.{op.name}"
 
-    @staticmethod
-    def _get_supported_dialect_opset() -> List[str]:
-        """
-        Return a list of supported dialect opsets at runtime.
-        """
-        return []
-
     def __init__(self):
-        self.main_input_types = []
-        self.main_output_types = None
         self.functions = {}
-        self.parameters = {}
         self.skip_all_passes = False
+
+    def _add_essential_scope_source(
+        self, scope_source: Union[ScopeSource, List[ScopeSource]]
+    ) -> None:
+        """
+        Add essential scope sources to functions.
+        """
+        for func in self.functions.values():
+            func._add_essential_scope_source(scope_source)
 
     def _get_dialect_namespaces(self) -> Dict[str, List[Operation]]:
         """
@@ -49,7 +48,7 @@ class Program:
         res = defaultdict(list)
 
         def get_dialect_namespaces_block(block):
-            for op in list(block.operations):
+            for op in block.operations:
                 for b in op.blocks:
                     get_dialect_namespaces_block(b)
                 if hasattr(op, "_dialect_namespace"):
@@ -72,7 +71,7 @@ class Program:
 
     def _check_ops_version_compatibility(self, max_opset_version):
         def check_version_compatibility_block(block):
-            for op in list(block.operations):
+            for op in block.operations:
                 for b in op.blocks:
                     check_version_compatibility_block(b)
                 if not hasattr(op, "_op_variants") or not isinstance(op._op_variants, dict):
@@ -146,10 +145,13 @@ class Program:
                     _check_invalid_tensor_rank_block(b)
                 for o in op.outputs:
                     if not isinstance(o, ListVar) and (o.rank < 0 or o.rank >= 6):
-                        if op.op_type == "const" and len(o.child_ops) == 1 and \
-                                o.child_ops[0].op_type == "constexpr_lut_to_dense":
-                            # For lut op, the lookup table is allowed to have rank > 5.
-                            continue
+                        if op.op_type == "const" or op.op_type.startswith("constexpr_"):
+                            if all(
+                                child_op.op_type.startswith("constexpr_")
+                                for child_op in o.child_ops
+                            ):
+                                # For const/constexpr op's constexpr output, tensor with rank > 5 is ok.
+                                continue
                         raise ValueError(
                             f'Core ML only supports tensors with rank <= 5. Layer "{op.name}", '
                             f'with type "{op.op_type}", outputs a rank {o.rank} tensor. '
@@ -207,20 +209,6 @@ class Program:
     def add_parameters(self, name, ssa_val):
         raise NotImplementedError()
 
-    def set_main_input_types(self, inputs):
-        if not isinstance(inputs, tuple):
-            raise ValueError("main inputs should be tuple of TensorType or ImageType")
-        elif not all([isinstance(inp, InputType) for inp in inputs]):
-            raise ValueError("main inputs should be tuple of InputSpec")
-        self.main_input_types = inputs
-
-    def set_main_output_types(self, outputs=None):
-        if outputs is not None:
-            if not (isinstance(outputs, list) and all([isinstance(out, InputType) for out in outputs])):
-                raise TypeError("main outputs should be a list of type ct.TensorType or ct.ImageType")
-        self.main_output_types = outputs
-
-
     def find_ops(self, prefix=None, op_type=None, exactly_one=False):
         """
         Return list of ops with name matching `prefix` if specified, and
@@ -242,9 +230,51 @@ class Program:
             raise ValueError(msg.format(found_ops))
         return found_ops
 
-    def validate(self):
+    def validate(self, check_essential_scope: Optional[bool] = False) -> None:
         for f in self.functions.values():
-            f.validate()
+            f.validate(force_validate=True, check_essential_scope=check_essential_scope)
+
+    def construct_debug_handle_to_ops_mapping(self) -> Dict:
+        """
+        For PyMIL program translated from ExecuTorch only: Based on scope info inherited from EXIR,
+        construct a debug handle to ops mapping. The mapping format is something like
+        {
+          1: [
+            {"Type": "Program"},
+            {"Type": "Function", "Name": "main"},
+            {"Type": "Block"},
+            {"Type": "Operation", "Operator": "add", "Output": "z"}
+          ]
+        }
+        where `1`, `"main"`, `"add"`, and `"z"` are example values of
+        the debug handle, function name, operation type,
+        and output var name (or the name of the first output var, if multiple outputs)
+        """
+        debug_handle_to_ops_mapping = {}
+        for function_name, function in self.functions.items():
+            for operation in function.operations:
+                # TODO (rdar://115846569): Handle multi-block case from EXIR
+                if len(operation.blocks) > 0:
+                    raise NotImplementedError("Multi-block case has not been supported yet")
+                debug_handle = operation.scopes.get(ScopeSource.EXIR_DEBUG_HANDLE)
+                if debug_handle is None:
+                    continue
+                debug_handle = debug_handle[0]
+                if debug_handle not in debug_handle_to_ops_mapping:
+                    debug_handle_to_ops_mapping[debug_handle] = []
+                debug_handle_to_ops_mapping[debug_handle].append(
+                    [
+                        {"Type": "Program"},
+                        {"Type": "Function", "Name": function_name},
+                        {"Type": "Block"},
+                        {
+                            "Type": "Operation",
+                            "Operator": operation.op_type,
+                            "Output": operation.outputs[0].name,
+                        },
+                    ]
+                )
+        return debug_handle_to_ops_mapping
 
     def __getitem__(self, func_name):
         if func_name not in self.functions:
@@ -255,10 +285,11 @@ class Program:
     def __repr__(self):
         return self.__str__()
 
-    def __str__(self):
+    def __str__(self, print_attr: Optional[bool] = False) -> str:
         s = ""
         for f_name, f in self.functions.items():
-            s += f.to_str(f_name)
+            s += "\n"
+            s += f.to_str(f_name, print_attr=print_attr)
         return s
 
 

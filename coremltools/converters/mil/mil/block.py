@@ -5,21 +5,25 @@
 
 import copy
 from collections import Counter, OrderedDict
-from typing import Tuple
+from typing import List, Optional, Set, Tuple, Union
 
 from coremltools import _OPSET
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
+from coremltools.converters.mil.input_types import InputType
 
 from . import SPACES, types
 from .operation import Operation
+from .scope import SCOPE_STACK, VALID_OPS_TO_COPY_SCOPE_INFO, ScopeSource, add_graph_pass_scope
 from .types.symbolic import is_symbolic, k_used_symbols
+from .utils import CacheDoublyLinkedList
 from .var import ComplexVar, InternalVar, Var
 from .visitors.dot_visitor import DotVisitor
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
 DEBUG = False
+
 
 def curr_block():
     if len(BLOCK_STACK) == 0:
@@ -50,6 +54,8 @@ class Block:
         "operations",
         "_internal_vars",
         "outer_op",
+        "cache_operations",
+        "_essential_scope_sources",
     ]
 
     counter = 0
@@ -108,7 +114,7 @@ class Block:
             self.name = Block._get_new_name()
 
         # list[Operation]. Topologically sorted.
-        self.operations = []
+        self.operations = CacheDoublyLinkedList()
 
         # Must be set before self.validate()
         self.outer_op = outer_op
@@ -124,22 +130,99 @@ class Block:
         # (infinite recursion). They must be considered as always visible.
         self._internal_vars = set()
 
+        # List[ScopeSource]. During graph pass, those scope source cannot be missed
+        self._essential_scope_sources = []
+
         if self.outer_op is None and not isinstance(self, Function):
             msg = "Block {} is not Function and thus outer_op cannot be None"
             raise ValueError(msg.format(self.name))
 
         self.validate()
 
-    def validate(self):
+    def _add_essential_scope_source(
+        self, scope_source: Union[ScopeSource, List[ScopeSource]]
+    ) -> None:
         """
-        Basic validation to protect against some invalid state.
+        Add essential scope sources to self._essential_scope_sources.
+        When self.validate() is called, we make sure that all source info are not missing.
         """
-        if not DEBUG:
-            return
+        if not isinstance(scope_source, list):
+            scope_source = [scope_source]
+
+        for source in scope_source:
+            if source in self._essential_scope_sources:
+                raise ValueError(f"{source} already exist in _essential_scope_sources.")
+            self._essential_scope_sources.append(source)
+
+    def _check_has_scope_info(self) -> None:
+        """
+        Check no ops in the function are missing scope information.
+        """
+
+        def _check_has_scope_info_block(block: Block):
+            for op in block.operations:
+                for b in op.blocks:
+                    _check_has_scope_info_block(b)
+                for scope in self._essential_scope_sources:
+                    if scope not in op.scopes or len(op.scopes[scope]) == 0:
+                        raise ValueError(
+                            f"op {op.name} with scopes {op.scopes} is missing essential scopes {scope}."
+                        )
+
+        _check_has_scope_info_block(self)
+
+    def _check_vars_visibility_in_block(
+        self, visible_vars_from_outer_block: Optional[Set[Var]] = None
+    ):
+        """
+        This utils does a one pass program-wise checking of vars visibility.
+        That is, each input of an op, should appear before the op in the sequantial order.
+
+        For the debug purpose, if you want to pinpoint the operation which caused the
+        invalid program state, please set DEBUG=True, and it will be captured by the ``is_var_visible_in_block`` utils.
+        """
+        if visible_vars_from_outer_block is None:
+            visible_vars_from_outer_block = set()
+        block_inputs = list(self.inputs.values()) if isinstance(self, Function) else self.inputs
+        visible_vars_in_block = set(block_inputs)
 
         for op in self.operations:
             for b in op.blocks:
-                b.validate()
+                b._check_vars_visibility_in_block(
+                    visible_vars_from_outer_block=visible_vars_from_outer_block.union(
+                        visible_vars_in_block
+                    )
+                )
+            for val in op.get_flattened_inputs():
+                if (
+                    val not in self._internal_vars
+                    and val not in visible_vars_in_block
+                    and val not in visible_vars_from_outer_block
+                ):
+                    raise ValueError(f"Var {val} not visible in the block {self.name}.")
+            for out_var in op.outputs:
+                visible_vars_in_block.add(out_var)
+
+    def validate(
+        self,
+        force_validate: Optional[bool] = False,
+        check_essential_scope: Optional[bool] = False,
+    ) -> None:
+        """
+        Basic validation to protect against some invalid state.
+        If force_validate is False, the validation is done only if the global variable DEBUG=True.
+        """
+        if not DEBUG and not force_validate:
+            return
+
+        # Check vars visibility
+        if isinstance(self, Function):
+            self._check_vars_visibility_in_block()
+
+        # Other validations
+        for op in self.operations:
+            for b in op.blocks:
+                b.validate(force_validate=force_validate)
             if op.outputs is None:
                 raise InvalidBlockStateError()
 
@@ -191,6 +274,20 @@ class Block:
                 msg = "Var {} should be output of block {}: {}"
                 raise ValueError(msg.format(ov.name, b.name, b))
 
+        # checking internal vars are consistent with self._internal_vars
+        internal_var_in_block = set()
+        for op in self.operations:
+            for v in op.internal_inputs.values():
+                internal_var_in_block.add(v)
+        if not internal_var_in_block == self._internal_vars:
+            raise ValueError(
+                "internal vars in the block are not consistent with self._internal_vars."
+            )
+
+        # check essential scope info are not missing
+        if check_essential_scope:
+            self._check_has_scope_info()
+
     def remove_inputs(self, curr_input_vars):
         """
         curr_input_vars: list[Var], whose elements must be in
@@ -236,7 +333,7 @@ class Block:
     def outputs(self):
         return self._outputs
 
-    def is_var_visible_in_block(self, var, upto_op_with_id=None):
+    def is_var_visible_in_block(self, var: Var, upto_op: Optional[Operation] = None):
         """
         Checks if a var is visible to ops starting from id=`upto_op_with_id` inside the block.
 
@@ -248,33 +345,60 @@ class Block:
 
         If upto_op_with_id is None, outputs of all operations inside the block are visible to
         that block.
+
+        For debugging:
+        - By default (DEBUG=False), this utils is guarded by the flag in calling code and not running.
+        - By setting DEBUG=True, this utils is triggered in multiple places in the code base,
+          so the users can pinpoint the exact place where an invalid operation is made by the converter.
+          Beware that, the converter could be slow in the debug mode, since the overal conversion
+          time will explode to O(N^2) in the average cases by this util.
         """
+        if not DEBUG:
+            # Only in debug mode, there is a chance that self.operations is type of list when executing this function.
+            assert isinstance(
+                self.operations, CacheDoublyLinkedList
+            ), "operations must be type of CacheDoublyLinkedList."
 
         if var in self._internal_vars:
             return True
 
-        inputs = self.function_inputs if isinstance(self, Function) else self.inputs
+        inputs = list(self.inputs.values()) if isinstance(self, Function) else self.inputs
         if var in inputs:
             return True
 
-        idx = len(self.operations) if upto_op_with_id is None else upto_op_with_id
-
-        for i in range(idx-1, -1, -1):
-            op_outputs = self.operations[i].outputs
-            if op_outputs is not None and var in op_outputs:
+        if upto_op is None:
+            if var.op in self.operations:
                 return True
+        else:
+            if isinstance(self.operations, list):
+                # This could only happen in debug mode
+                assert DEBUG is True, "block.operations can only be type of list in debug mode."
+                idx = self.find_op_id_in_block(upto_op)
+                for i in range(idx - 1, -1, -1):
+                    if var.op is self.operations[i]:
+                        return True
+            else:
+                cursor = self.operations._get_node_from_op(upto_op).prev
+                while cursor is not None:
+                    if cursor.op is var.op:
+                        return True
+                    cursor = cursor.prev
 
         if self.outer_op is not None:
             enclosing_block = self.outer_op.enclosing_block
-            outer_op_id = enclosing_block.find_op_id_in_block(self.outer_op)
-            if enclosing_block.is_var_visible_in_block(var, upto_op_with_id=outer_op_id):
+            if enclosing_block.is_var_visible_in_block(var, upto_op=self.outer_op):
                 return True
 
         return False
 
-    def find_op_id_in_block(self, target_op):
+    def find_op_id_in_block(self, target_op: Operation) -> int:
+        if len(self.operations) > 0 and target_op == self.operations[-1]:
+            return len(self.operations) - 1
+
+        op_list = self.operations if isinstance(self.operations, list) else list(self.operations)
+
         try:
-            idx = self.operations.index(target_op)
+            idx = op_list.index(target_op)
         except ValueError:
             raise ValueError("Op {} not found in {}: {}".format(target_op.name, self.name, self))
         return idx
@@ -287,13 +411,16 @@ class Block:
             raise ValueError("Outputs must be list of Vars")
 
         self.validate()
-        for ov in outputs:
-            if not self.is_var_visible_in_block(ov):
-                msg = (
-                    "Var {} is not visible in block {} and thus cannot "
-                    + "be a block output.\n{}"
-                )
-                raise ValueError(msg.format(ov.name, self.name, self))
+
+        # check var visibility in debug mode
+        if DEBUG:
+            for ov in outputs:
+                if not self.is_var_visible_in_block(ov):
+                    msg = (
+                        "Var {} is not visible in block {} and thus cannot "
+                        + "be a block output.\n{}"
+                    )
+                    raise ValueError(msg.format(ov.name, self.name, self))
 
         # For duplicate vars in self._outputs, only remove block once.
         for ov in set(self._outputs):
@@ -317,7 +444,7 @@ class Block:
         global BLOCK_STACK
         BLOCK_STACK = BLOCK_STACK[:-1]
 
-    def _insert_op_before(self, new_op, before_op=None):
+    def _insert_op_before(self, new_op: Operation, before_op: Optional[Operation] = None):
         """
         A private API used by builder. Please use `builder.YOUR_OP(...,before_op)`.
 
@@ -351,42 +478,91 @@ class Block:
         """
         self.validate()
 
-        idx = len(self.operations) if before_op is None else self.find_op_id_in_block(before_op)
+        if isinstance(self.operations, CacheDoublyLinkedList):
+            self.operations.insert_op_before(new_op, before_op)
+            return
 
-        # check inputs are visible
-        for k, v in new_op.inputs.items():
-            if not isinstance(v, (Var, tuple)):
-                continue
-            vs = [v] if isinstance(v, Var) else v
-            for v in vs:
-                if not self.is_var_visible_in_block(v, upto_op_with_id=idx):
-                    before_op_name = before_op.name if before_op is not None else "None"
-                    msg = "Op '{}' input {}={} is not in scope of {} before {}"
-                    raise ValueError(msg.format(new_op.name, k, v.name, self.name, before_op_name))
-
-        # add new_op
         if before_op is None:
             self.operations.append(new_op)
-        else:
-            self.operations.insert(idx, new_op)
+            return
+
+        # check inputs visibility in debug mode
+        if DEBUG:
+            for k, v in new_op.inputs.items():
+                if not isinstance(v, (Var, tuple)):
+                    continue
+                vs = [v] if isinstance(v, Var) else v
+                for v in vs:
+                    if not self.is_var_visible_in_block(v, upto_op=before_op):
+                        before_op_name = before_op.name if before_op is not None else "None"
+                        msg = "Op '{}' input {}={} is not in scope of {} before {}"
+                        raise ValueError(
+                            msg.format(new_op.name, k, v.name, self.name, before_op_name)
+                        )
+
+        idx = self.find_op_id_in_block(before_op)
+        self.operations.insert(idx, new_op)
 
     def _replace_var(
         self,
-        old_var,
-        new_var,
-        start=0,
-        end_id=-1,
-        no_check_var_types=False,
+        old_var: Var,
+        new_var: Var,
+        anchor_op: Optional[Operation] = None,
+        end_op: Optional[Operation] = None,
+        no_check_var_types: Optional[bool] = False,
     ):
         """
         Helper function for replace_uses_of_var_after_op
         """
+        self._copy_metadata(old_var, new_var)
+        self._copy_scope_info(old_var, new_var)
+
         num_ops_affected = 0
 
-        if end_id == -1:
-            op_list = self.operations[start:]
+        # If we start checking right after the old_var, we can reduce the time
+        # complexity hugely, by only checking the child_ops, without iterating
+        # through whole program.
+        # This fix reduce the overall time from O(N) -> O(1).
+        replace_vars_right_after_old_var = (
+            end_op is None
+            and len(self.operations) > 0
+            and anchor_op is not None
+            and anchor_op is old_var.op
+        )
+
+        # We should only compute start_idx and end_idx once if needed.
+        start_idx = end_idx = None
+
+        if replace_vars_right_after_old_var:
+            op_list = list(old_var.child_ops)
         else:
-            op_list = self.operations[start : end_id + 1]
+            if isinstance(self.operations, list):
+                start_idx = self.find_op_id_in_block(anchor_op) + 1 if anchor_op is not None else 0
+                end_idx = (
+                    self.find_op_id_in_block(end_op)
+                    if end_op is not None
+                    else len(self.operations) - 1
+                )
+                op_list = self.operations[start_idx : end_idx + 1]
+            else:
+                assert isinstance(
+                    self.operations, CacheDoublyLinkedList
+                ), f"Expect operations be type of CacheDoublyLinkedList. Got {type(self.operations)}."
+                if len(self.operations) == 0 and anchor_op is not None:
+                    raise ValueError(f"anchor op {anchor_op} not in the block.")
+
+                start_node = (
+                    self.operations.start
+                    if anchor_op is None
+                    else self.operations._get_node_from_op(anchor_op).next
+                )
+                cursor = start_node
+                op_list = []
+                while cursor is not None:
+                    op_list.append(cursor.op)
+                    if cursor.op is end_op:
+                        break
+                    cursor = cursor.next
 
         for op in op_list:
             new_inputs = {}
@@ -409,7 +585,43 @@ class Block:
             for b in op.blocks:
                 num_ops_affected += b._replace_var(old_var, new_var)
 
-        if end_id != -1 and old_var.op not in op_list:
+        # Replace consuming_blocks's outputs.
+        # It is important to use list copy here,
+        # since replace_block_output_var is going to change the consuming_blocks
+        # Note that, there are some expensive index query in the following implementation,
+        # but overally it won't affect the time complexity too much,
+        # since we can assume the number of the block outputs in a program as a constant.
+        # As the result, the amortized time complexity will not blow up.
+        for b in list(old_var.consuming_blocks):
+            outer_op = b.outer_op
+
+            if outer_op is not None:
+                # Query the start and end index if needed
+                if start_idx is None:
+                    start_idx = (
+                        self.find_op_id_in_block(anchor_op) + 1 if anchor_op is not None else 0
+                    )
+                if end_idx is None:
+                    end_idx = (
+                        self.find_op_id_in_block(end_op)
+                        if end_op is not None
+                        else len(self.operations) - 1
+                    )
+
+            op_to_idx = {}
+            while outer_op is not None:
+                block = outer_op.enclosing_block
+                if block is self:
+                    if len(op_to_idx) == 0:
+                        for idx, op in enumerate(self.operations):
+                            op_to_idx[op] = idx
+                    op_idx = op_to_idx[outer_op]
+                    if op_idx >= start_idx and op_idx <= end_idx:
+                        b.replace_block_output_var(old_var, new_var)
+                    break
+                outer_op = block.outer_op
+
+        if end_op is not None and old_var.op not in op_list:
             return num_ops_affected
 
         if old_var in self._block_inputs:
@@ -420,7 +632,6 @@ class Block:
 
         # If old_var is block's output, replace as well.
         self.replace_block_output_var(old_var, new_var)
-
         return num_ops_affected
 
     def replace_block_output_var(
@@ -451,12 +662,11 @@ class Block:
 
     def try_replace_uses_of_var_after_op(
         self,
-        anchor_op,
-        old_var,
-        new_var,
-        end_op=None,
-        no_check_var_types=False,
-        no_check_var_visibility=False,
+        anchor_op: Operation,
+        old_var: Var,
+        new_var: Var,
+        end_op: Optional[Operation] = None,
+        no_check_var_types: Optional[bool] = False,
     ):
         """
         :param anchor_op: Operation
@@ -464,8 +674,7 @@ class Block:
         :param new_var: Var
         :param end_op: Operation
         :param no_check_var_types: bool
-        :param no_check_var_visibility: bool
-        :return: True if the old_var can be replaced by new_var. False otherwise.
+        :return: True if the old_var can be replaced by new_var. False otherwsie.
 
         This helper function guards the replace_uses_of_var_after_op function,
         by first checking if the old_var could be replaced by the new_var.
@@ -482,19 +691,65 @@ class Block:
             old_var=old_var,
             new_var=new_var,
             no_check_var_types=no_check_var_types,
-            no_check_var_visibility=no_check_var_visibility,
         )
         return True
 
+    @staticmethod
+    def _copy_scope_info(src: Var, dst: Var) -> None:
+        """
+        Populate meta data from old var (src) to new var (dst)
+        """
+        curr_scopes = SCOPE_STACK.get_curr_scopes()
+
+        if ScopeSource.COREMLTOOLS_GRAPH_PASS in curr_scopes:
+
+            if src.op in VALID_OPS_TO_COPY_SCOPE_INFO[-1]:
+                return
+
+            elif dst.op in VALID_OPS_TO_COPY_SCOPE_INFO[-1]:
+                op = dst.op
+                assert op is not None, "new_var cannot be a placeholder output"
+                VALID_OPS_TO_COPY_SCOPE_INFO[-1].remove(op)
+
+                # If old_var is a placeholder output, we assign defaults values to essential scope source
+                old_scopes = src.scopes
+                if len(old_scopes) == 0:
+                    essential_scope_sources = op.enclosing_block._essential_scope_sources
+                    for val in essential_scope_sources:
+                        res = None
+                        if val == ScopeSource.TORCHSCRIPT_MODULE_TYPE:
+                            res = ["__COREML__::TORCHSCRIPT_PLACEHOLDER"]
+                        elif val == ScopeSource.TORCHSCRIPT_MODULE_NAME:
+                            res = [f"__COREML__::TORCHSCRIPT_PLACEHOLDER_{src.name}"]
+                        elif val == ScopeSource.EXIR_DEBUG_HANDLE:
+                            res = [None]
+                        else:
+                            raise ValueError(f"No default placeholder info for {val}.")
+                        old_scopes[val] = res
+
+                dst.scopes = add_graph_pass_scope(old_scopes, dst.scopes)
+
+                for input in op.inputs.values():
+                    if not isinstance(input, (list, tuple)):
+                        input = [input]
+                    for i in input:
+                        Block._copy_scope_info(src, i)
+
+    @staticmethod
+    def _copy_metadata(old_var: Var, new_var: Var) -> None:
+        """
+        Populate meta data from old var to new var
+        """
+        return
+
     def replace_uses_of_var_after_op(
         self,
-        anchor_op,
-        old_var,
-        new_var,
-        no_check_var_visibility=False,
-        end_op=None,
-        no_check_var_types=False,
-        force_replace=False,
+        anchor_op: Operation,
+        old_var: Var,
+        new_var: Var,
+        end_op: Optional[Operation] = None,
+        no_check_var_types: Optional[bool] = False,
+        force_replace: Optional[bool] = False,
     ):
         """
         Replace all uses of `old_var` with `new_var` after `anchor_op`,
@@ -507,9 +762,6 @@ class Block:
         If `anchor_op` is None, replace all input occurrences of `old_var` in the block. If
         `end_op` is None, all occurrences of `old_var` are replaced in the block starting from
         the op just after `anchor_op`
-
-        no_check_var_visibility: True to disable the check ensuring new_var is visible
-        (visibility requirement depends on anchor_op).
 
         no_check_var_types: An error will be raised if the type of new_var is not same as the
         old_var, unless `no_check_var_types` is set to True. Normally type inference is
@@ -589,13 +841,10 @@ class Block:
                 ).format(old_var, new_var, err_var)
                 raise ValueError(msg)
 
-        start = self.find_op_id_in_block(anchor_op) + 1 if anchor_op is not None else 0
-        end_id = self.find_op_id_in_block(end_op) if end_op is not None else -1
-
-        if not no_check_var_visibility:
+        # It is expensive to check the var visibility, and it should only be done while debugging.
+        if DEBUG:
             self.validate()
 
-            idx = start if anchor_op is not None else len(self.operations)
             visibility_error_msg = (
                     "new_var '{}' is not visible in block '{}' at or before "
                     + "anchor_op '{}'"
@@ -603,51 +852,47 @@ class Block:
             anchor_op_name = "None" if anchor_op is None else anchor_op.name
 
             if isinstance(new_var, ComplexVar):
-                # For CompleVar, as it's just a temp wrapper to transit the real and imag data, we
+                # For ComplexVar, as it's just a temp wrapper to transit the real and imag data, we
                 # check the visibility of its real and imaginary Var instead.
-                if not self.is_var_visible_in_block(new_var.real, upto_op_with_id=idx):
+                if not self.is_var_visible_in_block(new_var.real, upto_op=anchor_op):
                     raise ValueError(
-                        visibility_error_msg.format(
-                            new_var.real.name, self.name, anchor_op_name
-                        )
+                        visibility_error_msg.format(new_var.real.name, self.name, anchor_op_name)
                     )
-                if not self.is_var_visible_in_block(new_var.imag, upto_op_with_id=idx):
+                if not self.is_var_visible_in_block(new_var.imag, upto_op=anchor_op):
                     raise ValueError(
-                        visibility_error_msg.format(
-                            new_var.imag.name, self.name, anchor_op_name
-                        )
+                        visibility_error_msg.format(new_var.imag.name, self.name, anchor_op_name)
                     )
             else:
-                if not self.is_var_visible_in_block(new_var, upto_op_with_id=idx):
+                if not self.is_var_visible_in_block(new_var, upto_op=anchor_op):
                     raise ValueError(
-                        visibility_error_msg.format(
-                            new_var.name, self.name, anchor_op_name
-                        )
+                        visibility_error_msg.format(new_var.name, self.name, anchor_op_name)
                     )
+            start = self.find_op_id_in_block(anchor_op) + 1 if anchor_op is not None else 0
+            end_id = self.find_op_id_in_block(end_op) if end_op is not None else -1
 
-        if end_id != -1 and end_id < start:
-            msg = "end_op '{}' comes before the anchor_op '{}'"
-            raise ValueError(msg.format(end_op.name, anchor_op.name))
+            if end_id != -1 and end_id < start:
+                msg = "end_op '{}' comes before the anchor_op '{}'"
+                raise ValueError(msg.format(end_op.name, anchor_op.name))
 
         num_ops_affected = self._replace_var(
             old_var,
             new_var,
-            start=start,
-            end_id=end_id,
+            anchor_op=anchor_op,
+            end_op=end_op,
             no_check_var_types=no_check_var_types,
         )
 
         logger.debug("Num ops affected in replacing var: {}".format(num_ops_affected))
 
-    def remove_ops(self, existing_ops):
+    def remove_ops(self, ops_to_remove: List[Operation]):
         """
-        Remove ops in `existing_ops`.
+        Remove ops in `ops_to_remove`.
 
-        Args: existing_ops: List[Operation]. All ops in this list must be pre-existing in the
+        Args: ops_to_remove: List[Operation]. All ops in this list must be pre-existing in the
         block. It allows duplicated ops, but duplicated ops will only be removed once.
 
         Raises:
-            ValueError if any `op` in `existing_ops` meets any of following conditions:
+            ValueError if any `op` in `ops_to_remove` meets any of following conditions:
               - `op` is not found in the block
               - any other op in the block uses output Vars of `op`
               - the output var is block's output
@@ -655,99 +900,44 @@ class Block:
         self.validate()
 
         # Dedup ops because each op can only be deleted once.
-        existing_ops_set = set(existing_ops)
-        existing_ops = list(existing_ops_set)
-        # Find the idx of each to-be-removed op, and raise errors if any op couldn't be found.
-        idxs = [-1] * len(existing_ops)
-        for i, op in enumerate(self.operations):
-            if op in existing_ops_set:
-                idxs[existing_ops.index(op)] = i
-        if -1 in idxs:
-            not_found = []
-            for i, op in zip(idxs, existing_ops):
-                if i == -1:
-                    not_found.append(op.name)
-            raise ValueError(
-                "Ops {} not found in block {}".format(not_found, self.name)
-            )
+        ops_to_remove_set = set(ops_to_remove)
+        ops_to_remove = list(ops_to_remove_set)
 
-        # Remove ops in reverse topological order
-        pairs = list(zip(idxs, existing_ops))
-        pairs.sort(key=lambda x: x[0], reverse=True)
-
-        for idx, op in pairs:
+        for op in ops_to_remove:
             for i, v in enumerate(op.outputs):
-                # Check that no ops depend on op's outputs
-                if len(v.child_ops) > 0:
-                    child_op_names = [s.name for s in v.child_ops]
-                    msg = (
-                        "Cannot delete op '{}' with active output at id {}: '{}' "
-                        + "used by ops {}"
-                    )
-                    raise ValueError(msg.format(op.name, i, v.name, child_op_names))
                 # Check that the output Var isn't block's output
                 if v in self._outputs:
-                    msg = (
-                        "cannot delete op {} with output {}: {} "
-                        + "that's block {}'s output"
+                    raise ValueError(
+                        f"cannot delete op {op.name} with output {i}: {v.name} that's block {self.name}'s output."
                     )
-                    raise ValueError(msg.format(op.name, i, v.name, self.name))
 
             for b in op.blocks:
                 b.set_outputs([])
                 b.remove_ops(b.operations)
 
-            # Remove the op (in reverse topological order)
-            self.operations.pop(idx)
+            self.operations.remove(op)
+
             op.enclosing_block = None
 
-            for v in op.inputs.values():
-                if isinstance(v, (tuple, list)):
-                    for vv in v:
-                        vv.remove_child_op(op)
-                else:
-                    v.remove_child_op(op)
+            for v in op.get_flattened_inputs():
+                v.remove_child_op(op)
 
-    def operations_for_vars(self, end_vs):
-        """
-        Inputs:
+            # Remove InternalVar from self._internal_vars
+            for v in op.internal_inputs.values():
+                self._internal_vars.remove(v)
 
-        end_vs: list[Operation].
-
-        Return:
-
-        list[Operation] which are subset of self.operations that are ancestors
-        of `end_vs`. Also do recursion into nested blocks.
-        """
-        used_vars = set(end_vs)
-        used_ops = []
-        for op in reversed(self.operations):
-            # if none of op's output is used, delete op
-            if not set(op.outputs).intersection(used_vars):
-                continue
-
-            used_ops.append(op)  # append in reverse topological order
-
-            # recursively search for nested blocks
-            ops_to_check = []
-            for b in op.blocks:
-                ops_to_check += b.operations_for_vars(b.outputs)
-            ops_to_check.append(op)
-
-            # mark used vars
-            for op_to_check in ops_to_check:
-                # mark all op's inputs to used
-                for _, input_var in op_to_check.inputs.items():
-                    if isinstance(input_var, (tuple, list)):
-                        used_vars.update(list(input_var))
-                    else:
-                        used_vars.add(input_var)
-
-        return used_ops[::-1]
+        # In the end, we check no ops depend on removed op's outputs
+        for op in ops_to_remove:
+            for i, v in enumerate(op.outputs):
+                if len(v.child_ops) > 0:
+                    child_op_names = [s.name for s in v.child_ops]
+                    raise ValueError(
+                        f"Cannot delete op '{op.name}' with active output at id {i}: '{v.name}' used by ops {child_op_names}."
+                    )
 
     def _propagate_nonreplaceable_vars(self):
         def propagate_nonreplaceable_vars_block(block):
-            for op in list(block.operations):
+            for op in block.operations:
                 for b in op.blocks:
                     propagate_nonreplaceable_vars_block(b)
                 if op.outputs is None:
@@ -757,7 +947,7 @@ class Block:
                     o._set_nonreplaceable_vars_upstream()
         propagate_nonreplaceable_vars_block(self)
 
-    def indented_str(self, indent=None):
+    def indented_str(self, indent: Optional[str] = None, print_attr: Optional[bool] = False) -> str:
         if indent is None:
             indent = ""
         s = (
@@ -768,7 +958,7 @@ class Block:
         )
         s += ") {\n"
         for op in self.operations:
-            s += op.indented_str(indent + SPACES * 1)
+            s += op.indented_str(indent + SPACES * 1, print_attr=print_attr)
         s += indent + "} -> ("
         if self._outputs is not None:
             s += ", ".join(["%" + v.name for v in self._outputs])
@@ -842,17 +1032,18 @@ class Function(Block):
         """
         self.placeholder_inputs = inputs
         self.opset_version = opset_version
+        self.output_types = None
+        self.input_types = []
 
         # str -> Var
         self._input_dict = OrderedDict()
         for k, v in self.placeholder_inputs.items():
             v.set_name(k)  # set to user input name
             self._input_dict[k] = v.outputs[0]
-        self.function_inputs = tuple(self._input_dict.values())
 
         global k_used_symbols
         global k_num_internal_syms
-        for inp in self.function_inputs:
+        for inp in self._input_dict.values():
             if types.is_tensor(inp.dtype):
                 shapes = inp.dtype.get_shape()
                 for s in shapes:
@@ -884,7 +1075,9 @@ class Function(Block):
     def __str__(self):
         return self.to_str("function")
 
-    def to_str(self, func_name="function"):
+    def to_str(
+        self, func_name: Optional[str] = "function", print_attr: Optional[bool] = False
+    ) -> str:
         func_name = func_name + "[{}]".format(_OPSET[self.opset_version])
         if len(self._input_dict) == 0:
             s = func_name + "()"
@@ -893,9 +1086,10 @@ class Function(Block):
             s = func_name + "(" + str(inputs[0][1])
             for in_name, ph in inputs[1:]:
                 s += ",\n" + " " * (len(func_name) + 1) + str(ph)
-            s += ") {\n"
-            s += self.indented_str(SPACES)
-            s += "}\n"
+            s += ")"
+        s += " {\n"
+        s += self.indented_str(SPACES, print_attr=print_attr)
+        s += "}\n"
         return s
 
     def get_max_opset_version_and_op(self) -> Tuple[_target, Operation]:
@@ -909,7 +1103,7 @@ class Function(Block):
         def update_max_opset_version_block(block):
             nonlocal max_opset_version
             nonlocal op_with_max_opset_version
-            for op in list(block.operations):
+            for op in block.operations:
                 for b in op.blocks:
                     update_max_opset_version_block(b)
                 if not hasattr(op, "_op_variants") or not isinstance(op._op_variants, dict):
@@ -920,3 +1114,25 @@ class Function(Block):
 
         update_max_opset_version_block(self)
         return max_opset_version, op_with_max_opset_version
+
+    def set_output_types(self, outputs: Optional[List[InputType]] = None) -> None:
+        """
+        Set the user defined output type for a function.
+        Note: the common::update_output_dtypes graph pass takes this information,
+        and changes the function output signature accordingly.
+        """
+        if outputs is not None:
+            if not (
+                isinstance(outputs, list) and all([isinstance(out, InputType) for out in outputs])
+            ):
+                raise TypeError(
+                    "main outputs should be a list of type ct.TensorType or ct.ImageType"
+                )
+        self.output_types = outputs
+
+    def set_input_types(self, input_types: List[InputType]):
+        if not isinstance(input_types, tuple):
+            raise ValueError("main inputs should be tuple of TensorType or ImageType")
+        elif not all([isinstance(inp, InputType) for inp in input_types]):
+            raise ValueError("main inputs should be tuple of InputSpec")
+        self.input_types = input_types

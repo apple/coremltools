@@ -48,8 +48,11 @@ class fuse_squeeze_expand_dims(AbstractGraphPass):
 
     @block_context_manager
     def fuse_squeeze_expand_dims_block(self, block):
-        fusion_status = False
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -60,11 +63,9 @@ class fuse_squeeze_expand_dims(AbstractGraphPass):
 
             squeeze_op = self._match_pattern(op)
             if squeeze_op is not None:
-                fusion_status = self._try_to_transform(squeeze_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(squeeze_op, block):
+                    fusion_occurred = True
+        return fusion_occurred
 
     @staticmethod
     def _match_pattern(op):
@@ -268,8 +269,11 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
 
     @block_context_manager
     def expand_high_rank_reshape_and_transpose_block(self, block):
-        fusion_status = False
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -279,11 +283,9 @@ class expand_high_rank_reshape_and_transpose(AbstractGraphPass):
 
             ops = self._match_pattern(op)
             if ops is not None:
-                fusion_status = self._try_to_transform(ops, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(ops, block):
+                    fusion_occurred = True
+        return fusion_occurred
 
 @register_pass(namespace="common")
 class concat_to_pixel_shuffle(AbstractGraphPass):
@@ -545,8 +547,11 @@ class detect_concat_interleave(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_concat_interleave(self, block):
-        fusion_status = False
+        fusion_occurred = False
         for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -556,11 +561,9 @@ class detect_concat_interleave(AbstractGraphPass):
 
             concat_op = self._match_pattern(op)
             if concat_op is not None:
-                fusion_status = self._try_to_transform(op, concat_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(op, concat_op, block):
+                    fusion_occurred = True
+        return fusion_occurred
 
 
 @register_pass(namespace="common")
@@ -653,8 +656,11 @@ class fuse_onehot_matmul_to_gather(AbstractGraphPass):
 
     @block_context_manager
     def _fuse_onehot_matmul_to_gather_block(self, block):
-        fusion_status = False
-        for i, op in enumerate(list(block.operations)):
+        fusion_occurred = False
+        for op in list(block.operations):
+            if op.enclosing_block is None:
+                continue
+
             for b in op.blocks:
                 block_changed = True
                 while block_changed:
@@ -665,11 +671,9 @@ class fuse_onehot_matmul_to_gather(AbstractGraphPass):
 
             # start pattern match if one_hot op is encountered
             if op.op_type == "one_hot":
-                fusion_status = self._try_to_transform(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                if self._try_to_transform(op, block):
+                    fusion_occurred = True
+        return fusion_occurred
 
 
 @register_pass(namespace="common")

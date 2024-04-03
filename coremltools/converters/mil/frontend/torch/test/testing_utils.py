@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List, Union
+
 import numpy as np
 import pytest
 import torch
@@ -80,9 +82,15 @@ def convert_to_coreml_inputs(input_description, inputs):
     return coreml_inputs
 
 
-def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"),
-                       converter_input_type=None, compute_unit=ct.ComputeUnit.CPU_ONLY,
-                       minimum_deployment_target=None):
+def convert_to_mlmodel(
+    model_spec,
+    tensor_inputs,
+    backend=("neuralnetwork", "fp32"),
+    converter_input_type=None,
+    compute_unit=ct.ComputeUnit.CPU_ONLY,
+    minimum_deployment_target=None,
+    converter=ct.convert,
+):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
             return [_convert_to_inputtype(x) for x in inputs]
@@ -106,33 +114,43 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp3
         inputs = None
         outputs = None
 
-    return ct_convert(model_spec, inputs=inputs, convert_to=backend,
-                      source="pytorch", compute_units=compute_unit,
-                      minimum_deployment_target=minimum_deployment_target)
+    return ct_convert(
+        model_spec,
+        inputs=inputs,
+        convert_to=backend,
+        source="pytorch",
+        compute_units=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
+        converter=converter,
+    )
 
 
-def generate_input_data(input_size, rand_range=(0, 1), torch_device=torch.device("cpu")):
+def generate_input_data(
+    input_size, rand_range=(0, 1), dtype=np.float32, torch_device=torch.device("cpu")
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     r1, r2 = rand_range
 
-    def random_data(spec):
+    def random_data(spec, dtype=np.float32):
         if isinstance(spec, TensorType):
             spec_shape = spec.shape.shape
             dtype = nptype_from_builtin(spec.dtype)
         else:
             spec_shape = spec
-            dtype = np.float32
 
         static_shape = tuple([np.random.randint(dim.lower_bound, dim.upper_bound if dim.upper_bound > 0 else 10)
                               if isinstance(dim, RangeDim) else dim for dim in spec_shape])
 
-        data = np.random.rand(*static_shape) if static_shape != () else np.random.rand()
-        data = (r1 - r2) * data + r2
+        if np.issubdtype(dtype, np.floating):
+            data = np.random.rand(*static_shape) if static_shape != () else np.random.rand()
+            data = (r1 - r2) * data + r2
+        else:
+            data = np.random.randint(r1, r2, size=static_shape, dtype=dtype)
         return torch.from_numpy(np.array(data).astype(dtype)).to(torch_device)
 
     if isinstance(input_size, list):
-        return [random_data(size) for size in input_size]
+        return [random_data(size, dtype) for size in input_size]
     else:
-        return random_data(input_size)
+        return random_data(input_size, dtype)
 
 
 def trace_model(model, input_data):
@@ -162,6 +180,7 @@ def convert_and_compare(
     converter_input_type=None,
     compute_unit=ct.ComputeUnit.CPU_ONLY,
     minimum_deployment_target=None,
+    converter=ct.convert,
 ):
     """
     If expected results is not set, it will by default
@@ -175,6 +194,9 @@ def convert_and_compare(
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec
+    if _HAS_TORCH_EXPORT_API:
+        if isinstance(torch_model, ExportedProgram):
+            torch_model = torch_model.module()
 
     if not isinstance(input_data, (list, tuple)):
         input_data = [input_data]
@@ -183,10 +205,15 @@ def convert_and_compare(
         torch_input = _copy_input_data(input_data)
         expected_results = torch_model(*torch_input)
     expected_results = flatten_and_detach_torch_results(expected_results)
-    mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend,
-                                 converter_input_type=converter_input_type,
-                                 compute_unit=compute_unit,
-                                 minimum_deployment_target=minimum_deployment_target,)
+    mlmodel = convert_to_mlmodel(
+        model_spec,
+        input_data,
+        backend=backend,
+        converter_input_type=converter_input_type,
+        compute_unit=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
+        converter=converter,
+    )
 
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
 
@@ -228,6 +255,7 @@ class TorchBaseTest:
         atol=1e-04,
         rtol=1e-05,
         input_as_shape=True,
+        input_dtype=np.float32,
         backend=("neuralnetwork", "fp32"),
         rand_range=(-1.0, 1.0),
         use_scripting=False,
@@ -236,6 +264,7 @@ class TorchBaseTest:
         minimum_deployment_target=None,
         torch_device=torch.device("cpu"),
         frontend=TorchFrontend.TORCHSCRIPT,
+        converter=ct.convert,
     ):
         """
         Traces a model and runs a numerical test.
@@ -250,7 +279,7 @@ class TorchBaseTest:
             validate_minimum_deployment_target(minimum_deployment_target, backend)
 
         if input_as_shape:
-            input_data = generate_input_data(input_data, rand_range, torch_device)
+            input_data = generate_input_data(input_data, rand_range, input_dtype, torch_device)
 
         if frontend == TorchFrontend.TORCHSCRIPT:
             model.eval()
@@ -286,6 +315,7 @@ class TorchBaseTest:
             converter_input_type=converter_input_type,
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
+            converter=converter,
         )
 
         return model_spec, mlmodel, coreml_inputs, coreml_results, \

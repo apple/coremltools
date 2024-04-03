@@ -36,7 +36,7 @@ class torch_upsample_to_core_upsample(AbstractGraphPass):
 
 @block_context_manager
 def _torch_upsample_to_core_upsample_block(block):
-    for op in block.operations[:]:
+    for op in list(block.operations):
         for b in op.blocks:
             _torch_upsample_to_core_upsample_block(b)
 

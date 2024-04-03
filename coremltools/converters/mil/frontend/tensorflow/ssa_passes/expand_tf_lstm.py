@@ -41,7 +41,7 @@ class expand_tf_lstm(AbstractGraphPass):
 
 def _expand_tf_lstm_helper(block):
     # shallow copy hides changes on f.operations during the loop
-    for op in block.operations[:]:
+    for op in list(block.operations):
         for b in op.blocks:
             _expand_tf_lstm_helper(b)
 

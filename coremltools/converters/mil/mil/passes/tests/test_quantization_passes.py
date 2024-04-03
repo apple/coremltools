@@ -16,6 +16,7 @@ import coremltools.converters.mil.mil.types as types
 from coremltools._deps import _HAS_TORCH, _IS_MACOS, MSG_TORCH_NOT_FOUND
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.defs import quantization
+from coremltools.converters.mil.mil.passes.defs.quantization import add_fp16_cast
 from coremltools.converters.mil.mil.types import numpy_type_to_builtin_type
 from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
@@ -31,7 +32,8 @@ np.random.seed(1818)
 
 
 class TestTensorwiseAffineDequantizeConstElimination:
-    def test_eliminate_transpose(self):
+    @pytest.mark.parametrize("axis", (None, 0, 1, -1))
+    def test_eliminate_transpose(self, axis):
         """
         Input graph:
             data -> constexpr_affine_dequantize -> transpose
@@ -41,21 +43,28 @@ class TestTensorwiseAffineDequantizeConstElimination:
 
         where new_data is the value after applying transpose to data
         """
-        quantized_data = np.random.randint(0, 256, (1, 2, 3, 4)).astype(np.int8)
+        SHAPE = (1, 2, 3, 4)
+        quantized_data = np.random.randint(0, 256, SHAPE).astype(np.int8)
+        if axis is None:
+            axis = 0  # although tensor-wise, constexpr_affine_dequantize requires a (dummy) axis
+            scale = np.random.rand()
+            zero_point = np.random.randint(-127, 128, dtype=np.int8)
+        else:
+            size = SHAPE[axis]
+            scale = np.random.rand(size)
+            zero_point = np.random.randint(-127, 128, size, dtype=np.int8)
 
         @mb.program(input_specs=[], opset_version=ct.target.iOS16)
         def prog():
             res = mb.constexpr_affine_dequantize(
                 quantized_data=quantized_data,
-                axis=0,
-                scale=8.9,
-                zero_point=np.int8(34),
+                axis=axis,
+                scale=scale,
+                zero_point=zero_point,
             )
             return mb.transpose(x=res, perm=(2, 0, 1, 3))
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
 
         new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
@@ -84,9 +93,7 @@ class TestTensorwiseAffineDequantizeConstElimination:
             )
             return mb.reshape(x=res, shape=(3, -1))
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
 
         new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
@@ -115,9 +122,7 @@ class TestTensorwiseAffineDequantizeConstElimination:
             )
             return mb.expand_dims(x=res, axes=(0, 2, 4))
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
 
         new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
@@ -147,9 +152,7 @@ class TestTensorwiseAffineDequantizeConstElimination:
             )
             return mb.squeeze(x=res, axes=axis)
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
 
         new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
@@ -182,9 +185,7 @@ class TestTensorwiseAffineDequantizeConstElimination:
             res = mb.expand_dims(x=res, axes=(0, 2, 4))
             return mb.squeeze(x=res, axes=(2,))
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
 
         new_op = prog.find_ops(op_type="constexpr_affine_dequantize", exactly_one=True)[0]
@@ -195,39 +196,6 @@ class TestTensorwiseAffineDequantizeConstElimination:
         expected_quantized_data = np.squeeze(expected_quantized_data, (2,))
 
         np.testing.assert_array_equal(new_op.quantized_data.val, expected_quantized_data)
-
-    def test_negative_channel_wise_pattern(self):
-        """
-        If ``constexpr_affine_dequantize`` is not tensor-wise,
-        the graph is not changed.
-        """
-        quantized_data = np.random.randint(0, 256, (2, 3, 4)).astype(np.int8)
-
-        @mb.program(input_specs=[], opset_version=ct.target.iOS16)
-        def prog():
-            x = mb.constexpr_affine_dequantize(
-                quantized_data=quantized_data,
-                axis=0,
-                scale=[8.9, 6.5],
-                zero_point=np.int8(34),
-            )
-            y = mb.constexpr_affine_dequantize(
-                quantized_data=quantized_data,
-                axis=0,
-                scale=8.9,
-                zero_point=np.int8([34, 56]),
-            )
-            return mb.transpose(x=x, perm=(1, 0, 2)), mb.transpose(x=y, perm=(1, 0, 2))
-
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
-        assert get_op_types_in_program(prog) == [
-            "constexpr_affine_dequantize",
-            "constexpr_affine_dequantize",
-            "transpose",
-            "transpose",
-        ]
 
     def test_negative_non_linked_list_pattern(self):
         """
@@ -253,9 +221,7 @@ class TestTensorwiseAffineDequantizeConstElimination:
             )
             return mb.transpose(x=x, perm=(1, 0, 2)), mb.reshape(x=y, shape=(24,))
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == [
             "constexpr_affine_dequantize",
             "constexpr_affine_dequantize",
@@ -282,9 +248,7 @@ class TestTensorwiseAffineDequantizeConstElimination:
             y = mb.transpose(x=x, perm=(0, 3, 2, 1))
             return x, y
 
-        apply_pass_and_basic_check(
-            prog, "common::merge_tensorwise_affine_dequantize_with_consecutive_ops"
-        )
+        apply_pass_and_basic_check(prog, "common::merge_affine_dequantize_with_consecutive_ops")
         assert get_op_types_in_program(prog) == [
             "constexpr_affine_dequantize",
             "transpose",
@@ -1741,10 +1705,11 @@ class TestDequantizeToConstexpr:
             return y
 
         assert get_op_types_in_program(prog) == ["dequantize"]
+        dequantize_op = prog.find_ops(op_type="dequantize")[0]
+        assert dequantize_op.outputs[0].val is None
+        assert dequantize_op.can_materialize_val()
 
-        prev_prog, prev_block, block = apply_pass_and_basic_check(
-            prog, "common::dequantize_to_constexpr"
-        )
+        apply_pass_and_basic_check(prog, "common::dequantize_to_constexpr")
         assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize"]
 
     @pytest.mark.parametrize(
@@ -2196,20 +2161,150 @@ class TestFP16CastTransform:
         )
 
 
+class TestTransformFunctionSignatures:
+    @staticmethod
+    def test_empty():
+        """
+        Case where the input var is also a block output.
+        """
+        # case 1
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            return x
+
+        graph_pass = add_fp16_cast()
+        block = prog.functions["main"]
+        graph_pass.transform_function_signatures(block)
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        assert get_op_types_in_program(prog) == []
+        assert block.inputs["x"].dtype == types.fp16
+        assert len(block.outputs) == 1
+        assert block.outputs[0].dtype == types.fp16
+        assert block.outputs[0] is block.inputs["x"]
+
+        # case 2
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            return x, mb.relu(x=x), x, x
+
+        graph_pass = add_fp16_cast()
+        block = prog.functions["main"]
+        graph_pass.transform_function_signatures(block)
+
+        assert block.inputs["x"].dtype == types.fp16
+        assert len(block.outputs) == 4
+
+        assert block.outputs[0].dtype == types.fp16
+        assert block.outputs[2].dtype == types.fp16
+        assert block.outputs[3].dtype == types.fp16
+
+        assert block.outputs[1].dtype == types.fp32
+
+        assert block.outputs[0] is block.inputs["x"]
+        assert block.outputs[2] is block.inputs["x"]
+        assert block.outputs[3] is block.inputs["x"]
+
+        assert all([x.dtype == types.fp16 for x in block.output_types])
+
+        assert get_op_types_in_program(prog) == ["cast", "relu"]
+        cast_op = block.find_ops(op_type="cast")[0]
+        assert cast_op.dtype.val == "fp32"
+
+    @staticmethod
+    def test_simple():
+        """
+        Input graph:
+
+            input(fp32) -> relu -> output
+
+        Output graph:
+
+            input(fp16) -> cast(dtype="fp32") -> relu -> output,
+
+            with function.output_types = [ct.TesorType(dtype=types.fp16)]
+
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            return mb.relu(x=x)
+
+        graph_pass = add_fp16_cast()
+        block = prog.functions["main"]
+        graph_pass.transform_function_signatures(block)
+
+        assert block.inputs["x"].dtype == types.fp16
+
+        assert get_op_types_in_program(prog) == ["cast", "relu"]
+        cast_op = block.find_ops(op_type="cast")[0]
+        assert cast_op.dtype.val == "fp32"
+
+        assert len(block.outputs) == 1
+        assert block.outputs[0].dtype == types.fp32
+
+        assert len(block.output_types) == 1
+        assert block.output_types[0].dtype == types.fp16
+
+    @staticmethod
+    def test_simple_2():
+        """
+        Input graph:
+
+            input(fp32) -> identity -> cast(dtype="int32") -> output_1
+                               |
+                               .-> output_2
+
+        Output graph:
+
+            input(fp16) -> cast(dtype="fp32") -> identity -> cast(dtype="int32")  -> output_1
+                                                      |
+                                                      .-> output_2,
+
+            with function.output_types = [ct.TesorType(dtype=types.int32), ct.TesorType(dtype=types.fp16)]
+
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
+        def prog(x):
+            x = mb.identity(x=x)
+            return mb.cast(x=x, dtype="int32"), x
+
+        graph_pass = add_fp16_cast()
+        block = prog.functions["main"]
+        graph_pass.transform_function_signatures(block)
+
+        assert block.inputs["x"].dtype == types.fp16
+
+        assert get_op_types_in_program(prog) == ["cast", "identity", "cast"]
+        cast_ops = block.find_ops(op_type="cast")
+        assert cast_ops[0].dtype.val == "fp32"
+        assert cast_ops[1].dtype.val == "int32"
+
+        assert len(block.outputs) == 2
+        assert block.outputs[0].dtype == types.int32
+        assert block.outputs[1].dtype == types.fp32
+
+        assert len(block.output_types) == 2
+        assert block.output_types[0].dtype == types.int32
+        assert block.output_types[1].dtype == types.fp16
+
+
 class TestInt32CastToInt16:
     @pytest.mark.parametrize(
-        "x_dtype, dynamic, opset_version",
+        "x_dtype, dynamic, has_neg, opset_version",
         itertools.product(
             [np.int32, np.float32],
+            [True, False],
             [True, False],
             [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17],
         ),
     )
-    def test_gather_int16_indices(self, x_dtype, dynamic, opset_version):
+    def test_gather_int16_indices(self, x_dtype, dynamic, has_neg, opset_version):
         @mb.program(opset_version=opset_version)
         def prog_static():
             params = np.array([[1, 2, 3], [4, 5, 6]], dtype=x_dtype)
-            indices = np.array([1, 0], dtype=np.int32)
+            indices = np.array([-2, 0] if has_neg else [1, 0], dtype=np.int32)
             return mb.gather(x=params, indices=indices, axis=-1)
 
         @mb.program(
@@ -2241,7 +2336,7 @@ class TestInt32CastToInt16:
             assert get_op_types_in_program(prog) == expected_ops
             indices_cast_op_idx = 1 if x_dtype == np.int32 else 0
             cast_op = block.find_ops(op_type="cast")[indices_cast_op_idx]
-            assert cast_op.dtype.val == "int16"
+            assert cast_op.dtype.val == "int16" if has_neg else "uint16"
             assert len(cast_op.outputs) == 1
             assert len(cast_op.outputs[0].child_ops) == 1
             assert cast_op.outputs[0].child_ops[0].op_type == "gather"
@@ -2255,19 +2350,42 @@ class TestInt32CastToInt16:
                 rtol=1e-05,
             )
 
+    def test_gather_int16_scalar_indices(self):
+        @mb.program(input_specs=[], opset_version=ct.target.iOS17)
+        def prog_static():
+            params = np.array([1, 2, 3, 4], dtype=np.int32)
+            res = mb.gather(x=params, indices=0, axis=0, batch_dims=0, validate_indices=False)
+            return res
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(4,), dtype=types.int32)],
+            opset_version=ct.target.iOS17,
+        )
+        def prog_dynamic(x):
+            return mb.gather(x=x, indices=0, axis=0)
+
+        for prog in (prog_static, prog_dynamic):
+            assert get_op_types_in_program(prog) == ["gather"]
+            prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+            expected_ops = ["cast", "cast", "gather", "cast"]
+            assert get_op_types_in_program(prog) == expected_ops
+
     @pytest.mark.parametrize(
-        "x_dtype, dynamic, opset_version",
+        "x_dtype, dynamic, has_neg, opset_version",
         itertools.product(
             [np.int32, np.float32],
+            [True, False],
             [True, False],
             [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17],
         ),
     )
-    def test_gather_along_axis_int16_indices(self, x_dtype, dynamic, opset_version):
+    def test_gather_along_axis_int16_indices(self, x_dtype, dynamic, has_neg, opset_version):
         @mb.program(opset_version=opset_version)
         def prog_static():
             params = np.array([[1, 2, 3], [4, 5, 6]], dtype=x_dtype)
-            indices = np.array([[1, 0, 1], [1, 1, 0]], dtype=np.int32)
+            indices = np.array(
+                [[-2, 0, -2], [-2, -2, 0]] if has_neg else [[1, 0, 1], [1, 1, 0]], dtype=np.int32
+            )
             return mb.gather_along_axis(x=params, indices=indices, axis=-1)
 
         @mb.program(
@@ -2299,7 +2417,7 @@ class TestInt32CastToInt16:
             assert get_op_types_in_program(prog) == expected_ops
             indices_cast_op_idx = 1 if x_dtype == np.int32 else 0
             cast_op = block.find_ops(op_type="cast")[indices_cast_op_idx]
-            assert cast_op.dtype.val == "int16"
+            assert cast_op.dtype.val == "int16" if has_neg else "uint16"
             assert len(cast_op.outputs) == 1
             assert len(cast_op.outputs[0].child_ops) == 1
             assert cast_op.outputs[0].child_ops[0].op_type == "gather_along_axis"
@@ -2336,17 +2454,25 @@ class TestInt32CastToInt16:
             assert cast_op.dtype.val == "int16"
             assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
 
-    def test_gather_static_overflow_int16(self):
-        """Indices cannot be represented by int16 range, don't cast to int16."""
+    @pytest.mark.parametrize("overflow_uint16", [True, False])
+    def test_gather_static_overflow_int16(self, overflow_uint16):
+        """Indices cannot be represented by int16 range, but might be represented by uint16."""
+        max_index = 65536 if overflow_uint16 else 32768
 
         @mb.program(opset_version=ct.target.iOS17)
         def prog():
-            params = np.array([[1, 2]] * 32769, dtype=np.float32)
-            indices = np.array([32768, 0], dtype=np.int32)
+            params = np.array([[1, 2]] * (max_index + 1), dtype=np.float32)
+            indices = np.array([max_index, 0], dtype=np.int32)
             return mb.gather(x=params, indices=indices, axis=0)
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
-        assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        if overflow_uint16:
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            assert get_op_types_in_program(prog) == ["cast", "gather"]
+            cast_op = block.find_ops(op_type="cast")[0]
+            assert cast_op.dtype.val == "uint16"
+            assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
 
     @patch(
         "coremltools.converters.mil.mil.passes.defs.quantization.add_int16_cast._PREFER_INT16_OPS",

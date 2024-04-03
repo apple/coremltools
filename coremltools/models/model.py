@@ -4,22 +4,24 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import atexit as _atexit
+from copy import deepcopy as _deepcopy
+import json
 import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
+from typing import Optional as _Optional
 import warnings as _warnings
-from copy import deepcopy as _deepcopy
+
 
 import numpy as _np
 import numpy as _numpy
 
 from coremltools import ComputeUnit as _ComputeUnit
+from coremltools import _logger as logger
+from coremltools import proto as _proto
 from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 from coremltools.converters.mil.mil.program import Program as _Program
 
-from ..proto import FeatureTypes_pb2 as _ft
-from ..proto import MIL_pb2 as _MIL_pb2
-from ..proto import Model_pb2 as _Model_pb2
 from .utils import (
     _MLMODEL_EXTENSION,
     _MLPACKAGE_AUTHOR_NAME,
@@ -45,6 +47,12 @@ try:
     from ..libmodelpackage import ModelPackage as _ModelPackage
 except:
     _ModelPackage = None
+
+try:
+    from ..libcoremlpython import _MLModelProxy
+except Exception as e:
+    logger.warning(f"Failed to load _MLModelProxy: {e}")
+    _MLModelProxy = None
 
 _HAS_PIL = True
 try:
@@ -130,38 +138,6 @@ class _FeatureDescription:
             yield f.name
 
 
-def _get_proxy_and_spec(filename, compute_units, skip_model_load=False):
-    try:
-        from ..libcoremlpython import _MLModelProxy
-    except Exception:
-        _MLModelProxy = None
-
-    filename = _os.path.expanduser(filename)
-    specification = _load_spec(filename)
-
-    if _MLModelProxy and not skip_model_load:
-
-        # check if the version is supported
-        engine_version = _MLModelProxy.maximum_supported_specification_version()
-        if specification.specificationVersion > engine_version:
-            # in this case the specification is a newer kind of .mlmodel than this
-            # version of the engine can support so we'll not try to have a proxy object
-            return None, specification, None
-
-        try:
-            return _MLModelProxy(filename, compute_units.name), specification, None
-        except RuntimeError as e:
-            _warnings.warn(
-                "You will not be able to run predict() on this Core ML model."
-                + " Underlying exception message was: "
-                + str(e),
-                RuntimeWarning,
-            )
-            return None, specification, e
-
-    return None, specification, None
-
-
 def _try_get_weights_dir_path(mlpackage_path):
     """
     Try to find the weights in mlpackage and return the path to the weights directory if found.
@@ -182,7 +158,7 @@ def _try_get_weights_dir_path(mlpackage_path):
 
 class MLModel:
     """
-    This class defines the minimal interface to a CoreML object in Python.
+    This class defines the minimal interface to a Core ML object in Python.
 
     At a high level, the protobuf specification consists of:
 
@@ -379,10 +355,10 @@ class MLModel:
                 self.package_path = model
                 self.is_temp_package = is_temp_package
                 self._weights_dir = _try_get_weights_dir_path(model)
-            self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
+            self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
                 model, compute_units, skip_model_load=skip_model_load,
             )
-        elif isinstance(model, _Model_pb2.Model):
+        elif isinstance(model, _proto.Model_pb2.Model):
             if does_model_contain_mlprogram(model):
                 if model.WhichOneof("Type") == "mlProgram" and weights_dir is None:
                     raise Exception(
@@ -399,7 +375,7 @@ class MLModel:
                 filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
                 _save_spec(model, filename)
 
-            self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
+            self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
                 filename, compute_units, skip_model_load=skip_model_load,
             )
             try:
@@ -413,9 +389,42 @@ class MLModel:
 
         self._input_description = _FeatureDescription(self._spec.description.input)
         self._output_description = _FeatureDescription(self._spec.description.output)
+        self._model_input_names_set = set([i.name for i in self._spec.description.input])
 
         if self.is_package and self.is_temp_package:
             _atexit.register(cleanup, self.package_path)
+
+
+    def _get_proxy_and_spec(self,
+                            filename: str,
+                            compute_units: _ComputeUnit,
+                            skip_model_load: _Optional[bool] = False):
+
+        filename = _os.path.expanduser(filename)
+        specification = _load_spec(filename)
+
+        if _MLModelProxy and not skip_model_load:
+
+            # check if the version is supported
+            engine_version = _MLModelProxy.maximum_supported_specification_version()
+            if specification.specificationVersion > engine_version:
+                # in this case the specification is a newer kind of .mlmodel than this
+                # version of the engine can support so we'll not try to have a proxy object
+                return None, specification, None
+
+            try:
+                return _MLModelProxy(filename, compute_units.name), specification, None
+            except RuntimeError as e:
+                _warnings.warn(
+                    "You will not be able to run predict() on this Core ML model."
+                    + " Underlying exception message was: "
+                    + str(e),
+                    RuntimeWarning,
+                )
+                return None, specification, e
+
+        return None, specification, None
+
 
     @property
     def short_description(self):
@@ -509,6 +518,23 @@ class MLModel:
                 )
             _shutil.copytree(self.package_path, save_path)
 
+            if self._mil_program is not None:
+                debug_handle_to_ops_mapping = (
+                    self._mil_program.construct_debug_handle_to_ops_mapping()
+                )
+                if len(debug_handle_to_ops_mapping) > 0:
+                    debug_handle_to_ops_mapping_as_json = json.dumps(
+                        {
+                            "version" : self.user_defined_metadata[_METADATA_VERSION],
+                            "mapping" : debug_handle_to_ops_mapping,
+                        }
+                    )
+                    saved_debug_handle_to_ops_mapping_path = _os.path.join(
+                        save_path, "executorch_debug_handle_mapping.json"
+                    )
+                    with open(saved_debug_handle_to_ops_mapping_path, "w") as f:
+                        f.write(debug_handle_to_ops_mapping_as_json)
+
             saved_spec_path = _os.path.join(
                 save_path, "Data", _MLPACKAGE_AUTHOR_NAME, _MODEL_FILE_NAME
             )
@@ -600,15 +626,6 @@ class MLModel:
                     "Model prediction is only supported on macOS version 10.13 or later."
                 )
 
-            try:
-                from ..libcoremlpython import _MLModelProxy
-            except Exception as e:
-                print("Exception loading model proxy: %s\n" % e)
-                _MLModelProxy = None
-            except:
-                print("Exception while loading model proxy.\n")
-                _MLModelProxy = None
-
             if not _MLModelProxy:
                 raise Exception("Unable to load CoreML.framework. Cannot make predictions.")
             elif (
@@ -670,9 +687,9 @@ class MLModel:
         build_info_proto = ml_program_attributes["buildInfo"]
 
         # Set ValueType to dictionary of string to string
-        str_type = _MIL_pb2.ValueType()
-        str_type.tensorType.dataType = _MIL_pb2.DataType.STRING
-        dict_type_str_to_str = _MIL_pb2.ValueType()
+        str_type = _proto.MIL_pb2.ValueType()
+        str_type.tensorType.dataType = _proto.MIL_pb2.DataType.STRING
+        dict_type_str_to_str = _proto.MIL_pb2.ValueType()
         dict_type_str_to_str.dictionaryType.keyType.CopyFrom(str_type)
         dict_type_str_to_str.dictionaryType.valueType.CopyFrom(str_type)
         build_info_proto.type.CopyFrom(dict_type_str_to_str)
@@ -680,7 +697,7 @@ class MLModel:
         # Copy the metadata
         build_info_dict = build_info_proto.immediateValue.dictionary
         for k, v in metadata.items():
-            key_pair = _MIL_pb2.DictionaryValue.KeyValuePair()
+            key_pair = _proto.MIL_pb2.DictionaryValue.KeyValuePair()
             key_pair.key.immediateValue.tensor.strings.values.append(k)
             key_pair.key.type.CopyFrom(str_type)
             key_pair.value.immediateValue.tensor.strings.values.append(v)
@@ -728,27 +745,36 @@ class MLModel:
                 if not isinstance(input_val, _PIL_IMAGE.Image):
                     msg = "Image input, '{}' must be of type PIL.Image.Image in the input dict"
                     raise TypeError(msg.format(input_desc.name))
-                if input_desc.type.imageType.colorSpace in (_ft.ImageFeatureType.BGR, _ft.ImageFeatureType.RGB):
-                    if input_val.mode != 'RGB':
+                if input_desc.type.imageType.colorSpace in (
+                    _proto.FeatureTypes_pb2.ImageFeatureType.BGR,
+                    _proto.FeatureTypes_pb2.ImageFeatureType.RGB,
+                ):
+                    if input_val.mode != "RGB":
                         msg = "RGB/BGR image input, '{}', must be of type PIL.Image.Image with mode=='RGB'"
                         raise TypeError(msg.format(input_desc.name))
-                elif input_desc.type.imageType.colorSpace == _ft.ImageFeatureType.GRAYSCALE:
-                    if input_val.mode != 'L':
+                elif (
+                    input_desc.type.imageType.colorSpace
+                    == _proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE
+                ):
+                    if input_val.mode != "L":
                         msg = "GRAYSCALE image input, '{}', must be of type PIL.Image.Image with mode=='L'"
                         raise TypeError(msg.format(input_desc.name))
-                elif input_desc.type.imageType.colorSpace == _ft.ImageFeatureType.GRAYSCALE_FLOAT16:
-                    if input_val.mode != 'F':
+                elif (
+                    input_desc.type.imageType.colorSpace
+                    == _proto.FeatureTypes_pb2.ImageFeatureType.GRAYSCALE_FLOAT16
+                ):
+                    if input_val.mode != "F":
                         msg = "GRAYSCALE_FLOAT16 image input, '{}', must be of type PIL.Image.Image with mode=='F'"
                         raise TypeError(msg.format(input_desc.name))
 
+
     def _verify_input_name_exists(self, input_dict):
-        model_input_names = [inp.name for inp in self._spec.description.input]
-        model_input_names_set = set(model_input_names)
         for given_input in input_dict.keys():
-            if given_input not in model_input_names_set:
+            if given_input not in self._model_input_names_set:
                 err_msg = "Provided key \"{}\", in the input dict, " \
                           "does not match any of the model input name(s), which are: {}"
-                raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
+                raise KeyError(err_msg.format(given_input, self._model_input_names_set))
+
 
     @staticmethod
     def _update_float16_multiarray_input_to_float32(input_data: dict):
