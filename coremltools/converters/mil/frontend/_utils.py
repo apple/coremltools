@@ -9,9 +9,11 @@ from typing import List, Optional, Union
 
 import numpy as _np
 
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Var, types
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.ops.defs._utils import (
     parse_einsum_equation,
     promote_input_dtypes,
@@ -37,6 +39,36 @@ def value_at(x: Var, idx: int, name=None, before_op=None):
     if before_op is not None:
         args["before_op"] = before_op
     return mb.slice_by_index(**args)
+
+
+def _construct_gather_op(op_type: str, x: Var, indices: Var, axis: Var = None, **kwarg) -> Var:
+    """
+    This utility is a more general gather in the sense that:
+    1. Both mb.gather and mb.gather_nd are handled
+    2. x is allowed to be bool, while mb.gather and mb.gather_nd only allow float or int
+    """
+    assert (
+        op_type in {"gather", "gather_nd"}
+    ), f"This utility only handles gather or gather_nd, but got {op_type}"
+    assert (
+        (op_type == "gather_nd") != (axis is not None)
+    ), "mb.gather_nd should not have input axis"
+
+    if x.dtype == types.bool:
+        # cast bool input to a smallest supported dtype to gather, then cast back gather result
+        work_dtype = "int8" if is_current_opset_version_compatible_with(target.iOS17) else "fp16"
+        working_x = mb.cast(x=x, dtype=work_dtype)
+        if op_type == "gather":
+            gathered_x = mb.gather(x=working_x, indices=indices, axis=axis)
+        else:
+            gathered_x = mb.gather_nd(x=working_x, indices=indices)
+        result = mb.cast(x=gathered_x, dtype="bool", **kwarg)
+    else:
+        if op_type == "gather":
+            result = mb.gather(x=x, indices=indices, axis=axis, **kwarg)
+        else:
+            result = mb.gather_nd(x=x, indices=indices, **kwarg)
+    return result
 
 
 def _reverse_input_einsum_eq(equation: str) -> str:

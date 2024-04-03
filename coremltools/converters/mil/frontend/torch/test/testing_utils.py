@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List, Union
+
 import numpy as np
 import pytest
 import torch
@@ -123,28 +125,32 @@ def convert_to_mlmodel(
     )
 
 
-def generate_input_data(input_size, rand_range=(0, 1), torch_device=torch.device("cpu")):
+def generate_input_data(
+    input_size, rand_range=(0, 1), dtype=np.float32, torch_device=torch.device("cpu")
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     r1, r2 = rand_range
 
-    def random_data(spec):
+    def random_data(spec, dtype=np.float32):
         if isinstance(spec, TensorType):
             spec_shape = spec.shape.shape
             dtype = nptype_from_builtin(spec.dtype)
         else:
             spec_shape = spec
-            dtype = np.float32
 
         static_shape = tuple([np.random.randint(dim.lower_bound, dim.upper_bound if dim.upper_bound > 0 else 10)
                               if isinstance(dim, RangeDim) else dim for dim in spec_shape])
 
-        data = np.random.rand(*static_shape) if static_shape != () else np.random.rand()
-        data = (r1 - r2) * data + r2
+        if np.issubdtype(dtype, np.floating):
+            data = np.random.rand(*static_shape) if static_shape != () else np.random.rand()
+            data = (r1 - r2) * data + r2
+        else:
+            data = np.random.randint(r1, r2, size=static_shape, dtype=dtype)
         return torch.from_numpy(np.array(data).astype(dtype)).to(torch_device)
 
     if isinstance(input_size, list):
-        return [random_data(size) for size in input_size]
+        return [random_data(size, dtype) for size in input_size]
     else:
-        return random_data(input_size)
+        return random_data(input_size, dtype)
 
 
 def trace_model(model, input_data):
@@ -249,6 +255,7 @@ class TorchBaseTest:
         atol=1e-04,
         rtol=1e-05,
         input_as_shape=True,
+        input_dtype=np.float32,
         backend=("neuralnetwork", "fp32"),
         rand_range=(-1.0, 1.0),
         use_scripting=False,
@@ -272,7 +279,7 @@ class TorchBaseTest:
             validate_minimum_deployment_target(minimum_deployment_target, backend)
 
         if input_as_shape:
-            input_data = generate_input_data(input_data, rand_range, torch_device)
+            input_data = generate_input_data(input_data, rand_range, input_dtype, torch_device)
 
         if frontend == TorchFrontend.TORCHSCRIPT:
             model.eval()
