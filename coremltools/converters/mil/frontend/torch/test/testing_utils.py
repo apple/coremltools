@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List, Union
+
 import numpy as np
 import pytest
 import torch
@@ -125,7 +127,7 @@ def convert_to_mlmodel(
 
 def generate_input_data(
     input_size, rand_range=(0, 1), dtype=np.float32, torch_device=torch.device("cpu")
-) -> torch.Tensor:
+) -> Union[torch.Tensor, List[torch.Tensor]]:
     r1, r2 = rand_range
 
     def random_data(spec, dtype=np.float32):

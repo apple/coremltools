@@ -6148,7 +6148,7 @@ class TestTo(TorchBaseTest):
 
         inputs = [TensorType(name="input_data", shape=(1, 2, 3), dtype=np.int32)]
         self.run_compare_torch(
-            inputs, TestModel(), backend=backend, compute_unit=compute_unit
+            inputs, TestModel(), rand_range=(0, 127), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
