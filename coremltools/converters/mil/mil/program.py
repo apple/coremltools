@@ -243,7 +243,7 @@ class Program:
             {"Type": "Program"},
             {"Type": "Function", "Name": "main"},
             {"Type": "Block"},
-            {"Type": "Operation", "Operation_Type": "add", "Output": "z"}
+            {"Type": "Operation", "Operator": "add", "Output": "z"}
           ]
         }
         where `1`, `"main"`, `"add"`, and `"z"` are example values of
@@ -269,7 +269,7 @@ class Program:
                         {"Type": "Block"},
                         {
                             "Type": "Operation",
-                            "Operation_Type": operation.op_type,
+                            "Operator": operation.op_type,
                             "Output": operation.outputs[0].name,
                         },
                     ]

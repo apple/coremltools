@@ -70,7 +70,7 @@ class TestExecutorchExampleModels(TorchBaseTest):
             {"Type": "Program"},
             {"Type": "Function", "Name": "main"},
             {"Type": "Block"},
-            {"Type": "Operation", "Operation_Type": "mul", "Output": mul.outputs[0].name},
+            {"Type": "Operation", "Operator": "mul", "Output": mul.outputs[0].name},
         ]
         for index_const_cast in indices_const + indices_cast:
             assert ops[index_const_cast][:-1] == [
@@ -79,9 +79,9 @@ class TestExecutorchExampleModels(TorchBaseTest):
                 {"Type": "Block"},
             ]
         for index_const in indices_const:
-            assert ops[index_const][-1]["Operation_Type"] == "const"
+            assert ops[index_const][-1]["Operator"] == "const"
         for index_cast in indices_cast:
-            assert ops[index_cast][-1]["Operation_Type"] == "cast"
+            assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_linear(self, compute_unit, backend):
@@ -129,7 +129,7 @@ class TestExecutorchExampleModels(TorchBaseTest):
             {"Type": "Program"},
             {"Type": "Function", "Name": "main"},
             {"Type": "Block"},
-            {"Type": "Operation", "Operation_Type": "linear", "Output": linear.outputs[0].name},
+            {"Type": "Operation", "Operator": "linear", "Output": linear.outputs[0].name},
         ]
         for index_const_cast in indices_const + indices_cast:
             assert ops[index_const_cast][:-1] == [
@@ -138,9 +138,9 @@ class TestExecutorchExampleModels(TorchBaseTest):
                 {"Type": "Block"},
             ]
         for index_const in indices_const:
-            assert ops[index_const][-1]["Operation_Type"] == "const"
+            assert ops[index_const][-1]["Operator"] == "const"
         for index_cast in indices_cast:
-            assert ops[index_cast][-1]["Operation_Type"] == "cast"
+            assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_add(self, compute_unit, backend):
@@ -196,7 +196,7 @@ class TestExecutorchExampleModels(TorchBaseTest):
                 {"Type": "Program"},
                 {"Type": "Function", "Name": "main"},
                 {"Type": "Block"},
-                {"Type": "Operation", "Operation_Type": "add", "Output": add.outputs[0].name},
+                {"Type": "Operation", "Operator": "add", "Output": add.outputs[0].name},
             ]
             for index_const_cast in indices_const + indices_cast:
                 assert ops[index_const_cast][:-1] == [
@@ -205,9 +205,9 @@ class TestExecutorchExampleModels(TorchBaseTest):
                     {"Type": "Block"},
                 ]
             for index_const in indices_const:
-                assert ops[index_const][-1]["Operation_Type"] == "const"
+                assert ops[index_const][-1]["Operator"] == "const"
             for index_cast in indices_cast:
-                assert ops[index_cast][-1]["Operation_Type"] == "cast"
+                assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_add_mul(self, compute_unit, backend):
@@ -263,7 +263,7 @@ class TestExecutorchExampleModels(TorchBaseTest):
                 {"Type": "Block"},
                 {
                     "Type": "Operation",
-                    "Operation_Type": op_type,
+                    "Operator": op_type,
                     "Output": matmul_or_add[op_type].outputs[0].name,
                 },
             ]
@@ -274,9 +274,9 @@ class TestExecutorchExampleModels(TorchBaseTest):
                     {"Type": "Block"},
                 ]
             for index_const in indices_const[op_type]:
-                assert ops[op_type][index_const][-1]["Operation_Type"] == "const"
+                assert ops[op_type][index_const][-1]["Operator"] == "const"
             for index_cast in indices_cast[op_type]:
-                assert ops[op_type][index_cast][-1]["Operation_Type"] == "cast"
+                assert ops[op_type][index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_softmax(self, compute_unit, backend):
@@ -324,7 +324,7 @@ class TestExecutorchExampleModels(TorchBaseTest):
             {"Type": "Program"},
             {"Type": "Function", "Name": "main"},
             {"Type": "Block"},
-            {"Type": "Operation", "Operation_Type": "softmax", "Output": softmax.outputs[0].name},
+            {"Type": "Operation", "Operator": "softmax", "Output": softmax.outputs[0].name},
         ]
         for index_const_cast in indices_const + indices_cast:
             assert ops[index_const_cast][:-1] == [
@@ -333,9 +333,9 @@ class TestExecutorchExampleModels(TorchBaseTest):
                 {"Type": "Block"},
             ]
         for index_const in indices_const:
-            assert ops[index_const][-1]["Operation_Type"] == "const"
+            assert ops[index_const][-1]["Operator"] == "const"
         for index_cast in indices_cast:
-            assert ops[index_cast][-1]["Operation_Type"] == "cast"
+            assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.xfail(reason="numerical error")
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
