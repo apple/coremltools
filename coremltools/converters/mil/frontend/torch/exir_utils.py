@@ -4,30 +4,90 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
-from typing import List
+from typing import Dict, List, Tuple
 
-from torch import Tensor
+import torch
 
 import coremltools as ct
 
 from .torchscript_utils import torch_to_mil_types
 
 
-def to_coreml_tensor_type(name: str, tensor: Tensor) -> "ct.TensorType":
+def to_coreml_tensor_type(name: str, tensor: torch.Tensor) -> "ct.TensorType":
     # TODO: rdar://115845948 ([Executorch] Handle inputs of shapes with dynamic dimensions)
     return ct.TensorType(name=name, dtype=torch_to_mil_types[tensor.dtype], shape=tensor.shape)
 
 
-def extract_inputs_from_exir_program(exported_program) -> List["ct.TensorType"]:
-    module = exported_program.graph_module
-    inputs_to_parameters = exported_program.graph_signature.inputs_to_parameters
-    inputs_to_buffers = exported_program.graph_signature.inputs_to_buffers
-    inputs = []
-    for node in module.graph.nodes:
-        if node.op == "placeholder" and node.meta is not None and "val" in node.meta:
-            if isinstance(node.meta["val"], Tensor):
-                if node.name not in inputs_to_parameters and node.name not in inputs_to_buffers:
-                    inputs.append(to_coreml_tensor_type(node.name, node.meta["val"]))
-            else:
-                raise NotImplementedError("Only Tensor inputs handled yet")
-    return inputs
+def extract_inputs_from_exir_program(
+    exported_program
+) -> Tuple[
+    List["ct.TensorType"],
+    Dict[str, torch.Tensor],
+    Dict[str, torch.Tensor],
+    Dict[str, torch.Tensor],
+]:
+    """
+    Extract "input"s from torch.export.ExportedProgram
+
+    EXIR lifts constants also as inputs to easily delegate to different backends,
+    so the extracted "input"s consist of both user input and constants
+
+    EXIR has 3 types of constants:
+    1. parameters (e.g. weight of torch.nn.Linear)
+    2. buffers
+    3. constants (e.g. torch.tensor([0]) inside a torch.nn.Module)
+    """
+    # prepare necessary info as convenient dicts
+    # placeholder nodes
+    placeholder_nodes = {}
+    for node in exported_program.graph_module.graph.nodes:
+        if node.op == "placeholder":
+            placeholder_nodes[node.name] = node
+    # parameters
+    parameters = {}
+    for name, parameter in zip(
+        exported_program.graph_signature.parameters, exported_program.parameters()
+    ):
+        if not isinstance(parameter, torch.Tensor):
+            raise NotImplementedError(
+                f"Only torch.Tensor parameter handled yet, but got {type(parameter)}"
+            )
+        parameters[name] = parameter
+    # buffers
+    buffers = {}
+    for name, buffer in zip(
+        exported_program.graph_signature.buffers, exported_program.buffers()
+    ):
+        if not isinstance(buffer, torch.Tensor):
+            raise NotImplementedError(
+                f"Only torch.Tensor buffer handled yet, but got {type(buffer)}"
+            )
+        buffers[name] = buffer
+
+    # loop over input specs and populate output info
+    user_inputs = []
+    lifted_parameters = {}
+    lifted_buffers = {}
+    lifted_constants = {}
+    for input_spec in exported_program.graph_signature.input_specs:
+        if input_spec.kind == torch.export.graph_signature.InputKind.USER_INPUT:
+            node = placeholder_nodes[input_spec.arg.name]
+            assert (
+                node.meta is not None and "val" in node.meta
+            ), "placeholder torch.fx.Node must have metadata val"
+            val = node.meta["val"]
+            assert isinstance(val, torch.Tensor), "placeholder val must be a tensor or fake tensor"
+            user_inputs.append(to_coreml_tensor_type(node.name, val))
+        elif input_spec.kind == torch.export.graph_signature.InputKind.PARAMETER:
+            lifted_parameters[input_spec.arg.name] = parameters[input_spec.target]
+        elif input_spec.kind == torch.export.graph_signature.InputKind.BUFFER:
+            lifted_buffers[input_spec.arg.name] = buffers[input_spec.target]
+        elif input_spec.kind == torch.export.graph_signature.InputKind.CONSTANT_TENSOR:
+            lifted_constants[input_spec.arg.name] = exported_program.constants[input_spec.target]
+        else:
+            raise NotImplementedError(
+                "Only 4 types of inputs handled yet: user input, parameter, buffer, constant. "
+                f"But got {input_spec.kind}"
+            )
+
+    return user_inputs, lifted_parameters, lifted_buffers, lifted_constants
