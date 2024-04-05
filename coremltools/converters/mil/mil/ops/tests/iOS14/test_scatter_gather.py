@@ -122,6 +122,7 @@ class TestScatter:
             backend=backend,
         )
 
+
 class TestScatterAlongAxis:
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -346,6 +347,7 @@ class TestScatterNd:
             backend=backend,
         )
 
+
 class TestGather:
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -513,6 +515,7 @@ class TestGather:
             assert gather_3.sym_val.tolist() == [3, s1, s2]
 
             return x
+
 
 class TestGatherAlongAxis:
     @pytest.mark.parametrize(
