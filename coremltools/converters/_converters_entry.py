@@ -979,7 +979,7 @@ def _determine_target(convert_to, minimum_deployment_target) -> str:
     if minimum_deployment_target is None and convert_to is None:
         logger.warning(
             "When both 'convert_to' and 'minimum_deployment_target' not specified, "
-            "'convert_to' is set to \"mlprogram\" and 'minimum_deployment_targer' is set to "
+            "'convert_to' is set to \"mlprogram\" and 'minimum_deployment_target' is set to "
             "ct.target.iOS15 (which is same as ct.target.macOS12). "
             "Note: the model will not run on systems older than iOS15/macOS12/watchOS8/tvOS15. "
             "In order to make your model run on older system, please set the 'minimum_deployment_target' to iOS14/iOS13. "
