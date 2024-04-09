@@ -3808,8 +3808,7 @@ def select_scatter(context, node):
 @register_torch_op
 def slice_scatter(context, node):
     inputs = _get_inputs(context, node, min_expected=2)
-    x = inputs[0]
-    updates = inputs[1]
+    x, updates = promote_input_dtypes(inputs[0:2])
     dim = 0 if len(inputs) <= 2 else inputs[2].val
     start = 0 if len(inputs) <= 3 else inputs[3]
     end = x.shape[dim] if len(inputs) <= 4 else mb.minimum(x=inputs[4], y=x.shape[dim])
