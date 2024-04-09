@@ -30,12 +30,20 @@ def extract_inputs_from_exir_program(
     Extract "input"s from torch.export.ExportedProgram
 
     EXIR lifts constants also as inputs to easily delegate to different backends,
-    so the extracted "input"s consist of both user input and constants
+    so the extracted "input"s consist of both user inputs and constants
 
     EXIR has 3 types of constants:
     1. parameters (e.g. weight of torch.nn.Linear)
     2. buffers
     3. constants (e.g. torch.tensor([0]) inside a torch.nn.Module)
+
+    Given:
+        exported_program: torch.export.ExportedProgram
+    Return:
+        user_inputs: list of coremltools input tensor specifications
+        lifted_parameters: dictionary mapping names to torch parameter tensors
+        lifted_buffers: dictionary mapping names to torch buffer tensors
+        lifted_constants: dictionary mapping names to torch constant tensors
     """
     # prepare placeholder nodes into a convenient dict
     placeholder_nodes = {}
