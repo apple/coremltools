@@ -512,9 +512,9 @@ class scatter_nd(Operation):
     ----------
     data: tensor<\*D, T> (Required)
     indices: tensor<\*E, i32> (Required)
-        * E[-1] <= len(D)
-    updates: tensor<\*E, T> (Required)
-        * Must be the shape as ``E[:-1] + data.shape[E[-1]:]``.
+        * indices.shape[-1] <= data.rank
+    updates: tensor<\*F, T> (Required)
+        * Must be the shape as ``indices.shape[:-1] + data.shape[indices.shape[-1]:]``.
     mode: const string (Optional)
         * Default to ``add``.
         * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,
