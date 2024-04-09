@@ -3782,12 +3782,7 @@ def select_scatter(context, node):
     begin[dim] = index
     begin = mb.concat(values=begin, axis=0)
     end = x.shape
-    stride = [1] * x.rank
-
-    begin_mask = [True] * x.rank
-    if index.val not in (0, -x.rank):
-        begin_mask[dim] = False
-    end_mask = [True] * x.rank
+    # and squeeze dim to do pure indexing on it
     squeeze_mask = [False] * x.rank
     squeeze_mask[dim] = True
 
@@ -3796,9 +3791,9 @@ def select_scatter(context, node):
         updates=updates,
         begin=begin,
         end=end,
-        stride=stride,
-        begin_mask=begin_mask,
-        end_mask=end_mask,
+        stride=None,
+        begin_mask=None,
+        end_mask=None,
         squeeze_mask=squeeze_mask,
         name=node.name,
     )
@@ -3810,6 +3805,8 @@ def slice_scatter(context, node):
     inputs = _get_inputs(context, node, min_expected=2)
     x, updates = promote_input_dtypes(inputs[0:2])
     dim = 0 if len(inputs) <= 2 else inputs[2].val
+    if dim is None:
+        raise ValueError("Only compile time known dim supported yet")
     start = 0 if len(inputs) <= 3 else inputs[3]
     end = x.shape[dim] if len(inputs) <= 4 else mb.minimum(x=inputs[4], y=x.shape[dim])
     step = 1 if len(inputs) <= 5 else inputs[5]
@@ -3829,24 +3826,15 @@ def slice_scatter(context, node):
     steps[dim] = step
     steps = mb.concat(values=steps, axis=0)
 
-    # mb.torch_tensor_assign also have masks
-    begin_mask = [True] * x.rank
-    if start.val not in (0, -x.rank):
-        begin_mask[dim] = False
-    end_mask = [True] * x.rank
-    if end.val is None or end.val < x.shape[dim]:
-        end_mask[dim] = False
-    squeeze_mask = [False] * x.rank
-
     updated_x = _translate_torch_tensor_assign(
         x=x,
         updates=updates,
         begin=starts,
         end=ends,
         stride=steps,
-        begin_mask=begin_mask,
-        end_mask=end_mask,
-        squeeze_mask=squeeze_mask,
+        begin_mask=None,
+        end_mask=None,
+        squeeze_mask=None,
         name=node.name,
     )
     context.add(updated_x)
