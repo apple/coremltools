@@ -19,7 +19,7 @@ def to_coreml_tensor_type(name: str, tensor: torch.Tensor) -> "ct.TensorType":
 
 
 def extract_inputs_from_exir_program(
-    exported_program
+    exported_program  # torch.export.ExportedProgram
 ) -> Tuple[
     List["ct.TensorType"],
     Dict[str, torch.Tensor],
@@ -37,13 +37,13 @@ def extract_inputs_from_exir_program(
     2. buffers
     3. constants (e.g. torch.tensor([0]) inside a torch.nn.Module)
     """
-    # prepare necessary info as convenient dicts
-    # placeholder nodes
+    # prepare placeholder nodes into a convenient dict
     placeholder_nodes = {}
     for node in exported_program.graph_module.graph.nodes:
         if node.op == "placeholder":
             placeholder_nodes[node.name] = node
-    # parameters
+
+    # prepare parameters into a convenient dict
     parameters = {}
     for name, parameter in zip(
         exported_program.graph_signature.parameters, exported_program.parameters()
@@ -53,7 +53,8 @@ def extract_inputs_from_exir_program(
                 f"Only torch.Tensor parameter handled yet, but got {type(parameter)}"
             )
         parameters[name] = parameter
-    # buffers
+
+    # prepare buffers into a convenient dict
     buffers = {}
     for name, buffer in zip(
         exported_program.graph_signature.buffers, exported_program.buffers()
@@ -64,7 +65,7 @@ def extract_inputs_from_exir_program(
             )
         buffers[name] = buffer
 
-    # loop over input specs and populate output info
+    # loop over input specs and populate results
     user_inputs = []
     lifted_parameters = {}
     lifted_buffers = {}
