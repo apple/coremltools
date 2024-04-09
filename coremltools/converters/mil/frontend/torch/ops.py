@@ -1678,7 +1678,9 @@ def view(context, node):
 
     if np.prod(shape.shape) == 0:
         # Reshape to empty shape (works only for scalar) is a no op
-        assert np.prod(x.shape) <= 1, "Reshape to empty shape works only for scalar"
+        assert (
+            np.prod(x.shape) <= 1
+        ), "Reshape to empty shape works only for scalar and single-element tensor"
         context.add(mb.identity(x=x, name=node.name))
         return
 
@@ -3770,6 +3772,8 @@ def select_scatter(context, node):
     x = inputs[0]
     updates = inputs[1]
     dim = inputs[2].val
+    if dim is None:
+        raise ValueError("Only compile time known dim supported yet")
     index = inputs[3]
 
     # mb.torch_tensor_assign handles multi-dim slicing
@@ -3860,32 +3864,33 @@ def index_put(context, node):
 
     assert isinstance(indices, list), "indices must be a list of tensors"
     # Usually indices is a list of non-None tensors, so we stack them and feed to mb.scatter_nd
-    # However, when there exists a whole slice, that index is represented as None
-    exist_slice = False
-    for index in indices:
-        if index is None:
-            exist_slice = True
-            break
-    if exist_slice:
+    # However, when there exists a whole slice (i.e. :), that index is represented as None
+    if any(map(lambda index: index is None, indices)):
         # We have 2 ways to translate such torch.index_put, both have pros and cons
         # 1. mb.scatter_nd
         #    * pro: can handle accumulate or update
-        #    * con: can only have whole slice at the endmost dimensions
+        #    * con: can only have whole slice at last dimensions
         # 2. mb.torch_tensor_assign
         #    * pro: can have whole slice at arbitrary dimension
         #    * con: can only handle update
         # Here we use mb.torch_tensor_assign
         # TODO: explore how can we cover as many torch.index_put cases as possible
         if accumulate:
-            raise NotImplementedError("If there exists whole slices, only update mode handled yet")
+            raise NotImplementedError(
+                "If there existed any whole slice (e.g. : in x[:, 0]), "
+                "only torch.index_put(..., accumulate=False) handled yet"
+            )
 
         begin = [0] * x.rank
         end = list(x.shape)
         stride = [1] * x.rank
         begin_mask = [True] * x.rank
         end_mask = [True] * x.rank
-        # note: in torch slice, an indexed dim becomes size 1, rather than squeezed
-        is_dim_size1 = [False] * x.rank
+        # note: in torch slice, an indexed dim becomes size 1, rather than squeezed, e.g.
+        #     x = torch.zeros((2, 3))
+        #     y = x[:, 1]
+        # we will get y.shape as (2, 1)
+        is_dim_unity = [False] * x.rank
         for dim, index in enumerate(indices):
             if index is not None:
                 if len(index.shape) > 0:
@@ -3894,13 +3899,13 @@ def index_put(context, node):
                 end[dim] = mb.add(x=index, y=1)
                 begin_mask[dim] = False
                 end_mask[dim] = False
-                is_dim_size1[dim] = True
+                is_dim_unity[dim] = True
         begin = mb.concat(values=begin, axis=0)
         end = mb.concat(values=end, axis=0)
 
         expected_values_shape = []
         for dim in range(x.rank):
-            expected_values_shape.append(1 if is_dim_size1[dim] else x.shape[dim])
+            expected_values_shape.append(1 if is_dim_unity[dim] else x.shape[dim])
         expected_values_shape = tuple(expected_values_shape)
 
         if values.shape != expected_values_shape:
@@ -3931,9 +3936,9 @@ def index_put(context, node):
         indices = mb.cast(x=indices, dtype="int32")
         indices = mb.non_zero(x=indices)
         # values
-        if len(values.shape) == 0:
+        if values.shape == ():
             values = mb.expand_dims(x=values, axes=[0])
-        if np.prod(values.shape) <= 1:
+        if values.rank == 1 and values.shape[0] == 1:
             reps = value_at(mb.shape(x=indices), 0)
             reps = mb.expand_dims(x=reps, axes=[0])
             values = mb.tile(x=values, reps=reps)
@@ -5755,9 +5760,13 @@ def std(context, node):
 @register_torch_op
 def copy(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
-    if context.frontend == TorchFrontend.TORCHSCRIPT:
-        result = mb.identity(x=inputs[0], name=node.name)
-    elif context.frontend == TorchFrontend.EXIR:
+    assert (
+        context.frontend != TorchFrontend.TORCHSCRIPT
+    ), (
+        "In torch script frontend, by graph pass `generate_tensor_assignment_ops`, "
+        "`torch.copy_` should have been replaced with `_internal_op_tensor_inplace_copy`"
+    )
+    if context.frontend == TorchFrontend.EXIR:
         src = inputs[1]
         if inputs[0].shape != src.shape:
             _, src = _broadcast_tensors(inputs[: 2])
