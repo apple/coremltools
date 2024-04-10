@@ -486,26 +486,35 @@ class scatter_nd(Operation):
     Scatter ``updates`` to ``data`` at locations ``indices``.
 
     The ``indices`` is a K-dim tensor, where ``indices[i_0,...,i_{K-2}]`` defines a
-    slice of ``data``, ``K = rank(indices)``, and ``data[indices[i_0, ..., i_{K-2}]]``
-    has rank ``rank(data) - indices.shape[-1]``.
+    slice of ``data``, ``K = rank(indices)``, and ``data[i_0, ..., i_{K-2}]``
+    has rank ``rank(data) - indices.shape[-1]``. Concretely, this means the index is
+    stored in the last dim of ``indices``, e.g. take a ``K == 2`` example
+
+    .. math::
+       indices = [[0, 1],
+                  [0, 2]]
+
+    where ``indices[0]`` / ``[0, 1]`` and ``indices[1]`` / ``[0, 2]`` are
+    two indices that get applied to ``data``
 
     * Example: ``mode == update``: The ``output`` is set to ``data`` initially, and
       the op updates ``output`` as follows:
 
     .. math::
-       output[indices[i_0, ..., i_{K-2}]]= updates[indices[i_0, ..., i_{K-2}]]
+       output[indices[i_0, ..., i_{K-2}]]= updates[i_0, ..., i_{K-2}]
 
     * Example: ``mode == add``. The update rule is:
 
     .. math::
-       output[indices[i_0, ..., i_{K-2}]] += updates[indices[i_0, ..., i_{K-2}]]
+       output[indices[i_0, ..., i_{K-2}]] += updates[i_0, ..., i_{K-2}]
 
     Parameters
     ----------
     data: tensor<\*D, T> (Required)
-    indices: tensor<\*K, i32> (Required)
-    updates: tensor<\*K, T> (Required)
-        * Must be the shape as ``K[:-1]+data.shape[K[-1]:]``.
+    indices: tensor<\*E, i32> (Required)
+        * indices.shape[-1] <= data.rank
+    updates: tensor<\*F, T> (Required)
+        * Must be the shape as ``indices.shape[:-1] + data.shape[indices.shape[-1]:]``.
     mode: const string (Optional)
         * Default to ``add``.
         * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,
