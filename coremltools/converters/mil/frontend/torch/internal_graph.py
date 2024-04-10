@@ -388,6 +388,7 @@ class InternalTorchIRNode:
             scope_names = _trim_scopename_for_weight(scope_names)
         return scope_names, scope_types
 
+
 class InternalTorchIRGraph:
     """
     Core ML internal representation of a torch IR graph. A torch._C.Graph
@@ -518,58 +519,22 @@ class InternalTorchIRGraph:
 
     @classmethod
     def from_exir(cls, exir):
-        # exir: torch.export.ExportedProgram
-        exported_program = exir
-
-        nodes = []
-        params = {}
-        outputs = []
-        inputs = OrderedDict(
-            [
-                (i.name, i)
-                for i in extract_inputs_from_exir_program(exported_program=exported_program)
-            ]
+        exported_program: torch.export.ExportedProgram = exir
+        user_inputs, lifted_parameters, lifted_buffers, lifted_constants = (
+            extract_inputs_from_exir_program(exported_program)
         )
 
-        inputs_to_parameters = exported_program.graph_signature.inputs_to_parameters
-        inputs_to_buffers = exported_program.graph_signature.inputs_to_buffers
+        params = {**lifted_parameters, **lifted_buffers, **lifted_constants}
+        inputs = OrderedDict([(i.name, i) for i in user_inputs])
 
-        inputs_to_consts = {**inputs_to_parameters, **inputs_to_buffers}
-        consts_to_inputs = {
-            v: k if not k.startswith("%") else k[1:] for k, v in inputs_to_consts.items()
-        }
-
-        # Add params
-        for name, param in exported_program.state_dict.items():
-            if not isinstance(param, torch.Tensor):
-                raise NotImplementedError(
-                    f"For ExecuTorch paramter, only support torch.Tensor, but got {type(param)}"
-                )
-            params[name if name not in consts_to_inputs else consts_to_inputs[name]] = param
-        # Non-persistent buffers may be missing from state_dict, but we still need their values
-        # Reference: https://github.com/pytorch/executorch/pull/1802
-        for name, buffer in zip(exported_program.graph_signature.buffers, exported_program.buffers()):
-            if not isinstance(buffer, torch.Tensor):
-                raise NotImplementedError(
-                    f"For ExecuTorch buffer, only support torch.Tensor, but got {type(buffer)}"
-                )
-            params_name = consts_to_inputs[name]
-            if params_name in params:
-                assert torch.equal(params[params_name], buffer)
-            else:
-                params[params_name] = buffer
-
-        graph_module = exported_program.graph_module
-        graph = graph_module.graph
-
+        nodes = []
         outputs = []
-        for node in graph.nodes:
-            node: torch.fx.Node
+        for node in exported_program.graph_module.graph.nodes:
             if node.op == "call_function":
                 nodes.append(InternalTorchIRNode.from_exir_node(node=node))
             elif node.op == "get_attr":
                 name = node.target
-                attr = graph_module.__getattr__(name)
+                attr = exported_program.graph_module.__getattr__(name)
                 # Only handle simple tensor attribute for now
                 # There may be unconvertible advanced attributes,
                 # e.g. higher-level callables such as "call_delegate"

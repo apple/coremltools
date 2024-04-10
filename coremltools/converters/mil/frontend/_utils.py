@@ -41,7 +41,9 @@ def value_at(x: Var, idx: int, name=None, before_op=None):
     return mb.slice_by_index(**args)
 
 
-def _construct_gather_op(op_type: str, x: Var, indices: Var, axis: Var = None, **kwarg) -> Var:
+def _construct_gather_op(
+    op_type: str, x: Var, indices: Var, axis: Var = None, name: str = None
+) -> Var:
     """
     This utility is a more general gather in the sense that:
     1. Both mb.gather and mb.gather_nd are handled
@@ -50,24 +52,33 @@ def _construct_gather_op(op_type: str, x: Var, indices: Var, axis: Var = None, *
     assert (
         op_type in {"gather", "gather_nd"}
     ), f"This utility only handles gather or gather_nd, but got {op_type}"
-    assert (
-        (op_type == "gather_nd") != (axis is not None)
-    ), "mb.gather_nd should not have input axis"
+    if op_type == "gather_nd":
+        assert axis is None, "mb.gather_nd should not have input axis"
 
-    if x.dtype == types.bool:
-        # cast bool input to a smallest supported dtype to gather, then cast back gather result
-        work_dtype = "int8" if is_current_opset_version_compatible_with(target.iOS17) else "fp16"
-        working_x = mb.cast(x=x, dtype=work_dtype)
-        if op_type == "gather":
-            gathered_x = mb.gather(x=working_x, indices=indices, axis=axis)
-        else:
-            gathered_x = mb.gather_nd(x=working_x, indices=indices)
-        result = mb.cast(x=gathered_x, dtype="bool", **kwarg)
+    # if is gathering bool:
+    #     cast bool input to a smallest supported dtype to gather, then cast back gather result
+    #     the back cast carries the specified name
+    # else:
+    #     usual gather, and gather carries the specified name
+    is_gathering_bool = x.dtype == types.bool
+    if is_gathering_bool:
+        gather_name_kwarg = {}
+        cast_name_kwarg = {} if name is None else {"name": name}
     else:
-        if op_type == "gather":
-            result = mb.gather(x=x, indices=indices, axis=axis, **kwarg)
-        else:
-            result = mb.gather_nd(x=x, indices=indices, **kwarg)
+        gather_name_kwarg = {} if name is None else {"name": name}
+
+    if is_gathering_bool:
+        work_dtype = "int8" if is_current_opset_version_compatible_with(target.iOS17) else "fp16"
+        x = mb.cast(x=x, dtype=work_dtype)
+
+    if op_type == "gather":
+        result = mb.gather(x=x, indices=indices, axis=axis, **gather_name_kwarg)
+    else:
+        result = mb.gather_nd(x=x, indices=indices, **gather_name_kwarg)
+
+    if is_gathering_bool:
+        result = mb.cast(x=result, dtype="bool", **cast_name_kwarg)
+
     return result
 
 
