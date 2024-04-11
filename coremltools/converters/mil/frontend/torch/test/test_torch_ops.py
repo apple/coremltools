@@ -5740,6 +5740,45 @@ class TestElementWiseUnary(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_clamp_min_int(self, compute_unit, backend):
+        params_dict = {"min": 0}
+        input_data = torch.randint(low=-5, high=5, size=(2, 3, 4))
+        model = ModuleWrapper(torch.clamp_min, params_dict)
+        self.run_compare_torch(
+            input_data,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            converter_input_type=[TensorType(shape=input_data.shape, dtype=np.int32)],
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_clamp_min_float(self, compute_unit, backend):
+        params_dict = {"min": 0.0}
+        input_data = torch.randn((2, 3, 4))
+        model = ModuleWrapper(torch.clamp_min, params_dict)
+        self.run_compare_torch(
+            input_data,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, shape, threshold, minimum_deployment_target",
         itertools.product(
             compute_units,
