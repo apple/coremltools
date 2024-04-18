@@ -2894,10 +2894,11 @@ class TestAdaptiveAvgPool(TorchBaseTest):
 
 class TestMaxPool(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, kernel_size, stride, padding, ceil_mode",
+        "compute_unit, backend, frontend, input_shape, kernel_size, stride, padding, ceil_mode",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [(1, 3, 15), (1, 1, 7)],
             [1, 3],
             [1, 2],
@@ -2909,6 +2910,7 @@ class TestMaxPool(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        frontend,
         input_shape,
         kernel_size,
         stride,
@@ -2932,14 +2934,15 @@ class TestMaxPool(TorchBaseTest):
             ceil_mode=ceil_mode,
         )
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, kernel_size, stride, padding, ceil_mode",
+        "compute_unit, backend, frontend, input_shape, kernel_size, stride, padding, ceil_mode",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [(1, 3, 15, 15), (1, 1, 7, 7)],
             [1, 3],
             [1, 2],
@@ -2951,6 +2954,7 @@ class TestMaxPool(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        frontend,
         input_shape,
         kernel_size,
         stride,
@@ -2975,14 +2979,15 @@ class TestMaxPool(TorchBaseTest):
             ceil_mode=ceil_mode,
         )
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, kernel_size, stride, padding, ceil_mode",
+        "compute_unit, backend, frontend, input_shape, kernel_size, stride, padding, ceil_mode",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [(1, 3, 11, 3, 11), (1, 1, 7, 4, 7)],
             [1, 3],
             [1, 2],
@@ -2994,12 +2999,16 @@ class TestMaxPool(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        frontend,
         input_shape,
         kernel_size,
         stride,
         padding,
         ceil_mode,
     ):
+        if frontend == TorchFrontend.EXIR:
+            pytest.xfail("TODO (rdar://115846125): handle multi-output op max_pool3d_with_indices")
+
         if padding > kernel_size / 2:
             return
         if ceil_mode > 0 and padding == 0 and kernel_size == 1 and stride == 2:
@@ -3018,16 +3027,17 @@ class TestMaxPool(TorchBaseTest):
             ceil_mode=ceil_mode,
         )
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestMaximumMinimum(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shapes, mode",
+        "compute_unit, backend, frontend, input_shapes, mode",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(2, 5, 7, 3), (2, 5, 7, 3)],
                 [(3, 2, 9), (3, 2, 9)],
@@ -3038,7 +3048,7 @@ class TestMaximumMinimum(TorchBaseTest):
             ["minimum", "maximum"],
         ),
     )
-    def test_minimum_maximum(self, compute_unit, backend, input_shapes, mode):
+    def test_minimum_maximum(self, compute_unit, backend, frontend, input_shapes, mode):
         class TestModel(torch.nn.Module):
             def forward(self, x, y):
                 if mode == "minimum":
@@ -3049,14 +3059,15 @@ class TestMaximumMinimum(TorchBaseTest):
                     raise ValueError("Unsupported mode: {mode}".format(mode=mode))
 
         self.run_compare_torch(
-            input_shapes, TestModel(), backend=backend, compute_unit=compute_unit
+            input_shapes, TestModel(), frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shapes, mode, xdtype, ydtype",
+        "compute_unit, backend, frontend, input_shapes, mode, xdtype, ydtype",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(2, 5, 7, 3), (2, 5, 7, 3)],
                 [(3, 2, 9), (3, 2, 9)],
@@ -3070,7 +3081,7 @@ class TestMaximumMinimum(TorchBaseTest):
         ),
     )
     def test_minimum_maximum_mixed_precision(
-        self, compute_unit, backend, input_shapes, mode, xdtype, ydtype
+        self, compute_unit, backend, frontend, input_shapes, mode, xdtype, ydtype
     ):
         class TestModel(torch.nn.Module):
             def forward(self, x, y):
@@ -3086,11 +3097,13 @@ class TestMaximumMinimum(TorchBaseTest):
         self.run_compare_torch(
             input_shapes,
             TestModel(),
+            frontend=frontend,
             compute_unit=compute_unit,
             backend=backend,
             rtol=1e-6 if xdtype == ydtype and xdtype == torch.float32 else 1e-3,
             atol=1e-6 if xdtype == ydtype and xdtype == torch.float32 else 1e-3,
         )
+
 
 class TestAMaxAMin(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -6312,16 +6325,12 @@ class TestTo(TorchBaseTest):
 
 class TestSlice(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, start, end, step",
+        "compute_unit, backend, frontend, start, end, step",
         itertools.product(
-            compute_units,
-            backends,
-            (0, -5, None),
-            (7, -1, 100, None),
-            (1, 2, None)
+            compute_units, backends, frontends, (0, -5, None), (7, -1, 100, None), (1, 2, None)
         ),
     )
-    def test_slice(self, compute_unit, backend, start, end, step):
+    def test_slice(self, compute_unit, backend, frontend, start, end, step):
         class SliceModel(torch.nn.Module):
             def forward(self, x):
                 y = x[start : end : step]
@@ -6331,18 +6340,25 @@ class TestSlice(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch(
-            (9,), model, backend=backend, compute_unit=compute_unit
+            (9,), model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
-        "compute_unit, backend",
+        "compute_unit, backend, frontend",
         itertools.product(
             compute_units,
             backends,
+            frontends,
         ),
     )
-    def test_dynamic_slice(self, compute_unit, backend):
+    def test_dynamic_slice(self, compute_unit, backend, frontend):
+        if frontend == TorchFrontend.EXIR:
+            pytest.xfail(
+                "https://github.com/apple/coremltools/issues/2189: "
+                "torch.export Cannot Use Dynamic Index to Slice"
+            )
+
         class DynamicSlicer(torch.nn.Module):
             def forward(self, x, context_length):
                 return x[context_length:, :, :]
@@ -6374,7 +6390,12 @@ class TestSlice(TorchBaseTest):
             TensorType(name="context_length", shape=(1,), dtype=np.int32),
         ]
         self.run_compare_torch(
-            inputs, model, rand_range=(0, 8), backend=backend, compute_unit=compute_unit
+            inputs,
+            model,
+            rand_range=(0, 8),
+            frontend=frontend,
+            backend=backend,
+            compute_unit=compute_unit,
         )
 
 
@@ -7306,10 +7327,10 @@ class TestLogicalXor(TorchBaseTest):
 
 class TestWhere(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
-        itertools.product(compute_units, backends, [(2, 6), (3, 4, 5)]),
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, [(2, 6), (3, 4, 5)]),
     )
-    def test_where_test1(self, compute_unit, backend, shape):
+    def test_where_test1(self, compute_unit, backend, frontend, shape):
         class WhereModel(nn.Module):
             def forward(self, x, y):
                 return torch.where(x > 0.5, x, y)
@@ -7317,14 +7338,14 @@ class TestWhere(TorchBaseTest):
         input_shape = [shape, shape]
         model = WhereModel()
         self.run_compare_torch(
-            input_shape, model, backend=backend, compute_unit=compute_unit
+            input_shape, model, frontend=frontend, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
-        itertools.product(compute_units, backends, [(2, 6), (3, 4, 5)]),
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, [(2, 6), (3, 4, 5)]),
     )
-    def test_where_test2(self, compute_unit, backend, shape):
+    def test_where_test2(self, compute_unit, backend, frontend, shape):
         class WhereModel(nn.Module):
             def forward(self, cond, x, y):
                 return torch.where(cond, x, y)
@@ -7336,6 +7357,7 @@ class TestWhere(TorchBaseTest):
         self.run_compare_torch(
             inputs,
             model,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             expected_results=expected_results,
@@ -7343,17 +7365,18 @@ class TestWhere(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes",
+        "compute_unit, backend, frontend, shapes",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(1, 2), (1, 2), (1, 1)],
                 [(1, 2, 3), (1, 1, 1), (1, 1, 3)],
             ],
         ),
     )
-    def test_where_test3(self, compute_unit, backend, shapes):
+    def test_where_test3(self, compute_unit, backend, frontend, shapes):
         class WhereModel(nn.Module):
             def forward(self, cond, x, y):
                 return torch.where(cond, x, y)
@@ -7366,6 +7389,7 @@ class TestWhere(TorchBaseTest):
         self.run_compare_torch(
             inputs,
             model,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             expected_results=expected_results,
@@ -7373,10 +7397,11 @@ class TestWhere(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shapes, xdtype, ydtype",
+        "compute_unit, backend, frontend, shapes, xdtype, ydtype",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [
                 [(1, 2), (1, 2), (1, 1)],
                 [(1, 2, 3), (1, 2, 1), (1, 1, 3)],
@@ -7385,7 +7410,7 @@ class TestWhere(TorchBaseTest):
             (torch.float16, torch.float32),
         ),
     )
-    def test_where_mixed_precision(self, compute_unit, backend, shapes, xdtype, ydtype):
+    def test_where_mixed_precision(self, compute_unit, backend, frontend, shapes, xdtype, ydtype):
         class WhereModel(nn.Module):
             def forward(self, cond, x, y):
                 a = x.to(xdtype)
@@ -7400,6 +7425,7 @@ class TestWhere(TorchBaseTest):
             inputs,
             WhereModel(),
             compute_unit=compute_unit,
+            frontend=frontend,
             backend=backend,
             input_as_shape=False,
             rtol=1e-6 if xdtype == ydtype and xdtype == torch.float32 else 1e-3,
@@ -7407,10 +7433,16 @@ class TestWhere(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
-        itertools.product(compute_units, backends, COMMON_SHAPES + [(10,)]),
+        "compute_unit, backend, frontend, shape",
+        itertools.product(compute_units, backends, frontends, COMMON_SHAPES + [(10,)]),
     )
-    def test_where_single_param(self, compute_unit, backend, shape):
+    def test_where_single_param(self, compute_unit, backend, frontend, shape):
+        if frontend == TorchFrontend.EXIR:
+            pytest.xfail(
+                "https://github.com/apple/coremltools/issues/2183: "
+                "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
+            )
+
         class WhereModelSingleParam(nn.Module):
             def forward(self, x):
                 return torch.where(x)
@@ -7429,6 +7461,7 @@ class TestWhere(TorchBaseTest):
         self.run_compare_torch(
             x,
             WhereModelSingleParam(),
+            frontend=frontend,
             backend=backend,
             input_as_shape=False,
             compute_unit=compute_unit,
@@ -7953,7 +7986,7 @@ class TestIndexPut(TorchBaseTest):
                 "https://github.com/apple/coremltools/issues/2183: "
                 "Operator torch._ops.aten._assert_async.msg is not Aten Canonical"
             )
-        
+
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, y):
                 y = x + 1
@@ -9392,14 +9425,15 @@ class TestBroadcastTensors(TorchBaseTest):
 
 class TestEmbedding(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_dtype",
+        "compute_unit, backend, frontend, input_dtype",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [np.int32, np.float32],
         ),
     )
-    def test_embedding(self, compute_unit, backend, input_dtype):
+    def test_embedding(self, compute_unit, backend, frontend, input_dtype):
         num_embeddings = 4
         embedding_size = 10
         B = 2
@@ -9426,6 +9460,7 @@ class TestEmbedding(TorchBaseTest):
             model,
             expected_results=expected_results,
             input_as_shape=False,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             converter_input_type=converter_input_type,
@@ -10765,6 +10800,7 @@ class TestTupleIndex(TorchBaseTest):
                                input_as_shape=False, use_scripting=True,
                                backend=backend, compute_unit=compute_unit)
 
+
 class TestScaledDotProductAttention(TorchBaseTest):
     """
     Tests for torch.nn.functional.scaled_dot_product_attention op
@@ -10772,15 +10808,17 @@ class TestScaledDotProductAttention(TorchBaseTest):
     """
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank",
+        "compute_unit, backend, frontend, rank, dynamic",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [2, 3, 4, 5],
+            [True, False],
         ),
     )
     def test_different_input_ranks_no_mask(
-        self, compute_unit, backend, rank, minimum_deployment_target=None
+        self, compute_unit, backend, frontend, rank, dynamic, minimum_deployment_target=None
     ):
         """
         The query/key/value inputs can be any rank 2 or greater.
@@ -10806,26 +10844,52 @@ class TestScaledDotProductAttention(TorchBaseTest):
             },
         )
 
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(
+                    shape=(ct.RangeDim(upper_bound=10, default=batch_size),) + input_shape[1:]
+                )
+                for _ in range(3)
+            ]
+        else:
+            converter_input_type = None
+
         return self.run_compare_torch(
             [input_shape] * 3,
             model,
+            frontend=frontend,
             backend=backend,
+            converter_input_type=converter_input_type,
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
         )[1]
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, seq_lengths, include_heads",
+        "compute_unit, backend, frontend, seq_lengths, include_heads, dynamic",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [(5, 5), (5, 7), (6, 4)],
             [False, True],
+            [True, False],
         ),
     )
     def test_is_causal_flag(
-        self, compute_unit, backend, seq_lengths, include_heads, minimum_deployment_target=None
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        seq_lengths,
+        include_heads,
+        dynamic,
+        minimum_deployment_target=None,
     ):
+        if frontend == TorchFrontend.EXIR:
+            pytest.xfail(
+                "https://github.com/apple/coremltools/issues/2199: placeholder assertion error"
+            )
+
         source_seq_len, target_seq_len = seq_lengths
         query_shape = (2, 2, target_seq_len, 7) if include_heads else (2, target_seq_len, 7)
         key_shape = (2, 2, source_seq_len, 7) if include_heads else (2, source_seq_len, 7)
@@ -10838,10 +10902,23 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 "is_causal": True,
             },
         )
+
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(
+                    shape=(ct.RangeDim(upper_bound=10, default=input_shape[0]),) + input_shape[1:]
+                )
+                for input_shape in [query_shape, key_shape, value_shape]
+            ]
+        else:
+            converter_input_type = None
+
         res = self.run_compare_torch(
             [query_shape, key_shape, value_shape],
             model,
+            frontend=frontend,
             backend=backend,
+            converter_input_type=converter_input_type,
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
         )
@@ -10852,21 +10929,31 @@ class TestScaledDotProductAttention(TorchBaseTest):
         assert len(mil_prog.find_ops(op_type="band_part")) == 0
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, seq_lengths, bool_mask",
+        "compute_unit, backend, frontend, seq_lengths, bool_mask, dynamic",
         itertools.product(
             compute_units,
             backends,
+            frontends,
             [(5, 5), (7, 5)],
+            [False, True],
             [False, True],
         ),
     )
     def test_attn_mask(
-        self, compute_unit, backend, seq_lengths, bool_mask, minimum_deployment_target=None
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        seq_lengths,
+        bool_mask,
+        dynamic,
+        minimum_deployment_target=None,
     ):
-        if bool_mask:
+        if frontend == TorchFrontend.TORCHSCRIPT and bool_mask:
             pytest.xfail(
                 "rdar://110499660 ([CI][Bug] test_attn_mask is occasionally failing when bool_mask = True)"
             )
+
         source_seq_len, target_seq_len = seq_lengths
         query_shape = (2, 3, target_seq_len, 7)
         key_shape = (2, 3, source_seq_len, 7)
@@ -10883,26 +10970,53 @@ class TestScaledDotProductAttention(TorchBaseTest):
             mask = generate_input_data(mask_shape)
 
         model = ModuleWrapper(function=nn.functional.scaled_dot_product_attention)
+
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(
+                    shape=(ct.RangeDim(upper_bound=10, default=input_data.shape[0]),)
+                    + input_data.shape[1:]
+                )
+                for input_data in [query, key, value, mask]
+            ]
+        else:
+            converter_input_type = None
+
         self.run_compare_torch(
             (query, key, value, mask),
             model,
+            frontend=frontend,
             backend=backend,
+            converter_input_type=converter_input_type,
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,
             input_as_shape=False,
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, mask_as_input",
+        "compute_unit, backend, frontend, mask_as_input, dynamic",
         itertools.product(
             compute_units,
             backends,
+            frontends,
+            [True, False],
             [True, False],
         ),
     )
     def test_toy_xformer_with_sdpa(
-        self, compute_unit, backend, mask_as_input, minimum_deployment_target=None
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        mask_as_input,
+        dynamic,
+        minimum_deployment_target=None,
     ):
+        if frontend == TorchFrontend.EXIR and not mask_as_input:
+            pytest.xfail(
+                "https://github.com/apple/coremltools/issues/2199: placeholder assertion error"
+            )
+
         embedding_size = 32
         seq_length = 16
         n_heads = 4
@@ -10985,11 +11099,27 @@ class TestScaledDotProductAttention(TorchBaseTest):
                 return x
 
         model = ToyTransformer()
-        self.run_compare_torch(
+
+        input_shapes = (
             [(batch_size, seq_length, embedding_size), (seq_length, seq_length)]
             if mask_as_input
-            else [(batch_size, seq_length, embedding_size)],
+            else [(batch_size, seq_length, embedding_size)]
+        )
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(
+                    shape=(ct.RangeDim(upper_bound=16, default=input_shape[0]),) + input_shape[1:]
+                )
+                for input_shape in input_shapes
+            ]
+        else:
+            converter_input_type = None
+
+        self.run_compare_torch(
+            input_shapes,
             model,
+            converter_input_type=converter_input_type,
+            frontend=frontend,
             backend=backend,
             compute_unit=compute_unit,
             minimum_deployment_target=minimum_deployment_target,

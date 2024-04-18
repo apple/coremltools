@@ -252,11 +252,15 @@ class Program:
         """
         debug_handle_to_ops_mapping = {}
         for function_name, function in self.functions.items():
+            if ScopeSource.EXIR_DEBUG_HANDLE not in function._essential_scope_sources:
+                raise NotImplementedError(
+                    f"Function ({function_name}) must have EXIR_DEBUG_HANDLE as an essential scope source."
+                )
             for operation in function.operations:
                 # TODO (rdar://115846569): Handle multi-block case from EXIR
                 if len(operation.blocks) > 0:
                     raise NotImplementedError("Multi-block case has not been supported yet")
-                debug_handle = operation.scopes.get(ScopeSource.EXIR_DEBUG_HANDLE)
+                debug_handle = operation.scopes[ScopeSource.EXIR_DEBUG_HANDLE]
                 if debug_handle is None:
                     continue
                 debug_handle = debug_handle[0]

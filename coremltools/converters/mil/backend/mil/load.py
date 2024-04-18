@@ -22,7 +22,9 @@ from coremltools.converters.mil.backend.mil.helper import (
     create_immediate_value,
     create_list_scalarvalue,
     create_scalar_value,
-    types_to_proto,
+    create_valuetype_list,
+    create_valuetype_scalar,
+    create_valuetype_tensor,
     types_to_proto_primitive,
 )
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
@@ -158,7 +160,7 @@ class MILProtoExporter:
             attributes={"name": create_scalar_value(op.name), "val": value},
             outputs=[
                 proto.MIL_pb2.NamedValueType(
-                    name=output_var.name, type=types_to_proto(output_var.sym_type)
+                    name=output_var.name, type=self.types_to_proto(output_var.sym_type)
                 )
             ],
         )
@@ -190,11 +192,57 @@ class MILProtoExporter:
             attributes=attributes,
             outputs=[
                 proto.MIL_pb2.NamedValueType(
-                    name=output_var.name, type=types_to_proto(output_var.sym_type)
+                    name=output_var.name, type=self.types_to_proto(output_var.sym_type)
                 )
                 for output_var in op.outputs
             ],
         )
+
+    def create_valuetype_dict(self, key_type: type, value_type: type) -> proto.MIL_pb2.ValueType:
+        """
+        Return proto.MIL_pb2.ValueType with dict (dictionaryType) set
+        """
+        v_type = proto.MIL_pb2.ValueType()
+        v_type.dictionaryType.keyType.CopyFrom(self.types_to_proto(key_type))
+        v_type.dictionaryType.valueType.CopyFrom(self.types_to_proto(value_type))
+        return v_type
+
+    def types_to_proto(self, valuetype: type) -> proto.MIL_pb2.ValueType:
+        """
+        Return proto.MIL_pb2.ValueType from PyMIL types.
+        """
+        if types.is_tensor(valuetype):
+            primitive = types_to_proto_primitive(valuetype.get_primitive())
+            return create_valuetype_tensor(valuetype.get_shape(), primitive)
+        elif types.is_tuple(valuetype):
+            v_type = proto.MIL_pb2.ValueType()
+            t_type = v_type.tupleType
+            for t in valuetype.T:
+                new_v_type = t_type.types.add()
+                new_v_type.CopyFrom(self.types_to_proto(t))
+            return v_type
+        elif types.is_list(valuetype):
+            elem = valuetype.T[0]
+            length = valuetype.T[1]
+            if types.is_tensor(elem):
+                dtype = types_to_proto_primitive(elem.get_primitive())
+                elem_shape = elem.get_shape()
+            elif types.is_scalar(elem):
+                dtype = types_to_proto_primitive(valuetype)
+                elem_shape = ()
+            elif types.is_str(elem):
+                dtype = types_to_proto_primitive(elem)
+                elem_shape = ()
+            else:
+                raise NotImplementedError(
+                    "Only list of either tensors or scalars supported. "
+                    "Got element of type {}".format(elem.__type_info__())
+                )
+            return create_valuetype_list(length=length, elem_shape=elem_shape, dtype=dtype)
+        elif types.is_dict(valuetype):
+            return self.create_valuetype_dict(valuetype.T[0], valuetype.T[1])
+        else:
+            return create_valuetype_scalar(types_to_proto_primitive(valuetype))
 
     def translate_generic_op(
         self, op: Operation, literal_params: Optional[List[str]] = None
@@ -228,7 +276,7 @@ class MILProtoExporter:
             inputs[param_name] = args
 
         outputs = [
-            proto.MIL_pb2.NamedValueType(name=v.name, type=types_to_proto(v.sym_type))
+            proto.MIL_pb2.NamedValueType(name=v.name, type=self.types_to_proto(v.sym_type))
             for v in op.outputs
         ]
         blocks = None
@@ -311,14 +359,18 @@ class MILProtoExporter:
                 literal_params = ["begins", "ends", "end_masks"]
                 proto_ops.append(self.translate_generic_op(op, literal_params))
             else:
-                proto_ops.append(self.translate_generic_op(op))
+                # A single pymil op might be decomposed into multiple ops
+                ops = self.translate_generic_op(op)
+                if not isinstance(ops, list):
+                    ops = [ops]
+                proto_ops.extend(ops)
 
         inputs = []
         if not isinstance(block, Function):
             # Function is subclass of Block, but function's block has no input,
             # and hence skipping reading the block inputs.
             for var in block.inputs:
-                proto_type = types_to_proto(var.sym_type)
+                proto_type = self.types_to_proto(var.sym_type)
                 inputs.append(proto.MIL_pb2.NamedValueType(name=var.name, type=proto_type))
         output_names = [v.name for v in block.outputs]
         return proto.MIL_pb2.Block(inputs=inputs, outputs=output_names, operations=proto_ops)
@@ -331,7 +383,7 @@ class MILProtoExporter:
 
         inputs = []
         for name, var in function.inputs.items():
-            proto_type = types_to_proto(var.sym_type)
+            proto_type = self.types_to_proto(var.sym_type)
             inputs.append(proto.MIL_pb2.NamedValueType(name=name, type=proto_type))
 
         return proto.MIL_pb2.Function(
@@ -467,6 +519,15 @@ class CoreMLProtoExporter:
         """
         return {}
 
+    @staticmethod
+    def _try_convert_other_input_type(
+        input_var: Var, input_features: List[proto.Model_pb2.FeatureDescription]
+    ) -> bool:
+        """
+        Try to convert an input var with additional type.
+        """
+        return False
+
     def get_func_input(self, func: mil.Function) -> List[proto.Model_pb2.FeatureDescription]:
         """
         Utils to get function input feature description.
@@ -554,7 +615,7 @@ class CoreMLProtoExporter:
                 input_features.append(
                     proto.Model_pb2.FeatureDescription(name=var.name, type=input_feature_type)
                 )
-            else:
+            elif not self._try_convert_other_input_type(var, input_features):
                 raise NotImplementedError(f"Unsupported input type {var.sym_type}.")
 
             if not is_input_shape_symbolic:
@@ -746,6 +807,16 @@ class CoreMLProtoExporter:
 
         return output_features
 
+    def create_model_description(
+        self,
+        input_features: List[proto.Model_pb2.FeatureDescription],
+        output_features: List[proto.Model_pb2.FeatureDescription],
+    ) -> proto.Model_pb2.ModelDescription:
+        """
+        Create model description from input and output features
+        """
+        return proto.Model_pb2.ModelDescription(input=input_features, output=output_features)
+
     def get_coreml_model(
         self,
         input: Dict[str, List[proto.Model_pb2.FeatureDescription]],
@@ -758,7 +829,7 @@ class CoreMLProtoExporter:
         # Model description
         input_features = input[self._DEFAULT_FUNCTION_NAME]
         output_features = output[self._DEFAULT_FUNCTION_NAME]
-        desc = proto.Model_pb2.ModelDescription(input=input_features, output=output_features)
+        desc = self.create_model_description(input_features, output_features)
 
         if self.classifier_config is not None:
             desc.predictedFeatureName = self.predicted_feature_name

@@ -21,6 +21,7 @@ from coremltools import _logger as logger
 from coremltools import proto as _proto
 from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 from coremltools.converters.mil.mil.program import Program as _Program
+from coremltools.converters.mil.mil.scope import ScopeSource as _ScopeSource
 
 from .utils import (
     _MLMODEL_EXTENSION,
@@ -518,7 +519,11 @@ class MLModel:
                 )
             _shutil.copytree(self.package_path, save_path)
 
-            if self._mil_program is not None:
+            if self._mil_program is not None and all(
+                [
+                    _ScopeSource.EXIR_DEBUG_HANDLE in function._essential_scope_sources for function in self._mil_program.functions.values()
+                ]
+            ):
                 debug_handle_to_ops_mapping = (
                     self._mil_program.construct_debug_handle_to_ops_mapping()
                 )

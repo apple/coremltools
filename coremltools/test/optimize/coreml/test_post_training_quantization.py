@@ -4,6 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+from typing import Tuple
 
 import numpy as np
 import pytest
@@ -15,6 +16,7 @@ from coremltools._deps import _HAS_SKLEARN
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.optimize.coreml import _utils as optimize_utils
 from coremltools.optimize.coreml._post_training_quantization import CoreMLWeightMetaData
 from coremltools.test.ml_program.test_compression import get_test_model_and_data
 
@@ -112,6 +114,28 @@ def create_sparse_weight(weight, target_sparsity):
     num_of_zeros = int(size * target_sparsity)
     weight[:num_of_zeros] = 0
     return np.reshape(weight, shape).astype(np.float32)
+
+
+def create_quantize_friendly_weight(
+    weight: np.ndarray, nbits: int, signed: bool
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Create quantize friendly weight by first quantize and then de-quantize the weight."""
+    axes = tuple(axis for axis in range(len(weight.shape)) if axis != 0)
+    quantized_weight, scale, zero_point = optimize_utils.quantize_weight(
+        weight,
+        axes,
+        nbits,
+        signed,
+        quantization_mode="LINEAR",
+        dtype=np.int8 if signed else np.uint8,
+    )
+    scale_shape = scale.shape + tuple([1] * len(axes))
+    scale = scale.reshape(scale_shape)
+    zero_point = zero_point.reshape(scale_shape)
+    dequantized_weight = scale * (
+        quantized_weight.astype(np.float32) - zero_point.astype(np.float32)
+    )
+    return dequantized_weight, scale, zero_point
 
 
 def verify_model_outputs(model, compressed_model, input_values, rtol=1e-7, atol=0):
@@ -551,6 +575,12 @@ class TestPruneWeights:
     )
     def test_weight_pruning_percentile_based(percentile):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
+        # Make sure no weight element is randomed to 0, to eliminate testing noise
+        # e.g. in percentile 0 test case, we would expect no element gets pruned
+        # if there is no 0 in initial weight
+        with torch.no_grad():
+            non0_weight = torch.where(torch.abs(model.weight) > 1e-6, model.weight, 1e-6)
+            model.weight.copy_(non0_weight)
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
         mlmodel_sparsified = prune_weights(mlmodel, mode="percentile_based", target_sparsity=percentile)
@@ -567,7 +597,10 @@ class TestPruneWeights:
         if percentile == 0.:
             assert non_sparse_data.val.size == weight.size
         elif percentile == 0.5:
-            assert non_sparse_data.val.size <= 0.51 * (weight.size) and non_sparse_data.val.size >= 0.49 * (weight.size)
+            lower = 0.49 * weight.size
+            upper = 0.51 * weight.size
+            actual = non_sparse_data.val.size
+            assert lower <= actual and actual <= upper
         else:
             assert non_sparse_data.val.size == 0
 

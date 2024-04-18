@@ -12,6 +12,7 @@ from coremltools.converters.mil.input_types import (
     ImageType,
     RangeDim,
     Shape,
+    TensorType,
 )
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, any_variadic, is_symbolic
@@ -169,7 +170,7 @@ def _set_optional_inputs(proto, input_types):
     # Set default values for optional input_types
     default_map = {}
     for input_type in input_types:
-        if isinstance(input_type, ImageType):
+        if not isinstance(input_type, TensorType):
             continue
         if input_type.default_value is not None:
             default_map[input_type.name] = input_type.default_value
