@@ -512,7 +512,9 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
         return ab
 
 
-def _lower_scaled_dot_product_attention(q: Var, k: Var, v: Var, mask: Var, name: str) -> Var:
+def _lower_scaled_dot_product_attention(
+    q: Var, k: Var, v: Var, mask: Var, name: str, before_op: Optional[Operation] = None
+) -> Var:
     # scale the query input
     embed_size = q.shape[-1]
     if is_symbolic(embed_size):
@@ -520,25 +522,26 @@ def _lower_scaled_dot_product_attention(q: Var, k: Var, v: Var, mask: Var, name:
             "The embedding size, i.e. last dimension of the shape of query tensor"
             " cannot be symbolic, in scaled_dot_product_attention op"
         )
+
+    q, k, v = promote_input_dtypes([q, k, v])
     multiplicative_scale_factor = 1 / math.sqrt(embed_size)
-    q, k, v, multiplicative_scale_factor = promote_input_dtypes(
-        [q, k, v, multiplicative_scale_factor]
-    )
-    q = mb.mul(x=q, y=multiplicative_scale_factor)
+    if types.builtin_to_string(q.dtype) == "fp16":
+        multiplicative_scale_factor = _np.float16(multiplicative_scale_factor)
+    q = mb.mul(x=q, y=multiplicative_scale_factor, before_op=before_op)
 
     # multiply query and key input tensors
     # shape of output: (target_seq, source_seq) or (B,...,target_seq, source_seq)
-    attn_weights = mb.matmul(x=q, y=k, transpose_y=True)
+    attn_weights = mb.matmul(x=q, y=k, transpose_y=True, before_op=before_op)
 
     # add mask if applicable
     if mask is not None:
-        attn_weights = mb.add(x=attn_weights, y=mask)
+        attn_weights = mb.add(x=attn_weights, y=mask, before_op=before_op)
 
     # do softmax
-    attn_weights_normalized = mb.softmax(x=attn_weights, axis=-1)
+    attn_weights_normalized = mb.softmax(x=attn_weights, axis=-1, before_op=before_op)
 
     # multiply attn_weights and value tensor
-    res = mb.matmul(x=attn_weights_normalized, y=v, name=name)
+    res = mb.matmul(x=attn_weights_normalized, y=v, name=name, before_op=before_op)
     return res
 
 
@@ -549,7 +552,7 @@ def _construct_constexpr_affine_op(
     axis: Optional[Union[Var, int]] = None,
     name: Optional[str] = None,
     before_op: Optional[Operation] = None,
-) -> Operation:
+) -> Var:
     """Constructs the constexpr op to represent the dequantized weight from PyTorch's data."""
     # The constexpr_affine_dequantize op requires axis.
     if axis is None:

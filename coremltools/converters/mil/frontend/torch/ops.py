@@ -1678,7 +1678,7 @@ def view(context, node):
     x = inputs[0]
     shape = inputs[1]
 
-    if np.prod(shape.shape) == 0:
+    if isinstance(shape, Var) and np.prod(shape.shape) == 0:
         # Reshape to empty shape (works only for scalar) is a no op
         assert (
             np.prod(x.shape) <= 1
@@ -6694,21 +6694,15 @@ def _get_causal_attn_mask(is_causal: bool, query_var: Var, key_var: Var) -> Var:
 
 def _cast_bool_attn_mask(attn_mask: Var, query_var: Var) -> Var:
     """
-    compute float mask as:
-    mask = cast(bool_mask) + (1-cast(bool_mask)) * -30k*ones(shape(bool_mask))
+    compute float mask as (1 - cast(bool_mask)) * -30k
     """
     assert is_bool(attn_mask.dtype)
 
-    shape = mb.shape(x=attn_mask)
-    negative_inf = mb.fill(
-        shape=shape, value=_np.array([-3e4]).astype(types.nptype_from_builtin(query_var.dtype))
-    )
     mask = mb.cast(x=attn_mask, dtype=types.builtin_to_string(query_var.dtype))
     compliment_of_mask = mb.sub(
         x=_np.array([1.0]).astype(types.nptype_from_builtin(mask.dtype)), y=mask
     )
-    compliment_of_mask = mb.mul(x=negative_inf, y=compliment_of_mask)
-    return mb.add(x=mask, y=compliment_of_mask)
+    return mb.mul(x=-3e4, y=compliment_of_mask)
 
 @register_torch_op
 def scaled_dot_product_attention(context, node):

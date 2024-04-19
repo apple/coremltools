@@ -37,29 +37,6 @@ from coremltools.optimize.coreml._config import (
     OptimizationConfig,
 )
 
-"""
---------------------------------
-Compression parameters wrapper -
---------------------------------
-"""
-class SparseParams:
-    def __init__(self, nonzero_data=None, mask=None, shape=None):
-        self.nonzero_data = nonzero_data
-        self.mask = mask
-        self.shape = shape
-
-class LutParams:
-    def __init__(self, lut=None, indices=None, shape=None):
-        self.lut = lut
-        self.indices = indices
-        self.shape = shape
-
-class AffineQuantParams:
-    def __init__(self, quantized_data=None, zero_point=None, scale=None, axis=None):
-        self.quantized_data = quantized_data
-        self.zero_point = zero_point
-        self.scale = scale
-        self.axis = axis
 
 """
 ------------------------
@@ -254,10 +231,11 @@ class prune_weights(AbstractCompressionPass):
     @staticmethod
     def _pack_val_to_sparse_param(val):
         flattened_val = val.flatten()
-        params = SparseParams()
-        params.nonzero_data = flattened_val[np.where(flattened_val != 0)]
-        params.mask = np.packbits(np.where(flattened_val != 0, 1, 0), bitorder="little")
-        params.shape = val.shape
+        params = _utils.SparseParams(
+            nonzero_data=flattened_val[np.where(flattened_val != 0)],
+            mask=np.packbits(np.where(flattened_val != 0, 1, 0), bitorder="little"),
+            shape=val.shape,
+        )
         return params
 
     @staticmethod
@@ -399,12 +377,12 @@ class prune_weights(AbstractCompressionPass):
 
     @staticmethod
     def decompress(params):
-        if not isinstance(params, SparseParams):
+        if not isinstance(params, _utils.SparseParams):
             raise ValueError("Invalid type of params")
         return constexpr_sparse_to_dense.decompress(params.nonzero_data, params.mask, params.shape)
 
     @staticmethod
-    def _create_constexpr_var(op: Operation, sparse_params: SparseParams) -> Var:
+    def _create_constexpr_var(op: Operation, sparse_params: _utils.SparseParams) -> Var:
         return mb.constexpr_sparse_to_dense(
             nonzero_data=sparse_params.nonzero_data,
             mask=sparse_params.mask,
@@ -574,7 +552,7 @@ class palettize_weights(AbstractCompressionPass):
         return lut, indices
 
     @staticmethod
-    def compress(val, mode, nbits=None, lut_function=None) -> LutParams:
+    def compress(val, mode, nbits=None, lut_function=None) -> _utils.LutParams:
         def check_lut_parameters_are_valid(val, lut, indices):
             if not isinstance(lut, np.ndarray) or not isinstance(indices, np.ndarray):
                 raise ValueError("LUT and indices must be type of numpy array.")
@@ -604,20 +582,21 @@ class palettize_weights(AbstractCompressionPass):
 
         check_lut_parameters_are_valid(val, lut, indices)
 
-        params = LutParams()
-        params.lut = lut
-        params.shape = val.shape
-        params.indices = pack_elements_into_bits(indices, int(np.log2(lut.shape[0])))
+        params = _utils.LutParams(
+            lut=lut,
+            indices=pack_elements_into_bits(indices, int(np.log2(lut.shape[0]))),
+            shape=val.shape,
+        )
         return params
 
     @staticmethod
     def decompress(params):
-        if not isinstance(params, LutParams):
+        if not isinstance(params, _utils.LutParams):
             raise ValueError("Invalid type of params")
         return constexpr_lut_to_dense.decompress(params.lut, params.indices, params.shape)
 
     @staticmethod
-    def _create_constexpr_var(op: Operation, lut_params: LutParams) -> Var:
+    def _create_constexpr_var(op: Operation, lut_params: _utils.LutParams) -> Var:
         return mb.constexpr_lut_to_dense(
             indices=lut_params.indices,
             lut=lut_params.lut,
@@ -742,7 +721,9 @@ class linear_quantize_weights(AbstractCompressionPass):
         return quantized_data, scale, zero_point
 
     @classmethod
-    def compress(cls, val: np.ndarray, axis: int, mode: str, dtype: type) -> AffineQuantParams:
+    def compress(
+        cls, val: np.ndarray, axis: int, mode: str, dtype: type
+    ) -> _utils.AffineQuantParams:
         if not isinstance(val, (np.ndarray, np.generic)):
             raise ValueError("Only numpy arrays are supported")
         if isinstance(dtype, np.dtype):
@@ -763,11 +744,11 @@ class linear_quantize_weights(AbstractCompressionPass):
         if zero_point is None:
             # The iOS16 constexpr_affine_dequantize op requires zero_point.
             zero_point = np.zeros_like(scale).astype(quantized_data.dtype)
-        return AffineQuantParams(quantized_data, zero_point, scale, axis)
+        return _utils.AffineQuantParams(quantized_data, zero_point, scale, axis)
 
     @staticmethod
-    def decompress(params: AffineQuantParams) -> np.ndarray:
-        if not isinstance(params, AffineQuantParams):
+    def decompress(params: _utils.AffineQuantParams) -> np.ndarray:
+        if not isinstance(params, _utils.AffineQuantParams):
             raise ValueError("Invalid type of params")
         return constexpr_affine_dequantize.decompress(
             params.quantized_data, params.zero_point, params.scale, params.axis

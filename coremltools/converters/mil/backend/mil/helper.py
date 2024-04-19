@@ -42,16 +42,6 @@ def create_valuetype_list(length, elem_shape, dtype):
     update_listtype(v_type.listType, length, elem_shape, dtype)
     return v_type
 
-def create_valuetype_dict(key_type, value_type):
-    """
-    Return proto.MIL_pb2.ValueType with dict (dictionaryType) set
-    """
-    v_type = proto.MIL_pb2.ValueType()
-    v_type.dictionaryType.keyType.CopyFrom(types_to_proto(key_type))
-    v_type.dictionaryType.valueType.CopyFrom(types_to_proto(value_type))
-    return v_type
-
-
 def create_valuetype_tensor(shape, data_type):
     """
     Return proto.MIL_pb2.ValueType with tensor (TensorType) set.
@@ -260,40 +250,6 @@ def types_to_proto_primitive(valuetype):
             f"Unknown map from SSA type {valuetype} to Proto type. {additional_error_msg}"
         )
     return types.BUILTIN_TO_PROTO_TYPES[valuetype]
-
-
-def types_to_proto(valuetype):
-    if types.is_tensor(valuetype):
-        primitive = types_to_proto_primitive(valuetype.get_primitive())
-        return create_valuetype_tensor(valuetype.get_shape(), primitive)
-    elif types.is_tuple(valuetype):
-        v_type = proto.MIL_pb2.ValueType()
-        t_type = v_type.tupleType
-        for t in valuetype.T:
-            new_v_type = t_type.types.add()
-            new_v_type.CopyFrom(types_to_proto(t))
-        return v_type
-    elif types.is_list(valuetype):
-        elem = valuetype.T[0]
-        length = valuetype.T[1]
-        if types.is_tensor(elem):
-            dtype = types_to_proto_primitive(elem.get_primitive())
-            elem_shape = elem.get_shape()
-        elif types.is_scalar(elem):
-            dtype = types_to_proto_primitive(valuetype)
-            elem_shape = ()
-        elif types.is_str(elem):
-            dtype = types_to_proto_primitive(elem)
-            elem_shape = ()
-        else:
-            raise NotImplementedError("Only list of either tensors or scalars supported. "
-                                      "Got element of type {}".format(elem.__type_info__()))
-        return create_valuetype_list(length=length, elem_shape=elem_shape, dtype=dtype)
-    elif types.is_dict(valuetype):
-        return create_valuetype_dict(valuetype.T[0], valuetype.T[1])
-    else:
-        return create_valuetype_scalar(types_to_proto_primitive(valuetype))
-
 
 def _get_offset_by_writing_data(output_var, blob_writer):
     if output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 4:

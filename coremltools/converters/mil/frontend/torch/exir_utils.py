@@ -87,12 +87,27 @@ def extract_inputs_from_exir_program(
             val = node.meta["val"]
             assert isinstance(val, torch.Tensor), "placeholder val must be a tensor or fake tensor"
             user_inputs.append(to_coreml_tensor_type(node.name, val))
+
         elif input_spec.kind == torch.export.graph_signature.InputKind.PARAMETER:
             lifted_parameters[input_spec.arg.name] = parameters[input_spec.target]
+
         elif input_spec.kind == torch.export.graph_signature.InputKind.BUFFER:
-            lifted_buffers[input_spec.arg.name] = buffers[input_spec.target]
+            # This is a workaround on mutable buffer: Core ML does not support stateful execution,
+            # so ExecuTorch will pass mutable buffers as inputs/outputs to Core ML delegation,
+            # then in-place copy Core ML outputs into buffers
+            # On Core ML side, we do not have to do anything special with outputs,
+            # but for inputs we will need to identify ExecuTorch lifted mutable buffers
+            # as Core ML user inputs
+            if input_spec.target in exported_program.graph_signature.buffers_to_mutate.values():
+                user_inputs.append(
+                    to_coreml_tensor_type(input_spec.arg.name, buffers[input_spec.target])
+                )
+            else:
+                lifted_buffers[input_spec.arg.name] = buffers[input_spec.target]
+
         elif input_spec.kind == torch.export.graph_signature.InputKind.CONSTANT_TENSOR:
             lifted_constants[input_spec.arg.name] = exported_program.constants[input_spec.target]
+
         else:
             raise NotImplementedError(
                 "Only 4 types of inputs handled yet: user input, parameter, buffer, constant. "

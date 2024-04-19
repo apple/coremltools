@@ -3,8 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from collections import namedtuple
+from typing import Optional, Tuple
+
 import numpy as np
-from typing import Tuple, Optional
+
+SparseParams = namedtuple("SparseParams", "nonzero_data mask shape")
+LutParams = namedtuple("LutParams", "lut indices shape")
+AffineQuantParams = namedtuple("AffineQuantParams", "quantized_data zero_point scale axis")
 
 
 def get_quant_range(n_bits: int, signed: bool, mode: str) -> Tuple[int, int]:

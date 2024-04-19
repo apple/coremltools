@@ -26,23 +26,28 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
     """
     This graph pass does const folding to a chain of supported ops starts with a
     ``constexpr_affine_dequantize`` op. More types of op are supported when quantization
-    is tensor-wise, and only a subset is supported for channel-wise
+    is tensor-wise, and only a subset is supported for channel-wise. For example
 
-    For example:
-    Input graph:
-        data -> constexpr_affine_dequantize -> transpose -> expand_dims -> out
+    .. code-block::
 
-    Output graph:
-        new_data -> constexpr_affine_dequantize -> out
+        Input graph:
+            data -> constexpr_affine_dequantize -> transpose -> expand_dims -> out
+
+        Output graph:
+            new_data -> constexpr_affine_dequantize -> out
 
     where ``new_data`` is computed by ``data -> transpose -> expand_dims``.
 
     Note that, the graph pass only supports const folding of a single linked list pattern.
-    For example, the following pattern will not be changed:
+    For example, the following pattern will not be changed
 
-        data ---> constexpr_affine_dequantize -> transpose -> out
-              |
-              --> constexpr_affine_dequantize -> reshape -> out_2
+    .. code-block::
+
+              |-> constexpr_affine_dequantize -> transpose -> out
+        data -|
+              |-> constexpr_affine_dequantize -> reshape -> out_2
+
+    since the quantized data is used by multiple ``constexpr``
     """
 
     SUPPORTED_OP_TYPES_PER_TENSOR = {
