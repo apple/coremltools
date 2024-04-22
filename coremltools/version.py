@@ -4,4 +4,4 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
-__version__ = "7.2"  # VERSION_STRING
+__version__ = "7.2.1"  # VERSION_STRING
