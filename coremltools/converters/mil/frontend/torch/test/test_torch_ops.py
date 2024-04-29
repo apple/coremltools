@@ -6519,42 +6519,33 @@ class TestRepeat(TorchBaseTest):
 
 class TestRepeatInterleave(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank, repeat, dim",
+        "compute_unit, backend, rank, repeat",
         itertools.product(
             compute_units,
             backends,
             (1, 3, 5),
             (2, torch.tensor(3), torch.tensor([4])),
-            (None, 0),
         ),
     )
-    def test_scalar_repeat_and_dim_None_or_0(self, compute_unit, backend, rank, repeat, dim):
+    def test_scalar_repeat(self, compute_unit, backend, rank, repeat):
         input_shape = tuple(np.random.randint(low=1, high=6, size=rank))
-        model = ModuleWrapper(function=lambda x: x.repeat_interleave(repeat, dim=dim))
-        self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
+        for dim in [None] + [*range(rank)]:
+            model = ModuleWrapper(function=lambda x: x.repeat_interleave(repeat, dim=dim))
+            self.run_compare_torch(input_shape, model, backend=backend, compute_unit=compute_unit)
 
     def test_single_fill_tensor_repeat(self):
-        input_shape = (2, 3)
-        model = ModuleWrapper(function=lambda x: x.repeat_interleave(torch.tensor([2, 2]), dim=0))
+        input_shape = (3, 2)
+        model = ModuleWrapper(function=lambda x: x.repeat_interleave(torch.tensor([2, 2]), dim=1))
         self.run_compare_torch(input_shape, model)
 
     def test_unsupported_tensor_repeat(self):
-        input_shape = (3, 1)
+        input_shape = (4, 1, 3)
         model = ModuleWrapper(
-            function=lambda x: x.repeat_interleave(torch.tensor([1, 2, 3]), dim=0)
+            function=lambda x: x.repeat_interleave(torch.tensor([1, 2, 3]), dim=2)
         )
         with pytest.raises(
             NotImplementedError,
             match=r"Conversion for torch.repeat_interleave with Tensor repeats has not been implemented",
-        ):
-            self.run_compare_torch(input_shape, model)
-
-    def test_unsupported_dim1(self):
-        input_shape = (2, 1, 2, 1, 2)
-        model = ModuleWrapper(function=lambda x: x.repeat_interleave(2, dim=1))
-        with pytest.raises(
-            NotImplementedError,
-            match=r"Conversion for torch.repeat_interleave with non-zero dim has not been implemented",
         ):
             self.run_compare_torch(input_shape, model)
 
