@@ -42,6 +42,7 @@ from .utils import (
     TORCH_DTYPE_TO_NUM,
     TYPE_TO_DTYPE_STRING,
     TorchFrontend,
+    dtype_to_32bit,
 )
 
 # The pytorch args for many of the below ops were sourced from
@@ -4645,7 +4646,7 @@ def to(context, node):
         np_type = nptype_from_builtin(target_dtype.dtype)
         dtype = NUMPY_DTYPE_TO_TORCH_NUM[np_type]
 
-    torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
+    torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype])
     if isinstance(_input, Var) and _input.can_be_folded_to_const():
         # numpy -> torch -> torch cast -> numpy
         # This path is needed to use the mapping of passed in dtypes to torch dtypes.
@@ -4983,7 +4984,7 @@ def zeros(context, node):
         # layout = inputs[2] unused
         # device = inputs[3] unused
         # pin_memory = inputs[4] unused
-        torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
+        torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype])
         zeros_array = torch.zeros(tuple(size)).type(torch_dtype).numpy()
         zeros = mb.const(val=zeros_array, name=node.name)
 
