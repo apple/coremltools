@@ -3,14 +3,15 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import OrderedDict
+import pprint
+from collections import defaultdict, OrderedDict
 from typing import Callable, Dict, List, Optional
 
 import numpy as np
 from attrs import define, field, validators
 from tqdm import tqdm
 
-from coremltools import _SPECIFICATION_VERSION_IOS_16
+from coremltools import _SPECIFICATION_VERSION_IOS_16, _SPECIFICATION_VERSION_IOS_17
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
 from coremltools.converters.mil.mil.passes.defs.quantization import (
@@ -22,10 +23,11 @@ from coremltools.models import MLModel as _MLModel
 from coremltools.optimize.coreml import OptimizationConfig as _OptimizationConfig
 from coremltools.optimize.coreml._config import _MetaDataDict
 
+from ._quantization_passes import activations_quantization as _activations_quantization
 from ._quantization_passes import WeightDecompressor as _WeightDecompressor
 from ._quantization_passes import linear_quantize_weights as _linear_quantize_weights
 from ._quantization_passes import palettize_weights as _palettize_weights
-
+from .model_debugger import ModelDebugger
 
 def _convert_model_spec_to_pymil_prog(
     mlmodel: _MLModel, specification_version: int, pymil_load_func: Callable
@@ -59,6 +61,7 @@ def _apply_graph_pass(
     spec_version: int = _SPECIFICATION_VERSION_IOS_16,
     skip_model_load: bool = False,
     pymil_load_func: Callable = _milproto_to_pymil.load,
+    return_pymil_prog: bool = False,
 ):
     # Utility function which compresses a Core ML model
     # converts the full precision mlmodel into a pymil program
@@ -71,6 +74,10 @@ def _apply_graph_pass(
         graph_pass, _AbstractQuantizationPass
     ), "compression pass must be an AbstractQuantizationPass instance"
     graph_pass.apply(prog)
+
+    # an early return to avoid converting back to mlmodel can prevent running all other optimization paths.
+    if return_pymil_prog:
+        return prog
 
     # convert the pymil program back to mlmodel
     compressed_mlmodel = _mil_convert(
@@ -87,6 +94,163 @@ def _apply_graph_pass(
 
 def _is_valid_const(val, weight_threshold):
     return isinstance(val, np.ndarray) and val.size >= weight_threshold
+
+
+def activations_quantization(mlmodel: _MLModel, config: _OptimizationConfig, sample_data: None):
+    """
+    A linear activation quantizer.
+    Parameters
+    ----------
+    mlmodel: MLModel
+        Model to be activation quantized. This MLModel should be of type ``mlprogram``.
+    config: OptimizationConfig
+        An :py:class:`OptimizationConfig` object that specifies the parameters for activation quantization.
+    Returns
+    -------
+    model: MLModel
+        The activation quantized MLModel instance.
+    """
+
+    ### Apply four major graph passes in order.
+
+    # Graph pass I
+    # Insert leading quantize/dequantize pair to valid ops.
+    print("Running compression pass activations_quantization phase 1/4 ...")
+    linear_activation_quantizer = PASS_REGISTRY["compression::activations_quantization"]
+    linear_activation_quantizer = _activations_quantization(config, fake_compression=False)
+    linear_activation_quantizer.set_options([PassOption("config", config)])
+
+    prog = _apply_graph_pass(
+        mlmodel,
+        linear_activation_quantizer,
+        spec_version=_SPECIFICATION_VERSION_IOS_17,
+        pymil_load_func=_milproto_to_pymil.load,
+        skip_model_load=True,  # Save memony
+        return_pymil_prog=True,
+    )
+    model_spec = mlmodel.get_spec()
+
+    # Graph pass II
+    # Insert trailing quantize/dequantize pair to valid patterns.
+    print("Running compression pass activations_quantization phase 2/4 ...")
+    graph_pass = PASS_REGISTRY["compression::insert_quantize_dequantize"]
+    graph_pass(prog, config)
+    prog.validate()
+
+    # Graph pass III
+    # Re-use exsiting path to dedup quantize/dequantize ops
+    print("Running compression pass activations_quantization phase 3/4 ...")
+    graph_pass = PASS_REGISTRY["common::dequantize_quantize_pair_elimination"]
+    graph_pass(prog)
+    prog.validate()
+
+    # Graph pass IV
+    # Updating scale/zero_point in all quantize/dequantize ops calculated by calibration data.
+    print("Running compression pass activations_quantization phase 4/4 ...")
+    activation_stats = get_activation_calibration_stats(mlmodel, sample_data)
+    graph_pass = PASS_REGISTRY["compression::update_quantize_dequantize"]
+    graph_pass(prog, activation_stats)
+    prog.validate()
+
+    # Convert the pymil program (prog) back to mlmodel
+    model_spec = mlmodel.get_spec()
+    spec_version = _SPECIFICATION_VERSION_IOS_17
+    specification_version = max(model_spec.specificationVersion, spec_version)
+    mlmodel_activation_quantized = _mil_convert(
+        prog,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=specification_version,
+        compute_units=mlmodel.compute_unit,
+        model_description=model_spec.description,
+        skip_model_load=False,  # Must be False to avoid manually re-load from disk before running prediction.
+    )
+    return mlmodel_activation_quantized
+
+
+def get_tensor_range(tensor_name, tensor_value, activation_stats_dict):
+    tensor_min = np.min(np.array(tensor_value).flatten())
+    tensor_max = np.max(np.array(tensor_value).flatten())
+    activation_stats_dict[tensor_name]["rmin"] = tensor_min
+    activation_stats_dict[tensor_name]["rmax"] = tensor_max
+    if tensor_name in activation_stats_dict:
+        activation_stats_dict[tensor_name]["rmin"] = min(
+            tensor_min, activation_stats_dict[tensor_name]["rmin"]
+        )
+        activation_stats_dict[tensor_name]["rmax"] = max(
+            tensor_max, activation_stats_dict[tensor_name]["rmax"]
+        )
+    else:
+        activation_stats_dict[tensor_name]["rmin"] = tensor_min
+        activation_stats_dict[tensor_name]["rmax"] = tensor_max
+
+
+def get_activation_calibration_stats(fpmodel: _MLModel, sample_data: list[dict]):
+    """
+    Calibration and store a dict of intermediate tensor stats.
+    E.g. activation_stats_dict = {tensor_0: {rmin: 0.2, rmax: 3.8}, tensor_1: {rmin: 4.5, rmax: 12.6}}}
+    Parameters
+    ----------
+    fpmodel: MLModel
+        Path to fp16/fp32 "model.mlpackage". (Expect the orginal mlmodel, not the one with quantize and dequant op)
+    sample_data: list[dict]
+        Data for calibration.
+
+    Returns
+    -------
+    activation_calibration_stats: dict
+    """
+
+    print("Calibrating {} samples".format(len(sample_data)))
+    print("Running Calibrating may take a while ...")
+
+    analyzed = 0
+    tried = 0
+    debugger = ModelDebugger(fpmodel)
+    activation_stats_dict = defaultdict(dict)
+    intermediate_output_names = debugger.get_intermediate_output_names(
+        lambda op: (op.spec.type != "const")
+    )
+
+    # Get data ranges for all inputs.
+    for data in sample_data:
+        for input_name in data:
+            get_tensor_range(input_name, data[input_name], activation_stats_dict)
+
+    # The last few elements in intermediate_output_names might be output.
+    # We don't maintain min/max value for an output tensor.
+    # If it's an output tensor we exclude it, otherwise include it.
+    model_spec = fpmodel.get_spec()
+    output_count = len(fpmodel.get_spec().description.output)
+    output_names = []
+    for i in range(0, output_count):
+        output_name = model_spec.description.output[i].name
+        output_names.append(output_name)
+
+    for intermediate_output_name in intermediate_output_names:
+        if intermediate_output_name in output_names:
+            intermediate_output_names.remove(intermediate_output_name)
+
+    # Get data ranges for all intermeditate outputs.
+    for data in sample_data:
+        tried += 1
+        try:
+            debugger.step(
+                step_fn=ModelDebugger.check_intermediate_output,
+                inputs=data,
+                activation_stats_dict=activation_stats_dict,
+                intermediate_output_names=intermediate_output_names,
+            )
+            analyzed += 1
+            print("Calibrating sample {}/{} succeeds.".format(tried, len(sample_data)))
+
+        except Exception as e:
+            print(e)
+            print("Calibrating sample {}/{} fails.".format(tried, len(sample_data)))
+            continue
+
+    return activation_stats_dict
+
 
 def linear_quantize_weights(mlmodel: _MLModel, config: _OptimizationConfig):
     """

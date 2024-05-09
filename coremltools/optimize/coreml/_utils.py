@@ -16,7 +16,6 @@ AffineQuantParams = namedtuple("AffineQuantParams", "quantized_data zero_point s
 def get_quant_range(n_bits: int, signed: bool, mode: str) -> Tuple[int, int]:
     """
     Utility to get the quantization range for a given quantization config
-    Adapted from phoenix/quatization/_utils.py
     """
     max_q = 2**n_bits
     if not signed:

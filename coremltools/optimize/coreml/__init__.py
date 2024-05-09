@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ._config import (
+    OpActivationLinearQuantizerConfig,
     OpLinearQuantizerConfig,
     OpMagnitudePrunerConfig,
     OpPalettizerConfig,
@@ -11,6 +12,7 @@ from ._config import (
     OptimizationConfig,
 )
 from ._post_training_quantization import (
+    activations_quantization,
     CoreMLOpMetaData,
     CoreMLWeightMetaData,
     decompress_weights,
@@ -19,3 +21,6 @@ from ._post_training_quantization import (
     palettize_weights,
     prune_weights,
 )
+
+# Import to make sure the pass is registered.
+from ._quantization_passes import activations_quantization as _activations_quantization

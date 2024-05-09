@@ -42,6 +42,94 @@ def _check_weight_threshold(instance, attribute, value):
         raise ValueError(f"\"weight_threshold\" must be a non-negative integer. Got {value}.")
 
 """
+Activation Linear Quantization configuration
+"""
+@define
+class OpActivationLinearQuantizerConfig(OpCompressorConfig):
+    """
+    Notes
+    ----------
+    Made minor modifications based on OpLinearQuantizerConfig.
+    It's better to have a new Config since some operations doesn’t have weights but can still do ActivationQuant, plus not all modes are enabled.
+
+    Parameters
+    ----------
+    mode: str
+        Mode for linear quantization:
+        * ``"linear_symmetric"`` (default): Input data are quantized in the range
+          ``[-R, R]``, where :math:`R = max(abs(w_r))`.
+        * ``"linear"``: Input data are quantized in the range
+          :math:`[min(w_r), max(w_r)]`.
+    dtype: np.generic or mil.type type
+        Determines the quantized data type (int8/uint8).
+        * The allowed values are:
+            * ``np.int8`` (the default)
+            * ``np.uint8``
+            * ``coremltools.converters.mil.mil.types.int8``
+            * ``coremltools.converters.mil.mil.types.uint8``
+    weight_threshold: int
+        The size threshold, above which weights are pruned.
+        That is, a weight tensor is pruned only if its total number of elements are greater than ``weight_threshold``.
+        For example, if ``weight_threshold = 1024`` and a weight tensor is of shape ``[10, 20, 1, 1]``, hence ``200``
+        elements, it will not be pruned.
+        * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are compressed.
+    """
+
+    mode: str = field(default="linear_symmetric", validator=validators.instance_of(str))
+    dtype: type = field(default=np.int8, validator=validators.instance_of(type))
+
+    # [TODO] Not sure if we should have "weight_threshold" for activation quantization.
+    weight_threshold: Optional[int] = field(
+        default=2048,
+        validator=validators.optional([validators.instance_of(int), _check_weight_threshold]),
+    )
+
+    # Only one combination is enabled.
+    _ACTIVATION_AFFINE_QUANTIZATION_MODES = ("LINEAR_SYMMETRIC", "LINEAR")
+    _ACTIVATION_AFFINE_DTYPES = (types.int8, types.uint8)
+
+    @mode.validator
+    def check_mode(self, attr, mode):
+        if not mode.upper() in self._ACTIVATION_AFFINE_QUANTIZATION_MODES:
+            raise ValueError(
+                f'Only mode {self._ACTIVATION_AFFINE_QUANTIZATION_MODES} supported for weight + activation affine quantization. Got mode: "{mode}".'
+            )
+
+    @dtype.validator
+    def check_dtype(self, attr, dtype):
+        msg = f"dtype={dtype} is unsupported for affine_quantize_activation."
+        if not is_builtin(dtype):
+            try:
+                dtype = numpy_type_to_builtin_type(dtype)
+            except TypeError:
+                raise ValueError(msg)
+
+        if dtype not in self._ACTIVATION_AFFINE_DTYPES:
+            raise ValueError(msg)
+
+    def __attrs_post_init__(self):
+        self.mode = self.mode.upper()
+        if not is_builtin(self.dtype):
+            self.dtype = numpy_type_to_builtin_type(self.dtype)
+
+    @classmethod
+    # [TODO]: updated to OpActivationLinearQuantizerConfig or delete.
+    def _from_dict(cls, config_dict: Dict[str, Any]) -> "OpLinearQuantizerConfig":
+        def _structure_type(value, dtype):
+            if isinstance(value, type):
+                return value
+            else:
+                if not isinstance(value, str) or value not in ("int8", "uint8"):
+                    raise ValueError(
+                        f'"dtype" must be type of type or str ["int8", "uint8"]. Got {value}'
+                    )
+                return getattr(np, value)
+
+        converter = cattrs.Converter(forbid_extra_keys=True)
+        converter.register_structure_hook(type, _structure_type)
+        return converter.structure(config_dict, cls)
+
+"""
 Linear Quantization configuration
 """
 

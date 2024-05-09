@@ -30,12 +30,114 @@ from coremltools.models._deprecation import deprecated as _deprecated
 from coremltools.models.neural_network.quantization_utils import _get_kmeans_lookup_table_and_weight
 from coremltools.optimize.coreml import _utils
 from coremltools.optimize.coreml._config import (
+    OpActivationLinearQuantizerConfig,
     OpLinearQuantizerConfig,
     OpMagnitudePrunerConfig,
     OpPalettizerConfig,
     OpThresholdPrunerConfig,
     OptimizationConfig,
 )
+
+"""
+-----------------------------------
+Activation compression graph pass -
+-----------------------------------
+"""
+class AbstractActCompressionPass(AbstractQuantizationPass):
+    """
+    The abstract class for the activation compression graph passes.
+    """
+
+    _MINIMUM_OPSET_VERSION = AvailableTarget.iOS16
+
+    def __init__(self, config: OptimizationConfig = None, fake_compression: bool = False):
+        if not isinstance(config, (OptimizationConfig, type(None))):
+            raise ValueError(f"config must be of type OptimizationConfig. Got {type(config)}.")
+
+        op_selector = None if config is None else config._op_selector
+
+        super().__init__(op_selector=op_selector)
+
+        self.fake_compression = fake_compression
+        self._config = config
+        if config is not None:
+            self._check_config_type(config)
+
+    def apply(self, prog):
+        if not isinstance(prog, Program):
+            raise TypeError('Transform "{}" can only be applied on PyMIL programs.'.format(self))
+
+        @block_context_manager
+        def apply_block(block):
+            if not is_current_opset_version_compatible_with(self._MINIMUM_OPSET_VERSION):
+                logger.warning(
+                    f"The program's opset is not compatible with {self._MINIMUM_OPSET_VERSION}. "
+                    f"Skipped the compression pass {self.__class__}."
+                )
+                return
+
+            valid_consts = []
+            for op in list(block.operations):
+                for b in op.blocks:
+                    apply_block(b)
+
+                if self.is_valid_op(op):
+                    need_transform = True
+                    if self.op_selector is not None:
+                        need_transform = self.op_selector(op)
+
+                    if need_transform:
+                        valid_consts.append(op)
+
+            for op in tqdm(
+                valid_consts,
+                desc=f"Running compression pass {self.__class__.__name__}",
+                unit=" ops",
+            ):
+                self.transform_op(op)
+
+        for f in prog.functions.values():
+            apply_block(f)
+
+    @property
+    def config(self) -> OptimizationConfig:
+        return self._config
+
+    @config.setter
+    def config(self, value: OptimizationConfig):
+        self._check_config_type(value)
+        self._config = value
+        if value._op_selector is not None:
+            self.op_selector = value._op_selector
+
+    def _check_config_type(self, config: OptimizationConfig):
+        """
+        The utility function is checking the OptimizationConfig is holding correct type of op config.
+        """
+
+        def get_supported_types_as_str(supported_type):
+            if not isinstance(supported_type, (tuple, list)):
+                supported_type = [supported_type]
+            return ", ".join([f"{val.__name__}" for val in supported_type])
+
+        all_configs = []
+        if config.global_config is not None:
+            all_configs.append(config.global_config)
+        all_configs.extend(list(config.op_type_configs.values()))
+        all_configs.extend(list(config.op_name_configs.values()))
+
+        for config in all_configs:
+            if not isinstance(config, self._SUPPORTED_CONFIG_TYPE) and config is not None:
+                supported_type_str = get_supported_types_as_str(self._SUPPORTED_CONFIG_TYPE)
+                raise ValueError(
+                    f"{self.__class__.__name__} only accept {supported_type_str} type config. Got {config.__class__.__name__}."
+                )
+
+    def is_valid_op(self, op: Operation):
+        # if op.op_type == "const" and should_use_weight_file(self._get_const_value(op)):
+        #     return True
+        # return False
+        return True
 
 
 """
@@ -828,3 +930,97 @@ class WeightDecompressor(AbstractQuantizationPass):
             )
 
         op.enclosing_block.remove_ops([op])
+
+@register_pass(namespace="compression")
+class activations_quantization(AbstractActCompressionPass):
+    """
+    This graph pass applies transform on each valid activation quantization pattern.
+    A valid activation quantization pattern should be surrounded by a quantize/dequantize pair before and after this pattern.
+    This transform adds a quantize/dequantize pair before valid activation quantization patterns.
+
+    .. code-block::
+        Input graph:
+            ... -> downstream op
+        Output graph:
+            quantize -> dequantize -> downstream op
+    """
+
+    _SUPPORTED_CONFIG_TYPE = OpActivationLinearQuantizerConfig
+    _MODE_DTYPE_TO_RANGE = {
+        (types.int8, "LINEAR"): (-128, 127),
+        (types.int8, "LINEAR_SYMMETRIC"): (-127, 127),
+        (types.uint8, "LINEAR"): (0, 255),
+        (types.uint8, "LINEAR_SYMMETRIC"): (0, 254),
+    }
+
+    def transform_op(self, op: Operation):
+        # Let's start with the easiest pattern.
+        if op.op_type not in ("conv"):
+            return False
+
+        # Checking op-level config. Skip if we disable compression on certain ops.
+        op_config = self.config._get_op_config(op)
+        if op_config is None:
+            return
+
+        # Insert quantize and dequantize before op
+        # [Before] ... -> conv -> ...
+        # [After ] quantize -> dequantize -> conv -> ...
+        scale_dtype = None
+        if op.inputs["x"].dtype == types.fp16:
+            scale_dtype = np.float16
+        else:
+            scale_dtype = np.float32
+
+        new_quantize_op = mb.quantize(
+            input=op.inputs["x"],
+            scale=np.array(1).astype(scale_dtype),  # np.float16(1),
+            zero_point=np.int8(0),
+            output_dtype="int8",
+            before_op=op,
+        )
+        new_dequantize_op = mb.dequantize(
+            input=new_quantize_op,
+            scale=np.array(1).astype(scale_dtype),  # np.float16(1),
+            zero_point=np.int8(0),
+            before_op=op,
+        )
+
+        if "bias" in op.inputs:
+            new_conv_op = mb.conv(
+                x=new_dequantize_op,
+                weight=op.inputs["weight"].val,
+                bias=op.inputs["bias"].val,
+                strides=op.inputs["strides"].val,
+                pad_type=op.inputs["pad_type"].val,
+                pad=op.inputs["pad"].val,
+                dilations=op.inputs["dilations"].val,
+                groups=op.inputs["groups"].val,
+                name=op.name,
+                before_op=op,
+            )
+            new_conv_op.name = op.outputs[0].name
+        else:
+            new_conv_op = mb.conv(
+                x=new_dequantize_op,
+                weight=op.inputs["weight"].val,
+                # bias=op.inputs["bias"].val,
+                strides=op.inputs["strides"].val,
+                pad_type=op.inputs["pad_type"].val,
+                pad=op.inputs["pad"].val,
+                dilations=op.inputs["dilations"].val,
+                groups=op.inputs["groups"].val,
+                name=op.name,
+                before_op=op,
+            )
+            new_conv_op.name = op.outputs[0].name
+
+        if new_conv_op.op.enclosing_block.try_replace_uses_of_var_after_op(
+            old_var=op.outputs[0],
+            new_var=new_conv_op,
+            anchor_op=new_conv_op.op,
+            end_op=new_conv_op,
+        ):
+            pass
+        new_conv_op.op.enclosing_block.remove_ops([op])
+

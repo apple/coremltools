@@ -72,3 +72,77 @@ class AbstractGraphPass(ABC):
                         f"The graph pass `{self}` doesn't support option `{option_name}`."
                     )
                 setattr(self, option_name, pass_option.option_val)
+
+
+class AbstractGraphPassWithSampleData(ABC):
+    """
+    Base class for a graph pass which needs sample data to edit MIL program, e.g. activation quantization.
+    Note that, all changes are related to sample_data.
+
+    Each graph pass should be a subclass of this and implement the `apply` method.
+    Each graph pass can also implement their own supported options.
+    See examples of `skip_ops_by_type` in `add_fp16_cast` and `skip_const_by_size` in
+    `const_elimination` about how to support new options in each pass.
+    """
+
+    def __call__(self, prog: Program, sample_data: dict):
+        if not prog.skip_all_passes:
+            # we use the scope context manager to populate the graph pass information to the ops
+            # constructed by the pass.
+            with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=[str(self)])):
+                self.apply(prog, sample_data)
+
+    def __str__(self):
+        return type(self).__name__
+
+    @abstractmethod
+    def apply(self, prog: Program, sample_data: None):
+        pass
+
+    def set_options(self, pass_options: Optional[List[PassOption]] = None):
+        """Set pass options."""
+        if pass_options is not None:
+            for pass_option in pass_options:
+                option_name = pass_option.option_name
+                if not hasattr(self, option_name):
+                    raise NotImplementedError(
+                        f"The graph pass `{self}` doesn't support option `{option_name}`."
+                    )
+                setattr(self, option_name, pass_option.option_val)
+
+
+class AbstractGraphPassWithOptimizationConfig(ABC):
+    """
+    Base class for a graph pass which needs OptimizationConfig to edit MIL program, e.g. activation quantization.
+    Note that, all changes are related to config.
+
+    Each graph pass should be a subclass of this and implement the `apply` method.
+    Each graph pass can also implement their own supported options.
+    See examples of `skip_ops_by_type` in `add_fp16_cast` and `skip_const_by_size` in
+    `const_elimination` about how to support new options in each pass.
+    """
+
+    def __call__(self, prog: Program, config: None):
+        if not prog.skip_all_passes:
+            # we use the scope context manager to populate the graph pass information to the ops
+            # constructed by the pass.
+            with mb.scope(ScopeInfo(source=ScopeSource.COREMLTOOLS_GRAPH_PASS, data=[str(self)])):
+                self.apply(prog, config)
+
+    def __str__(self):
+        return type(self).__name__
+
+    @abstractmethod
+    def apply(self, prog: Program, config: None):
+        pass
+
+    def set_options(self, pass_options: Optional[List[PassOption]] = None):
+        """Set pass options."""
+        if pass_options is not None:
+            for pass_option in pass_options:
+                option_name = pass_option.option_name
+                if not hasattr(self, option_name):
+                    raise NotImplementedError(
+                        f"The graph pass `{self}` doesn't support option `{option_name}`."
+                    )
+                setattr(self, option_name, pass_option.option_val)

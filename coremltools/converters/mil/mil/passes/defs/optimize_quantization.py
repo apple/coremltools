@@ -778,6 +778,13 @@ class distributive_quantized_binary_op_scale_normalization(AbstractGraphPass):
 
         return dequantize_x, dequantize_y, quantize_z
 
+    def convert_mil_float_dtype_to_np(mil_dtype):
+        if mil_dtype == types.fp16:
+            np_dtype = np.float16
+        else:
+            np_dtype = np.float32
+        return np_dtype
+
     def try_to_transform(
         self, op: Operation, dequantize_x: Operation, dequantize_y: Operation, quantize_z: Operation
     ) -> bool:
@@ -799,17 +806,21 @@ class distributive_quantized_binary_op_scale_normalization(AbstractGraphPass):
             if new_s_x is None and new_s_z is None:
                 return False
 
+        new_s_x_dtype = convert_mil_float_dtype_to_np(dequantize_x.scale.val.dtype)
+        new_s_y_dtype = convert_mil_float_dtype_to_np(dequantize_y.scale.val.dtype)
+        new_s_z_dtype = convert_mil_float_dtype_to_np(quantize_z.scale.val.dtype)
+
         # insert normalized new_dequantize_x and new_dequantize_y before op
         new_dequantize_x = mb.dequantize(
             input=dequantize_x.input,
-            scale=new_s_x,
+            scale=new_s_x.astype(new_s_x_dtype),
             zero_point=dequantize_x.zero_point,
             axis=dequantize_x.axis,
             before_op=op,
         )
         new_dequantize_y = mb.dequantize(
             input=dequantize_y.input,
-            scale=1.0 if dequantize_y.axis is None else np.full(dequantize_y.scale.val.shape, 1.0),
+            scale=np.array(1).astype(new_s_y_dtype) if dequantize_y.axis is None else np.full(dequantize_y.scale.val.shape, 1.0),
             zero_point=dequantize_y.zero_point,
             axis=dequantize_y.axis,
             before_op=op,
@@ -817,7 +828,7 @@ class distributive_quantized_binary_op_scale_normalization(AbstractGraphPass):
         # insert normalized new_quantize_z before quantize_z
         new_quantize_z = mb.quantize(
             input=quantize_z.input,
-            scale=new_s_z,
+            scale=new_s_z.astype(new_s_z_dtype),
             zero_point=quantize_z.zero_point,
             axis=quantize_z.axis,
             output_dtype=quantize_z.output_dtype,

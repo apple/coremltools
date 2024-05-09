@@ -8,7 +8,11 @@ from typing import Callable, List, Optional
 import numpy as np
 
 from coremltools.converters.mil.mil import Block, Operation
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.graph_pass import (
+    AbstractGraphPass,
+    AbstractGraphPassWithOptimizationConfig,
+    AbstractGraphPassWithSampleData,
+)
 
 
 class classproperty(property):
@@ -49,7 +53,11 @@ def block_context_manager(_func: Optional[Callable] = None):
 
     def wrapper(*args):
         # Make it compatible with class method.
-        if isinstance(args[0], AbstractGraphPass):
+        if (
+            isinstance(args[0], AbstractGraphPass)
+            or isinstance(args[0], AbstractGraphPassWithSampleData)
+            or isinstance(args[0], AbstractGraphPassWithOptimizationConfig)
+        ):
             block = args[1]
         else:
             block = args[0]
