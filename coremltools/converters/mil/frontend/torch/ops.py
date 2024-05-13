@@ -42,6 +42,7 @@ from .utils import (
     TORCH_DTYPE_TO_NUM,
     TYPE_TO_DTYPE_STRING,
     TorchFrontend,
+    dtype_to_32bit,
 )
 
 # The pytorch args for many of the below ops were sourced from
@@ -4645,7 +4646,7 @@ def to(context, node):
         np_type = nptype_from_builtin(target_dtype.dtype)
         dtype = NUMPY_DTYPE_TO_TORCH_NUM[np_type]
 
-    torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
+    torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype])
     if isinstance(_input, Var) and _input.can_be_folded_to_const():
         # numpy -> torch -> torch cast -> numpy
         # This path is needed to use the mapping of passed in dtypes to torch dtypes.
@@ -4983,7 +4984,7 @@ def zeros(context, node):
         # layout = inputs[2] unused
         # device = inputs[3] unused
         # pin_memory = inputs[4] unused
-        torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
+        torch_dtype = dtype_to_32bit(NUM_TO_TORCH_DTYPE[dtype])
         zeros_array = torch.zeros(tuple(size)).type(torch_dtype).numpy()
         zeros = mb.const(val=zeros_array, name=node.name)
 
@@ -5174,6 +5175,47 @@ def repeat_interleave(context, node):
     """
     For now, we only support scalar repeats + None or 0 dim
     """
+
+    def repeat_interleave_dim0(x: Var, repeats_val: int, name: str = None) -> Var:
+        """
+        on a high level:
+             x
+             | tile in dim 0
+             v
+            [x, x, ...]
+             | reshape to split the repeats
+             v
+            [[x],
+             [x],
+             ...]
+             | transpose(1, 0)
+             V
+            [x^T, x^T, ...]
+             | flatten
+             V
+            result
+        """
+
+        reps = [1] * x.rank
+        reps[0] = repeats_val
+        x_tiled = mb.tile(x=x, reps=reps)
+
+        split_reps = [repeats_val] + list(x.shape)
+        x_reshaped = mb.reshape(x=x_tiled, shape=list(split_reps))
+
+        perm = [*range(x.rank + 1)]
+        perm[0] = 1
+        perm[1] = 0
+        x_transposed = mb.transpose(x=x_reshaped, perm=perm)
+
+        result_shape = list(x.shape)
+        result_shape[0] = -1
+        if name is None:
+            result = mb.reshape(x=x_transposed, shape=result_shape)
+        else:
+            result = mb.reshape(x=x_transposed, shape=result_shape, name=node.name)
+        return result
+
     x, repeats, dim, _ = _get_inputs(context, node, expected=4)
 
     repeats_val = repeats.val
@@ -5185,49 +5227,32 @@ def repeat_interleave(context, node):
             )
         repeats_val = repeats_val0
 
+    is_dim_0 = True
     # This would operate on the flattened input tensor
     if dim is None:
         x = mb.reshape(x=x, shape=(-1,))
     else:
+        # non-0 dim requires additional pre and post treatment
         if dim.val != 0:
-            raise NotImplementedError(
-                "Conversion for torch.repeat_interleave with non-zero dim has not been implemented"
-            )
+            is_dim_0 = False
 
-    """
-    on a high level:
-         x
-         | tile in dim 0
-         v
-        [x, x, ...]
-         | reshape to split the repeats
-         v
-        [[x],
-         [x],
-         ...]
-         | transpose(1, 0)
-         V
-        [x^T, x^T, ...]
-         | flatten
-         V
-        result
-    """
+    if is_dim_0:
+        result = repeat_interleave_dim0(x, repeats_val, node.name)
+    else:
+        # pre treatment: permute to have dim 0
+        perm2dim0 = [dim.val]
+        for i in range(x.rank):
+            if i != dim.val:
+                perm2dim0.append(i)
+        x = mb.transpose(x=x, perm=perm2dim0)
 
-    reps = [1] * x.rank
-    reps[0] = repeats_val
-    x_tiled = mb.tile(x=x, reps=reps)
+        result_of_dim0 = repeat_interleave_dim0(x, repeats_val)
 
-    split_reps = [repeats_val] + list(x.shape)
-    x_reshaped = mb.reshape(x=x_tiled, shape=list(split_reps))
-
-    perm = [*range(x.rank + 1)]
-    perm[0] = 1
-    perm[1] = 0
-    x_transposed = mb.transpose(x=x_reshaped, perm=perm)
-
-    result_shape = list(x.shape)
-    result_shape[0] = -1
-    result = mb.reshape(x=x_transposed, shape=result_shape, name=node.name)
+        # post treatment: permute back to original dim
+        perm_back = [0] * x.rank
+        for i in range(x.rank):
+            perm_back[perm2dim0[i]] = i
+        result = mb.transpose(x=result_of_dim0, perm=perm_back, name=node.name)
 
     context.add(result)
 

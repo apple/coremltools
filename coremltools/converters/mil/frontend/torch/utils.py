@@ -26,16 +26,24 @@ NUM_TO_TORCH_DTYPE = {
     1: torch.int8,
     2: torch.int16,
     3: torch.int32,
-    4: torch.int32,
+    4: torch.int64,
     5: torch.float16,
     6: torch.float32,
-    7: torch.float32,
+    7: torch.float64,
     11: torch.bool,
     12: torch.qint8,
     13: torch.quint8,
     14: torch.qint32,
 }
 
+def dtype_to_32bit(dtype):
+    if dtype == torch.int64:
+        return torch.int32
+    elif dtype == torch.float64:
+        return torch.float32
+    else:
+        return dtype
+    
 TORCH_DTYPE_TO_NUM = {
     dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
 }
