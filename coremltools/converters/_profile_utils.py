@@ -12,11 +12,9 @@ _ENABLE_PROFILING = os.environ.get("ENABLE_PROFILING", False)
 
 def _profile(_f=None):
     def func_wrapper(func):
-        f_name = func.__module__ + "." + func.__name__
+        f_name = f"{func.__module__}.{func.__name__}"
         if f_name in _FUNCTION_PROFILE_REGISTRY:
-            raise ValueError(
-                "Function {} is already registered for profiling.".format(f_name)
-            )
+            raise ValueError(f"Function {f_name} is already registered for profiling.")
 
         _FUNCTION_PROFILE_REGISTRY[f_name] = []
         return func
@@ -39,7 +37,7 @@ def _profiler(frame, event, arg, indent=[0]):
 
     package_name = __name__.split(".")[0]
 
-    function_name = frame.f_globals["__name__"] + "." + frame.f_code.co_name
+    function_name = f"{frame.f_globals['__name__']}.{frame.f_code.co_name}"
 
     profile_function = (
         package_name in str(frame) and function_name in _FUNCTION_PROFILE_REGISTRY
