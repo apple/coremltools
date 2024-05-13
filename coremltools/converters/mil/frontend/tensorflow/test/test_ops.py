@@ -13,7 +13,7 @@ from typing import Optional
 
 import numpy as np
 import pytest
-from packaging import Version
+from packaging.version import Version
 
 import coremltools as ct
 from coremltools import RangeDim, TensorType

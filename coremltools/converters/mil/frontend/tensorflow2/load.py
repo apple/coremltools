@@ -6,7 +6,7 @@
 import os.path as _os_path
 
 import tensorflow as _tf
-from packaging import Version
+from packaging.version import Version
 from tensorflow.lite.python.util import \
     get_grappler_config as _get_grappler_config
 from tensorflow.lite.python.util import \

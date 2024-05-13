@@ -6,7 +6,7 @@
 import unittest
 
 import numpy as np
-from packaging import Version
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 

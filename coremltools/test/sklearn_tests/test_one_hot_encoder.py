@@ -7,7 +7,7 @@ import unittest
 from copy import copy
 
 import numpy as np
-from packaging import Version
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,

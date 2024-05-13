@@ -9,7 +9,7 @@ import random
 
 import numpy as np
 import pytest
-from packaging import Version
+from packaging.version import Version
 
 import coremltools as ct
 from coremltools._deps import _get_version

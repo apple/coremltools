@@ -6,7 +6,7 @@
 import unittest
 
 import pandas as pd
-from packaging import Version
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.converters.sklearn import convert

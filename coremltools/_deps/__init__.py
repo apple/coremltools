@@ -11,7 +11,7 @@ import platform as _platform
 import re as _re
 import sys as _sys
 
-from packaging import version, Version
+from packaging.version import Version
 
 from coremltools import _logger as logger
 
@@ -205,8 +205,8 @@ def version_ge(module, target_version):
     >>> import torch # v1.5.0
     >>> version_ge(torch, '1.6.0') # False
     """
-    return version.parse(module.__version__) >= version.parse(target_version)
+    return Version(module.__version__) >= Version(target_version)
 
 def version_lt(module, target_version):
     """See version_ge"""
-    return version.parse(module.__version__) < version.parse(target_version)
+    return Version(module.__version__) < Version(target_version)

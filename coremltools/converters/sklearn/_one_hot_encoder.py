@@ -16,7 +16,7 @@ from ...proto import OneHotEncoder_pb2 as _OHE_pb2
 from . import _sklearn_util
 
 if _HAS_SKLEARN:
-    from packaging import Version
+    from packaging.version import Version
     from sklearn.preprocessing import OneHotEncoder
 
     sklearn_class = OneHotEncoder

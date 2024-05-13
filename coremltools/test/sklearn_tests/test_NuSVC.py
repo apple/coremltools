@@ -23,7 +23,7 @@ if _HAS_LIBSVM:
     from coremltools.converters import libsvm
 
 if _HAS_SKLEARN:
-    from packaging import Version
+    from packaging.version import Version
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import NuSVC
 

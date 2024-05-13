@@ -6,7 +6,7 @@
 import pathlib
 import sys
 
-from packaging import version
+from packaging.version import version
 
 
 def _python_version():

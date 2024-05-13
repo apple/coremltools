@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import torch as _torch
-from packaging import version
+from packaging.version import version
 
 
 def version_ge(module, target_version):

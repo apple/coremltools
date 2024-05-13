@@ -8,7 +8,7 @@ import os
 from tempfile import mktemp
 
 import tensorflow as tf
-from packaging import Version
+from packaging.version import Version
 from tqdm import tqdm as _tqdm
 
 from coremltools import _logger as logger

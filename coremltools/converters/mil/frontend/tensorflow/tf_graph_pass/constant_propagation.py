@@ -6,7 +6,7 @@
 import gc
 
 import tensorflow as tf
-from packaging import Version
+from packaging.version import Version
 
 from coremltools import _logger as logger
 from coremltools._deps import _get_version
