@@ -4,11 +4,11 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import torch as _torch
-from packaging import version
+from packaging.version import Version
 
 
 def version_ge(module, target_version):
-    return version.parse(module.__version__) >= version.parse(target_version)
+    return Version(module.__version__) >= Version(target_version)
 
 
 def get_torch_version():

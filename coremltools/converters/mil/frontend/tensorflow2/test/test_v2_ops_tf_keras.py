@@ -6,10 +6,10 @@
 import itertools
 import platform
 import random
-from distutils.version import StrictVersion as _StrictVersion
 
 import numpy as np
 import pytest
+from packaging.version import Version
 
 import coremltools as ct
 from coremltools._deps import _get_version
@@ -258,10 +258,10 @@ class TestConvolution(TensorFlowBaseTest):
         batch_size,
         groups,
     ):
-        if _get_version(_tf.__version__) < _StrictVersion("2.5.0") and groups != 1:
+        if _get_version(_tf.__version__) < Version("2.5.0") and groups != 1:
             pytest.skip("TF supports groupwise convolution only for version > tf.2.5.0-rc3")
 
-        if _get_version(_tf.__version__) > _StrictVersion("2.8.0") and groups != 1:
+        if _get_version(_tf.__version__) > Version("2.8.0") and groups != 1:
             pytest.xfail("rdar://100814590 ([TF] [Infra] TF 2.10.0 Uses Unimplemented "
                          "PartitionedCall op for Groupwise Convolution)")
 
@@ -1765,7 +1765,7 @@ class TestUpSampling(TensorFlowBaseTest):
 
 class TestGelu(TensorFlowBaseTest):
     @pytest.mark.skipif(
-        _get_version(_tf.__version__) < _StrictVersion("2.4.0"),
+        _get_version(_tf.__version__) < Version("2.4.0"),
         reason="Gelu is a new layer for tf 2.4.0 and above."
     )
     @pytest.mark.parametrize(

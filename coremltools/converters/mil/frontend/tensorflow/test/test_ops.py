@@ -9,11 +9,11 @@ import os
 import platform
 import shutil
 import tempfile
-from distutils.version import StrictVersion
 from typing import Optional
 
 import numpy as np
 import pytest
+from packaging.version import Version
 
 import coremltools as ct
 from coremltools import RangeDim, TensorType
@@ -2324,7 +2324,7 @@ class TestElementWiseUnary(TensorFlowBaseTest):
         if compute_unit != ct.ComputeUnit.CPU_ONLY and mode in self._FP16_UNSUPPORTED:
             return
 
-        if _get_version(tf.__version__) == StrictVersion(PREBUILT_TF1_WHEEL_VERSION):
+        if _get_version(tf.__version__) == Version(PREBUILT_TF1_WHEEL_VERSION):
             if mode in _PREBUILD_WHEEL_SEGFAULTING_MODE:
                 # we should re-enable these tests after this radar rdar://100735561 ([CI] Build a more stable TF1 Rosetta wheel for the lightning CI) is fixed
                 pytest.skip("Prebuilt wheel segfaulting on several functions.")

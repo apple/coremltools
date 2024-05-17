@@ -4,9 +4,9 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from distutils.version import StrictVersion
 
 import pandas as pd
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.converters.sklearn import convert
@@ -24,7 +24,7 @@ if _HAS_SKLEARN:
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
 
     @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
-    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+    @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def test_boston_OHE_plus_normalizer(self):
@@ -49,7 +49,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             result = evaluate_transformer(spec, input_data, output_data)
             assert result["num_errors"] == 0
 
-    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+    @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def _test_boston_OHE_plus_trees(self, loss='ls'):

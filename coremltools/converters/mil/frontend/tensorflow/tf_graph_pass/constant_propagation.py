@@ -4,9 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import gc
-from distutils.version import StrictVersion as _StrictVersion
 
 import tensorflow as tf
+from packaging.version import Version
 
 from coremltools import _logger as logger
 from coremltools._deps import _get_version
@@ -72,7 +72,7 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                 # We're only making one call to `sess.run()` in order to compute constant values.
                 # In this context, the default optimization settings make everything dramatically
                 # slower and more memory-intensive.
-                if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
+                if _get_version(tf.__version__) < Version("1.13.1"):
                     session_config = tf.ConfigProto()
                     session_config.graph_options.optimizer_options.opt_level = (
                         tf.OptimizerOptions.L0

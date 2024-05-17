@@ -5,11 +5,11 @@
 
 import itertools
 import unittest
-from distutils.version import StrictVersion
 
 import numpy as np
 import pandas as pd
 import pytest
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -82,7 +82,7 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
             max_leaf_nodes=[None, 20],
         )
 
-        if _SKLEARN_VERSION >= StrictVersion("0.19"):
+        if _SKLEARN_VERSION >= Version("0.19"):
             options["min_impurity_decrease"] = [1e-07, 0.1]
 
         # Make a cartesian product of all options
@@ -129,7 +129,7 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
             max_leaf_nodes=[None, 20],
         )
 
-        if _SKLEARN_VERSION >= StrictVersion("0.19"):
+        if _SKLEARN_VERSION >= Version("0.19"):
             options["min_impurity_decrease"] = [1e-07, 0.1]
 
         # Make a cartesian product of all options

@@ -16,8 +16,7 @@ from ...proto import OneHotEncoder_pb2 as _OHE_pb2
 from . import _sklearn_util
 
 if _HAS_SKLEARN:
-    from distutils.version import StrictVersion
-
+    from packaging.version import Version
     from sklearn.preprocessing import OneHotEncoder
 
     sklearn_class = OneHotEncoder
@@ -52,7 +51,7 @@ def convert(model, input_features, output_features):
 
     # Make sure the model is fitted.
     _sklearn_util.check_expected_type(model, OneHotEncoder)
-    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+    if _SKLEARN_VERSION >= Version("0.22"):
         _sklearn_util.check_fitted(model, lambda m: hasattr(m, "categories_"))
         _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_features_in_"))
     else:
@@ -71,7 +70,7 @@ def convert(model, input_features, output_features):
     expected_output_dimension = update_dimension(model, input_dimension)
     assert output_features[0][1] == datatypes.Array(expected_output_dimension)
 
-    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+    if _SKLEARN_VERSION >= Version("0.22"):
         model.categorical_features = "all"
         model.active_features_ = range(expected_output_dimension)
         model.feature_indices_ = [0]
@@ -224,7 +223,7 @@ def update_dimension(model, input_dimension):
             "scikit-learn not found. scikit-learn conversion API is disabled."
         )
 
-    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+    if _SKLEARN_VERSION >= Version("0.22"):
         _sklearn_util.check_fitted(model, lambda m: hasattr(m, "categories_"))
         _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_features_in_"))
         return sum(model._n_features_outs)
@@ -248,7 +247,7 @@ def get_input_dimension(model):
             "scikit-learn not found. scikit-learn conversion API is disabled."
         )
 
-    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+    if _SKLEARN_VERSION >= Version("0.22"):
         _sklearn_util.check_fitted(model, lambda m: hasattr(m, "categories_"))
         _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_features_in_"))
         return model.n_features_in_

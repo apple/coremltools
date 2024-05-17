@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from distutils.version import StrictVersion
+from packaging.version import Version
 
 from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from ...models import MLModel as _MLModel
@@ -62,7 +62,7 @@ def convert(model, input_features, output_features):
         base_prediction = model.init_.quantile
     else:
         # >= 0.22 GradientBoostingRegressor deprecated "mean" in favor of "constant_" attribute
-        if _SKLEARN_VERSION < StrictVersion("0.22"):
+        if _SKLEARN_VERSION < Version("0.22"):
             base_prediction = model.init_.mean
         else:
             base_prediction = model.init_.constant_

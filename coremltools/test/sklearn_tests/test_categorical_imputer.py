@@ -4,9 +4,9 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from distutils.version import StrictVersion
 
 import numpy as np
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 
@@ -41,7 +41,7 @@ class ImputerTestCase(unittest.TestCase):
         scikit_data = load_boston()
         # axis parameter deprecated in SimpleImputer >= 0.22. which now imputes
         # only along columns as desired here.
-        if _SKLEARN_VERSION >= StrictVersion("0.22"):
+        if _SKLEARN_VERSION >= Version("0.22"):
             scikit_model = Imputer(strategy="most_frequent")
         else:
             scikit_model = Imputer(strategy="most_frequent", axis=0)

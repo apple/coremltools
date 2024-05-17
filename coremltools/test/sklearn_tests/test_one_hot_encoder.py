@@ -5,9 +5,9 @@
 
 import unittest
 from copy import copy
-from distutils.version import StrictVersion
 
 import numpy as np
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -92,7 +92,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
     def test_conversion_one_column_of_several(self):
-        if _SKLEARN_VERSION >= StrictVersion("0.22"):
+        if _SKLEARN_VERSION >= Version("0.22"):
             scikit_model = OneHotEncoder()
         else:
             scikit_model = OneHotEncoder(categorical_features=[0])
@@ -119,7 +119,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
-    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+    @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def test_boston_OHE(self):
@@ -144,7 +144,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
-    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+    @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def test_boston_OHE_pipeline(self):
@@ -176,7 +176,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
-    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+    @unittest.skipIf(_SKLEARN_VERSION >= Version("0.22"),
         "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def test_random_sparse_data(self):

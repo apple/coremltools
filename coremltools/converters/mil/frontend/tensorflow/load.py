@@ -5,10 +5,10 @@
 
 import gc
 import os
-from distutils.version import StrictVersion as _StrictVersion
 from tempfile import mktemp
 
 import tensorflow as tf
+from packaging.version import Version
 from tqdm import tqdm as _tqdm
 
 from coremltools import _logger as logger
@@ -107,7 +107,7 @@ class TFLoader:
         logger.debug(msg.format(outputs))
         outputs = outputs if isinstance(outputs, list) else [outputs]
         outputs = [i.split(":")[0] for i in outputs]
-        if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
+        if _get_version(tf.__version__) < Version("1.13.1"):
             return tf.graph_util.extract_sub_graph(graph_def, outputs)
         else:
             return tf.compat.v1.graph_util.extract_sub_graph(graph_def, outputs)
@@ -148,7 +148,7 @@ class TF1Loader(TFLoader):
             if not os.path.exists(str(self.model)):
                 raise ValueError('Input model "{}" does not exist'.format(self.model))
             elif os.path.isfile(str(self.model)) and self.model.endswith(".pb"):
-                if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
+                if _get_version(tf.__version__) < Version("1.13.1"):
                     with open(self.model, "rb") as f:
                         gd = tf.GraphDef()
                         gd.ParseFromString(f.read())
@@ -249,7 +249,7 @@ class TF1Loader(TFLoader):
 
         # get model outputs
         output_node_names = []
-        if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
+        if _get_version(tf.__version__) < Version("1.13.1"):
             sess = tf.Session()
         else:
             sess = tf.compat.v1.Session()
@@ -263,7 +263,7 @@ class TF1Loader(TFLoader):
 
         # get frozen graph
         output_graph = mktemp()
-        tf.compat.v1.reset_default_graph() if _get_version(tf.__version__) >= _StrictVersion("1.13.1") else tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph() if _get_version(tf.__version__) >= Version("1.13.1") else tf.reset_default_graph()
         freeze_graph.freeze_graph(
             input_graph=None,
             input_saver=None,
@@ -282,7 +282,7 @@ class TF1Loader(TFLoader):
             saved_model_tags=",".join(saved_model_tags),
         )
 
-        if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
+        if _get_version(tf.__version__) < Version("1.13.1"):
             graph_def = tf.GraphDef()
             with open(output_graph, "rb") as f:
                 graph_def.ParseFromString(f.read())

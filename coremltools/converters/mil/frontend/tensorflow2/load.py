@@ -4,9 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os.path as _os_path
-from distutils.version import StrictVersion as _StrictVersion
 
 import tensorflow as _tf
+from packaging.version import Version
 from tensorflow.lite.python.util import \
     get_grappler_config as _get_grappler_config
 from tensorflow.lite.python.util import \
@@ -322,7 +322,7 @@ class TF2Loader(TFLoader):
         if len(cfs) != 1:
             raise NotImplementedError("Only a single concrete function is supported.")
 
-        if _get_version(_tf.__version__) >= _StrictVersion("2.2.0"):
+        if _get_version(_tf.__version__) >= Version("2.2.0"):
             frozen_fn = _convert_variables_to_constants_v2(cfs[0], lower_control_flow=False, aggressive_inlining=True)
         else:
             frozen_fn = _convert_variables_to_constants_v2(cfs[0], lower_control_flow=False)

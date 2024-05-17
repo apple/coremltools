@@ -10,9 +10,8 @@ optional includes
 import platform as _platform
 import re as _re
 import sys as _sys
-from distutils.version import StrictVersion as _StrictVersion
 
-from packaging import version
+from packaging.version import Version
 
 from coremltools import _logger as logger
 
@@ -28,11 +27,11 @@ def _get_version(version):
     # matching 1.6.1, and 1.6.1rc, 1.6.1.dev
     version_regex = r"^\d+\.\d+\.\d+"
     version = _re.search(version_regex, str(version)).group(0)
-    return _StrictVersion(version)
+    return Version(version)
 
 
 def _warn_if_above_max_supported_version(package_name, package_version, max_supported_version):
-    if _get_version(package_version) > _StrictVersion(max_supported_version):
+    if _get_version(package_version) > Version(max_supported_version):
         logger.warning(
             "%s version %s has not been tested with coremltools. You may run into unexpected errors. "
             "%s %s is the most recent version that has been tested."
@@ -62,16 +61,16 @@ def __get_sklearn_version(version):
     # matching 0.15b, 0.16bf, etc
     version_regex = r"^\d+\.\d+"
     version = _re.search(version_regex, str(version)).group(0)
-    return _StrictVersion(version)
+    return Version(version)
 
 
 try:
     import sklearn
 
     _SKLEARN_VERSION = __get_sklearn_version(sklearn.__version__)
-    if _SKLEARN_VERSION < _StrictVersion(
+    if _SKLEARN_VERSION < Version(
         _SKLEARN_MIN_VERSION
-    ) or _SKLEARN_VERSION > _StrictVersion(_SKLEARN_MAX_VERSION):
+    ) or _SKLEARN_VERSION > Version(_SKLEARN_MAX_VERSION):
         _HAS_SKLEARN = False
         logger.warning(
             (
@@ -117,14 +116,14 @@ try:
     tf_ver = _get_version(tensorflow.__version__)
 
     # TensorFlow
-    if tf_ver < _StrictVersion("2.0.0"):
+    if tf_ver < Version("2.0.0"):
         _HAS_TF_1 = True
 
-    if tf_ver >= _StrictVersion("2.0.0"):
+    if tf_ver >= Version("2.0.0"):
         _HAS_TF_2 = True
 
     if _HAS_TF_1:
-        if tf_ver < _StrictVersion(_TF_1_MIN_VERSION):
+        if tf_ver < Version(_TF_1_MIN_VERSION):
             logger.warning(
                 (
                     "TensorFlow version %s is not supported. Minimum required version: %s ."
@@ -134,7 +133,7 @@ try:
             )
         _warn_if_above_max_supported_version("TensorFlow", tensorflow.__version__, _TF_1_MAX_VERSION)
     elif _HAS_TF_2:
-        if tf_ver < _StrictVersion(_TF_2_MIN_VERSION):
+        if tf_ver < Version(_TF_2_MIN_VERSION):
             logger.warning(
                 (
                     "TensorFlow version %s is not supported. Minimum required version: %s ."
@@ -160,7 +159,7 @@ try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)
 
-    if _get_version(torch.__version__) >= _StrictVersion("2.1.0"):
+    if _get_version(torch.__version__) >= Version("2.1.0"):
         _HAS_TORCH_EXPORT_API = True
 
 except:
@@ -206,8 +205,8 @@ def version_ge(module, target_version):
     >>> import torch # v1.5.0
     >>> version_ge(torch, '1.6.0') # False
     """
-    return version.parse(module.__version__) >= version.parse(target_version)
+    return Version(module.__version__) >= Version(target_version)
 
 def version_lt(module, target_version):
     """See version_ge"""
-    return version.parse(module.__version__) < version.parse(target_version)
+    return Version(module.__version__) < Version(target_version)

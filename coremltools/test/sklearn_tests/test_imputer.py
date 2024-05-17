@@ -4,10 +4,10 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from distutils.version import StrictVersion
 
 import numpy as np
 import numpy.random as rn
+from packaging.version import Version
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -55,7 +55,7 @@ class NumericalImputerTestCase(unittest.TestCase):
         for strategy in ["mean", "median", "most_frequent"]:
             for missing_value in [0, "NaN", -999]:
                 # SimpleImputer >=0.22 does not accept missing values encoded as NaN.
-                if _SKLEARN_VERSION >= StrictVersion("0.22"):
+                if _SKLEARN_VERSION >= Version("0.22"):
                     if missing_value == "NaN":
                         continue
 
