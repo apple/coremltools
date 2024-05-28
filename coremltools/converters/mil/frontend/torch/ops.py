@@ -5397,6 +5397,10 @@ def clamp(context, node):
 
 
 @register_torch_op
+def clip(context, node):
+    clamp(context, node)
+
+@register_torch_op
 def triu(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
