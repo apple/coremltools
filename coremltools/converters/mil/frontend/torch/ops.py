@@ -5372,7 +5372,7 @@ def ceil(context, node):
     context.add(mb.ceil(x=inputs[0], name=node.name))
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["clip"])
 def clamp(context, node):
     inputs = _get_inputs(context, node, expected=[1,2,3])
     x = inputs[0]
@@ -5395,10 +5395,6 @@ def clamp(context, node):
     else:
         context.add(mb.clip(x=x, alpha=min_val, beta=max_val, name=node.name))
 
-
-@register_torch_op
-def clip(context, node):
-    clamp(context, node)
 
 @register_torch_op
 def triu(context, node):
