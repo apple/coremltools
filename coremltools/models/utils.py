@@ -7,6 +7,7 @@
 Utilities for the entire package.
 """
 
+import copy as _copy
 import math as _math
 import os as _os
 import shutil as _shutil
@@ -16,15 +17,27 @@ import tempfile as _tempfile
 import warnings as _warnings
 from collections.abc import Iterable as _Iterable
 from functools import lru_cache as _lru_cache
+from typing import Callable as _Callable
+from typing import Dict as _Dict
 from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 from typing import Union as _Union
 
 import numpy as _np
 
 import coremltools as _ct
+from coremltools import _SPECIFICATION_VERSION_IOS_16, _SPECIFICATION_VERSION_IOS_18
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import proto as _proto
+from coremltools.converters.mil import mil as _mil
+from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
+from coremltools.converters.mil.mil import Program as _Program
 from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer as _NameSanitizer
+from coremltools.converters.mil.mil.passes.defs.randomize import (
+    WeightRandomizer as _WeightRandomizer,
+)
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass as _AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY as _PASS_REGISTRY
 
 from .._deps import _HAS_SCIPY
 
@@ -67,13 +80,21 @@ def _create_mlpackage(
     package_path: _Optional[str] = None,
 ) -> str:
     """
-    Args:
-        proto_spec: The proto spec of the model.
-        weights_dir: Copy weights from this path to the mlpackage.
-        package_path: Place the created mlpackage at this path. Error out if this path is a non-empty directory.
 
-    Returns:
-        path to the mlpackage
+    Parameters
+    ----------
+    proto_spec
+        The proto spec of the model.
+
+    weights_dir
+        Copy weights from this path to the ``mlpackage``.
+
+    package_path
+        Place the created ``mlpackage`` at this path. Error out if this path is a non-empty directory.
+
+    Returns
+    -------
+    path to the ``mlpackage``.
     """
     if package_path is None:
         package_path = _tempfile.mkdtemp(suffix=_MLPACKAGE_EXTENSION)
@@ -121,17 +142,17 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
     Parameters
     ----------
     spec: Model_pb
-        Protobuf representation of the model
+        Protobuf representation of the model.
 
     filename: str
-        File path where the spec gets saved.
+        File path where the spec is saved.
 
     auto_set_specification_version: bool
-        If True, will always try to set specification version automatically.
+        If ``True``, will always try to set specification version automatically.
 
     weights_dir: str
         Path to the directory containing the weights.bin file. This is required
-        when the spec has model type mlprogram. If the mlprogram does not contain
+        when the spec has model type ``mlprogram``. If the ``mlprogram`` does not contain
         any weights, this path can be an empty directory.
 
     Examples
@@ -192,7 +213,7 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
 
 def load_spec(model_path: str) -> _proto.Model_pb2:
     """
-    Load a protobuf model specification from file (mlmodel) or directory (mlpackage).
+    Load a protobuf model specification from file (``mlmodel``) or directory (``mlpackage``).
 
     Parameters
     ----------
@@ -201,7 +222,7 @@ def load_spec(model_path: str) -> _proto.Model_pb2:
     Returns
     -------
     model_spec: Model_pb
-        Protobuf representation of the model
+        Protobuf representation of the model.
 
     Examples
     --------
@@ -239,7 +260,7 @@ def _get_nn_layers(spec):
     Returns
     -------
     [NN layer]
-        list of all layers (including layers from elements of a pipeline
+        list of all layers (including layers from elements of a pipeline).
 
     """
 
@@ -314,21 +335,21 @@ def _convert_neural_network_spec_weights_to_fp16(fp_spec):
 
 def _convert_neural_network_weights_to_fp16(full_precision_model):
     """
-    Utility function to convert a full precision (float) MLModel to a
-    half precision MLModel (float16).
+    Utility function to convert a full-precision (float) MLModel to a
+    half-precision MLModel (float16).
 
     Parameters
     ----------
     full_precision_model: MLModel
         Model which will be converted to half precision. Currently conversion
         for only neural network models is supported. If a pipeline model is
-        passed in then all embedded neural network models embedded within
+        passed in, then all embedded neural network models embedded within
         will be converted.
 
     Returns
     -------
     model: MLModel
-        The converted half precision MLModel
+        The converted half precision MLModel.
 
     """
     spec = full_precision_model.get_spec()
@@ -348,19 +369,19 @@ def _get_model(spec, compute_units=_ComputeUnit.ALL):
 
 def evaluate_regressor(model, data, target="target", verbose=False):
     """
-    Evaluate a CoreML regression model and compare against predictions
+    Evaluate a Core ML regression model and compare against predictions
     from the original framework (for testing correctness of conversion).
 
     Parameters
     ----------
     model: MLModel or str
-        A loaded MLModel or a path to a saved MLModel
+        A loaded MLModel or a path to a saved MLModel.
 
     data: Dataframe
-        Test data on which to evaluate the models
+        Test data on which to evaluate the models.
 
     target: str
-       Name of the column in the dataframe to be compared against the prediction
+       Name of the column in the dataframe to be compared against the prediction.
 
     verbose: bool
        Set to true for a more verbose output.
@@ -421,18 +442,18 @@ def evaluate_classifier(model, data, target="target", verbose=False):
     Parameters
     ----------
     filename: list of str or list of MLModel
-        File from where to load the model from (OR) a loaded
+        File to load the model from, or a loaded
         version of the MLModel.
 
     data: list of str or list of Dataframe
         Test data on which to evaluate the models (dataframe,
-        or path to a csv file).
+        or path to a CSV file).
 
     target: str
-       Column to interpret as the target column
+       Column to interpret as the target column.
 
     verbose: bool
-       Set to true for a more verbose output.
+       Set to true for more verbose output.
 
     See Also
     --------
@@ -483,15 +504,15 @@ def evaluate_classifier_with_probabilities(
     Parameters
     ----------
     filename: [str | Model]
-        File from where to load the model from (OR) a loaded
+        File to load the model from, or a loaded
         version of the MLModel.
 
     data: [str | Dataframe]
         Test data on which to evaluate the models (dataframe,
-        or path to a csv file).
+        or path to a CSV file).
 
     probabilities: str
-       Column to interpret as the probabilities column
+       Column to interpret as the probabilities column.
 
     verbose: bool
        Verbosity levels of the predictions.
@@ -561,12 +582,12 @@ def rename_feature(
         New name of the feature.
 
     rename_inputs: bool
-        Search for `current_name` only in the input features (i.e ignore output
-        features)
+        Search for ``current_name`` only in the input features (that is, ignore output
+        features).
 
     rename_outputs: bool
-        Search for `current_name` only in the output features (i.e ignore input
-        features)
+        Search for ``current_name`` only in the output features (that is, ignore input
+        features).
 
     Examples
     --------
@@ -752,8 +773,8 @@ def evaluate_transformer(model, input_data, reference_output, verbose=False):
     Parameters
     ----------
     spec: list of str or list of MLModel
-        File from where to load the Model from (OR) a loaded
-        version of MLModel.
+        File to load the Model from, or a loaded
+        version of the MLModel.
 
     input_data: list of dict
         Test data on which to evaluate the models.
@@ -825,7 +846,7 @@ def _has_custom_layer(spec):
     Returns
     -------
 
-    True if the protobuf specification contains a neural network with a custom layer, False otherwise.
+    ``True`` if the protobuf specification contains a neural network with a custom layer, ``False`` otherwise.
 
     """
 
@@ -840,7 +861,7 @@ def _has_custom_layer(spec):
 def _get_custom_layer_names(spec):
     """
 
-    Returns a list of className fields which appear in the given protobuf spec
+    Returns a list of ``className`` fields which appear in the given protobuf spec.
 
     Parameters
     ----------
@@ -848,8 +869,8 @@ def _get_custom_layer_names(spec):
 
     Returns
     -------
-
-    set(str) A set of unique className fields of custom layers that appear in the model.
+    set(str)
+        A set of unique ``className`` fields of custom layers that appear in the model.
 
     """
     layers = _get_nn_layers(spec)
@@ -872,8 +893,8 @@ def _get_custom_layers(spec):
 
     Returns
     -------
-
-    [NN layer] A list of custom layer implementations
+    [NN layer]
+        A list of custom layer implementations.
     """
     layers = _get_nn_layers(spec)
     layers_out = []
@@ -887,20 +908,21 @@ def _get_custom_layers(spec):
 def _replace_custom_layer_name(spec, oldname, newname):
     """
 
-    Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no
-    layers with className=oldname, then the spec is unchanged.
+    Substitutes ``newname`` for ``oldname`` in the ``className`` field of custom layers. If there are no custom layers, or no
+    layers with ``className`` = ``oldname``, then the spec is unchanged.
 
     Parameters
     ----------
     spec: mlmodel spec
 
-    oldname: str The custom layer className to be replaced.
+    oldname: str
+        The custom layer ``className`` to be replaced.
 
-    newname: str The new className value to replace oldname
+    newname: str
+        The new ``className`` value to replace ``oldname``.
 
     Returns
     -------
-
     An mlmodel spec.
 
     """
@@ -964,12 +986,12 @@ def _get_input_names(spec):
 def convert_double_to_float_multiarray_type(spec):
     """
     Convert all double multiarrays feature descriptions (input, output, training input)
-    to float multiarrays
+    to float multiarrays.
 
     Parameters
     ----------
     spec: Model_pb
-        The specification containing the multiarrays types to convert
+        The specification containing the multiarrays types to convert.
 
     Examples
     --------
@@ -1009,7 +1031,7 @@ def compile_model(model: _proto.Model_pb2.Model, destination_path: _Optional[str
     model: Model_pb2
         Spec/protobuf to compile.
 
-        Note: an mlprogam which uses a blob file is not supported.
+        Note: an ``mlprogam`` which uses a blob file is not supported.
 
     destination_path: str
         Path where the compiled model will be saved.
@@ -1018,7 +1040,7 @@ def compile_model(model: _proto.Model_pb2.Model, destination_path: _Optional[str
     -------
 
     str : Path to compiled model directory
-        If the destination_path is specified, that is the value that will be returned.
+        If the ``destination_path`` is specified, that is the value that will be returned.
 
     Examples
     --------
@@ -1238,3 +1260,418 @@ def make_pipeline(
                 _shutil.copyfile(weight_file_path, dst + f"/{i}-weight.bin")
 
     return _ct.models.MLModel(pipeline_spec, compute_units=compute_units, weights_dir=dst)
+
+
+def _convert_model_spec_to_pymil_prog(
+    mlmodel: "_ct.models.MLModel",
+    specification_version: int,
+    pymil_load_func: _Callable,
+    skip_model_load: bool = False,
+) -> _Program:
+    """
+    A utility that converts an ``mlprogram`` model into PyMIL program.
+    """
+    model_spec = mlmodel.get_spec()
+    model_type = model_spec.WhichOneof("Type")
+    if model_type in (
+        "neuralNetwork",
+        "neuralNetworkClassifier",
+        "neuralNetworkRegressor",
+        "pipeline",
+        "PipelineClassifier",
+        "PipelineRegressor",
+    ):
+        msg = (
+            "coremltools.optimize.coreml are meant to be used only with mlprogram typed coreml models. "
+            "This model has type {}. Please use coremltools.models.neural_network.quantization_utils.quantize_weights"
+            "instead to compress the weights of the model."
+        )
+        raise TypeError(msg.format(model_type))
+    elif model_type == "mlProgram":
+        pass
+    else:
+        raise TypeError("weight compression not applicable for model type {}".format(model_type))
+
+    prog = pymil_load_func(
+        model_spec=model_spec,
+        specification_version=specification_version,
+        file_weights_dir=mlmodel.weights_dir,
+        skip_model_load=skip_model_load,
+    )
+    return prog
+
+
+def _apply_graph_pass(
+    mlmodel: "_ct.models.MLModel",
+    graph_pass: _AbstractGraphPass,
+    spec_version: int = _SPECIFICATION_VERSION_IOS_16,
+    skip_model_load: bool = False,
+    pymil_load_func: _Callable = _milproto_to_pymil.load,
+    return_pymil_prog: bool = False,
+) -> _Union["_ct.models.MLModel", _Program]:
+    # We do the lazy import to prevent circular import
+    from coremltools.converters.mil.converter import mil_convert as _mil_convert
+
+    # Utility function which compresses a Core ML model
+    # Converts the full precision mlmodel into a pymil program
+    model_spec = mlmodel.get_spec()
+    specification_version = max(model_spec.specificationVersion, spec_version)
+    prog = _convert_model_spec_to_pymil_prog(
+        mlmodel, specification_version, pymil_load_func, skip_model_load
+    )
+
+    # Apply graph pass.
+    print(type(graph_pass))
+    assert isinstance(
+        graph_pass, _AbstractGraphPass
+    ), "graph pass must be an AbstractGraphPass instance"
+    graph_pass.apply(prog)
+
+    # An early return can prevent running all other optimization paths triggered by _mil_convert.
+    if return_pymil_prog:
+        return prog
+
+    # Convert the pymil program back to mlmodel
+    compressed_mlmodel = _mil_convert(
+        prog,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=specification_version,
+        compute_units=mlmodel.compute_unit,
+        model_description=model_spec.description,
+        skip_model_load=skip_model_load,
+    )
+    return compressed_mlmodel
+
+
+def _try_get_weights_dir_path(mlpackage_path):
+    """
+    Try to find the weights in mlpackage and return the path to the weights directory if found.
+    Return None if not found.
+    :param mlpackage_path: str, path to the mlpackage directory
+    :return: path to the weights directory inside the mlpackage directory
+    """
+    weights_dir = None
+    try:
+        if _ModelPackage.isValid(mlpackage_path):
+            item_info = _ModelPackage(mlpackage_path).findItemByNameAuthor(
+                _WEIGHTS_DIR_NAME, _MLPACKAGE_AUTHOR_NAME
+            )
+            if item_info is not None:
+                weights_dir = item_info.path()
+    except:
+        pass
+    return weights_dir
+
+
+class MultiFunctionDescriptor:
+    """
+    The data class defines how to construct a multifunction model from different model sources.
+    The users can use the ``add_function`` method to specify the path to the source ``mlpackage``,
+    along with the source and target function names.
+
+    After setting the ``default_function_name`` to the ``MultiFunctionDescriptor`` instance,
+    a multifunction model can be exported using the ``save_multifunction`` method.
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        from coremltools.utils import MultiFunctionDescriptor, save_multifunction
+
+        # Initialize a MultiFunctionDescriptor instance with functions in an existing mlpackage.
+        # desc will constain all functions in "my_model.mlpackage"
+        desc = MultiFunctionDescriptor("my_model.mlpackage")
+
+        # Construct a MultiFunctionDescriptor instance from scratch.
+        # The below code inserts "main" function from "my_model.mlpackage" as "main_1",
+        # and inserts "main" function from "my_model_2.mlpackage" as "main_2".
+        desc = MultiFunctionDescriptor()
+        desc.add_function(
+            model_path="my_model.mlpackage",
+            source_function_name="main",
+            target_function_name="main_1",
+        )
+        desc.add_function(
+            model_path="my_model_2.mlpackage",
+            source_function_name="main",
+            target_function_name="main_2",
+        )
+
+        # Each MultiFunctionDescriptor must has a default function name before saved
+        # as a multifunction mlpackage on disk.
+        desc.default_function_name = "main_1"
+        save_multifunction(desc, "my_multifunction_model.mlpackage")
+
+    See Also
+    --------
+    save_multifunction
+
+    """
+
+    def __init__(self, model_path: _Optional[str] = None):
+        """
+        If ``model_path`` is passed to the constructor, it must be a str pointing to a
+        mlpackage on disk. The MultiFunctionDescriptor instance will be initiated
+        with functions in ``model_path``.
+        """
+        self._default_function_name = None
+        self._name_to_source_function = {}
+        self._modelpath_to_functions = {}
+        self._modelpath_to_spec = {}
+
+        if model_path is not None:
+            self.add_model(model_path)
+
+    def _functions(self) -> _Dict[str, _Tuple[str, str]]:
+        """
+        Returns ``self._name_to_source_function``
+        """
+        return _copy.copy(self._name_to_source_function)
+
+    def _add_modelpath_to_cache(self, model_path: str) -> None:
+        """
+        Given a mlpackage path ``model_path``, the utils caches related metadata.
+        """
+        if model_path in self._modelpath_to_functions:
+            return
+
+        try:
+            spec = load_spec(model_path)
+        except Exception as err:
+            raise ValueError(f"invalid model_path {model_path} with error {err} while loading.")
+
+        desc = spec.description
+
+        # for the iOS17 and below protobuf, there were no functions field,
+        # in which "main" is the only function associated with the model.
+        if len(desc.functions) == 0:
+            self._modelpath_to_functions[model_path] = ["main"]
+        else:
+            self._modelpath_to_functions[model_path] = [func.name for func in desc.functions]
+        self._modelpath_to_spec[model_path] = spec
+
+    @property
+    def default_function_name(self) -> _Union[str, None]:
+        return self._default_function_name
+
+    @default_function_name.setter
+    def default_function_name(self, val: str) -> None:
+        if not isinstance(val, str):
+            raise ValueError(f"default_function_name must be type of str. Got {val}.")
+        self._default_function_name = val
+
+    def add_function(
+        self, model_path: str, src_function_name: str, target_function_name: str
+    ) -> None:
+        """
+        Insert ``src_function_name`` function from ``model_path`` as ``target_function_name``
+        function in the multifunction descriptor.
+        """
+        self._add_modelpath_to_cache(model_path)
+
+        if src_function_name not in self._modelpath_to_functions[model_path]:
+            raise ValueError(f"src_function_name {src_function_name} not found in {model_path}.")
+
+        if target_function_name in self._name_to_source_function:
+            raise ValueError(f"function {target_function_name} already exist.")
+
+        self._name_to_source_function[target_function_name] = (model_path, src_function_name)
+
+    def add_model(self, model_path: str) -> None:
+        """
+        Insert all functions in ``model_path`` into the multifunction descriptor.
+        Same function names in the original model will be applied.
+        """
+        self._add_modelpath_to_cache(model_path)
+
+        for func_name in self._modelpath_to_functions[model_path]:
+            self.add_function(model_path, func_name, func_name)
+
+    def remove_function(self, function_name: str) -> None:
+        """
+        Remove function ``function_name`` from the multifunction descriptor.
+        """
+        if function_name not in self._name_to_source_function:
+            raise ValueError(f"function_name {function_name} not found.")
+        del self._name_to_source_function[function_name]
+
+
+def save_multifunction(
+    desc: MultiFunctionDescriptor,
+    destination_path: str,
+):
+    """
+    Save a MultiFunctionDescriptor instance into a multifunction ``mlpackage``.
+    The utility also performs constant deduplication across functions to allow weight sharing.
+
+    Parameters
+    ----------
+    desc : MultiFunctionDescriptor
+        Multifunction descriptor to save on the disk.
+
+    destination_path : str
+        The saved ``mlpackage`` model path.
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        from coremltools.utils import MultiFunctionDescriptor, save_multifunction
+
+        desc = MultiFunctionDescriptor("my_model_1.mlpackage")
+        desc.add_function("my_model_2.mlpackage", "main", "main_2")
+        desc.default_function_name = "main_2"
+
+        save_multifunction(desc, "multifunctino_model.mlpackage")
+
+    See Also
+    --------
+    MultiFunctionDescriptor
+
+    """
+    # We do the lazy import to prevent circular import
+    from coremltools.converters.mil.converter import mil_convert as _mil_convert
+
+    def get_function_spec(
+        spec: _proto.Model_pb2, func_name: str
+    ) -> _proto.Model_pb2.FunctionDescription:
+        """
+        Utils to construct a FunctionDescription from the source spec.
+        """
+        model_desc = spec.description
+        # For single function model, we construct the FunctionDescription ourselves
+        if len(model_desc.functions) == 0:
+            assert func_name == "main", f"invalid function name {func_name}"
+            return _proto.Model_pb2.FunctionDescription(
+                input=model_desc.input,
+                output=model_desc.output,
+                state=model_desc.state,
+                predictedFeatureName=model_desc.predictedFeatureName,
+                predictedProbabilitiesName=model_desc.predictedProbabilitiesName,
+            )
+        # For multifunction model, we look for the corresponding FunctionDescription
+        for func_desc in model_desc.functions:
+            if func_desc.name != func_name:
+                continue
+            res = _proto.Model_pb2.FunctionDescription()
+            res.CopyFrom(func_desc)
+            res.name = ""
+            return res
+
+    # compile model information: spec / weight_dir
+    modelpath_to_spec_and_weightdir = {}
+    for k, v in desc._name_to_source_function.items():
+        model_path = v[0]
+        if model_path in modelpath_to_spec_and_weightdir:
+            continue
+        spec = desc._modelpath_to_spec[model_path]
+        weight_dir = _try_get_weights_dir_path(model_path)
+        if weight_dir is None:
+            raise ValueError(f"weight_dir for model_path {model_path} not found.")
+        modelpath_to_spec_and_weightdir[model_path] = (spec, weight_dir)
+
+    # min spec version to support multi-functions model is iOS18
+    # we also make the target spec version the max among the input models
+    spec_version = max(
+        map(lambda val: val[0].specificationVersion, modelpath_to_spec_and_weightdir.values())
+    )
+    spec_version = max(spec_version, _SPECIFICATION_VERSION_IOS_18)
+
+    # convert spec into pymil program
+    modelpath_to_pymil = {}
+    for model_path, (spec, weight_dir) in modelpath_to_spec_and_weightdir.items():
+        prog = _milproto_to_pymil.load(
+            spec,
+            spec_version,
+            weight_dir,
+        )
+        modelpath_to_pymil[model_path] = prog
+
+    # construct a multifunction pymil program
+    multifunction_prog = _mil.Program()
+    function_to_desc = {}
+    for target_func_name, v in desc._name_to_source_function.items():
+        model_path = v[0]
+        src_func_name = v[1]
+        prog = modelpath_to_pymil[model_path]
+        multifunction_prog.add_function(target_func_name, prog.functions[src_func_name])
+
+        # get the corresponding function description from the spec
+        spec = modelpath_to_spec_and_weightdir[model_path][0]
+        function_spec = get_function_spec(spec, src_func_name)
+        assert function_spec.name == "", "function_spec should not have name set"
+        function_spec.name = target_func_name
+        function_to_desc[target_func_name] = function_spec
+
+    # Here we deduplicate the same weights across functions, to allow consts to use
+    # the same blob file value when lowered into milproto.
+    # By weight sharing, we can make the model size as small as we could.
+    graph_pass = _PASS_REGISTRY["common::const_deduplication"]
+    graph_pass._deduplicate_const_across_functions(multifunction_prog)
+
+    # set default function name
+    default_function_name = desc.default_function_name
+    if default_function_name is None:
+        raise ValueError(
+            "default_function_name must be set for the MultiFunctionDescriptor instance before calling save_multifunction."
+        )
+
+    if default_function_name not in multifunction_prog.functions:
+        raise ValueError(
+            f"default_function_name {default_function_name} not found in the program. Available functions names are {list(multifunction_prog.functions.keys())}"
+        )
+    multifunction_prog.default_function_name = default_function_name
+
+    # export program into multi-functions CoreML model
+    functions = []
+    for func in multifunction_prog.functions:
+        functions.append(function_to_desc[func])
+    model_description = _proto.Model_pb2.ModelDescription(
+        functions=functions,
+        defaultFunctionName=default_function_name,
+    )
+    multifunction_prog.skip_all_passes = True
+    mlmodel = _mil_convert(
+        multifunction_prog,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=spec_version,
+        compute_units=_ct.ComputeUnit.CPU_ONLY,
+        model_description=model_description,
+        export_multi_functions=True,
+        skip_model_load=True,
+    )
+    mlmodel.save(destination_path)
+
+
+def randomize_weights(mlmodel: "_ct.models.MLModel"):
+    """
+    Utility function to randomize weights
+
+    Parameters
+    ----------
+    mlmodel: MLModel
+        Model which will be randomized.
+
+    Returns
+    -------
+    model: MLModel
+        The MLModel with randomized weights.
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        import coremltools as ct
+
+        model = ct.models.MLModel("my_model.mlpackage")
+        randomized_mlmodel = ct.models.utils.randomize_weights(mlmodel)
+
+    """
+
+    randomized_mlmodel = _apply_graph_pass(
+        mlmodel, graph_pass=_WeightRandomizer(), skip_model_load=True
+    )
+
+    return randomized_mlmodel

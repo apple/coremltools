@@ -110,6 +110,9 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;

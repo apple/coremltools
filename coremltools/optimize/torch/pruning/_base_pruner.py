@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -10,20 +10,26 @@ from typing import Tuple as _Tuple
 
 import torch as _torch
 
+from coremltools.optimize.torch._utils.metadata_utils import (
+    register_metadata_version as _register_metadata_version,
+)
 from coremltools.optimize.torch._utils.torch_utils import get_eval_model as _get_eval_model
 from coremltools.optimize.torch.base_model_optimizer import (
-    BaseModelOptimizer as _BaseModelOptimizer,
+    BaseTrainingTimeModelOptimizer as _BaseTrainingTimeModelOptimizer,
 )
 from coremltools.optimize.torch.base_model_optimizer import _Report
 from coremltools.optimize.torch.optimization_config import OptimizationConfig as _OptimizationConfig
 from coremltools.optimize.torch.pruning._utils import (
     get_global_sparsity_summaries as _get_global_sparsity_summaries,
 )
+from coremltools.optimize.torch.pruning._utils import (
+    register_compression_metadata as _register_compression_metadata,
+)
 
 _logger = _logging.getLogger(__name__)
 
 
-class BasePruner(_BaseModelOptimizer):
+class BasePruner(_BaseTrainingTimeModelOptimizer):
     pass
 
 
@@ -51,7 +57,7 @@ class BasePrunerWithPruningMethod(BasePruner):
             inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and
                 the original module is mutated, otherwise a copy of the model is mutated and returned.
         """
-        return _copy.deepcopy(self._model) if not inplace else self._model
+        return self._get_model_for_compression(inplace=inplace)
 
     def step(self):
         """
@@ -76,9 +82,11 @@ class BasePrunerWithPruningMethod(BasePruner):
         if model is None:
             model = self._model
         finalized_model = model if inplace else _copy.deepcopy(model)
-        for _, submodule in finalized_model.named_modules(remove_duplicate=True):
+        _register_metadata_version(finalized_model)
+        for name, submodule in finalized_model.named_modules(remove_duplicate=True):
             if hasattr(submodule, "pruning_method"):
                 submodule.pruning_method.remove(submodule)
+                _register_compression_metadata(submodule, self._pruner_info[name].config)
         if model is None:
             self._model = finalized_model
         return finalized_model

@@ -68,6 +68,7 @@ def run_compare_builder(
     also_compare_shapes=True,
     converter=ct.convert,
     pass_pipeline: Optional[PassPipeline] = None,
+    pred_iters: Optional[int] = None,
 ):
     """
     Inputs:
@@ -100,8 +101,11 @@ def run_compare_builder(
 
         - backend: A BackendConfig that specifies the compute backend, precision and minimum_deployment_target
 
+        - pred_iters: Number of prediction to run the mlmodel. For a stateful model,
+          each prediction can have different numerical results. Can only be provided when mlmodel is stateful.
+
     Returns:
-        The converted mlmodel
+        The converted mlmodel (MLModel), or Tuple[MLModel, MLState].
     """
     if backend is None:
         backend = BackendConfig(
@@ -180,26 +184,36 @@ def run_compare_builder(
     if frontend_only:
         return mlmodel
 
-    if expected_outputs:
-        assert len(output_vars) == len(expected_outputs), (
-            "Provided expected_outputs {}"
-            " should match number of output"
-            " variables {}".format(len(expected_outputs), len(output_vars))
+    state = mlmodel.make_state() if mlmodel._is_stateful() else None
+
+    if pred_iters is not None:
+        assert state is not None, "pred_iters can only be provided with stateful model."
+    else:
+        pred_iters = 1
+
+    for i in range(pred_iters):
+        # get the expected outputs from each prediction iteration
+        outputs = None
+        if expected_outputs is not None:
+            outputs = expected_outputs if pred_iters == 1 else expected_outputs[i]
+            assert len(output_vars) == len(outputs), (
+                f"Provided expected_outputs {len(outputs)}"
+                " should match number of output"
+                f" variables {len(output_vars)}"
+            )
+            outputs = {name: val for name, val in zip(output_names, outputs)}
+
+        # run the mlmodel and compare the output numerical
+        compare_backend(
+            mlmodel=mlmodel,
+            input_key_values=input_values,
+            expected_outputs=outputs,
+            atol=atol,
+            rtol=rtol,
+            also_compare_shapes=also_compare_shapes,
+            dtype=backend[1],
+            state=state,
         )
-
-        expected_outputs = {
-            name: val for name, val in zip(output_names, expected_outputs)
-        }
-
-    compare_backend(
-        mlmodel=mlmodel,
-        input_key_values=input_values,
-        expected_outputs=expected_outputs,
-        atol=atol,
-        rtol=rtol,
-        also_compare_shapes=also_compare_shapes,
-        dtype=backend[1],
-    )
 
     return mlmodel
 

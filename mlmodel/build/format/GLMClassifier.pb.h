@@ -114,6 +114,9 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -552,7 +555,7 @@ inline ::CoreML::Specification::GLMClassifier_PostEvaluationTransform GLMClassif
   return static_cast< ::CoreML::Specification::GLMClassifier_PostEvaluationTransform >(postevaluationtransform_);
 }
 inline void GLMClassifier::set_postevaluationtransform(::CoreML::Specification::GLMClassifier_PostEvaluationTransform value) {
-  
+
   postevaluationtransform_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.GLMClassifier.postEvaluationTransform)
 }
@@ -566,7 +569,7 @@ inline ::CoreML::Specification::GLMClassifier_ClassEncoding GLMClassifier::class
   return static_cast< ::CoreML::Specification::GLMClassifier_ClassEncoding >(classencoding_);
 }
 inline void GLMClassifier::set_classencoding(::CoreML::Specification::GLMClassifier_ClassEncoding value) {
-  
+
   classencoding_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.GLMClassifier.classEncoding)
 }

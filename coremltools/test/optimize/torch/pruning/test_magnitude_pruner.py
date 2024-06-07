@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -9,7 +9,9 @@ from collections import OrderedDict
 import numpy as np
 import pytest
 import torch
+import torch.nn as nn
 
+from coremltools.optimize.torch._utils.metadata_utils import CompressionMetadata, CompressionType
 from coremltools.optimize.torch.pruning import (
     MagnitudePruner,
     MagnitudePrunerConfig,
@@ -23,7 +25,7 @@ def _zero_loss(x, y):
 
 
 def _mock_initializer(shape, dtype):
-    # Each output channel is (entirely) an integer, increasing. This makes it so
+    # Each output channel is (entirely) an integer, increaing. This makes it so
     # that we know what to expect from the LnPruner.
     output_channel_index = 0
     num_output_channels = shape[output_channel_index]
@@ -77,9 +79,8 @@ def sample_data():
     return X, Y
 
 
-
-@pytest.mark.parametrize('out_channels', [17, 127])
-@pytest.mark.parametrize('block_size', [2, 3, 4])
+@pytest.mark.parametrize("out_channels", [17, 127])
+@pytest.mark.parametrize("block_size", [2, 3, 4])
 def test_magnitude_pruner_nondivisible_block_size(out_channels, block_size):
     """
     Test block sparsity when the number of channels is not divisible by block size
@@ -118,31 +119,53 @@ def test_magnitude_pruner_nondivisible_block_size(out_channels, block_size):
     np.testing.assert_array_almost_equal(sparsity, 0.5, decimal=2)
 
 
-def test_magnitude_pruner_incompatible_block_size(simple_module):
+@pytest.mark.parametrize("out_channels", [8])
+@pytest.mark.parametrize("block_size", [5, 8, 9])
+def test_magnitude_pruner_morethanhalf_block_size(out_channels, block_size):
     """
-    Test MagnitudePruner init failure when block_size is incompatibe with the number of channels
-    in the block sparsity dimension
+    Test block sparsity when the block size is greater than half the number of channels
     """
-    # block size greater than half the number of channels
-    with pytest.raises(ValueError):
-        config = MagnitudePrunerConfig.from_dict(
-            {"global_config":
-                {
-                    "scheduler": {"update_steps": [0, 1]},
-                    "block_size": 4
-                }},
-        )
-        pruner = MagnitudePruner(simple_module, config)
-        pruner.prepare(inplace=True)
-    # block size greater than half the number of channels
-    config.global_config.block_size = 4
-    with pytest.raises(ValueError):
-        pruner = MagnitudePruner(simple_module, config)
-        pruner.prepare(inplace=True)
+    conv2d = torch.nn.Conv2d(
+        in_channels=3,
+        out_channels=out_channels,
+        kernel_size=(3, 3),
+        bias=False,
+        groups=1,
+    )
+
+    weight_tensor = torch.rand_like(conv2d.weight)
+    weight_tensor[weight_tensor == 0] = 1.0
+    conv2d.weight.data = weight_tensor
+
+    config = MagnitudePrunerConfig.from_dict(
+        {
+            "global_config": {
+                "scheduler": {"update_steps": [1, 2]},
+                "initial_sparsity": 0.0,
+                "target_sparsity": 0.5,
+                "block_size": block_size,
+            }
+        },
+    )
+    pruner = MagnitudePruner(conv2d, config)
+    conv2d = pruner.prepare()
+
+    for _ in range(4):
+        pruner.step()
+
+    if block_size > 1:
+        block_sparse_channels = out_channels - out_channels % block_size
+        for idx in range(0, block_sparse_channels, block_size):
+            for jdx in range(1, block_size):
+                assert torch.all(conv2d.weight_mask[idx] == conv2d.weight_mask[idx + jdx])
+
+    sparsity = conv2d.weight_mask.eq(0).sum() / conv2d.weight_mask.numel()
+    assert np.isclose(sparsity, 0.5, rtol=0.05)
+
 
 @pytest.mark.parametrize(
     "options",
-    [("block_size", 2), ("initial_sparsity", 0.5), ("granularity", "per_channel")],
+    [("block_size", 2), ("granularity", "per_channel")],
 )
 def test_magnitude_pruner_n_m_ratio_param_usage(options):
     param_name, val = options
@@ -568,3 +591,33 @@ def test_nm_pruner_polynomial_scheduler():
         model(data)
         for row in range(2):
             assert torch.count_nonzero(model.weight_mask[row]) == (7 - idx)
+
+
+def test_compression_metadata():
+    """
+    Test that calling finalize on the module leads to compression metadata being added to the model
+    """
+    model = nn.Sequential(
+        OrderedDict([("conv1", nn.Conv2d(3, 32, 3)), ("fc1", nn.Linear(32, 100))])
+    )
+    # Disable compression for Linear layer
+    config = MagnitudePrunerConfig().set_module_name("fc1", None)
+    pruner = MagnitudePruner(model, config)
+    pruner.prepare(inplace=True)
+    pruner.step()
+    pruner.finalize(inplace=True)
+
+    # Verify metadata version is added to model
+    assert "_COREML_/metadata_version" in model.state_dict()
+
+    # Verify compression metadata is added for conv1
+    metadata_dict = CompressionMetadata.from_state_dict(model.conv1.state_dict())
+    assert len(metadata_dict) == 1
+    assert "weight" in metadata_dict
+
+    metadata = metadata_dict["weight"]
+    assert metadata.compression_type == [CompressionType.pruning.value]
+
+    # Verify no compression metadata is added for fc1
+    metadata_dict = CompressionMetadata.from_state_dict(model.fc1.state_dict())
+    assert len(metadata_dict) == 0

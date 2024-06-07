@@ -259,6 +259,9 @@ class TorchBaseTest:
         backend=("neuralnetwork", "fp32"),
         rand_range=(-1.0, 1.0),
         use_scripting=False,
+        # TODO (rdar://128768037): Once we fully figure out torch.export converter,
+        # we may default the tests to ATen dialect
+        use_edge_dialect=True,
         converter_input_type=None,
         compute_unit=ct.ComputeUnit.CPU_ONLY,
         minimum_deployment_target=None,
@@ -298,8 +301,9 @@ class TorchBaseTest:
                 input_data_clone = tuple(input_data_clone)
             elif isinstance(input_data_clone, torch.Tensor):
                 input_data_clone = (input_data_clone,)
-            exir_program_aten = torch.export.export(model, input_data_clone)
-            model_spec = executorch.exir.to_edge(exir_program_aten).exported_program()
+            model_spec = torch.export.export(model, input_data_clone)
+            if use_edge_dialect:
+                model_spec = executorch.exir.to_edge(model_spec).exported_program()
         else:
             raise ValueError(
                 f"Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT or TorchFrontend.EXIR. Provided: {frontend}"

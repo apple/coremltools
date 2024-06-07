@@ -5,6 +5,7 @@
 
 import itertools
 import os
+import re
 import tempfile
 
 import cattrs
@@ -18,7 +19,7 @@ import coremltools.optimize.coreml._quantization_passes as quantization
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.passes.tests.test_passes import CONSTEXPR_FUNCS, CONSTEXPR_OPS
-from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.converters.mil.testing_utils import compute_snr_and_psnr, get_op_types_in_program
 
 
 class TestCompressionNumerical:
@@ -53,6 +54,166 @@ class TestCompressionNumerical:
         np.testing.assert_allclose(val, decompressed_val, rtol=1e-02, atol=1e-02)
 
     @pytest.mark.parametrize(
+        "nbits, signed, block_size, mode, source_dtype, data_range",
+        itertools.product(
+            [4, 8],
+            [True, False],
+            [0, 1, 2, 8, 32],
+            ["LINEAR", "LINEAR_SYMMETRIC"],
+            [np.float16, np.float32],
+            [
+                [-1.0, 1.0],
+                [-3.0, -1.0],
+                [1.0, 3.0],
+                [1.0, 1.0],  # Test corner case of same values.
+            ],
+        ),
+    )
+    def test_linear_quantizer_compression_blockwise(
+        self,
+        nbits,
+        signed,
+        block_size,
+        mode,
+        source_dtype,
+        data_range,
+    ):
+        """
+        This test mainly follows the weights pattern in real life's ML models. However, when compressing
+        weights to a small number of bits (such as 4-bit), the information loss is critical, which
+        makes the numerical test hard. That's why we adjust the atol and rtol based on nbits and
+        block_size values.
+        For more comprehensive numerical tests, see `test_linear_quantizer_compression_blockwise_integer`.
+        """
+        original_data = np.random.uniform(data_range[0], data_range[1], (32, 64)).astype(
+            source_dtype
+        )
+
+        compressed_params = quantization.linear_quantize_weights.blockwise_compress(
+            original_data, nbits, mode, signed, block_sizes=[1, block_size]
+        )
+        decompressed_val = quantization.linear_quantize_weights.decompress(compressed_params)
+
+        if nbits > 4 and block_size < 3:
+            # When block size is small and nbits is large, the information loss is limited.
+            atol, rtol = 1e-02, 1e-02
+        elif nbits <= 2 and block_size >= 2:
+            atol, rtol = 0.5, 0.5
+        else:
+            atol, rtol = 0.2, 0.2
+        np.testing.assert_allclose(original_data, decompressed_val, rtol=rtol, atol=atol)
+
+    @pytest.mark.parametrize(
+        "nbits, signed, block_size, mode",
+        itertools.product(
+            [4, 8],
+            [True, False],
+            [1, 2, 8, 32],
+            ["LINEAR", "LINEAR_SYMMETRIC"],
+        ),
+    )
+    def test_linear_quantizer_compression_blockwise_integer(self, nbits, signed, block_size, mode):
+        """
+        We use int input because after rounding the dequantized data the numerical loss is less
+        critical when comparing it to the original data.
+        """
+        input_shape = (32, 64)
+        nbits_range_max = 2 ** (nbits - 1) - 1
+        nbits_range_min = -nbits_range_max
+        original_data = np.random.randint(nbits_range_min, nbits_range_max, input_shape).astype(
+            np.float32
+        )
+        compressed_params = quantization.linear_quantize_weights.blockwise_compress(
+            original_data, nbits, mode, signed, block_sizes=[1, block_size]
+        )
+        decompressed_val = quantization.linear_quantize_weights.decompress(compressed_params)
+        decompressed_val = np.round(decompressed_val).astype(original_data.dtype)
+
+        assert np.sum(original_data != decompressed_val) / original_data.size < 0.03
+        assert np.all(np.abs(original_data - decompressed_val) <= 1)
+
+    def test_linear_quantizer_compression_blockwise_corner_case(self):
+        """
+        When the input data is [-2, -10, 6, -3], the
+            np.round(quantized_data / scale) + np.round(zero_point)
+        AND
+            np.round(quantized_data / scale + zero_point)
+        is different ([-1, -8, 7, -2] vs [0, -8, 7, -1]), while we follow PyTorch to use the former.
+        """
+        original_data = np.array([-2, -10, 6, -3]).astype(np.float32)
+        params = quantization.linear_quantize_weights.blockwise_compress(
+            original_data,
+            nbits=4,
+            block_sizes=[4],
+            mode="LINEAR",
+            signed=True,
+        )
+        expected_quantized_data = np.array([-1, -8, 7, -2], dtype=np.int8)
+        np.testing.assert_equal(params.data, expected_quantized_data)
+
+    def test_linear_quantizer_compression_blockwise_invalid_original_data(self):
+        original_data_not_np_array = [1.0, 2.0]
+        with pytest.raises(ValueError, match="Only numpy arrays are supported"):
+            quantization.linear_quantize_weights.blockwise_compress(
+                original_data_not_np_array,
+                nbits=8,
+                block_sizes=[2],
+                mode="LINEAR",
+                signed=True,
+            )
+
+        original_data_integer = np.random.randint(0, 10, size=(3, 2))
+        with pytest.raises(ValueError, match="Only floating numpy arrays are supported."):
+            quantization.linear_quantize_weights.blockwise_compress(
+                original_data_integer,
+                nbits=8,
+                block_sizes=[0, 2],
+                mode="LINEAR",
+                signed=True,
+            )
+
+    def test_linear_quantizer_compression_blockwise_invalid_block_size(self, caplog):
+        original_data = np.random.uniform(-1.0, 1.0, (4, 6))
+
+        params = quantization.linear_quantize_weights.blockwise_compress(
+            original_data,
+            nbits=8,
+            block_sizes=[1, 2],
+            mode="LINEAR",
+            signed=True,
+        )
+        assert params.scale.shape == (4, 3)
+
+        params = quantization.linear_quantize_weights.blockwise_compress(
+            original_data,
+            nbits=8,
+            block_sizes=[1, 6],
+            mode="LINEAR",
+            signed=True,
+        )
+        assert params.scale.shape == (4, 1)
+
+        params = quantization.linear_quantize_weights.blockwise_compress(
+            original_data,
+            nbits=8,
+            block_sizes=[2, 6],
+            mode="LINEAR",
+            signed=True,
+        )
+        assert params.scale.shape == (2, 1)
+
+        result = quantization.linear_quantize_weights.blockwise_compress(
+            original_data,
+            nbits=8,
+            block_sizes=[1, 8],
+            mode="LINEAR",
+            signed=True,
+        )
+        assert result is None
+        expected_warning_msg = "Invalid block_sizes"
+        assert any([expected_warning_msg in rec.message for rec in caplog.records])
+
+    @pytest.mark.parametrize(
         "mode, nbits, shape",
         itertools.product(
             ["KMEANS", "UNIFORM", "UNIQUE"],
@@ -81,6 +242,197 @@ class TestCompressionNumerical:
         # We can perfecting re-construct the original value
         if (mode in ["UNIQUE", "KMEANS"]) or (mode == "UNIFORM" and max_val <= val_size):
             np.testing.assert_allclose(val, decompressed_val, rtol=1e-02, atol=1e-02)
+
+    def test_palettizer_compression_channelwise_basic(self):
+        original_data = np.arange(16, dtype=np.float32).reshape((4, 4))
+
+        # Group on axis=0.
+        result = quantization.palettize_weights.blockwise_compress(
+            original_data, "UNIQUE", nbits=3, block_sizes=[2, 0]
+        )
+        expected_lut = np.array(
+            [[0, 1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14, 15]], dtype=np.float32
+        ).reshape((2, 1, 8, 1))
+        np.testing.assert_array_equal(result.lut, expected_lut)
+        expected_indices = np.array(
+            [[0, 1, 2, 3], [4, 5, 6, 7], [0, 1, 2, 3], [4, 5, 6, 7]]
+        ).astype(np.int8)
+        np.testing.assert_array_equal(result.indices, expected_indices)
+
+        # Group on axis=1.
+        result = quantization.palettize_weights.blockwise_compress(
+            original_data, "UNIQUE", nbits=3, block_sizes=[0, 2]
+        )
+        expected_lut = np.array(
+            [[0, 1, 4, 5, 8, 9, 12, 13], [2, 3, 6, 7, 10, 11, 14, 15]], dtype=np.float32
+        ).reshape((1, 2, 8, 1))
+        np.testing.assert_array_equal(result.lut, expected_lut)
+        expected_indices = np.array(
+            [[0, 1, 0, 1], [2, 3, 2, 3], [4, 5, 4, 5], [6, 7, 6, 7]]
+        ).astype(np.int8)
+        np.testing.assert_array_equal(result.indices, expected_indices)
+
+    @pytest.mark.parametrize(
+        "nbits, channel_axis, mode, source_dtype, data_range, channel_group_size",
+        itertools.product(
+            [1, 2, 3, 4, 6, 8],
+            [0, 1, 2, -1],
+            ["KMEANS", "UNIFORM"],
+            [np.float16, np.float32],
+            [
+                [-1.0, 1.0],
+                [-3.0, -1.0],
+                [1.0, 3.0],
+                [1.0, 1.0],
+            ],
+            [0, 1, 2],
+        ),
+    )
+    def test_palettizer_compression_channelwise_stress(
+        self, nbits, channel_axis, mode, source_dtype, data_range, channel_group_size
+    ):
+        if nbits < 8:
+            # As sub-byte numerical accuracy loss is significant, we construct palettize-friendly data.
+            upper_bound = 2**nbits
+            original_data = np.stack(
+                [np.arange(upper_bound).reshape((1, upper_bound)) for _ in range(4)],
+                axis=channel_axis,
+            )
+        else:
+            original_data = np.random.uniform(data_range[0], data_range[1], (2, 4, 16)).astype(
+                source_dtype
+            )
+        block_sizes = [0] * len(original_data.shape)
+        block_sizes[channel_axis] = channel_group_size
+        params = quantization.palettize_weights.blockwise_compress(
+            original_data,
+            mode,
+            nbits,
+            block_sizes,
+        )
+        decompressed_val = quantization.palettize_weights.decompress(params)
+        if nbits < 8 or mode == "KMEANS":
+            np.testing.assert_allclose(original_data, decompressed_val, rtol=3e-4, atol=3e-4)
+        else:
+            np.testing.assert_array_almost_equal(original_data, decompressed_val, decimal=2)
+
+    @pytest.mark.parametrize(
+        "nbits, channel_axis, channel_group_size",
+        itertools.product(
+            [2, 3, 4, 6],
+            [0, 1, -1],
+            [0, 1, 2],
+        ),
+    )
+    def test_grouped_channelwise_equivalent_to_blockwise(
+        self, nbits, channel_axis, channel_group_size
+    ):
+        """The grouped channelwise palettization could be expressed as general blockwise."""
+        original_data = np.random.randint(low=-256, high=256, size=(16, 16, 2, 2)).astype(
+            np.float32
+        )
+
+        params_grouped_channelwise = quantization.palettize_weights.grouped_channelwise_compress(
+            original_data, "UNIFORM", nbits, channel_axis, channel_group_size
+        )
+        decompressed_grouped_channelwise = quantization.palettize_weights.decompress(
+            params_grouped_channelwise
+        )
+
+        block_sizes = [0] * len(original_data.shape)
+        block_sizes[channel_axis] = channel_group_size
+        params_blockwise = quantization.palettize_weights.blockwise_compress(
+            original_data, "UNIFORM", nbits, block_sizes=block_sizes
+        )
+        decompressed_blockwise = quantization.palettize_weights.decompress(params_blockwise)
+
+        np.testing.assert_allclose(
+            np.sort(params_grouped_channelwise.lut, axis=None),
+            np.sort(params_blockwise.lut, axis=None),
+        )
+        np.testing.assert_allclose(decompressed_grouped_channelwise, decompressed_blockwise)
+
+    @pytest.mark.parametrize(
+        "nbits, mode",
+        itertools.product(
+            [2, 3, 4, 6],
+            ["KMEANS", "UNIFORM"],
+        ),
+    )
+    def test_tensorwise_equivalent_to_blockwise_zero(self, nbits, mode):
+        """The block_size=0 in palettization is equivalent to legacy tensorwise compression."""
+        original_data = np.random.randint(low=-256, high=256, size=(16, 16, 2, 2)).astype(
+            np.float32
+        )
+        params_old = quantization.palettize_weights.compress(original_data, mode, nbits)
+        decompressed_old = quantization.palettize_weights.decompress(params_old)
+        params_new = quantization.palettize_weights.blockwise_compress(
+            original_data, mode, nbits, block_sizes=[0] * len(original_data.shape)
+        )
+        decompressed_new = quantization.palettize_weights.decompress(params_new)
+        np.testing.assert_allclose(
+            np.sort(params_old.lut, axis=None),
+            np.sort(params_new.lut, axis=None),
+            atol=5e-5,
+            rtol=1e-6,
+        )
+        np.testing.assert_allclose(decompressed_old, decompressed_new, atol=5e-5, rtol=1e-6)
+
+    @pytest.mark.parametrize(
+        "nbits, channel_axis, channel_group_size",
+        itertools.product(
+            [2, 3, 4],
+            [0, 1],
+            [1, 2],
+        ),
+    )
+    def test_grouped_channelwise_better_than_tensorwise(
+        self, nbits, channel_axis, channel_group_size
+    ):
+        """The noise introduced by per-tensor lut should be more than grouped-channel-wise lut."""
+        original_data = np.random.randint(low=-512, high=512, size=(32, 32, 2, 2)).astype(
+            np.float32
+        )
+        block_sizes_channelwise = [0] * len(original_data.shape)
+        block_sizes_channelwise[channel_axis] = channel_group_size
+        params_grouped_channelwise = quantization.palettize_weights.blockwise_compress(
+            original_data,
+            "UNIFORM",
+            nbits,
+            block_sizes_channelwise,
+        )
+
+        block_sizes_per_tensor = [0] * len(original_data.shape)
+        params_per_tensor = quantization.palettize_weights.blockwise_compress(
+            original_data,
+            "UNIFORM",
+            nbits,
+            block_sizes_per_tensor,
+        )
+        decompressed_grouped_channelwise = quantization.palettize_weights.decompress(
+            params_grouped_channelwise
+        )
+        decompressed_per_tensor = quantization.palettize_weights.decompress(params_per_tensor)
+        snr_grouped_channelwise = compute_snr_and_psnr(
+            original_data, decompressed_grouped_channelwise
+        )[0]
+        snr_per_tensor = compute_snr_and_psnr(original_data, decompressed_per_tensor)[0]
+        assert snr_grouped_channelwise > snr_per_tensor
+
+    def test_palettizer_compression_blockwise_invalid(self):
+        with pytest.raises(ValueError, match="Only numpy arrays are supported"):
+            quantization.palettize_weights.blockwise_compress(10, "KMEANS", 6, [0])
+        with pytest.raises(ValueError, match="Invalid nbits."):
+            quantization.palettize_weights.blockwise_compress(
+                np.random.uniform(-1.0, 1.0, (2, 3, 4)), "KMEANS", nbits=5, block_sizes=[0, 0, 1]
+            )
+
+        assert (
+            quantization.palettize_weights.blockwise_compress(
+                np.random.uniform(-1.0, 1.0, (2, 3, 4)), "KMEANS", nbits=3, block_sizes=[3, 0, 0]
+            )
+            is None
+        )
 
     def test_block_sparsity_pruning_smoke(self):
         # dim = 0
@@ -433,6 +785,33 @@ class TestCompressionPasses:
             x = mb.conv_transpose(x=x, weight=conv_transpose_weight, name="conv_transpose")
             return x
         return prog
+
+    @staticmethod
+    def _get_test_program_3():
+        """An iOS18 program with conv, linear, matmul, and conv_transpose."""
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 30, 10, 10))],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            # weight
+            conv_weight = np.random.rand(90, 30, 2, 2).astype(np.float32)
+            linear_weight = np.random.rand(70, 81).astype(np.float32)
+            matmul_weight = np.random.rand(2, 1, 70, 35).astype(np.float32)
+            conv_transpose_weight = np.random.rand(30, 4, 21, 10).astype(np.float32)
+
+            # graph
+            x = mb.conv(x=x, weight=conv_weight, name="conv")
+            x = mb.reshape(x=x, shape=(1, 90, 81), name="reshape_1")
+            x = mb.linear(x=x, weight=linear_weight, name="linear")
+            x = mb.matmul(x=x, y=matmul_weight, transpose_y=False, name="matmul")
+            x = mb.reshape(x=x, shape=(1, 30, 21, 10), name="reshape_2")
+            x = mb.conv_transpose(x=x, weight=conv_transpose_weight, name="conv_transpose")
+            return x
+
+        return prog
+
 
 class TestOptimizationConfig(TestCompressionPasses):
     """
@@ -933,6 +1312,66 @@ class TestLinearQuantizer(TestCompressionPasses):
             ]
         assert get_op_types_in_program(prog) == expected_ops
 
+    @pytest.mark.parametrize(
+        "mode, dtype, block_size, weight_threshold, fake_compression",
+        itertools.product(
+            ["LINEAR", "LINEAR_SYMMETRIC"],
+            ["int4", "uint4", "int8", "uint8", np.int8, np.uint8],
+            [1],
+            [1000, 7000],
+            [True, False],
+        ),
+    )
+    def test_global_config_affine_quantizer_blockwise(
+        self, mode, dtype, block_size, weight_threshold, fake_compression
+    ):
+        """
+        Global config would compress all operations with the same config for blockwise.
+        """
+        op_config = cto.coreml.OpLinearQuantizerConfig(
+            mode=mode,
+            dtype=dtype,
+            granularity="per_block",
+            block_size=block_size,
+            weight_threshold=weight_threshold,
+        )
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+        compressor = quantization.linear_quantize_weights(
+            config=config, fake_compression=fake_compression
+        )
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+
+        if fake_compression:
+            expected_ops = ["conv", "reshape", "linear", "matmul", "reshape", "conv_transpose"]
+        elif weight_threshold == 1000:
+            expected_ops = [
+                "constexpr_blockwise_shift_scale",
+                "conv",
+                "reshape",
+                "constexpr_blockwise_shift_scale",
+                "linear",
+                "constexpr_blockwise_shift_scale",
+                "matmul",
+                "reshape",
+                "constexpr_blockwise_shift_scale",
+                "conv_transpose",
+            ]
+        else:
+            assert weight_threshold == 7000
+            # linear and matmul weight size < 7000
+            expected_ops = [
+                "constexpr_blockwise_shift_scale",
+                "conv",
+                "reshape",
+                "linear",
+                "matmul",
+                "reshape",
+                "constexpr_blockwise_shift_scale",
+                "conv_transpose",
+            ]
+        assert get_op_types_in_program(prog) == expected_ops
+
     def test_op_type_config_linear_quantizer(self):
         """
         set_op_type allow the user to set different config for each op type.
@@ -993,6 +1432,66 @@ class TestLinearQuantizer(TestCompressionPasses):
             == np.uint8
         )
 
+    def test_op_type_config_linear_quantizer_blockwise(self):
+        """
+        set_op_type allow the user to set different config for each op type for blockwise.
+        Also checking that the config can be overwritten.
+        """
+        conv_config_1 = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int8",
+            granularity="per_block",
+            block_size=10,
+            weight_threshold=5000,
+        )
+        # conv_config_2 overwrite conv_config_1
+        conv_config_2 = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int4",
+            granularity="per_block",
+            block_size=3,
+            weight_threshold=2000,
+        )
+        # The weight_threshold is super large so linear is not going to be compressed
+        linear_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int4",
+            granularity="per_block",
+            weight_threshold=1000000,
+        )
+        conv_transpose_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR",
+            dtype="int8",
+            granularity="per_block",
+            block_size=10,
+            weight_threshold=2000,
+        )
+
+        config = cto.coreml.OptimizationConfig()
+        config.set_op_type("conv", conv_config_1)
+        config.set_op_type("conv", conv_config_2)
+        config.set_op_type("linear", linear_config)
+        config.set_op_type("conv_transpose", conv_transpose_config)
+
+        compressor = quantization.linear_quantize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+
+        expected_ops = [
+            "constexpr_blockwise_shift_scale",
+            "conv",
+            "reshape",
+            "linear",
+            "matmul",
+            "reshape",
+            "constexpr_blockwise_shift_scale",
+            "conv_transpose",
+        ]
+        assert get_op_types_in_program(prog) == expected_ops
+        assert prog.find_ops(op_type="constexpr_blockwise_shift_scale")[0].offset is None
+        assert prog.find_ops(op_type="constexpr_blockwise_shift_scale")[1].offset is not None
+
     def test_op_name_config_linear_quantizer(self):
         """
         set_op_name allow the user to set different config for each op specified by name.
@@ -1052,6 +1551,149 @@ class TestLinearQuantizer(TestCompressionPasses):
             prog.find_ops(op_type="constexpr_affine_dequantize")[1].quantized_data.val.dtype
             == np.uint8
         )
+
+    def test_op_name_config_linear_quantizer_blockwise(self):
+        """
+        set_op_name allow the user to set different config for each op specified by name.
+        Also checking that the config can be overwritten
+        """
+        conv_config_1 = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int8",
+            granularity="per_block",
+            block_size=4,
+            weight_threshold=2000,
+        )
+        # conv_config_2 overwrite conv_config_1
+        conv_config_2 = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int8",
+            granularity="per_block",
+            block_size=2,
+            weight_threshold=2000,
+        )
+        # The weight_threshold is super large so linear is not going to be compressed
+        linear_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int4",
+            weight_threshold=1000000,
+        )
+        conv_transpose_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR",
+            dtype="int8",
+            granularity="per_block",
+            block_size=6,
+            weight_threshold=2000,
+        )
+
+        config = cto.coreml.OptimizationConfig()
+        config.set_op_name("conv", conv_config_1)
+        config.set_op_name("conv", conv_config_2)
+        config.set_op_name("linear", linear_config)
+        config.set_op_name("conv_transpose", conv_transpose_config)
+
+        compressor = quantization.linear_quantize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+
+        expected_ops = [
+            "constexpr_blockwise_shift_scale",
+            "conv",
+            "reshape",
+            "linear",
+            "matmul",
+            "reshape",
+            "constexpr_blockwise_shift_scale",
+            "conv_transpose",
+        ]
+        assert get_op_types_in_program(prog) == expected_ops
+        blockwise_ops = prog.find_ops(op_type="constexpr_blockwise_shift_scale")
+        assert blockwise_ops[0].offset is None
+        assert blockwise_ops[1].offset is not None
+        # Conv transpose original weight shape is (30, 4, 21, 10). The output channel axis is 1 and
+        # input channel axis is 0, so the scale's first axis dim is 30 / 6 = 5.
+        assert blockwise_ops[1].scale.shape == (5, 4, 1, 1)
+
+    def test_auto_pick_channel_axis_quantizer(self):
+        """
+        Check the right output channel axis is picked for block-wise quantization.
+        """
+        global_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR",
+            dtype="int4",
+            granularity="per_block",
+            block_size=2,
+            weight_threshold=2000,
+        )
+        linear_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            dtype="int4",
+            granularity="per_block",
+            block_size=9,
+            weight_threshold=100,
+        )
+        config = cto.coreml.OptimizationConfig()
+        config.set_global(global_config)
+        config.set_op_name("linear", linear_config)
+        compressor = quantization.linear_quantize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+
+        blockwise_ops = prog.find_ops(op_type="constexpr_blockwise_shift_scale")
+        # For conv, input channel axis is 1, output channel axis is 0.
+        # The original weight shape is [90, 30, 2, 2], the scale's second dim is 30 / 2 = 15.
+        assert blockwise_ops[0].scale.shape == (90, 15, 1, 1)
+        # For linear, input channel axis is 1, output channel axis is 0.
+        # The original weight shape is [70, 81], the scale's second dim is 81 / 9 = 9.
+        assert blockwise_ops[1].scale.shape == (70, 9)
+        # For matmul (transpose_y=False), input channel axis is -2, output channel axis is -1.
+        # The original weight shape is [2, 1, 70, 35], the scale's third dim is 70 / 2 = 35.
+        assert blockwise_ops[2].scale.shape == (1, 1, 35, 35)
+        # For conv_transpose, input channel axis is 0, output channel axis is 1.
+        # The original weight shape is [30, 4, 21, 10], the scale's first dim is 30 / 2 = 15.
+        assert blockwise_ops[3].scale.shape == (15, 4, 1, 1)
+
+    def test_invalid_config(self):
+        with pytest.raises(
+            ValueError,
+            match="Invalid dtype int2. Only support int8/uint8/int4/uint4",
+        ):
+            cto.coreml.OpLinearQuantizerConfig(
+                mode="LINEAR_SYMMETRIC",
+                dtype="int2",
+                block_size=2,
+                weight_threshold=2000,
+            )
+
+        with pytest.raises(
+            ValueError,
+            match="Only mode \('LINEAR_SYMMETRIC', 'LINEAR'\) supported for weight affine quantization. Got mode: \"DUMMY\".",
+        ):
+            cto.coreml.OpLinearQuantizerConfig(
+                mode="DUMMY",
+                dtype="int4",
+                block_size=32,
+                weight_threshold=5000,
+            )
+
+    def test_not_divisible_block_size(self, caplog):
+        global_config = cto.coreml.OpLinearQuantizerConfig(
+            mode="LINEAR_SYMMETRIC",
+            granularity="per_block",
+            dtype="int4",
+            block_size=13,
+            weight_threshold=100,
+        )
+        config = cto.coreml.OptimizationConfig()
+        config.set_global(global_config)
+        compressor = quantization.linear_quantize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+        warning_msg = "Invalid block_sizes; On 1th axis, the dim size 30 is not divisible by block size 13. Unable to perform structured quantization."
+        assert any([re.match(warning_msg, rec.message) for rec in caplog.records])
 
 
 class TestPruner(TestCompressionPasses):
@@ -1572,6 +2214,228 @@ class TestPalettizer(TestCompressionPasses):
         assert prog.find_ops(op_type="constexpr_lut_to_dense")[0].lut.val.shape == (4,)
         assert prog.find_ops(op_type="constexpr_lut_to_dense")[1].lut.val.shape == (16,)
 
+    def test_op_name_config_palettizer_blockwise(self):
+        """
+        set_op_name allow the user to set different config for each op specified by name.
+        Also checking that the config can be overwritten.
+        """
+        conv_config_1 = cto.coreml.OpPalettizerConfig(
+            mode="uniform",
+            nbits=4,
+            granularity="per_tensor",
+            weight_threshold=500000,
+        )
+        # The conv_config_2 overwrites conv_config_1.
+        conv_config_2 = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=8,
+            granularity="per_grouped_channel",
+            group_size=1,
+            channel_axis=1,
+            weight_threshold=2000,
+        )
+        # The weight_threshold is super large so linear is not going to be compressed.
+        linear_config = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=4,
+            weight_threshold=1000000,
+        )
+        conv_transpose_config = cto.coreml.OpPalettizerConfig(
+            mode="uniform",
+            nbits=4,
+            granularity="per_grouped_channel",
+            group_size=1,
+            weight_threshold=2000,
+        )
+
+        config = cto.coreml.OptimizationConfig()
+        config.set_op_name("conv", conv_config_1)
+        config.set_op_name("conv", conv_config_2)
+        config.set_op_name("linear", linear_config)
+        config.set_op_name("conv_transpose", conv_transpose_config)
+
+        prog = self._get_test_program_3()
+        compressor = quantization.palettize_weights(config=config)
+        compressor.apply(prog)
+
+        expected_ops = [
+            "constexpr_lut_to_dense",
+            "conv",
+            "reshape",
+            "linear",
+            "matmul",
+            "reshape",
+            "constexpr_lut_to_dense",
+            "conv_transpose",
+        ]
+        assert get_op_types_in_program(prog) == expected_ops
+        assert prog.find_ops(op_type="constexpr_lut_to_dense")[0].vector_axis is None
+        # Makes sure the channel_axis in conv_config_2 is effective.
+        conv_lut = prog.find_ops(op_type="constexpr_lut_to_dense")[0].lut
+        assert conv_lut.shape[0] == 1
+        assert conv_lut.shape[1] == 30
+
+    def test_invalid_granularity(self):
+        with pytest.raises(
+            ValueError,
+            match='"granularity" must be one of .*, but got CompressionGranularity.PER_CHANNEL',
+        ):
+            cto.coreml.OpPalettizerConfig(
+                mode="kmeans",
+                nbits=4,
+                granularity="per_channel",
+                weight_threshold=2000,
+            )
+
+        with pytest.raises(TypeError, match="got an unexpected keyword argument 'block_size'"):
+            cto.coreml.OpPalettizerConfig(
+                mode="kmeans",
+                nbits=4,
+                granularity="per_tensor",
+                block_size=2,
+                weight_threshold=2000,
+            )
+
+    def test_auto_pick_channel_axis_palettizer(self):
+        """
+        Check the right output channel axis is picked for granularity='per_grouped_channel'.
+        """
+        global_config = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=4,
+            granularity="per_grouped_channel",
+            group_size=1,
+            weight_threshold=2000,
+        )
+        config = cto.coreml.OptimizationConfig()
+        config.set_global(global_config)
+        compressor = quantization.palettize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+
+        # For conv, the output channel-axis is 0.
+        conv_lut = prog.find_ops(op_type="constexpr_lut_to_dense")[0].lut
+        assert conv_lut.shape[0] == 90
+        assert conv_lut.shape[1] == 1
+        # For linear, the output channel-axis is 0.
+        linear_lut = prog.find_ops(op_type="constexpr_lut_to_dense")[1].lut
+        assert linear_lut.shape[0] == 70
+        assert linear_lut.shape[1] == 1
+        # For matmul with transpose_y=False, the output channel-axis is -1.
+        matmul_lut = prog.find_ops(op_type="constexpr_lut_to_dense")[2].lut
+        assert matmul_lut.shape == (1, 1, 1, 35, 16, 1)
+        # For conv_transpose, the output channel-axis is -2.
+        conv_transpose_lut = prog.find_ops(op_type="constexpr_lut_to_dense")[3].lut
+        assert conv_transpose_lut.shape[0] == 1
+        assert conv_transpose_lut.shape[1] == 4
+
+    def test_group_channel_wise(self):
+        global_config = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=3,
+            granularity="per_grouped_channel",
+            group_size=2,
+            weight_threshold=2000,
+        )
+        config = cto.coreml.OptimizationConfig()
+        config.set_global(global_config)
+        compressor = quantization.palettize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+        lut_ops = prog.find_ops(op_type="constexpr_lut_to_dense")
+        # The conv weight dense shape is (90, 30, 2, 2).  Auto-picked axis=0.
+        assert lut_ops[0].lut.shape == (45, 1, 1, 1, 8, 1)
+        # The linear weight dense shape is (70, 81). Auto-picked axis=0.
+        assert lut_ops[1].lut.shape == (35, 1, 8, 1)
+        # The matmul y dense shape is (2, 1, 70, 35). Auto-picked axis=-1.
+        # However, the 35 is not divisible by 2, so it will get skipped.
+        assert prog.find_ops(op_type="matmul")[0].y.op.op_type == "const"
+        # The conv_transpose weight dense shape is (30, 4, 21, 10).  Auto-picked axis=-2.
+        assert lut_ops[2].lut.shape == (1, 2, 1, 1, 8, 1)
+
+    def test_tensor_wise(self):
+        """Test granularity='per_block' with block_size=0 equivalent to granularity='per_tensor'."""
+        global_config_1 = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=3,
+            granularity="per_tensor",
+            weight_threshold=2000,
+        )
+        global_config_2 = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=3,
+            granularity="per_grouped_channel",
+            group_size=0,
+            weight_threshold=2000,
+        )
+
+        for global_config in (global_config_1, global_config_2):
+            config = cto.coreml.OptimizationConfig(global_config=global_config)
+            compressor = quantization.palettize_weights(config=config)
+
+            prog = self._get_test_program_3()
+            compressor.apply(prog)
+            lut_ops = prog.find_ops(op_type="constexpr_lut_to_dense")
+            # The conv weight dense shape is (90, 30, 2, 2).
+            assert lut_ops[0].lut.shape == (1, 1, 1, 1, 8, 1)
+            # The linear weight dense shape is (70, 81).
+            assert lut_ops[1].lut.shape == (1, 1, 8, 1)
+            # The matmul y dense shape is (2, 1, 70, 35).
+            assert lut_ops[2].lut.shape == (1, 1, 1, 1, 8, 1)
+            # The conv_transpose weight dense shape is (30, 4, 21, 10).
+            assert lut_ops[3].lut.shape == (1, 1, 1, 1, 8, 1)
+
+    def test_not_divisible_channel_group_size(self, caplog):
+        global_config = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=4,
+            granularity="per_grouped_channel",
+            group_size=3,
+            weight_threshold=2000,
+        )
+        config = cto.coreml.OptimizationConfig()
+        config.set_global(global_config)
+        compressor = quantization.palettize_weights(config=config)
+
+        prog = self._get_test_program_3()
+        compressor.apply(prog)
+
+        # The axis-0 in linear (70), axis-3 in matmul (35), and axis-1 in conv_transpose (4) are not divisible by 3.
+        for axis in (0, 3, 1):
+            warning_msg = (
+                f"Can't perform palettization: The number of channels at {axis}th axis .* is not "
+                "divisible by channel_group_size"
+            )
+            assert any([re.match(warning_msg, rec.message) for rec in caplog.records])
+        # Only the conv get compressed.
+        lut_ops = prog.find_ops(op_type="constexpr_lut_to_dense")
+        assert len(lut_ops) == 1
+        assert lut_ops[0].outputs[0].child_ops[0].op_type == "conv"
+
+    def test_ios16_program_not_support_channel_wise_lut(self):
+        global_config = cto.coreml.OpPalettizerConfig(
+            mode="kmeans",
+            nbits=4,
+            granularity="per_grouped_channel",
+            group_size=3,
+            weight_threshold=2000,
+        )
+        config = cto.coreml.OptimizationConfig()
+        config.set_global(global_config)
+        compressor = quantization.palettize_weights(config=config)
+
+        prog = self._get_test_program()
+        with pytest.raises(
+            AssertionError,
+            match=re.escape(
+                "The iOS16 only supports per-tensor lut, but got more than one lut "
+                "on 0th axis. LUT shape: (30, 1, 1, 1, 16, 1)"
+            ),
+        ):
+            compressor.apply(prog)
+
 
 class TestCompressionOperations(TestCompressionPasses):
     """
@@ -2082,34 +2946,37 @@ class TestConfigurationFromDictFromYaml:
             config_cls._from_dict(config_dict)
 
     @pytest.mark.parametrize(
-        "mode, dtype, weight_threshold, use_yaml",
+        "mode, dtype, granularity, block_size, weight_threshold, use_yaml",
         itertools.product(
             ["linear", "linear_symmetric"],
-            ["int8", "uint8", np.int8, np.uint8, types.int8, types.uint8],
+            ["int4", "uint4", "int8", "uint8", np.int8, np.uint8, types.int8, types.uint8],
+            ["per_tensor", "per_channel", "per_block"],
+            [0, 1, 2, [0, 1]],
             [1024, None],
             [True, False],
         ),
     )
-    def test_linear_quantizer_config_load_stress(self, mode, dtype, weight_threshold, use_yaml):
+    def test_linear_quantizer_config_load_stress(
+        self, mode, dtype, granularity, block_size, weight_threshold, use_yaml
+    ):
         config_dict = {
             "mode": mode,
             "dtype": dtype,
+            "granularity": granularity,
+            "block_size": block_size,
             "weight_threshold": weight_threshold,
         }
 
-        if use_yaml and dtype in ("int8", "uint8"):
+        if use_yaml and isinstance(dtype, str):
             config_dict = self.load_to_yaml(config_dict)
 
         config = quantization.OpLinearQuantizerConfig._from_dict(config_dict)
 
-        if dtype in ["int8", np.int8, types.int8]:
-            expected_dtype = np.int8
-        elif dtype in ["uint8", np.uint8, types.uint8]:
-            expected_dtype = np.uint8
-
         expected_config = quantization.OpLinearQuantizerConfig(
             mode=mode,
-            dtype=expected_dtype,
+            dtype=dtype,
+            granularity=granularity,
+            block_size=block_size,
             weight_threshold=weight_threshold,
         )
         assert config == expected_config
@@ -2211,24 +3078,37 @@ class TestConfigurationFromDictFromYaml:
         assert config == expected_config
 
     @pytest.mark.parametrize(
-        "mode_nbits, weight_threshold, use_yaml",
+        "mode, nbits, granularity, group_size, channel_axis, weight_threshold, num_kmeans_workers, use_yaml",
         itertools.product(
-            [
-                ("kmeans", 2),
-                ("uniform", 1),
-                ("unique", None),
-            ],
-            [None, 1024],
+            ["kmeans", "uniform"],
+            [1, 2, 3, 4, 6, 8],
+            ["per_tensor", "per_grouped_channel"],
+            [0, 1, 32],
+            [None, 0, 1],
+            [1024, None],
+            [1, 4],
             [True, False],
         ),
     )
-    def test_palettizer_config_load_stress(self, mode_nbits, weight_threshold, use_yaml):
-        mode, nbits = mode_nbits
-
+    def test_palettizer_config_load_stress(
+        self,
+        mode,
+        nbits,
+        granularity,
+        group_size,
+        channel_axis,
+        weight_threshold,
+        num_kmeans_workers,
+        use_yaml,
+    ):
         config_dict = {
             "mode": mode,
             "nbits": nbits,
+            "granularity": granularity,
+            "group_size": group_size,
+            "channel_axis": channel_axis,
             "weight_threshold": weight_threshold,
+            "num_kmeans_workers": num_kmeans_workers,
         }
 
         if use_yaml:
@@ -2239,7 +3119,11 @@ class TestConfigurationFromDictFromYaml:
         expected_config = quantization.OpPalettizerConfig(
             mode=mode,
             nbits=nbits,
+            granularity=granularity,
+            group_size=group_size,
+            channel_axis=channel_axis,
             weight_threshold=weight_threshold,
+            num_kmeans_workers=num_kmeans_workers,
         )
         assert config == expected_config
 

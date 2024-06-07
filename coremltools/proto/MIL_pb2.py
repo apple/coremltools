@@ -17,83 +17,68 @@ _sym_db = _symbol_database.Default()
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='MIL.proto',
-  package='CoreML.Specification.MILSpec',
-  syntax='proto3',
-  serialized_pb=_b('\n\tMIL.proto\x12\x1c\x43oreML.Specification.MILSpec\"\xf3\x02\n\x07Program\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12G\n\tfunctions\x18\x02 \x03(\x0b\x32\x34.CoreML.Specification.MILSpec.Program.FunctionsEntry\x12\x11\n\tdocString\x18\x03 \x01(\t\x12I\n\nattributes\x18\x04 \x03(\x0b\x32\x35.CoreML.Specification.MILSpec.Program.AttributesEntry\x1aX\n\x0e\x46unctionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32&.CoreML.Specification.MILSpec.Function:\x02\x38\x01\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01\"\xbe\x03\n\x08\x46unction\x12<\n\x06inputs\x18\x01 \x03(\x0b\x32,.CoreML.Specification.MILSpec.NamedValueType\x12\r\n\x05opset\x18\x02 \x01(\t\x12_\n\x15\x62lock_specializations\x18\x03 \x03(\x0b\x32@.CoreML.Specification.MILSpec.Function.BlockSpecializationsEntry\x12J\n\nattributes\x18\x04 \x03(\x0b\x32\x36.CoreML.Specification.MILSpec.Function.AttributesEntry\x1a`\n\x19\x42lockSpecializationsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Block:\x02\x38\x01\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01\"\xb4\x02\n\x05\x42lock\x12<\n\x06inputs\x18\x01 \x03(\x0b\x32,.CoreML.Specification.MILSpec.NamedValueType\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12;\n\noperations\x18\x03 \x03(\x0b\x32\'.CoreML.Specification.MILSpec.Operation\x12G\n\nattributes\x18\x04 \x03(\x0b\x32\x33.CoreML.Specification.MILSpec.Block.AttributesEntry\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01\"\xa9\x01\n\x08\x41rgument\x12\x41\n\targuments\x18\x01 \x03(\x0b\x32..CoreML.Specification.MILSpec.Argument.Binding\x1aZ\n\x07\x42inding\x12\x0e\n\x04name\x18\x01 \x01(\tH\x00\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.ValueH\x00\x42\t\n\x07\x62inding\"\xce\x03\n\tOperation\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x43\n\x06inputs\x18\x02 \x03(\x0b\x32\x33.CoreML.Specification.MILSpec.Operation.InputsEntry\x12=\n\x07outputs\x18\x03 \x03(\x0b\x32,.CoreML.Specification.MILSpec.NamedValueType\x12\x33\n\x06\x62locks\x18\x04 \x03(\x0b\x32#.CoreML.Specification.MILSpec.Block\x12K\n\nattributes\x18\x05 \x03(\x0b\x32\x37.CoreML.Specification.MILSpec.Operation.AttributesEntry\x1aU\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32&.CoreML.Specification.MILSpec.Argument:\x02\x38\x01\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01\"U\n\x0eNamedValueType\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x35\n\x04type\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\"\x95\x02\n\tValueType\x12>\n\ntensorType\x18\x01 \x01(\x0b\x32(.CoreML.Specification.MILSpec.TensorTypeH\x00\x12:\n\x08listType\x18\x02 \x01(\x0b\x32&.CoreML.Specification.MILSpec.ListTypeH\x00\x12<\n\ttupleType\x18\x03 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.TupleTypeH\x00\x12\x46\n\x0e\x64ictionaryType\x18\x04 \x01(\x0b\x32,.CoreML.Specification.MILSpec.DictionaryTypeH\x00\x42\x06\n\x04type\"\xb7\x02\n\nTensorType\x12\x38\n\x08\x64\x61taType\x18\x01 \x01(\x0e\x32&.CoreML.Specification.MILSpec.DataType\x12\x0c\n\x04rank\x18\x02 \x01(\x03\x12;\n\ndimensions\x18\x03 \x03(\x0b\x32\'.CoreML.Specification.MILSpec.Dimension\x12L\n\nattributes\x18\x04 \x03(\x0b\x32\x38.CoreML.Specification.MILSpec.TensorType.AttributesEntry\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01\"C\n\tTupleType\x12\x36\n\x05types\x18\x01 \x03(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\"z\n\x08ListType\x12\x35\n\x04type\x18\x01 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\x12\x37\n\x06length\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.Dimension\"\x86\x01\n\x0e\x44ictionaryType\x12\x38\n\x07keyType\x18\x01 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\x12:\n\tvalueType\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\"\xfd\x01\n\tDimension\x12M\n\x08\x63onstant\x18\x01 \x01(\x0b\x32\x39.CoreML.Specification.MILSpec.Dimension.ConstantDimensionH\x00\x12K\n\x07unknown\x18\x02 \x01(\x0b\x32\x38.CoreML.Specification.MILSpec.Dimension.UnknownDimensionH\x00\x1a!\n\x11\x43onstantDimension\x12\x0c\n\x04size\x18\x01 \x01(\x04\x1a$\n\x10UnknownDimension\x12\x10\n\x08variadic\x18\x01 \x01(\x08\x42\x0b\n\tdimension\"\xb9\x04\n\x05Value\x12\x11\n\tdocString\x18\x01 \x01(\t\x12\x35\n\x04type\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\x12L\n\x0eimmediateValue\x18\x03 \x01(\x0b\x32\x32.CoreML.Specification.MILSpec.Value.ImmediateValueH\x00\x12J\n\rblobFileValue\x18\x05 \x01(\x0b\x32\x31.CoreML.Specification.MILSpec.Value.BlobFileValueH\x00\x1a\x8f\x02\n\x0eImmediateValue\x12;\n\x06tensor\x18\x01 \x01(\x0b\x32).CoreML.Specification.MILSpec.TensorValueH\x00\x12\x39\n\x05tuple\x18\x02 \x01(\x0b\x32(.CoreML.Specification.MILSpec.TupleValueH\x00\x12\x37\n\x04list\x18\x03 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ListValueH\x00\x12\x43\n\ndictionary\x18\x04 \x01(\x0b\x32-.CoreML.Specification.MILSpec.DictionaryValueH\x00\x42\x07\n\x05value\x1a\x31\n\rBlobFileValue\x12\x10\n\x08\x66ileName\x18\x01 \x01(\t\x12\x0e\n\x06offset\x18\x02 \x01(\x04\x42\x07\n\x05value\"\xac\x06\n\x0bTensorValue\x12J\n\x06\x66loats\x18\x01 \x01(\x0b\x32\x38.CoreML.Specification.MILSpec.TensorValue.RepeatedFloatsH\x00\x12\x46\n\x04ints\x18\x02 \x01(\x0b\x32\x36.CoreML.Specification.MILSpec.TensorValue.RepeatedIntsH\x00\x12H\n\x05\x62ools\x18\x03 \x01(\x0b\x32\x37.CoreML.Specification.MILSpec.TensorValue.RepeatedBoolsH\x00\x12L\n\x07strings\x18\x04 \x01(\x0b\x32\x39.CoreML.Specification.MILSpec.TensorValue.RepeatedStringsH\x00\x12N\n\x08longInts\x18\x05 \x01(\x0b\x32:.CoreML.Specification.MILSpec.TensorValue.RepeatedLongIntsH\x00\x12L\n\x07\x64oubles\x18\x06 \x01(\x0b\x32\x39.CoreML.Specification.MILSpec.TensorValue.RepeatedDoublesH\x00\x12H\n\x05\x62ytes\x18\x07 \x01(\x0b\x32\x37.CoreML.Specification.MILSpec.TensorValue.RepeatedBytesH\x00\x1a$\n\x0eRepeatedFloats\x12\x12\n\x06values\x18\x01 \x03(\x02\x42\x02\x10\x01\x1a%\n\x0fRepeatedDoubles\x12\x12\n\x06values\x18\x01 \x03(\x01\x42\x02\x10\x01\x1a\"\n\x0cRepeatedInts\x12\x12\n\x06values\x18\x01 \x03(\x05\x42\x02\x10\x01\x1a&\n\x10RepeatedLongInts\x12\x12\n\x06values\x18\x01 \x03(\x03\x42\x02\x10\x01\x1a#\n\rRepeatedBools\x12\x12\n\x06values\x18\x01 \x03(\x08\x42\x02\x10\x01\x1a!\n\x0fRepeatedStrings\x12\x0e\n\x06values\x18\x01 \x03(\t\x1a\x1f\n\rRepeatedBytes\x12\x0e\n\x06values\x18\x01 \x01(\x0c\x42\x07\n\x05value\"A\n\nTupleValue\x12\x33\n\x06values\x18\x01 \x03(\x0b\x32#.CoreML.Specification.MILSpec.Value\"@\n\tListValue\x12\x33\n\x06values\x18\x01 \x03(\x0b\x32#.CoreML.Specification.MILSpec.Value\"\xd3\x01\n\x0f\x44ictionaryValue\x12J\n\x06values\x18\x01 \x03(\x0b\x32:.CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair\x1at\n\x0cKeyValuePair\x12\x30\n\x03key\x18\x01 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value*\xc0\x01\n\x08\x44\x61taType\x12\x0f\n\x0bUNUSED_TYPE\x10\x00\x12\x08\n\x04\x42OOL\x10\x01\x12\n\n\x06STRING\x10\x02\x12\x0b\n\x07\x46LOAT16\x10\n\x12\x0b\n\x07\x46LOAT32\x10\x0b\x12\x0b\n\x07\x46LOAT64\x10\x0c\x12\x0c\n\x08\x42\x46LOAT16\x10\r\x12\x08\n\x04INT8\x10\x15\x12\t\n\x05INT16\x10\x16\x12\t\n\x05INT32\x10\x17\x12\t\n\x05INT64\x10\x18\x12\t\n\x05UINT8\x10\x1f\x12\n\n\x06UINT16\x10 \x12\n\n\x06UINT32\x10!\x12\n\n\x06UINT64\x10\"B\x02H\x03\x62\x06proto3')
+    name="MIL.proto",
+    package="CoreML.Specification.MILSpec",
+    syntax="proto3",
+    serialized_pb=_b(
+        '\n\tMIL.proto\x12\x1c\x43oreML.Specification.MILSpec"\xf3\x02\n\x07Program\x12\x0f\n\x07version\x18\x01 \x01(\x03\x12G\n\tfunctions\x18\x02 \x03(\x0b\x32\x34.CoreML.Specification.MILSpec.Program.FunctionsEntry\x12\x11\n\tdocString\x18\x03 \x01(\t\x12I\n\nattributes\x18\x04 \x03(\x0b\x32\x35.CoreML.Specification.MILSpec.Program.AttributesEntry\x1aX\n\x0e\x46unctionsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32&.CoreML.Specification.MILSpec.Function:\x02\x38\x01\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01"\xbe\x03\n\x08\x46unction\x12<\n\x06inputs\x18\x01 \x03(\x0b\x32,.CoreML.Specification.MILSpec.NamedValueType\x12\r\n\x05opset\x18\x02 \x01(\t\x12_\n\x15\x62lock_specializations\x18\x03 \x03(\x0b\x32@.CoreML.Specification.MILSpec.Function.BlockSpecializationsEntry\x12J\n\nattributes\x18\x04 \x03(\x0b\x32\x36.CoreML.Specification.MILSpec.Function.AttributesEntry\x1a`\n\x19\x42lockSpecializationsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Block:\x02\x38\x01\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01"\xb4\x02\n\x05\x42lock\x12<\n\x06inputs\x18\x01 \x03(\x0b\x32,.CoreML.Specification.MILSpec.NamedValueType\x12\x0f\n\x07outputs\x18\x02 \x03(\t\x12;\n\noperations\x18\x03 \x03(\x0b\x32\'.CoreML.Specification.MILSpec.Operation\x12G\n\nattributes\x18\x04 \x03(\x0b\x32\x33.CoreML.Specification.MILSpec.Block.AttributesEntry\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01"\xa9\x01\n\x08\x41rgument\x12\x41\n\targuments\x18\x01 \x03(\x0b\x32..CoreML.Specification.MILSpec.Argument.Binding\x1aZ\n\x07\x42inding\x12\x0e\n\x04name\x18\x01 \x01(\tH\x00\x12\x34\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.ValueH\x00\x42\t\n\x07\x62inding"\xce\x03\n\tOperation\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x43\n\x06inputs\x18\x02 \x03(\x0b\x32\x33.CoreML.Specification.MILSpec.Operation.InputsEntry\x12=\n\x07outputs\x18\x03 \x03(\x0b\x32,.CoreML.Specification.MILSpec.NamedValueType\x12\x33\n\x06\x62locks\x18\x04 \x03(\x0b\x32#.CoreML.Specification.MILSpec.Block\x12K\n\nattributes\x18\x05 \x03(\x0b\x32\x37.CoreML.Specification.MILSpec.Operation.AttributesEntry\x1aU\n\x0bInputsEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x35\n\x05value\x18\x02 \x01(\x0b\x32&.CoreML.Specification.MILSpec.Argument:\x02\x38\x01\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01"U\n\x0eNamedValueType\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x35\n\x04type\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType"\xd3\x02\n\tValueType\x12>\n\ntensorType\x18\x01 \x01(\x0b\x32(.CoreML.Specification.MILSpec.TensorTypeH\x00\x12:\n\x08listType\x18\x02 \x01(\x0b\x32&.CoreML.Specification.MILSpec.ListTypeH\x00\x12<\n\ttupleType\x18\x03 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.TupleTypeH\x00\x12\x46\n\x0e\x64ictionaryType\x18\x04 \x01(\x0b\x32,.CoreML.Specification.MILSpec.DictionaryTypeH\x00\x12<\n\tstateType\x18\x05 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.StateTypeH\x00\x42\x06\n\x04type"\xb7\x02\n\nTensorType\x12\x38\n\x08\x64\x61taType\x18\x01 \x01(\x0e\x32&.CoreML.Specification.MILSpec.DataType\x12\x0c\n\x04rank\x18\x02 \x01(\x03\x12;\n\ndimensions\x18\x03 \x03(\x0b\x32\'.CoreML.Specification.MILSpec.Dimension\x12L\n\nattributes\x18\x04 \x03(\x0b\x32\x38.CoreML.Specification.MILSpec.TensorType.AttributesEntry\x1aV\n\x0f\x41ttributesEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value:\x02\x38\x01"C\n\tTupleType\x12\x36\n\x05types\x18\x01 \x03(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType"z\n\x08ListType\x12\x35\n\x04type\x18\x01 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\x12\x37\n\x06length\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.Dimension"\x86\x01\n\x0e\x44ictionaryType\x12\x38\n\x07keyType\x18\x01 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\x12:\n\tvalueType\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType"I\n\tStateType\x12<\n\x0bwrappedType\x18\x01 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType"\xfd\x01\n\tDimension\x12M\n\x08\x63onstant\x18\x01 \x01(\x0b\x32\x39.CoreML.Specification.MILSpec.Dimension.ConstantDimensionH\x00\x12K\n\x07unknown\x18\x02 \x01(\x0b\x32\x38.CoreML.Specification.MILSpec.Dimension.UnknownDimensionH\x00\x1a!\n\x11\x43onstantDimension\x12\x0c\n\x04size\x18\x01 \x01(\x04\x1a$\n\x10UnknownDimension\x12\x10\n\x08variadic\x18\x01 \x01(\x08\x42\x0b\n\tdimension"\xb9\x04\n\x05Value\x12\x11\n\tdocString\x18\x01 \x01(\t\x12\x35\n\x04type\x18\x02 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ValueType\x12L\n\x0eimmediateValue\x18\x03 \x01(\x0b\x32\x32.CoreML.Specification.MILSpec.Value.ImmediateValueH\x00\x12J\n\rblobFileValue\x18\x05 \x01(\x0b\x32\x31.CoreML.Specification.MILSpec.Value.BlobFileValueH\x00\x1a\x8f\x02\n\x0eImmediateValue\x12;\n\x06tensor\x18\x01 \x01(\x0b\x32).CoreML.Specification.MILSpec.TensorValueH\x00\x12\x39\n\x05tuple\x18\x02 \x01(\x0b\x32(.CoreML.Specification.MILSpec.TupleValueH\x00\x12\x37\n\x04list\x18\x03 \x01(\x0b\x32\'.CoreML.Specification.MILSpec.ListValueH\x00\x12\x43\n\ndictionary\x18\x04 \x01(\x0b\x32-.CoreML.Specification.MILSpec.DictionaryValueH\x00\x42\x07\n\x05value\x1a\x31\n\rBlobFileValue\x12\x10\n\x08\x66ileName\x18\x01 \x01(\t\x12\x0e\n\x06offset\x18\x02 \x01(\x04\x42\x07\n\x05value"\xac\x06\n\x0bTensorValue\x12J\n\x06\x66loats\x18\x01 \x01(\x0b\x32\x38.CoreML.Specification.MILSpec.TensorValue.RepeatedFloatsH\x00\x12\x46\n\x04ints\x18\x02 \x01(\x0b\x32\x36.CoreML.Specification.MILSpec.TensorValue.RepeatedIntsH\x00\x12H\n\x05\x62ools\x18\x03 \x01(\x0b\x32\x37.CoreML.Specification.MILSpec.TensorValue.RepeatedBoolsH\x00\x12L\n\x07strings\x18\x04 \x01(\x0b\x32\x39.CoreML.Specification.MILSpec.TensorValue.RepeatedStringsH\x00\x12N\n\x08longInts\x18\x05 \x01(\x0b\x32:.CoreML.Specification.MILSpec.TensorValue.RepeatedLongIntsH\x00\x12L\n\x07\x64oubles\x18\x06 \x01(\x0b\x32\x39.CoreML.Specification.MILSpec.TensorValue.RepeatedDoublesH\x00\x12H\n\x05\x62ytes\x18\x07 \x01(\x0b\x32\x37.CoreML.Specification.MILSpec.TensorValue.RepeatedBytesH\x00\x1a$\n\x0eRepeatedFloats\x12\x12\n\x06values\x18\x01 \x03(\x02\x42\x02\x10\x01\x1a%\n\x0fRepeatedDoubles\x12\x12\n\x06values\x18\x01 \x03(\x01\x42\x02\x10\x01\x1a"\n\x0cRepeatedInts\x12\x12\n\x06values\x18\x01 \x03(\x05\x42\x02\x10\x01\x1a&\n\x10RepeatedLongInts\x12\x12\n\x06values\x18\x01 \x03(\x03\x42\x02\x10\x01\x1a#\n\rRepeatedBools\x12\x12\n\x06values\x18\x01 \x03(\x08\x42\x02\x10\x01\x1a!\n\x0fRepeatedStrings\x12\x0e\n\x06values\x18\x01 \x03(\t\x1a\x1f\n\rRepeatedBytes\x12\x0e\n\x06values\x18\x01 \x01(\x0c\x42\x07\n\x05value"A\n\nTupleValue\x12\x33\n\x06values\x18\x01 \x03(\x0b\x32#.CoreML.Specification.MILSpec.Value"@\n\tListValue\x12\x33\n\x06values\x18\x01 \x03(\x0b\x32#.CoreML.Specification.MILSpec.Value"\xd3\x01\n\x0f\x44ictionaryValue\x12J\n\x06values\x18\x01 \x03(\x0b\x32:.CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair\x1at\n\x0cKeyValuePair\x12\x30\n\x03key\x18\x01 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value\x12\x32\n\x05value\x18\x02 \x01(\x0b\x32#.CoreML.Specification.MILSpec.Value*\xa3\x02\n\x08\x44\x61taType\x12\x0f\n\x0bUNUSED_TYPE\x10\x00\x12\x08\n\x04\x42OOL\x10\x01\x12\n\n\x06STRING\x10\x02\x12\x10\n\x0c\x46LOAT8E4M3FN\x10(\x12\x0e\n\nFLOAT8E5M2\x10)\x12\x0b\n\x07\x46LOAT16\x10\n\x12\x0b\n\x07\x46LOAT32\x10\x0b\x12\x0b\n\x07\x46LOAT64\x10\x0c\x12\x0c\n\x08\x42\x46LOAT16\x10\r\x12\x08\n\x04INT8\x10\x15\x12\t\n\x05INT16\x10\x16\x12\t\n\x05INT32\x10\x17\x12\t\n\x05INT64\x10\x18\x12\x08\n\x04INT4\x10\x19\x12\t\n\x05UINT8\x10\x1f\x12\n\n\x06UINT16\x10 \x12\n\n\x06UINT32\x10!\x12\n\n\x06UINT64\x10"\x12\t\n\x05UINT4\x10#\x12\t\n\x05UINT2\x10$\x12\t\n\x05UINT1\x10%\x12\t\n\x05UINT6\x10&\x12\t\n\x05UINT3\x10\'B\x02H\x03\x62\x06proto3'
+    ),
 )
 
 _DATATYPE = _descriptor.EnumDescriptor(
-  name='DataType',
-  full_name='CoreML.Specification.MILSpec.DataType',
-  filename=None,
-  file=DESCRIPTOR,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='UNUSED_TYPE', index=0, number=0,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='BOOL', index=1, number=1,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STRING', index=2, number=2,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='FLOAT16', index=3, number=10,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='FLOAT32', index=4, number=11,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='FLOAT64', index=5, number=12,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='BFLOAT16', index=6, number=13,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='INT8', index=7, number=21,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='INT16', index=8, number=22,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='INT32', index=9, number=23,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='INT64', index=10, number=24,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='UINT8', index=11, number=31,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='UINT16', index=12, number=32,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='UINT32', index=13, number=33,
-      options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='UINT64', index=14, number=34,
-      options=None,
-      type=None),
-  ],
-  containing_type=None,
-  options=None,
-  serialized_start=4816,
-  serialized_end=5008,
+    name="DataType",
+    full_name="CoreML.Specification.MILSpec.DataType",
+    filename=None,
+    file=DESCRIPTOR,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="UNUSED_TYPE", index=0, number=0, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(name="BOOL", index=1, number=1, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="STRING", index=2, number=2, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="FLOAT8E4M3FN", index=3, number=40, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="FLOAT8E5M2", index=4, number=41, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="FLOAT16", index=5, number=10, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="FLOAT32", index=6, number=11, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="FLOAT64", index=7, number=12, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="BFLOAT16", index=8, number=13, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(name="INT8", index=9, number=21, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="INT16", index=10, number=22, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="INT32", index=11, number=23, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="INT64", index=12, number=24, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="INT4", index=13, number=25, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="UINT8", index=14, number=31, options=None, type=None),
+        _descriptor.EnumValueDescriptor(
+            name="UINT16", index=15, number=32, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="UINT32", index=16, number=33, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="UINT64", index=17, number=34, options=None, type=None
+        ),
+        _descriptor.EnumValueDescriptor(name="UINT4", index=18, number=35, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="UINT2", index=19, number=36, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="UINT1", index=20, number=37, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="UINT6", index=21, number=38, options=None, type=None),
+        _descriptor.EnumValueDescriptor(name="UINT3", index=22, number=39, options=None, type=None),
+    ],
+    containing_type=None,
+    options=None,
+    serialized_start=4953,
+    serialized_end=5244,
 )
 _sym_db.RegisterEnumDescriptor(_DATATYPE)
 
@@ -101,6 +86,8 @@ DataType = enum_type_wrapper.EnumTypeWrapper(_DATATYPE)
 UNUSED_TYPE = 0
 BOOL = 1
 STRING = 2
+FLOAT8E4M3FN = 40
+FLOAT8E5M2 = 41
 FLOAT16 = 10
 FLOAT32 = 11
 FLOAT64 = 12
@@ -109,10 +96,16 @@ INT8 = 21
 INT16 = 22
 INT32 = 23
 INT64 = 24
+INT4 = 25
 UINT8 = 31
 UINT16 = 32
 UINT32 = 33
 UINT64 = 34
+UINT4 = 35
+UINT2 = 36
+UINT1 = 37
+UINT6 = 38
+UINT3 = 39
 
 
 
@@ -700,57 +693,116 @@ _NAMEDVALUETYPE = _descriptor.Descriptor(
 
 
 _VALUETYPE = _descriptor.Descriptor(
-  name='ValueType',
-  full_name='CoreML.Specification.MILSpec.ValueType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='tensorType', full_name='CoreML.Specification.MILSpec.ValueType.tensorType', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='listType', full_name='CoreML.Specification.MILSpec.ValueType.listType', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='tupleType', full_name='CoreML.Specification.MILSpec.ValueType.tupleType', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='dictionaryType', full_name='CoreML.Specification.MILSpec.ValueType.dictionaryType', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='type', full_name='CoreML.Specification.MILSpec.ValueType.type',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=1902,
-  serialized_end=2179,
+    name="ValueType",
+    full_name="CoreML.Specification.MILSpec.ValueType",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="tensorType",
+            full_name="CoreML.Specification.MILSpec.ValueType.tensorType",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="listType",
+            full_name="CoreML.Specification.MILSpec.ValueType.listType",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="tupleType",
+            full_name="CoreML.Specification.MILSpec.ValueType.tupleType",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="dictionaryType",
+            full_name="CoreML.Specification.MILSpec.ValueType.dictionaryType",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="stateType",
+            full_name="CoreML.Specification.MILSpec.ValueType.stateType",
+            index=4,
+            number=5,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[
+        _descriptor.OneofDescriptor(
+            name="type",
+            full_name="CoreML.Specification.MILSpec.ValueType.type",
+            index=0,
+            containing_type=None,
+            fields=[],
+        ),
+    ],
+    serialized_start=1902,
+    serialized_end=2241,
 )
 
 
@@ -792,824 +844,1254 @@ _TENSORTYPE_ATTRIBUTESENTRY = _descriptor.Descriptor(
 )
 
 _TENSORTYPE = _descriptor.Descriptor(
-  name='TensorType',
-  full_name='CoreML.Specification.MILSpec.TensorType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='dataType', full_name='CoreML.Specification.MILSpec.TensorType.dataType', index=0,
-      number=1, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='rank', full_name='CoreML.Specification.MILSpec.TensorType.rank', index=1,
-      number=2, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='dimensions', full_name='CoreML.Specification.MILSpec.TensorType.dimensions', index=2,
-      number=3, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='attributes', full_name='CoreML.Specification.MILSpec.TensorType.attributes', index=3,
-      number=4, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[_TENSORTYPE_ATTRIBUTESENTRY, ],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=2182,
-  serialized_end=2493,
+    name="TensorType",
+    full_name="CoreML.Specification.MILSpec.TensorType",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="dataType",
+            full_name="CoreML.Specification.MILSpec.TensorType.dataType",
+            index=0,
+            number=1,
+            type=14,
+            cpp_type=8,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="rank",
+            full_name="CoreML.Specification.MILSpec.TensorType.rank",
+            index=1,
+            number=2,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="dimensions",
+            full_name="CoreML.Specification.MILSpec.TensorType.dimensions",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="attributes",
+            full_name="CoreML.Specification.MILSpec.TensorType.attributes",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[
+        _TENSORTYPE_ATTRIBUTESENTRY,
+    ],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=2244,
+    serialized_end=2555,
 )
 
 
 _TUPLETYPE = _descriptor.Descriptor(
-  name='TupleType',
-  full_name='CoreML.Specification.MILSpec.TupleType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='types', full_name='CoreML.Specification.MILSpec.TupleType.types', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=2495,
-  serialized_end=2562,
+    name="TupleType",
+    full_name="CoreML.Specification.MILSpec.TupleType",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="types",
+            full_name="CoreML.Specification.MILSpec.TupleType.types",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=2557,
+    serialized_end=2624,
 )
 
 
 _LISTTYPE = _descriptor.Descriptor(
-  name='ListType',
-  full_name='CoreML.Specification.MILSpec.ListType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='type', full_name='CoreML.Specification.MILSpec.ListType.type', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='length', full_name='CoreML.Specification.MILSpec.ListType.length', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=2564,
-  serialized_end=2686,
+    name="ListType",
+    full_name="CoreML.Specification.MILSpec.ListType",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="type",
+            full_name="CoreML.Specification.MILSpec.ListType.type",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="length",
+            full_name="CoreML.Specification.MILSpec.ListType.length",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=2626,
+    serialized_end=2748,
 )
 
 
 _DICTIONARYTYPE = _descriptor.Descriptor(
-  name='DictionaryType',
-  full_name='CoreML.Specification.MILSpec.DictionaryType',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='keyType', full_name='CoreML.Specification.MILSpec.DictionaryType.keyType', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='valueType', full_name='CoreML.Specification.MILSpec.DictionaryType.valueType', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=2689,
-  serialized_end=2823,
+    name="DictionaryType",
+    full_name="CoreML.Specification.MILSpec.DictionaryType",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="keyType",
+            full_name="CoreML.Specification.MILSpec.DictionaryType.keyType",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="valueType",
+            full_name="CoreML.Specification.MILSpec.DictionaryType.valueType",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=2751,
+    serialized_end=2885,
+)
+
+
+_STATETYPE = _descriptor.Descriptor(
+    name="StateType",
+    full_name="CoreML.Specification.MILSpec.StateType",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="wrappedType",
+            full_name="CoreML.Specification.MILSpec.StateType.wrappedType",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=2887,
+    serialized_end=2960,
 )
 
 
 _DIMENSION_CONSTANTDIMENSION = _descriptor.Descriptor(
-  name='ConstantDimension',
-  full_name='CoreML.Specification.MILSpec.Dimension.ConstantDimension',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='size', full_name='CoreML.Specification.MILSpec.Dimension.ConstantDimension.size', index=0,
-      number=1, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=2995,
-  serialized_end=3028,
+    name="ConstantDimension",
+    full_name="CoreML.Specification.MILSpec.Dimension.ConstantDimension",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="size",
+            full_name="CoreML.Specification.MILSpec.Dimension.ConstantDimension.size",
+            index=0,
+            number=1,
+            type=4,
+            cpp_type=4,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=3132,
+    serialized_end=3165,
 )
 
 _DIMENSION_UNKNOWNDIMENSION = _descriptor.Descriptor(
-  name='UnknownDimension',
-  full_name='CoreML.Specification.MILSpec.Dimension.UnknownDimension',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='variadic', full_name='CoreML.Specification.MILSpec.Dimension.UnknownDimension.variadic', index=0,
-      number=1, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=3030,
-  serialized_end=3066,
+    name="UnknownDimension",
+    full_name="CoreML.Specification.MILSpec.Dimension.UnknownDimension",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="variadic",
+            full_name="CoreML.Specification.MILSpec.Dimension.UnknownDimension.variadic",
+            index=0,
+            number=1,
+            type=8,
+            cpp_type=7,
+            label=1,
+            has_default_value=False,
+            default_value=False,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=3167,
+    serialized_end=3203,
 )
 
 _DIMENSION = _descriptor.Descriptor(
-  name='Dimension',
-  full_name='CoreML.Specification.MILSpec.Dimension',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='constant', full_name='CoreML.Specification.MILSpec.Dimension.constant', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='unknown', full_name='CoreML.Specification.MILSpec.Dimension.unknown', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[_DIMENSION_CONSTANTDIMENSION, _DIMENSION_UNKNOWNDIMENSION, ],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='dimension', full_name='CoreML.Specification.MILSpec.Dimension.dimension',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=2826,
-  serialized_end=3079,
+    name="Dimension",
+    full_name="CoreML.Specification.MILSpec.Dimension",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="constant",
+            full_name="CoreML.Specification.MILSpec.Dimension.constant",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="unknown",
+            full_name="CoreML.Specification.MILSpec.Dimension.unknown",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[
+        _DIMENSION_CONSTANTDIMENSION,
+        _DIMENSION_UNKNOWNDIMENSION,
+    ],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[
+        _descriptor.OneofDescriptor(
+            name="dimension",
+            full_name="CoreML.Specification.MILSpec.Dimension.dimension",
+            index=0,
+            containing_type=None,
+            fields=[],
+        ),
+    ],
+    serialized_start=2963,
+    serialized_end=3216,
 )
 
 
 _VALUE_IMMEDIATEVALUE = _descriptor.Descriptor(
-  name='ImmediateValue',
-  full_name='CoreML.Specification.MILSpec.Value.ImmediateValue',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='tensor', full_name='CoreML.Specification.MILSpec.Value.ImmediateValue.tensor', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='tuple', full_name='CoreML.Specification.MILSpec.Value.ImmediateValue.tuple', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='list', full_name='CoreML.Specification.MILSpec.Value.ImmediateValue.list', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='dictionary', full_name='CoreML.Specification.MILSpec.Value.ImmediateValue.dictionary', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='value', full_name='CoreML.Specification.MILSpec.Value.ImmediateValue.value',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=3320,
-  serialized_end=3591,
+    name="ImmediateValue",
+    full_name="CoreML.Specification.MILSpec.Value.ImmediateValue",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="tensor",
+            full_name="CoreML.Specification.MILSpec.Value.ImmediateValue.tensor",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="tuple",
+            full_name="CoreML.Specification.MILSpec.Value.ImmediateValue.tuple",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="list",
+            full_name="CoreML.Specification.MILSpec.Value.ImmediateValue.list",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="dictionary",
+            full_name="CoreML.Specification.MILSpec.Value.ImmediateValue.dictionary",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[
+        _descriptor.OneofDescriptor(
+            name="value",
+            full_name="CoreML.Specification.MILSpec.Value.ImmediateValue.value",
+            index=0,
+            containing_type=None,
+            fields=[],
+        ),
+    ],
+    serialized_start=3457,
+    serialized_end=3728,
 )
 
 _VALUE_BLOBFILEVALUE = _descriptor.Descriptor(
-  name='BlobFileValue',
-  full_name='CoreML.Specification.MILSpec.Value.BlobFileValue',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='fileName', full_name='CoreML.Specification.MILSpec.Value.BlobFileValue.fileName', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='offset', full_name='CoreML.Specification.MILSpec.Value.BlobFileValue.offset', index=1,
-      number=2, type=4, cpp_type=4, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=3593,
-  serialized_end=3642,
+    name="BlobFileValue",
+    full_name="CoreML.Specification.MILSpec.Value.BlobFileValue",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="fileName",
+            full_name="CoreML.Specification.MILSpec.Value.BlobFileValue.fileName",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="offset",
+            full_name="CoreML.Specification.MILSpec.Value.BlobFileValue.offset",
+            index=1,
+            number=2,
+            type=4,
+            cpp_type=4,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=3730,
+    serialized_end=3779,
 )
 
 _VALUE = _descriptor.Descriptor(
-  name='Value',
-  full_name='CoreML.Specification.MILSpec.Value',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='docString', full_name='CoreML.Specification.MILSpec.Value.docString', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='type', full_name='CoreML.Specification.MILSpec.Value.type', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='immediateValue', full_name='CoreML.Specification.MILSpec.Value.immediateValue', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='blobFileValue', full_name='CoreML.Specification.MILSpec.Value.blobFileValue', index=3,
-      number=5, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[_VALUE_IMMEDIATEVALUE, _VALUE_BLOBFILEVALUE, ],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='value', full_name='CoreML.Specification.MILSpec.Value.value',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=3082,
-  serialized_end=3651,
+    name="Value",
+    full_name="CoreML.Specification.MILSpec.Value",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="docString",
+            full_name="CoreML.Specification.MILSpec.Value.docString",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b("").decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="type",
+            full_name="CoreML.Specification.MILSpec.Value.type",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="immediateValue",
+            full_name="CoreML.Specification.MILSpec.Value.immediateValue",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="blobFileValue",
+            full_name="CoreML.Specification.MILSpec.Value.blobFileValue",
+            index=3,
+            number=5,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[
+        _VALUE_IMMEDIATEVALUE,
+        _VALUE_BLOBFILEVALUE,
+    ],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[
+        _descriptor.OneofDescriptor(
+            name="value",
+            full_name="CoreML.Specification.MILSpec.Value.value",
+            index=0,
+            containing_type=None,
+            fields=[],
+        ),
+    ],
+    serialized_start=3219,
+    serialized_end=3788,
 )
 
 
 _TENSORVALUE_REPEATEDFLOATS = _descriptor.Descriptor(
-  name='RepeatedFloats',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedFloats',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedFloats.values', index=0,
-      number=1, type=2, cpp_type=6, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4201,
-  serialized_end=4237,
+    name="RepeatedFloats",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedFloats",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedFloats.values",
+            index=0,
+            number=1,
+            type=2,
+            cpp_type=6,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\020\001")),
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4338,
+    serialized_end=4374,
 )
 
 _TENSORVALUE_REPEATEDDOUBLES = _descriptor.Descriptor(
-  name='RepeatedDoubles',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedDoubles',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedDoubles.values', index=0,
-      number=1, type=1, cpp_type=5, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4239,
-  serialized_end=4276,
+    name="RepeatedDoubles",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedDoubles",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedDoubles.values",
+            index=0,
+            number=1,
+            type=1,
+            cpp_type=5,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\020\001")),
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4376,
+    serialized_end=4413,
 )
 
 _TENSORVALUE_REPEATEDINTS = _descriptor.Descriptor(
-  name='RepeatedInts',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedInts',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedInts.values', index=0,
-      number=1, type=5, cpp_type=1, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4278,
-  serialized_end=4312,
+    name="RepeatedInts",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedInts",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedInts.values",
+            index=0,
+            number=1,
+            type=5,
+            cpp_type=1,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\020\001")),
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4415,
+    serialized_end=4449,
 )
 
 _TENSORVALUE_REPEATEDLONGINTS = _descriptor.Descriptor(
-  name='RepeatedLongInts',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedLongInts',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedLongInts.values', index=0,
-      number=1, type=3, cpp_type=2, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4314,
-  serialized_end=4352,
+    name="RepeatedLongInts",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedLongInts",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedLongInts.values",
+            index=0,
+            number=1,
+            type=3,
+            cpp_type=2,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\020\001")),
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4451,
+    serialized_end=4489,
 )
 
 _TENSORVALUE_REPEATEDBOOLS = _descriptor.Descriptor(
-  name='RepeatedBools',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedBools',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedBools.values', index=0,
-      number=1, type=8, cpp_type=7, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b('\020\001'))),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4354,
-  serialized_end=4389,
+    name="RepeatedBools",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedBools",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedBools.values",
+            index=0,
+            number=1,
+            type=8,
+            cpp_type=7,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=_descriptor._ParseOptions(descriptor_pb2.FieldOptions(), _b("\020\001")),
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4491,
+    serialized_end=4526,
 )
 
 _TENSORVALUE_REPEATEDSTRINGS = _descriptor.Descriptor(
-  name='RepeatedStrings',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedStrings',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedStrings.values', index=0,
-      number=1, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4391,
-  serialized_end=4424,
+    name="RepeatedStrings",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedStrings",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedStrings.values",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4528,
+    serialized_end=4561,
 )
 
 _TENSORVALUE_REPEATEDBYTES = _descriptor.Descriptor(
-  name='RepeatedBytes',
-  full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedBytes',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values', index=0,
-      number=1, type=12, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b(""),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4426,
-  serialized_end=4457,
+    name="RepeatedBytes",
+    full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedBytes",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values",
+            index=0,
+            number=1,
+            type=12,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=_b(""),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4563,
+    serialized_end=4594,
 )
 
 _TENSORVALUE = _descriptor.Descriptor(
-  name='TensorValue',
-  full_name='CoreML.Specification.MILSpec.TensorValue',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='floats', full_name='CoreML.Specification.MILSpec.TensorValue.floats', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='ints', full_name='CoreML.Specification.MILSpec.TensorValue.ints', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='bools', full_name='CoreML.Specification.MILSpec.TensorValue.bools', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='strings', full_name='CoreML.Specification.MILSpec.TensorValue.strings', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='longInts', full_name='CoreML.Specification.MILSpec.TensorValue.longInts', index=4,
-      number=5, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='doubles', full_name='CoreML.Specification.MILSpec.TensorValue.doubles', index=5,
-      number=6, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='bytes', full_name='CoreML.Specification.MILSpec.TensorValue.bytes', index=6,
-      number=7, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[_TENSORVALUE_REPEATEDFLOATS, _TENSORVALUE_REPEATEDDOUBLES, _TENSORVALUE_REPEATEDINTS, _TENSORVALUE_REPEATEDLONGINTS, _TENSORVALUE_REPEATEDBOOLS, _TENSORVALUE_REPEATEDSTRINGS, _TENSORVALUE_REPEATEDBYTES, ],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='value', full_name='CoreML.Specification.MILSpec.TensorValue.value',
-      index=0, containing_type=None, fields=[]),
-  ],
-  serialized_start=3654,
-  serialized_end=4466,
+    name="TensorValue",
+    full_name="CoreML.Specification.MILSpec.TensorValue",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="floats",
+            full_name="CoreML.Specification.MILSpec.TensorValue.floats",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="ints",
+            full_name="CoreML.Specification.MILSpec.TensorValue.ints",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="bools",
+            full_name="CoreML.Specification.MILSpec.TensorValue.bools",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="strings",
+            full_name="CoreML.Specification.MILSpec.TensorValue.strings",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="longInts",
+            full_name="CoreML.Specification.MILSpec.TensorValue.longInts",
+            index=4,
+            number=5,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="doubles",
+            full_name="CoreML.Specification.MILSpec.TensorValue.doubles",
+            index=5,
+            number=6,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="bytes",
+            full_name="CoreML.Specification.MILSpec.TensorValue.bytes",
+            index=6,
+            number=7,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[
+        _TENSORVALUE_REPEATEDFLOATS,
+        _TENSORVALUE_REPEATEDDOUBLES,
+        _TENSORVALUE_REPEATEDINTS,
+        _TENSORVALUE_REPEATEDLONGINTS,
+        _TENSORVALUE_REPEATEDBOOLS,
+        _TENSORVALUE_REPEATEDSTRINGS,
+        _TENSORVALUE_REPEATEDBYTES,
+    ],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[
+        _descriptor.OneofDescriptor(
+            name="value",
+            full_name="CoreML.Specification.MILSpec.TensorValue.value",
+            index=0,
+            containing_type=None,
+            fields=[],
+        ),
+    ],
+    serialized_start=3791,
+    serialized_end=4603,
 )
 
 
 _TUPLEVALUE = _descriptor.Descriptor(
-  name='TupleValue',
-  full_name='CoreML.Specification.MILSpec.TupleValue',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.TupleValue.values', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4468,
-  serialized_end=4533,
+    name="TupleValue",
+    full_name="CoreML.Specification.MILSpec.TupleValue",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.TupleValue.values",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4605,
+    serialized_end=4670,
 )
 
 
 _LISTVALUE = _descriptor.Descriptor(
-  name='ListValue',
-  full_name='CoreML.Specification.MILSpec.ListValue',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.ListValue.values', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4535,
-  serialized_end=4599,
+    name="ListValue",
+    full_name="CoreML.Specification.MILSpec.ListValue",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.ListValue.values",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4672,
+    serialized_end=4736,
 )
 
 
 _DICTIONARYVALUE_KEYVALUEPAIR = _descriptor.Descriptor(
-  name='KeyValuePair',
-  full_name='CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='key', full_name='CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.key', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-    _descriptor.FieldDescriptor(
-      name='value', full_name='CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.value', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4697,
-  serialized_end=4813,
+    name="KeyValuePair",
+    full_name="CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="key",
+            full_name="CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.key",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+        _descriptor.FieldDescriptor(
+            name="value",
+            full_name="CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.value",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4834,
+    serialized_end=4950,
 )
 
 _DICTIONARYVALUE = _descriptor.Descriptor(
-  name='DictionaryValue',
-  full_name='CoreML.Specification.MILSpec.DictionaryValue',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='values', full_name='CoreML.Specification.MILSpec.DictionaryValue.values', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      options=None),
-  ],
-  extensions=[
-  ],
-  nested_types=[_DICTIONARYVALUE_KEYVALUEPAIR, ],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=4602,
-  serialized_end=4813,
+    name="DictionaryValue",
+    full_name="CoreML.Specification.MILSpec.DictionaryValue",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="values",
+            full_name="CoreML.Specification.MILSpec.DictionaryValue.values",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            options=None,
+        ),
+    ],
+    extensions=[],
+    nested_types=[
+        _DICTIONARYVALUE_KEYVALUEPAIR,
+    ],
+    enum_types=[],
+    options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=4739,
+    serialized_end=4950,
 )
 
 _PROGRAM_FUNCTIONSENTRY.fields_by_name['value'].message_type = _FUNCTION
@@ -1643,37 +2125,37 @@ _OPERATION_INPUTSENTRY.fields_by_name['value'].message_type = _ARGUMENT
 _OPERATION_INPUTSENTRY.containing_type = _OPERATION
 _OPERATION_ATTRIBUTESENTRY.fields_by_name['value'].message_type = _VALUE
 _OPERATION_ATTRIBUTESENTRY.containing_type = _OPERATION
-_OPERATION.fields_by_name['inputs'].message_type = _OPERATION_INPUTSENTRY
-_OPERATION.fields_by_name['outputs'].message_type = _NAMEDVALUETYPE
-_OPERATION.fields_by_name['blocks'].message_type = _BLOCK
-_OPERATION.fields_by_name['attributes'].message_type = _OPERATION_ATTRIBUTESENTRY
-_NAMEDVALUETYPE.fields_by_name['type'].message_type = _VALUETYPE
-_VALUETYPE.fields_by_name['tensorType'].message_type = _TENSORTYPE
-_VALUETYPE.fields_by_name['listType'].message_type = _LISTTYPE
-_VALUETYPE.fields_by_name['tupleType'].message_type = _TUPLETYPE
-_VALUETYPE.fields_by_name['dictionaryType'].message_type = _DICTIONARYTYPE
-_VALUETYPE.oneofs_by_name['type'].fields.append(
-  _VALUETYPE.fields_by_name['tensorType'])
-_VALUETYPE.fields_by_name['tensorType'].containing_oneof = _VALUETYPE.oneofs_by_name['type']
-_VALUETYPE.oneofs_by_name['type'].fields.append(
-  _VALUETYPE.fields_by_name['listType'])
-_VALUETYPE.fields_by_name['listType'].containing_oneof = _VALUETYPE.oneofs_by_name['type']
-_VALUETYPE.oneofs_by_name['type'].fields.append(
-  _VALUETYPE.fields_by_name['tupleType'])
-_VALUETYPE.fields_by_name['tupleType'].containing_oneof = _VALUETYPE.oneofs_by_name['type']
-_VALUETYPE.oneofs_by_name['type'].fields.append(
-  _VALUETYPE.fields_by_name['dictionaryType'])
-_VALUETYPE.fields_by_name['dictionaryType'].containing_oneof = _VALUETYPE.oneofs_by_name['type']
-_TENSORTYPE_ATTRIBUTESENTRY.fields_by_name['value'].message_type = _VALUE
+_OPERATION.fields_by_name["inputs"].message_type = _OPERATION_INPUTSENTRY
+_OPERATION.fields_by_name["outputs"].message_type = _NAMEDVALUETYPE
+_OPERATION.fields_by_name["blocks"].message_type = _BLOCK
+_OPERATION.fields_by_name["attributes"].message_type = _OPERATION_ATTRIBUTESENTRY
+_NAMEDVALUETYPE.fields_by_name["type"].message_type = _VALUETYPE
+_VALUETYPE.fields_by_name["tensorType"].message_type = _TENSORTYPE
+_VALUETYPE.fields_by_name["listType"].message_type = _LISTTYPE
+_VALUETYPE.fields_by_name["tupleType"].message_type = _TUPLETYPE
+_VALUETYPE.fields_by_name["dictionaryType"].message_type = _DICTIONARYTYPE
+_VALUETYPE.fields_by_name["stateType"].message_type = _STATETYPE
+_VALUETYPE.oneofs_by_name["type"].fields.append(_VALUETYPE.fields_by_name["tensorType"])
+_VALUETYPE.fields_by_name["tensorType"].containing_oneof = _VALUETYPE.oneofs_by_name["type"]
+_VALUETYPE.oneofs_by_name["type"].fields.append(_VALUETYPE.fields_by_name["listType"])
+_VALUETYPE.fields_by_name["listType"].containing_oneof = _VALUETYPE.oneofs_by_name["type"]
+_VALUETYPE.oneofs_by_name["type"].fields.append(_VALUETYPE.fields_by_name["tupleType"])
+_VALUETYPE.fields_by_name["tupleType"].containing_oneof = _VALUETYPE.oneofs_by_name["type"]
+_VALUETYPE.oneofs_by_name["type"].fields.append(_VALUETYPE.fields_by_name["dictionaryType"])
+_VALUETYPE.fields_by_name["dictionaryType"].containing_oneof = _VALUETYPE.oneofs_by_name["type"]
+_VALUETYPE.oneofs_by_name["type"].fields.append(_VALUETYPE.fields_by_name["stateType"])
+_VALUETYPE.fields_by_name["stateType"].containing_oneof = _VALUETYPE.oneofs_by_name["type"]
+_TENSORTYPE_ATTRIBUTESENTRY.fields_by_name["value"].message_type = _VALUE
 _TENSORTYPE_ATTRIBUTESENTRY.containing_type = _TENSORTYPE
-_TENSORTYPE.fields_by_name['dataType'].enum_type = _DATATYPE
-_TENSORTYPE.fields_by_name['dimensions'].message_type = _DIMENSION
-_TENSORTYPE.fields_by_name['attributes'].message_type = _TENSORTYPE_ATTRIBUTESENTRY
-_TUPLETYPE.fields_by_name['types'].message_type = _VALUETYPE
-_LISTTYPE.fields_by_name['type'].message_type = _VALUETYPE
-_LISTTYPE.fields_by_name['length'].message_type = _DIMENSION
-_DICTIONARYTYPE.fields_by_name['keyType'].message_type = _VALUETYPE
-_DICTIONARYTYPE.fields_by_name['valueType'].message_type = _VALUETYPE
+_TENSORTYPE.fields_by_name["dataType"].enum_type = _DATATYPE
+_TENSORTYPE.fields_by_name["dimensions"].message_type = _DIMENSION
+_TENSORTYPE.fields_by_name["attributes"].message_type = _TENSORTYPE_ATTRIBUTESENTRY
+_TUPLETYPE.fields_by_name["types"].message_type = _VALUETYPE
+_LISTTYPE.fields_by_name["type"].message_type = _VALUETYPE
+_LISTTYPE.fields_by_name["length"].message_type = _DIMENSION
+_DICTIONARYTYPE.fields_by_name["keyType"].message_type = _VALUETYPE
+_DICTIONARYTYPE.fields_by_name["valueType"].message_type = _VALUETYPE
+_STATETYPE.fields_by_name["wrappedType"].message_type = _VALUETYPE
 _DIMENSION_CONSTANTDIMENSION.containing_type = _DIMENSION
 _DIMENSION_UNKNOWNDIMENSION.containing_type = _DIMENSION
 _DIMENSION.fields_by_name['constant'].message_type = _DIMENSION_CONSTANTDIMENSION
@@ -1751,25 +2233,26 @@ _LISTVALUE.fields_by_name['values'].message_type = _VALUE
 _DICTIONARYVALUE_KEYVALUEPAIR.fields_by_name['key'].message_type = _VALUE
 _DICTIONARYVALUE_KEYVALUEPAIR.fields_by_name['value'].message_type = _VALUE
 _DICTIONARYVALUE_KEYVALUEPAIR.containing_type = _DICTIONARYVALUE
-_DICTIONARYVALUE.fields_by_name['values'].message_type = _DICTIONARYVALUE_KEYVALUEPAIR
-DESCRIPTOR.message_types_by_name['Program'] = _PROGRAM
-DESCRIPTOR.message_types_by_name['Function'] = _FUNCTION
-DESCRIPTOR.message_types_by_name['Block'] = _BLOCK
-DESCRIPTOR.message_types_by_name['Argument'] = _ARGUMENT
-DESCRIPTOR.message_types_by_name['Operation'] = _OPERATION
-DESCRIPTOR.message_types_by_name['NamedValueType'] = _NAMEDVALUETYPE
-DESCRIPTOR.message_types_by_name['ValueType'] = _VALUETYPE
-DESCRIPTOR.message_types_by_name['TensorType'] = _TENSORTYPE
-DESCRIPTOR.message_types_by_name['TupleType'] = _TUPLETYPE
-DESCRIPTOR.message_types_by_name['ListType'] = _LISTTYPE
-DESCRIPTOR.message_types_by_name['DictionaryType'] = _DICTIONARYTYPE
-DESCRIPTOR.message_types_by_name['Dimension'] = _DIMENSION
-DESCRIPTOR.message_types_by_name['Value'] = _VALUE
-DESCRIPTOR.message_types_by_name['TensorValue'] = _TENSORVALUE
-DESCRIPTOR.message_types_by_name['TupleValue'] = _TUPLEVALUE
-DESCRIPTOR.message_types_by_name['ListValue'] = _LISTVALUE
-DESCRIPTOR.message_types_by_name['DictionaryValue'] = _DICTIONARYVALUE
-DESCRIPTOR.enum_types_by_name['DataType'] = _DATATYPE
+_DICTIONARYVALUE.fields_by_name["values"].message_type = _DICTIONARYVALUE_KEYVALUEPAIR
+DESCRIPTOR.message_types_by_name["Program"] = _PROGRAM
+DESCRIPTOR.message_types_by_name["Function"] = _FUNCTION
+DESCRIPTOR.message_types_by_name["Block"] = _BLOCK
+DESCRIPTOR.message_types_by_name["Argument"] = _ARGUMENT
+DESCRIPTOR.message_types_by_name["Operation"] = _OPERATION
+DESCRIPTOR.message_types_by_name["NamedValueType"] = _NAMEDVALUETYPE
+DESCRIPTOR.message_types_by_name["ValueType"] = _VALUETYPE
+DESCRIPTOR.message_types_by_name["TensorType"] = _TENSORTYPE
+DESCRIPTOR.message_types_by_name["TupleType"] = _TUPLETYPE
+DESCRIPTOR.message_types_by_name["ListType"] = _LISTTYPE
+DESCRIPTOR.message_types_by_name["DictionaryType"] = _DICTIONARYTYPE
+DESCRIPTOR.message_types_by_name["StateType"] = _STATETYPE
+DESCRIPTOR.message_types_by_name["Dimension"] = _DIMENSION
+DESCRIPTOR.message_types_by_name["Value"] = _VALUE
+DESCRIPTOR.message_types_by_name["TensorValue"] = _TENSORVALUE
+DESCRIPTOR.message_types_by_name["TupleValue"] = _TUPLEVALUE
+DESCRIPTOR.message_types_by_name["ListValue"] = _LISTVALUE
+DESCRIPTOR.message_types_by_name["DictionaryValue"] = _DICTIONARYVALUE
+DESCRIPTOR.enum_types_by_name["DataType"] = _DATATYPE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Program = _reflection.GeneratedProtocolMessageType('Program', (_message.Message,), dict(
@@ -1920,6 +2403,17 @@ DictionaryType = _reflection.GeneratedProtocolMessageType('DictionaryType', (_me
   # @@protoc_insertion_point(class_scope:CoreML.Specification.MILSpec.DictionaryType)
   ))
 _sym_db.RegisterMessage(DictionaryType)
+
+StateType = _reflection.GeneratedProtocolMessageType(
+    "StateType",
+    (_message.Message,),
+    dict(
+        DESCRIPTOR=_STATETYPE,
+        __module__="MIL_pb2"
+        # @@protoc_insertion_point(class_scope:CoreML.Specification.MILSpec.StateType)
+    ),
+)
+_sym_db.RegisterMessage(StateType)
 
 Dimension = _reflection.GeneratedProtocolMessageType('Dimension', (_message.Message,), dict(
 

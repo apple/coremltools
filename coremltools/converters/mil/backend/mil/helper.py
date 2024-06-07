@@ -10,7 +10,18 @@ from coremltools import proto
 from coremltools.converters.mil.mil import types
 
 # For immediate values, those types are stored in bytes (MIL parser reads those types from bytes).
-IMMEDIATE_VALUE_TYPES_IN_BYTES = (types.fp16, types.int8, types.uint8, types.uint32)
+IMMEDIATE_VALUE_TYPES_IN_BYTES = (
+    types.fp16,
+    types.int4,
+    types.int8,
+    types.uint1,
+    types.uint2,
+    types.uint3,
+    types.uint4,
+    types.uint6,
+    types.uint8,
+    types.uint32,
+)
 
 
 def create_valuetype_scalar(data_type):
@@ -251,8 +262,21 @@ def types_to_proto_primitive(valuetype):
         )
     return types.BUILTIN_TO_PROTO_TYPES[valuetype]
 
+
 def _get_offset_by_writing_data(output_var, blob_writer):
-    if output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 4:
+    if output_var.dtype == types.int4:
+        offset = blob_writer.write_int4_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.dtype == types.uint1:
+        offset = blob_writer.write_uint1_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.dtype == types.uint2:
+        offset = blob_writer.write_uint2_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.dtype == types.uint3:
+        offset = blob_writer.write_uint3_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.dtype == types.uint4:
+        offset = blob_writer.write_uint4_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.dtype == types.uint6:
+        offset = blob_writer.write_uint6_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.val.dtype.kind == "f" and output_var.val.dtype.itemsize == 4:
         offset = blob_writer.write_float_data(np.ascontiguousarray(output_var.val.flatten()))
     elif output_var.val.dtype.kind == "f" and output_var.val.dtype.itemsize == 2:
         output_var_fp16_to_bytes_to_uint16 = np.frombuffer(
@@ -269,6 +293,10 @@ def _get_offset_by_writing_data(output_var, blob_writer):
         offset = blob_writer.write_uint16_data(np.ascontiguousarray(output_var.val.flatten()))
     elif output_var.val.dtype.kind == "i" and output_var.val.dtype.itemsize == 2:
         offset = blob_writer.write_int16_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.val.dtype.kind == "i" and output_var.val.dtype.itemsize == 4:
+        offset = blob_writer.write_int32_data(np.ascontiguousarray(output_var.val.flatten()))
+    elif output_var.val.dtype.kind == "u" and output_var.val.dtype.itemsize == 4:
+        offset = blob_writer.write_uint32_data(np.ascontiguousarray(output_var.val.flatten()))
     else:
         raise TypeError("Unsupported type, {}, for net buffer serialization.".format(output_var.val.dtype))
 

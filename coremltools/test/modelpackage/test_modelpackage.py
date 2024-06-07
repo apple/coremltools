@@ -5,6 +5,7 @@
 
 import json
 import os
+import platform
 import shutil
 import tempfile
 
@@ -12,11 +13,14 @@ import numpy as np
 import pytest
 
 import coremltools
+import coremltools as ct
 from coremltools import ComputeUnit, utils
 from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.libmodelpackage import ModelPackage
-from coremltools.models import _METADATA_VERSION, MLModel
+from coremltools.models import _METADATA_VERSION, CompiledMLModel, MLModel
 from coremltools.models.utils import _MLPACKAGE_AUTHOR_NAME, _WEIGHTS_DIR_NAME
 from coremltools.proto import Model_pb2
 
@@ -295,7 +299,7 @@ class TestMLModel:
             assert loaded_debug_handle_mapping == debug_handle_mapping
 
         def _compare_prediction_with_torch(coreml_model, torch_model):
-            x = torch.rand(2, 10)
+            x = torch.rand(INPUT_SHAPE)
             coreml_x = {list(coreml_model.input_description)[0]: x.numpy()}
 
             coreml_preds = coreml_model.predict(coreml_x)
@@ -303,18 +307,16 @@ class TestMLModel:
             coreml_y = list(coreml_preds.values())[0]
 
             torch_y = torch_model(x).detach().numpy()
-            np.testing.assert_allclose(coreml_y, torch_y, rtol=1e-6, atol=1e-6)
+            np.testing.assert_allclose(coreml_y, torch_y, rtol=1e-3, atol=1e-3)
 
         torch_model = TestModule()
         torch_model.eval()
 
-        example_input = (torch.rand(*INPUT_SHAPE),)
+        example_input = (torch.rand(*INPUT_SHAPE, dtype=torch.float16).to(torch.float32),)
         exir_program_aten = torch.export.export(torch_model, example_input)
         exir_program_edge = executorch.exir.to_edge(exir_program_aten).exported_program()
 
-        coreml_model = coremltools.convert(
-            exir_program_edge, compute_precision=coremltools.precision.FLOAT32
-        )
+        coreml_model = coremltools.convert(exir_program_edge)
         debug_handle_mapping = {
             "version" : coreml_model.user_defined_metadata[_METADATA_VERSION],
             "mapping" : {
@@ -322,7 +324,6 @@ class TestMLModel:
                 for k, v in coreml_model._mil_program.construct_debug_handle_to_ops_mapping().items()
             },
         }
-
 
         with tempfile.TemporaryDirectory(suffix=".mlpackage") as package0:
             coreml_model.save(package0)
@@ -456,6 +457,63 @@ class TestMLModel:
         assert os.path.exists(package_path)
 
         shutil.rmtree(package_path)
+
+
+class TestCompiledMLModel:
+    @pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="State only supported on macOS 15+")
+    def test_state(self):
+        """
+        Test prediction from a stateful model
+        """
+
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((1,), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def increment(x):
+            # Read
+            y = mb.read_state(input=x)
+            # Update
+            y = mb.add(x=y, y=np.array([1.0]).astype("float16"))
+            # Write
+            y = mb.coreml_update_state(state=x, value=y)
+            # Return
+            return y
+
+        mlmodel = ct.convert(
+            increment,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+
+        def extract_value(y):
+            return list(y.values())[0][0]
+
+        compiled_model = CompiledMLModel(mlmodel.get_compiled_model_path())
+
+        # Using first state
+        state1 = compiled_model.make_state()
+        for i in range(1, 5):
+            y = compiled_model.predict({}, state=state1)
+            assert extract_value(y) == i
+
+        # rdar://126957030 ([State][Bug][Intel] Stateful model prediction is wrong on Intel laptop)
+        if platform.machine() != "arm64":
+            return
+
+        # Use a new state
+        state2 = compiled_model.make_state()
+        for i in range(1, 5):
+            y = compiled_model.predict({}, state=state2)
+            assert extract_value(y) == i
+
+        # Go back to using the first state
+        for i in range(5, 10):
+            y = compiled_model.predict({}, state=state1)
+            assert extract_value(y) == i
+
 
 class TestSpecAndMLModelAPIs:
 

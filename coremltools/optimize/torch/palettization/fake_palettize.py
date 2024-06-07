@@ -1,21 +1,38 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import contextlib
-import gc
+import logging as _logging
+from distutils.version import StrictVersion as _StrictVersion
+from typing import Optional as _Optional
+from typing import Tuple as _Tuple
+from typing import Union as _Union
 
 import torch as _torch
+import torch.distributed as _dist
 import torch.nn.functional as _F
 from torch.ao.quantization.observer import ObserverBase as _ObserverBase
 from torch.quantization import FakeQuantize as _FakeQuantize
 
+from coremltools.optimize.torch._utils.torch_utils import get_torch_version as _get_torch_version
+
 from ._efficient_kmeans import _EfficientKMeans
-from ._fake_palettizer_tensor_hook import _FakePalettizationTensorHook
+from ._fake_palettizer_tensor_hook import _FakePalettizerTensorHook
 from ._partitioner import _Partitioner
+from ._utils import devectorize as _devectorize
+from ._utils import get_shard_list as _get_shard_list
+from ._utils import vectorize as _vectorize
 from .palettization_config import DEFAULT_PALETTIZATION_ADVANCED_OPTIONS
 
+# This is the maximum torch version currently supported for supporting the
+# FakePalettizerTensorHook as the backward graph tracing that the pack/unpack method
+# does accepts certain names for functions which have been changed after this
+# torch version
+MAX_TORCH_VERSION_FOR_PALETT_MAX_MEM = "2.0.1"
+
+_logger = _logging.getLogger(__name__)
 
 class FakePalettize(_FakeQuantize, _Partitioner):
     """
@@ -55,6 +72,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
                     ),
                     n_bits=2,
                     cluster_dim=1,
+                    module_parameter_shape=torch.Size([5, 4]),
                 )
                 model.linear2.qconfig = torch.quantization.QConfig(
                     activation=fq_activation, weight=fq_weight
@@ -71,6 +89,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         observer (:obj:`torch.ao.quantization.observer.ObserverBase`): Observer for quantizing the ``LUT``.
         n_bits (:obj:`int`): Number of palettization bits. There would be :math:`2^{n\_bits}` unique weights in the ``LUT``.
         cluster_dim (:obj:`int`): Dimensionality of centroids to use for clustering.
+        enable_per_channel_scale (:obj:`bool`): When set to ``True``, per channel scaling is used along the channel dimension.
+        group_size (:obj:`int`): Each group of ``group_size`` number of channels are palettized using
+            different look up tables.
         quant_min (:obj:`int`): The minimum allowable quantized value.
         quant_max (:obj:`int`): The maximum allowable quantized value.
         cluster_dtype (:obj:`str`): String that decides whether to quantize the ``LUT`` or not. The following are the ``str``
@@ -90,20 +111,37 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         observer: _ObserverBase,
         n_bits: int,
         cluster_dim: int,
+        enable_per_channel_scale: bool = False,
+        group_size: _Optional[int] = None,
         quant_min: int = -128,
         quant_max: int = 127,
         cluster_dtype: str = "f32",
         advanced_options: dict = {},
         **observer_kwargs,
     ):
-        partition_size = advanced_options.get(
-            "partition_size", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["partition_size"]
-        )
         cluster_permute = advanced_options.get(
             "cluster_permute", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["cluster_permute"]
         )
         palett_max_mem = advanced_options.get(
             "palett_max_mem", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_max_mem"]
+        )
+        if palett_max_mem < 1:
+            _CURRENT_TORCH_VERSION = _get_torch_version(_torch.__version__)
+            if _CURRENT_TORCH_VERSION > _StrictVersion(MAX_TORCH_VERSION_FOR_PALETT_MAX_MEM):
+                _logger.error(
+                    f"palett_max_mem<1 is only supported till a max torch version "
+                    f"of:{MAX_TORCH_VERSION_FOR_PALETT_MAX_MEM} "
+                )
+
+        palett_shard = advanced_options.get(
+            "palett_shard", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_shard"]
+        )
+        palett_unique = advanced_options.get(
+            "palett_unique", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_unique"]
+        )
+        palett_min_tsize = advanced_options.get(
+            "palett_min_tsize",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_min_tsize"],
         )
         kmeans_max_iter = advanced_options.get(
             "kmeans_max_iter", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_max_iter"]
@@ -125,7 +163,8 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             "palett_mode", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_mode"]
         )
         palett_cluster_tol = advanced_options.get(
-            "palett_cluster_tol", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_cluster_tol"]
+            "palett_cluster_tol",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_cluster_tol"],
         )
         palett_tau = advanced_options.get(
             "palett_tau", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_tau"]
@@ -137,7 +176,38 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             "palett_lambda", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_lambda"]
         )
         add_extra_centroid = advanced_options.get(
-            "add_extra_centroid", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["add_extra_centroid"]
+            "add_extra_centroid",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["add_extra_centroid"],
+        )
+        per_channel_scaling_factor_scheme = advanced_options.get(
+            "per_channel_scaling_factor_scheme",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["per_channel_scaling_factor_scheme"],
+        )
+        percentage_palett_enable = advanced_options.get(
+            "percentage_palett_enable",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["percentage_palett_enable"],
+        )
+        kmeans_batch_threshold = advanced_options.get(
+            "kmeans_batch_threshold",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_batch_threshold"],
+        )
+        kmeans_n_init = advanced_options.get(
+            "kmeans_n_init", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_n_init"]
+        )
+        zero_threshold = advanced_options.get(
+            "zero_threshold", DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["zero_threshold"]
+        )
+        palett_batch_mode = advanced_options.get(
+            "palett_batch_mode",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_batch_mode"],
+        )
+        palett_dist = advanced_options.get(
+            "palett_dist",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_dist"],
+        )
+        kmeans_error_bnd = advanced_options.get(
+            "kmeans_error_bnd",
+            DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_error_bnd"],
         )
 
         self._target_module_level_sparsity = 0.0
@@ -147,21 +217,37 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             self,
             n_bits,
             enforce_zero,
-            partition_size,
+            prune_threshold,
             cluster_dim,
             cluster_permute,
+            group_size,
             palett_tau,
             kmeans_init,
-            prune_threshold,
+            percentage_palett_enable,
             kmeans_opt1d_threshold,
-            add_extra_centroid,
+            kmeans_batch_threshold,
+            kmeans_n_init,
+            kmeans_error_bnd,
         )
 
+        self.cluster_permute = cluster_permute
+        self.enable_per_channel_scale = enable_per_channel_scale
+        self.per_channel_scaling_factor_scheme = per_channel_scaling_factor_scheme
+        self.per_channel_scaling_factor = None
+        self.partitions = []
+        self.group_size = group_size
         self.cluster_dtype = cluster_dtype
         self.add_extra_centroid = add_extra_centroid
         self.need_to_quantize = self.cluster_dtype in ["i8", "u8", "f16"]
         self.autograd_graph = hasattr(_torch.autograd, "graph") and palett_max_mem < 1.0
         self.palett_max_mem = palett_max_mem
+        self.palett_min_tsize = palett_min_tsize
+        self.palett_unique = palett_unique
+        self.palett_shard = palett_shard
+        self.palett_dist = palett_dist and _dist.is_available() and _dist.is_initialized()
+        self.zero_threshold = zero_threshold
+        self.prune_threshold = prune_threshold
+        self.palett_batch_mode = palett_batch_mode
         self.palett_cluster_tol = palett_cluster_tol
         self.kmeans_max_iter = kmeans_max_iter
         self.palett_mode = palett_mode
@@ -171,18 +257,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         self.n_bits = n_bits
         self.cluster_dim = cluster_dim
         self.kmeans_init = kmeans_init
-        # Temporary create placeholder buffers that will get replaced with proper centroids on the first forward,
-        # or when we reload a checkpoint. Having placeholder values is useful to maintain the structure of the state
-        # dict constant.
-        self.register_buffer("centroids", _torch.rand([1]))
-        self.register_buffer("labels", _torch.rand([1]))
-        # During init, we would want the fake_palett_enabled flag to be False, i.e. to be at a state of 0. Also, we
-        # would have set the fake_quant_enabled and observer_enabled to be 0 as well so that palettizer does nothing
-        # until the first milestone.
         self.register_buffer("fake_palett_enabled", _torch.tensor([0], dtype=_torch.uint8))
         self.disable_fake_quant()
         self.disable_observer()
-        self.buffers_are_placeholders = True
 
     def enable_fake_palett(self, enabled: bool = True) -> None:
         self.fake_palett_enabled[0] = 1 if enabled else 0
@@ -190,210 +267,376 @@ class FakePalettize(_FakeQuantize, _Partitioner):
     def disable_fake_palett(self):
         self.enable_fake_palett(False)
 
-    def diff_palettize(self, weights: _torch.Tensor):
-        """
-        Method called to run the differentiable k-means operation.
-        """
-        use_cpu_if_cuda_available = False
-        if _torch.cuda.is_available():
-            t = _torch.cuda.get_device_properties(weights.device).total_memory
-            a = _torch.cuda.memory_allocated(weights.device)
-            use_cpu_if_cuda_available = (a / t) > self.palett_max_mem and self.autograd_graph
-            if use_cpu_if_cuda_available:
-                if _FakePalettizationTensorHook.gc_trigger is None:
-                    _FakePalettizationTensorHook.gc_trigger = True
-
-        if _FakePalettizationTensorHook.gc_trigger:
-            gc.collect()
-
-        auto_grad_graph_on_cpu = (
-            _torch.autograd.graph.save_on_cpu(pin_memory=True)
-            if use_cpu_if_cuda_available
-            else contextlib.nullcontext()
+    def diff_palettize(self, X) -> _torch.Tensor:
+        cX, pad = list(
+            zip(
+                *[
+                    _vectorize(X[partition], self.cluster_dim)
+                    for i, partition in enumerate(self.partitions)
+                ]
+            )
         )
 
-        for i, partition in enumerate(self.partitions):
-
-            current_partition_clone = weights[partition[0] : partition[1]].clone()
-            cX, pad = self.flatten(current_partition_clone)
-
+        if self.training:
             with _torch.no_grad():
-                palett_table = _torch.unique(self.centroids[i], dim=0)
-                if len(palett_table) < self.n_clusters[i] * self.palett_cluster_tol:
-                    # We use n_init as 3 so as to not spend a lot of time running this operation
-                    kmeans = _EfficientKMeans(
-                        n_clusters=self.n_clusters[i],
-                        init="kmeans++",
-                        labels=self.labels[i],
-                        n_init=3,
-                        max_iter=1,
-                    )
-                    kmeans.kmeans_pp(3, cX, 0)
-                    self.centroids[i] = kmeans.cluster_centers_
+                if self.palett_tau > 0:
+                    new_centroid_list = []
+                    new_cur_n_clusters = self.n_clusters
+                    for i, partition in enumerate(self.partitions):
+                        if not self.enable_partition[i]:
+                            continue
 
-            centroids = self.centroids[i].clone()
+                        cur_clusters, cur_inverse, cur_counts = _torch.unique(
+                            self.centroids[i].float(),
+                            dim=0,
+                            return_inverse=True,
+                            return_counts=True,
+                        )
+                        cur_n_clusters = len(cur_clusters)
+                        new_cur_n_clusters = min(new_cur_n_clusters, cur_n_clusters)
 
-            assert not centroids.requires_grad
+                        if cur_n_clusters < self.n_clusters * (1 - self.palett_cluster_tol):
+                            for j, count in enumerate(cur_counts):
+                                if count > 1:
+                                    new_centroid = 0.5 * (
+                                        cur_clusters[j] + cur_clusters[(j + 1) % cur_n_clusters]
+                                    )
+                                    self.centroids[i][cur_inverse.tolist().index(j)] = new_centroid
+                                    new_centroid_list.append(new_centroid)
+
+            batch_partitions = []
+            seq_partitions = []
+            disabled_partitions = []
+            most_common_numel = None
+
+            for i, numel in enumerate(self.partition_numel):
+                if self.enable_partition[i]:
+                    if most_common_numel is None:
+                        most_common_numel = self.partition_numel[self.enable_partition].mode()[0]
+                    if numel == most_common_numel:
+                        batch_partitions.append(i)
+                    else:
+                        seq_partitions.append(i)
+                elif isinstance(self.centroids[i], _torch.Tensor):
+                    disabled_partitions.append(i)
+
+            if len(batch_partitions) == 1 or not self.palett_batch_mode:
+                seq_partitions += batch_partitions
+                batch_partitions = []
+
+            if batch_partitions:
+                X, mean_inertia = self.diff_palettize_batch(X, cX, pad, batch_partitions)
+
+            if seq_partitions:
+                X, mean_inertia = self.diff_palettize_seq(X, cX, pad, seq_partitions)
+
+            if disabled_partitions:
+                X = self.palettize(X, cX, pad, disabled_partitions)
+        else:
+            X = self.palettize(X, cX, pad, partitions=range(len(self.partitions)))
+
+        return X
+
+    def diff_palettize_seq(
+        self, X, cX, pad, partitions
+    ) -> _Tuple[_torch.Tensor, _Union[_torch.Tensor, int]]:
+        cur_inertia = []
+        for p in partitions:
+            partition = self.partitions[p]
+            centroids = self.centroids[p].clone()
+            if _torch.is_grad_enabled():
+                assert not centroids.requires_grad
+
+            cX_p = cX[p]
+            cX_pt = cX_p.T
+
             last_inertia = None
+            keep_sparsity = self.prune_threshold == 0 and self.enforce_zero[p]
 
             for j in range(self.kmeans_max_iter):
-                if self.autograd_graph:
-                    tensor_hook = _FakePalettizationTensorHook(
-                        [_torch.Size([cX.size()[0], centroids.size()[0]])],
-                        use_cpu_if_cuda_available,
-                        f"FakePalettizationTensorHook.{i}.{j}",
-                        self.palett_tau,
+                x_c_dist = _EfficientKMeans.x_c_dist(cX_p, centroids)
+
+                if keep_sparsity:
+                    # need to be keep pruning exact, no additional weight to be pruned by being assigned to the zero
+                    # centroid. the zero centroid is always centroids[0]
+                    if _torch.is_nonzero(centroids[0]):
+                        centroids[0] = _torch.zeros_like(centroids[0]).unsqueeze(0)
+
+                    cX_nonzero_indices = cX_p.nonzero(as_tuple=True)[0]
+                    x_c_dist[cX_nonzero_indices, :1] = 1 / self.zero_threshold
+
+                if self.prune_threshold > 0:
+                    x_c_dist[:, :1] -= self.prune_threshold
+
+                if "dkm" in self.palett_mode:
+                    attention = _F.softmax(-x_c_dist / self.palett_tau, dim=-1).clamp(
+                        min=self.zero_threshold
                     )
-                    auto_grad_graph_hook_init = _torch.autograd.graph.saved_tensors_hooks(
-                        tensor_hook.init_pack, tensor_hook.init_unpack
+                elif "topk" in self.palett_mode:
+                    values, indices = _torch.topk(x_c_dist, k=2, dim=-1, largest=False)
+                    attention_topk = _F.softmax(-values / self.palett_tau, dim=-1)
+                    attention = _torch.zeros_like(x_c_dist)
+                    attention[:, indices] = attention_topk
+                elif "hard" in self.palett_mode:
+                    col_idx = x_c_dist.min(dim=-1).indices
+                    row_idx = _torch.arange(start=0, end=len(col_idx), dtype=_torch.int32).to(
+                        cX_p.device
                     )
-                    auto_grad_graph_hook_reuse = _torch.autograd.graph.saved_tensors_hooks(
-                        tensor_hook.reuse_pack, tensor_hook.reuse_unpack
-                    )
+                    attention = _torch.sparse_coo_tensor(
+                        _torch.vstack([row_idx, col_idx]),
+                        _torch.ones_like(row_idx).to(cX_p.device),
+                        x_c_dist.size(),
+                        dtype=x_c_dist.dtype,
+                        requires_grad=True,
+                    ).to_dense()
+                elif "gsm" in self.palett_mode:
+                    attention = _F.gumbel_softmax(-x_c_dist / self.palett_tau, dim=-1)
                 else:
-                    auto_grad_graph_hook_init = contextlib.nullcontext()
-                    auto_grad_graph_hook_reuse = contextlib.nullcontext()
+                    raise ValueError(f"palett_mode: {self.palett_mode} currently not supported.")
 
-                with auto_grad_graph_hook_init:
-                    x_c_dist = _EfficientKMeans.x_c_dist(cX, centroids)
-                    min_error, _ = x_c_dist.min(dim=-1)
-
-                with auto_grad_graph_hook_reuse:
-                    if "dkm" in self.palett_mode:
-                        attention = _F.softmax(-x_c_dist / self.palett_tau, dim=1)
-                    elif "gsm" in self.palett_mode:
-                        attention = _F.gumbel_softmax(-x_c_dist / self.palett_tau, dim=1)
-                    elif "hard" in self.palett_mode:
-                        col_idx = x_c_dist.min(dim=1).indices
-                        row_idx = _torch.arange(start=0, end=len(col_idx), dtype=_torch.int32).to(
-                            cX.device
-                        )
-                        attention = _torch.sparse_coo_tensor(
-                            _torch.vstack([row_idx, col_idx]),
-                            _torch.ones_like(row_idx).to(cX.device),
-                            x_c_dist.size(),
-                            dtype=x_c_dist.dtype,
-                            requires_grad=True,
-                        ).to_dense()
-
-                assert attention.requires_grad
+                # attention_sum can overflow with fp16
                 attention_sum = attention.sum(dim=0).view(-1, 1)
-                attention_sum[attention_sum == 0] = 1e-6
+                assert not (attention_sum == 0).any()
 
-                with auto_grad_graph_hook_reuse:
-                    centroids = _torch.matmul(cX.T, attention).T / attention_sum
+                # matmul can overflow with fp16
+                centroids = _torch.matmul(cX_pt, attention).T / attention_sum
 
-                with auto_grad_graph_on_cpu:
-                    if self.need_to_quantize:
-                        centroids = super().forward(centroids)
+                if self.need_to_quantize:
+                    centroids = super().forward(centroids)
 
+                if _torch.is_grad_enabled():
                     assert centroids.requires_grad
 
-                    if self.prune_threshold > 0:
-                        centroids = _torch.nn.Hardshrink(self.prune_threshold.item())(centroids)
+                if self.enforce_zero[p]:
+                    # fix zero
+                    zero_point = _torch.zeros_like(centroids[0]).unsqueeze(0)
+                    centroids[0] = zero_point
 
-                    if self.enforce_zero[i]:
-                        zero_point = (
-                            _torch.zeros(centroids[0].size()).to(centroids.device).unsqueeze(0)
-                        )
-                        zero_idx = _torch.argmin(_torch.cdist(centroids, zero_point))
-                        centroids[zero_idx] = zero_point
+                min_error, _ = x_c_dist.min(dim=-1)
+                cur_inertia.append(min_error.sum())
 
-                cur_inertia = min_error.sum()
-
-                if last_inertia and abs(last_inertia - cur_inertia) <= self.palett_epsilon:
+                if last_inertia and abs(last_inertia - cur_inertia[-1]) <= self.palett_epsilon:
                     break
 
-                last_inertia = cur_inertia
+                last_inertia = cur_inertia[-1]
 
-            with auto_grad_graph_hook_reuse:
-                weights[partition[0] : partition[1]] = self.deflatten(
-                    _torch.matmul(attention, centroids), current_partition_clone.size(), pad
-                )
+            X[partition] = _devectorize(
+                _torch.matmul(attention, centroids), pad[p], X[partition].size()
+            ).to(X.dtype)
 
-                self.centroids[i] = (
-                    self.palett_lambda * self.centroids[i] + (1 - self.palett_lambda) * centroids
-                ).detach()
-                self.labels[i] = attention.detach().max(dim=1)[1].data
+            self.labels[p] = None
+            self.centroids[p] = centroids.detach().to(X.dtype)
+            self.cum_inertia[p] += float(cur_inertia[-1].detach())
 
-        return weights
+        return X, (_torch.stack(cur_inertia).mean() if cur_inertia else -1)
 
-    def palettize(self, weights: _torch.Tensor):
+    def diff_palettize_batch(self, X, cX, pad, partitions) -> _Tuple[_torch.Tensor, _torch.Tensor]:
+        num_partitions = len(partitions)
+        centroids = _torch.stack([self.centroids[i] for i in partitions]).clone()
+        cX = _torch.stack([cX[i] for i in partitions])
+        cXt = cX.mT
+        last_inertia = None
+
+        for j in range(self.kmeans_max_iter):
+            if self.palett_dist:
+                x_c_dist = dist_batch_cdist_square.apply(cX, centroids)
+            else:
+                x_c_dist = _EfficientKMeans.x_c_dist(cX, centroids)
+
+            attention = _F.softmax(-x_c_dist / self.palett_tau, -1).clamp(min=self.zero_threshold)
+
+            # attention_sum can overflow with fp16
+            if _torch.is_grad_enabled():
+                assert attention.requires_grad
+            attention_sum = attention.sum(dim=1).view(num_partitions, -1, 1)
+
+            centroids = _torch.matmul(cXt, attention).mT / attention_sum
+
+            if self.need_to_quantize:
+                centroids = super().forward(centroids)
+
+            if _torch.is_grad_enabled():
+                assert centroids.requires_grad
+            if self.enforce_zero[0]:
+                zero_point = _torch.zeros_like(centroids[0][0]).unsqueeze(0)
+
+                for k in range(centroids.size(0)):
+                    centroids[k][0] = zero_point
+
+            if self.kmeans_max_iter <= 1 and self.percentage_palett_enable >= 1:
+                cur_inertia = _torch.zeros([num_partitions], device=X.device, dtype=X.dtype)
+                break
+            else:
+                min_error, _ = x_c_dist.min(dim=-1)
+                cur_inertia = min_error.sum(dim=1)
+                avg_inertia = cur_inertia.mean()
+
+                if last_inertia and abs(last_inertia - avg_inertia) <= self.palett_epsilon:
+                    break
+
+                last_inertia = avg_inertia
+
+        tX = _torch.matmul(attention, centroids)
+
+        for i, p in enumerate(partitions):
+            partition = self.partitions[p]
+            X[partition] = _devectorize(tX[i], pad[p], X[partition].size()).to(X.dtype)
+            self.labels[p] = None
+            self.centroids[p] = centroids[i].detach().to(X.dtype)
+            self.cum_inertia[p] += float(cur_inertia[i].detach())
+
+        return X, cur_inertia
+
+    def palettize(self, X, cX, pad, partitions) -> _torch.Tensor:
         """
         This method is run during inference time by the forward method of the ``FakePalettize`` class. It calculates the
         weight from the ``LUT`` and ``indices`` across all partitions and returns them.
         """
-        for i, partition in enumerate(self.partitions):
-            labels = self.labels[i]
-            if labels is not None:
-                current_weight_partition = weights[partition[0] : partition[1]].detach()
-                _, pad = self.flatten(current_weight_partition)
+        batch_partitions = []
+        seq_partitions = []
+        most_common_numel = self.partition_numel[partitions].mode()[0]
 
-                weights[partition[0] : partition[1]] = self.deflatten(
-                    self.centroids[i][labels.long()], current_weight_partition.size(), pad
+        for p in partitions:
+            if self.partition_numel[p] == most_common_numel and self.labels[p] is None:
+                batch_partitions.append(p)
+            else:
+                seq_partitions.append(p)
+
+        if len(batch_partitions) == 1 or not self.palett_batch_mode:
+            seq_partitions += batch_partitions
+            batch_partitions = []
+
+        if seq_partitions:
+            X = self.palettize_seq(X, cX, pad, seq_partitions)
+
+        if batch_partitions:
+            X = self.palettize_batch(X, cX, pad, batch_partitions)
+
+        return X
+
+    def palettize_seq(self, X, cX, pad, partitions) -> _torch.Tensor:
+        for p in partitions:
+            partition = self.partitions[p]
+            labels = self.labels[p]
+            centroids = self.centroids[p]
+            if labels is None:
+                cX_p = cX[p]
+
+                x_c_dist = _EfficientKMeans.x_c_dist(cX_p, centroids)
+
+                if self.prune_threshold > 0:
+                    x_c_dist[:, :1] -= self.prune_threshold
+
+                min_error, labels = x_c_dist.min(dim=-1)
+                self.labels[p] = labels.to(_torch.int).cpu()
+
+            if X is not None:
+                X[partition] = _devectorize(
+                    centroids[self.labels[p]], pad[p], X[partition].size()
+                ).to(X.dtype)
+
+        return X
+
+    def palettize_batch(self, X, cX, pad, partitions) -> _torch.Tensor:
+        # intentionally use cat instead of stack to make the backward graph distinguishable from diff_palettize_batch
+        cX = _torch.cat([cX[i] for i in partitions]).view(len(partitions), -1, self.cluster_dim)
+        centroids = _torch.stack([self.centroids[i] for i in partitions])
+        x_c_dist = _EfficientKMeans.x_c_dist(cX, centroids)
+
+        if self.prune_threshold > 0:
+            x_c_dist[:, :, :1] -= self.prune_threshold
+
+        min_error, labels = x_c_dist.min(dim=-1)
+
+        for i, p in enumerate(partitions):
+            partition = self.partitions[p]
+            centroids = self.centroids[p]
+            self.labels[p] = labels[i].to(_torch.int).cpu()
+
+            X[partition] = _devectorize(centroids[self.labels[p]], pad[p], X[partition].size()).to(
+                X.dtype
+            )
+
+        return X
+
+    def forward(self, weights: _torch.Tensor) -> _torch.Tensor:
+        if self.cluster_permute and len(self.cluster_permute) == len(weights.size()):
+            weights = weights.permute(self.cluster_permute)
+        if self.enable_per_channel_scale:
+            if not isinstance(self.per_channel_scaling_factor, _torch.Tensor):
+                self.per_channel_scaling_factor = _torch.zeros((weights.flatten(1).shape[0], 1))
+            with _torch.no_grad():
+                if not self.per_channel_scaling_factor[0][0]:
+                    permuted_weights_proj = weights.flatten(1)
+                    if self.per_channel_scaling_factor_scheme == "min_max":
+                        self.per_channel_scaling_factor = 0.5 * (
+                            permuted_weights_proj.max(1)[0].view(-1, 1)
+                            - permuted_weights_proj.min(1)[0].view(-1, 1)
+                        )
+                    elif self.per_channel_scaling_factor_scheme == "abs":
+                        self.per_channel_scaling_factor = (
+                            permuted_weights_proj.abs().max(1)[0].view(-1, 1)
+                        )
+                    else:
+                        raise ValueError(
+                            f"Unsupported per_channel_scaling_factor_scheme:{self.per_channel_scaling_factor_scheme}"
+                        )
+
+            weights = (weights.flatten(1) / self.per_channel_scaling_factor).view(
+                weights.size()
+            )  # scale the weights using projection factors
+
+        if self.fake_palett_enabled[0] == 1:
+            if not self.partitions:
+                self.create_partitions(weights.detach())
+            tensor_hook = None
+            if self.training and self.palett_max_mem < 1.0:
+                tensor_hook = _FakePalettizerTensorHook(
+                    zero_threshold=self.zero_threshold,
+                    device=weights.device,
+                    min_size=self.palett_min_tsize,
+                    max_mem=self.palett_max_mem,
+                    use_unique=self.palett_unique
+                    and self.cluster_dim == 1
+                    and weights.dtype in [_torch.bfloat16, _torch.float16],
+                    use_shard=self.palett_shard,
                 )
 
-        return weights
-
-    def forward(self, weights: _torch.Tensor):
-        if self.partition_size == 0:
-            forwarded_weights = super().forward(weights)
-            if self.fake_palett_enabled[0] == 1:
-                with _torch.no_grad():
-                    quant_centroids, quant_labels = forwarded_weights.unique(return_inverse=True)
-                    self.centroids = _torch.stack([quant_centroids.view(-1, self.cluster_dim)])
-                    self.labels = _torch.stack([quant_labels])
+            with _torch.autograd.graph.saved_tensors_hooks(
+                tensor_hook.pack, tensor_hook.unpack
+            ) if tensor_hook else contextlib.nullcontext():
+                cloned_weights = weights.clone()
+                self.init_partitions(cloned_weights.detach())
+                palettized_weights = self.diff_palettize(cloned_weights)
         else:
-            forwarded_weights = weights.clone()
+            palettized_weights = super().forward(weights)
 
-            if self.fake_palett_enabled[0] == 1:
-                if not self.partitions:
-                    self.init_partitions(weights.detach())
-                    self.centroids = _torch.stack(self.centroids_init)
-                    self.labels = _torch.stack(self.labels_init)
-                    self.buffers_are_placeholders = False
+        if self.enable_per_channel_scale:
+            palettized_weights = (
+                palettized_weights.flatten(1) * self.per_channel_scaling_factor
+            ).view(palettized_weights.size())
 
-                if self.training:
-                    forwarded_weights = self.diff_palettize(forwarded_weights)
-                else:
-                    forwarded_weights = self.palettize(forwarded_weights)
-            else:
-                forwarded_weights = super().forward(weights)
+        if self.cluster_permute:
+            palettized_weights = palettized_weights.permute(
+                _torch.argsort(_torch.Tensor(self.cluster_permute)).tolist()
+            )
 
         if self.cluster_dtype == "f16":
-            forwarded_weights = forwarded_weights.to(_torch.float16).to(weights.dtype)
+            palettized_weights = palettized_weights.to(_torch.float16).to(weights.dtype)
         elif self.cluster_dtype == "b16":
-            forwarded_weights = forwarded_weights.to(_torch.bfloat16).to(weights.dtype)
+            palettized_weights = palettized_weights.to(_torch.bfloat16).to(weights.dtype)
 
-        return forwarded_weights
+        return palettized_weights
 
     def _load_from_state_dict(
         self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
     ):
 
         self.cluster_dtype = local_metadata["cluster_dtype"]
-        state_dict_buffers_are_placeholders = local_metadata["buffers_are_placeholders"]
-
-        if not self.buffers_are_placeholders and state_dict_buffers_are_placeholders:
-            raise ValueError(
-                f"Trying to reload an uninitialized state dict onto an initialized module: {prefix[:-1]}"
-            )
-
-        if self.buffers_are_placeholders and not state_dict_buffers_are_placeholders:
-            # We only change the size of the placeholders if we intend to reload a proper checkpoint
-            # onto an uninitialized module. In the other cases, we expect the state dict and the module to be compatible.
-            self.centroids = _torch.empty(
-                state_dict[prefix + "centroids"].size(), device=self.centroids.device
-            )
-            self.labels = _torch.empty(
-                state_dict[prefix + "labels"].size(), device=self.labels.device
-            )
-            self.fake_palett_enabled = _torch.empty(
-                state_dict[prefix + "fake_palett_enabled"].size(), device=self.labels.device
-            )
-
-        self.buffers_are_placeholders = state_dict_buffers_are_placeholders
-
+        self.fake_palett_enabled = _torch.empty(
+            state_dict[prefix + "fake_palett_enabled"].size(),
+            device=self.centroids.device,
+        )
         _Partitioner._load_from_state_dict_(
             self,
             state_dict,
@@ -438,24 +681,95 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             # Skip FakeQuantize._save_to_state_dict and go directly to nn.Module._save_to_state_dict
             super(_FakeQuantize, self)._save_to_state_dict(destination, prefix, keep_vars)
 
-        # State dicts can only contain tensors (for DDP), so store infos in the metadata dict (in particular str)
+        # State dicts can only contain tensors (for DDP), so store infos in the metatadata dict (in particular str)
         destination._metadata[prefix[:-1]]["cluster_dtype"] = self.cluster_dtype
-        destination._metadata[prefix[:-1]][
-            "buffers_are_placeholders"
-        ] = self.buffers_are_placeholders
+        destination[prefix + "per_channel_scaling_factor"] = self.per_channel_scaling_factor
         _Partitioner._save_to_state_dict_(self, destination, prefix + "palett.", keep_vars)
 
     def __repr__(self):
         rep = super().__repr__()
-        if self.centroids.shape[0] != self.n_clusters:
-            rep += " ===> centroids: uninitialised buffer, "
-            rep += "labels: uninitialised buffer, "
-        else:
-            rep += f" ===> centroids: {self.centroids}, "
-            rep += f"labels: {self.labels}, "
         rep += f"cluster_dtype: {self.cluster_dtype}, "
         rep += f"n_bits: {self.n_bits}, "
         rep += f"cluster_dim: {self.cluster_dim}, "
         rep += f"palett_tau: {self.palett_tau}, "
         rep += f"palett_mode: {self.palett_mode}"
         return rep
+
+
+class dist_batch_cdist_square(_torch.autograd.Function):
+    def forward_2d(X, C):
+        _C = C.reshape(-1)
+        _X = X.repeat(1, C.size(0))
+        _T = _X - _C
+        _T = _T.square()
+        T = _T.view(X.size(0), C.size(0), C.size(1)).sum(dim=-1)
+        return T
+
+    def forward_3d(X, C):
+        T = [None] * X.size(0)
+
+        for i in range(X.size(0)):
+            T[i] = dist_batch_cdist_square.forward_2d(X[i], C[i])
+
+        return _torch.stack(T)
+
+    def backward_2d(X, C, grad_output):
+        _C = C.reshape(-1)
+        _X = X.repeat(1, C.size(0))
+        _T = _X - _C
+        _T = _T.view(-1, C.size(0), C.size(1))
+        _T = _T * grad_output.unsqueeze(-1).expand(
+            grad_output.size(0), grad_output.size(1), C.size(1)
+        )
+
+        grad_X = _T.sum(dim=1)
+        grad_C = _T.sum(dim=0)
+
+        return 2 * grad_X, -2 * grad_C
+
+    def backward_3d(X, C, grad_output):
+        grad_X = [None] * X.size(0)
+        grad_C = [None] * X.size(0)
+
+        for i in range(X.size(0)):
+            grad_X[i], grad_C[i] = dist_batch_cdist_square.backward_2d(X[i], C[i], grad_output[i])
+
+        return _torch.stack(grad_X), _torch.stack(grad_C)
+
+    @staticmethod
+    def forward(ctx, X, C):
+        shard_list = _get_shard_list(X.size(0))
+        T = [None] * _dist.world_size
+
+        for i in range(_dist.world_size):
+            cur_X = X[shard_list[i] : shard_list[i + 1]]
+            cur_C = C[shard_list[i] : shard_list[i + 1]]
+
+            if i == _dist.rank:
+                T[i] = _torch.cdist(cur_X, cur_C).square()
+            else:
+                T[i] = _torch.zeros(
+                    [cur_X.size(0), cur_X.size(1), cur_C.size(1)],
+                    device=X.device,
+                    dtype=X.dtype,
+                )
+
+        _dist.all_gather(T, T[_dist.rank])
+        T = _torch.cat(T)
+
+        M = _torch.Tensor([])
+        ctx.save_for_backward(X, C, M)
+
+        return T
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        X, C, _ = ctx.saved_tensors
+
+        # gradient is data-dependent, so it CANNOT be sharded
+        if X.dim() == 3:
+            grad_X, grad_C = dist_batch_cdist_square.backward_3d(X, C, grad_output)
+        else:
+            grad_X, grad_C = dist_batch_cdist_square.backward_2d(X, C, grad_output)
+
+        return grad_X, grad_C

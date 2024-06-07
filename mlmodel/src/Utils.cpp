@@ -121,7 +121,11 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
         // lets start at the newest specification version and downgrade from there
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
-    
+
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS18 && !hasIOS18Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS17);
+    }
+
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS17 && !hasIOS17Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS16);
     }
@@ -329,6 +333,19 @@ bool CoreML::hasFloat16MultiArray(const Specification::Model& model) {
         }
     }
 
+    return false;
+}
+
+bool CoreML::hasCoreML8Opsets(const Specification::Model& model) {
+    if (model.Type_case() == Specification::Model::kMlProgram) {
+        auto main_iter = model.mlprogram().functions().find("main");
+        if (main_iter != model.mlprogram().functions().end()) {
+            const auto& main = main_iter->second;
+            if (main.opset() == "CoreML8") {
+                return true;
+            }
+        }
+    }
     return false;
 }
 
@@ -708,6 +725,51 @@ bool CoreML::hasIOS17Features(const Specification::Model& model) {
     return result;
 }
 
+bool CoreML::hasIOS18Features(const Specification::Model& model) {
+    // New in IOS18 features:
+    // - Language expansion for multilingual BERT used in text classifier and word tagger (revision == 5)
+
+    bool result = false;
+
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                result = result || hasIOS18Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                result = result || hasIOS18Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                result = result || hasIOS18Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kWordTagger:
+            return model.wordtagger().revision() == 5;
+        case Specification::Model::kTextClassifier:
+            return model.textclassifier().revision() == 5;
+        default:
+            break;
+    }
+
+    result = result || hasCoreML8Opsets(model);
+    result = result || hasMultiFunctions(model);
+    result = result || hasEmptyInput(model);
+    return result;
+}
+
 bool CoreML::hasCustomModel(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kCustomModel);
 }
@@ -1016,4 +1078,14 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
         }
     }
     return false;
+}
+
+bool CoreML::hasMultiFunctions(const Specification::Model& model) {
+    const auto& description = model.description();
+    return description.functions_size() != 0 || !description.defaultfunctionname().empty();
+}
+
+bool CoreML::hasEmptyInput(const Specification::Model& model) {
+    const auto& description = model.description();
+    return  description.input_size() == 0;
 }

@@ -10,7 +10,6 @@ import numpy as np
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil.types.type_mapping import is_builtin, numpy_type_to_builtin_type
 
 
 class ColorLayout(Enum):
@@ -208,7 +207,7 @@ class TensorType(InputType):
         """
         super(TensorType, self).__init__(name, shape)
         if dtype is not None:
-            if is_builtin(dtype):
+            if types.is_builtin(dtype):
                 self.dtype = dtype
                 if dtype not in (
                     types.int8,
@@ -226,7 +225,7 @@ class TensorType(InputType):
             else:
                 # Assume dtype is numpy type
                 try:
-                    self.dtype = numpy_type_to_builtin_type(dtype)
+                    self.dtype = types.numpy_type_to_builtin_type(dtype)
                 except TypeError:
                     raise TypeError("dtype={} is unsupported".format(dtype))
                 if dtype not in (np.float16, np.float32, np.float64, float,
@@ -247,20 +246,19 @@ class TensorType(InputType):
                 msg = 'TensorType {} default_value can only have ' +\
                     'same entries'
                 raise ValueError(msg.format(name))
-            if not self.shape.has_symbolic and \
-                list(default_value.shape) != list(self.shape.symbolic_shape):
-                msg = 'TensorType {} default_value shape {} != ' +\
-                    'TensorType.shape {}'
-                raise ValueError(msg.format(name, default_value.shape,
-                    self.shape.to_list()))
-            if self.dtype is not None and \
-                    numpy_type_to_builtin_type(default_value.dtype) != self.dtype:
-                msg = 'TensorType {} default_value dtype {} != ' +\
-                    'TensorType.dtype {}'
-                raise ValueError(msg.format(name, default_value.dtype,
-                    self.dtype.__type_info__()))
+            if not self.shape.has_symbolic and list(default_value.shape) != list(
+                self.shape.symbolic_shape
+            ):
+                msg = "TensorType {} default_value shape {} != " + "TensorType.shape {}"
+                raise ValueError(msg.format(name, default_value.shape, self.shape.to_list()))
+            if (
+                self.dtype is not None
+                and types.numpy_type_to_builtin_type(default_value.dtype) != self.dtype
+            ):
+                msg = "TensorType {} default_value dtype {} != " + "TensorType.dtype {}"
+                raise ValueError(msg.format(name, default_value.dtype, self.dtype.__type_info__()))
             else:
-                self.dtype = numpy_type_to_builtin_type(default_value.dtype)
+                self.dtype = types.numpy_type_to_builtin_type(default_value.dtype)
 
         self.default_value = default_value
 
@@ -272,6 +270,58 @@ class TensorType(InputType):
                                                                 self.shape,
                                                                 self.dtype)
 
+class StateType(InputType):
+    SUPPORTED_WRAPPER_TYPE = (
+        TensorType,
+    )
+
+    def __init__(
+        self,
+        wrapped_type: type,
+        name: Optional[str] = None,
+    ):
+        """
+        Specify a model state as a wrapper of a ``TensorType``.
+        For example, you can use the following code to create a
+        state type input that wraps a fp16 tensor with shape ``(2, 3)``::
+
+            ct.StateType(
+                wrapped_type=ct.TensorType(
+                    shape=(2, 3),
+                    dtype=np.float16
+                ),
+                name="state",
+            )
+
+        Parameters
+        ----------
+        wrapped_type: coremltools.converters.mil.input_types.InputType
+            - The type wrapped in the state. 
+            - Can be ``TensorType``.
+              Note that the ``name`` and ``default_value`` of the wrapped ``TensorType`` must not be provided.
+
+        name: str
+            The name of the state.
+            It must match the key of ``named_buffers()`` in the source TorchScript model.
+        """
+        if not isinstance(wrapped_type, StateType.SUPPORTED_WRAPPER_TYPE):
+            raise ValueError(
+                f"StateType only supports {StateType.SUPPORTED_WRAPPER_TYPE}. Got {type(wrapped_type)}."
+            )
+        # name and default_value cannot be set
+        if wrapped_type.name is not None:
+            raise ValueError("name cannot be set in the state wrapped_type.")
+        if wrapped_type.default_value is not None:
+            raise ValueError("default_value cannot be set in the state wrapped_type.")
+
+        super(StateType, self).__init__(name, wrapped_type.shape, wrapped_type.dtype)
+        self.wrapped_type = wrapped_type
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return f"StateType[{self.wrapped_type}]"
 
 class RangeDim:
     def __init__(
@@ -448,12 +498,7 @@ class EnumeratedShapes:
         .. sourcecode:: python
 
             sample_shape = ct.EnumeratedShapes(
-               shapes=[
-                    (2, 4, 64, 64),
-                    (2, 4, 48, 48),
-                    (2, 4, 32, 32)
-                ],
-                default=(2, 4, 64, 64)
+                shapes=[(2, 4, 64, 64), (2, 4, 48, 48), (2, 4, 32, 32)], default=(2, 4, 64, 64)
             )
 
             my_core_ml_model = ct.convert(

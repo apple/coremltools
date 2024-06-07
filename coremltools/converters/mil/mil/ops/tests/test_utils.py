@@ -3,16 +3,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import itertools
 
 import numpy as np
-import pytest
 
 from coremltools.converters.mil.mil.ops.defs._utils import (
     aggregated_pad,
     effective_kernel,
-    pack_elements_into_bits,
-    restore_elements_from_packed_bits,
     spatial_dimensions_out_shape,
 )
 
@@ -268,47 +264,3 @@ class TestOutputShape:
 
         expected = [5, 5]
         np.testing.assert_equal(actual, expected)
-
-
-class TestPackUnpackBits:
-    def test_pack_basic(self):
-        """
-        Original data: [-8, 7, 3, 4, -2].
-        The 4-bit binary representation for those elements are:
-            -8: 1000;
-             7: 0111;
-             3: 0011
-             4: 0100
-            -2: 1110
-        Hence the packed quantized_data will be 3 bytes long, i.e., 24 bits long, which is:
-            0111 1000  0100 0011  0000 1110
-        So the packed data is represented by 3 uint8 values: [120, 67, 14].
-        """
-        original_data = np.array([-8, 7, 3, 4, -2], dtype=np.int8)
-        expected_packed_data = np.array([120, 67, 14], dtype=np.uint8)
-        packed_data = pack_elements_into_bits(original_data, nbits=4)
-        np.testing.assert_array_equal(packed_data, expected_packed_data)
-
-    def test_pack_basic_2(self):
-        original_data = np.array([1, 2, 3, 4, 5], dtype=np.int8)
-        expected_packed_data = np.array([33, 67, 5], dtype=np.uint8)
-        packed_data = pack_elements_into_bits(original_data, nbits=4)
-        np.testing.assert_array_equal(packed_data, expected_packed_data)
-
-    @pytest.mark.parametrize(
-        "nbits, data_dtype, element_num",
-        itertools.product(list(range(1, 9)), [np.int8, np.uint8], [1, 3, 20]),
-    )
-    def test_round_trip_pack_unpack(self, nbits, data_dtype, element_num):
-        is_data_signed = np.issubdtype(data_dtype, np.signedinteger)
-        low, high = 0, 2**nbits
-        if is_data_signed:
-            low, high = -(2 ** (nbits - 1)), 2 ** (nbits - 1)
-        original_data = np.random.randint(low=low, high=high, size=(element_num,)).astype(
-            data_dtype
-        )
-        packed_data = pack_elements_into_bits(original_data, nbits)
-        restored_data = restore_elements_from_packed_bits(
-            packed_data, nbits, element_num, are_packed_values_signed=is_data_signed
-        )
-        np.testing.assert_array_equal(restored_data, original_data)

@@ -3,9 +3,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import math
 from collections import OrderedDict
-from typing import List, Optional, Union
+from enum import Enum
+from typing import Dict, List, Optional, Union
 
+import attrs
 import numpy as np
 import torch as torch
 from torch.jit._script import RecursiveScriptModule
@@ -14,15 +17,17 @@ from coremltools import _logger as logger
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil import mil
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.input_types import ImageType, InputType, TensorType
+from coremltools.converters.mil.frontend import _utils as frontend_utils
+from coremltools.converters.mil.input_types import ImageType, InputType, StateType, TensorType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Placeholder, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
-from coremltools.converters.mil.mil.types import is_float
+from coremltools.converters.mil.mil.types import builtin_to_string, is_float
 from coremltools.converters.mil.mil.var import Var
+from coremltools.optimize.coreml import _utils as optimize_utils
+from coremltools.optimize.coreml._quantization_passes import prune_weights
 
-from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 from .ops import convert_nodes
 from .quantization_ops import _dequantized_weight
@@ -40,6 +45,68 @@ from .utils import TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
+
+
+# The compression info is stored in state_dict with the prefix, e.g. "dense2._COREML_n_bits".
+_COMPRESSION_INFO_PREFIX = "_COREML_"
+
+
+# TODO: Share the enum between cto.coreml and cto.torch (rdar://124409664).
+class CompressionType(Enum):
+    PRUNING = 1
+    PALETTIZATION = 2
+    QUANTIZATION = 3
+
+
+@attrs.define(kw_only=True)
+class CompressionInfo:
+    """
+    This class stores the compression info carried by the traced torch model.
+    """
+
+    # Quantization related fields.
+    quantization_n_bits: Optional[int] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional([attrs.validators.instance_of(int)]),
+        converter=attrs.converters.optional(int),
+    )
+    quantization_scale: Optional[torch.Tensor] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional([attrs.validators.instance_of(torch.Tensor)]),
+    )
+    zero_point: Optional[torch.Tensor] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional([attrs.validators.instance_of(torch.Tensor)]),
+    )
+
+    # Palettization related fields.
+    lut: Optional[torch.Tensor] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional([attrs.validators.instance_of(torch.Tensor)]),
+    )
+    palettization_scale: Optional[torch.Tensor] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional([attrs.validators.instance_of(torch.Tensor)]),
+    )
+
+    # Compression type indication fields.
+    compression_type: Optional[List[int]] = attrs.field(
+        default=None,
+        converter=attrs.converters.optional(lambda tensor: tensor.tolist()),
+    )
+
+    @quantization_n_bits.validator
+    def check_n_bits(self, attribute, n_bits):
+        if n_bits is not None and not 1 <= n_bits <= 8:
+            raise ValueError(f"Only support quantization_n_bits between 1 and 8, but got {n_bits}")
+
+    @compression_type.validator
+    def check_compression_type(self, attribute, compression_type):
+        if compression_type is not None:
+            if not all(isinstance(type_val, int) for type_val in compression_type):
+                raise ValueError(
+                    f"Only support int compression_type, but got {type(compression_type)}"
+                )
 
 
 def _convert_to_torch_inputtype(inputs: List[TensorType]) -> List[TensorType]:
@@ -215,6 +282,8 @@ class TranscriptionContext:
         self._torch_graph = None
         if frontend == TorchFrontend.TORCHSCRIPT:
             self._quant_context = QuantizationContext(self)
+        # Dict to map a var's name into its corresponding source state var.
+        self.name_to_source_state = dict()
 
     @property
     def torch_graph(self):
@@ -232,13 +301,139 @@ class TranscriptionContext:
 
     def prepare_for_conversion(self, node: InternalTorchIRNode) -> None:
         """
-        Perform any preparation necessary before node-specific frontend conversion
-        is invoked.
+        Perform any preparation necessary before node-specific frontend conversion is invoked.
+
+        This utility check if the input is a function state input, and
+        convert it into a tensor type.
+
+        For instance, given the following torchscript graph:
+
+            %x(state, fp16), %y(tensor, fp32) -> {
+                %1 = add(%x, %y)
+            }
+
+        The graph is translated into:
+
+            %x(state, fp16), %y(tensor, fp32) -> {
+                %read_x = read_state(%x)
+                %read_x_cast = cast(%read_x, "fp32")
+                %1 = add(%read_x_cast, %y)
+            }
+
+        ``%read_x_cast`` is cached in ``name_to_source_state``, to make sure one
+        state feeds into only one ``read_state`` op.
         """
+        for val in node.inputs:
+            if val is None:
+                continue
+            if val not in self:
+                continue
+            in_node = self[val]
+            if in_node is None or not isinstance(in_node, Var):
+                continue
+            if types.is_state(in_node.sym_type):
+                self.name_to_source_state[val] = self[val]
+                assert (
+                    in_node.op is None
+                ), f"A state type var must come from a placeholder. Got parent op {in_node.op.op_type} instead."
+                read_state = mb.read_state(input=in_node)
+                read_state_fp32 = mb.cast(x=read_state, dtype="fp32")
+                self.add(read_state_fp32, torch_name=val, override=True)
         return
 
-    def process_inplace_op(self, node: InternalTorchIRNode):
-        return
+    def process_inplace_op(self, node: InternalTorchIRNode) -> None:
+        """
+        This utility:
+
+        1. adds ``mb.coreml_update_state`` after each torch inplace ops.
+        2. adjusts the dtype across state / tensor.
+
+        In torch, inplaces ops have the following properties:
+
+        1. op type has the suffix of ``_``. For instance, ``add_``, ``mul_``, etc.
+        2. The op does an inplace update for the first input tensor.
+
+        For instance, the following syntax of a TorchScript:
+
+            %3 = add_(%1, %2)
+
+        denotes an inplace ``add`` operation on the ``%1`` tensor. The memory buffer
+        of ``%1`` is updated and returned as a reference ``%3``.
+
+        Here are the steps what this utility does, lets use the above
+        simple torch script as an example, after adding the ``add_`` in the context,
+        we currently have a MIL graph as ``%3 = add(x=%1, y=%2)``:
+
+        1. Validate the first input (``%1``) comes from a state source by checking if the tensor's name ``1`` is in ``name_to_source_state``. If not, this utility does nothing.
+        2. Say ``name_to_source_state["1"] = %state``. ``%state, %3`` can potentially has different dtype.
+           For instance, the user could specify ``%state`` in fp16, while
+           the MIL program in the front end conversion stage is
+           still in fp32. Hence we cast ``%3`` into ``%state``'s dtype:
+
+           (%state: fp16) -> {
+                ...
+                %3_<fp32> = add(x=%1, y=%2)
+                %3_cast<fp16> = cast(x=%3_, dtype="fp16")
+            }
+        3. Insert a ``coreml_update_state`` and cast the output back to ``%3``'s original dtype:
+
+           (%state: fp16) -> {
+                ...
+                %3_<fp32> = add(x=%1, y=%2)
+                %3_cast<fp16> = cast(x=%3_, dtype="fp16")
+                %3_update<fp16> = coreml_update_state(state=%state, value=%3_cast)
+                %3<fp32> = cast(x=%3_update, dtype="fp32")
+            }
+        4. Set ``name_to_source_state["3"] = %state``, so the state chain can be used in the downstream.
+
+        The below Torch Script model,
+
+            (%state: fp16) -> {
+                ...
+                %3 = add_(%1, %2)
+                %out = sub_(%3, %4)
+            }
+
+        will result in:
+
+           (%state: fp16) -> {
+                %1_<fp16> = read_state(%state)
+                %1<fp32> = cast(x=%1_, dtype="fp32")
+                %3_<fp32> = add(x=%1, y=%2)
+                %3_cast<fp16> = cast(x=%3_, dtype="fp16")
+                %3_update<fp16> = coreml_update_state(state=%state, value=%3_cast)
+                %3<fp32> = cast(x=%3_update, dtype="fp32")
+                %out_<fp32> = sub(x=%3, y=%4)
+                %out_cast<fp16> = cast(x=%out_, dtype="fp16")
+                %out_update<fp16> = coreml_update_state(state=%state, value=%out_cast)
+                %out<fp32> = cast(x=%out_update, dtype="fp32")
+            }
+
+        Please note that, the intermediate ``cast`` ops would be removed
+        by the ``add_fp16_cast`` + ``cast_optimization`` graph passes:
+
+           (%state: fp16) -> {
+                %1<fp16> = read_state(%state)
+                %3_<fp16> = add(x=%1, y=%2)
+                %3<fp16> = coreml_update_state(state=%state, value=%3_)
+                %out_<fp16> = sub(x=%3, y=%4)
+                %out<fp16> = coreml_update_state(state=%state, value=%out_)
+            }
+
+        """
+        if len(node.inputs) == 0:
+            return
+
+        if node.inputs[0] not in self.name_to_source_state:
+            return
+
+        source_state = self.name_to_source_state[node.inputs[0]]
+        self.name_to_source_state[node.name] = source_state
+        value_node = self[node.name]
+        cast_value = mb.cast(x=value_node, dtype=builtin_to_string(source_state.dtype))
+        update = mb.coreml_update_state(state=source_state, value=cast_value)
+        cast_update = mb.cast(x=update, dtype=builtin_to_string(value_node.dtype), name=node.name)
+        self.add(cast_update, torch_name=node.name, override=True)
 
     def add(self, ssa_var: Var, torch_name: Optional[str] = None, override=False) -> None:
         """
@@ -324,6 +519,7 @@ class TorchConverter:
         cut_at_symbols: Optional[List[str]] = None,
         opset_version: Optional[int] = None,
         use_default_fp16_io: bool = False,
+        states: Optional[List[StateType]] = None,
     ) -> None:
         """
         Arguments:
@@ -343,20 +539,26 @@ class TorchConverter:
         """
         self.use_default_fp16_io = use_default_fp16_io
 
-        if inputs is not None:
-            inputs = _convert_to_torch_inputtype(inputs)
-            self.inputs = inputs
-            for idx, inp in enumerate(self.inputs):
-                if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
-                    self.inputs[idx].channel_first = True
+        # process inputs
+        if inputs is None:
+            inputs = []
+        self.inputs = _convert_to_torch_inputtype(inputs)
+        for idx, inp in enumerate(self.inputs):
+            if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
+                self.inputs[idx].channel_first = True
 
-            if self.use_default_fp16_io:
-                # If the input type is not specified by the user and use_default_fp16_io
-                # is True. Make the default input type to fp16
-                self._adjust_default_input_to_fp16()
+        # process states
+        if states is None:
+            states = []
+        self.states = states
+
+        if self.use_default_fp16_io:
+            # If the input type is not specified by the user and use_default_fp16_io
+            # is True. Make the default input type to fp16
+            self._adjust_default_input_to_fp16()
 
         self.outputs = outputs
-        self.output_names = get_output_names(self.outputs)
+        self.output_names = frontend_utils.get_output_names(self.outputs)
         self.opset_version = _target(opset_version) if opset_version is not None else None
         self._prog = mil.Program()
 
@@ -388,18 +590,64 @@ class TorchConverter:
             )
 
         self.context.torch_graph = self.graph
-
         self.inputs = list(self.graph.inputs.values())
+        self._validate_states()
 
-    def _adjust_default_input_to_fp16(self):
+        # Store the mapping from parameter name (such as "dense1.weight") to the compression info.
+        self.param_to_compression_info: Dict[str, CompressionInfo] = dict()
+        if self.opset_version is not None and self.opset_version >= _target.iOS16:
+            # Notice that even the compression info in registered buffer is kept in self.graph,
+            # we still want to explicitly construct it here, to make it useful for both TorchScript
+            # and ExportedProgram.
+            state_dict = loaded_model.state_dict
+            self.param_to_compression_info = self._construct_compression_info(
+                state_dict() if callable(state_dict) else state_dict
+            )
+
+    def _validate_states(self) -> None:
+        """
+        Validate that the user provided states is consistent with the
+        registered buffer in the torchscript model.
+        """
+        if len(self.states) > 0:
+            for state in self.states:
+                if state.name is None or state.name not in self.graph.buffers:
+                    raise ValueError(
+                        f"StateType named {state.name} not provided or "
+                        "not found in the source torch model. "
+                        "Please make sure the name in "
+                        "'ct.StateType(name=..., wrapped_type=ct.TensorType(...))' "
+                        f"match the 'named_buffers()' in the source torch model: {list(self.graph.buffers.keys())}"
+                    )
+
+                state_shape = state.shape.shape
+                buffer_shape = tuple(self.graph.buffers[state.name].size())
+                if state_shape != buffer_shape:
+                    raise ValueError(
+                        f"StateType shape {state_shape} must matched the torch buffer shape {buffer_shape}."
+                    )
+
+            if self.opset_version is None or self.opset_version < _target.iOS18:
+                raise ValueError(
+                    "State model is supported only >= iOS18. "
+                    "Please update the minimum_deployment_target to at least coremltools.target.iOS18"
+                )
+            self.inputs.extend(self.states)
+
+    def _adjust_default_input_to_fp16(self) -> None:
         """
         An utility function that sets the default input dtype to fp16
         """
-        assert isinstance(self.inputs, list), "inputs must be type of list"
-        # Adjust inputs dtype to fp16
-        for val in self.inputs:
-            if isinstance(val, TensorType) and val.dtype is None:
-                val.dtype = types.fp16
+
+        def _adjust_default_input_to_fp16_helper(inputs: InputType):
+            assert isinstance(inputs, list), "inputs must be type of list"
+            # Adjust inputs dtype to fp16
+            for val in inputs:
+                if isinstance(val, (StateType, TensorType)) and val.dtype is None:
+                    val.dtype = types.fp16
+
+        _adjust_default_input_to_fp16_helper(self.inputs)
+        _adjust_default_input_to_fp16_helper(self.states)
 
     def _adjust_default_output_to_fp16(self, graph_outputs):
         """
@@ -444,13 +692,12 @@ class TorchConverter:
         return implemented_ops, missing_ops
 
     @staticmethod
-    def _create_placeholder(
-        _input: TensorType,
-    ) -> Placeholder:
+    def _create_placeholder(_input: InputType) -> Placeholder:
         """
         Converts an InputType into a Placeholder.
 
-        _input: TensorType
+        1. ``StateType`` into ``mb.state_tensor_placeholder``.
+        2. ``TensorType`` and ``ImageType`` into ``mb.placeholder``.
         """
         shape = _input.shape.symbolic_shape
         dtype = _input.dtype
@@ -459,10 +706,364 @@ class TorchConverter:
             dtype = types.int32
         elif dtype == types.fp64:
             dtype = types.fp32
+
+        if isinstance(_input, StateType):
+            return mb.state_tensor_placeholder(shape, dtype=dtype)
+
         return mb.placeholder(shape, dtype=dtype)
+
+    @staticmethod
+    def _construct_compression_info(
+        state_dict: Dict[str, torch.Tensor],
+    ) -> Dict[str, CompressionInfo]:
+        """
+        Construct compression info from the traced model's state_dict.
+
+        The state_dict of the traced model is something like
+        {
+            'dense1.weight': xxx, 'dense1.bias': xxx,
+            'dense1._COREML_/weight/quantization_n_bits': tensor(4),
+            'dense1._COREML_/weight/quantization_scale': xxx,
+            'dense1._COREML_/weight/zero_point': xxx,
+            'dense1._COREML_/weight/compression_type': tensor([3]),
+            'dense2.weight': xxx,
+            ...
+        }
+
+        We extract the compression info and store it as a dict
+        {
+            'dense1.weight': CompressionInfo(quantization_n_bits=4, quantization_scale=xxx,
+                                            zero_point=xxx, compression_type=[QUANTIZATION]),
+            'dense2.weight': ...
+        }
+        """
+        compression_info = dict()
+        for torch_key_name in state_dict.keys():
+            if torch_key_name == f"{_COMPRESSION_INFO_PREFIX}/metadata_version":
+                # TODO: rdar://124707382 ([Compression] Support versioning in CompressionInfo)
+                continue
+
+            if _COMPRESSION_INFO_PREFIX in torch_key_name:
+                module_name = None
+                buffer_name = torch_key_name
+                if not torch_key_name.startswith(_COMPRESSION_INFO_PREFIX):
+                    module_name, buffer_name = torch_key_name.rsplit(".", 1)
+                _, param_name, compression_key = buffer_name.rsplit("/", 2)
+                if module_name:
+                    param_name = f"{module_name}.{param_name}"
+
+                if param_name not in compression_info:
+                    compression_info[param_name] = CompressionInfo()
+                setattr(
+                    compression_info[param_name],
+                    compression_key,
+                    state_dict[torch_key_name],
+                )
+
+        return compression_info
+
+    def _has_compression_info(self, param_name: str) -> bool:
+        """Check if the parameter carries compression info."""
+        return param_name in self.param_to_compression_info
+
+    def _construct_quantization_op(
+        self,
+        weight: np.ndarray,
+        compression_info: CompressionInfo,
+        name: str,
+        compressed_var: Optional[Var] = None,
+    ) -> Var:
+        """
+        The weight is constructed by `weight = scale * (quantized_data - zero_point)`.
+        We need to restore the quantized_data to construct the quantization op.
+
+        If compressed_var is not None, it's the var constructed by a previous compression function,
+        which means this is a joint compression. For example, if the compression_info.compression_type
+        is [CompressionType.PRUNING, CompressionType.QUANTIZATION], the compressed_var is the var
+        produced by the pruning.
+        """
+        if compression_info.quantization_n_bits is None:
+            raise ValueError("quantization_n_bits must be specified in quantization.")
+        if compression_info.quantization_scale is None:
+            raise ValueError("quantization_scale must be specified in quantization.")
+
+        scale = compression_info.quantization_scale.detach().numpy()
+        zero_point: Optional[np.ndarray] = None
+        if compression_info.zero_point is not None:
+            zero_point = compression_info.zero_point.detach().numpy()
+        # For conv/conv_transpose, the weight has rank=4, so we auto-expand scale and zero-point if
+        # it only has two elements.
+        if len(weight.shape) == 4 and len(scale.shape) == 2:
+            scale = np.expand_dims(np.expand_dims(scale, axis=-1), axis=-1)
+            if zero_point is not None:
+                zero_point = np.expand_dims(np.expand_dims(zero_point, axis=-1), axis=-1)
+
+        if len(weight.shape) != len(scale.shape):
+            raise ValueError(
+                f"In {name}, the `weight` should have same rank as `scale`, but got {weight.shape} vs {scale.shape}"
+            )
+        if zero_point is not None:
+            if len(weight.shape) != len(zero_point.shape):
+                raise ValueError(
+                    f"In {name}, the `weight` should have same rank as `zero_point`, but got {weight.shape} vs {zero_point.shape}"
+                )
+
+        # The scale has shape [.., block_num, ..], which means each scale is for one block. As
+        # weight has shape [.., block_num*block_size, ..], we need to interleave repeat it.
+        scale_repeated = scale
+        zero_point_repeated = zero_point
+        for axis, weight_dim_size in enumerate(weight.shape):
+            scale_dim_size = scale.shape[axis]
+            if weight_dim_size != scale_dim_size and scale_dim_size != 1:
+                # Only repeat axis where dim size is not 1, because 1 will be auto-broadcast by np.
+                block_size = weight_dim_size // scale.shape[axis]
+                scale_repeated = np.repeat(scale_repeated, block_size, axis=axis)
+                if zero_point_repeated is not None:
+                    zero_point_repeated = np.repeat(zero_point_repeated, block_size, axis=axis)
+
+        quantized_data = np.round(weight / scale_repeated)
+        if zero_point_repeated is not None:
+            quantized_data += zero_point_repeated
+
+        # Adjust dtype based on nbits.
+        dtype_str_prefix = "int"
+        if quantized_data.min() >= 0 and (zero_point is None or zero_point.min() >= 0):
+            dtype_str_prefix = "uint"
+        dtype_str = dtype_str_prefix + str(compression_info.quantization_n_bits)
+        builtin_dtype = types.string_to_builtin(dtype_str)
+        np_dtype = types.nptype_from_builtin(builtin_dtype)
+
+        builtin_range = types.type_mapping.builtin_to_range(builtin_dtype)
+        quantized_data = np.clip(quantized_data, builtin_range.low, builtin_range.high).astype(
+            np_dtype
+        )
+        if zero_point is not None:
+            zero_point = zero_point.astype(np_dtype)
+
+        if compressed_var is None:
+            return frontend_utils._construct_constexpr_dequant_op(
+                quantized_data, zero_point, scale, name=name
+            )
+        else:
+            # Specially handles joint compression, such as using sparse op if joint with pruning.
+            if compressed_var.op.op_type == "constexpr_sparse_to_dense":
+                mask, nonzero_data = mb.constexpr_sparse_blockwise_shift_scale(
+                    data_mask=compressed_var.op.mask,
+                    nonzero_data=quantized_data[compressed_var.op.mask.val != 0].flatten(),
+                    scale=scale,
+                    offset=zero_point,
+                    before_op=compressed_var.op,
+                    name=compressed_var.op.name + "_quantized",
+                )
+                return mb.constexpr_sparse_to_dense(nonzero_data=nonzero_data, mask=mask, name=name)
+            else:
+                raise ValueError(
+                    "Unsupported joint compression combination. The quantization can only be joint "
+                    f"with pruning, but got {compressed_var.op.op_type}. Please check the value of "
+                    "'compression_type' in your registered buffers."
+                )
+
+    @staticmethod
+    def _construct_palettization_op(
+        weight: np.ndarray,
+        compression_info: CompressionInfo,
+        name: str,
+        compressed_var: Optional[Var] = None,
+    ) -> Var:
+        """
+        The weight is constructed by 2**nbits unique values in each group.
+
+        When `palettization_scale` is provided, it means the weight has scales before got palettized.
+        More specifically, the diagram is:
+
+        lut(fp16) \
+                    -> constexpr_lut_to_dense -> dense(fp16) -> constexpr_blockwise_shift_scale -> dense(fp16)
+        indices  /
+
+        If compressed_var is not None, it's the var constructed by a previous compression function,
+        which means this is a joint compression. For example, if the compression_info.compression_type
+        is [CompressionType.PRUNING, CompressionType.PALETTIZATION], the compressed_var is the var
+        produced by the pruning.
+        """
+        if compression_info.lut is None:
+            raise ValueError("Missing lut in compression info. Please register a buffer for lut.")
+
+        lut = compression_info.lut.detach().numpy()
+        if len(lut.shape) == len(weight.shape) + 2:
+            if lut.shape[-1] > 1:
+                raise NotImplementedError(
+                    "Doesn't support Vector Palettization (last dim in lut > 1). "
+                    "Implementation is tracked in rdar://124474258"
+                )
+        elif len(lut.shape) == len(weight.shape) + 1:
+            # The last dim to indicate vector size is by default 1 for scalar palettization.
+            lut = np.expand_dims(lut, axis=-1)
+        else:
+            raise ValueError(
+                "The rank of lut is invalid. It should match the weight dimension. "
+                f"Got {len(lut.shape)} vs {len(weight.shape)}"
+            )
+
+        assert len(lut.shape) == len(weight.shape) + 2
+        num_palettes = lut.shape[-2]
+        nbits = int(math.ceil(math.log2(num_palettes)))
+        if 2**nbits != num_palettes:
+            # Padding lut to make it has 2**nbits dim size on -2 axis.
+            padding_shape = list(lut.shape)
+            padding_shape[-2] = 2**nbits - num_palettes
+            lut = np.concatenate([lut, np.zeros(padding_shape, dtype=lut.dtype)], axis=-2)
+            num_palettes = lut.shape[-2]
+
+        if compression_info.palettization_scale is not None:
+            # The weight has scales, which means the palettization is on the pre-scale data.
+            scale = compression_info.palettization_scale.detach().numpy()
+            # For conv/conv_transpose, the weight has rank=4, so we auto-expand scale and zero-point if
+            # it only has two elements.
+            if len(weight.shape) == 4 and len(scale.shape) == 2:
+                scale = np.expand_dims(np.expand_dims(scale, axis=-1), axis=-1)
+            if len(scale.shape) != len(weight.shape):
+                raise ValueError(
+                    f"In {name}, the scale should have the same rank as weight, but got "
+                    f"{scale.shape} vs {weight.shape}."
+                )
+            weight = weight / scale
+
+        indices = optimize_utils.find_indices_for_lut(weight, lut)
+
+        if compressed_var is None:
+            if is_current_opset_version_compatible_with(_target.iOS18):
+                result = mb.constexpr_lut_to_dense(indices=indices, lut=lut, name=name)
+            else:
+                if np.prod(lut.shape[:-2]) > 1:
+                    raise ValueError(
+                        "More than one look-up-table (lut) per tensor is only supported in iOS18+. "
+                        "Please set the minimum_deployment_target to iOS18 or later."
+                    )
+                # Convert iOS18 lut params to pre-iOS18 compatible format.
+                lut = lut.reshape([num_palettes])
+                result = mb.constexpr_lut_to_dense(
+                    indices=optimize_utils.pack_elements_into_bits(indices, nbits),
+                    lut=lut,
+                    shape=np.uint32(indices.shape),
+                    name=name,
+                )
+        else:
+            # Specially handles joint compression, such as using sparse op if joint with pruning.
+            if compressed_var.op.op_type == "constexpr_sparse_to_dense":
+                mask, nonzero_data = mb.constexpr_lut_to_sparse(
+                    indices_mask=compressed_var.op.mask,
+                    indices_nonzero_data=indices[compressed_var.op.mask.val != 0].flatten(),
+                    lut=lut,
+                    before_op=compressed_var.op,
+                    name=compressed_var.op.name + "_palettized",
+                )
+                result = mb.constexpr_sparse_to_dense(
+                    nonzero_data=nonzero_data, mask=mask, name=name
+                )
+            else:
+                raise ValueError(
+                    "Unsupported joint compression combination. The palettization can only be joint "
+                    f"with pruning, but got {compressed_var.op.op_type}. Please check the value of "
+                    "'compression_type' in your registered buffers."
+                )
+
+        if compression_info.palettization_scale is not None:
+            if not is_current_opset_version_compatible_with(_target.iOS18):
+                raise ValueError(
+                    "The palettization with per-channel-scale is only supported in iOS18+. Please "
+                    "set the minimum_deployment_target to iOS18 or later."
+                )
+            result = mb.constexpr_blockwise_shift_scale(
+                data=result, scale=scale, offset=None, name=name
+            )
+        return result
+
+    @staticmethod
+    def _construct_sparsification_op(
+        weight: np.ndarray,
+        compression_info: CompressionInfo,
+        name: str,
+        compressed_var: Optional[Var] = None,
+    ) -> Var:
+        sparse_params = prune_weights.compress_by_threshold(
+            weight, threshold=np.finfo(np.float16).eps, minimum_sparsity_percentile=0
+        )
+        if sparse_params is None:
+            raise ValueError(
+                f"Unable to construct sparsified op. Please check if the weight {name} "
+                "is sparse."
+            )
+        if is_current_opset_version_compatible_with(_target.iOS18):
+            sparse_params_ios18 = optimize_utils.ios16_sparse_params_to_ios18(sparse_params)
+            return mb.constexpr_sparse_to_dense(
+                nonzero_data=sparse_params_ios18.nonzero_data,
+                mask=sparse_params_ios18.mask,
+                name=name,
+            )
+        else:
+            return mb.constexpr_sparse_to_dense(
+                nonzero_data=sparse_params.nonzero_data,
+                mask=sparse_params.mask,
+                shape=np.uint32(sparse_params.shape),
+                name=name,
+            )
+
+    def _construct_compression_op(self, val: np.ndarray, param_name: str) -> Var:
+        """Construct the compression op based on the compression info."""
+        compression_info: CompressionInfo = self.param_to_compression_info[param_name]
+
+        shared_msg = (
+            "There are coreml compression related buffers registered in the torch "
+            f"model (with {_COMPRESSION_INFO_PREFIX} in the buffer's name) for {param_name}"
+        )
+        if not compression_info.compression_type:
+            raise ValueError(
+                shared_msg + ", but the 'compression_type' is not set. Please set it to indicate "
+                "the type of compression used on the weight."
+            )
+        if len(compression_info.compression_type) > 3:
+            raise ValueError(
+                shared_msg + ", but the 'compression_type' has too many values. Support at most 3 "
+                "values."
+            )
+
+        if len(compression_info.compression_type) > 1:
+            if not is_current_opset_version_compatible_with(_target.iOS18):
+                raise ValueError(
+                    "The joint compression (more than one values in 'compression_type') is only "
+                    "supported in iOS18+. Please set minimum_deployment_target to iOS18 or later."
+                )
+
+        result: Optional[Var] = None
+        for idx, type_val in enumerate(compression_info.compression_type):
+            if CompressionType(type_val) == CompressionType.QUANTIZATION:
+                result = self._construct_quantization_op(val, compression_info, param_name, result)
+            elif CompressionType(type_val) == CompressionType.PALETTIZATION:
+                result = self._construct_palettization_op(val, compression_info, param_name, result)
+            else:
+                assert CompressionType(type_val) == CompressionType.PRUNING
+                result = self._construct_sparsification_op(
+                    val, compression_info, param_name, result
+                )
+
+        if result is None:
+            raise AssertionError(shared_msg + f", but unable to compress weight {param_name}")
+        return result
 
     def _add_const(self, name: str, val: Union[torch.Tensor, torch._C.ScriptObject]) -> None:
         """Create a const op and add it to the graph."""
+        if isinstance(val, torch.Tensor) and self._has_compression_info(name):
+            try:
+                compression_op = self._construct_compression_op(val.detach().numpy(), name)
+                self.context.add(compression_op)
+                return
+            except NotImplementedError as e:
+                logger.warning(
+                    "Failed to create a compression op based on the compression info "
+                    f"carried by {name} in the torch model. Ignored the compression info "
+                    f"and constructed a normal const. Detailed error message:\n{e}"
+                )
+
         if isinstance(val, torch._C.ScriptObject):
             logger.info(f"Encountered constant {name} of type _torch._C.ScriptObject")
             return
@@ -505,6 +1106,7 @@ class TorchConverter:
                 # since inputs/constants will not contribute to debugging/profiling
                 # TODO (rdar://125572392): Support torch.export IO metadata
                 with mb.scope(
+                    ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[None]),
                     ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
                 ):
                     self._add_const(name, val)
@@ -578,7 +1180,8 @@ class TorchConverter:
             self.convert_const()
 
             # Add the rest of the operations
-            convert_nodes(self.context, self.graph)
+            has_states = len(getattr(self, "states", [])) > 0
+            convert_nodes(self.context, self.graph, early_exit=not has_states)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
 
@@ -620,7 +1223,10 @@ class TorchConverter:
                     ScopeSource.TORCHSCRIPT_MODULE_TYPE,
                 ]
             elif self.context.frontend == TorchFrontend.EXIR:
-                essential_scope_sources = [ScopeSource.EXIR_DEBUG_HANDLE]
+                essential_scope_sources = [
+                    ScopeSource.EXIR_STACK_TRACE,
+                    ScopeSource.EXIR_DEBUG_HANDLE,
+                ]
             else:
                 raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
             prog._add_essential_scope_source(essential_scope_sources)

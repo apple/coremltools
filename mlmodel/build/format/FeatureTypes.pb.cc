@@ -59,6 +59,10 @@ class SequenceFeatureTypeDefaultTypeInternal : public ::google::protobuf::intern
   const ::CoreML::Specification::Int64FeatureType* int64type_;
   const ::CoreML::Specification::StringFeatureType* stringtype_;
 } _SequenceFeatureType_default_instance_;
+class StateFeatureTypeDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<StateFeatureType> {
+  public:
+  const ::CoreML::Specification::ArrayFeatureType* arraytype_;
+} _StateFeatureType_default_instance_;
 class FeatureTypeDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<FeatureType> {
   public:
   const ::CoreML::Specification::Int64FeatureType* int64type_;
@@ -68,6 +72,7 @@ class FeatureTypeDefaultTypeInternal : public ::google::protobuf::internal::Expl
   const ::CoreML::Specification::ArrayFeatureType* multiarraytype_;
   const ::CoreML::Specification::DictionaryFeatureType* dictionarytype_;
   const ::CoreML::Specification::SequenceFeatureType* sequencetype_;
+  const ::CoreML::Specification::StateFeatureType* statetype_;
 } _FeatureType_default_instance_;
 
 namespace protobuf_FeatureTypes_2eproto {
@@ -83,6 +88,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::AuxillaryParseTableField
 };
 PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
     TableStruct::schema[] = {
+  { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
@@ -116,6 +122,7 @@ void TableStruct::Shutdown() {
   _ArrayFeatureType_default_instance_.Shutdown();
   _DictionaryFeatureType_default_instance_.Shutdown();
   _SequenceFeatureType_default_instance_.Shutdown();
+  _StateFeatureType_default_instance_.Shutdown();
   _FeatureType_default_instance_.Shutdown();
 }
 
@@ -137,6 +144,7 @@ void TableStruct::InitDefaultsImpl() {
   _ArrayFeatureType_default_instance_.DefaultConstruct();
   _DictionaryFeatureType_default_instance_.DefaultConstruct();
   _SequenceFeatureType_default_instance_.DefaultConstruct();
+  _StateFeatureType_default_instance_.DefaultConstruct();
   _FeatureType_default_instance_.DefaultConstruct();
   _ImageFeatureType_ImageSizeRange_default_instance_.get_mutable()->widthrange_ = const_cast< ::CoreML::Specification::SizeRange*>(
       ::CoreML::Specification::SizeRange::internal_default_instance());
@@ -870,7 +878,7 @@ void SizeRange::clear_lowerbound() {
   return lowerbound_;
 }
 void SizeRange::set_lowerbound(::google::protobuf::uint64 value) {
-  
+
   lowerbound_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.SizeRange.lowerBound)
 }
@@ -884,7 +892,7 @@ void SizeRange::clear_upperbound() {
   return upperbound_;
 }
 void SizeRange::set_upperbound(::google::protobuf::int64 value) {
-  
+
   upperbound_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.SizeRange.upperBound)
 }
@@ -1115,7 +1123,7 @@ void ImageFeatureType_ImageSize::clear_width() {
   return width_;
 }
 void ImageFeatureType_ImageSize::set_width(::google::protobuf::uint64 value) {
-  
+
   width_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.ImageSize.width)
 }
@@ -1129,7 +1137,7 @@ void ImageFeatureType_ImageSize::clear_height() {
   return height_;
 }
 void ImageFeatureType_ImageSize::set_height(::google::protobuf::uint64 value) {
-  
+
   height_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.ImageSize.height)
 }
@@ -1594,7 +1602,7 @@ const ::CoreML::Specification::SizeRange& ImageFeatureType_ImageSizeRange::width
                          : *::CoreML::Specification::SizeRange::internal_default_instance();
 }
 ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::mutable_widthrange() {
-  
+
   if (widthrange_ == NULL) {
     widthrange_ = new ::CoreML::Specification::SizeRange;
   }
@@ -1603,7 +1611,7 @@ const ::CoreML::Specification::SizeRange& ImageFeatureType_ImageSizeRange::width
 }
 ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::release_widthrange() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ImageFeatureType.ImageSizeRange.widthRange)
-  
+
   ::CoreML::Specification::SizeRange* temp = widthrange_;
   widthrange_ = NULL;
   return temp;
@@ -1612,9 +1620,9 @@ void ImageFeatureType_ImageSizeRange::set_allocated_widthrange(::CoreML::Specifi
   delete widthrange_;
   widthrange_ = widthrange;
   if (widthrange) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ImageFeatureType.ImageSizeRange.widthRange)
 }
@@ -1633,7 +1641,7 @@ const ::CoreML::Specification::SizeRange& ImageFeatureType_ImageSizeRange::heigh
                          : *::CoreML::Specification::SizeRange::internal_default_instance();
 }
 ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::mutable_heightrange() {
-  
+
   if (heightrange_ == NULL) {
     heightrange_ = new ::CoreML::Specification::SizeRange;
   }
@@ -1642,7 +1650,7 @@ const ::CoreML::Specification::SizeRange& ImageFeatureType_ImageSizeRange::heigh
 }
 ::CoreML::Specification::SizeRange* ImageFeatureType_ImageSizeRange::release_heightrange() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ImageFeatureType.ImageSizeRange.heightRange)
-  
+
   ::CoreML::Specification::SizeRange* temp = heightrange_;
   heightrange_ = NULL;
   return temp;
@@ -1651,9 +1659,9 @@ void ImageFeatureType_ImageSizeRange::set_allocated_heightrange(::CoreML::Specif
   delete heightrange_;
   heightrange_ = heightrange;
   if (heightrange) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ImageFeatureType.ImageSizeRange.heightRange)
 }
@@ -2026,7 +2034,7 @@ void ImageFeatureType::clear_width() {
   return width_;
 }
 void ImageFeatureType::set_width(::google::protobuf::int64 value) {
-  
+
   width_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.width)
 }
@@ -2040,7 +2048,7 @@ void ImageFeatureType::clear_height() {
   return height_;
 }
 void ImageFeatureType::set_height(::google::protobuf::int64 value) {
-  
+
   height_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.height)
 }
@@ -2150,7 +2158,7 @@ void ImageFeatureType::clear_colorspace() {
   return static_cast< ::CoreML::Specification::ImageFeatureType_ColorSpace >(colorspace_);
 }
 void ImageFeatureType::set_colorspace(::CoreML::Specification::ImageFeatureType_ColorSpace value) {
-  
+
   colorspace_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ImageFeatureType.colorSpace)
 }
@@ -3343,7 +3351,7 @@ void ArrayFeatureType::clear_datatype() {
   return static_cast< ::CoreML::Specification::ArrayFeatureType_ArrayDataType >(datatype_);
 }
 void ArrayFeatureType::set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType value) {
-  
+
   datatype_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ArrayFeatureType.dataType)
 }
@@ -4323,7 +4331,7 @@ const ::CoreML::Specification::SizeRange& SequenceFeatureType::sizerange() const
                          : *::CoreML::Specification::SizeRange::internal_default_instance();
 }
 ::CoreML::Specification::SizeRange* SequenceFeatureType::mutable_sizerange() {
-  
+
   if (sizerange_ == NULL) {
     sizerange_ = new ::CoreML::Specification::SizeRange;
   }
@@ -4332,7 +4340,7 @@ const ::CoreML::Specification::SizeRange& SequenceFeatureType::sizerange() const
 }
 ::CoreML::Specification::SizeRange* SequenceFeatureType::release_sizerange() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.SequenceFeatureType.sizeRange)
-  
+
   ::CoreML::Specification::SizeRange* temp = sizerange_;
   sizerange_ = NULL;
   return temp;
@@ -4341,9 +4349,9 @@ void SequenceFeatureType::set_allocated_sizerange(::CoreML::Specification::SizeR
   delete sizerange_;
   sizerange_ = sizerange;
   if (sizerange) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SequenceFeatureType.sizeRange)
 }
@@ -4362,6 +4370,283 @@ SequenceFeatureType::TypeCase SequenceFeatureType::Type_case() const {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int StateFeatureType::kArrayTypeFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+StateFeatureType::StateFeatureType()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_FeatureTypes_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.StateFeatureType)
+}
+StateFeatureType::StateFeatureType(const StateFeatureType& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  clear_has_Type();
+  switch (from.Type_case()) {
+    case kArrayType: {
+      mutable_arraytype()->::CoreML::Specification::ArrayFeatureType::MergeFrom(from.arraytype());
+      break;
+    }
+    case TYPE_NOT_SET: {
+      break;
+    }
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.StateFeatureType)
+}
+
+void StateFeatureType::SharedCtor() {
+  clear_has_Type();
+  _cached_size_ = 0;
+}
+
+StateFeatureType::~StateFeatureType() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.StateFeatureType)
+  SharedDtor();
+}
+
+void StateFeatureType::SharedDtor() {
+  if (has_Type()) {
+    clear_Type();
+  }
+}
+
+void StateFeatureType::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const StateFeatureType& StateFeatureType::default_instance() {
+  protobuf_FeatureTypes_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+StateFeatureType* StateFeatureType::New(::google::protobuf::Arena* arena) const {
+  StateFeatureType* n = new StateFeatureType;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void StateFeatureType::clear_Type() {
+// @@protoc_insertion_point(one_of_clear_start:CoreML.Specification.StateFeatureType)
+  switch (Type_case()) {
+    case kArrayType: {
+      delete Type_.arraytype_;
+      break;
+    }
+    case TYPE_NOT_SET: {
+      break;
+    }
+  }
+  _oneof_case_[0] = TYPE_NOT_SET;
+}
+
+
+void StateFeatureType::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.StateFeatureType)
+  clear_Type();
+}
+
+bool StateFeatureType::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.StateFeatureType)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // .CoreML.Specification.ArrayFeatureType arrayType = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_arraytype()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.StateFeatureType)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.StateFeatureType)
+  return false;
+#undef DO_
+}
+
+void StateFeatureType::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.StateFeatureType)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // .CoreML.Specification.ArrayFeatureType arrayType = 1;
+  if (has_arraytype()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      1, *Type_.arraytype_, output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.StateFeatureType)
+}
+
+size_t StateFeatureType::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.StateFeatureType)
+  size_t total_size = 0;
+
+  switch (Type_case()) {
+    // .CoreML.Specification.ArrayFeatureType arrayType = 1;
+    case kArrayType: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.arraytype_);
+      break;
+    }
+    case TYPE_NOT_SET: {
+      break;
+    }
+  }
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void StateFeatureType::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const StateFeatureType*>(&from));
+}
+
+void StateFeatureType::MergeFrom(const StateFeatureType& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.StateFeatureType)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  switch (from.Type_case()) {
+    case kArrayType: {
+      mutable_arraytype()->::CoreML::Specification::ArrayFeatureType::MergeFrom(from.arraytype());
+      break;
+    }
+    case TYPE_NOT_SET: {
+      break;
+    }
+  }
+}
+
+void StateFeatureType::CopyFrom(const StateFeatureType& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.StateFeatureType)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool StateFeatureType::IsInitialized() const {
+  return true;
+}
+
+void StateFeatureType::Swap(StateFeatureType* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void StateFeatureType::InternalSwap(StateFeatureType* other) {
+  std::swap(Type_, other->Type_);
+  std::swap(_oneof_case_[0], other->_oneof_case_[0]);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string StateFeatureType::GetTypeName() const {
+  return "CoreML.Specification.StateFeatureType";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// StateFeatureType
+
+// .CoreML.Specification.ArrayFeatureType arrayType = 1;
+bool StateFeatureType::has_arraytype() const {
+  return Type_case() == kArrayType;
+}
+void StateFeatureType::set_has_arraytype() {
+  _oneof_case_[0] = kArrayType;
+}
+void StateFeatureType::clear_arraytype() {
+  if (has_arraytype()) {
+    delete Type_.arraytype_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::ArrayFeatureType& StateFeatureType::arraytype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.StateFeatureType.arrayType)
+  return has_arraytype()
+      ? *Type_.arraytype_
+      : ::CoreML::Specification::ArrayFeatureType::default_instance();
+}
+::CoreML::Specification::ArrayFeatureType* StateFeatureType::mutable_arraytype() {
+  if (!has_arraytype()) {
+    clear_Type();
+    set_has_arraytype();
+    Type_.arraytype_ = new ::CoreML::Specification::ArrayFeatureType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.StateFeatureType.arrayType)
+  return Type_.arraytype_;
+}
+::CoreML::Specification::ArrayFeatureType* StateFeatureType::release_arraytype() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.StateFeatureType.arrayType)
+  if (has_arraytype()) {
+    clear_has_Type();
+    ::CoreML::Specification::ArrayFeatureType* temp = Type_.arraytype_;
+    Type_.arraytype_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void StateFeatureType::set_allocated_arraytype(::CoreML::Specification::ArrayFeatureType* arraytype) {
+  clear_Type();
+  if (arraytype) {
+    set_has_arraytype();
+    Type_.arraytype_ = arraytype;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.StateFeatureType.arrayType)
+}
+
+bool StateFeatureType::has_Type() const {
+  return Type_case() != TYPE_NOT_SET;
+}
+void StateFeatureType::clear_has_Type() {
+  _oneof_case_[0] = TYPE_NOT_SET;
+}
+StateFeatureType::TypeCase StateFeatureType::Type_case() const {
+  return StateFeatureType::TypeCase(_oneof_case_[0]);
+}
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int FeatureType::kInt64TypeFieldNumber;
 const int FeatureType::kDoubleTypeFieldNumber;
 const int FeatureType::kStringTypeFieldNumber;
@@ -4369,6 +4654,7 @@ const int FeatureType::kImageTypeFieldNumber;
 const int FeatureType::kMultiArrayTypeFieldNumber;
 const int FeatureType::kDictionaryTypeFieldNumber;
 const int FeatureType::kSequenceTypeFieldNumber;
+const int FeatureType::kStateTypeFieldNumber;
 const int FeatureType::kIsOptionalFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
@@ -4414,6 +4700,10 @@ FeatureType::FeatureType(const FeatureType& from)
     }
     case kSequenceType: {
       mutable_sequencetype()->::CoreML::Specification::SequenceFeatureType::MergeFrom(from.sequencetype());
+      break;
+    }
+    case kStateType: {
+      mutable_statetype()->::CoreML::Specification::StateFeatureType::MergeFrom(from.statetype());
       break;
     }
     case TYPE_NOT_SET: {
@@ -4487,6 +4777,10 @@ void FeatureType::clear_Type() {
     }
     case kSequenceType: {
       delete Type_.sequencetype_;
+      break;
+    }
+    case kStateType: {
+      delete Type_.statetype_;
       break;
     }
     case TYPE_NOT_SET: {
@@ -4597,6 +4891,18 @@ bool FeatureType::MergePartialFromCodedStream(
         break;
       }
 
+      // .CoreML.Specification.StateFeatureType stateType = 8;
+      case 8: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(66u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+               input, mutable_statetype()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
       // bool isOptional = 1000;
       case 1000: {
         if (static_cast< ::google::protobuf::uint8>(tag) ==
@@ -4680,6 +4986,12 @@ void FeatureType::SerializeWithCachedSizes(
       7, *Type_.sequencetype_, output);
   }
 
+  // .CoreML.Specification.StateFeatureType stateType = 8;
+  if (has_statetype()) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      8, *Type_.statetype_, output);
+  }
+
   // bool isOptional = 1000;
   if (this->isoptional() != 0) {
     ::google::protobuf::internal::WireFormatLite::WriteBool(1000, this->isoptional(), output);
@@ -4747,6 +5059,13 @@ size_t FeatureType::ByteSizeLong() const {
           *Type_.sequencetype_);
       break;
     }
+    // .CoreML.Specification.StateFeatureType stateType = 8;
+    case kStateType: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          *Type_.statetype_);
+      break;
+    }
     case TYPE_NOT_SET: {
       break;
     }
@@ -4800,6 +5119,10 @@ void FeatureType::MergeFrom(const FeatureType& from) {
     }
     case kSequenceType: {
       mutable_sequencetype()->::CoreML::Specification::SequenceFeatureType::MergeFrom(from.sequencetype());
+      break;
+    }
+    case kStateType: {
+      mutable_statetype()->::CoreML::Specification::StateFeatureType::MergeFrom(from.statetype());
       break;
     }
     case TYPE_NOT_SET: {
@@ -5173,6 +5496,54 @@ void FeatureType::set_allocated_sequencetype(::CoreML::Specification::SequenceFe
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureType.sequenceType)
 }
 
+// .CoreML.Specification.StateFeatureType stateType = 8;
+bool FeatureType::has_statetype() const {
+  return Type_case() == kStateType;
+}
+void FeatureType::set_has_statetype() {
+  _oneof_case_[0] = kStateType;
+}
+void FeatureType::clear_statetype() {
+  if (has_statetype()) {
+    delete Type_.statetype_;
+    clear_has_Type();
+  }
+}
+ const ::CoreML::Specification::StateFeatureType& FeatureType::statetype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FeatureType.stateType)
+  return has_statetype()
+      ? *Type_.statetype_
+      : ::CoreML::Specification::StateFeatureType::default_instance();
+}
+::CoreML::Specification::StateFeatureType* FeatureType::mutable_statetype() {
+  if (!has_statetype()) {
+    clear_Type();
+    set_has_statetype();
+    Type_.statetype_ = new ::CoreML::Specification::StateFeatureType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FeatureType.stateType)
+  return Type_.statetype_;
+}
+::CoreML::Specification::StateFeatureType* FeatureType::release_statetype() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.FeatureType.stateType)
+  if (has_statetype()) {
+    clear_has_Type();
+    ::CoreML::Specification::StateFeatureType* temp = Type_.statetype_;
+    Type_.statetype_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+void FeatureType::set_allocated_statetype(::CoreML::Specification::StateFeatureType* statetype) {
+  clear_Type();
+  if (statetype) {
+    set_has_statetype();
+    Type_.statetype_ = statetype;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureType.stateType)
+}
+
 // bool isOptional = 1000;
 void FeatureType::clear_isoptional() {
   isoptional_ = false;
@@ -5182,7 +5553,7 @@ bool FeatureType::isoptional() const {
   return isoptional_;
 }
 void FeatureType::set_isoptional(bool value) {
-  
+
   isoptional_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.FeatureType.isOptional)
 }

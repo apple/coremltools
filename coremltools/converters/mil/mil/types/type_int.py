@@ -157,19 +157,57 @@ def make_int(width, unsigned):
     return int
 
 
+int4 = make_int(4, "")
 int8 = make_int(8, "")
 int16 = make_int(16, "")
 int32 = make_int(32, "")
 int64 = make_int(64, "")
 
+uint1 = make_int(1, "u")
+uint2 = make_int(2, "u")
+uint3 = make_int(3, "u")
+uint4 = make_int(4, "u")
+uint6 = make_int(6, "u")
 uint8 = make_int(8, "u")
 uint16 = make_int(16, "u")
 uint32 = make_int(32, "u")
 uint64 = make_int(64, "u")
 uint = uint64
 
-_INT_TYPES = (int8, int16, int32, int64, uint8, uint16, uint32, uint64)
+_INT_TYPES = (
+    int4,
+    int8,
+    int16,
+    int32,
+    int64,
+    uint1,
+    uint2,
+    uint3,
+    uint4,
+    uint6,
+    uint8,
+    uint16,
+    uint32,
+    uint64,
+)
+
+# The key name for storing type info in `np.dtype.metadata`.
+SUB_BYTE_DTYPE_METADATA_KEY = "true_dtype"
+# Uses np.int8/uint8 as np doesn't natively support sub-byte type (such as int4/uint4) yet.
+np_int4_dtype = np.dtype(np.int8, metadata={SUB_BYTE_DTYPE_METADATA_KEY: int4})
+np_uint1_dtype = np.dtype(np.uint8, metadata={SUB_BYTE_DTYPE_METADATA_KEY: uint1})
+np_uint2_dtype = np.dtype(np.uint8, metadata={SUB_BYTE_DTYPE_METADATA_KEY: uint2})
+np_uint3_dtype = np.dtype(np.uint8, metadata={SUB_BYTE_DTYPE_METADATA_KEY: uint3})
+np_uint4_dtype = np.dtype(np.uint8, metadata={SUB_BYTE_DTYPE_METADATA_KEY: uint4})
+np_uint6_dtype = np.dtype(np.uint8, metadata={SUB_BYTE_DTYPE_METADATA_KEY: uint6})
+
+_SUB_BYTE_TYPES = (int4, uint1, uint2, uint3, uint4, uint6)
 
 
 def is_int(t):
     return any(t is i or isinstance(t, i) for i in _INT_TYPES)
+
+
+def is_sub_byte(t):
+    """Determines if a type (or instance) is sub-byte (less than 8-bit data type)."""
+    return t in _SUB_BYTE_TYPES or isinstance(t, _SUB_BYTE_TYPES)

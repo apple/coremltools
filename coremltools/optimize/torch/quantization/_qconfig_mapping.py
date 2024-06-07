@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -14,6 +14,7 @@ from coremltools.optimize.torch.quantization._backend_config import _fixed_qpara
 from coremltools.optimize.torch.quantization._backend_config import (
     get_supported_modules as _get_supported_modules,
 )
+from coremltools.optimize.torch.quantization._utils import get_quant_range as _get_quant_range
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig as _LinearQuantizerConfig,
 )
@@ -125,6 +126,16 @@ class _QConfigMappingBuilder:
                     is_per_channel=False,
                 ),
             )
+
+        quant_min, quant_max = (
+            _get_quant_range(
+                n_bits=quantization_config.weight_n_bits,
+                dtype=quantization_config.weight_dtype,
+            )
+            if quantization_config.weight_n_bits < 8
+            else (None, None)
+        )
+
         weight_qconfig = _aoquant.FakeQuantize.with_args(
             observer=_ObserverType.get_observer(
                 quantization_config.weight_observer,
@@ -135,6 +146,8 @@ class _QConfigMappingBuilder:
                 quantization_config.quantization_scheme,
                 is_per_channel=quantization_config.weight_per_channel,
             ),
+            quant_min=quant_min,
+            quant_max=quant_max,
         )
         return _aoquant.QConfig(activation=activation_qconfig, weight=weight_qconfig)
 

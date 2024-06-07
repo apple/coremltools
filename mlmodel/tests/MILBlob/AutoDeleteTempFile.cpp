@@ -9,10 +9,10 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fts.h>
-#include <unistd.h>
-#include <vector>
 #include <stdexcept>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <vector>
 
 using namespace MILBlob::TestUtil;
 

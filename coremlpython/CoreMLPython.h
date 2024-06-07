@@ -15,10 +15,32 @@
 
 #import <CoreML/CoreML.h>
 
+
+#ifndef BUILT_WITH_MACOS15_SDK
+#define BUILT_WITH_MACOS15_SDK \
+  !(TARGET_OS_OSX && (!defined(__MAC_15_0) || __MAC_OS_X_VERSION_MAX_ALLOWED < __MAC_15_0))
+#endif
+
+// Print BUILT_WITH_MACOS15_SDK value
+#if BUILT_WITH_MACOS15_SDK
+#pragma message ("Building with macOS 15+ SDK")
+#else
+#pragma message ("Building without macOS 15 SDK")
+#endif
+
+
 namespace py = pybind11;
 
 namespace CoreML {
     namespace Python {
+
+
+        struct State {
+#if BUILT_WITH_MACOS15_SDK
+            // MLState must be wrapped in a C++ class for PyBind.
+            MLState* m_state = nil;
+#endif
+        };
 
         class Model {
         private:
@@ -35,13 +57,19 @@ namespace CoreML {
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
             ~Model();
-            explicit Model(const std::string& urlStr, const std::string& computeUnits);
+            explicit Model(const std::string& urlStr, const std::string& computeUnits, const std::string& functionName);
             explicit Model(MLModel* m_model, NSURL* compiledUrl, bool deleteCompiledModelOnExit);
 
-            py::dict predict(const py::dict& input) const;
             py::list batchPredict(const py::list& batch) const;
 
             py::str getCompiledModelPath() const;
+
+            py::dict predict(const py::dict& input, State* state=NULL) const;
+
+#if BUILT_WITH_MACOS15_SDK
+            State newState() const;
+#endif
+
         };
     }
 }

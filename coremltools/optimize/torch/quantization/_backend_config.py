@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -863,7 +863,7 @@ def get_backend_config() -> _BackendConfig:
 
 def get_supported_modules() -> _List[_Any]:
     """
-    Returns a list of modules which are supported for quantization
+    Returns a tuple of modules which are supported for quantization
     aware training.
     """
     return tuple(_BackendConfigRegistry.supported_modules)

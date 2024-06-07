@@ -198,4 +198,3 @@ int testFileWriterTestsReadData()
 
     return 0;
 }
-

@@ -8,8 +8,8 @@ import warnings as _warnings
 from typing import Optional, Text, Tuple
 
 from coremltools.converters._profile_utils import _profile
-from coremltools.converters.mil import Program
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Program
 from coremltools.converters.mil.mil.types.symbolic import k_num_internal_syms, k_used_symbols
 from coremltools.models import MLModel
 from coremltools.models.model import _create_mlpackage

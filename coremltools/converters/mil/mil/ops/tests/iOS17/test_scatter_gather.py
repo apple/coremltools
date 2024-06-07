@@ -8,6 +8,7 @@ import itertools
 import numpy as np
 import pytest
 
+import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.tests.iOS14.test_scatter_gather import (
@@ -41,6 +42,34 @@ class TestScatter:
     def test_ios17_invalid_indices(
         self, compute_unit, backend, indices_val, validate_indices, dynamic
     ):
+        if (
+            indices_val == [10, 0]
+            and backend.opset_version == ct.target.iOS18
+            and not validate_indices
+        ):
+            pytest.xfail(
+                "rdar://128089254 ([Bug][Regression] iOS18 scatter ops has unexpected behavior than iOS17)"
+            )
+
+        if (
+            indices_val == [-1, 0]
+            and backend.opset_version == ct.target.iOS18
+            and validate_indices
+            and dynamic
+        ):
+            pytest.xfail(
+                "rdar://128089254 ([Bug][Regression] iOS18 scatter ops has unexpected behavior than iOS17)"
+            )
+
+        if (
+            indices_val == [-1, 0]
+            and backend.opset_version == ct.target.iOS18
+            and not validate_indices
+        ):
+            pytest.xfail(
+                "rdar://128089254 ([Bug][Regression] iOS18 scatter ops has unexpected behavior than iOS17)"
+            )
+
         def build_static(data, updates):
             return (
                 mb.scatter(
@@ -82,6 +111,7 @@ class TestScatter:
             expected_error_msg = (
                 "Error computing NN outputs",
                 "Unable to compute the prediction using a neural network model",
+                "Unable to compute the prediction using ML Program",
             )
         else:
             # The negative or out-of-bound indices will error out when validate_indices is set.
@@ -98,10 +128,10 @@ class TestScatter:
                 compute_unit=compute_unit,
                 backend=backend,
             )
-            if not isinstance(expected_error_msg, tuple):
-                expected_error_msg = expected_error_msg
-            assert any([err in str(excinfo.value) for err in expected_error_msg])
 
+        if not isinstance(expected_error_msg, tuple):
+            expected_error_msg = expected_error_msg
+        assert any([err in str(excinfo.value) for err in expected_error_msg])
 
 class TestScatterAlongAxis:
     @pytest.mark.parametrize(
@@ -127,6 +157,15 @@ class TestScatterAlongAxis:
         ),
     )
     def test_ios17_invalid_indices(self, compute_unit, backend, indices_val, dynamic):
+        if (
+            indices_val == [[-1, 0, 1], [1, 1, 0]]
+            and dynamic
+            and backend.opset_version == ct.target.iOS18
+        ):
+            pytest.xfail(
+                "rdar://128089254 ([Bug][Regression] iOS18 scatter ops has unexpected behavior than iOS17)"
+            )
+
         def build_static(data, updates):
             return (
                 mb.scatter_along_axis(
@@ -164,6 +203,7 @@ class TestScatterAlongAxis:
             expected_error_msg = (
                 "Error computing NN outputs",
                 "Unable to compute the prediction using a neural network model",
+                "Unable to compute the prediction using ML Program",
             )
         else:
             # The negative or out-of-bound indices will error out when validate_indices is set.
@@ -181,9 +221,10 @@ class TestScatterAlongAxis:
                 compute_unit=compute_unit,
                 backend=backend,
             )
-            if not isinstance(expected_error_msg, tuple):
-                expected_error_msg = expected_error_msg
-            assert any([err in str(excinfo.value) for err in expected_error_msg])
+
+        if not isinstance(expected_error_msg, tuple):
+            expected_error_msg = expected_error_msg
+        assert any([err in str(excinfo.value) for err in expected_error_msg])
 
 
 class TestScatterNd:
@@ -194,6 +235,15 @@ class TestScatterNd:
         ),
     )
     def test_ios17_invalid_indices(self, compute_unit, backend, indices_val, dynamic):
+        if (
+            indices_val == [[1, 0], [0, -1]]
+            and dynamic
+            and backend.opset_version == ct.target.iOS18
+        ):
+            pytest.xfail(
+                "rdar://128089254 ([Bug][Regression] iOS18 scatter ops has unexpected behavior than iOS17)"
+            )
+
         def build_static(data, updates):
             return (
                 mb.scatter_nd(
@@ -226,6 +276,7 @@ class TestScatterNd:
             expected_error_msg = (
                 "Error computing NN outputs",
                 "Unable to compute the prediction using a neural network model",
+                "Unable to compute the prediction using ML Program",
             )
         else:
             # The negative or out-of-bound indices will error out when validate_indices is set.
@@ -242,9 +293,9 @@ class TestScatterNd:
                 compute_unit=compute_unit,
                 backend=backend,
             )
-            if not isinstance(expected_error_msg, tuple):
-                expected_error_msg = expected_error_msg
-            assert any([err in str(excinfo.value) for err in expected_error_msg])
+        if not isinstance(expected_error_msg, tuple):
+            expected_error_msg = expected_error_msg
+        assert any([err in str(excinfo.value) for err in expected_error_msg])
 
 
 class TestGather(_TestGatherIOS16):

@@ -31,6 +31,7 @@ class Program:
     def __init__(self):
         self.functions = {}
         self.skip_all_passes = False
+        self.default_function_name = "main"
 
     def _add_essential_scope_source(
         self, scope_source: Union[ScopeSource, List[ScopeSource]]
@@ -119,8 +120,10 @@ class Program:
     def _get_runtime_supported_dialect_opset() -> List[str]:
         """
         Return a list of supported dialect opsets at runtime.
+        Right now, we are allowing ``coreml``, until we fix this radar:
+        rdar://114737210 ([Infra] Handle control flow mechanism in coremltools)
         """
-        return []
+        return ["coreml"]
 
     def _check_invalid_opset(self):
         """
@@ -233,6 +236,27 @@ class Program:
     def validate(self, check_essential_scope: Optional[bool] = False) -> None:
         for f in self.functions.values():
             f.validate(force_validate=True, check_essential_scope=check_essential_scope)
+
+    def stringify_stack_trace(self) -> str:
+        result = ""
+        for function_name, function in self.functions.items():
+            if ScopeSource.EXIR_STACK_TRACE not in function._essential_scope_sources:
+                raise NotImplementedError(
+                    f"Function ({function_name}) must have EXIR_STACK_TRACE as an essential scope source."
+                )
+            for operation in function.operations:
+                # TODO (rdar://115846569): Handle multi-block case from EXIR
+                if len(operation.blocks) > 0:
+                    raise NotImplementedError("Multi-block case has not been supported yet")
+                stack_trace = operation.scopes[ScopeSource.EXIR_STACK_TRACE]
+                if stack_trace is None:
+                    continue
+                stack_trace = stack_trace[0]
+                result += (
+                    f"{operation.op_type} : {operation.outputs[0].name}\n"
+                    f"{stack_trace}\n"
+                )
+        return result
 
     def construct_debug_handle_to_ops_mapping(self) -> Dict:
         """
@@ -351,6 +375,34 @@ class Placeholder:
 
         # List of output vars (consistent w/ other ops)
         self.outputs = [Var(self.name, sym_type)]
+
+
+class StateTensorPlaceholder(Placeholder):
+    counter = 0
+
+    def __init__(self, sym_shape, dtype=None, name=None):
+        """
+        A placeholder with a state wrapping a tensor.
+
+        Parameters
+        ----------
+        sym_shape: list, tuple
+            * shape of the tensor.
+        dtype: type
+            * types.float or other scalar builtin types.
+        name: str
+            * name of the placeholder
+        """
+        self.sym_shape = sym_shape
+        if dtype is None:
+            dtype = types.fp32
+        self.dtype = dtype
+        self.name = name
+        self._infer_output_var()
+
+    def type_inference(self):
+        wrapped_tensor_type = types.tensor(self.dtype, self.sym_shape)
+        return types.state(wrapped_tensor_type)
 
 def get_new_variadic_symbol():
     global k_num_internal_syms

@@ -1170,6 +1170,19 @@ class TestTile:
 
 
 class TestDynamicTile:
+    @staticmethod
+    def test_dynamic_shape_tile_type_inference():
+        reps = [1, 2]
+        input_shape = [get_new_symbol(), get_new_symbol()]
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
+        def prog(x):
+            x = mb.tile(x=x, reps=[1, 2])
+            assert x.shape[0] == input_shape[0]
+            assert is_symbolic(x.shape[1])
+            assert x.shape[1] != input_shape[1]
+            return x
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(

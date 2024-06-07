@@ -3,32 +3,31 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+
 import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools import ComputeUnit
+from coremltools import _SPECIFICATION_VERSION_IOS_18, ComputeUnit
 from coremltools._deps import _HAS_TF_2, _HAS_TORCH
 from coremltools.converters._converters_entry import _get_metadata_from_mlmodel
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.converter import mil_convert
-from coremltools.converters.mil.frontend.milproto.load import \
-    load as milproto_to_pymil
-from coremltools.converters.mil.frontend.tensorflow.test.test_ops import \
-    TestTensorArray
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
-    run_compare_tf
-from coremltools.converters.mil.mil.ops.tests.testing_utils import \
-    compare_backend
+from coremltools.converters.mil.frontend.milproto.load import load as milproto_to_pymil
+from coremltools.converters.mil.frontend.tensorflow.test.test_ops import TestTensorArray
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import run_compare_tf
+from coremltools.converters.mil.mil import Program, types
+from coremltools.converters.mil.mil.ops.tests.testing_utils import compare_backend
 from coremltools.converters.mil.testing_utils import (
     get_op_names_in_program,
-    get_op_types_in_program
+    get_op_types_in_program,
 )
 
 if _HAS_TORCH:
     import torch
-    from coremltools.converters.mil.frontend.torch.test.test_torch_ops import \
-        TestScriptedModels
+
+    from coremltools.converters.mil.frontend.torch.test.test_torch_ops import TestScriptedModels
 
 
 def get_pymil_prog_from_mlmodel(mlmodel):
@@ -169,6 +168,62 @@ class TestLoadAPIUsage:
         loaded_pymil_prog = get_pymil_prog_from_mlmodel(mlmodel)
         assert get_op_types_in_program(loaded_pymil_prog) == get_op_types_in_program(prog)
 
+    @pytest.mark.parametrize(
+        "immediate_value, dtype",
+        itertools.product(
+            (True, False),
+            (types.int4, types.uint4, types.int8, types.uint8),
+        ),
+    )
+    def test_milproto_load_to_pymil_sub_byte(self, immediate_value: bool, dtype: types):
+        """Test if value in milproto (especially sub-byte) could be corrected loaded into pymil."""
+        dtype_range = types.type_mapping.builtin_to_range(dtype)
+        data_val = [dtype_range.low, dtype_range.high]
+        if immediate_value:
+            # Tensors with less than 10 elements will be stored as immediate values.
+            data = np.array(data_val).reshape((1, 2, 1))
+        else:
+            data = np.array(data_val * 20).reshape((1, 40, 1))
+
+        offset_val = dtype_range.high if dtype.is_unsigned() else -1
+        offset = np.array([offset_val]).reshape((1, 1, 1))
+
+        np_dtype = types.nptype_from_builtin(dtype)
+
+        @mb.program(input_specs=[], opset_version=ct.target.iOS18)
+        def prog():
+            return mb.constexpr_blockwise_shift_scale(
+                data=data.astype(np_dtype),
+                scale=np.array([4]).reshape((1, 1, 1)).astype(np.float16),
+                offset=offset.astype(np_dtype),
+            )
+
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+            minimum_deployment_target=ct.target.iOS18,
+        )
+        pymil_prog: Program = milproto_to_pymil(
+            model_spec=mlmodel.get_spec(),
+            specification_version=ct.target.iOS18,
+            file_weights_dir=mlmodel.weights_dir,
+        )
+        assert get_op_types_in_program(pymil_prog) == get_op_types_in_program(prog)
+
+        original_ops = mlmodel._mil_program.functions["main"].find_ops(
+            op_type="constexpr_blockwise_shift_scale"
+        )
+        load_back_ops = pymil_prog.functions["main"].find_ops(
+            op_type="constexpr_blockwise_shift_scale"
+        )
+        for (original_op, load_back_op) in zip(original_ops, load_back_ops):
+            assert original_op.data.dtype == load_back_op.data.dtype
+            assert original_op.offset.dtype == load_back_op.offset.dtype
+            np.testing.assert_array_equal(original_op.data.val, load_back_op.data.val)
+            np.testing.assert_array_equal(original_op.offset.val, load_back_op.offset.val)
+
+
 
 @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
 class TestE2ENumericalCorrectness:
@@ -252,3 +307,132 @@ class TestE2ENumericalCorrectness:
             backend=("mlprogram", "fp16")
         )
         roundtrip_and_compare_mlmodel(mlmodel, {"Placeholder": input_values[0]})
+
+
+class TestStatefulModelLoad:
+    @staticmethod
+    def convert_and_load_back(prog):
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+
+        return milproto_to_pymil(
+            mlmodel.get_spec(),
+            specification_version=_SPECIFICATION_VERSION_IOS_18,
+            file_weights_dir=mlmodel.weights_dir,
+        )
+
+    @staticmethod
+    def check_update_prog(prog, output_name):
+        # check i/o types
+        assert len(prog.functions) == 1
+        func = prog.functions["main"]
+
+        assert len(func.inputs) == 2
+        in_var = func.inputs["state_workaround"]
+        assert types.is_state(in_var.sym_type)
+        assert in_var.name == "state_workaround"
+        assert in_var.shape == (2, 3)
+        assert in_var.dtype == types.fp16
+
+        in_var_2 = func.inputs["x"]
+        assert in_var_2.name == "x"
+        assert in_var_2.shape == (2, 3)
+        assert in_var_2.dtype == types.fp16
+
+        assert len(func.outputs) == 1
+        out_var = func.outputs[0]
+        assert out_var.name == output_name
+        assert out_var.shape == (2, 3)
+        assert out_var.dtype == types.fp16
+
+        # check op
+        get_op_types_in_program(prog) == ["coreml_update_state"]
+
+    def test_load_read_state(self):
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            return mb.read_state(input=x, name="out")
+
+        new_prog = self.convert_and_load_back(prog)
+
+        # check i/o types
+        assert len(new_prog.functions) == 1
+        func = new_prog.functions["main"]
+
+        assert len(func.inputs) == 1
+        in_var = func.inputs["x"]
+        assert types.is_state(in_var.sym_type)
+        assert in_var.name == "x"
+        assert in_var.shape == (2, 3)
+        assert in_var.dtype == types.fp16
+
+        assert len(func.outputs) == 1
+        out_var = func.outputs[0]
+        assert out_var.name == "out"
+        assert out_var.shape == (2, 3)
+        assert out_var.dtype == types.fp16
+
+        # check op
+        get_op_types_in_program(new_prog) == ["read_state"]
+
+    def test_load_coreml_update_state(self):
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+                mb.TensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state, x):
+            return mb.coreml_update_state(state=state, value=x, name="out")
+
+        new_prog = self.convert_and_load_back(prog)
+        self.check_update_prog(new_prog, "out")
+
+    def test_load_coreml_update_state_singular(self):
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+                mb.TensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state, x):
+            mb.coreml_update_state(state=state, value=x)
+            return x
+
+        new_prog = self.convert_and_load_back(prog)
+        self.check_update_prog(new_prog, "x")
+
+    def test_load_state_complex(self):
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+                mb.TensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state, x):
+            read_state = mb.read_state(input=state)
+            add = mb.add(x=read_state, y=np.float16([0.1]))
+            value = mb.coreml_update_state(state=state, value=add)
+            add = mb.add(x=value, y=x)
+            mb.coreml_update_state(state=state, value=add)
+            return add
+
+        new_prog = self.convert_and_load_back(prog)
+        assert get_op_types_in_program(new_prog) == [
+            "read_state",
+            "add",
+            "coreml_update_state",
+            "add",
+            "coreml_update_state",
+        ]

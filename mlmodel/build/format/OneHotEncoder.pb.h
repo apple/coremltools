@@ -111,6 +111,9 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -411,7 +414,7 @@ inline bool OneHotEncoder::outputsparse() const {
   return outputsparse_;
 }
 inline void OneHotEncoder::set_outputsparse(bool value) {
-  
+
   outputsparse_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.OneHotEncoder.outputSparse)
 }
@@ -425,7 +428,7 @@ inline ::CoreML::Specification::OneHotEncoder_HandleUnknown OneHotEncoder::handl
   return static_cast< ::CoreML::Specification::OneHotEncoder_HandleUnknown >(handleunknown_);
 }
 inline void OneHotEncoder::set_handleunknown(::CoreML::Specification::OneHotEncoder_HandleUnknown value) {
-  
+
   handleunknown_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.OneHotEncoder.handleUnknown)
 }

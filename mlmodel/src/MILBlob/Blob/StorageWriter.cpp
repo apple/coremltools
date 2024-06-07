@@ -8,6 +8,7 @@
 #include "MILBlob/Blob/StorageFormat.hpp"
 #include "MILBlob/Blob/StorageWriter.hpp"
 #include "MILBlob/Fp16.hpp"
+#include "MILBlob/Fp8.hpp"
 #include "MILBlob/Util/Span.hpp"
 #include "MILBlob/Util/SpanCast.hpp"
 
@@ -75,12 +76,40 @@ private:
 };
 
 template <typename T>
+uint64_t SpanSizeInBytes(Util::Span<const T> data)
+{
+    if constexpr (MILBlob::IsSubByteSized<T>::value) {
+        auto uint8Span = MILBlob::Util::CastFromBitSpan(data);
+        return SpanSizeInBytes(uint8Span);
+    } else {
+        return data.Size() * sizeof(T);
+    }
+}
+
+template <typename T>
+void WritePaddingBits(blob_metadata& metadata, size_t numElements)
+{
+    // types aligned to byte boundaries don't need this padding
+    if constexpr (MILBlob::IsSubByteSized<T>::value) {
+        metadata.padding_size_in_bits = 0;
+        std::size_t numBitsRemaining = (numElements * T::SizeInBits) % 8;
+        if (numBitsRemaining != 0) {
+            metadata.padding_size_in_bits = 8 - numBitsRemaining;
+        }
+    }
+}
+
+template <typename T>
 uint64_t StorageWriter::Impl::WriteData(Util::Span<const T> data)
 {
     // 1. Write data
     blob_metadata metadata;
     metadata.mil_dtype = BlobDataTypeTraits<typename std::remove_const<T>::type>::DataType;
-    metadata.sizeInBytes = data.Size() * sizeof(T);
+    metadata.sizeInBytes = SpanSizeInBytes(data);
+
+    // populate padding_size_in_bits, if we're writing a sub-byte-sized type
+    WritePaddingBits<std::remove_cv_t<T>>(metadata, data.Size());
+
     // Get offset for data
     auto metadataOffset = m_fileWriter->GetNextAlignedOffset();
     // metadata is 64 bit aligned.
@@ -94,7 +123,13 @@ uint64_t StorageWriter::Impl::WriteData(Util::Span<const T> data)
     MILVerifyIsTrue(metadataOffset == actualMetadataOffset,
                     std::runtime_error,
                     "[MIL StorageWriter]: Metadata written to different offset than expected.");
-    auto actualDataOffset = m_fileWriter->AppendData(Util::SpanCast<const uint8_t>(data));
+    Util::Span<const uint8_t> byteSpan;
+    if constexpr (MILBlob::IsSubByteSized<T>::value) {
+        byteSpan = Util::CastFromBitSpan(data);
+    } else {
+        byteSpan = Util::SpanCast<const uint8_t>(data);
+    }
+    auto actualDataOffset = m_fileWriter->AppendData(byteSpan);
     MILVerifyIsTrue(dataOffset == actualDataOffset,
                     std::runtime_error,
                     "[MIL StorageWriter]: Metadata written to different offset than expected.");
@@ -128,7 +163,25 @@ uint64_t StorageWriter::WriteData<uint8_t>(Util::Span<const uint8_t> data)
 }
 
 template <>
+uint64_t StorageWriter::WriteData<uint32_t>(Util::Span<const uint32_t> data)
+{
+    return m_impl->WriteData(data);
+}
+
+template <>
 uint64_t StorageWriter::WriteData<Bf16>(Util::Span<const Bf16> data)
+{
+    return m_impl->WriteData(data);
+}
+
+template <>
+uint64_t StorageWriter::WriteData<Fp8E4M3FN>(Util::Span<const Fp8E4M3FN> data)
+{
+    return m_impl->WriteData(data);
+}
+
+template <>
+uint64_t StorageWriter::WriteData<Fp8E5M2>(Util::Span<const Fp8E5M2> data)
 {
     return m_impl->WriteData(data);
 }
@@ -150,6 +203,24 @@ uint64_t StorageWriter::WriteData<int16_t>(Util::Span<const int16_t> data)
 {
     return m_impl->WriteData(data);
 }
+
+template <>
+uint64_t StorageWriter::WriteData<int32_t>(Util::Span<const int32_t> data)
+{
+    return m_impl->WriteData(data);
+}
+
+// Implement WriteData forwarding stubs for all sub byte types
+#define DECLARE_SUB_BYTE_TYPE(TYPE_NAME)                                           \
+    template <>                                                                    \
+    uint64_t StorageWriter::WriteData<TYPE_NAME>(Util::Span<const TYPE_NAME> data) \
+    {                                                                              \
+        return m_impl->WriteData(data);                                            \
+    }
+
+#include "MILBlob/SubByteTypeList.hpp"
+
+#undef DECLARE_SUB_BYTE_TYPE
 
 template <>
 uint64_t StorageWriter::WriteData<uint16_t>(Util::Span<const uint16_t> data)

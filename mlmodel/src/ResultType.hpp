@@ -43,7 +43,16 @@ enum class ResultType {
     INVALID_UPDATABLE_MODEL_CONFIGURATION,
 
     // NN shaper failure, not necessarily an error
-    POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES
+    POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES,
+
+    // The model type doesn't support the multi-function.
+    MODEL_TYPE_DOES_NOT_SUPPORT_MULTI_FUNCTION,
+
+    // The default function name is invalid.
+    INVALID_DEFAULT_FUNCTION_NAME,
+
+    // The model type requires at least one input feature.
+    MODEL_TYPE_DOES_NOT_SUPPORT_EMPTY_INPUT,
 };
 
 }

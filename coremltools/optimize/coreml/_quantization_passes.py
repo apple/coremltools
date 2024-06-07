@@ -3,33 +3,41 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from typing import Callable, Optional, Tuple
+import atexit
+from itertools import repeat
+from multiprocessing import Pool
+from typing import Callable, List, Optional, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
 
-import coremltools.converters.mil.frontend._utils as frontend_utils
 from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.backend.mil.load import should_use_weight_file
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
-from coremltools.converters.mil.mil.ops.defs._utils import pack_elements_into_bits
+from coremltools.converters.mil.mil.ops.defs.iOS16 import constexpr_affine_dequantize
 from coremltools.converters.mil.mil.ops.defs.iOS16 import (
-    constexpr_affine_dequantize,
+    constexpr_lut_to_dense as constexpr_lut_to_dense_ios16,
+)
+from coremltools.converters.mil.mil.ops.defs.iOS16 import (
+    constexpr_sparse_to_dense as constexpr_sparse_to_dense_ios16,
+)
+from coremltools.converters.mil.mil.ops.defs.iOS18 import (
+    constexpr_blockwise_shift_scale,
     constexpr_lut_to_dense,
     constexpr_sparse_to_dense,
 )
 from coremltools.converters.mil.mil.passes.defs.quantization import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.mil.var import Var
-from coremltools.models._deprecation import deprecated as _deprecated
+from coremltools.models._deprecation import deprecated
 from coremltools.models.neural_network.quantization_utils import _get_kmeans_lookup_table_and_weight
-from coremltools.optimize.coreml import _utils
+from coremltools.optimize.coreml import _utils as optimize_utils
 from coremltools.optimize.coreml._config import (
+    CompressionGranularity,
     OpLinearQuantizerConfig,
     OpMagnitudePrunerConfig,
     OpPalettizerConfig,
@@ -38,16 +46,40 @@ from coremltools.optimize.coreml._config import (
 )
 
 
-"""
-------------------------
-Compression graph pass -
-------------------------
-"""
 class AbstractCompressionPass(AbstractQuantizationPass):
     """
     The abstract class for the compression graph passes.
     """
     _MINIMUM_OPSET_VERSION = AvailableTarget.iOS16
+
+    # Graph pass option for setting compression config.
+    _config: Optional[OptimizationConfig] = None
+
+    # Graph pass option for enabling joint compressions.
+    _joint_compression: bool = False
+
+    @property
+    def config(self) -> OptimizationConfig:
+        return self._config
+
+    @config.setter
+    def config(self, value: OptimizationConfig):
+        self._check_config_type(value)
+        self._config = value
+        if value._op_selector is not None:
+            self.op_selector = value._op_selector
+
+    @property
+    def joint_compression(self):
+        return self._joint_compression
+
+    @joint_compression.setter
+    def joint_compression(self, joint_compression: bool):
+        if not isinstance(joint_compression, bool):
+            raise ValueError(
+                f"joint_compression only supports bool, but got {type(joint_compression)}"
+            )
+        self._joint_compression = joint_compression
 
     def __init__(self, config: OptimizationConfig = None, fake_compression: bool = False):
         if not isinstance(config, (OptimizationConfig, type(None))):
@@ -74,6 +106,14 @@ class AbstractCompressionPass(AbstractQuantizationPass):
                     f"Skipped the compression pass {self.__class__}.")
                 return
 
+            if self._joint_compression and not is_current_opset_version_compatible_with(
+                AvailableTarget.iOS18
+            ):
+                raise ValueError(
+                    "Joint compression is only supported since iOS18. Please set the "
+                    "minimum deployment target to iOS18 if you want to use it."
+                )
+
             valid_consts = []
             for op in list(block.operations):
                 for b in op.blocks:
@@ -97,17 +137,6 @@ class AbstractCompressionPass(AbstractQuantizationPass):
         for f in prog.functions.values():
             apply_block(f)
 
-    @property
-    def config(self) -> OptimizationConfig:
-        return self._config
-
-    @config.setter
-    def config(self, value: OptimizationConfig):
-        self._check_config_type(value)
-        self._config = value
-        if value._op_selector is not None:
-            self.op_selector = value._op_selector
-
     def need_compress_const(
         self, op: Operation, _is_deprecated: bool, weight_threshold: float
     ) -> bool:
@@ -128,6 +157,13 @@ class AbstractCompressionPass(AbstractQuantizationPass):
 
         if weight_threshold is None:
             raise ValueError("weight_threshold cannot be None")
+
+        # Disable 1D tensor compression due to MIL 1D Tensor bug (rdar://113860800).
+        if (
+            not op.outputs[0].child_ops[0].op_type.startswith("constexpr_")
+            and op.outputs[0].rank <= 1
+        ):
+            return False
 
         return (
             should_use_weight_file(val) and self._get_weight_to_compress_size(op) > weight_threshold
@@ -161,40 +197,6 @@ class AbstractCompressionPass(AbstractQuantizationPass):
                 supported_type_str = get_supported_types_as_str(self._SUPPORTED_CONFIG_TYPE)
                 raise ValueError(f"{self.__class__.__name__} only accept {supported_type_str} type config. Got {config.__class__.__name__}.")
 
-    @staticmethod
-    def select_input_output_channel_axis(op: Operation) -> Tuple[int, int]:
-        """
-        Here are some representative ops:
-        - linear: [D_out, D_in]
-        - matmul's y: [..., D_in, D_out] if transpose_y is False, else [..., D_out, D_in]
-        - conv: [C_out, C_in_div_group, KH, KW]
-        - conv_transpose: [C_in, C_out_div_group, KH, KW]
-
-        The input output channel axis selection criteria is:
-        - For conv_transpose the output channel is 1 and input channel is 0.
-        - For matmul's y:
-            - When transpose_y=False, output channel is -1 and input channel is -2
-            - When transpose_y=True, output channel is -2 and input channel is -1
-        - For all other ops, output channel is 0 and input channel is 1.
-        """
-        output_channel_axis, input_channel_axis = 0, 1
-        var = op.outputs[0]
-        if len(var.child_ops) == 1:
-            child_op = var.child_ops[0]
-            if child_op.op_type == "conv_transpose":
-                output_channel_axis = 1
-                input_channel_axis = 0
-            if child_op.op_type == "matmul" and child_op.y == var:
-                if child_op.transpose_y.val:
-                    output_channel_axis = -2
-                    input_channel_axis = -1
-                else:
-                    output_channel_axis = -1
-                    input_channel_axis = -2
-            if child_op.op_type.startswith("constexpr_"):
-                return AbstractCompressionPass.select_input_output_channel_axis(child_op)
-        return input_channel_axis, output_channel_axis
-
     def is_valid_op(self, op: Operation):
         if op.op_type == "const" and should_use_weight_file(self._get_const_value(op)):
             return True
@@ -206,6 +208,31 @@ class AbstractCompressionPass(AbstractQuantizationPass):
         return op.outputs[0].val
 
     def _get_weight_to_compress_size(self, op: Operation) -> int:
+        """
+        For joint compression, the constexpr op is the intermediate compressed result, so we
+        need to go along the constexpr op chain to get the op which actually is the weight need
+        to be compressed.
+
+        For example, the op could be a const feed into constexpr_lut_to_dense as indices, and the
+        constexpr_lut_to_dense is fed into a conv op. In this case, we need to find the original
+        weight of the conv op, instead of using the const indices to determine if we want to
+        compress the op.
+        """
+        if not (op.op_type == "const" or op.op_type.startswith("constexpr_")):
+            raise ValueError(f"Only support const or constexpr ops, but got {op.op_type}")
+
+        if self.joint_compression:
+            for op_output in op.outputs:
+                # If the current const/constexpr is used in multiple ops, we do a depth-first
+                # search to find the endpoint of the chained const/constexpr ops.
+                for child_op in op_output.child_ops:
+                    if child_op.op_type.startswith("constexpr_"):
+                        return self._get_weight_to_compress_size(child_op)
+                    else:
+                        # The child op is not constexpr, which means the current op is the real
+                        # weight (not intermediate constexpr) that need compression.
+                        return np.prod(op.outputs[0].shape)
+
         if op.op_type != "const":
             raise ValueError("Only const weight can be compressed")
         return np.prod(op.outputs[0].shape)
@@ -225,21 +252,65 @@ class prune_weights(AbstractCompressionPass):
     - If ``fake_compression=False``, the zeroed-out value is encoded using the ``constexpr_sparse_to_dense`` op.
     - If ``fake_compression=True``, the zeroed-out value is encoded using the ``const`` op.
     - Old ``const`` is replaced by a new operation with zeroed-out value.
+
+    When the `joint_compression` option is set, for each existing compressed constexpr op, it will
+    check if the result is sparse. If the result is sparse, it will replace the constexpr op by the
+    corresponding sparse version to support joint compression. More specifically:
+    - For quantization, `constexpr_blockwise_shift_scale` is replaced by `constexpr_sparse_blockwise_shift_scale` +
+      `constexpr_sparse_to_dense` if the dequantized result is sparse.
+    - For palettization, `constexpr_lut_to_dense` is replaced by `constexpr_lut_to_sparse` +
+      `constexpr_sparse_to_dense` if the depalettized result is sparse.
+
+    .. code-block::
+
+        Input graph:
+
+            constexpr_blockwise_shift_scale -> downstream op
+
+        Output graph:
+
+            constexpr_sparse_blockwise_shift_scale -> constexpr_sparse_to_dense -> downstream op
+
+    Support Options:
+
+    - ``joint_compression``: Enable joint compression. Similar to blockwise_quantize_weights and
     """
     _SUPPORTED_CONFIG_TYPE = (OpMagnitudePrunerConfig, OpThresholdPrunerConfig)
+    # Ops to be further pruned for joint compression.
+    _JOINT_SUPPORT_OPS = {"constexpr_blockwise_shift_scale", "constexpr_lut_to_dense"}
+
+    def is_valid_op(self, op: Operation):
+        if not self.joint_compression:
+            return super().is_valid_op(op)
+        if op.op_type in self._JOINT_SUPPORT_OPS and should_use_weight_file(
+            self._get_const_value(op)
+        ):
+            return True
+        return False
+
+    def _get_const_value(self, op: Operation) -> np.ndarray:
+        if op.op_type == "const" or not self.joint_compression:
+            return super()._get_const_value(op)
+        elif op.op_type.startswith("constexpr_"):
+            # The materialized_val_inference is expensive, so only do it for joint compression, as
+            # we need to get the de-compressed value and prune it.
+            return op.materialized_val_inference()
+        else:
+            raise ValueError(f"The op {op} is not a const/constexpr.")
 
     @staticmethod
-    def _pack_val_to_sparse_param(val):
+    def _produce_sparse_param(val) -> optimize_utils.SparseParamsIos16:
         flattened_val = val.flatten()
-        params = _utils.SparseParams(
+        return optimize_utils.SparseParamsIos16(
             nonzero_data=flattened_val[np.where(flattened_val != 0)],
             mask=np.packbits(np.where(flattened_val != 0, 1, 0), bitorder="little"),
             shape=val.shape,
         )
-        return params
 
     @staticmethod
-    def compress_by_threshold(val, threshold, minimum_sparsity_percentile):
+    def compress_by_threshold(
+        val, threshold, minimum_sparsity_percentile
+    ) -> Optional[optimize_utils.SparseParamsIos16]:
         val = np.where(np.abs(val) <= threshold, 0, val)
         sparsity_percentile = np.sum(val == 0.0) / val.size
         if sparsity_percentile < minimum_sparsity_percentile:
@@ -248,10 +319,12 @@ class prune_weights(AbstractCompressionPass):
                   )
             logger.warning(msg)
             return None
-        return prune_weights._pack_val_to_sparse_param(val)
+        return prune_weights._produce_sparse_param(val)
 
     @staticmethod
-    def compress_by_magnitude(val, target_sparsity, block_size=None, dim=None):
+    def compress_by_magnitude(
+        val, target_sparsity, block_size=None, dim=None
+    ) -> Optional[optimize_utils.SparseParamsIos16]:
         def _apply_block_sparsity(val, block_size, dim):
             shape = val.shape
             rank = len(shape)
@@ -317,10 +390,10 @@ class prune_weights(AbstractCompressionPass):
             val = 0 * val
         elif q != 0:
             val = np.where(magnitude_map <= np.percentile(magnitude_map, q), 0, val)
-        return prune_weights._pack_val_to_sparse_param(val)
+        return prune_weights._produce_sparse_param(val)
 
     @staticmethod
-    def compress_by_nm_sparsity(val, n_m_ratio, dim):
+    def compress_by_nm_sparsity(val, n_m_ratio, dim) -> Optional[optimize_utils.SparseParamsIos16]:
         n, m = n_m_ratio
         assert n <= m
         shape = val.shape
@@ -373,20 +446,59 @@ class prune_weights(AbstractCompressionPass):
         n_m_mask = np.transpose(n_m_mask, axes=perm_back)
 
         val = val * (1 - n_m_mask)
-        return prune_weights._pack_val_to_sparse_param(val)
+        return prune_weights._produce_sparse_param(val)
 
     @staticmethod
-    def decompress(params):
-        if not isinstance(params, _utils.SparseParams):
+    def decompress(
+        params: Union[optimize_utils.SparseParamsIos16, optimize_utils.SparseParams]
+    ) -> np.ndarray:
+        if isinstance(params, optimize_utils.SparseParamsIos16):
+            return constexpr_sparse_to_dense_ios16.decompress(
+                params.nonzero_data, params.mask, params.shape
+            )
+        elif isinstance(params, optimize_utils.SparseParams):
+            return constexpr_sparse_to_dense.decompress(params.nonzero_data, params.mask)
+        else:
             raise ValueError("Invalid type of params")
-        return constexpr_sparse_to_dense.decompress(params.nonzero_data, params.mask, params.shape)
 
     @staticmethod
-    def _create_constexpr_var(op: Operation, sparse_params: _utils.SparseParams) -> Var:
+    def _create_constexpr_var(
+        op: Operation, sparse_params: optimize_utils.SparseParams, joint_compression: bool = False
+    ) -> Var:
+        if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
+            sparse_params_ios16 = optimize_utils.ios18_sparse_params_to_ios16(sparse_params)
+            return mb.constexpr_sparse_to_dense(
+                nonzero_data=sparse_params_ios16.nonzero_data,
+                mask=sparse_params_ios16.mask,
+                shape=np.uint32(sparse_params_ios16.shape),
+                before_op=op,
+                name=op.name + "_sparsified",
+            )
+
+        mask = sparse_params.mask
+        nonzero_data = sparse_params.nonzero_data
+
+        if joint_compression:
+            if op.op_type == "constexpr_blockwise_shift_scale":
+                mask, nonzero_data = mb.constexpr_sparse_blockwise_shift_scale(
+                    data_mask=mask,
+                    nonzero_data=op.data.val[mask != 0].flatten(),
+                    scale=op.scale,
+                    offset=op.offset,
+                    before_op=op,
+                )
+            elif op.op_type == "constexpr_lut_to_dense":
+                mask, nonzero_data = mb.constexpr_lut_to_sparse(
+                    indices_mask=mask,
+                    indices_nonzero_data=op.indices.val[mask != 0].flatten(),
+                    lut=op.lut,
+                    vector_axis=op.vector_axis,
+                    before_op=op,
+                )
+
         return mb.constexpr_sparse_to_dense(
-            nonzero_data=sparse_params.nonzero_data,
-            mask=sparse_params.mask,
-            shape=np.uint32(sparse_params.shape),
+            nonzero_data=nonzero_data,
+            mask=mask,
             before_op=op,
             name=op.name + "_sparsified",
         )
@@ -402,6 +514,8 @@ class prune_weights(AbstractCompressionPass):
         if not isinstance(const_val, (np.ndarray, np.generic)):
             raise ValueError("Only numpy arrays are supported")
 
+        sparse_params: Optional[optimize_utils.SparseParamsIos16] = None
+        skip_msg = f"op named {op.name} not applicable for {op_config} configuration. Skipped."
         if isinstance(op_config, OpThresholdPrunerConfig):
             sparse_params = self.compress_by_threshold(
                 val=const_val,
@@ -415,7 +529,7 @@ class prune_weights(AbstractCompressionPass):
             # if it is explicitly set by set_op_name,
             if not op_config._check_const_op_is_valid(op):
                 if op.name not in self.config.op_name_configs:
-                    logger.warning(f"op named {op.name} not applicable for {OpMagnitudePrunerConfig} configuration. Skipped.")
+                    logger.warning(skip_msg)
                     return
 
             if op_config.target_sparsity is not None:
@@ -433,10 +547,19 @@ class prune_weights(AbstractCompressionPass):
                 )
 
         if sparse_params is None:
+            logger.warning(skip_msg)
             return
 
+        sparse_params: optimize_utils.SparseParams = optimize_utils.ios16_sparse_params_to_ios18(
+            sparse_params
+        )
+
         if not self.fake_compression:
-            new_var = self._create_constexpr_var(op, sparse_params)
+            new_var = self._create_constexpr_var(
+                op,
+                sparse_params,
+                joint_compression=self.joint_compression and op.op_type in self._JOINT_SUPPORT_OPS,
+            )
         else:
             decompressed_val = self.decompress(sparse_params)
             new_var = mb.const(
@@ -450,9 +573,11 @@ class prune_weights(AbstractCompressionPass):
             old_var=op.outputs[0],
             new_var=new_var,
             no_check_var_types=True,
+            force_replace=True,  # Need force_replace to replace the constexpr.
         )
 
         op.enclosing_block.remove_ops([op])
+
 
 @register_pass(namespace="compression")
 class palettize_weights(AbstractCompressionPass):
@@ -468,9 +593,72 @@ class palettize_weights(AbstractCompressionPass):
     - If ``fake_compression=False``, compressed value is encoded using the ``constexpr_lut_to_dense`` op.
     - If ``fake_compression=True``,  compressed value is decompressed and then encoded using the ``const`` op.
     - Old ``const`` op is replaced by a newly created operation.
+
+    Here is an example for input and output graph of this graph pass:
+
+    .. code-block::
+
+        Input graph:
+
+            const -> downstream op
+
+        Output graph:
+
+            constexpr_lut_to_dense -> downstream op
+
+
+    Support Options:
+
+    - ``joint_compression``:
+        Enable joint compression by quantizing an already compressed model.
+        What op could be further quantized is in `_validate_child_constexpr_for_compress`.
+
+        Using pruning + palettization as an example, for each existing ``constexpr_sparse_to_dense``
+        op, it tries to palettize the non-sparse elements in the spasified data, which could be
+        represented as:
+
+
+          - For each existing ``constexpr_sparse_to_dense`` op, it tries to palettize the
+            non-sparse elements in the spasified data, which could be represented as:
+
+
+            .. code-block::
+
+                Input graph:
+
+                    sparse weight(fp16) -> constexpr_sparse_to_dense -> dense weight(fp16)
+
+                Output graph:
+
+                    sparse lut(int8) -> constexpr_lut_to_sparse -> sparse weight(fp16) -> constexpr_sparse_to_dense -> dense weight(fp16)
+
+    For details about different palettization schemas, see `OpPalettizerConfig` for more details.
     """
     _SUPPORTED_CONFIG_TYPE = OpPalettizerConfig
-    _SUPPORTED_NBITS = (1, 2, 4, 6, 8)
+    _SUPPORTED_NBITS = (1, 2, 3, 4, 6, 8)
+
+    _compress_pool: Optional[Pool] = None
+
+    def __del__(self):
+        if palettize_weights._compress_pool is not None:
+            palettize_weights._compress_pool.close()
+
+    def _validate_child_constexpr_for_compress(self, op: Operation) -> bool:
+        """Determines which pattern supports joint compression."""
+        if (
+            is_current_opset_version_compatible_with(AvailableTarget.iOS18)
+            and self.joint_compression
+        ):
+            # In iOS18 joint compression, the sparsified data could be further palettized.
+            if len(op.outputs[0].child_ops) == 1:
+                child_op = op.outputs[0].child_ops[0]
+                if (
+                    child_op.op_type == "constexpr_sparse_to_dense"
+                    and child_op.nonzero_data == op.outputs[0]
+                ):
+                    return True
+
+        return super()._validate_child_constexpr_for_compress(op)
 
     @staticmethod
     def _get_nbits_for_unique_mode(val: np.ndarray, allowed_nbits: Tuple[int, ...]) -> int:
@@ -552,7 +740,18 @@ class palettize_weights(AbstractCompressionPass):
         return lut, indices
 
     @staticmethod
-    def compress(val, mode, nbits=None, lut_function=None) -> _utils.LutParams:
+    @deprecated(
+        suffix="Please use coremltools.optimize.coreml.palettize_weights.blockwise_compress",
+        version="8.2",
+        obj_prefix="coremltools.optimize.coreml.palettize_weights.",
+    )
+    def compress(val, mode, nbits=None, lut_function=None) -> optimize_utils.LutParamsIos16:
+        """
+        [Legacy] Per-tensor palletization.
+
+        This API is for backward compatibility only. It's no longer used inside the coremltools.
+        It's recommended to use `blockwise_compress` instead, which is more general.
+        """
         def check_lut_parameters_are_valid(val, lut, indices):
             if not isinstance(lut, np.ndarray) or not isinstance(indices, np.ndarray):
                 raise ValueError("LUT and indices must be type of numpy array.")
@@ -582,25 +781,197 @@ class palettize_weights(AbstractCompressionPass):
 
         check_lut_parameters_are_valid(val, lut, indices)
 
-        params = _utils.LutParams(
+        params = optimize_utils.LutParamsIos16(
             lut=lut,
-            indices=pack_elements_into_bits(indices, int(np.log2(lut.shape[0]))),
+            indices=optimize_utils.pack_elements_into_bits(indices, int(np.log2(lut.shape[0]))),
             shape=val.shape,
         )
         return params
 
     @staticmethod
-    def decompress(params):
-        if not isinstance(params, _utils.LutParams):
-            raise ValueError("Invalid type of params")
-        return constexpr_lut_to_dense.decompress(params.lut, params.indices, params.shape)
+    def blockwise_compress(
+        original_data: np.ndarray,
+        mode: str,
+        nbits: Optional[int],
+        block_sizes: List[int],
+        lut_function: Optional[Callable] = None,
+        num_kmeans_workers: int = 1,
+    ) -> Optional[optimize_utils.LutParams]:
+        """
+        Compress original_data into n-bit representation by palettization.
+
+        Supported nbits: 1, 2, 3, 4, 6, 8
+        Supported mode: KMEANS, UNIFORM, UNIQUE, CUSTOM
+
+        block_sizes: Each element is the block size on corresponding axis for original_data.
+
+        Returns None if the weight cannot be compressed (for example, the dim size on an axis is not
+        divisible by the corresponding block_size).
+        """
+        # TODO (rdar://127342739): Support more general blockwise palettization.
+        # As general blockwise palettization hasn't been supported yet, we try to infer channel axis
+        # and channel group size from block_sizes, and use grouped channelwise palettization instead.
+        channel_axis = None
+        channel_group_size = 0
+        for axis, block_size in enumerate(block_sizes):
+            if block_size != 0 and block_size != original_data.shape[axis]:
+                if channel_axis is not None:
+                    raise NotImplementedError(
+                        "General block-wise palettization is not supported. Please use "
+                        "'per_grouped_channel' or 'per_tensor' for the 'granularity' in config."
+                    )
+                channel_axis = axis
+                channel_group_size = block_size
+        if channel_axis is None:
+            # Per-tensor compression, just need to pick a dummy axis.
+            channel_axis = 0
+
+        return palettize_weights.grouped_channelwise_compress(
+            original_data,
+            mode,
+            nbits,
+            channel_axis,
+            channel_group_size,
+            lut_function,
+            num_kmeans_workers,
+        )
 
     @staticmethod
-    def _create_constexpr_var(op: Operation, lut_params: _utils.LutParams) -> Var:
+    def grouped_channelwise_compress(
+        original_data: np.ndarray,
+        mode: str,
+        nbits: Optional[int],
+        channel_axis: int,
+        channel_group_size: int,
+        lut_function: Optional[Callable] = None,
+        num_kmeans_workers: int = 1,
+    ) -> Optional[optimize_utils.LutParams]:
+        """
+        Compress original_data into n-bit representation by grouped channelwise palettization.
+
+        Supported nbits: 1, 2, 3, 4, 6, 8
+        Supported mode: KMEANS, UNIFORM, UNIQUE, CUSTOM
+
+        block_sizes: Each element is the block size on corresponding axis for original_data.
+
+        Returns None if the weight cannot be compressed (for example, the dim size on an axis is not
+        divisible by the corresponding channel_group_size).
+        """
+        if not isinstance(original_data, np.ndarray):
+            raise ValueError(f"Only numpy arrays are supported, but got {type(original_data)}")
+        if nbits is not None and nbits not in palettize_weights._SUPPORTED_NBITS:
+            raise ValueError(
+                f"Invalid nbits. Support {palettize_weights._SUPPORTED_NBITS}, but got {nbits}"
+            )
+        data_rank = len(original_data.shape)
+        if not (-data_rank <= channel_axis < data_rank):
+            raise ValueError(
+                "Invalid channel_axis. Should be in range "
+                f"[{-data_rank}, {data_rank}), but got {channel_axis}"
+            )
+
+        if channel_axis < 0:
+            channel_axis += len(original_data.shape)
+
+        channel_num = original_data.shape[channel_axis]
+        if channel_group_size == 0:
+            channel_group_size = channel_num
+        if channel_num % channel_group_size != 0:
+            logger.warning(
+                f"Can't perform palettization: The number of channels at {channel_axis}th axis "
+                f"({channel_num}) is not divisible by channel_group_size ({channel_group_size})."
+            )
+            return None
+        channel_group_num = channel_num // channel_group_size
+
+        if channel_axis != 0:
+            original_data = np.swapaxes(original_data, 0, channel_axis)
+        grouped_channel_data = np.split(original_data, channel_group_num, axis=0)
+
+        # If mode is UNIQUE, infer nbits from the number of unique values in each group.
+        if mode.upper() == "UNIQUE":
+            try:
+                for per_group_data in grouped_channel_data:
+                    per_group_nbits = palettize_weights._get_nbits_for_unique_mode(
+                        per_group_data, palettize_weights._SUPPORTED_NBITS
+                    )
+                    # Pick the largest per-channel nbits to be used as the nbits for the whole op.
+                    if nbits is None or per_group_nbits > nbits:
+                        nbits = per_group_nbits
+            except ValueError as e:
+                logger.warning(f"Can't perform palettization:{e}")
+                return None
+
+        # The subprocesses have overhead, so only use it for expensive computations (k-means).
+        if mode.upper() == "KMEANS" and num_kmeans_workers > 1:
+            if palettize_weights._compress_pool is None:
+                palettize_weights._compress_pool = Pool(processes=num_kmeans_workers)
+                atexit.register(lambda: palettize_weights._compress_pool.terminate())
+            lut, indices = zip(
+                *palettize_weights._compress_pool.starmap(
+                    palettize_weights._get_lut_and_indices,
+                    zip(grouped_channel_data, repeat(mode), repeat(nbits), repeat(lut_function)),
+                )
+            )
+        else:
+            lut, indices = zip(
+                *[
+                    palettize_weights._get_lut_and_indices(
+                        per_channel_group_data, mode, nbits, lut_function
+                    )
+                    for per_channel_group_data in grouped_channel_data
+                ]
+            )
+
+        lut = np.stack(lut, axis=0)
+        indices = np.stack(indices, axis=0)
+
+        if mode.upper() == "CUSTOM":
+            # The custom lut_function provided by users should have nbits info.
+            nbits = int(np.ceil(np.log2(lut.shape[-1])))
+
+        # The lut and indices from `_get_lut_and_indices` is flattened. The desired result should be
+        # `lut` with shape [channel_group_num, palette_num], and `indices` with same shape as the
+        # original_data.
+        palette_num = 2**nbits
+        indices = indices.reshape(original_data.shape)
+        lut_target_shape = [1] * (len(original_data.shape) + 2)
+        lut_target_shape[0] = channel_group_num
+        lut_target_shape[-2] = palette_num
+        lut = lut.reshape(lut_target_shape)
+
+        if channel_axis != 0:
+            lut = np.swapaxes(lut, 0, channel_axis)
+            indices = np.swapaxes(indices, 0, channel_axis)
+
+        indices_np_dtype = types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}"))
+        return optimize_utils.LutParams(indices.astype(indices_np_dtype), lut)
+
+    @staticmethod
+    def decompress(params: Union[optimize_utils.LutParamsIos16, optimize_utils.LutParams]):
+        if isinstance(params, optimize_utils.LutParamsIos16):
+            return constexpr_lut_to_dense_ios16.decompress(params.lut, params.indices, params.shape)
+        elif isinstance(params, optimize_utils.LutParams):
+            return constexpr_lut_to_dense.decompress(params.indices, params.lut, None)
+        else:
+            raise ValueError("Invalid type of params")
+
+    @staticmethod
+    def _create_constexpr_var(op: Operation, lut_params: optimize_utils.LutParams) -> Var:
+        """Create constexpr lut op based on opset version."""
+        if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
+            lut_params_ios16 = optimize_utils.ios18_lut_params_to_ios16(lut_params)
+            return mb.constexpr_lut_to_dense(
+                indices=lut_params_ios16.indices,
+                lut=lut_params_ios16.lut,
+                shape=np.uint32(lut_params_ios16.shape),
+                before_op=op,
+                name=op.name + "_palettized",
+            )
+
         return mb.constexpr_lut_to_dense(
             indices=lut_params.indices,
             lut=lut_params.lut,
-            shape=np.uint32(lut_params.shape),
             before_op=op,
             name=op.name + "_palettized",
         )
@@ -612,24 +983,49 @@ class palettize_weights(AbstractCompressionPass):
         if not self.need_compress_const(op, self.config._is_deprecated, op_config.weight_threshold):
             return
 
-        if op_config.mode == "UNIQUE":
-            try:
-                palettize_weights._get_nbits_for_unique_mode(
-                    op.outputs[0].val, self._SUPPORTED_NBITS
+        weight_to_compress = op.outputs[0].val
+        if self.joint_compression:
+            child_op = op.outputs[0].child_ops[0]
+            if child_op.op_type == "constexpr_sparse_to_dense":
+                # When the child op is sparse_to_dense op, the weight_to_compress is the sparse
+                # representation, which need to be restored to dense representation for compression.
+                weight_to_compress = constexpr_sparse_to_dense.decompress(
+                    weight_to_compress, child_op.mask.val
                 )
-            except ValueError as e:
-                logger.warning(f"Skip op {op.name} for palettization, because {e}")
-                return
 
-        lut_params = self.compress(
-            op.outputs[0].val,
+        block_sizes = optimize_utils.infer_block_sizes(op, op_config, weight_to_compress)
+        lut_params = self.blockwise_compress(
+            weight_to_compress,
             op_config.mode,
             op_config.nbits,
-            op_config.lut_function
+            block_sizes,
+            op_config.lut_function,
+            num_kmeans_workers=op_config.num_kmeans_workers,
         )
+        if lut_params is None:
+            logger.warning(f"Cannot perform palettization on {op.name}. Skipped this op.")
+            return
 
         if not self.fake_compression:
-            new_var = palettize_weights._create_constexpr_var(op, lut_params)
+            new_var: Optional[Var] = None
+
+            # Specially handle sparse-related compression ops chaining.
+            if self.joint_compression:
+                child_op = op.outputs[0].child_ops[0]
+                if child_op.op_type == "constexpr_sparse_to_dense":
+                    mask, nonzero_data = mb.constexpr_lut_to_sparse(
+                        indices_mask=child_op.mask,
+                        indices_nonzero_data=lut_params.indices[child_op.mask.val != 0].flatten(),
+                        lut=lut_params.lut,
+                        before_op=child_op,
+                        name=op.name + "_palettized",
+                    )
+                    # Feed the sparse lut's nonzero_data output to the child sparse op.
+                    new_var = nonzero_data
+
+            # For other cases, the new quant var could be constructed directly from lut_params.
+            if new_var is None:
+                new_var = self._create_constexpr_var(op, lut_params)
         else:
             decompressed_val = self.decompress(lut_params)
             new_var = mb.const(
@@ -658,9 +1054,44 @@ class linear_quantize_weights(AbstractCompressionPass):
 
     The transform performs the following:
 
-    - Values are linearly quantized into unsigned 8-bits.
-    - If ``fake_compression=False``, compressed value is encoded using the ``constexpr_affine_dequantize`` op.
+    - Values are linearly quantized into n-bit.
+    - If ``fake_compression=False``, compressed value is encoded using the
+      ``constexpr_affine_dequantize`` op (pre-iOS18) or the ``constexpr_blockwise_shift_scale`` op (iOS18).
     - If ``fake_compression=True``, compressed value is decompressed and then encoded using the ``const`` op.
+
+    Here is an example for input and output graph of this graph pass:
+
+    .. code-block::
+
+        Input graph:
+
+            const -> downstream op
+
+        Output graph:
+
+            constexpr_blockwise_shift_scale -> downstream op
+
+    Support Options:
+
+    - ``joint_compression``:
+
+        Enable joint compression by quantizing an already compressed model.
+        What op could be further quantized is in `_validate_child_constexpr_for_compress`.
+
+        Using palettization + quantization as an example, for each existing ``constexpr_lut_to_dense``
+        op, it tries to quantize the elements in the lut, which could be represented as:
+
+        .. code-block::
+
+            Input graph:
+
+                lut(fp16) -> constexpr_lut_to_dense -> dense(fp16) -> downstream op
+
+            Output graph:
+
+                lut(int8) -> constexpr_blockwise_shift_scale -> lut(fp16) -> constexpr_lut_to_dense -> dense(fp16) -> downstream op
+
+    For details about different quantization schemas, see `OpLinearQuantizerConfig` for more details.
     """
     _SUPPORTED_CONFIG_TYPE = OpLinearQuantizerConfig
     _MODE_DTYPE_TO_RANGE = {
@@ -670,60 +1101,51 @@ class linear_quantize_weights(AbstractCompressionPass):
         (types.uint8, "LINEAR_SYMMETRIC"): (0, 254),
     }
 
+    def _validate_child_constexpr_for_compress(self, op: Operation) -> bool:
+        """
+        Overrides external method to support joint compression for iOS18+.
+
+        In iOS18 joint compression, the palettized/sparsified data could be further quantized.
+        For each specific op, we only quantize the specific input:
+        - constexpr_lut_to_dense's lut
+        - constexpr_lut_to_sparse's lut
+        - constexpr_sparse_to_dense's nonzero_data
+        """
+        if (
+            is_current_opset_version_compatible_with(AvailableTarget.iOS18)
+            and self.joint_compression
+        ):
+            if len(op.outputs[0].child_ops) == 1:
+                child_op = op.outputs[0].child_ops[0]
+                if child_op.op_type == "constexpr_lut_to_dense" and child_op.lut == op.outputs[0]:
+                    return True
+                elif (
+                    child_op.op_type == "constexpr_lut_to_sparse" and child_op.lut == op.outputs[0]
+                ):
+                    return True
+                elif (
+                    child_op.op_type == "constexpr_sparse_to_dense"
+                    and child_op.nonzero_data == op.outputs[0]
+                ):
+                    return True
+
+        return super()._validate_child_constexpr_for_compress(op)
+
     @classmethod
-    @_deprecated(
-        suffix="Please use _utils.quantize_weight",
-        version="8.0",
-        obj_prefix="coremltools.optimize.coreml._quantization_passes.",
+    @deprecated(
+        suffix="Please use coremltools.optimize.coreml.linear_quantize_weights.blockwise_compress",
+        version="8.2",
+        obj_prefix="coremltools.optimize.coreml.linear_quantize_weights.",
     )
-    def _get_quantized_data(
-        cls, original_data: np.ndarray, axes: Tuple[int, ...], mode: str, dtype: type
-    ) -> Tuple[np.ndarray, np.ndarray, Optional[np.ndarray]]:
-        """[Deprecated] Get quantized data along with metadata (scale, zero_point)."""
-        if not np.issubdtype(original_data.dtype, np.floating):
-            raise ValueError("Only floating numpy arrays are supported.")
-
-        val_min = np.amin(original_data, axis=axes, keepdims=True)
-        val_max = np.amax(original_data, axis=axes, keepdims=True)
-
-        if mode == "LINEAR_SYMMETRIC":
-            # For the linear_symmetric mode, the range is symmetrical to 0
-            max_abs = np.maximum(np.abs(val_min), np.abs(val_max))
-            val_min = -max_abs
-            val_max = max_abs
-        else:
-            assert mode == "LINEAR"
-            # For the linear mode, we need to make sure the data range contains `0`
-            val_min = np.minimum(0.0, val_min)
-            val_max = np.maximum(0.0, val_max)
-
-        q_val_min, q_val_max = cls._MODE_DTYPE_TO_RANGE[(dtype, mode)]
-        np_dtype = nptype_from_builtin(dtype)
-        zero_point = None
-        if mode == "LINEAR_SYMMETRIC":
-            if dtype.is_unsigned():
-                zero_point_shift = q_val_max // 2
-                zero_point = zero_point_shift * np.ones(val_min.shape)
-        else:
-            assert mode == "LINEAR"
-            zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
-            zero_point = np.round(zero_point)
-            zero_point = np.clip(zero_point, q_val_min, q_val_max)
-
-        scale = (val_max - val_min) / (q_val_max - q_val_min)
-        quantized_data = np.round(original_data / scale)
-        if zero_point is not None:
-            quantized_data += zero_point
-            zero_point = zero_point.squeeze().astype(np_dtype)
-        quantized_data = np.clip(quantized_data, q_val_min, q_val_max).astype(np_dtype)
-        scale = scale.astype(original_data.dtype).squeeze()
-
-        return quantized_data, scale, zero_point
-
-    @classmethod
     def compress(
         cls, val: np.ndarray, axis: int, mode: str, dtype: type
-    ) -> _utils.AffineQuantParams:
+    ) -> optimize_utils.QuantParamsIos16:
+        """
+        [Legacy] Per-channel quantization on axis.
+
+        This API is for backward compatibility only. It's no longer used inside the coremltools.
+        It's recommended to use `blockwise_compress` instead, which is more general.
+        """
         if not isinstance(val, (np.ndarray, np.generic)):
             raise ValueError("Only numpy arrays are supported")
         if isinstance(dtype, np.dtype):
@@ -731,56 +1153,164 @@ class linear_quantize_weights(AbstractCompressionPass):
         if not types.is_builtin(dtype):
             raise ValueError(f"The input dtype is should be a built-in type, but got {type(dtype)}")
 
-        axes = tuple([i for i in range(len(val.shape)) if i != axis])
-        quantized_data, scale, zero_point = _utils.quantize_weight(
+        block_sizes = [0] * len(val.shape)
+        block_sizes[axis] = 1
+        quant_params = cls.blockwise_compress(
             val,
-            axes,
             nbits=dtype.get_bitwidth(),
+            mode=mode,
             signed=not dtype.is_unsigned(),
-            quantization_mode=mode,
-            dtype=types.nptype_from_builtin(dtype),
+            block_sizes=block_sizes,
+        )
+        if quant_params is None:
+            raise ValueError("Failed to quantize.")
+
+        return optimize_utils.ios18_quant_params_to_ios16(quant_params)
+
+    @classmethod
+    def blockwise_compress(
+        cls,
+        original_data: np.ndarray,
+        nbits: int,
+        mode: str,
+        signed: bool,
+        block_sizes: List[int],
+    ) -> Optional[optimize_utils.QuantParams]:
+        """
+        Compress original_data into n-bit representation by quantization.
+
+        block_sizes: Each element is the block size on corresponding axis for original_data.
+
+        Returns None if the weight cannot be compressed (for example, the dim size on an axis is not
+        divisible by the corresponding block_size).
+        """
+        if not isinstance(original_data, np.ndarray):
+            raise ValueError("Only numpy arrays are supported")
+
+        result = optimize_utils.compute_qparams(
+            original_data,
+            nbits,
+            signed,
+            mode,
+            types.nptype_from_builtin(types.get_nbits_int_builtin_type(nbits, signed)),
+            block_sizes,
         )
 
-        if zero_point is None:
-            # The iOS16 constexpr_affine_dequantize op requires zero_point.
-            zero_point = np.zeros_like(scale).astype(quantized_data.dtype)
-        return _utils.AffineQuantParams(quantized_data, zero_point, scale, axis)
+        if result is None:
+            return None
+
+        quantized_data, scale, zero_point = result
+        return optimize_utils.QuantParams(
+            data=quantized_data, scale=scale, offset=zero_point, nbits=np.uint8(nbits)
+        )
 
     @staticmethod
-    def decompress(params: _utils.AffineQuantParams) -> np.ndarray:
-        if not isinstance(params, _utils.AffineQuantParams):
+    def decompress(params: Union[optimize_utils.QuantParamsIos16, optimize_utils.QuantParams]):
+        if isinstance(params, optimize_utils.QuantParamsIos16):
+            return constexpr_affine_dequantize.decompress(
+                params.quantized_data, params.zero_point, params.scale, params.axis
+            )
+        elif isinstance(params, optimize_utils.QuantParams):
+            return constexpr_blockwise_shift_scale.decompress(
+                params.data,
+                params.scale,
+                params.offset,
+            )
+        else:
             raise ValueError("Invalid type of params")
-        return constexpr_affine_dequantize.decompress(
-            params.quantized_data, params.zero_point, params.scale, params.axis
+
+    @staticmethod
+    def _create_constexpr_var(op: Operation, quant_params: optimize_utils.QuantParams) -> Var:
+        """Create constexpr quant op based on opset version."""
+        if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
+            quant_params_ios16 = optimize_utils.ios18_quant_params_to_ios16(quant_params)
+            return mb.constexpr_affine_dequantize(
+                quantized_data=quant_params_ios16.quantized_data,
+                zero_point=quant_params_ios16.zero_point,
+                scale=quant_params_ios16.scale,
+                axis=quant_params_ios16.axis,
+                before_op=op,
+                name=op.name + "_quantized",
+            )
+
+        return mb.constexpr_blockwise_shift_scale(
+            data=quant_params.data,
+            scale=quant_params.scale,
+            offset=quant_params.offset,
+            before_op=op,
+            name=op.name + "_quantized",
         )
 
     def transform_op(self, op: Operation):
-        op_config = self.config._get_const_op_config(op)
+        op_config: Optional[OpLinearQuantizerConfig] = self.config._get_const_op_config(op)
         if op_config is None:
             return
         if not self.need_compress_const(op, self.config._is_deprecated, op_config.weight_threshold):
             return
 
-        output_channel = self.select_input_output_channel_axis(op)[1]
-        quant_params = self.compress(
-            op.outputs[0].val, output_channel, op_config.mode, op_config.dtype
+        weight_to_compress = op.outputs[0].val
+        if self.joint_compression:
+            child_op = op.outputs[0].child_ops[0]
+            if child_op.op_type == "constexpr_sparse_to_dense":
+                # When the child op is sparse_to_dense op, the weight_to_compress is the sparse
+                # representation, which need to be restored to dense representation for compression.
+                weight_to_compress = constexpr_sparse_to_dense.decompress(
+                    weight_to_compress, child_op.mask.val
+                )
+            elif child_op.op_type.startswith("constexpr_lut_to_"):
+                if not op_config.granularity == CompressionGranularity.PER_TENSOR:
+                    raise NotImplementedError(
+                        "When use joint compression for palettization-quantization, please make "
+                        "sure to use per-tensor quantization, because the axis for the data to be"
+                        "quantized (palettization's lut) is different from the original weight."
+                    )
+
+        block_sizes = optimize_utils.infer_block_sizes(op, op_config, weight_to_compress)
+        quant_params = self.blockwise_compress(
+            weight_to_compress,
+            op_config.nbits,
+            op_config.mode,
+            op_config.signed,
+            block_sizes,
         )
 
+        if quant_params is None:
+            logger.warning(f"Cannot perform quantization on {op.name}. Skipped this op.")
+            return
+
         if not self.fake_compression:
-            new_var = frontend_utils._construct_constexpr_affine_op(
-                quant_params.quantized_data,
-                quant_params.zero_point,
-                quant_params.scale,
-                quant_params.axis,
-                name=op.name + "_affine_quantized",
-                before_op=op,
-            )
+            new_var: Optional[Var] = None
+
+            # Specially handle sparse-related compression ops chaining.
+            if self.joint_compression:
+                child_op = op.outputs[0].child_ops[0]
+                if child_op.op_type == "constexpr_sparse_to_dense":
+                    mask, nonzero_data = mb.constexpr_sparse_blockwise_shift_scale(
+                        data_mask=child_op.mask,
+                        nonzero_data=quant_params.data[child_op.mask.val != 0].flatten(),
+                        scale=quant_params.scale,
+                        offset=quant_params.offset,
+                        before_op=child_op,
+                        name=op.name + "_quantized",
+                    )
+                    # Feed the sparse quantization op's nonzero_data output to the child sparse op.
+                    new_var = nonzero_data
+
+                elif child_op.op_type == "constexpr_lut_to_sparse":
+                    # Here we only quantize the lut itself, which is a dense data, so we cannot use
+                    # the sparse version of the quant op; instead we just use the dense version of
+                    # the quant op. Will change if backends don't support it.
+                    pass
+
+            # For other cases, the new quant var could be constructed directly from quant_params.
+            if new_var is None:
+                new_var = self._create_constexpr_var(op, quant_params)
         else:
             decompressed_val = self.decompress(quant_params)
             new_var = mb.const(
                 val=decompressed_val,
                 before_op=op,
-                name=op.name + "_fake_affine_quantized",
+                name=op.name + "_fake_quantized",
             )
 
         op.enclosing_block.replace_uses_of_var_after_op(
@@ -791,6 +1321,7 @@ class linear_quantize_weights(AbstractCompressionPass):
         )
 
         op.enclosing_block.remove_ops([op])
+
 
 @register_pass(namespace="compression")
 class WeightDecompressor(AbstractQuantizationPass):

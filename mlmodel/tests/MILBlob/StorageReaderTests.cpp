@@ -96,7 +96,6 @@ int testStorageReaderTestsTruncatedMetadata()
     StorageReader reader(tempfile.GetFilename());
     ML_ASSERT_THROWS_WITH_MESSAGE(reader.GetDataView<float>(64), std::range_error, "index out of bounds");
 
-
     return 0;
 }
 
@@ -135,7 +134,6 @@ int testStorageReaderTestsTruncatedData()
 
     StorageReader reader(tempfile.GetFilename());
     ML_ASSERT_THROWS_WITH_MESSAGE(reader.GetDataView<float>(64), std::range_error, "index out of bounds");
-
 
     return 0;
 }
@@ -276,6 +274,49 @@ int testStorageReaderTestsThreeRecords()
         ML_ASSERT_SPAN_EQ(data, Util::MakeSpan(expectedValues));
     }
 
+    {  // read Int4 weights from metadata t
+        auto int4Data = reader.GetDataView<Int4>(960);
+        ML_ASSERT_EQ(int4Data.Size(), 8);
+        auto uint8Data = MILBlob::Util::CastFromBitSpan(int4Data);
+        auto data = MILBlob::Util::SpanCast<const uint16_t>(uint8Data);
+
+        std::vector<uint16_t> expectedValues = {uint16_t(0xe8d0), uint16_t(0x007e)};
+        ML_ASSERT_SPAN_EQ(data, Util::MakeSpan(expectedValues));
+    }
+    {
+        auto uint3Data = reader.GetDataView<UInt3>(1472);
+        ML_ASSERT_EQ(uint3Data.Size(), 9);
+        auto uint8Data = MILBlob::Util::CastFromBitSpan(uint3Data);
+        auto data = MILBlob::Util::SpanCast<const uint16_t>(uint8Data);
+
+        std::vector<uint16_t> expectedValues = {uint16_t(0xEC24), uint16_t(0x1D45)};
+        ML_ASSERT_SPAN_EQ(data, Util::MakeSpan(expectedValues));
+    }
+    {
+        auto int32Data = reader.GetDataView<int32_t>(1600);
+        ML_ASSERT_EQ(int32Data.Size(), 1);
+        std::vector<int32_t> expectedValues = {int32_t(0x0C24)};
+        ML_ASSERT_SPAN_EQ(int32Data, Util::MakeSpan(expectedValues));
+    }
+    {
+        auto uint32Data = reader.GetDataView<uint32_t>(1728);
+        ML_ASSERT_EQ(uint32Data.Size(), 2);
+        std::vector<uint32_t> expectedValues = {uint32_t(0x0C24), uint32_t(0xBEEF)};
+        ML_ASSERT_SPAN_EQ(uint32Data, Util::MakeSpan(expectedValues));
+    }
+    {
+        auto fp8E5M2Data = reader.GetDataView<Fp8E5M2>(1856);
+        ML_ASSERT_EQ(fp8E5M2Data.Size(), 4);
+        std::vector<Fp8E5M2> expectedValues = {Fp8E5M2(0xBE), Fp8E5M2(0xEF), Fp8E5M2(0x00), Fp8E5M2(0xCA)};
+        ML_ASSERT_SPAN_EQ(fp8E5M2Data, Util::MakeSpan(expectedValues));
+    }
+    {
+        auto fp8E4M3FNData = reader.GetDataView<Fp8E4M3FN>(1984);
+        ML_ASSERT_EQ(fp8E4M3FNData.Size(), 4);
+        std::vector<Fp8E4M3FN> expectedValues = {Fp8E4M3FN(0xBE), Fp8E4M3FN(0xEF), Fp8E4M3FN(0x00), Fp8E4M3FN(0xCA)};
+        ML_ASSERT_SPAN_EQ(fp8E4M3FNData, Util::MakeSpan(expectedValues));
+    }
+
     return 0;
 }
 
@@ -309,7 +350,7 @@ int testStorageReaderTestsRawData()
         ML_ASSERT_SPAN_EQ(data, Util::SpanCast<uint8_t>(Util::MakeSpan(expectedValues)));
     }
 
-    {  // read Bf16 weights from metadata 4
+    {  // read Bf16 weights from metadata 5
         auto data = reader.GetRawDataView(576);
         ML_ASSERT_EQ(data.Size(), size_t(8));
 
@@ -317,7 +358,7 @@ int testStorageReaderTestsRawData()
         ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValues)));
     }
 
-    {  // read int16_t weights from metadata 5
+    {  // read int16_t weights from metadata 6
         auto data = reader.GetRawDataView(704);
         ML_ASSERT_EQ(data.Size(), size_t(4));
 
@@ -325,11 +366,86 @@ int testStorageReaderTestsRawData()
         ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
     }
 
-    {  // read uint16_t weights from metadata 5
+    {  // read uint16_t weights from metadata 7
         auto data = reader.GetRawDataView(832);
         ML_ASSERT_EQ(data.Size(), size_t(4));
 
         std::vector<uint16_t> expectedValue = {uint16_t(0xe8d0), uint16_t(0x7e)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+
+    {  // read Int4 weights from metadata 8
+        auto data = reader.GetRawDataView(960);
+        ML_ASSERT_EQ(data.Size(), size_t(4));
+
+        // remember int4's are actually stored here, so this vector type is immaterial
+        // (cant materialize an int4 span from an int4 vector)
+        std::vector<uint16_t> expectedValue = {uint16_t(0xe8d0), uint16_t(0x7e)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+
+    {  // read UInt4 weights from metadata 9
+        auto data = reader.GetRawDataView(1088);
+        ML_ASSERT_EQ(data.Size(), size_t(3));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0xd1), uint8_t(0xe8), uint8_t(0x7c)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+    {  // read UInt1 weights from metadata 10
+        auto data = reader.GetRawDataView(1216);
+        ML_ASSERT_EQ(data.Size(), size_t(3));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0x24), uint8_t(0xec), uint8_t(0xf7)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+    {  // read UInt2 weights from metadata 11
+        auto data = reader.GetRawDataView(1344);
+        ML_ASSERT_EQ(data.Size(), size_t(2));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0x24), uint8_t(0xec)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+
+    {  // read UInt3 weights from metadata 12
+        auto data = reader.GetRawDataView(1472);
+        ML_ASSERT_EQ(data.Size(), size_t(4));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0x24), uint8_t(0xEC), uint8_t(0x45), uint8_t(0x1D)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+    {  // read Int32 weights from metadata 13
+        auto data = reader.GetRawDataView(1600);
+        ML_ASSERT_EQ(data.Size(), size_t(4));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0x24), uint8_t(0x0C), uint8_t(0x00), uint8_t(0x00)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+    {  // read Uint32 weights from metadata 14
+        auto data = reader.GetRawDataView(1728);
+        ML_ASSERT_EQ(data.Size(), size_t(8));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0x24),
+                                              uint8_t(0x0C),
+                                              uint8_t(0x00),
+                                              uint8_t(0x00),
+                                              uint8_t(0xEF),
+                                              uint8_t(0xBE),
+                                              uint8_t(0x00),
+                                              uint8_t(0x00)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+    {  // read Fp8E5M2 weights from metadata 15
+        auto data = reader.GetRawDataView(1856);
+        ML_ASSERT_EQ(data.Size(), size_t(4));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0xBE), uint8_t(0xEF), uint8_t(0x00), uint8_t(0xCA)};
+        ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
+    }
+    {  // read Fp8E4M3FN weights from metadata 16
+        auto data = reader.GetRawDataView(1984);
+        ML_ASSERT_EQ(data.Size(), size_t(4));
+
+        std::vector<uint8_t> expectedValue = {uint8_t(0xBE), uint8_t(0xEF), uint8_t(0x00), uint8_t(0xCA)};
         ML_ASSERT_SPAN_EQ(data, Util::SpanCast<const uint8_t>(Util::MakeSpan(expectedValue)));
     }
 
@@ -364,6 +480,48 @@ int testStorageReaderTestsDataOffset()
         ML_ASSERT_EQ(uint64_t(640), reader.GetDataOffset(576));
         ML_ASSERT_EQ(uint64_t(8), reader.GetDataSize(576));
         ML_ASSERT_EQ(BlobDataType::BFloat16, reader.GetDataType(576));
+    }
+
+    {  // read data offset for UInt1 weights from metadata 9
+        ML_ASSERT_EQ(uint64_t(1280), reader.GetDataOffset(1216));
+        ML_ASSERT_EQ(uint64_t(3), reader.GetDataSize(1216));
+        ML_ASSERT_EQ(BlobDataType::UInt1, reader.GetDataType(1216));
+        ML_ASSERT_EQ(7, reader.GetDataPaddingInBits(1216));
+    }
+
+    {  // read data offset for UInt3 weights from metadata 12
+        ML_ASSERT_EQ(uint64_t(0x600), reader.GetDataOffset(1472));
+        ML_ASSERT_EQ(uint64_t(4), reader.GetDataSize(1472));
+        ML_ASSERT_EQ(BlobDataType::UInt3, reader.GetDataType(1472));
+        ML_ASSERT_EQ(5, reader.GetDataPaddingInBits(1472));
+    }
+
+    {  // read data offset for Int32 weights from metadata 13
+        ML_ASSERT_EQ(uint64_t(1664), reader.GetDataOffset(1600));
+        ML_ASSERT_EQ(uint64_t(4), reader.GetDataSize(1600));
+        ML_ASSERT_EQ(BlobDataType::Int32, reader.GetDataType(1600));
+        ML_ASSERT_EQ(0, reader.GetDataPaddingInBits(1600));
+    }
+
+    {  // read data offset for UInt32 weights from metadata 14
+        ML_ASSERT_EQ(uint64_t(1792), reader.GetDataOffset(1728));
+        ML_ASSERT_EQ(uint64_t(8), reader.GetDataSize(1728));
+        ML_ASSERT_EQ(BlobDataType::UInt32, reader.GetDataType(1728));
+        ML_ASSERT_EQ(0, reader.GetDataPaddingInBits(1728));
+    }
+
+    {  // read data offset for Fp8E5M2 weights from metadata 15
+        ML_ASSERT_EQ(uint64_t(1920), reader.GetDataOffset(1856));
+        ML_ASSERT_EQ(uint64_t(4), reader.GetDataSize(1856));
+        ML_ASSERT_EQ(BlobDataType::Float8E5M2, reader.GetDataType(1856));
+        ML_ASSERT_EQ(0, reader.GetDataPaddingInBits(1856));
+    }
+
+    {  // read data offset for Fp8E4M3FN weights from metadata 15
+        ML_ASSERT_EQ(uint64_t(1920), reader.GetDataOffset(1984));
+        ML_ASSERT_EQ(uint64_t(4), reader.GetDataSize(1984));
+        ML_ASSERT_EQ(BlobDataType::Float8E4M3FN, reader.GetDataType(1984));
+        ML_ASSERT_EQ(0, reader.GetDataPaddingInBits(1984));
     }
 
     return 0;

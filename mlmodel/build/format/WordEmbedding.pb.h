@@ -107,6 +107,9 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -276,7 +279,7 @@ inline ::google::protobuf::uint32 WordEmbedding::revision() const {
   return revision_;
 }
 inline void WordEmbedding::set_revision(::google::protobuf::uint32 value) {
-  
+
   revision_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.WordEmbedding.revision)
 }
@@ -290,13 +293,13 @@ inline const ::std::string& WordEmbedding::language() const {
   return language_.GetNoArena();
 }
 inline void WordEmbedding::set_language(const ::std::string& value) {
-  
+
   language_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.WordEmbedding.language)
 }
 #if LANG_CXX11
 inline void WordEmbedding::set_language(::std::string&& value) {
-  
+
   language_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.CoreMLModels.WordEmbedding.language)
@@ -304,31 +307,31 @@ inline void WordEmbedding::set_language(::std::string&& value) {
 #endif
 inline void WordEmbedding::set_language(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   language_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.CoreMLModels.WordEmbedding.language)
 }
 inline void WordEmbedding::set_language(const char* value, size_t size) {
-  
+
   language_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CoreMLModels.WordEmbedding.language)
 }
 inline ::std::string* WordEmbedding::mutable_language() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.CoreMLModels.WordEmbedding.language)
   return language_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* WordEmbedding::release_language() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.CoreMLModels.WordEmbedding.language)
-  
+
   return language_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void WordEmbedding::set_allocated_language(::std::string* language) {
   if (language != NULL) {
-    
+
   } else {
-    
+
   }
   language_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), language);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CoreMLModels.WordEmbedding.language)
@@ -343,13 +346,13 @@ inline const ::std::string& WordEmbedding::modelparameterdata() const {
   return modelparameterdata_.GetNoArena();
 }
 inline void WordEmbedding::set_modelparameterdata(const ::std::string& value) {
-  
+
   modelparameterdata_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)
 }
 #if LANG_CXX11
 inline void WordEmbedding::set_modelparameterdata(::std::string&& value) {
-  
+
   modelparameterdata_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)
@@ -357,31 +360,31 @@ inline void WordEmbedding::set_modelparameterdata(::std::string&& value) {
 #endif
 inline void WordEmbedding::set_modelparameterdata(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   modelparameterdata_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)
 }
 inline void WordEmbedding::set_modelparameterdata(const void* value, size_t size) {
-  
+
   modelparameterdata_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)
 }
 inline ::std::string* WordEmbedding::mutable_modelparameterdata() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)
   return modelparameterdata_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* WordEmbedding::release_modelparameterdata() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)
-  
+
   return modelparameterdata_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void WordEmbedding::set_allocated_modelparameterdata(::std::string* modelparameterdata) {
   if (modelparameterdata != NULL) {
-    
+
   } else {
-    
+
   }
   modelparameterdata_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), modelparameterdata);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CoreMLModels.WordEmbedding.modelParameterData)

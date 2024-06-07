@@ -1551,7 +1551,7 @@ message ConvolutionLayerParams {
  *
  * Output
  *   A blob of rank 5.
- *   The output blob's shape is ``[batch, channelsOut, depthOut, heightOut, without]``.
+ *   The output blob's shape is ``[batch, channelsOut, depthOut, heightOut, widthOut]``.
  *
  * Type of padding can be ``custom``, ``valid``, or ``same``. Padded values are all zeros.
  * Output spatial dimensions depend on the the type of padding. For details, refer to the
@@ -1701,11 +1701,11 @@ message Convolution3DLayerParams {
      * Used when the `PaddingType` is `CustomPadding`, otherwise ignored by other padding types.
      */
     int32 customPaddingRight = 85;
-    
+
     /* Flag to specify if this is Convolution Transpose or not.
      */
     bool isDeconvolution = 86;
-    
+
     /*
      * The output shape, which has length 3 ``[D_out, H_out, W_out]``.
      * This is used only for deconvolution (``isDeconvolution == true``).
@@ -2017,33 +2017,33 @@ message PoolingLayerParams {
  * +----+----+
  */
 message Pooling3DLayerParams {
-    
+
     enum PoolingType3D {
         MAX = 0;
         AVERAGE = 1;
     }
-    
+
     // Whether to use Max or Average
     PoolingType3D type = 1;
-    
+
     // Depth of the pooling region.
     int32 kernelDepth = 2;
-    
+
     // Height of the pooling region.
     int32 kernelHeight = 3;
-    
+
     // Width of the pooling region.
     int32 kernelWidth = 4;
-    
+
     // Stride along the depth direction
     int32 strideDepth = 5;
-    
+
     // Stride along the height direction
     int32 strideHeight = 6;
-    
+
     // Stride along the width direction
     int32 strideWidth = 7;
-    
+
     /*
      * The type of padding.
      * All padding types pad the input shape with zeros.
@@ -2065,25 +2065,25 @@ message Pooling3DLayerParams {
         SAME = 2;
     }
     Pooling3DPaddingType paddingType = 15;
-    
+
     // Padding before the input in the depth direction.
     int32 customPaddingFront = 8;
-    
+
     // Padding after the input in the depth direction.
     int32 customPaddingBack = 9;
-    
+
     // Padding before the input in the height direction.
     int32 customPaddingTop = 10;
-    
+
     // Padding after the input in the height direction.
     int32 customPaddingBottom = 11;
-    
+
     // Padding before the input in the width direction.
     int32 customPaddingLeft = 12;
-    
+
     // Padding after the input in the width direction.
     int32 customPaddingRight = 13;
-    
+
     // If true, exclude zeros from padding in Average pooling.  Meaningless in Max Pooling.
     bool countExcludePadding = 14;
 }
@@ -2124,12 +2124,12 @@ message Pooling3DLayerParams {
  * +----+
  */
 message GlobalPooling3DLayerParams {
-    
+
     enum GlobalPoolingType3D {
         MAX = 0;
         AVERAGE = 1;
     }
-    
+
     // Whether to use Max or Average
     GlobalPoolingType3D type = 1;
 }
@@ -4029,14 +4029,14 @@ message ConcatNDLayerParams {
      * Dimension along which to concatenate. Supports negative values of the parameter 'axis'.
      */
     int64 axis = 1;
-    
+
     /*
      * (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 11.0)
      * Interleave option. If True, concatenation is done via interleaving the inputs.
      * This requires all inputs to have the exact same shape.
      */
     bool interleave = 2;
-    
+
 
 }
 
@@ -6264,7 +6264,7 @@ message ArgSortLayerParams {
 }
 
 /*
- * A layer that does slice operation by providing size to be extracted 
+ * A layer that does slice operation by providing size to be extracted
  * from the given input tensor.
  *
  * Requires 2 inputs and produces 1 output.

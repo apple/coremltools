@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -41,18 +41,32 @@ act_quant_dtype_configs = [
 
 
 weighted_dtype_configs = [
-    # weight int, act float
+    # weight int, act float, weight dtype signed
     _DTypeConfig(
         input_dtype=_torch.float,
         output_dtype=_torch.float,
         weight_dtype=_torch.qint8,
         bias_dtype=_torch.float,
     ),
-    # weight int, act int
+    # weight int, act float, weight dtype unsigned
+    _DTypeConfig(
+        input_dtype=_torch.float,
+        output_dtype=_torch.float,
+        weight_dtype=_torch.quint8,
+        bias_dtype=_torch.float,
+    ),
+    # weight int, act int, weight dtype signed
     _DTypeConfig(
         input_dtype=_torch.quint8,
         output_dtype=_torch.quint8,
         weight_dtype=_torch.qint8,
+        bias_dtype=_torch.float,
+    ),
+    # weight int, act int, weight dtype unsigned
+    _DTypeConfig(
+        input_dtype=_torch.quint8,
+        output_dtype=_torch.quint8,
+        weight_dtype=_torch.quint8,
         bias_dtype=_torch.float,
     ),
 ]

@@ -197,7 +197,7 @@ def _dequantized_weight(qweight, name: str = None):
         scale = _np.float32(qweight.q_scale())
         zero_point = quant_dtype_np(qweight.q_zero_point())
         quantized_weights = _torch.int_repr(qweight).numpy()
-        dequant_weights = _utils._construct_constexpr_affine_op(
+        dequant_weights = _utils._construct_constexpr_dequant_op(
             quantized_weights, zero_point, scale, axis=None, name=name
         )
     # per_channel_affine_float_qparams is same as per_channel_affine except that it
@@ -223,7 +223,7 @@ def _dequantized_weight(qweight, name: str = None):
             zero_point = quant_dtype_np(val)
         quantized_weights = _torch.int_repr(qweight).numpy()
         axis = _np.int32(qweight.q_per_channel_axis())
-        dequant_weights = _utils._construct_constexpr_affine_op(
+        dequant_weights = _utils._construct_constexpr_dequant_op(
             quantized_weights, zero_point, scale, axis=axis, name=name
         )
     else:

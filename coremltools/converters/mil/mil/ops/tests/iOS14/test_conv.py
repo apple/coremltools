@@ -449,7 +449,9 @@ class TestConv:
                 "symbolic": True,
             }
         ):
-            pytest.xfail("rdar://121954894: Conv2d starts to fail")
+            pytest.xfail(
+                "rdar://129121584: NN Conv Fail when Run Multiple Faulty Models at Same Time"
+            )
 
         padding = config["padding"]
         DHWKdKhKw = config["DHWKdKhKw"]
@@ -638,20 +640,6 @@ class TestConv:
         conv_dim,
         config,
     ):
-        if (
-            conv_dim == "conv2d" and
-            config == {
-                'padding': (1, 1, 1),
-                'DHWKdKhKw': (5, 5, 5, 2, 2, 2),
-                'stride': (2, 2, 2),
-                'dilation': (2, 1, 1),
-                'has_bias': True,
-                'groups': 1,
-                'symbolic': True,
-            }
-        ):
-            pytest.xfail("rdar://121954894: Conv2d starts to fail")
-
         padding = config["padding"]
         DHWKdKhKw = config["DHWKdKhKw"]
         stride = config["stride"]

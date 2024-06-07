@@ -24,7 +24,7 @@
     bool caughtCorrectException = false; \
     try { expr; } \
     catch (const exType&) { caughtCorrectException = true; } \
-    catch (...) { std::clog << __FILE__ << ":" << __LINE__ << ": error: caught unexpected exception type.\n"; return 1;} \
+    catch (...) { std::clog << __FILE__ << ":" << __LINE__ << ": error: caught unexpected exeception type.\n"; return 1;} \
     if (!caughtCorrectException) { std::clog << __FILE__ << ":" << __LINE__ << ": expected exception, but none thrown.\n"; return 1; } }
 
 #define ML_ASSERT_THROWS_WITH_MESSAGE(expr, exType, message)                                             \
@@ -40,7 +40,7 @@
                 return 1;                                                                                \
             }                                                                                            \
         } catch (...) {                                                                                  \
-            std::clog << __FILE__ << ":" << __LINE__ << ": error: caught unexpected exception type.\n"; \
+            std::clog << __FILE__ << ":" << __LINE__ << ": error: caught unexpected exeception type.\n"; \
             return 1;                                                                                    \
         }                                                                                                \
         if (!caughtCorrectException) {                                                                   \

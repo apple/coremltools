@@ -16,13 +16,12 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 @register_pass(namespace="common")
 class expand_dynamic_linear(AbstractGraphPass):
     """
-    ``Linear`` requires const or constexpr ``weight`` and ``bias``. In op translation,
-    we ambitiously prefer ``linear`` whenever possible, i.e. translate to ``linear``
-    when operand is descendant of const, since such operand may be folded / fused into
-    const or constexpr later on by graph passes.
+    Translate to ``linear`` when the operand is a descendant of const, since such an operand
+    may be folded into const or fused into constexpr later by graph passes. In op translation,
+    we prefer ``linear`` whenever possible because it requires const or constexpr ``weight`` and ``bias``.
 
-    If such const folding / constexpr fusion did not happen, this pass would clean up
-    those too ambitious ``linear``s by replacing them with ``matmul``s
+    If such const folding or constexpr fusion did not happen, this pass would clean up
+    the too-ambitious ``linear`` ops by replacing them with ``matmul`` ops.
     """
 
     def apply(self, prog: Program) -> None:

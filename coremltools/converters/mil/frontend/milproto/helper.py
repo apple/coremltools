@@ -61,5 +61,10 @@ def proto_to_types(valuetype):
         valuetype = proto_to_types(dicttype.valueType)
 
         return types.dict(keytype, valuetype)
+
+    elif valuetype.WhichOneof("type") == "stateType":
+        wrapped_type = proto_to_types(valuetype.stateType.wrappedType)
+
+        return types.state(wrapped_type)
     else:
         raise NotImplementedError("Types {} not yet implemented".format(valuetype.WhichOneof("type")))

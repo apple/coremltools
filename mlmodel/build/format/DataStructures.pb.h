@@ -109,6 +109,9 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -1542,7 +1545,7 @@ inline ::google::protobuf::int64 Int64Range::minvalue() const {
   return minvalue_;
 }
 inline void Int64Range::set_minvalue(::google::protobuf::int64 value) {
-  
+
   minvalue_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Int64Range.minValue)
 }
@@ -1556,7 +1559,7 @@ inline ::google::protobuf::int64 Int64Range::maxvalue() const {
   return maxvalue_;
 }
 inline void Int64Range::set_maxvalue(::google::protobuf::int64 value) {
-  
+
   maxvalue_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Int64Range.maxValue)
 }
@@ -1608,7 +1611,7 @@ inline double DoubleRange::minvalue() const {
   return minvalue_;
 }
 inline void DoubleRange::set_minvalue(double value) {
-  
+
   minvalue_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.DoubleRange.minValue)
 }
@@ -1622,7 +1625,7 @@ inline double DoubleRange::maxvalue() const {
   return maxvalue_;
 }
 inline void DoubleRange::set_maxvalue(double value) {
-  
+
   maxvalue_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.DoubleRange.maxValue)
 }
@@ -1645,7 +1648,7 @@ inline const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::precisi
                          : *::CoreML::Specification::FloatVector::internal_default_instance();
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_precisionvalues() {
-  
+
   if (precisionvalues_ == NULL) {
     precisionvalues_ = new ::CoreML::Specification::FloatVector;
   }
@@ -1654,7 +1657,7 @@ inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_preci
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_precisionvalues() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.precisionValues)
-  
+
   ::CoreML::Specification::FloatVector* temp = precisionvalues_;
   precisionvalues_ = NULL;
   return temp;
@@ -1663,9 +1666,9 @@ inline void PrecisionRecallCurve::set_allocated_precisionvalues(::CoreML::Specif
   delete precisionvalues_;
   precisionvalues_ = precisionvalues;
   if (precisionvalues) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.precisionValues)
 }
@@ -1684,7 +1687,7 @@ inline const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::precisi
                          : *::CoreML::Specification::FloatVector::internal_default_instance();
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_precisionconfidencethresholds() {
-  
+
   if (precisionconfidencethresholds_ == NULL) {
     precisionconfidencethresholds_ = new ::CoreML::Specification::FloatVector;
   }
@@ -1693,7 +1696,7 @@ inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_preci
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_precisionconfidencethresholds() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds)
-  
+
   ::CoreML::Specification::FloatVector* temp = precisionconfidencethresholds_;
   precisionconfidencethresholds_ = NULL;
   return temp;
@@ -1702,9 +1705,9 @@ inline void PrecisionRecallCurve::set_allocated_precisionconfidencethresholds(::
   delete precisionconfidencethresholds_;
   precisionconfidencethresholds_ = precisionconfidencethresholds;
   if (precisionconfidencethresholds) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.precisionConfidenceThresholds)
 }
@@ -1723,7 +1726,7 @@ inline const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::recallv
                          : *::CoreML::Specification::FloatVector::internal_default_instance();
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_recallvalues() {
-  
+
   if (recallvalues_ == NULL) {
     recallvalues_ = new ::CoreML::Specification::FloatVector;
   }
@@ -1732,7 +1735,7 @@ inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_recal
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_recallvalues() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.recallValues)
-  
+
   ::CoreML::Specification::FloatVector* temp = recallvalues_;
   recallvalues_ = NULL;
   return temp;
@@ -1741,9 +1744,9 @@ inline void PrecisionRecallCurve::set_allocated_recallvalues(::CoreML::Specifica
   delete recallvalues_;
   recallvalues_ = recallvalues;
   if (recallvalues) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.recallValues)
 }
@@ -1762,7 +1765,7 @@ inline const ::CoreML::Specification::FloatVector& PrecisionRecallCurve::recallc
                          : *::CoreML::Specification::FloatVector::internal_default_instance();
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_recallconfidencethresholds() {
-  
+
   if (recallconfidencethresholds_ == NULL) {
     recallconfidencethresholds_ = new ::CoreML::Specification::FloatVector;
   }
@@ -1771,7 +1774,7 @@ inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::mutable_recal
 }
 inline ::CoreML::Specification::FloatVector* PrecisionRecallCurve::release_recallconfidencethresholds() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds)
-  
+
   ::CoreML::Specification::FloatVector* temp = recallconfidencethresholds_;
   recallconfidencethresholds_ = NULL;
   return temp;
@@ -1780,9 +1783,9 @@ inline void PrecisionRecallCurve::set_allocated_recallconfidencethresholds(::Cor
   delete recallconfidencethresholds_;
   recallconfidencethresholds_ = recallconfidencethresholds;
   if (recallconfidencethresholds) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PrecisionRecallCurve.recallConfidenceThresholds)
 }

@@ -112,6 +112,7 @@ namespace CoreML {
     bool hasIOS15Features(const Specification::Model& model);
     bool hasIOS16Features(const Specification::Model& model);
     bool hasIOS17Features(const Specification::Model& model);
+    bool hasIOS18Features(const Specification::Model& model);
 
     typedef std::pair<std::string,std::string> StringPair;
     // Returns a vector of pairs of strings, one pair per custom layer instance
@@ -149,8 +150,10 @@ namespace CoreML {
     bool hasGrayscaleFloat16Image(const Specification::Model& model);
     bool hasCoreML6Opsets(const Specification::Model& model);
     bool hasCoreML7Opsets(const Specification::Model& model);
-
+    bool hasCoreML8Opsets(const Specification::Model& model);
+    bool hasMultiFunctions(const Specification::Model& model);
     bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
+    bool hasEmptyInput(const Specification::Model& model);
 
     // We also need a hasNonmaxSupression and hasBayesianProbitRegressor
     static inline std::vector<float16> readFloat16Weights(const Specification::WeightParams& weights) {

@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -30,19 +30,30 @@ class TestApiVisibilities:
             "palettization",
             "pruning",
             "quantization",
+            "layerwise_compression",
         ]
         visible_modules = _get_visible_items(coremltools.optimize.torch)
         _check_visible_modules(visible_modules, expected)
 
     def test_base_model_optimizer_module(self):
         # coremltools.optimize.torch.base_model_optimizer.*
-        expected = ["BaseModelOptimizer"]
+        expected = [
+            "BaseModelOptimizer",
+            "BaseTrainingTimeModelOptimizer",
+            "BasePostTrainingModelOptimizer",
+            "BaseDataCalibratedModelOptimizer",
+        ]
         visible_modules = _get_visible_items(coremltools.optimize.torch.base_model_optimizer)
         _check_visible_modules(visible_modules, expected)
 
     def test_optimization_config_module(self):
         # coremltools.optimize.torch.optimization_config.*
-        expected = ["ModuleOptimizationConfig", "OptimizationConfig"]
+        expected = [
+            "PalettizationGranularity",
+            "QuantizationGranularity",
+            "ModuleOptimizationConfig",
+            "OptimizationConfig",
+        ]
         visible_modules = _get_visible_items(coremltools.optimize.torch.optimization_config)
         _check_visible_modules(visible_modules, expected)
 
@@ -56,6 +67,14 @@ class TestApiVisibilities:
             "palettization_config",
             "fake_palettize",
             "palettizer",
+            "post_training_palettization",
+            "ModulePostTrainingPalettizerConfig",
+            "PostTrainingPalettizer",
+            "PostTrainingPalettizerConfig",
+            "sensitive_k_means",
+            "ModuleSKMPalettizerConfig",
+            "SKMPalettizer",
+            "SKMPalettizerConfig",
         ]
         visible_modules = _get_visible_items(coremltools.optimize.torch.palettization)
         _check_visible_modules(visible_modules, expected)
@@ -92,6 +111,10 @@ class TestApiVisibilities:
             "quantizer",
             "quantization_config",
             "modules",
+            "ModulePostTrainingQuantizerConfig",
+            "PostTrainingQuantizer",
+            "PostTrainingQuantizerConfig",
+            "post_training_quantization",
         ]
         visible_modules = _get_visible_items(coremltools.optimize.torch.quantization)
         _check_visible_modules(visible_modules, expected)
@@ -113,4 +136,24 @@ class TestApiVisibilities:
             "LinearQuantizer",
         ]
         visible_modules = _get_visible_items(coremltools.optimize.torch.quantization.quantizer)
+        _check_visible_modules(visible_modules, expected)
+
+    def test_layerwise_compression_module(self):
+        expected = [
+            "algorithms",
+            "LayerwiseCompressionAlgorithm",
+            "LayerwiseCompressionAlgorithmConfig",
+            "SparseGPT",
+            "GPTQ",
+            "ModuleGPTQConfig",
+            "ModuleSparseGPTConfig",
+            "input_cacher",
+            "FirstLayerInputCacher",
+            "DefaultInputCacher",
+            "GPTFirstLayerInputCacher",
+            "layerwise_compressor",
+            "LayerwiseCompressor",
+            "LayerwiseCompressorConfig",
+        ]
+        visible_modules = _get_visible_items(coremltools.optimize.torch.layerwise_compression)
         _check_visible_modules(visible_modules, expected)

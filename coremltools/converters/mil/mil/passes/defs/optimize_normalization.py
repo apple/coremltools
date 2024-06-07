@@ -1019,8 +1019,13 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
 
         if has_beta_and_gamma:
             beta_var = add_beta_op.y if add_beta_op.x == mul_op.outputs[0] else add_beta_op.x
+            gamma_var = (
+                mul_gamma_op.y if mul_gamma_op.x == add_beta_op.outputs[0] else mul_gamma_op.x
+            )
 
-            gamma_var = mul_gamma_op.y if mul_gamma_op.x == add_beta_op.outputs[0] else mul_gamma_op.x
+            if beta_var.val is None or gamma_var.val is None:
+                return False
+
             gamma_var = mb.const(
                 val=np.squeeze(gamma_var.val),
                 name="_fuse_layernorm_gamma",

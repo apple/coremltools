@@ -10,13 +10,15 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as target
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import mil_list, types
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
-    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
+    apply_pass_and_basic_check,
+    assert_model_is_valid,
+    get_op_types_in_program,
+)
 
 
 class TestAdjustToSupportedTypes:
@@ -453,6 +455,22 @@ class TestAdjustToSupportedTypes:
 
         assert get_op_types_in_program(prev_prog) == ['cast']
         assert get_op_types_in_program(prog) == []
+
+    @staticmethod
+    def test_classify_no_affected():
+        """
+        If the outputs are from a classify op, it should not be affected by this graph pass.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,))])
+        def prog(x):
+            classes = [np.int64(x) for x in range(3)]
+            classes_var = mb.const(val=mil_list(classes))
+            return mb.classify(probabilities=x, classes=classes_var)
+
+        apply_pass_and_basic_check(prog, "mil_backend::adjust_io_to_supported_types")
+        assert get_op_types_in_program(prog) == ["classify"]
+
 
 class TestImagePreprocessingPass:
 

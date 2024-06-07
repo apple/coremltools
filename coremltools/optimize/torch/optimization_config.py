@@ -1,62 +1,50 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import re as _re
 from collections import OrderedDict as _OrderedDict
-from typing import IO as _IO
+from enum import Enum as _Enum
 from typing import Any as _Any
 from typing import Callable as _Callable
 from typing import Dict as _Dict
 from typing import List as _List
 from typing import Optional as _Optional
-from typing import Type as _Type
 from typing import Union as _Union
 
-import cattrs as _cattrs
 import torch as _torch
-import yaml as _yaml
 from attr import Factory as _Factory
-from attr import asdict as _asdict
 from attr import define as _define
+from attrs import field as _field
+
+from coremltools.optimize.torch._utils.python_utils import DictableDataClass as _DictableDataClass
+
+
+class QuantizationGranularity(_Enum):
+    """
+    Enum to denote granularity at which different compression schemes are applied.
+    See specific algorithm for more details.
+    """
+    per_tensor = "per_tensor"
+    per_channel = "per_channel"
+    per_block = "per_block"
+
+class PalettizationGranularity(_Enum):
+    """
+    Enum to denote granularity at which different compression schemes are applied.
+    See specific algorithm for more details.
+    """
+
+    per_tensor = "per_tensor"
+    per_grouped_channel = "per_grouped_channel"
+
+class ModuleOptimizationConfig(_DictableDataClass):
+    pass
 
 
 @_define
-class ModuleOptimizationConfig:
-    @classmethod
-    def from_dict(cls, config_dict: _Dict[str, _Any]) -> "ModuleOptimizationConfig":
-        """
-        Create class from a dictionary of string keys and values.
-
-        Args:
-            config_dict (:obj:`dict` of :obj:`str` and values): A nested dictionary of strings
-                and values.
-        """
-        # passing forbid_extra_keys=True doesn't prevent silent failure when keys are mis-spelled
-        _validate_config_dict(cls, config_dict)
-        converter = _cattrs.Converter(forbid_extra_keys=True)
-        return converter.structure_attrs_fromdict(config_dict, cls)
-
-    @classmethod
-    def from_yaml(cls, yml: _Union[_IO, str]) -> "ModuleOptimizationConfig":
-        """
-        Create class from a yaml stream.
-
-        Args:
-            yml: An :py:class:`IO` stream containing yaml or a :obj:`str`
-                path to the yaml file.
-        """
-        return _from_yaml(cls, yml)
-
-    def as_dict(self) -> _Dict[str, _Any]:
-        """
-        Returns the config as a dictionary.
-        """
-        return _asdict(self)
-
-
-@_define
-class OptimizationConfig:
+class OptimizationConfig(_DictableDataClass):
     global_config: _Optional[ModuleOptimizationConfig] = None
     module_type_configs: _Dict[
         _Union[_Callable, str], _Optional[ModuleOptimizationConfig]
@@ -95,9 +83,10 @@ class OptimizationConfig:
     def get_module_config(
         self, name: str, module: _torch.nn.Module
     ) -> _Optional[ModuleOptimizationConfig]:
-        if name in self.module_name_configs:
-            return self.module_name_configs[name]
-        elif type(module) in self.module_type_configs:
+        for mod_name in self.module_name_configs:
+            if _re.fullmatch(mod_name, name):
+                return self.module_name_configs[mod_name]
+        if type(module) in self.module_type_configs:
             return self.module_type_configs[type(module)]
         elif module.__class__.__name__ in self.module_type_configs:
             return self.module_type_configs[module.__class__.__name__]
@@ -114,25 +103,8 @@ class OptimizationConfig:
                 and values.
         """
         # passing forbid_extra_keys=True doesn't prevent silent failure when keys are mis-spelled
-        _validate_config_dict(cls, config_dict)
+        cls._validate_dict(config_dict)
         return
-
-    @classmethod
-    def from_yaml(cls, yml: _Union[_IO, str]) -> "OptimizationConfig":
-        """
-        Create class from a yaml stream.
-
-        Args:
-            yml: An :py:class:`IO` stream containing yaml or a :obj:`str`
-                path to the yaml file.
-        """
-        return _from_yaml(cls, yml)
-
-    def as_dict(self) -> _Dict[str, _Any]:
-        """
-        Returns the config as a dictionary.
-        """
-        return _asdict(self)
 
     def _validate_same_params(self, param_names: _List[str]):
         """
@@ -199,27 +171,6 @@ def _structure_from_dict_hook_factory(conversion_cls: _Any) -> _Callable:
     return _structure_from_dict_hook
 
 
-def _validate_config_dict(cls: _Type, config_dict: _Dict[str, _Any]):
-    for key, _ in config_dict.items():
-        if not hasattr(cls, key):
-            raise ValueError(f"Found unrecognized key {key} in config_dict: {config_dict}.")
-
-
-def _from_yaml(
-    cls: _Union[_Type[OptimizationConfig], _Type[ModuleOptimizationConfig]], yml: _Union[_IO, str]
-):
-    if isinstance(yml, str):
-        with open(yml, "r") as file:
-            dict_from_yml = _yaml.safe_load(file)
-    else:
-        dict_from_yml = _yaml.safe_load(yml)
-    assert isinstance(dict_from_yml, dict), (
-        "Invalid yaml received. yaml stream should return a dict "
-        f"on parsing. Received type: {type(dict_from_yml)}."
-    )
-    return cls.from_dict(dict_from_yml)
-
-
 def _validate_module_type_keys_factory(supported_modules):
     supported_module_names = [cls.__name__ for cls in supported_modules]
 
@@ -236,3 +187,11 @@ def _validate_module_type_keys_factory(supported_modules):
             )
 
     return validate_module_type_key
+
+
+def _deprecated_field(message="This field is deprecated"):
+    def validator(inst, attr, val):
+        if val is not None:
+            raise DeprecationWarning(message)
+
+    return _field(default=None, validator=validator, on_setattr=validator)

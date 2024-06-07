@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -195,8 +195,19 @@ class MultiheadAttention(_nn.MultiheadAttention):
     _FLOAT_MODULE = _nn.MultiheadAttention
 
     def forward(self, query, key, value, key_padding_mask=None, need_weights=True, attn_mask=None):
+        is_batched = query.dim() == 3
+        if self.batch_first and is_batched:
+            # Ensure that that the "is" property is maintained
+            if key is value:
+                if query is key:
+                    query = key = value = query.transpose(1, 0)
+                else:
+                    query, key = (x.transpose(1, 0) for x in (query, key))
+                    value = key
+            else:
+                query, key, value = (x.transpose(1, 0) for x in (query, key, value))
         if not self._qkv_same_embed_dim:
-            return _F.multi_head_attention_forward(
+            attn_output, attn_output_weights = _F.multi_head_attention_forward(
                 query,
                 key,
                 value,
@@ -220,7 +231,7 @@ class MultiheadAttention(_nn.MultiheadAttention):
                 v_proj_weight=self.v_proj_weight_fake_quant(self.v_proj_weight),
             )
         else:
-            return _F.multi_head_attention_forward(
+            attn_output, attn_output_weights = _F.multi_head_attention_forward(
                 query,
                 key,
                 value,
@@ -239,6 +250,10 @@ class MultiheadAttention(_nn.MultiheadAttention):
                 need_weights=need_weights,
                 attn_mask=attn_mask,
             )
+        if self.batch_first and is_batched:
+            return attn_output.transpose(1, 0), attn_output_weights
+        else:
+            return attn_output, attn_output_weights
 
     @classmethod
     def from_float(cls, mod):
@@ -258,12 +273,12 @@ class MultiheadAttention(_nn.MultiheadAttention):
             mod.embed_dim,
             mod.num_heads,
             mod.dropout,
+            batch_first=mod.batch_first,
             bias=hasattr(mod, "in_proj_bias"),
             add_bias_kv=mod.bias_k is not None,
             add_zero_attn=mod.add_zero_attn,
             kdim=mod.kdim,
             vdim=mod.vdim,
-            qconfig=qconfig,
         )
         qat.qconfig = qconfig
         if not qat._qkv_same_embed_dim:
@@ -282,3 +297,20 @@ class MultiheadAttention(_nn.MultiheadAttention):
             setattr(qat.out_proj, name, param)
 
         return qat
+
+
+def get_palettizable_parameters(module):
+    """
+    Return a list of parameters of the module which can be palettized
+    """
+    if isinstance(module, _nn.MultiheadAttention):
+        if not module._qkv_same_embed_dim:
+            return [
+                module.out_proj.weight,
+                module.q_proj_weight,
+                module.k_proj_weight,
+                module.v_proj_weight,
+            ]
+        else:
+            return [module.in_proj_weight, module.out_proj.weight]
+    return [module.weight]

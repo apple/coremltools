@@ -64,6 +64,9 @@ _SPECIFICATION_VERSION_IOS_16 = 7
 # New versions for iOS 17.0
 _SPECIFICATION_VERSION_IOS_17 = 8
 
+# New versions for iOS 18.0
+_SPECIFICATION_VERSION_IOS_18 = 9
+
 
 class ComputeUnit(_Enum):
     '''
@@ -82,6 +85,7 @@ _OPSET = {
     _SPECIFICATION_VERSION_IOS_15: "CoreML5",
     _SPECIFICATION_VERSION_IOS_16: "CoreML6",
     _SPECIFICATION_VERSION_IOS_17: "CoreML7",
+    _SPECIFICATION_VERSION_IOS_18: "CoreML8",
 }
 
 # Default specification version for each backend
@@ -94,7 +98,7 @@ from . import converters, models, optimize, proto
 # expose unified converter in coremltools package level
 from .converters import ClassifierConfig
 from .converters import ColorLayout as colorlayout
-from .converters import EnumeratedShapes, ImageType, RangeDim, Shape, TensorType, convert
+from .converters import EnumeratedShapes, ImageType, RangeDim, Shape, StateType, TensorType, convert
 from .converters.mil._deployment_compatibility import AvailableTarget as target
 from .converters.mil.mil.passes.defs import quantization as transform
 from .converters.mil.mil.passes.defs.quantization import ComputePrecision as precision

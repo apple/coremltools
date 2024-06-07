@@ -138,3 +138,87 @@ int testWordTaggerTransferLearningSpecIOS14() {
 
     return 0;
 }
+
+int testEmptyInputModel_downgradeToIOS18() {
+    // This model doesn't have input. Such empty input models are supported in iOS18 and later.
+    auto spec = Specification::Model();
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
+    auto* modelDescription = spec.mutable_description();
+
+    auto output = modelDescription->add_output();
+    output->set_name("output");
+    output->mutable_type()->mutable_multiarraytype()->set_datatype(Specification::ArrayFeatureType_ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    output->mutable_type()->mutable_multiarraytype()->add_shape(1);
+
+    auto* net = spec.mutable_neuralnetwork();
+    auto* layer = net->add_layers();
+    layer->set_name("load_constantND_layer");
+    layer->add_output("output");
+    layer->mutable_loadconstantnd()->add_shape(1);
+    layer->mutable_loadconstantnd()->mutable_data()->add_floatvalue(0.1f);
+
+    // The model uses empty input, which was introduced in iOS18.
+    Model emptyInputModel(spec);
+    ML_ASSERT_EQ(emptyInputModel.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS18);
+
+    // Now, add an input.
+    auto input = modelDescription->add_input();
+    input->set_name("input");
+    input->mutable_type()->mutable_multiarraytype()->set_datatype(Specification::ArrayFeatureType_ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    input->mutable_type()->mutable_multiarraytype()->add_shape(1);
+
+    // The model uses EXACT_ARRAY_MAPPING, which was introduced in iOS13. Other than that,
+    // there is nothing special. We expect the downgrade utility sets it to iOS13.
+    Model modelWithInput(spec);
+    ML_ASSERT_EQ(modelWithInput.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS13);
+
+    return 0;
+}
+
+int testMultiFunctionModel_downgradeToIOS18() {
+    // This model doesn't have input. Such empty input models are supported in iOS18 and later.
+    auto spec = Specification::Model();
+    spec.set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
+    auto* modelDescription = spec.mutable_description();
+
+    auto *function = modelDescription->add_functions();
+    function->set_name("f");
+
+    modelDescription->set_defaultfunctionname("f");
+
+    auto input = function->add_input();
+    input->set_name("input");
+    input->mutable_type()->mutable_multiarraytype()->set_datatype(Specification::ArrayFeatureType_ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    input->mutable_type()->mutable_multiarraytype()->add_shape(1);
+
+    auto output = function->add_output();
+    output->set_name("output");
+    output->mutable_type()->mutable_multiarraytype()->set_datatype(Specification::ArrayFeatureType_ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    output->mutable_type()->mutable_multiarraytype()->add_shape(1);
+
+    spec.mutable_mlprogram();
+
+    // The model uses multi-function description syntax, which was introduced in iOS18.
+    Model multiFunctionModel(spec);
+    ML_ASSERT_EQ(multiFunctionModel.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS18);
+
+    // Let's remove multi-function syntax and use the good old syntax.
+    modelDescription->clear_functions();
+    modelDescription->clear_defaultfunctionname();
+
+    input = modelDescription->add_input();
+    input->set_name("input");
+    input->mutable_type()->mutable_multiarraytype()->set_datatype(Specification::ArrayFeatureType_ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    input->mutable_type()->mutable_multiarraytype()->add_shape(1);
+
+    output = modelDescription->add_output();
+    output->set_name("output");
+    output->mutable_type()->mutable_multiarraytype()->set_datatype(Specification::ArrayFeatureType_ArrayDataType::ArrayFeatureType_ArrayDataType_FLOAT32);
+    output->mutable_type()->mutable_multiarraytype()->add_shape(1);
+
+    // Now, the model is nothing special ML Program, which was introduced in iOS15.
+    Model notMultiFunctionModel(spec);
+    ML_ASSERT_EQ(notMultiFunctionModel.getProto().specificationversion(), MLMODEL_SPECIFICATION_VERSION_IOS15);
+
+    return 0;
+}

@@ -117,6 +117,9 @@ add_library(mlmodel
     src/TreeEnsembleCommon.cpp
     src/Utils.cpp
 
+    src/MILBlob/SubByteTypeList.hpp
+    src/MILBlob/SubByteTypes.cpp
+    src/MILBlob/Fp8.cpp
     src/MILBlob/Blob/FileWriter.cpp
     src/MILBlob/Blob/MMapFileReader.cpp
     src/MILBlob/Blob/MMapFileReaderFactory.cpp

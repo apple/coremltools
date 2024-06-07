@@ -26,6 +26,7 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil.mil.block import curr_block
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry as _SSAOpRegistry
+from coremltools.converters.mil.mil.program import StateTensorPlaceholder
 
 from .helper import proto_to_types
 
@@ -113,8 +114,20 @@ def _load_file_value(context, filevalue_spec, dtype):
         blob_reader = BlobReader(filename)
         context.blob_reader_from_filename[filename] = blob_reader
 
-    if dtype == types.uint8:
+    if dtype == types.uint1:
+        np_value = blob_reader.read_uint1_data(offset)
+    elif dtype == types.uint2:
+        np_value = blob_reader.read_uint2_data(offset)
+    elif dtype == types.uint3:
+        np_value = blob_reader.read_uint3_data(offset)
+    elif dtype == types.uint4:
+        np_value = blob_reader.read_uint4_data(offset)
+    elif dtype == types.uint6:
+        np_value = blob_reader.read_uint6_data(offset)
+    elif dtype == types.uint8:
         np_value = blob_reader.read_uint8_data(offset)
+    elif dtype == types.int4:
+        np_value = blob_reader.read_int4_data(offset)
     elif dtype == types.int8:
         np_value = blob_reader.read_int8_data(offset)
     elif dtype == types.uint16:
@@ -126,6 +139,10 @@ def _load_file_value(context, filevalue_spec, dtype):
         np_value = np.frombuffer(np_value_uint16.tobytes(), np.float16)
     elif dtype == types.fp32:
         np_value = blob_reader.read_float_data(offset)
+    elif dtype == types.int32:
+        np_value = blob_reader.read_int32_data(offset)
+    elif dtype == types.uint32:
+        np_value = blob_reader.read_uint32_data(offset)
     else:
         raise ValueError("Invalid dtype for blob file value type")
 
@@ -133,6 +150,19 @@ def _load_file_value(context, filevalue_spec, dtype):
 
 
 def _restore_np_from_bytes_value(value: bytes, dtype: types, shape: Tuple[int]) -> np.ndarray:
+    # Import _utils here to avoid circular import.
+    from coremltools.optimize.coreml import _utils as optimize_utils
+
+    if types.is_sub_byte(dtype) and isinstance(value, bytes):
+        result = np.frombuffer(value, types.nptype_from_builtin(dtype))
+        # For sub-byte data, the np array restored from bytes is packed, so we need to unpack it.
+        nbits = dtype.get_bitwidth()
+        element_num = np.prod(shape)
+        are_packed_values_signed = not dtype.is_unsigned()
+        return optimize_utils.restore_elements_from_packed_bits(
+            result, nbits, element_num, are_packed_values_signed
+        ).reshape(shape)
+
     return np.frombuffer(value, types.nptype_from_builtin(dtype)).reshape(shape)
 
 
@@ -359,18 +389,32 @@ def _load_operation(context: TranscriptionContext, op_spec: proto.MIL_pb2.Operat
                     vars.append(var)
                 else:
                     raise NotImplementedError("Binding {} not yet implemented".format(binding_type))
-            op_cls = _SSAOpRegistry._get_core_op_cls(op_type)
-            if len(vars) == 1 and not isinstance(
-                op_cls.input_spec.input_types[param_name], TupleInputType
-            ):
+
+            if op_type == "write_state":
                 inputs[param_name] = vars[0]
             else:
-                inputs[param_name] = vars
+                op_cls = _SSAOpRegistry._get_core_op_cls(op_type)
+                if len(vars) == 1 and not isinstance(
+                    op_cls.input_spec.input_types[param_name], TupleInputType
+                ):
+                    inputs[param_name] = vars[0]
+                else:
+                    inputs[param_name] = vars
 
         blocks = _create_nested_blocks(context, op_spec)
         _set_inputs_for_control_flow_op(inputs, blocks, op_type)
 
-        output_var = getattr(mb, op_type)(**inputs)
+        # write_state is translated into coreml_update_state
+        if op_type == "write_state":
+            new_inputs = {
+                "state": inputs["input"],
+                "value": inputs["data"],
+            }
+            getattr(mb, "coreml_update_state")(**new_inputs)
+            return
+        else:
+            output_var = getattr(mb, op_type)(**inputs)
+
         if not isinstance(output_var, (tuple, list)):
             output_var = [output_var]
 
@@ -397,6 +441,33 @@ def _load_operation(context: TranscriptionContext, op_spec: proto.MIL_pb2.Operat
 
 
 def _load_block(context, block_spec):
+    def _try_to_merge_state_ops():
+        """
+        We detect the pattern of:
+
+            %1 = coreml_update_state(state=%state, value=%value)
+            %2 = read_state(input=%state)
+
+        and transform it into:
+
+            %2 = coreml_update_state(state=%state, value=%value)
+        """
+        block = curr_block()
+
+        if len(block.operations) < 2:
+            return
+
+        op_1, op_2 = block.operations.end.prev.op, block.operations.end.op
+        if op_1.op_type != "coreml_update_state" or op_2.op_type != "read_state":
+            return
+        if op_1.state != op_2.input:
+            return
+
+        var_1, var_2 = op_1.outputs[0], op_2.outputs[0]
+        var_1.name = var_2.name
+        context.register_var_with_name(var_1.name, var_1)
+        block.remove_ops([op_2])
+
     if not isinstance(block_spec, proto.MIL_pb2.Block):
         raise TypeError("Invalid Block spec object")
 
@@ -407,6 +478,7 @@ def _load_block(context, block_spec):
     output_vars = []
     for op_spec in block_spec.operations:
         _load_operation(context, op_spec)
+        _try_to_merge_state_ops()
 
     for proto_output_name in block_outputs:
         output_vars.append(context.get_var_from_name(proto_output_name))
@@ -428,11 +500,19 @@ def _load_function(context, func_spec, spec_version):
         name = named_value_type.name
         valuetype = proto_to_types(named_value_type.type)
 
-        if not types.is_tensor(valuetype):
-            raise ValueError("Functions inputs can only be tensors")
-        func_inputs[name] = Placeholder(
-            sym_shape=valuetype.get_shape(), dtype=valuetype.get_primitive(), name=name
-        )
+        if types.is_tensor(valuetype):
+            func_inputs[name] = Placeholder(
+                sym_shape=valuetype.get_shape(), dtype=valuetype.get_primitive(), name=name
+            )
+        elif types.is_state(valuetype):
+            func_inputs[name] = StateTensorPlaceholder(
+                sym_shape=valuetype.wrapped_type().get_shape(),
+                dtype=valuetype.wrapped_type().get_primitive(),
+                name=name,
+            )
+        else:
+            raise ValueError(f"Functions input of type {valuetype} not supported.")
+
         context.register_var_with_name(name, func_inputs[name].outputs[0])
 
     opset = func_spec.opset

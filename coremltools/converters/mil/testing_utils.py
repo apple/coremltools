@@ -38,7 +38,22 @@ IOS_TO_MINIMUM_MACOS_VERSION: Dict[ct.target, int] = {
     ct.target.iOS15: 12,
     ct.target.iOS16: 13,
     ct.target.iOS17: 14,
+    ct.target.iOS18: 15,
 }
+
+_COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY = "/tmp/coremltools_debug_save_mlmodel"
+
+debug_save_mlmodels = set()
+debug_save_mlmodel_config_file_name = os.environ.get("DEBUG_SAVE_MLMODEL", "0")
+if debug_save_mlmodel_config_file_name != "0":
+    if not os.path.isfile(debug_save_mlmodel_config_file_name):
+        raise ValueError("DEBUG_SAVE_MLMODEL must be the name of a config file with tests to save")
+    with open(debug_save_mlmodel_config_file_name, "r") as f:
+        lines = f.readlines()
+        for line in lines:
+            if line[0] == "#" or line == "\n":
+                continue
+            debug_save_mlmodels.add(line[:-1])
 
 hardcoded_einsum_equations: List[str] = [
     # hardcoded cases
@@ -101,9 +116,36 @@ def macos_compatible_with_deployment_target(minimum_deployment_target):
     return True
 
 def _serialize_current_pytest(mlmodel):
-    class_name = os.environ.get('PYTEST_CURRENT_TEST').split("::")[1].strip()
-    test_name = "::".join(os.environ.get('PYTEST_CURRENT_TEST').split("::")[2:]).split("(call)")[0].strip()
-    mlpackage_path = "/tmp/pytest_failures/{}/{}/model.mlpackage".format(class_name, test_name)
+    """
+    Usually pytest test name is of format file::class::test_function[param0-param1] (call)...
+    Assume each test produces only one Core ML model,
+    then file::class::test_function[param0-param1] is enough to determine unique name
+        {_COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY}/file/class/test_function/param0/param1/model.mlpackage
+    """
+    mlpackage_path = _COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY + "/"
+
+    PYTEST_CURRENT_TEST = os.environ.get("PYTEST_CURRENT_TEST").split("(call)")[0].strip()
+    test_name_fragments = PYTEST_CURRENT_TEST.split("::")
+
+    for test_name_fragment in test_name_fragments[:-1]:
+        mlpackage_path += f"{test_name_fragment.strip()}/"
+
+    test_name = test_name_fragments[-1]
+    # For a parameterized test, further decompose parameters into directories
+    if "[" in test_name and test_name[-1] == "]":
+        # Split test name with []
+        bra_index = test_name.index("[")
+        test_function_name = test_name[:bra_index]
+        parameters = test_name[bra_index + 1 : -1].split("-")
+        # Append test function name and parameter to mlpackage path
+        mlpackage_path += f"{test_function_name}/"
+        for parameter in parameters:
+            mlpackage_path += f"{parameter}/"
+    else:
+        mlpackage_path += f"{test_name}/"
+
+    mlpackage_path += "model.mlpackage"
+
     Path(mlpackage_path).mkdir(parents=True, exist_ok=True)
     mlmodel.save(mlpackage_path)
 
@@ -303,7 +345,7 @@ def to_tuple(v):
     return tuple(v)
 
 
-def run_core_ml_predict(mlmodel, input_key_values):
+def run_core_ml_predict(mlmodel, input_key_values, state=None):
     for k, v in input_key_values.items():
         if isinstance(v, Image.Image):
             continue
@@ -311,7 +353,7 @@ def run_core_ml_predict(mlmodel, input_key_values):
             input_key_values[k] = v.astype(np.float32)
         else:
             input_key_values[k] = np.array([v], dtype=np.float32)
-    return mlmodel.predict(input_key_values)
+    return mlmodel.predict(input_key_values, state=state)
 
 def _get_coreml_out_from_dict(out_dict, out_name):
     if out_name in out_dict:
@@ -322,9 +364,10 @@ def _get_coreml_out_from_dict(out_dict, out_name):
     else:
         raise KeyError(f"{out_name} output not found in Core ML outputs")
 
-def _get_proto_output_shape(spec, out_name):
+
+def _get_proto_output_shape(desc, out_name):
     sanitized_out_name = _NameSanitizer._replace_invalid_char_with_underscore(out_name)
-    for coreml_o in spec.description.output:
+    for coreml_o in desc.output:
         if coreml_o.name == sanitized_out_name:
             return coreml_o.type.multiArrayType.shape
     raise KeyError(f"{out_name} output not found in Core ML outputs")
@@ -337,6 +380,7 @@ def compare_backend(
     atol=1e-04,
     rtol=1e-05,
     also_compare_shapes=True,
+    state=None,
 ):
     """
     Inputs:
@@ -353,7 +397,7 @@ def compare_backend(
         if dtype not in ["fp32", "fp16"]:
             raise ValueError("Unsupported dtype config")
 
-        pred = run_core_ml_predict(mlmodel, input_key_values)
+        pred = run_core_ml_predict(mlmodel, input_key_values, state)
         if also_compare_shapes:
             compare_shapes(
                 mlmodel,
@@ -419,10 +463,18 @@ def compare_shapes(mlmodel, input_key_values, expected_outputs, pred=None):
                 # the output information in the mlprogram proto.
                 spec = mlmodel.get_spec()
                 if spec.WhichOneof("Type") == "mlProgram":
+
+                    if mlmodel._is_multifunction():
+                        desc = mlmodel._get_function_description(mlmodel.function_name)
+                    else:
+                        desc = spec.description
+
                     # The proto output and the runtime outputs are different for classifier
-                    if spec.description.predictedFeatureName != "":
+                    if desc.predictedFeatureName != "":
                         continue
-                    proto_shape = _get_proto_output_shape(spec, o)
+
+                    proto_shape = _get_proto_output_shape(desc, o)
+
                     if proto_shape != []:
                         assert proto_shape == list(
                             coreml_out.shape
@@ -464,6 +516,13 @@ def ct_convert(
     if target == "neuralnetwork":
         compute_precision = None
 
+    PYTEST_CURRENT_TEST = os.environ.get("PYTEST_CURRENT_TEST").split("(call)")[0].strip()
+    is_current_test_to_be_debugged = PYTEST_CURRENT_TEST in debug_save_mlmodels
+    if is_current_test_to_be_debugged:
+        # If current test is to be debugged, then it is probably buggy in Core ML framework,
+        # so we skip its load to dodge potential bug which might kill python process
+        skip_model_load = True
+
     mlmodel = converter(
                 program,
                 source=source,
@@ -477,9 +536,9 @@ def ct_convert(
                 **kwargs
     )
 
-    if os.environ.get("DEBUG_SAVE_MLMODEL", "0") == "1":
-        from coremltools.converters.mil.testing_utils import _serialize_current_pytest
+    if is_current_test_to_be_debugged:
         _serialize_current_pytest(mlmodel)
+        pytest.xfail("This test is to be debugged")
 
     return mlmodel
 
@@ -700,9 +759,10 @@ def verify_prediction(mlmodel, multiarray_type=None):
         input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
         if multiarray_type is not None:
             input_dict[input_desc.name] = input_dict[input].astype(multiarray_type)
-    res = mlmodel.predict(input_dict)
+    state = mlmodel.make_state() if mlmodel._is_stateful() else None
+    res = mlmodel.predict(input_dict, state=state)
     assert isinstance(res, dict)
-    assert len(res) >= 1
+    assert len(res) == len(spec.description.output)
 
 def assert_spec_input_image_type(spec, expected_feature_type):
     assert spec.description.input[0].type.imageType.colorSpace == expected_feature_type
@@ -730,3 +790,16 @@ def validate_minimum_deployment_target(
         pytest.skip(
             f"IOS{minimum_deployment_target} target is not runnable on this macOS {coremltoolsutils._macos_version()}"
         )
+
+
+def compute_snr_and_psnr(x, y):
+    assert len(x) == len(y)
+    eps = 1e-5
+    eps2 = 1e-10
+    noise = x - y
+    noise_var = np.sum(noise**2) / len(noise)
+    signal_energy = np.sum(y**2) / len(y)
+    max_signal_energy = np.amax(y**2)
+    snr = 10 * np.log10((signal_energy + eps) / (noise_var + eps2))
+    psnr = 10 * np.log10((max_signal_energy + eps) / (noise_var + eps2))
+    return snr, psnr

@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "MILBlob/SubByteTypes.hpp"
 #include "MILBlob/Util/Verify.hpp"
 #include <array>
 #include <iterator>
@@ -97,10 +98,15 @@ private:
 // If Extent is specified, Span supports compile-time bounds checking
 // when the Get<> method is used.
 //
-// This version of Span also supports iterating slices and dimensions
-// of multi-dimensional contiguous memory blocks.
+// For underlying types of at least byte-size, this version of Span also
+// supports iterating slices and dimensions of multi-dimensional
+// contiguous memory blocks.
+//
+// For sub-byte types, only basic access to the data pointer and size
+// are supported.
 //----------------------------------------------------------------------
 
+// Span types of at least byte-size.
 template <typename T, size_t Extent = DynamicExtent>
 class Span final {
 public:
@@ -121,6 +127,8 @@ public:
 
     template <size_t Index, size_t Extent_>
     using IsIndexValid = span_helpers::IsIndexValid<Index, Extent_>;
+
+    static_assert(!MILBlob::IsSubByteSized<T>::value, "Sub byte-sized types must use the reduced Span implementation");
 
     class SliceIterator final {
     public:
@@ -415,6 +423,186 @@ public:
 private:
     pointer m_ptr;
     SpanSize<Extent> m_size;
+};
+
+template <typename T, typename = void>
+struct voidType {
+    using type = void*;
+};
+template <typename T>
+struct voidType<T, typename std::enable_if<std::is_const<T>::value>::type> {
+    using type = const void*;
+};
+// Specializations for sub-byte types.
+// This should ideally be implemented with std::enable_if but that involves an ABI breaking change.
+// The pointer referenced by m_ptr and returned by Data() is byte aligned and packed, with possible
+// padding in the last byte.
+#define DEFINE_SPAN_CLASS_FOR_SUBBYTE(subByteType)                                                                    \
+public:                                                                                                               \
+    template <size_t Extent_>                                                                                         \
+    using SpanSize = span_helpers::SpanSize<Extent_>;                                                                 \
+                                                                                                                      \
+    template <size_t Extent_>                                                                                         \
+    using IsDynamicExtent = span_helpers::IsDynamicExtent<Extent_>;                                                   \
+                                                                                                                      \
+    ~Span() = default;                                                                                                \
+                                                                                                                      \
+    Span(const Span<subByteType, Extent>&) = default;                                                                 \
+    Span(Span<subByteType, Extent>&&) noexcept = default;                                                             \
+                                                                                                                      \
+    Span<subByteType, Extent>& operator=(const Span<subByteType, Extent>&) = default;                                 \
+    Span<subByteType, Extent>& operator=(Span<subByteType, Extent>&&) noexcept = default;                             \
+                                                                                                                      \
+    /** Implicit copy constructor for converting a mutable span to a const span. Extent and type must be the same. */ \
+    template <typename NonConstT,                                                                                     \
+              typename std::enable_if<!std::is_same<subByteType, NonConstT>::value &&                                 \
+                                          std::is_same<subByteType, typename std::add_const<NonConstT>::type>::value, \
+                                      int>::type = 0>                                                                 \
+    Span(const Span<NonConstT, Extent>& other) : m_ptr(other.Data())                                                  \
+                                               , m_size(other.Size())                                                 \
+    {}                                                                                                                \
+                                                                                                                      \
+    /** Implicit move constructor for converting a mutable span to a const span. Extent and type must be the same. */ \
+    template <typename NonConstT,                                                                                     \
+              typename std::enable_if<!std::is_same<subByteType, NonConstT>::value &&                                 \
+                                          std::is_same<subByteType, typename std::add_const<NonConstT>::type>::value, \
+                                      int>::type = 0>                                                                 \
+    Span(Span<NonConstT, Extent>&& other) : m_ptr(other.Data())                                                       \
+                                          , m_size(other.Size())                                                      \
+    {}                                                                                                                \
+                                                                                                                      \
+    template <size_t Extent__ = Extent, typename std::enable_if<IsDynamicExtent<Extent__>::value, int>::type = 0>     \
+    Span() : m_ptr(nullptr)                                                                                           \
+           , m_size(0)                                                                                                \
+    {}                                                                                                                \
+                                                                                                                      \
+    template <size_t Extent__ = Extent, typename std::enable_if<!IsDynamicExtent<Extent__>::value, int>::type = 0>    \
+    explicit Span(voidType<subByteType>::type p) : m_ptr(p)                                                           \
+    {}                                                                                                                \
+                                                                                                                      \
+    template <size_t Extent__ = Extent, typename std::enable_if<IsDynamicExtent<Extent__>::value, int>::type = 0>     \
+    Span(voidType<subByteType>::type p, size_t size) : m_ptr(size == 0 ? nullptr : p)                                 \
+                                                     , m_size(size)                                                   \
+    {}                                                                                                                \
+                                                                                                                      \
+    voidType<subByteType>::type Data() const                                                                          \
+    {                                                                                                                 \
+        return m_ptr;                                                                                                 \
+    }                                                                                                                 \
+                                                                                                                      \
+    size_t Size() const                                                                                               \
+    {                                                                                                                 \
+        return m_size.Size();                                                                                         \
+    }                                                                                                                 \
+                                                                                                                      \
+    constexpr bool IsEmpty() const                                                                                    \
+    {                                                                                                                 \
+        return Size() == 0;                                                                                           \
+    }                                                                                                                 \
+    template <size_t NewExtent>                                                                                       \
+    Span<subByteType, NewExtent> StaticResize() const                                                                 \
+    {                                                                                                                 \
+        MILVerifyIsTrue(NewExtent <= Size(), std::range_error, "index out of bounds");                                \
+        return Span<subByteType, NewExtent>(Data());                                                                  \
+    }                                                                                                                 \
+                                                                                                                      \
+    std::remove_const<subByteType>::type ValueAt(std::size_t index)                                                   \
+    {                                                                                                                 \
+        if (index >= Size()) {                                                                                        \
+            throw std::out_of_range("index out of bounds.");                                                          \
+        }                                                                                                             \
+        using nonConstSubByteType = std::remove_const<subByteType>::type;                                             \
+        using impl_t = decltype(nonConstSubByteType::data);                                                           \
+                                                                                                                      \
+        uint8_t bitSize = nonConstSubByteType::SizeInBits;                                                            \
+        size_t elementIndex = index % Size();                                                                         \
+        size_t packedBitsIndex = elementIndex * bitSize / 8;                                                          \
+        size_t startBitIndex = elementIndex * bitSize % 8;                                                            \
+        uint8_t bitMask = static_cast<uint8_t>(nonConstSubByteType::BitMask << startBitIndex);                        \
+        uint8_t restoredElement_uint8 = (*((const uint8_t*)Data() + packedBitsIndex) & bitMask) >> startBitIndex;     \
+                                                                                                                      \
+        /* For non-byte-aligned dtypes like UInt3, the required bits can be spread across 2 bytes.                    \
+        Create mask and retrieve bits from the second byte if needed.                                                 \
+        Look at SpanTests::testSubByteUIntValueAt*/                                                                   \
+        size_t retrievedBits = 8 - startBitIndex;                                                                     \
+        if (retrievedBits < bitSize) {                                                                                \
+            bitMask = 0;                                                                                              \
+            for (size_t i = 0; i < (bitSize - retrievedBits); ++i) {                                                  \
+                bitMask |= 1 << i;                                                                                    \
+            }                                                                                                         \
+            restoredElement_uint8 |= (*((const uint8_t*)Data() + packedBitsIndex + 1) & bitMask) << retrievedBits;    \
+        }                                                                                                             \
+                                                                                                                      \
+        /* If sign=1, fill all 1s in the prefix.                                                                      \
+        e.g., say the Int4 value is 1011 which is -5 in 2s complement. At this point, restoredElement_uint8 is        \
+        00001011. To represent -5 correctly in 1 byte, we fill prefix 1s, resulting in 111110111. */                  \
+        if (nonConstSubByteType::MIN < 0) {                                                                           \
+            uint8_t sign_bit = (restoredElement_uint8 >> (bitSize - 1)) & 1;                                          \
+            if (sign_bit == 1) {                                                                                      \
+                for (size_t i = 0; i < 8 - bitSize; ++i) {                                                            \
+                    restoredElement_uint8 |= 1 << (i + bitSize);                                                      \
+                }                                                                                                     \
+            }                                                                                                         \
+        }                                                                                                             \
+        return nonConstSubByteType(*reinterpret_cast<impl_t*>(&restoredElement_uint8));                               \
+    }                                                                                                                 \
+                                                                                                                      \
+private:                                                                                                              \
+    voidType<subByteType>::type m_ptr;                                                                                \
+    SpanSize<Extent> m_size;
+
+template <size_t Extent>
+class Span<Int4, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(Int4)
+};
+template <size_t Extent>
+class Span<const Int4, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(const Int4)
+};
+
+template <size_t Extent>
+class Span<UInt6, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(UInt6)
+};
+template <size_t Extent>
+class Span<const UInt6, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(const UInt6)
+};
+
+template <size_t Extent>
+class Span<UInt4, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(UInt4)
+};
+template <size_t Extent>
+class Span<const UInt4, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(const UInt4)
+};
+
+template <size_t Extent>
+class Span<UInt3, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(UInt3)
+};
+template <size_t Extent>
+class Span<const UInt3, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(const UInt3)
+};
+
+template <size_t Extent>
+class Span<UInt2, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(UInt2)
+};
+template <size_t Extent>
+class Span<const UInt2, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(const UInt2)
+};
+
+template <size_t Extent>
+class Span<UInt1, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(UInt1)
+};
+template <size_t Extent>
+class Span<const UInt1, Extent> final {
+    DEFINE_SPAN_CLASS_FOR_SUBBYTE(const UInt1)
 };
 
 // MakeSpan for std::vector<T> yields Span<T, DynamicExtent>

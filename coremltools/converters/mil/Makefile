@@ -8,7 +8,6 @@ SRC_PACKAGES=.
 
 TF_IOS13_TEST=../tensorflow/test
 MIL_TEST="."
-MIL_TEST_INTERNAL="../../../../coremltools-internal/coremltools_internal/converters/mil"
 
 .PHONY: all lint test style checkstyle
 
@@ -26,7 +25,7 @@ lint:
 	${PYTHON} -m pylint -j 0 ${SRC_PACKAGES}
 
 test:
-	${PYTHON} -m pytest -W ignore::DeprecationWarning ${MIL_TEST} ${MIL_TEST_INTERNAL}
+	${PYTHON} -m pytest -W ignore::DeprecationWarning ${MIL_TEST}
 
 test_ref:
 	${PYTHON} -m pytest -W ignore::DeprecationWarning ${TF_IOS13_TEST}

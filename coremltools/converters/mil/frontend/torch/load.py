@@ -12,7 +12,7 @@ from torch.jit._script import RecursiveScriptModule
 from coremltools import _logger as logger
 from coremltools._deps import _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil.frontend.torch.converter import TorchConverter
-from coremltools.converters.mil.input_types import TensorType
+from coremltools.converters.mil.input_types import StateType, TensorType
 from coremltools.converters.mil.mil.program import Program
 
 from .converter import TorchConverter
@@ -29,6 +29,7 @@ def load(
     outputs: Optional[List[TensorType]] = None,
     cut_at_symbols: Optional[List[str]] = None,
     use_default_fp16_io: bool = False,
+    states: Optional[List[StateType]] = None,
     **kwargs
 ) -> Program:
     """
@@ -77,6 +78,7 @@ def load(
         cut_at_symbols,
         specification_version,
         use_default_fp16_io,
+        states,
     )
 
     return _perform_torch_convert(converter, debug)

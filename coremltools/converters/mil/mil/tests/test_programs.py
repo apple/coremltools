@@ -910,13 +910,17 @@ class TestScope:
         # default list type
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
         def prog(x):
-            with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[1])):
+            with mb.scope(
+                ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=["x + 0.0"]),
+                ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[1]),
+            ):
                 return mb.add(x=x, y=0.0)
 
         add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.EXIR_STACK_TRACE] == ["x + 0.0"]
         assert add_op_1.scopes[ScopeSource.EXIR_DEBUG_HANDLE] == [1]
 
-        # data cannot have len > 1
+        # debug handle data cannot have len > 1
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3))])
         def prog(x):
             with pytest.raises(ValueError, match="EXIR_DEBUG_HANDLE scope cannot have len > 1."):
@@ -929,9 +933,12 @@ class TestScope:
         def prog(x):
             with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None])):
                 with mb.scope(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[0])):
-                    return mb.add(x=x, y=0.0)
+                    with mb.scope(ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=["x + 0.0"])):
+                        with mb.scope(ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[None])):
+                            return mb.add(x=x, y=0.0)
 
         add_op_1 = prog.find_ops(op_type="add")[0]
+        assert add_op_1.scopes[ScopeSource.EXIR_STACK_TRACE] == ["x + 0.0", None]
         assert add_op_1.scopes[ScopeSource.EXIR_DEBUG_HANDLE] == [None, 0]
 
     @staticmethod
@@ -1949,15 +1956,18 @@ class TestScope:
             ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
         }
 
-        # Case 4: essential scope set to EXIR_DEBUG_HANDLE
+        # Case 4: essential scope set to EXIR_STACK_TRACE and EXIR_DEBUG_HANDLE
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
         def prog(x):
             with mb.scope(
+                ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=["torch.sin(x)"]),
                 ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[1]),
             ):
                 return mb.sin(x=x)
 
-        prog._add_essential_scope_source(ScopeSource.EXIR_DEBUG_HANDLE)
+        prog._add_essential_scope_source(
+            [ScopeSource.EXIR_STACK_TRACE, ScopeSource.EXIR_DEBUG_HANDLE]
+        )
 
         block = prog.functions["main"]
         ops = list(block.operations)
@@ -1971,6 +1981,7 @@ class TestScope:
                 block._replace_var(block.inputs["x"], relu)
 
         assert relu.scopes == {
+            ScopeSource.EXIR_STACK_TRACE: [None],
             ScopeSource.EXIR_DEBUG_HANDLE: [None],
             ScopeSource.COREMLTOOLS_GRAPH_PASS: ["pass_1"],
         }

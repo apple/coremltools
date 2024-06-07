@@ -36,7 +36,7 @@ NeuralNetworkSpecValidator::NeuralNetworkSpecValidator(const std::map<std::strin
 #pragma mark NeuralNetworkSpecValidator member functions
 
 Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetworkLayer& layer) {
-    
+
     switch(layer.layer_case()) {
         case Specification::NeuralNetworkLayer::LayerCase::kConvolution:
             return validateConvolutionLayer(layer);
@@ -338,23 +338,23 @@ Result NeuralNetworkSpecValidator::validateLayer(const Specification::NeuralNetw
 
 template<typename T>
 Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
-    
+
     Result r;
-    
+
     // Loop over the layers
     // For each layer, validate the following:
-    // 1. inputtensor/outputtensor message, rank compatibility with Model input/output ranks
+    // 1. inputtensor/outputtensor message, rank compatibilty with Model input/output ranks
     // 2. Check rank consistency across the network for all blobs: ranks are not allowed to change for the same blob
     // 3. Call layer specific validation function
     // 4. check that layer's inputs are already present in "availableBlobs" set
     // 5. check that layer's outputs are NOT already present in "availableBlobs" set
     // 6. Add the layer's outputs to the "availableBlobs" set
     for (const auto& layer : nn.layers()) {
-        
+
         if (!r.good()) {
             return r;
         }
-        
+
         // check for inputtensor message validity
         if (ndArrayInterpretation) {
             if (layer.inputtensor_size() != 0) {
@@ -422,15 +422,15 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
                 }
             }
         } // inputtensor, outputtensor validity end
-        
+
         // First, we check the layer for internal correctness
         // this calls layer wise function
         r = validateLayer(layer);
-        
+
         if (!r.good()) {
             return r;
         }
-        
+
         // Check for topological defects: the layer's input must have been produced by a blob we have
         // already seen.
         for (const auto& input: layer.input()) {
@@ -440,7 +440,7 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
                 return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
         }
-        
+
         // Check for topological defects: check that the same output isn't being produced in two different places.
         // unless its the "copy" layer
         for (const auto& output: layer.output()) {
@@ -456,7 +456,7 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
             blobs[output].insert(layer.name());
         }
     } // loop over layers
-    
+
     return Result();
 }
 
@@ -465,13 +465,14 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
 template<typename T>
 Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& interface,
                                      const T& nn, std::set<std::string>& outputBlobNames,
-                                     bool isUpdatable) {
+                                     bool isUpdatable,
+                                     const ValidationPolicy& validationPolicy) {
     Result r;
-    
+
     // First calculate the value of the flag "ndArrayInterpretation"
     // ndArrayInterpretation == False ==> iOS 11/12 (old) execution path can be used, i.e. all tensors are static rank 5.
     // ndArrayInterpretation == True ==>  Tensors can have any rank (including 5).
-    
+
     bool ndArrayInterpretation = false;
 
     bool hasNonIOS12Layer = false;
@@ -485,56 +486,59 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
             break;
         }
     }
-    
+
     if (nn.arrayinputshapemapping() != Specification::NeuralNetworkMultiArrayShapeMapping::RANK5_ARRAY_MAPPING) {
         hasNewArrayShapeMapping = true;
     }
-    
+
     if (nn.imageinputshapemapping() != Specification::NeuralNetworkImageShapeMapping::RANK5_IMAGE_MAPPING) {
         hasNewImageShapeMapping = true;
     }
-    
+
     for (const auto &layer: nn.layers()) {
         if (!isIOS12NeuralNetworkLayer(layer)) {
             hasNonIOS12Layer = true;
             break;
         }
     }
-    
+
     if (hasNonIOS12Layer || hasNewArrayShapeMapping || hasNewImageShapeMapping) {
         ndArrayInterpretation = true;
     }
-    
+
     if (hasNonIOS12Layer && !hasNewArrayShapeMapping && hasMultiArrayInput) {
         return Result(ResultType::INVALID_MODEL_INTERFACE,
                       "Neural Network Multi-Array input shape mapping cannot be 'RANK5_ARRAY_MAPPING' if the network contains a layer added in version 4 (iOS 13) or later. Use 'EXACT_ARRAY_MAPPING' instead.");
     }
-    
+
     if (!hasNewArrayShapeMapping && hasNewImageShapeMapping && hasMultiArrayInput) {
         return Result(ResultType::INVALID_MODEL_INTERFACE,
                       "Neural Network Multi-Array input shape mapping cannot be 'RANK5_ARRAY_MAPPING' if the image input Shape mapping is not 'RANK5_IMAGE_MAPPING'");
     }
-    
+
     //==================== End of logic to determine the value of "ndArrayInterpretation" ======================
-    
-    if (interface.input_size() == 0) {
+
+    if (!validationPolicy.allowsEmptyInput && interface.input_size() == 0) {
         return Result(ResultType::INVALID_MODEL_INTERFACE,
                       "Neural networks require at least one input.");
     }
-    
+
     if (interface.output_size() == 0) {
         return Result(ResultType::INVALID_MODEL_INTERFACE,
                       "Neural networks produce at least one output.");
     }
-    
+
     if (nn.layers().size() == 0) {
         return Result(ResultType::INVALID_MODEL_PARAMETERS,
                       "Neural networks require at least one layer.");
     }
-    
-    if (std::all_of(interface.input().begin(), interface.input().end(),
+
+    if (interface.input_size() > 0 && std::all_of(interface.input().begin(), interface.input().end(),
                     [](const Specification::FeatureDescription& input) {
-                        return input.type().isoptional();
+                        if (input.type().Type_case() == Specification::FeatureType::kStateType)
+                            return true; // ignores optionality for State type (which is always non-optional).
+                        else
+                            return input.type().isoptional();
                     })) {
                         return Result(ResultType::INVALID_MODEL_INTERFACE,
                                       "Neural networks require at least one non-optional input.");
@@ -544,7 +548,7 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
     HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.input(), ResultReason::MODEL_INPUT_TYPE_INVALID, "inputs"));
 
     std::map<std::string, int> ioBlobNameToRank; // to collect ranks of input/output blobs from the shapes present in the description
-    
+
     // populate "ioBlobNameToRank"
     if (ndArrayInterpretation) {
         for (const auto& input: interface.input()) {
@@ -570,18 +574,18 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
             }
         }
     }
-    
+
     // Collect Model input names and do some checking
-    
+
     // inputBlobs: For each named data blob, the name of the node which produced it (there can be multiple in if-else branches)
     std::map<std::string, std::set<std::string>> inputBlobs;
     for (const auto& input: interface.input()) {
         // For input blobs, we'll give them a dummy producing layer name
         inputBlobs[input.name()] = {"__input"};
         if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
-            
+
             if (!ndArrayInterpretation) {
-                
+
                 // only vector-like (rank 1) or image-like (rank 3) inputs are allowed
                 bool validShapeFound = false;
                 if (input.type().multiarraytype().shape().size() > 0) {
@@ -619,7 +623,7 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
                 if (!validShapeFound) {
                     return Result(ResultType::INVALID_MODEL_INTERFACE, "Input MLMultiArray to neural networks must have dimension 1 (vector) or 3 (image-like arrays).");
                 }
-                
+
             } else { // validate input shape when "ndArrayInterpretation" is True
 
                 if (!(r = validateNdMultiArrayInputType(input.type().multiarraytype())).good()) {
@@ -628,18 +632,18 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
             } // if else block on spec version to check validity of input shape
         }
     }
-    
+
     // validate the Neural Network message
-    
+
     //  create an object to validate neural network message
     NeuralNetworkSpecValidator validator(inputBlobs, ioBlobNameToRank, ndArrayInterpretation, 0, ioBlobNameToRank);
-    
+
     r = validator.validateNeuralNetwork(nn);
-    
+
     if (!r.good()) {
         return r;
     }
-    
+
     // gather all output blobs of the graph
     for (auto& blob: validator.blobs){
         if (inputBlobs.find(blob.first) == inputBlobs.end()) {
@@ -652,7 +656,7 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
             }
         }
     }
-    
+
     // Call the shaper: compatibility with iOS 12
     if (!ndArrayInterpretation) {
         // Compute the shapes
@@ -664,11 +668,11 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
             return Result(ResultType::POTENTIALLY_INVALID_NEURAL_NETWORK_SHAPES, err);
         }
     }
-    
+
     if (!r.good()) {
         return r;
     }
-    
+
     if (isUpdatable) {
         r = validateUpdatableNeuralNetwork(nn);
         if (!r.good()) { return r; }
@@ -676,28 +680,30 @@ Result validateNeuralNetworkTopLevel(const Specification::ModelDescription& inte
         r = validateTrainingInputs(interface, nn);
         if (!r.good()) { return r; }
     }
-    
+
     return r;
-    
+
 }
 
 namespace CoreML {
-    
+
     template <>
     Result validate<MLModelType_neuralNetworkClassifier>(const Specification::Model& format) {
+        const auto validationPolicy = ValidationPolicy(MLModelType_neuralNetworkClassifier);
+
         // must have classifier parameters
-        Result r = validateClassifierInterface(format, format.neuralnetworkclassifier());
+        Result r = validateClassifierInterface(format, format.neuralnetworkclassifier(), /* allowEmptyLabels */ false, /* defaultClassLabelIsInt64 */ false, validationPolicy);
         if (!r.good()) {
             return r;
         }
-        
+
         std::set<std::string> outputBlobNames;
-        r = validateNeuralNetworkTopLevel(format.description(), format.neuralnetworkclassifier(), outputBlobNames, format.isupdatable());
-        
+        r = validateNeuralNetworkTopLevel(format.description(), format.neuralnetworkclassifier(), outputBlobNames, format.isupdatable(), validationPolicy);
+
         if (!r.good()) {
             return r;
         }
-        
+
         std::string probBlob = format.neuralnetworkclassifier().labelprobabilitylayername();
         // Check if the probability blob name was provided in the proto
         if (!probBlob.empty()) {
@@ -707,7 +713,7 @@ namespace CoreML {
                 return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
         }
-        
+
         // Now, we need to check that all the model's output names are either blob names or the extra outputs
         // for a classifier
         for (const auto& output : format.description().output()) {
@@ -720,59 +726,57 @@ namespace CoreML {
                 }
             }
         }
-        
+
         return r;
-        
+
     }
-    
+
     template <>
     Result validate<MLModelType_neuralNetworkRegressor>(const Specification::Model& format) {
+        auto validationPolicy = ValidationPolicy(MLModelType_neuralNetworkRegressor);
+
         // must have regressor parameters
-        Result r = validateRegressorInterface(format.description(), format.specificationversion());
+        Result r = validateRegressorInterface(format.description(), format.specificationversion(), validationPolicy);
         if (!r.good()) {
             return r;
         }
-        
+
         std::set<std::string> outputBlobNames;
-        return validateNeuralNetworkTopLevel(format.description(), format.neuralnetworkregressor(), outputBlobNames, format.isupdatable());
+        return validateNeuralNetworkTopLevel(format.description(), format.neuralnetworkregressor(), outputBlobNames, format.isupdatable(), validationPolicy);
     }
-    
+
     template <>
     Result validate<MLModelType_neuralNetwork>(const Specification::Model& format) {
-        
-        
-        
+        auto validationPolicy = ValidationPolicy(MLModelType_neuralNetwork);
+
         const auto& interface = format.description();
-        
+
         // This isn't true for classifiers and regressors -- need to template specialize it to make these work
         HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputTypes(interface.output(), ResultReason::MODEL_OUTPUT_TYPE_INVALID, "outputs"));
 
         std::set<std::string> outputBlobNames;
-        
-        Result r = validateNeuralNetworkTopLevel(format.description(), format.neuralnetwork(), outputBlobNames, format.isupdatable());
-        
+
+        Result r = validateNeuralNetworkTopLevel(format.description(), format.neuralnetwork(), outputBlobNames, format.isupdatable(), validationPolicy);
+
         if (r.good()) {
             // Make sure that all of the model interface's outputs are actually produced by some blob
             for (const auto& output : format.description().output()) {
-                
+
                 const std::string& name = output.name();
-                
+
                 std::string err;
                 if (outputBlobNames.count(name) == 0) {
                     err = "Interface specifies output '" + name + "' which is not produced by any layer in the neural network.";
                     return Result(ResultType::INVALID_MODEL_INTERFACE, err);
                 }
                 outputBlobNames.erase(name);
-                
+
             }
         }
-        
+
         return r;
-        
+
     }
 
 
 }
-
-
-

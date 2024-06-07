@@ -3,6 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+#include "MILBlob/SubByteTypes.hpp"
 #include "MILBlob/Util/SpanCast.hpp"
 #include "framework/TestUtils.hpp"
 #include "MLModelTests.hpp"
@@ -36,3 +37,36 @@ int testSpanCastTestsBasics()
     return 0;
 }
 
+int testSpanCastTestsToInt4()
+{
+    std::vector<uint8_t> v;
+    v.emplace_back(0x20);
+    v.emplace_back(0x64);
+    Span<uint8_t> span = MakeSpan(v);
+
+    // Valid casts.
+    CastToBitSpan<MILBlob::Int4>(span, 3);
+    CastToBitSpan<MILBlob::Int4>(span, 4);
+
+    // Invalid due to size being too short or too long.
+    ML_ASSERT_THROWS(CastToBitSpan<MILBlob::Int4>(span, 2), std::invalid_argument);
+    ML_ASSERT_THROWS(CastToBitSpan<MILBlob::Int4>(span, 5), std::invalid_argument);
+
+    return 0;
+}
+
+int testSpanCastTestsFromInt4()
+{
+    std::vector<uint8_t> v;
+    v.emplace_back(0x20);
+    v.emplace_back(0x64);
+    Span<uint8_t> span = MakeSpan(v);
+    {
+        Span<MILBlob::Int4> int4Span = CastToBitSpan<MILBlob::Int4>(span, 3);
+        ML_ASSERT_EQ(int4Span.Size(), 3);
+        Span<const uint8_t> uint8Span = CastFromBitSpan(int4Span);
+        ML_ASSERT_EQ(uint8Span.Size(), 2);
+    }
+
+    return 0;
+}

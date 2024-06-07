@@ -869,6 +869,7 @@ def Neg(context, node):
 def NotEqual(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
+    x, y = promote_input_dtypes([x, y])
     x = mb.not_equal(x=x, y=y, name=node.name)
     context.add(node.name, x)
 

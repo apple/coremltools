@@ -6,8 +6,10 @@
 #pragma once
 
 #include "MILBlob/Bf16.hpp"
-#include "MILBlob/Fp16.hpp"
 #include "MILBlob/Blob/BlobDataType.hpp"
+#include "MILBlob/Fp16.hpp"
+#include "MILBlob/Fp8.hpp"
+#include "MILBlob/SubByteTypes.hpp"
 #include "MILBlob/Util/Span.hpp"
 #include <memory>
 #include <string>
@@ -22,12 +24,16 @@ namespace Blob {
  * Memory-mapping is performed lazily on first access to the underlying data.
  *
  * This file format supports the following types:
+ * - uint1,2,4
+ * - int4
  * - uint8_t
  * - Bf16
  * - Fp16
  * - float
  * - int16_t
  * - uint16_t
+ * - int32_t
+ * - uint32_t
  */
 class StorageReader final {
 public:
@@ -85,15 +91,23 @@ public:
     /** Returns a vector containing the metadata offsets for all blobs in the file, in order. */
     std::vector<uint64_t> GetAllOffsets() const;
 
+    uint64_t GetDataPaddingInBits(uint64_t metadataOffset) const;
+
 private:
     class Impl;
     const std::unique_ptr<Impl> m_impl;
 };
 
 template <>
+Util::Span<const Int4> StorageReader::GetDataView<Int4>(uint64_t) const;
+template <>
 Util::Span<const int8_t> StorageReader::GetDataView<int8_t>(uint64_t) const;
 template <>
 Util::Span<const uint8_t> StorageReader::GetDataView<uint8_t>(uint64_t) const;
+template <>
+Util::Span<const Fp8E4M3FN> StorageReader::GetDataView<Fp8E4M3FN>(uint64_t) const;
+template <>
+Util::Span<const Fp8E5M2> StorageReader::GetDataView<Fp8E5M2>(uint64_t) const;
 template <>
 Util::Span<const Bf16> StorageReader::GetDataView<Bf16>(uint64_t) const;
 template <>
@@ -101,9 +115,23 @@ Util::Span<const Fp16> StorageReader::GetDataView<Fp16>(uint64_t) const;
 template <>
 Util::Span<const float> StorageReader::GetDataView<float>(uint64_t) const;
 template <>
+Util::Span<const UInt1> StorageReader::GetDataView<UInt1>(uint64_t) const;
+template <>
+Util::Span<const UInt2> StorageReader::GetDataView<UInt2>(uint64_t) const;
+template <>
+Util::Span<const UInt3> StorageReader::GetDataView<UInt3>(uint64_t) const;
+template <>
+Util::Span<const UInt4> StorageReader::GetDataView<UInt4>(uint64_t) const;
+template <>
+Util::Span<const UInt6> StorageReader::GetDataView<UInt6>(uint64_t) const;
+template <>
 Util::Span<const int16_t> StorageReader::GetDataView<int16_t>(uint64_t) const;
 template <>
 Util::Span<const uint16_t> StorageReader::GetDataView<uint16_t>(uint64_t) const;
+template <>
+Util::Span<const int32_t> StorageReader::GetDataView<int32_t>(uint64_t) const;
+template <>
+Util::Span<const uint32_t> StorageReader::GetDataView<uint32_t>(uint64_t) const;
 
 }  // namespace Blob
 }  // namespace MILBlob

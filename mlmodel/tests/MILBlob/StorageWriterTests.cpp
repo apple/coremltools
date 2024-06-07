@@ -7,6 +7,8 @@
 #include "MILBlob/Blob/StorageFormat.hpp"
 #include "MILBlob/Blob/StorageWriter.hpp"
 #include "MILBlob/Fp16.hpp"
+#include "MILBlob/Fp8.hpp"
+#include "MILBlob/Util/SpanCast.hpp"
 #include "AutoDeleteTempFile.hpp"
 #include "BlobUtils.hpp"
 #include "framework/TestUtils.hpp"
@@ -30,20 +32,37 @@ namespace {
 }
 
 template <typename T>
+[[nodiscard]] bool IsCorrectMetadataForSubByte(const std::string& filePath,
+                                               uint64_t offset,
+                                               uint64_t entryCount,
+                                               BlobDataType dataType)
+{
+    blob_metadata metadata;
+    TestUtil::ReadData<blob_metadata>(filePath, metadata, offset);
+    uint64_t occupiedBits = (metadata.sizeInBytes * 8 - metadata.padding_size_in_bits);
+    bool sizesMatch = (occupiedBits / T::SizeInBits) == entryCount;
+    return metadata.sentinel == BlobMetadataSentinel && metadata.mil_dtype == dataType && sizesMatch;
+}
+
+template <typename T>
 [[nodiscard]] bool IsCorrectMetadata(const std::string& filePath,
                                      uint64_t offset,
                                      uint64_t entryCount,
                                      BlobDataType dataType)
 {
-    blob_metadata metadata;
-    TestUtil::ReadData<blob_metadata>(filePath, metadata, offset);
+    if constexpr (MILBlob::IsSubByteSized<T>::value) {
+        return IsCorrectMetadataForSubByte<T>(filePath, offset, entryCount, dataType);
+    } else {
+        blob_metadata metadata;
+        TestUtil::ReadData<blob_metadata>(filePath, metadata, offset);
 
-    return metadata.sentinel == BlobMetadataSentinel && metadata.mil_dtype == dataType &&
-           metadata.sizeInBytes == entryCount * sizeof(T) && metadata.offset % DefaultStorageAlignment == 0;
+        return metadata.sentinel == BlobMetadataSentinel && metadata.mil_dtype == dataType &&
+               metadata.sizeInBytes == entryCount * sizeof(T) && metadata.offset % DefaultStorageAlignment == 0;
+    }
 }
 
 template <typename T>
-[[nodiscard]] bool IsCorrectData(const std::string& filePath, uint64_t offset, Util::Span<const T> expectedSpan)
+[[nodiscard]] bool IsCorrectDataImpl(const std::string& filePath, uint64_t offset, Util::Span<const T> expectedSpan)
 {
     blob_metadata metadata;
     TestUtil::ReadData<blob_metadata>(filePath, metadata, offset);
@@ -54,6 +73,55 @@ template <typename T>
 
     return outputSpan.Size() == expectedSpan.Size() &&
            std::equal(outputSpan.begin(), outputSpan.end(), expectedSpan.begin());
+}
+
+template <typename T>
+[[nodiscard]] bool IsCorrectSubByteData(const std::string& filePath, uint64_t offset, Util::Span<const T> expectedSpan)
+{
+    blob_metadata metadata;
+    TestUtil::ReadData<blob_metadata>(filePath, metadata, offset);
+    // sizing this int8 vector with the int4 span size is an overestimation - should be
+    // fine for this test since we need the buffer only anyway
+    std::vector<uint8_t> v(expectedSpan.Size());
+    Util::Span<T> outputSpan((void*)v.data(), expectedSpan.Size());
+    TestUtil::ReadBlobFile(filePath, metadata.offset, outputSpan);
+
+    auto ourBytesPtr = static_cast<const T*>(outputSpan.Data());
+    auto otherBytesPtr = static_cast<const T*>(expectedSpan.Data());
+
+    // scan bytes up to but not including padding
+    std::size_t numBits = outputSpan.Size() * T::SizeInBits;
+    std::size_t remainderBits = numBits % 8;
+
+    std::size_t numFullBytes = numBits / 8;
+    std::size_t numRemainingElements = remainderBits / T::SizeInBits;
+
+    for (size_t i = 0; i < numFullBytes; i++) {
+        if (ourBytesPtr[i] != otherBytesPtr[i]) {
+            return false;
+        }
+    }
+
+    // scan remainder, ignore garbage bits
+    for (size_t i = 0; i < numRemainingElements; i++) {
+        auto mask = T::BitMask << (i * T::SizeInBits);
+        auto ourVal = ourBytesPtr[numFullBytes].data & mask;
+        auto otherVal = otherBytesPtr[numFullBytes].data & mask;
+        if (ourVal != otherVal) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template <typename T>
+[[nodiscard]] bool IsCorrectData(const std::string& filePath, uint64_t offset, Util::Span<const T> expectedSpan)
+{
+    if constexpr (MILBlob::IsSubByteSized<T>::value) {
+        return IsCorrectSubByteData(filePath, offset, expectedSpan);
+    } else {
+        return IsCorrectDataImpl(filePath, offset, expectedSpan);
+    }
 }
 
 }  // anonymous namespace
@@ -110,6 +178,38 @@ int testStorageWriterTestsSupportedTypes()
         ML_ASSERT(IsCorrectHeader(filePath, ++headerCount));
         ML_ASSERT(IsCorrectMetadata<int16_t>(filePath, offset, 4, BlobDataType::Int16));
         ML_ASSERT(IsCorrectData<int16_t>(filePath, offset, expectedSpan));
+    }
+
+    // Writing Fp8E4M3FN values
+    {
+        const std::vector<Fp8E4M3FN> val = {Fp8E4M3FN(0xCA), Fp8E4M3FN(0xBE), Fp8E4M3FN(0x80), Fp8E4M3FN(0x00)};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<Fp8E4M3FN>(filePath, offset, 4, BlobDataType::Float8E4M3FN));
+        ML_ASSERT(IsCorrectData<Fp8E4M3FN>(filePath, offset, expectedSpan));
+    }
+
+    // Writing Fp8E5M2 values
+    {
+        const std::vector<Fp8E5M2> val = {Fp8E5M2(0xCA), Fp8E5M2(0xBE), Fp8E5M2(0x80), Fp8E5M2(0x00)};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<Fp8E5M2>(filePath, offset, 4, BlobDataType::Float8E5M2));
+        ML_ASSERT(IsCorrectData<Fp8E5M2>(filePath, offset, expectedSpan));
     }
 
     // Writing bf16 values
@@ -176,12 +276,151 @@ int testStorageWriterTestsSupportedTypes()
         ML_ASSERT(IsCorrectData<int8_t>(filePath, offset, expectedSpan));
     }
 
+    // Writing int4 values
+    {
+        std::vector<uint8_t> val = {0xFA, 0x17, 0xD2};
+        auto expectedSpanInt8 = Util::MakeSpan(val);
+        const auto expectedSpan = MILBlob::Util::CastToBitSpan<const Int4>(expectedSpanInt8, 6);
+
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<Int4>(filePath, offset, 6, BlobDataType::Int4));
+        ML_ASSERT(IsCorrectData<Int4>(filePath, offset, expectedSpan));
+    }
+
+    // Writing uint4 values
+    {
+        std::vector<uint8_t> val = {0xFA, 0x17, 0xD2};
+        auto expectedSpanUInt8 = Util::MakeSpan(val);
+        const auto expectedSpan = MILBlob::Util::CastToBitSpan<const UInt4>(expectedSpanUInt8, 5);
+
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<UInt4>(filePath, offset, 5, BlobDataType::UInt4));
+        ML_ASSERT(IsCorrectData<UInt4>(filePath, offset, expectedSpan));
+    }
+
+    // Writing uint2 values
+    {
+        std::vector<uint8_t> val = {0b11001010, 0b11110101};
+        auto expectedSpanUInt8 = Util::MakeSpan(val);
+        const auto expectedSpan = MILBlob::Util::CastToBitSpan<const UInt2>(expectedSpanUInt8, 5);
+
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<UInt2>(filePath, offset, 5, BlobDataType::UInt2));
+        ML_ASSERT(IsCorrectData<UInt2>(filePath, offset, expectedSpan));
+    }
+
+    // Writing uint1 values
+    {
+        std::vector<uint8_t> val = {0b11001010, 0b11110101};
+        auto expectedSpanUInt8 = Util::MakeSpan(val);
+        const auto expectedSpan = MILBlob::Util::CastToBitSpan<const UInt1>(expectedSpanUInt8, 13);
+
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<UInt1>(filePath, offset, 13, BlobDataType::UInt1));
+        ML_ASSERT(IsCorrectData<UInt1>(filePath, offset, expectedSpan));
+    }
+
+    // Writing uint3 values
+    {
+        std::vector<uint8_t> val = {0b11001010, 0b11110101};
+        auto expectedSpanUInt8 = Util::MakeSpan(val);
+        const auto expectedSpan = MILBlob::Util::CastToBitSpan<const UInt3>(expectedSpanUInt8, 4);
+
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<UInt3>(filePath, offset, 4, BlobDataType::UInt3));
+        ML_ASSERT(IsCorrectData<UInt3>(filePath, offset, expectedSpan));
+    }
+
+    // Writing uint6 values
+    {
+        std::vector<uint8_t> val = {0b11001010, 0b11110101, 0b00000100};
+        auto expectedSpanUInt8 = Util::MakeSpan(val);
+        const auto expectedSpan = MILBlob::Util::CastToBitSpan<const UInt6>(expectedSpanUInt8, 3);
+
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount /*count*/));
+        ML_ASSERT(IsCorrectMetadata<UInt6>(filePath, offset, 3, BlobDataType::UInt6));
+        ML_ASSERT(IsCorrectData<UInt6>(filePath, offset, expectedSpan));
+    }
+
+    // Writing int32 values
+    {
+        const std::vector<int32_t> val = {0xFFC2, 0x7FFF};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount));
+        ML_ASSERT(IsCorrectMetadata<int32_t>(filePath, offset, 2, BlobDataType::Int32));
+        ML_ASSERT(IsCorrectData<int32_t>(filePath, offset, expectedSpan));
+    }
+    // Writing uint32 values
+    {
+        const std::vector<uint32_t> val = {0xFFC2, 0x7FFF, 0xDEAD, 0XCAFE};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, ++headerCount));
+        ML_ASSERT(IsCorrectMetadata<uint32_t>(filePath, offset, 4, BlobDataType::UInt32));
+        ML_ASSERT(IsCorrectData<uint32_t>(filePath, offset, expectedSpan));
+    }
+
     return 0;
 }
 
 int testStorageWriterTestsAppendToExistingFile()
 {
-    // File does not exists, creates one
+    // File does not exist, creates one
     {
         AutoDeleteTempFile tempfile;
         StorageWriter(tempfile.GetFilename(), /* truncateFile */ false);

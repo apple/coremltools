@@ -51,17 +51,14 @@ class gru(Operation):
         * ``weigh_ih = [W_{ir} | W_{io} | W_{iz}]`` where ``[a|b]`` denotes column
           concatenation and ``[a, b]`` denotes row concatenation. ``W_{ir}``,
           ``W_{io}``, and ``W_{iz}`` have shape ``(H, I)``.
-        * This is used when direction="forward" or "reverse".
 
     weight_hh: const<3*H, H, T> (Required) - Weight matrix
         * ``weight_hh =  [W_{hr} | W_{ho} | W_{hz}]``: ``W_{hr}``, ``W_{ho}``, and
           ``W_{hz}`` have shape ``(H, H)``.
-        * This is used when direction="forward" or "reverse".
 
     bias: const<3*H, T> (Optional) [Default all 0s]
         * ``bias[0]`` are input-hidden and hidden-hidden bias.
         * ``3*H`` are biases for ``[b_{ir} | b_{io} | b_{hz}]``.
-        * This is used when direction="forward" or "reverse".
 
     direction: const<str> (Optional) [Default=forward]
         * Either ``forward`` or ``reverse``.

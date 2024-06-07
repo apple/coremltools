@@ -101,6 +101,9 @@ extern Program_AttributesEntryDefaultTypeInternal _Program_AttributesEntry_defau
 class Program_FunctionsEntry;
 class Program_FunctionsEntryDefaultTypeInternal;
 extern Program_FunctionsEntryDefaultTypeInternal _Program_FunctionsEntry_default_instance_;
+class StateType;
+class StateTypeDefaultTypeInternal;
+extern StateTypeDefaultTypeInternal _StateType_default_instance_;
 class TensorType;
 class TensorTypeDefaultTypeInternal;
 extern TensorTypeDefaultTypeInternal _TensorType_default_instance_;
@@ -175,6 +178,8 @@ enum DataType {
   UNUSED_TYPE = 0,
   BOOL = 1,
   STRING = 2,
+  FLOAT8E4M3FN = 40,
+  FLOAT8E5M2 = 41,
   FLOAT16 = 10,
   FLOAT32 = 11,
   FLOAT64 = 12,
@@ -183,16 +188,22 @@ enum DataType {
   INT16 = 22,
   INT32 = 23,
   INT64 = 24,
+  INT4 = 25,
   UINT8 = 31,
   UINT16 = 32,
   UINT32 = 33,
   UINT64 = 34,
+  UINT4 = 35,
+  UINT2 = 36,
+  UINT1 = 37,
+  UINT6 = 38,
+  UINT3 = 39,
   DataType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   DataType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool DataType_IsValid(int value);
 const DataType DataType_MIN = UNUSED_TYPE;
-const DataType DataType_MAX = UINT64;
+const DataType DataType_MAX = FLOAT8E5M2;
 const int DataType_ARRAYSIZE = DataType_MAX + 1;
 
 // ===================================================================
@@ -1125,6 +1136,7 @@ class ValueType : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
     kListType = 2,
     kTupleType = 3,
     kDictionaryType = 4,
+    kStateType = 5,
     TYPE_NOT_SET = 0,
   };
 
@@ -1212,6 +1224,15 @@ class ValueType : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   ::CoreML::Specification::MILSpec::DictionaryType* release_dictionarytype();
   void set_allocated_dictionarytype(::CoreML::Specification::MILSpec::DictionaryType* dictionarytype);
 
+  // .CoreML.Specification.MILSpec.StateType stateType = 5;
+  bool has_statetype() const;
+  void clear_statetype();
+  static const int kStateTypeFieldNumber = 5;
+  const ::CoreML::Specification::MILSpec::StateType& statetype() const;
+  ::CoreML::Specification::MILSpec::StateType* mutable_statetype();
+  ::CoreML::Specification::MILSpec::StateType* release_statetype();
+  void set_allocated_statetype(::CoreML::Specification::MILSpec::StateType* statetype);
+
   TypeCase type_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.MILSpec.ValueType)
  private:
@@ -1219,6 +1240,7 @@ class ValueType : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
   void set_has_listtype();
   void set_has_tupletype();
   void set_has_dictionarytype();
+  void set_has_statetype();
 
   inline bool has_type() const;
   void clear_type();
@@ -1231,6 +1253,7 @@ class ValueType : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
     ::CoreML::Specification::MILSpec::ListType* listtype_;
     ::CoreML::Specification::MILSpec::TupleType* tupletype_;
     ::CoreML::Specification::MILSpec::DictionaryType* dictionarytype_;
+    ::CoreML::Specification::MILSpec::StateType* statetype_;
   } type_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -1630,6 +1653,87 @@ class DictionaryType : public ::google::protobuf::MessageLite /* @@protoc_insert
 };
 // -------------------------------------------------------------------
 
+class StateType : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.MILSpec.StateType) */ {
+ public:
+  StateType();
+  virtual ~StateType();
+
+  StateType(const StateType& from);
+
+  inline StateType& operator=(const StateType& from) {
+    CopyFrom(from);
+    return *this;
+  }
+
+  static const StateType& default_instance();
+
+  static inline const StateType* internal_default_instance() {
+    return reinterpret_cast<const StateType*>(
+               &_StateType_default_instance_);
+  }
+  static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
+    20;
+
+  void Swap(StateType* other);
+
+  // implements Message ----------------------------------------------
+
+  inline StateType* New() const PROTOBUF_FINAL { return New(NULL); }
+
+  StateType* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
+    PROTOBUF_FINAL;
+  void CopyFrom(const StateType& from);
+  void MergeFrom(const StateType& from);
+  void Clear() PROTOBUF_FINAL;
+  bool IsInitialized() const PROTOBUF_FINAL;
+
+  size_t ByteSizeLong() const PROTOBUF_FINAL;
+  bool MergePartialFromCodedStream(
+      ::google::protobuf::io::CodedInputStream* input) PROTOBUF_FINAL;
+  void SerializeWithCachedSizes(
+      ::google::protobuf::io::CodedOutputStream* output) const PROTOBUF_FINAL;
+  void DiscardUnknownFields();
+  int GetCachedSize() const PROTOBUF_FINAL { return _cached_size_; }
+  private:
+  void SharedCtor();
+  void SharedDtor();
+  void SetCachedSize(int size) const;
+  void InternalSwap(StateType* other);
+  private:
+  inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
+    return NULL;
+  }
+  inline void* MaybeArenaPtr() const {
+    return NULL;
+  }
+  public:
+
+  ::std::string GetTypeName() const PROTOBUF_FINAL;
+
+  // nested types ----------------------------------------------------
+
+  // accessors -------------------------------------------------------
+
+  // .CoreML.Specification.MILSpec.ValueType wrappedType = 1;
+  bool has_wrappedtype() const;
+  void clear_wrappedtype();
+  static const int kWrappedTypeFieldNumber = 1;
+  const ::CoreML::Specification::MILSpec::ValueType& wrappedtype() const;
+  ::CoreML::Specification::MILSpec::ValueType* mutable_wrappedtype();
+  ::CoreML::Specification::MILSpec::ValueType* release_wrappedtype();
+  void set_allocated_wrappedtype(::CoreML::Specification::MILSpec::ValueType* wrappedtype);
+
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.MILSpec.StateType)
+ private:
+
+  ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
+  ::CoreML::Specification::MILSpec::ValueType* wrappedtype_;
+  mutable int _cached_size_;
+  friend struct protobuf_MIL_2eproto::TableStruct;
+};
+// -------------------------------------------------------------------
+
 class Dimension_ConstantDimension : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.MILSpec.Dimension.ConstantDimension) */ {
  public:
   Dimension_ConstantDimension();
@@ -1649,7 +1753,7 @@ class Dimension_ConstantDimension : public ::google::protobuf::MessageLite /* @@
                &_Dimension_ConstantDimension_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    20;
+    21;
 
   void Swap(Dimension_ConstantDimension* other);
 
@@ -1727,7 +1831,7 @@ class Dimension_UnknownDimension : public ::google::protobuf::MessageLite /* @@p
                &_Dimension_UnknownDimension_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    21;
+    22;
 
   void Swap(Dimension_UnknownDimension* other);
 
@@ -1811,7 +1915,7 @@ class Dimension : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_Dimension_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    22;
+    23;
 
   void Swap(Dimension* other);
 
@@ -1925,7 +2029,7 @@ class Value_ImmediateValue : public ::google::protobuf::MessageLite /* @@protoc_
                &_Value_ImmediateValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    23;
+    24;
 
   void Swap(Value_ImmediateValue* other);
 
@@ -2050,7 +2154,7 @@ class Value_BlobFileValue : public ::google::protobuf::MessageLite /* @@protoc_i
                &_Value_BlobFileValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    24;
+    25;
 
   void Swap(Value_BlobFileValue* other);
 
@@ -2149,7 +2253,7 @@ class Value : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
                &_Value_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    25;
+    26;
 
   void Swap(Value* other);
 
@@ -2280,7 +2384,7 @@ class TensorValue_RepeatedFloats : public ::google::protobuf::MessageLite /* @@p
                &_TensorValue_RepeatedFloats_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    26;
+    27;
 
   void Swap(TensorValue_RepeatedFloats* other);
 
@@ -2365,7 +2469,7 @@ class TensorValue_RepeatedDoubles : public ::google::protobuf::MessageLite /* @@
                &_TensorValue_RepeatedDoubles_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    27;
+    28;
 
   void Swap(TensorValue_RepeatedDoubles* other);
 
@@ -2450,7 +2554,7 @@ class TensorValue_RepeatedInts : public ::google::protobuf::MessageLite /* @@pro
                &_TensorValue_RepeatedInts_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    28;
+    29;
 
   void Swap(TensorValue_RepeatedInts* other);
 
@@ -2535,7 +2639,7 @@ class TensorValue_RepeatedLongInts : public ::google::protobuf::MessageLite /* @
                &_TensorValue_RepeatedLongInts_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    29;
+    30;
 
   void Swap(TensorValue_RepeatedLongInts* other);
 
@@ -2620,7 +2724,7 @@ class TensorValue_RepeatedBools : public ::google::protobuf::MessageLite /* @@pr
                &_TensorValue_RepeatedBools_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    30;
+    31;
 
   void Swap(TensorValue_RepeatedBools* other);
 
@@ -2705,7 +2809,7 @@ class TensorValue_RepeatedStrings : public ::google::protobuf::MessageLite /* @@
                &_TensorValue_RepeatedStrings_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    31;
+    32;
 
   void Swap(TensorValue_RepeatedStrings* other);
 
@@ -2799,7 +2903,7 @@ class TensorValue_RepeatedBytes : public ::google::protobuf::MessageLite /* @@pr
                &_TensorValue_RepeatedBytes_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    32;
+    33;
 
   void Swap(TensorValue_RepeatedBytes* other);
 
@@ -2896,7 +3000,7 @@ class TensorValue : public ::google::protobuf::MessageLite /* @@protoc_insertion
                &_TensorValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    33;
+    34;
 
   void Swap(TensorValue* other);
 
@@ -3062,7 +3166,7 @@ class TupleValue : public ::google::protobuf::MessageLite /* @@protoc_insertion_
                &_TupleValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    34;
+    35;
 
   void Swap(TupleValue* other);
 
@@ -3146,7 +3250,7 @@ class ListValue : public ::google::protobuf::MessageLite /* @@protoc_insertion_p
                &_ListValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    35;
+    36;
 
   void Swap(ListValue* other);
 
@@ -3230,7 +3334,7 @@ class DictionaryValue_KeyValuePair : public ::google::protobuf::MessageLite /* @
                &_DictionaryValue_KeyValuePair_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    36;
+    37;
 
   void Swap(DictionaryValue_KeyValuePair* other);
 
@@ -3321,7 +3425,7 @@ class DictionaryValue : public ::google::protobuf::MessageLite /* @@protoc_inser
                &_DictionaryValue_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
-    37;
+    38;
 
   void Swap(DictionaryValue* other);
 
@@ -3407,7 +3511,7 @@ inline ::google::protobuf::int64 Program::version() const {
   return version_;
 }
 inline void Program::set_version(::google::protobuf::int64 value) {
-  
+
   version_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Program.version)
 }
@@ -3439,13 +3543,13 @@ inline const ::std::string& Program::docstring() const {
   return docstring_.GetNoArena();
 }
 inline void Program::set_docstring(const ::std::string& value) {
-  
+
   docstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Program.docString)
 }
 #if LANG_CXX11
 inline void Program::set_docstring(::std::string&& value) {
-  
+
   docstring_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.Program.docString)
@@ -3453,31 +3557,31 @@ inline void Program::set_docstring(::std::string&& value) {
 #endif
 inline void Program::set_docstring(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   docstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.Program.docString)
 }
 inline void Program::set_docstring(const char* value, size_t size) {
-  
+
   docstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.Program.docString)
 }
 inline ::std::string* Program::mutable_docstring() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.Program.docString)
   return docstring_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* Program::release_docstring() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.Program.docString)
-  
+
   return docstring_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void Program::set_allocated_docstring(::std::string* docstring) {
   if (docstring != NULL) {
-    
+
   } else {
-    
+
   }
   docstring_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), docstring);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.Program.docString)
@@ -3548,13 +3652,13 @@ inline const ::std::string& Function::opset() const {
   return opset_.GetNoArena();
 }
 inline void Function::set_opset(const ::std::string& value) {
-  
+
   opset_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Function.opset)
 }
 #if LANG_CXX11
 inline void Function::set_opset(::std::string&& value) {
-  
+
   opset_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.Function.opset)
@@ -3562,31 +3666,31 @@ inline void Function::set_opset(::std::string&& value) {
 #endif
 inline void Function::set_opset(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   opset_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.Function.opset)
 }
 inline void Function::set_opset(const char* value, size_t size) {
-  
+
   opset_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.Function.opset)
 }
 inline ::std::string* Function::mutable_opset() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.Function.opset)
   return opset_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* Function::release_opset() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.Function.opset)
-  
+
   return opset_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void Function::set_allocated_opset(::std::string* opset) {
   if (opset != NULL) {
-    
+
   } else {
-    
+
   }
   opset_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), opset);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.Function.opset)
@@ -3988,13 +4092,13 @@ inline const ::std::string& Operation::type() const {
   return type_.GetNoArena();
 }
 inline void Operation::set_type(const ::std::string& value) {
-  
+
   type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Operation.type)
 }
 #if LANG_CXX11
 inline void Operation::set_type(::std::string&& value) {
-  
+
   type_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.Operation.type)
@@ -4002,31 +4106,31 @@ inline void Operation::set_type(::std::string&& value) {
 #endif
 inline void Operation::set_type(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.Operation.type)
 }
 inline void Operation::set_type(const char* value, size_t size) {
-  
+
   type_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.Operation.type)
 }
 inline ::std::string* Operation::mutable_type() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.Operation.type)
   return type_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* Operation::release_type() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.Operation.type)
-  
+
   return type_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void Operation::set_allocated_type(::std::string* type) {
   if (type != NULL) {
-    
+
   } else {
-    
+
   }
   type_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), type);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.Operation.type)
@@ -4141,13 +4245,13 @@ inline const ::std::string& NamedValueType::name() const {
   return name_.GetNoArena();
 }
 inline void NamedValueType::set_name(const ::std::string& value) {
-  
+
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.NamedValueType.name)
 }
 #if LANG_CXX11
 inline void NamedValueType::set_name(::std::string&& value) {
-  
+
   name_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.NamedValueType.name)
@@ -4155,31 +4259,31 @@ inline void NamedValueType::set_name(::std::string&& value) {
 #endif
 inline void NamedValueType::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.NamedValueType.name)
 }
 inline void NamedValueType::set_name(const char* value, size_t size) {
-  
+
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.NamedValueType.name)
 }
 inline ::std::string* NamedValueType::mutable_name() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.NamedValueType.name)
   return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* NamedValueType::release_name() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.NamedValueType.name)
-  
+
   return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void NamedValueType::set_allocated_name(::std::string* name) {
   if (name != NULL) {
-    
+
   } else {
-    
+
   }
   name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.NamedValueType.name)
@@ -4199,7 +4303,7 @@ inline const ::CoreML::Specification::MILSpec::ValueType& NamedValueType::type()
                          : *::CoreML::Specification::MILSpec::ValueType::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::ValueType* NamedValueType::mutable_type() {
-  
+
   if (type_ == NULL) {
     type_ = new ::CoreML::Specification::MILSpec::ValueType;
   }
@@ -4208,7 +4312,7 @@ inline ::CoreML::Specification::MILSpec::ValueType* NamedValueType::mutable_type
 }
 inline ::CoreML::Specification::MILSpec::ValueType* NamedValueType::release_type() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.NamedValueType.type)
-  
+
   ::CoreML::Specification::MILSpec::ValueType* temp = type_;
   type_ = NULL;
   return temp;
@@ -4217,9 +4321,9 @@ inline void NamedValueType::set_allocated_type(::CoreML::Specification::MILSpec:
   delete type_;
   type_ = type;
   if (type) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.NamedValueType.type)
 }
@@ -4420,6 +4524,54 @@ inline void ValueType::set_allocated_dictionarytype(::CoreML::Specification::MIL
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.ValueType.dictionaryType)
 }
 
+// .CoreML.Specification.MILSpec.StateType stateType = 5;
+inline bool ValueType::has_statetype() const {
+  return type_case() == kStateType;
+}
+inline void ValueType::set_has_statetype() {
+  _oneof_case_[0] = kStateType;
+}
+inline void ValueType::clear_statetype() {
+  if (has_statetype()) {
+    delete type_.statetype_;
+    clear_has_type();
+  }
+}
+inline  const ::CoreML::Specification::MILSpec::StateType& ValueType::statetype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.MILSpec.ValueType.stateType)
+  return has_statetype()
+      ? *type_.statetype_
+      : ::CoreML::Specification::MILSpec::StateType::default_instance();
+}
+inline ::CoreML::Specification::MILSpec::StateType* ValueType::mutable_statetype() {
+  if (!has_statetype()) {
+    clear_type();
+    set_has_statetype();
+    type_.statetype_ = new ::CoreML::Specification::MILSpec::StateType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.ValueType.stateType)
+  return type_.statetype_;
+}
+inline ::CoreML::Specification::MILSpec::StateType* ValueType::release_statetype() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.ValueType.stateType)
+  if (has_statetype()) {
+    clear_has_type();
+    ::CoreML::Specification::MILSpec::StateType* temp = type_.statetype_;
+    type_.statetype_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void ValueType::set_allocated_statetype(::CoreML::Specification::MILSpec::StateType* statetype) {
+  clear_type();
+  if (statetype) {
+    set_has_statetype();
+    type_.statetype_ = statetype;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.ValueType.stateType)
+}
+
 inline bool ValueType::has_type() const {
   return type_case() != TYPE_NOT_SET;
 }
@@ -4444,7 +4596,7 @@ inline ::CoreML::Specification::MILSpec::DataType TensorType::datatype() const {
   return static_cast< ::CoreML::Specification::MILSpec::DataType >(datatype_);
 }
 inline void TensorType::set_datatype(::CoreML::Specification::MILSpec::DataType value) {
-  
+
   datatype_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.TensorType.dataType)
 }
@@ -4458,7 +4610,7 @@ inline ::google::protobuf::int64 TensorType::rank() const {
   return rank_;
 }
 inline void TensorType::set_rank(::google::protobuf::int64 value) {
-  
+
   rank_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.TensorType.rank)
 }
@@ -4563,7 +4715,7 @@ inline const ::CoreML::Specification::MILSpec::ValueType& ListType::type() const
                          : *::CoreML::Specification::MILSpec::ValueType::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::ValueType* ListType::mutable_type() {
-  
+
   if (type_ == NULL) {
     type_ = new ::CoreML::Specification::MILSpec::ValueType;
   }
@@ -4572,7 +4724,7 @@ inline ::CoreML::Specification::MILSpec::ValueType* ListType::mutable_type() {
 }
 inline ::CoreML::Specification::MILSpec::ValueType* ListType::release_type() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.ListType.type)
-  
+
   ::CoreML::Specification::MILSpec::ValueType* temp = type_;
   type_ = NULL;
   return temp;
@@ -4581,9 +4733,9 @@ inline void ListType::set_allocated_type(::CoreML::Specification::MILSpec::Value
   delete type_;
   type_ = type;
   if (type) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.ListType.type)
 }
@@ -4602,7 +4754,7 @@ inline const ::CoreML::Specification::MILSpec::Dimension& ListType::length() con
                          : *::CoreML::Specification::MILSpec::Dimension::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::Dimension* ListType::mutable_length() {
-  
+
   if (length_ == NULL) {
     length_ = new ::CoreML::Specification::MILSpec::Dimension;
   }
@@ -4611,7 +4763,7 @@ inline ::CoreML::Specification::MILSpec::Dimension* ListType::mutable_length() {
 }
 inline ::CoreML::Specification::MILSpec::Dimension* ListType::release_length() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.ListType.length)
-  
+
   ::CoreML::Specification::MILSpec::Dimension* temp = length_;
   length_ = NULL;
   return temp;
@@ -4620,9 +4772,9 @@ inline void ListType::set_allocated_length(::CoreML::Specification::MILSpec::Dim
   delete length_;
   length_ = length;
   if (length) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.ListType.length)
 }
@@ -4645,7 +4797,7 @@ inline const ::CoreML::Specification::MILSpec::ValueType& DictionaryType::keytyp
                          : *::CoreML::Specification::MILSpec::ValueType::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::ValueType* DictionaryType::mutable_keytype() {
-  
+
   if (keytype_ == NULL) {
     keytype_ = new ::CoreML::Specification::MILSpec::ValueType;
   }
@@ -4654,7 +4806,7 @@ inline ::CoreML::Specification::MILSpec::ValueType* DictionaryType::mutable_keyt
 }
 inline ::CoreML::Specification::MILSpec::ValueType* DictionaryType::release_keytype() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.DictionaryType.keyType)
-  
+
   ::CoreML::Specification::MILSpec::ValueType* temp = keytype_;
   keytype_ = NULL;
   return temp;
@@ -4663,9 +4815,9 @@ inline void DictionaryType::set_allocated_keytype(::CoreML::Specification::MILSp
   delete keytype_;
   keytype_ = keytype;
   if (keytype) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.DictionaryType.keyType)
 }
@@ -4684,7 +4836,7 @@ inline const ::CoreML::Specification::MILSpec::ValueType& DictionaryType::valuet
                          : *::CoreML::Specification::MILSpec::ValueType::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::ValueType* DictionaryType::mutable_valuetype() {
-  
+
   if (valuetype_ == NULL) {
     valuetype_ = new ::CoreML::Specification::MILSpec::ValueType;
   }
@@ -4693,7 +4845,7 @@ inline ::CoreML::Specification::MILSpec::ValueType* DictionaryType::mutable_valu
 }
 inline ::CoreML::Specification::MILSpec::ValueType* DictionaryType::release_valuetype() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.DictionaryType.valueType)
-  
+
   ::CoreML::Specification::MILSpec::ValueType* temp = valuetype_;
   valuetype_ = NULL;
   return temp;
@@ -4702,11 +4854,54 @@ inline void DictionaryType::set_allocated_valuetype(::CoreML::Specification::MIL
   delete valuetype_;
   valuetype_ = valuetype;
   if (valuetype) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.DictionaryType.valueType)
+}
+
+// -------------------------------------------------------------------
+
+// StateType
+
+// .CoreML.Specification.MILSpec.ValueType wrappedType = 1;
+inline bool StateType::has_wrappedtype() const {
+  return this != internal_default_instance() && wrappedtype_ != NULL;
+}
+inline void StateType::clear_wrappedtype() {
+  if (GetArenaNoVirtual() == NULL && wrappedtype_ != NULL) delete wrappedtype_;
+  wrappedtype_ = NULL;
+}
+inline const ::CoreML::Specification::MILSpec::ValueType& StateType::wrappedtype() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.MILSpec.StateType.wrappedType)
+  return wrappedtype_ != NULL ? *wrappedtype_
+                         : *::CoreML::Specification::MILSpec::ValueType::internal_default_instance();
+}
+inline ::CoreML::Specification::MILSpec::ValueType* StateType::mutable_wrappedtype() {
+
+  if (wrappedtype_ == NULL) {
+    wrappedtype_ = new ::CoreML::Specification::MILSpec::ValueType;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.StateType.wrappedType)
+  return wrappedtype_;
+}
+inline ::CoreML::Specification::MILSpec::ValueType* StateType::release_wrappedtype() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.StateType.wrappedType)
+
+  ::CoreML::Specification::MILSpec::ValueType* temp = wrappedtype_;
+  wrappedtype_ = NULL;
+  return temp;
+}
+inline void StateType::set_allocated_wrappedtype(::CoreML::Specification::MILSpec::ValueType* wrappedtype) {
+  delete wrappedtype_;
+  wrappedtype_ = wrappedtype;
+  if (wrappedtype) {
+
+  } else {
+
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.StateType.wrappedType)
 }
 
 // -------------------------------------------------------------------
@@ -4722,7 +4917,7 @@ inline ::google::protobuf::uint64 Dimension_ConstantDimension::size() const {
   return size_;
 }
 inline void Dimension_ConstantDimension::set_size(::google::protobuf::uint64 value) {
-  
+
   size_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Dimension.ConstantDimension.size)
 }
@@ -4740,7 +4935,7 @@ inline bool Dimension_UnknownDimension::variadic() const {
   return variadic_;
 }
 inline void Dimension_UnknownDimension::set_variadic(bool value) {
-  
+
   variadic_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Dimension.UnknownDimension.variadic)
 }
@@ -5072,13 +5267,13 @@ inline const ::std::string& Value_BlobFileValue::filename() const {
   return filename_.GetNoArena();
 }
 inline void Value_BlobFileValue::set_filename(const ::std::string& value) {
-  
+
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
 }
 #if LANG_CXX11
 inline void Value_BlobFileValue::set_filename(::std::string&& value) {
-  
+
   filename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
@@ -5086,31 +5281,31 @@ inline void Value_BlobFileValue::set_filename(::std::string&& value) {
 #endif
 inline void Value_BlobFileValue::set_filename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
 }
 inline void Value_BlobFileValue::set_filename(const char* value, size_t size) {
-  
+
   filename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
 }
 inline ::std::string* Value_BlobFileValue::mutable_filename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
   return filename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* Value_BlobFileValue::release_filename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
-  
+
   return filename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void Value_BlobFileValue::set_allocated_filename(::std::string* filename) {
   if (filename != NULL) {
-    
+
   } else {
-    
+
   }
   filename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), filename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.Value.BlobFileValue.fileName)
@@ -5125,7 +5320,7 @@ inline ::google::protobuf::uint64 Value_BlobFileValue::offset() const {
   return offset_;
 }
 inline void Value_BlobFileValue::set_offset(::google::protobuf::uint64 value) {
-  
+
   offset_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Value.BlobFileValue.offset)
 }
@@ -5143,13 +5338,13 @@ inline const ::std::string& Value::docstring() const {
   return docstring_.GetNoArena();
 }
 inline void Value::set_docstring(const ::std::string& value) {
-  
+
   docstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.Value.docString)
 }
 #if LANG_CXX11
 inline void Value::set_docstring(::std::string&& value) {
-  
+
   docstring_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.Value.docString)
@@ -5157,31 +5352,31 @@ inline void Value::set_docstring(::std::string&& value) {
 #endif
 inline void Value::set_docstring(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   docstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.Value.docString)
 }
 inline void Value::set_docstring(const char* value, size_t size) {
-  
+
   docstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.Value.docString)
 }
 inline ::std::string* Value::mutable_docstring() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.Value.docString)
   return docstring_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* Value::release_docstring() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.Value.docString)
-  
+
   return docstring_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void Value::set_allocated_docstring(::std::string* docstring) {
   if (docstring != NULL) {
-    
+
   } else {
-    
+
   }
   docstring_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), docstring);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.Value.docString)
@@ -5201,7 +5396,7 @@ inline const ::CoreML::Specification::MILSpec::ValueType& Value::type() const {
                          : *::CoreML::Specification::MILSpec::ValueType::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::ValueType* Value::mutable_type() {
-  
+
   if (type_ == NULL) {
     type_ = new ::CoreML::Specification::MILSpec::ValueType;
   }
@@ -5210,7 +5405,7 @@ inline ::CoreML::Specification::MILSpec::ValueType* Value::mutable_type() {
 }
 inline ::CoreML::Specification::MILSpec::ValueType* Value::release_type() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.Value.type)
-  
+
   ::CoreML::Specification::MILSpec::ValueType* temp = type_;
   type_ = NULL;
   return temp;
@@ -5219,9 +5414,9 @@ inline void Value::set_allocated_type(::CoreML::Specification::MILSpec::ValueTyp
   delete type_;
   type_ = type;
   if (type) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.Value.type)
 }
@@ -5587,13 +5782,13 @@ inline const ::std::string& TensorValue_RepeatedBytes::values() const {
   return values_.GetNoArena();
 }
 inline void TensorValue_RepeatedBytes::set_values(const ::std::string& value) {
-  
+
   values_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
 }
 #if LANG_CXX11
 inline void TensorValue_RepeatedBytes::set_values(::std::string&& value) {
-  
+
   values_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
@@ -5601,31 +5796,31 @@ inline void TensorValue_RepeatedBytes::set_values(::std::string&& value) {
 #endif
 inline void TensorValue_RepeatedBytes::set_values(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   values_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
 }
 inline void TensorValue_RepeatedBytes::set_values(const void* value, size_t size) {
-  
+
   values_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
 }
 inline ::std::string* TensorValue_RepeatedBytes::mutable_values() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
   return values_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* TensorValue_RepeatedBytes::release_values() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
-  
+
   return values_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void TensorValue_RepeatedBytes::set_allocated_values(::std::string* values) {
   if (values != NULL) {
-    
+
   } else {
-    
+
   }
   values_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), values);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.TensorValue.RepeatedBytes.values)
@@ -6066,7 +6261,7 @@ inline const ::CoreML::Specification::MILSpec::Value& DictionaryValue_KeyValuePa
                          : *::CoreML::Specification::MILSpec::Value::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::Value* DictionaryValue_KeyValuePair::mutable_key() {
-  
+
   if (key_ == NULL) {
     key_ = new ::CoreML::Specification::MILSpec::Value;
   }
@@ -6075,7 +6270,7 @@ inline ::CoreML::Specification::MILSpec::Value* DictionaryValue_KeyValuePair::mu
 }
 inline ::CoreML::Specification::MILSpec::Value* DictionaryValue_KeyValuePair::release_key() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.key)
-  
+
   ::CoreML::Specification::MILSpec::Value* temp = key_;
   key_ = NULL;
   return temp;
@@ -6084,9 +6279,9 @@ inline void DictionaryValue_KeyValuePair::set_allocated_key(::CoreML::Specificat
   delete key_;
   key_ = key;
   if (key) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.key)
 }
@@ -6105,7 +6300,7 @@ inline const ::CoreML::Specification::MILSpec::Value& DictionaryValue_KeyValuePa
                          : *::CoreML::Specification::MILSpec::Value::internal_default_instance();
 }
 inline ::CoreML::Specification::MILSpec::Value* DictionaryValue_KeyValuePair::mutable_value() {
-  
+
   if (value_ == NULL) {
     value_ = new ::CoreML::Specification::MILSpec::Value;
   }
@@ -6114,7 +6309,7 @@ inline ::CoreML::Specification::MILSpec::Value* DictionaryValue_KeyValuePair::mu
 }
 inline ::CoreML::Specification::MILSpec::Value* DictionaryValue_KeyValuePair::release_value() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.value)
-  
+
   ::CoreML::Specification::MILSpec::Value* temp = value_;
   value_ = NULL;
   return temp;
@@ -6123,9 +6318,9 @@ inline void DictionaryValue_KeyValuePair::set_allocated_value(::CoreML::Specific
   delete value_;
   value_ = value;
   if (value) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.MILSpec.DictionaryValue.KeyValuePair.value)
 }
@@ -6165,6 +6360,8 @@ DictionaryValue::values() const {
 }
 
 #endif  // !PROTOBUF_INLINE_NOT_IN_HEADERS
+// -------------------------------------------------------------------
+
 // -------------------------------------------------------------------
 
 // -------------------------------------------------------------------

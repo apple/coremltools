@@ -11,10 +11,17 @@
 #include "ValidatorUtils-inl.hpp"
 #include "../build/format/Model.pb.h"
 #include "Globals.hpp"
+#include "Model.hpp"
+#include "Utils.hpp"
 
 namespace CoreML {
 
-
+    ValidationPolicy::ValidationPolicy(MLModelType modelType)
+        :allowsEmptyInput(Model::modelTypeAllowsEmptyInput(modelType)),
+         allowsEmptyOutput(false),
+         allowsMultipleFunctions(Model::modelTypeAllowsMultipleFunctions(modelType)),
+         allowsStatefulPrediction(Model::modelTypeAllowsStatefulPrediction(modelType))
+    {}
 
     Result validateSizeRange(const Specification::SizeRange &range) {
         if (range.upperbound() > 0 && range.lowerbound() > static_cast<unsigned long long>(range.upperbound())) {
@@ -24,7 +31,7 @@ namespace CoreML {
         return Result();
     }
 
-    Result validateFeatureDescription(const Specification::FeatureDescription& desc, int modelVersion, bool isInput) {
+    Result validateFeatureDescription(const Specification::FeatureDescription& desc, int modelVersion, FeatureIOType featureIOType) {
         if (desc.name() == "") {
             return Result(ResultType::INVALID_MODEL_INTERFACE,
                           "Feature description must have a non-empty name.");
@@ -36,6 +43,21 @@ namespace CoreML {
         }
 
         const auto& type = desc.type();
+        if (type.Type_case() == Specification::FeatureType::kStateType) {
+            // State features must be declared in the state feature descriptions. (For backward compatibility reason,
+            // it's also allowed to be in the input feature description.)
+            if (featureIOType != FeatureIOType::STATE && featureIOType != FeatureIOType::INPUT) {
+                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                              "State feature '" + desc.name() + "' should only be declared in the state feature description.");
+            }
+        } else {
+            // State feature description shall not have anything but state features.
+            if (featureIOType == FeatureIOType::STATE) {
+                return Result(ResultType::INVALID_MODEL_INTERFACE,
+                              "State feature description can declare only state features, but '" + desc.name() + "' is not.");
+            }
+        }
+
         switch (type.Type_case()) {
             case Specification::FeatureType::kDoubleType:
             case Specification::FeatureType::kInt64Type:
@@ -137,7 +159,7 @@ namespace CoreML {
 
                 }
 
-                if (isInput && !hasExplicitDefault && !hasImplictDefault) {
+                if (featureIOType == FeatureIOType::INPUT && !hasExplicitDefault && !hasImplictDefault) {
                     return Result(ResultType::INVALID_MODEL_INTERFACE,
                                   "Description of multiarray feature '" + desc.name() + "' has missing shape constraints.");
                 }
@@ -177,7 +199,7 @@ namespace CoreML {
                     case CoreML::Specification::ArrayFeatureType::kDoubleDefaultValue:
                         if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_DOUBLE){
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                          "Description of multiarray feature '" + desc.name() + "' has mismatch"
+                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
                                           " between dataType and the type of default optional value.");
                         }
                         break;
@@ -185,21 +207,21 @@ namespace CoreML {
                         if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_FLOAT32 &&
                             type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_FLOAT16){
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                          "Description of multiarray feature '" + desc.name() + "' has mismatch"
+                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
                                           " between dataType and the type of default optional value.");
                         }
                         break;
                     case CoreML::Specification::ArrayFeatureType::kIntDefaultValue:
                         if (type.multiarraytype().datatype() != Specification::ArrayFeatureType_ArrayDataType_INT32){
                             return Result(ResultType::INVALID_MODEL_INTERFACE,
-                                          "Description of multiarray feature '" + desc.name() + "' has mismatch"
+                                          "Description of multiarray feature '" + desc.name() + "' has mistmatch"
                                           " between dataType and the type of default optional value.");
                         }
                         break;
                     default:
                         break;
                 }
-                
+
                 break;
 
             }
@@ -337,7 +359,7 @@ namespace CoreML {
 
                 if (modelVersion < MLMODEL_SPECIFICATION_VERSION_IOS12) {
                     return  Result(ResultType::INVALID_MODEL_INTERFACE,
-                                   "Sequence types are only valid in specification version >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS12)+
+                                   "Sequence types are only valid in specification verison >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS12)+
                                    ". This model has version " + std::to_string(modelVersion));
                 }
 
@@ -364,6 +386,56 @@ namespace CoreML {
                 }
                 break;
             }
+            case Specification::FeatureType::kStateType:
+            {
+                if (modelVersion < MLMODEL_SPECIFICATION_VERSION_IOS18) {
+                    return  Result(ResultType::INVALID_MODEL_INTERFACE,
+                                   "State types are only valid in specification verison >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS18)+
+                                   ". This model has version " + std::to_string(modelVersion));
+                }
+
+                if (type.isoptional()) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                  "State feature '" + desc.name() + "' cannot be optional.");
+                }
+
+                const auto &defaultShape = type.statetype().arraytype().shape();
+                bool hasExplicitDefault = (type.statetype().arraytype().shape_size() != 0);
+
+                if (!hasExplicitDefault) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                  "Description of State feature '" + desc.name() + "' has missing shape constraints.");
+                }
+
+                for (int i=0; i < type.statetype().arraytype().shape_size(); i++) {
+                    const auto &value = type.statetype().arraytype().shape(i);
+                    if (value < 0) {
+                        return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                      "Description of State feature '" + desc.name() + "' has an invalid shape. "
+                                      "Element " + std::to_string(i) + " has non-positive value " + std::to_string(value) + ".");
+                    }
+                }
+
+                switch (type.statetype().arraytype().datatype()) {
+                    case Specification::ArrayFeatureType_ArrayDataType_FLOAT16:
+                        break;
+                    default:
+                        return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                      "Description of State feature '" + desc.name() + "' has an invalid or unspecified dataType. "
+                                      "It must be specified as FLOAT16");
+                }
+
+                if (type.statetype().arraytype().ShapeFlexibility_case() != Specification::ArrayFeatureType::SHAPEFLEXIBILITY_NOT_SET) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                  "State feature '" + desc.name() + "' cannot have flexible shape.");
+                }
+
+                if (type.statetype().arraytype().defaultOptionalValue_case() != Specification::ArrayFeatureType::DEFAULTOPTIONALVALUE_NOT_SET) {
+                    return Result(ResultType::INVALID_MODEL_INTERFACE,
+                                  "State feature '" + desc.name() + "' cannot have default optional value.");
+                }
+                break;
+            }
             case Specification::FeatureType::TYPE_NOT_SET:
                 // these aren't equal to anything, even themselves
                 return Result(ResultType::INVALID_MODEL_INTERFACE,
@@ -374,50 +446,102 @@ namespace CoreML {
         return Result();
     }
 
-    Result validateFeatureDescriptions(const Specification::ModelDescription& interface, int modelVersion) {
-        // a model must have at least one input and one output
-        if (interface.input_size() < 1) {
-            return Result(ResultType::INVALID_MODEL_INTERFACE, "Models must have one or more inputs.");
-        }
-        if (interface.output_size() < 1) {
-            return Result(ResultType::INVALID_MODEL_INTERFACE, "Models must have one or more outputs.");
+    inline Result validateModelLevelFeatureDescriptionsAreEmpty(const Specification::ModelDescription& interface) {
+        if (interface.input_size() != 0) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE, "Multi-function model must not use top level input feature description.");
         }
 
-        for (const auto& input : interface.input()) {
-            Result r = validateFeatureDescription(input, modelVersion, true);
-            if (!r.good()) { return r; }
+        if (interface.output_size() != 0) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE, "Multi-function model must not use top level output feature description.");
         }
 
-        for (const auto& output : interface.output()) {
-            Result r = validateFeatureDescription(output, modelVersion, false);
-            if (!r.good()) { return r; }
+        if (interface.state_size() != 0) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE, "Multi-function model must not use top level state feature description.");
         }
 
-        // If we got here, all inputs/outputs seem good independently of each other.
+        if (!interface.predictedfeaturename().empty()) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE, "Multi-function model must not use top level predictedFeatureName field.");
+        }
+
+        if (!interface.predictedprobabilitiesname().empty()) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE, "Multi-function model must not use top level predictedProbabilitiesName field.");
+        }
+
+        if (!interface.traininginput().empty()) {
+            return Result(ResultType::INVALID_MODEL_INTERFACE, "Multi-function model must not use top level training input feature description.");
+        }
+
         return Result();
     }
 
-    Result validateModelDescription(const Specification::ModelDescription& interface, int modelVersion) {
+    Result validateMultiFunctionDescription(const Specification::ModelDescription& interface, int modelVersion, const ValidationPolicy& validationPolicy) {
+        if (!validationPolicy.allowsMultipleFunctions) {
+            return  Result(ResultType::MODEL_TYPE_DOES_NOT_SUPPORT_MULTI_FUNCTION,
+                           "This model type doesn't support multi-function syntax.");
+        }
 
-        Result result = validateFeatureDescriptions(interface, modelVersion);
-        if (!result.good()) {
-            return result;
+        if (modelVersion < MLMODEL_SPECIFICATION_VERSION_IOS18) {
+            return  Result(ResultType::INVALID_COMPATIBILITY_VERSION,
+                           "Multi-function syntax is only valid in specification verison >= " + std::to_string(MLMODEL_SPECIFICATION_VERSION_IOS18)+
+                           ". This model has version " + std::to_string(modelVersion));
+        }
+
+        const auto& functions = interface.functions();
+        auto functionNames = std::vector<std::string>();
+        for (const auto& function: functions) {
+            Result r = validateFeatureDescriptions(function, modelVersion, validationPolicy);
+            if (!r.good()) {
+                return r;
+            }
+            functionNames.push_back(function.name());
+        }
+
+        // The default function name must be in function name list.
+        const auto& defaultFunctionName = interface.defaultfunctionname();
+        if (find(functionNames.begin(), functionNames.end(), defaultFunctionName) == functionNames.end()) {
+            return  Result(ResultType::INVALID_DEFAULT_FUNCTION_NAME,
+                           "The default function name '" + defaultFunctionName + "' is not found in the function name list: " + componentsJoinedBy(functionNames, ","));
+        }
+
+        return Result();
+    }
+
+    Result validateModelDescription(const Specification::ModelDescription& interface, int modelVersion, const ValidationPolicy& validationPolicy) {
+        Result result;
+        if (interface.functions_size() > 0 || !interface.defaultfunctionname().empty()) {
+            // The model uses multi-function configuration.
+
+            // Validate it doesn't use top level feature descriptions
+            result = validateModelLevelFeatureDescriptionsAreEmpty(interface);
+            if (!result.good()) {
+                return result;
+            }
+
+            result = validateMultiFunctionDescription(interface, modelVersion, validationPolicy);
+            if (!result.good()) {
+                return result;
+            }
+        } else {
+            // The model doesn't use multi-function configuration.
+            Result result = validateFeatureDescriptions(interface, modelVersion, validationPolicy);
+            if (!result.good()) {
+                return result;
+            }
         }
 
         return result;
-
     }
 
 
-    Result validateRegressorInterface(const Specification::ModelDescription& description, int modelVersion) {
-        
+    Result validateRegressorInterface(const Specification::ModelDescription& description, int modelVersion, const ValidationPolicy& validationPolicy) {
+
         if (description.predictedfeaturename() == "") {
             return Result(ResultType::INVALID_MODEL_INTERFACE,
                           "Specification is missing regressor predictedFeatureName.");
         }
-        
+
         // Validate feature descriptions
-        Result result = validateFeatureDescriptions(description, modelVersion);
+        Result result = validateFeatureDescriptions(description, modelVersion, validationPolicy);
         if (!result.good()) {
             return result;
         }
@@ -431,8 +555,9 @@ namespace CoreML {
         return result;
     }
 
-    Result validateClassifierFeatureDescriptions(const Specification::ModelDescription& interface,
-                                                 bool expected_class_is_int64) {
+    template <class Description>
+    inline Result validateClassifierFeatureDescriptions_(const Description& interface,
+                                                         bool expected_class_is_int64) {
 
         const auto& predictedFeatureName = interface.predictedfeaturename();
         const auto& probOutputName = interface.predictedprobabilitiesname();
@@ -469,6 +594,16 @@ namespace CoreML {
         return Result();
     }
 
+    Result validateClassifierFeatureDescriptions(const Specification::ModelDescription& interface,
+                                                 bool expected_class_is_int64) {
+        return validateClassifierFeatureDescriptions_(interface, expected_class_is_int64);
+    }
+
+    Result validateClassifierFeatureDescriptions(const Specification::FunctionDescription& interface,
+                                                 bool expected_class_is_int64) {
+        return validateClassifierFeatureDescriptions_(interface, expected_class_is_int64);
+    }
+
     /*
      * Validate optional inputs/outputs.
      * For most models, optional is not allowed (all inputs/outputs required).
@@ -491,7 +626,7 @@ namespace CoreML {
         }
         return validateOptionalOutputs(interface);
     }
-    
+
     inline Result validateOptionalTree(const Specification::ModelDescription& interface) {
         return validateOptionalOutputs(interface);
     }
@@ -535,12 +670,16 @@ namespace CoreML {
         // just need to check that not all inputs are optional
         bool hasNotOptional = false;
         for (const auto& input : description.input()) {
+            if (input.type().Type_case() == Specification::FeatureType::kStateType) { // ignore optionality for State type input (which is always non-optional)
+                hasNotOptional = true;
+                continue;
+            }
             if (!input.type().isoptional()) {
                 hasNotOptional = true;
                 break;
             }
         }
-        if (!hasNotOptional) {
+        if (description.input().size() > 0 && !hasNotOptional) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS, "At least one feature for a neural network must NOT be optional.");
         }
         return Result();
@@ -591,7 +730,7 @@ namespace CoreML {
 
         return validateOptionalOutputs(format.description());
     }
-    
+
     Result validateCanModelBeUpdatable(const Specification::Model& format) {
         Result r;
         switch (format.Type_case()) {
@@ -611,4 +750,3 @@ namespace CoreML {
         }
     }
 }
-

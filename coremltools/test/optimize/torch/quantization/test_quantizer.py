@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -15,6 +15,7 @@ import torch.nn.intrinsic.qat
 import torch.nn.quantized
 import torch.nn.quantized.modules.utils
 
+from coremltools.optimize.torch._utils.metadata_utils import CompressionMetadata, CompressionType
 from coremltools.optimize.torch.quantization import (
     LinearQuantizer,
     LinearQuantizerConfig,
@@ -173,7 +174,7 @@ def test_activation_defaults(quantization_scheme):
         }}
     )
     quantizer = LinearQuantizer(model, config)
-    model = quantizer.prepare(example_inputs=torch.randn(1, 1, 28, 28))
+    model = quantizer.prepare(example_inputs=(torch.randn(1, 1, 28, 28),))
 
     assert isinstance(model.conv, torch.nn.intrinsic.qat.ConvReLU2d)
     assert model.activation_post_process_0.dtype == torch.quint8
@@ -200,7 +201,7 @@ def test_quantizer_step_mechanism(quantization_scheme):
         }}
     )
     quantizer = LinearQuantizer(model, config)
-    model = quantizer.prepare(example_inputs=torch.randn(1, 1, 28, 28))
+    model = quantizer.prepare(example_inputs=(torch.randn(1, 1, 28, 28),))
 
     assert not model.activation_post_process_0.observer_enabled
     assert not model.activation_post_process_0.fake_quant_enabled
@@ -233,3 +234,118 @@ def test_quantizer_step_mechanism(quantization_scheme):
             assert model.activation_post_process_0.fake_quant_enabled
             assert not model.activation_post_process_1.observer_enabled
             assert model.activation_post_process_1.fake_quant_enabled
+
+
+def test_preserved_attributes():
+    """
+    Test if methods and attributes on the model are preserved by passing
+    preserved_attributes to the config.
+    """
+
+    class MyModel(nn.Sequential):
+        def __init__(self):
+            super().__init__(
+                OrderedDict(
+                    {
+                        "conv": nn.Conv2d(1, 20, (3, 3)),
+                        "bn": nn.BatchNorm2d(20),
+                        "relu": nn.ReLU(),
+                    }
+                )
+            )
+            self.conv.weight.data = torch.ones_like(self.conv.weight.data)
+
+        def my_method(self):
+            return self.weight + torch.ones_like(self.weight)
+
+        @property
+        def weight(self):
+            return (
+                self.conv.weight
+                if hasattr(self.conv, "weight")
+                else self.conv.get_submodule("0").weight
+            )
+
+    preserved_attrs = ["key_1", "key_2", "my_method", "weight"]
+
+    model = MyModel()
+    model.key_1 = 5
+    model.key_2 = torch.tensor(5)
+
+    config = LinearQuantizerConfig.from_dict(
+        {
+            "global_config": {
+                "milestones": [0, 3, 4, 5],
+            },
+            "preserved_attributes": preserved_attrs,
+        }
+    )
+    quantizer_1 = LinearQuantizer(model, LinearQuantizerConfig())
+    prepared_model = quantizer_1.prepare(example_inputs=(torch.randn(1),), inplace=False)
+    for attr in preserved_attrs:
+        assert not hasattr(prepared_model, attr)
+
+    quantizer_2 = LinearQuantizer(model, config)
+    prepared_model = quantizer_2.prepare(example_inputs=(torch.randn(1),), inplace=False)
+    for attr in preserved_attrs:
+        assert hasattr(prepared_model, attr)
+    assert torch.all(
+        prepared_model.my_method() == 2 * torch.ones_like(prepared_model.conv.weight.data)
+    )
+
+    quantizer_2.step()
+    prepared_model(torch.randn(2, 1, 28, 28))
+    final_model = quantizer_2.finalize()
+    for attr in preserved_attrs:
+        assert hasattr(final_model, attr)
+    assert torch.all(
+        final_model.my_method()
+        == final_model.weight.data + torch.ones_like(prepared_model.weight.data)
+    )
+
+
+@pytest.mark.parametrize("dtype", ["qint4", "qint8"])
+@pytest.mark.parametrize("scheme", ["symmetric", "affine"])
+def test_compression_metadata(dtype, scheme):
+    """
+    Test that calling finalize on the module leads to compression metadata being added to the model
+    """
+    model = nn.Sequential(
+        OrderedDict([("conv1", nn.Conv2d(1, 20, 3)), ("fc1", nn.Linear(20, 100))])
+    )
+    config = LinearQuantizerConfig.from_dict(
+        {
+            "module_name_configs": {
+                "conv1": {
+                    "weight_dtype": dtype,
+                    "quantization_scheme": scheme,
+                },
+                "fc1": None,
+            }
+        }
+    )
+    quantizer = LinearQuantizer(model, config)
+    quantizer.prepare(inplace=True, example_inputs=(torch.randn(1, 1, 28, 28),))
+    for _ in range(4):
+        quantizer.step()
+    model = quantizer.finalize()
+
+    # Verify metadata version is added to model
+    assert "_COREML_/metadata_version" in model.state_dict()
+
+    # Verify compression metadata is added for conv1
+    metadata_dict = CompressionMetadata.from_state_dict(model.conv1.state_dict())
+    assert len(metadata_dict) == 1
+    assert "weight" in metadata_dict
+
+    metadata = metadata_dict["weight"]
+    assert metadata.compression_type == [CompressionType.quantization.value]
+    assert metadata.quantization_n_bits == 4 if dtype == "qint4" else 8
+    assert metadata.quantization_scale.shape == (20, 1)
+    assert metadata.zero_point.shape == (20, 1)
+    if scheme == "symmetric":
+        assert torch.all(metadata.zero_point == 0)
+
+    # # Verify no compression metadata is added for fc1
+    metadata_dict = CompressionMetadata.from_state_dict(model.fc1.state_dict())
+    assert len(metadata_dict) == 0

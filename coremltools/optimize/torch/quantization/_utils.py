@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -9,6 +9,7 @@ from enum import Enum as _Enum
 from typing import Dict as _Dict
 from typing import List as _List
 from typing import Optional as _Optional
+from typing import Tuple as _Tuple
 
 import torch as _torch
 import torch.ao.quantization as _aoquant
@@ -16,6 +17,9 @@ import torch.fx as _fx
 from torch.ao.quantization.backend_config import BackendConfig as _BackendConfig
 from torch.ao.quantization.backend_config import ObservationType as _ObservationType
 
+from coremltools.optimize.torch._utils.metadata_utils import (
+    CompressionMetadata as _CompressionMetadata,
+)
 from coremltools.optimize.torch._utils.version_utils import is_torch_2 as _is_torch_2
 
 
@@ -153,3 +157,26 @@ def get_share_qparams_ops(backend_config: _BackendConfig):
         for op in configs
         if configs[op].observation_type == _ObservationType.OUTPUT_SHARE_OBSERVER_WITH_INPUT
     ]
+
+
+def get_quant_range(n_bits: int, dtype: _torch.dtype) -> _Tuple[int, int]:
+    """
+    Returns quant_max and quant_min values for a given quantization n_bits.
+    """
+    max_q = 2**n_bits
+    if dtype in [_torch.quint8, _torch.uint8]:
+        quant_min = 0
+        quant_max = max_q - 1
+    else:
+        quant_min = -max_q / 2
+        quant_max = max_q / 2 - 1
+    return int(quant_min), int(quant_max)
+
+
+def register_compression_metadata(submodule, config):
+    metadata = _CompressionMetadata("weight")
+    metadata.compression_type = ["quantization"]
+    metadata.quantization_n_bits = config.weight_n_bits
+    metadata.quantization_scale = submodule.weight_scale.detach().clone().unsqueeze(-1)
+    metadata.zero_point = submodule.weight_zero_point.detach().clone().unsqueeze(-1)
+    metadata.register(submodule)

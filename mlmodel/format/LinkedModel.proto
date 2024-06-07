@@ -38,5 +38,3 @@ message LinkedModelFile {
     // - $BUNDLE_IDENTIFIER(identifier) - Looks in Bunde with given identifier
     StringParameter linkedModelSearchPath = 2;
 }
-
-
