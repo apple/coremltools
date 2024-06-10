@@ -47,6 +47,7 @@ def _multifunction_unsupported(func):
             raise ValueError(f"{func} is not supported for a multifunction model.")
         return func(*args, **kwargs)
 
+    decorator.__doc__ = func.__doc__
     return decorator
 
 
