@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download__examples_dkm_palettization.py>`
-        to download the full example code
+        to download the full example code.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -41,7 +41,7 @@ First, define your network:
 
 .. GENERATED FROM PYTHON SOURCE LINES 24-49
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from collections import OrderedDict
@@ -77,7 +77,7 @@ Apply a very simple transformation to the input images to normalize them.
 
 .. GENERATED FROM PYTHON SOURCE LINES 53-71
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import os
@@ -104,7 +104,7 @@ Initialize the model and the dataset.
 
 .. GENERATED FROM PYTHON SOURCE LINES 73-81
 
-.. code-block:: default
+.. code-block:: Python
 
 
     model = mnist_net()
@@ -124,7 +124,7 @@ Train the model without applying any palettization.
 
 .. GENERATED FROM PYTHON SOURCE LINES 86-139
 
-.. code-block:: default
+.. code-block:: Python
 
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.008)
@@ -197,7 +197,7 @@ you fine-tune the model.
 
 .. GENERATED FROM PYTHON SOURCE LINES 152-162
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from coremltools.optimize.torch.palettization import DKMPalettizer, DKMPalettizerConfig
@@ -220,7 +220,7 @@ layers' weights in the form of a LUT and indices.
 
 .. GENERATED FROM PYTHON SOURCE LINES 168-181
 
-.. code-block:: default
+.. code-block:: Python
 
 
     optimizer = torch.optim.SGD(prepared_model.parameters(), lr=0.008)
@@ -243,7 +243,7 @@ with the final model.
 
 .. GENERATED FROM PYTHON SOURCE LINES 184-188
 
-.. code-block:: default
+.. code-block:: Python
 
 
     print("Accuracy of unpalettized network: {:.1f}%\n".format(accuracy_unpalettized))
@@ -260,7 +260,7 @@ restore the LUT and indices of the palettized modules as weights in the model.
 
 .. GENERATED FROM PYTHON SOURCE LINES 194-197
 
-.. code-block:: default
+.. code-block:: Python
 
 
     finalized_model = palettizer.finalize()
@@ -283,7 +283,7 @@ footprint on disk as compared to the dense weights.
 
 .. GENERATED FROM PYTHON SOURCE LINES 210-226
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import coremltools as ct
@@ -303,27 +303,19 @@ footprint on disk as compared to the dense weights.
     coreml_model.save("~/.mnist_palettization_data/palettized_model.mlpackage")
 
 
-.. rst-class:: sphx-glr-timing
-
-   **Total running time of the script:** (0 minutes 0.000 seconds)
-
-
 .. _sphx_glr_download__examples_dkm_palettization.py:
 
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: dkm_palettization.ipynb <dkm_palettization.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: dkm_palettization.py <dkm_palettization.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: dkm_palettization.ipynb <dkm_palettization.ipynb>`
 
 
 .. only:: html

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.optimize.torch.palettization.post_training_palettization &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.optimize.torch.palettization.post_training_palettization</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.optimize.torch.palettization.post_training_palettization</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
+
+<span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
+<span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">KMeansConfig</span> <span class="k">as</span> <span class="n">_KMeansConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">KMeansSupportedModulesRegistry</span> <span class="k">as</span> <span class="n">_KMeansSupportedModulesRegistry</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">ParallelKMeans</span> <span class="k">as</span> <span class="n">_ParallelKMeans</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.k_means</span> <span class="kn">import</span> <span class="n">SequentialKMeans</span> <span class="k">as</span> <span class="n">_SequentialKMeans</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.report_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">compute_post_training_report</span> <span class="k">as</span> <span class="n">_compute_post_training_report</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">maybe_convert_str_to_mod_type</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.validation_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">validate_param_config</span> <span class="k">as</span> <span class="n">_validate_param_config</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BasePostTrainingModelOptimizer</span> <span class="k">as</span> <span class="n">_BasePostTrainingModelOptimizer</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="n">_Report</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ModuleOptimizationConfig</span> <span class="k">as</span> <span class="n">_ModuleOptimizationConfig</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="n">OptimizationConfig</span> <span class="k">as</span> <span class="n">_OptimizationConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.optimization_config</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PalettizationGranularity</span><span class="p">,</span>
+    <span class="n">_structure_from_dict_hook_factory</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ModulePostTrainingPalettizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">ModulePostTrainingPalettizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying global and module level palettization options for</span>
+<span class="sd">    :py:class:`PostTrainingPalettizerConfig` algorithm.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        n_bits (:obj:`int`): Number of bits to use for palettizing the weights. Defaults to ``4``.</span>
+<span class="sd">        lut_dtype (:py:class:`torch.dtype`): The dtype to use for representing each element in look up tables.</span>
+<span class="sd">            When value is None, no quantization is performed. Supported values are :py:class:`torch.int8` and</span>
+<span class="sd">            :py:class:`torch.uint8`. Defaults to None.</span>
+<span class="sd">        granularity (:py:class:`PalettizationGranularity`) – Granularity for palettization.</span>
+<span class="sd">            One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.</span>
+<span class="sd">        group_size (:obj:`int`): Specify the number of channels in a group.</span>
+<span class="sd">            Only effective when granularity is ``per_grouped_channel``.</span>
+<span class="sd">        channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.</span>
+<span class="sd">            Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.</span>
+<span class="sd">        cluster_dim (:obj:`int`): The dimension of centroids for each look up table. Defaults to ``1``.</span>
+<span class="sd">            The centroid is a scalar by default. When ``cluster_dim &gt; 1``, it indicates 2-D clustering</span>
+<span class="sd">            and each ``cluster_dim`` length of weight vectors along the output channel are palettized</span>
+<span class="sd">            using the same 2-D centroid. The length of each entry in the look-up tables is equal to ``cluster_dim``.</span>
+<span class="sd">        enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels</span>
+<span class="sd">            using per channel scales before being palettized. This is not supported with ``cluster_dim &gt; 1``.</span>
+
+<span class="sd">    This class supports few different configurations to structure the palettization:</span>
+
+<span class="sd">    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single look-up</span>
+<span class="sd">    table. The ``granularity`` is set to ``per_tensor`` and ``group_size`` is ``None``.</span>
+
+<span class="sd">    2. **Per-grouped-channel palettization**: In this configuration, ``group_size`` number of channels along</span>
+<span class="sd">    ``channel_axis`` share the same look-up table. For example, for a weight matrix of shape ``(16, 25)``, if we provide</span>
+<span class="sd">     ``group_size = 8``, the shape of the look-up table would be ``(2, 2^n_bits)``.</span>
+
+<span class="sd">    NOTE: Currently grouping is only supported along either input or output channel axis.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n_bits</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">lut_dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">converter</span><span class="o">=</span><span class="k">lambda</span> <span class="n">val</span><span class="p">:</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">if</span> <span class="n">val</span> <span class="k">else</span> <span class="n">val</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">]),</span>
+            <span class="p">]</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="n">PalettizationGranularity</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="s2">&quot;per_tensor&quot;</span><span class="p">,</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">PalettizationGranularity</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">PalettizationGranularity</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">group_size</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">channel_axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])]),</span>
+    <span class="p">)</span>
+    <span class="n">cluster_dim</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
+    <span class="n">enable_per_channel_scale</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">))</span>
+    <span class="p">)</span>
+
+    <span class="nd">@group_size</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">per_grouped_channel_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="o">==</span> <span class="n">PalettizationGranularity</span><span class="o">.</span><span class="n">per_grouped_channel</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="p">),</span> <span class="s2">&quot;group_size has to be specified along with per_grouped_channel granularity.&quot;</span>
+            <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;group_size should be greater than zero&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;group_size can&#39;t be specified along with per_tensor granularity.&quot;</span>
+
+    <span class="nd">@cluster_dim</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">per_tensor_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">granularity</span> <span class="o">==</span> <span class="n">PalettizationGranularity</span><span class="o">.</span><span class="n">per_tensor</span>
+            <span class="p">),</span> <span class="s2">&quot;cluster_dim larger than 1 is only supported with per tensor palettization&quot;</span>
+
+    <span class="nd">@cluster_dim</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">no_per_channel_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">enable_per_channel_scale</span> <span class="o">==</span> <span class="kc">False</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Enabling per_channel_scale is not supported for cluster_dim=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> larger than 1&quot;</span></div>
+
+
+
+<span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_NewType</span><span class="p">(</span>
+    <span class="s2">&quot;ModuleTypeConfigType&quot;</span><span class="p">,</span>
+    <span class="n">_Dict</span><span class="p">[</span><span class="n">_Union</span><span class="p">[</span><span class="n">_Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">]],</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="PostTrainingPalettizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.PostTrainingPalettizerConfig">[docs]</a>
+<span class="nd">@_define</span>
+<span class="k">class</span> <span class="nc">PostTrainingPalettizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Configuration class for specifying how different submodules of a model</span>
+<span class="sd">    should be post-training palettized by :py:class:`PostTrainingPalettizer`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        global_config (:py:class:`ModulePostTrainingPalettizerConfig`): Config to be applied globally</span>
+<span class="sd">            to all supported modules.</span>
+<span class="sd">        module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModulePostTrainingPalettizerConfig`):</span>
+<span class="sd">            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.</span>
+<span class="sd">            The keys can be either strings or module classes.</span>
+<span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModulePostTrainingPalettizerConfig`):</span>
+<span class="sd">            Module name configs applied to specific modules. This can be a dictionary with module names pointing to their</span>
+<span class="sd">            corresponding :py:class:`ModulePostTrainingPalettizerConfig`s</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">global_config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">)),</span>
+    <span class="p">)</span>
+    <span class="n">module_type_configs</span><span class="p">:</span> <span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">((</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Callable</span><span class="p">)),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+    <span class="n">module_name_configs</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">]]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="n">_OrderedDict</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_mapping</span><span class="p">(</span>
+            <span class="n">key_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+            <span class="n">value_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span>
+                <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">mapping_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="ow">is</span> <span class="kc">None</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="o">=</span> <span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">_maybe_convert_str_to_mod_type</span><span class="p">(</span><span class="n">key</span><span class="p">):</span> <span class="n">val</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">}</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;PostTrainingPalettizerConfig&quot;</span><span class="p">:</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_ModuleTypeConfigType</span><span class="p">,</span>
+            <span class="n">_structure_from_dict_hook_factory</span><span class="p">(</span><span class="n">ModulePostTrainingPalettizerConfig</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="PostTrainingPalettizer">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.PostTrainingPalettizer">[docs]</a>
+<span class="k">class</span> <span class="nc">PostTrainingPalettizer</span><span class="p">(</span><span class="n">_BasePostTrainingModelOptimizer</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform post-training palettization on a torch model. Post palettization, all the weights in supported</span>
+<span class="sd">    layers point to elements in a look-up table after performing a kmeans operation.</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">            .. code-block:: python</span>
+
+<span class="sd">                import torch.nn as nn</span>
+<span class="sd">                from coremltools.optimize.torch.palettization import (</span>
+<span class="sd">                    PostTrainingPalettizerConfig,</span>
+<span class="sd">                    PostTrainingPalettizer,</span>
+<span class="sd">                )</span>
+
+<span class="sd">                model = nn.Sequential(</span>
+<span class="sd">                    OrderedDict(</span>
+<span class="sd">                        {</span>
+<span class="sd">                            &quot;conv&quot;: nn.Conv2d(1, 20, (3, 3)),</span>
+<span class="sd">                            &quot;relu1&quot;: nn.ReLU(),</span>
+<span class="sd">                            &quot;conv2&quot;: nn.Conv2d(20, 20, (3, 3)),</span>
+<span class="sd">                            &quot;relu2&quot;: nn.ReLU(),</span>
+<span class="sd">                        }</span>
+<span class="sd">                    )</span>
+<span class="sd">                )</span>
+
+<span class="sd">                # initialize the palettizer</span>
+<span class="sd">                config = PostTrainingPalettizerConfig.from_dict(</span>
+<span class="sd">                    {</span>
+<span class="sd">                        &quot;global_config&quot;: {</span>
+<span class="sd">                            &quot;n_bits&quot;: 4,</span>
+<span class="sd">                        },</span>
+<span class="sd">                    }</span>
+<span class="sd">                )</span>
+
+<span class="sd">                ptpalettizer = PostTrainingPalettizer(model, config)</span>
+<span class="sd">                palettized_model = ptpalettizer.compress()</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        model (:obj:`torch.nn.Module`): Module to be compressed.</span>
+<span class="sd">        config (:py:class:`PostTrainingPalettizerConfig`): Config that specifies how</span>
+<span class="sd">            different submodules in the model will be palettized.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_supported_modules</span><span class="p">:</span> <span class="n">_Tuple</span> <span class="o">=</span> <span class="n">_KMeansSupportedModulesRegistry</span><span class="o">.</span><span class="n">get_supported_modules</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">PostTrainingPalettizerConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingPalettizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">compress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_kmeans_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The compress method performs a `kmeans` operation on all supported modules.</span>
+<span class="sd">        Args:</span>
+<span class="sd">            num_kmeans_workers (:obj:`int`): Number of worker processes used for</span>
+<span class="sd">                performing post-training palettization. Defaults to ``1``.</span>
+<span class="sd">            inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and</span>
+<span class="sd">                the original module is mutated, otherwise a copy of the model is mutated and returned.</span>
+<span class="sd">                Defaults to ``False``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
+        <span class="n">kmeans_config_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">():</span>
+            <span class="n">submod_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get_module_config</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">submodule</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">submod_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="n">k_means_module_cls</span> <span class="o">=</span> <span class="n">_KMeansSupportedModulesRegistry</span><span class="o">.</span><span class="n">get_kmeans_module</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">k_means_module_cls</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">for</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">k_means_module_cls</span><span class="o">.</span><span class="n">parameter_names</span><span class="p">:</span>
+                <span class="c1"># Validate configuration for parameter</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="n">submodule</span><span class="o">.</span><span class="n">get_parameter</span><span class="p">(</span><span class="n">param_name</span><span class="p">)</span>
+                <span class="n">updated_config</span> <span class="o">=</span> <span class="n">_validate_param_config</span><span class="p">(</span>
+                    <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">param_name</span><span class="p">,</span>
+                    <span class="n">param</span><span class="p">,</span>
+                    <span class="n">submod_config</span><span class="p">,</span>
+                    <span class="p">[</span><span class="s2">&quot;palettization_group_size&quot;</span><span class="p">,</span> <span class="s2">&quot;palettization_cluster_dim&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_config</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kmeans_config_dict</span><span class="p">:</span>
+                    <span class="n">kmeans_config_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="n">kmeans_config_dict</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="n">param_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">_KMeansConfig</span><span class="p">(</span>
+                    <span class="n">n_bits</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">n_bits</span><span class="p">,</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">channel_axis</span><span class="p">,</span>
+                    <span class="n">lut_dtype</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">lut_dtype</span><span class="p">,</span>
+                    <span class="n">block_size</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">group_size</span><span class="p">,</span>
+                    <span class="n">cluster_dim</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">cluster_dim</span><span class="p">,</span>
+                    <span class="n">enable_per_channel_scale</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">enable_per_channel_scale</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">num_kmeans_workers</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_ParallelKMeans</span><span class="o">.</span><span class="n">cluster_weights</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">kmeans_config_dict</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="n">num_kmeans_workers</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">_SequentialKMeans</span><span class="o">.</span><span class="n">cluster_weights</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">kmeans_config_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_compute_post_training_report</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_uncompressed_model</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span>
+            <span class="n">supported_modules</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

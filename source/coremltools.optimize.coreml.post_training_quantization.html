@@ -1,36 +1,33 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Post-Training Compression &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css" />
+  <title>Post-Training Compression &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Compression Configuration" href="coremltools.optimize.coreml.config.html" />
-    <link rel="prev" title="Optimizers" href="coremltools.optimize.html" /> 
+    <link rel="search" title="Search" href="../search.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -45,7 +42,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -56,31 +53,14 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Model APIs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#post-training-compression">Post-Training Compression</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Post-Training Compression</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.linear_quantize_weights"><code class="docutils literal notranslate"><span class="pre">linear_quantize_weights()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.prune_weights"><code class="docutils literal notranslate"><span class="pre">prune_weights()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.palettize_weights"><code class="docutils literal notranslate"><span class="pre">palettize_weights()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.decompress_weights"><code class="docutils literal notranslate"><span class="pre">decompress_weights()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.get_weights_metadata"><code class="docutils literal notranslate"><span class="pre">get_weights_metadata()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.CoreMLWeightMetaData"><code class="docutils literal notranslate"><span class="pre">CoreMLWeightMetaData</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.coreml.CoreMLOpMetaData"><code class="docutils literal notranslate"><span class="pre">CoreMLOpMetaData</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.config.html">Compression Configuration</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#training-time-compression">Training-Time Compression</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
@@ -104,7 +84,6 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
-          <li class="breadcrumb-item"><a href="coremltools.optimize.html">Optimizers</a></li>
       <li class="breadcrumb-item active">Post-Training Compression</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.optimize.coreml.post_training_quantization.rst.txt" rel="nofollow"> View page source</a>
@@ -116,22 +95,24 @@
            <div itemprop="articleBody">
              
   <section id="module-coremltools.optimize.coreml">
-<span id="post-training-compression"></span><h1>Post-Training Compression<a class="headerlink" href="#module-coremltools.optimize.coreml" title="Permalink to this heading"></a></h1>
+<span id="post-training-compression"></span><h1>Post-Training Compression<a class="headerlink" href="#module-coremltools.optimize.coreml" title="Link to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.linear_quantize_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#linear_quantize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.linear_quantize_weights" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#linear_quantize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.linear_quantize_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, which uses
-float-precision weights, into a compressed MLModel that uses 8-bit weights. This is
-achieved by converting the float weight values that are stored in the <code class="docutils literal notranslate"><span class="pre">const</span></code> op
-into the <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> op.</p>
-<p>This function uses linear quantization on the float weights, providing up to 2x
+float-precision weights, into a compressed MLModel that uses n-bit weights (currently only
+support n=4 and n=8). This is achieved by converting the float weight values that are stored in
+the <code class="docutils literal notranslate"><span class="pre">const</span></code> op into the <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> or <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code>
+op (based on model’s minimum deployment target).</p>
+<p>This function uses linear quantization on the float weights, providing up to 4x (for 4-bit)
 savings in storage compared to float 16, or up to 4x savings compared to float 32.
 All computation at runtime uses float precision; the precision of the intermediate
 tensors and the compute precision of the ops are not altered.</p>
-<p>For each weight, this utility function converts the weight into the int8 or uint8 type using
-either <cite>linear interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) or <cite>linear symmetric
-interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default).</p>
+<p>For each weight, this utility function converts the weight into the int4/8 or uint4/8 type using
+either <cite>linear interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) or <cite>linear symmetric interpolation</cite>
+(<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default).</p>
 <p><strong>Linear interpolation</strong></p>
+<p>The following description uses 8-bit quantization to illustrate, and 4-bit is similar to it.</p>
 <p>Linear interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) maps the min/max of the float
 range to the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> using a zero point (also called quantization bias, or
 offset) and a scale factor. For the int8 quantization, <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span> <span class="pre">=</span> <span class="pre">[-128,</span> <span class="pre">127]</span></code>, while uint8
@@ -198,12 +179,20 @@ point <code class="docutils literal notranslate"><span class="pre">0</span></cod
 </li>
 </ul>
 </div></blockquote>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be quantized. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
 </dd>
-<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight quantization.</p>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight quantization.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further quantized to a
+jointly compressed mlmodel. For what compression schema that could be futher jointly
+quantized, see the <cite>blockwise_quantize_weights</cite> graph pass for details.</p>
+<p>Using “palettize + quantize” as an example, where the input mlmodel is already palettized,
+and the palettization’s lut will be further quantized. The weight values are represented by
+<code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
+lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</p>
 </dd>
 </dl>
 </dd>
@@ -229,7 +218,7 @@ point <code class="docutils literal notranslate"><span class="pre">0</span></cod
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.prune_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">prune_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#prune_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.prune_weights" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">prune_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#prune_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.prune_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
 compressed MLModel using sparse representation. The <code class="docutils literal notranslate"><span class="pre">const</span></code> ops storing weight
 values are replaced by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops.</p>
@@ -254,12 +243,20 @@ non-zero data, which is a size-1 vector of value <code class="docutils literal n
 <li><p><code class="docutils literal notranslate"><span class="pre">bit_mask</span> <span class="pre">=</span> <span class="pre">&quot;100100&quot;</span></code></p></li>
 </ul>
 </div></blockquote>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be sparsified. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
 </dd>
-<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight pruning.</p>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight pruning.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further pruned to a
+jointly compressed mlmodel. For what compression schema that could be futher jointly
+pruned, see the <cite>prune_weights</cite> graph pass for details.</p>
+<p>Using “quantize + prune” as an example, where the input mlmodel is already quantized,
+and it will be further pruned. The weight values are represented by
+<code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
 </dd>
 </dl>
 </dd>
@@ -285,9 +282,9 @@ non-zero data, which is a size-1 vector of value <code class="docutils literal n
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.palettize_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">palettize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#palettize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.palettize_weights" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">palettize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#palettize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.palettize_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
-compressed MLModel by reducing the overall number of weights using a lookup table
+compressed MLModel by reducing the overall number of weights using one or more look-up-table
 (LUT). A LUT contains a list of float values. An <cite>nbit</cite> LUT has 2<sup>nbits</sup> entries.</p>
 <p>For example, a float weight vector such as <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.3,</span> <span class="pre">0.5,</span> <span class="pre">0.5}</span></code> can be compressed
 using a 1-bit LUT: <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.5}</span></code>. In this case the float vector can be replaced
@@ -318,12 +315,20 @@ indices are a byte array.</p>
 the palette as indices <code class="docutils literal notranslate"><span class="pre">[01b,</span> <span class="pre">10b,</span> <span class="pre">11b,</span> <span class="pre">01b,</span> <span class="pre">00b,</span> <span class="pre">00b]</span></code>.</p></li>
 </ul>
 </div></blockquote>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
+<dd class="field-odd"><dl>
 <dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model to be converted by a LUT. This MLModel should be of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>.</p>
 </dd>
-<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight palettization.</p>
+<dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight palettization.</p>
+</dd>
+<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further palettized to a
+jointly compressed mlmodel. For what compression schema that could be futher jointly
+palettized, see the <cite>channelwise_palettize_weights</cite> graph pass for details.</p>
+<p>Using “prune + palettize” as an example, where the input mlmodel is already pruned,
+and the non-zero entries will be further palettized. The weight values are represented by
+<code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+lut(sparse) -&gt; constexpr_lut_to_sparse -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
 </dd>
 </dl>
 </dd>
@@ -349,7 +354,7 @@ the palette as indices <code class="docutils literal notranslate"><span class="p
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.decompress_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">decompress_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#decompress_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.decompress_weights" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">decompress_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#decompress_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.decompress_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert weights that are sparse or palettized or affine quantized, back to the float format.
 That is, convert any of the following three ops to <code class="docutils literal notranslate"><span class="pre">mb.const</span></code>:</p>
 <ol class="arabic simple">
@@ -382,7 +387,7 @@ That is, convert any of the following three ops to <code class="docutils literal
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.get_weights_metadata">
-<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">get_weights_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_threshold</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#get_weights_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.get_weights_metadata" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">get_weights_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#get_weights_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.get_weights_metadata" title="Link to this definition"></a></dt>
 <dd><p>Utility function to get the weights metadata as a dictionary, which maps the weight’s name to its corresponding CoreMLWeightMetaData.</p>
 <p>CoreMLWeightMetaData contains the following attributes:</p>
 <ol class="arabic simple">
@@ -471,7 +476,7 @@ You can access the metadata by <code class="docutils literal notranslate"><span 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.CoreMLWeightMetaData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">CoreMLWeightMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">_Nothing.NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#coremltools.optimize.coreml.CoreMLOpMetaData" title="coremltools.optimize.coreml._post_training_quantization.CoreMLOpMetaData"><span class="pre">CoreMLOpMetaData</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#CoreMLWeightMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.CoreMLWeightMetaData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">CoreMLWeightMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sparsity</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unique_values</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">child_ops</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.CoreMLOpMetaData" title="coremltools.optimize.coreml._post_training_quantization.CoreMLOpMetaData"><span class="pre">CoreMLOpMetaData</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#CoreMLWeightMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.CoreMLWeightMetaData" title="Link to this definition"></a></dt>
 <dd><p>A container class that stores weight meta data.</p>
 <p>The class has the following attributes:</p>
 <dl class="field-list">
@@ -515,7 +520,7 @@ You can access the metadata by <code class="docutils literal notranslate"><span 
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.CoreMLOpMetaData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">CoreMLOpMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_name_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#CoreMLOpMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.CoreMLOpMetaData" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">CoreMLOpMetaData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">params_name_mapping</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#CoreMLOpMetaData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.CoreMLOpMetaData" title="Link to this definition"></a></dt>
 <dd><p>A container class that stores op meta data.</p>
 <p>The class has the following attributes:</p>
 <dl class="field-list">
@@ -545,10 +550,7 @@ For instance, given a <code class="docutils literal notranslate"><span class="pr
 
            </div>
           </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="coremltools.optimize.html" class="btn btn-neutral float-left" title="Optimizers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="coremltools.optimize.coreml.config.html" class="btn btn-neutral float-right" title="Compression Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
+          <footer>
 
   <hr/>
 

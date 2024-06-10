@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.quantization.quantizer &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.optimize.torch.quantization.quantizer &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../_static/jquery.js"></script>
-        <script src="../../../../../_static/underscore.js"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -94,7 +93,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for coremltools.optimize.torch.quantization.quantizer</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -108,13 +107,17 @@
 <span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
 <span class="kn">import</span> <span class="nn">torch.ao.quantization</span> <span class="k">as</span> <span class="nn">_aoquant</span>
 <span class="kn">import</span> <span class="nn">torch.nn.intrinsic.qat</span> <span class="k">as</span> <span class="nn">_nnintrinsicqat</span>
+<span class="kn">from</span> <span class="nn">torch.ao.quantization.fx.custom_config</span> <span class="kn">import</span> <span class="n">ConvertCustomConfig</span> <span class="k">as</span> <span class="n">_ConvertCustomConfig</span>
 <span class="kn">from</span> <span class="nn">torch.ao.quantization.fx.custom_config</span> <span class="kn">import</span> <span class="n">PrepareCustomConfig</span> <span class="k">as</span> <span class="n">_PrepareCustomConfig</span>
 <span class="kn">from</span> <span class="nn">torch.ao.quantization.quantize_fx</span> <span class="kn">import</span> <span class="n">convert_to_reference_fx</span> <span class="k">as</span> <span class="n">_convert_to_reference_fx</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.math_utils</span> <span class="kn">import</span> <span class="n">rmse_error</span> <span class="k">as</span> <span class="n">_rmse_error</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">register_metadata_version</span> <span class="k">as</span> <span class="n">_register_metadata_version</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_eval_model</span> <span class="k">as</span> <span class="n">_get_eval_model</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">BaseModelOptimizer</span> <span class="k">as</span> <span class="n">_BaseModelOptimizer</span><span class="p">,</span>
+    <span class="n">BaseTrainingTimeModelOptimizer</span> <span class="k">as</span> <span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="n">_Report</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._backend_config</span> <span class="kn">import</span> <span class="p">(</span>
@@ -127,6 +130,9 @@
     <span class="n">QATConfigurationHandler</span> <span class="k">as</span> <span class="n">_QATConfigurationHandler</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._qconfig_mapping</span> <span class="kn">import</span> <span class="n">_QConfigMappingBuilder</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization._utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">register_compression_metadata</span> <span class="k">as</span> <span class="n">_register_compression_metadata</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization.quantization_config</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearQuantizerConfig</span> <span class="k">as</span> <span class="n">_LinearQuantizerConfig</span><span class="p">,</span>
 <span class="p">)</span>
@@ -137,11 +143,13 @@
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Quantizer</span><span class="p">(</span><span class="n">_BaseModelOptimizer</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Quantizer</span><span class="p">(</span><span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">):</span>
     <span class="k">pass</span>
 
 
-<div class="viewcode-block" id="LinearQuantizer"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer">[docs]</a><span class="k">class</span> <span class="nc">LinearQuantizer</span><span class="p">(</span><span class="n">Quantizer</span><span class="p">):</span>
+<div class="viewcode-block" id="LinearQuantizer">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer">[docs]</a>
+<span class="k">class</span> <span class="nc">LinearQuantizer</span><span class="p">(</span><span class="n">Quantizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform quantization aware training (QAT) of models. This algorithm simulates the effects of</span>
 <span class="sd">    quantization during training, by quantizing and dequantizing the weights and/or activations during</span>
@@ -236,12 +244,16 @@
                 <span class="k">return</span> <span class="n">config</span>
         <span class="k">return</span> <span class="n">_ModuleLinearQuantizerConfig</span><span class="p">()</span>
 
-<div class="viewcode-block" id="LinearQuantizer.prepare"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">:</span> <span class="n">_Any</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<div class="viewcode-block" id="LinearQuantizer.prepare">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.prepare">[docs]</a>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">example_inputs</span><span class="p">:</span> <span class="n">_Tuple</span><span class="p">[</span><span class="n">_Any</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Prepares the model for quantization aware training by inserting</span>
 <span class="sd">        :py:class:`torch.ao.quantization.FakeQuantize` layers in the model in appropriate places.</span>
 
 <span class="sd">        Args:</span>
+<span class="sd">            example_inputs (:obj:`Tuple[Any, ...]`): Example inputs for forward function of the model,</span>
+<span class="sd">                tuple of positional args (keyword args can be passed as positional args as well)</span>
 <span class="sd">            inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and</span>
 <span class="sd">                the original module is mutated, otherwise a copy of the model is mutated and returned.</span>
 
@@ -259,12 +271,13 @@
                 <span class="s2">&quot;will be a no-op.&quot;</span>
             <span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
-        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
-            <span class="n">model</span> <span class="o">=</span> <span class="n">_copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">)</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_model_for_compression</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span><span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
         <span class="n">prepare_custom_config</span> <span class="o">=</span> <span class="n">_PrepareCustomConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_non_traceable_module_names</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">non_traceable_module_names</span>
+        <span class="p">)</span>
+        <span class="n">prepare_custom_config</span> <span class="o">=</span> <span class="n">prepare_custom_config</span><span class="o">.</span><span class="n">set_preserved_attributes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">preserved_attributes</span>
         <span class="p">)</span>
         <span class="n">qat_handler</span> <span class="o">=</span> <span class="n">_QATConfigurationHandler</span><span class="p">(</span>
             <span class="n">prepare_custom_config</span><span class="o">=</span><span class="n">prepare_custom_config</span><span class="p">,</span>
@@ -280,7 +293,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">return</span> <span class="n">prepared_model</span></div>
 
-<div class="viewcode-block" id="LinearQuantizer.step"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="LinearQuantizer.step">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Steps through the milestones defined for this quantizer.</span>
 
@@ -314,7 +330,10 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">_nnintrinsicqat</span><span class="o">.</span><span class="n">freeze_bn_stats</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_step_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
 
-<div class="viewcode-block" id="LinearQuantizer.finalize"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.finalize">[docs]</a>    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
+
+<div class="viewcode-block" id="LinearQuantizer.finalize">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.finalize">[docs]</a>
+    <span class="k">def</span> <span class="nf">finalize</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -341,14 +360,29 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">inplace</span><span class="p">:</span>
             <span class="n">model</span> <span class="o">=</span> <span class="n">_copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
         <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
-        <span class="n">finalized_model</span> <span class="o">=</span> <span class="n">_convert_to_reference_fx</span><span class="p">(</span>
-            <span class="n">model</span><span class="p">,</span> <span class="n">qconfig_mapping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_qconfig_mapping</span><span class="p">,</span> <span class="n">backend_config</span><span class="o">=</span><span class="n">_get_backend_config</span><span class="p">()</span>
+        <span class="n">convert_custom_config</span> <span class="o">=</span> <span class="n">_ConvertCustomConfig</span><span class="p">()</span><span class="o">.</span><span class="n">set_preserved_attributes</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">preserved_attributes</span>
         <span class="p">)</span>
+        <span class="n">finalized_model</span> <span class="o">=</span> <span class="n">_convert_to_reference_fx</span><span class="p">(</span>
+            <span class="n">model</span><span class="p">,</span>
+            <span class="n">convert_custom_config</span><span class="o">=</span><span class="n">convert_custom_config</span><span class="p">,</span>
+            <span class="n">qconfig_mapping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_qconfig_mapping</span><span class="p">,</span>
+            <span class="n">backend_config</span><span class="o">=</span><span class="n">_get_backend_config</span><span class="p">(),</span>
+        <span class="p">)</span>
+        <span class="n">_register_metadata_version</span><span class="p">(</span><span class="n">finalized_model</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">submodule</span> <span class="ow">in</span> <span class="n">finalized_model</span><span class="o">.</span><span class="n">named_modules</span><span class="p">(</span><span class="n">remove_duplicate</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="s2">&quot;weight_scale&quot;</span><span class="p">):</span>
+                <span class="n">submod_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get_module_config</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">submodule</span><span class="p">)</span>
+                <span class="n">_register_compression_metadata</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="n">submod_config</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="n">finalized_model</span>
         <span class="k">return</span> <span class="n">finalized_model</span></div>
 
-<div class="viewcode-block" id="LinearQuantizer.report"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.report">[docs]</a>    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
+
+<div class="viewcode-block" id="LinearQuantizer.report">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.report">[docs]</a>
+    <span class="k">def</span> <span class="nf">report</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Report</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns a dictionary with important statistics related to current state of quantization.</span>
 <span class="sd">        Each key in the dictionary corresponds to a module name, and the</span>
@@ -379,7 +413,9 @@
                         <span class="p">)</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;#params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">qweight</span><span class="p">))</span>
                         <span class="n">report</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module_summary</span>
-        <span class="k">return</span> <span class="n">report</span></div></div>
+        <span class="k">return</span> <span class="n">report</span></div>
+</div>
+
 </pre></div>
 
            </div>

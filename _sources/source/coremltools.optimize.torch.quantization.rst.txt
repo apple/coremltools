@@ -1,5 +1,5 @@
-Training-Time Quantization
-==========================
+Quantization
+============
 
 Quantization refers to techniques for performing neural network computations in lower precision than
 floating point. Quantization can reduce a model’s size and also improve a model’s inference latency and
@@ -18,4 +18,10 @@ operations.
 .. autoclass::  coremltools.optimize.torch.quantization.ObserverType
 
 .. autoclass::  coremltools.optimize.torch.quantization.QuantizationScheme
+
+.. autoclass::  coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig
+
+.. autoclass::  coremltools.optimize.torch.quantization.PostTrainingQuantizer
+
+.. autoclass::  coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig
 

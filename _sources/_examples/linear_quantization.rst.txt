@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download__examples_linear_quantization.py>`
-        to download the full example code
+        to download the full example code.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -41,7 +41,7 @@ followed by a dense (linear) layer.
 
 .. GENERATED FROM PYTHON SOURCE LINES 23-47
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from collections import OrderedDict
@@ -76,7 +76,7 @@ images to normalize them.
 
 .. GENERATED FROM PYTHON SOURCE LINES 51-69
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import os
@@ -103,7 +103,7 @@ Next, initialize the model and the dataset.
 
 .. GENERATED FROM PYTHON SOURCE LINES 71-81
 
-.. code-block:: default
+.. code-block:: Python
 
 
     model = mnist_net()
@@ -124,7 +124,7 @@ Train the model without any quantization applied.
 
 .. GENERATED FROM PYTHON SOURCE LINES 85-143
 
-.. code-block:: default
+.. code-block:: Python
 
 
     optimizer = torch.optim.Adam(model.parameters(), eps=1e-07)
@@ -201,7 +201,7 @@ to specify quantization parameters. ``milestones=[0, 1, 2, 1]`` refers to the fo
 
 .. GENERATED FROM PYTHON SOURCE LINES 155-168
 
-.. code-block:: default
+.. code-block:: Python
 
 
 
@@ -224,7 +224,7 @@ layers in the model.
 
 .. GENERATED FROM PYTHON SOURCE LINES 171-174
 
-.. code-block:: default
+.. code-block:: Python
 
 
     qmodel = quantizer.prepare(example_inputs=torch.randn(1, 1, 28, 28))
@@ -240,7 +240,7 @@ quantization milestones.
 
 .. GENERATED FROM PYTHON SOURCE LINES 180-195
 
-.. code-block:: default
+.. code-block:: Python
 
 
     optimizer = torch.optim.Adam(qmodel.parameters(), eps=1e-07)
@@ -268,7 +268,7 @@ less amenable to quantization.
 
 .. GENERATED FROM PYTHON SOURCE LINES 201-208
 
-.. code-block:: default
+.. code-block:: Python
 
 
 
@@ -292,7 +292,7 @@ into the weights.
 
 .. GENERATED FROM PYTHON SOURCE LINES 218-222
 
-.. code-block:: default
+.. code-block:: Python
 
 
     qmodel.eval()
@@ -313,7 +313,7 @@ ops are only supported on iOS versions >= 17.
 
 .. GENERATED FROM PYTHON SOURCE LINES 232-245
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import coremltools as ct
@@ -330,27 +330,19 @@ ops are only supported on iOS versions >= 17.
     coreml_model.save("~/.mnist_qat_data/quantized_model.mlpackage")
 
 
-.. rst-class:: sphx-glr-timing
-
-   **Total running time of the script:** (0 minutes 0.000 seconds)
-
-
 .. _sphx_glr_download__examples_linear_quantization.py:
 
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: linear_quantization.ipynb <linear_quantization.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: linear_quantization.py <linear_quantization.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: linear_quantization.ipynb <linear_quantization.ipynb>`
 
 
 .. only:: html

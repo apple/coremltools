@@ -11,7 +11,7 @@
         :class: sphx-glr-download-link-note
 
         :ref:`Go to the end <sphx_glr_download__examples_magnitude_pruning.py>`
-        to download the full example code
+        to download the full example code.
 
 .. rst-class:: sphx-glr-example-title
 
@@ -41,7 +41,7 @@ followed by a dense (linear) layer.
 
 .. GENERATED FROM PYTHON SOURCE LINES 23-45
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from collections import OrderedDict
@@ -74,7 +74,7 @@ images to normalize them.
 
 .. GENERATED FROM PYTHON SOURCE LINES 49-66
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import os
@@ -100,7 +100,7 @@ Next, initialize the model and the dataset.
 
 .. GENERATED FROM PYTHON SOURCE LINES 68-77
 
-.. code-block:: default
+.. code-block:: Python
 
 
 
@@ -120,7 +120,7 @@ Train the model without any pruning applied.
 
 .. GENERATED FROM PYTHON SOURCE LINES 81-133
 
-.. code-block:: default
+.. code-block:: Python
 
 
     optimizer = torch.optim.Adam(model.parameters(), eps=1e-07)
@@ -192,7 +192,7 @@ gradually from the initial value to the target value.
 
 .. GENERATED FROM PYTHON SOURCE LINES 146-151
 
-.. code-block:: default
+.. code-block:: Python
 
 
     from coremltools.optimize.torch.pruning import PolynomialDecayScheduler
@@ -212,7 +212,7 @@ the amenability of the layer to sparsification.
 
 .. GENERATED FROM PYTHON SOURCE LINES 159-175
 
-.. code-block:: default
+.. code-block:: Python
 
 
 
@@ -242,7 +242,7 @@ either ``1`` or ``0``.
 
 .. GENERATED FROM PYTHON SOURCE LINES 182-185
 
-.. code-block:: default
+.. code-block:: Python
 
 
     pruner.prepare(inplace=True)
@@ -258,7 +258,7 @@ after every call to ``optimizer.step()`` to step through the pruning schedule.
 
 .. GENERATED FROM PYTHON SOURCE LINES 191-206
 
-.. code-block:: default
+.. code-block:: Python
 
 
     optimizer = torch.optim.Adam(model.parameters(), eps=1e-07)
@@ -286,7 +286,7 @@ trade-off curve depends on the model and task.
 
 .. GENERATED FROM PYTHON SOURCE LINES 212-218
 
-.. code-block:: default
+.. code-block:: Python
 
 
     print("Accuracy of pruned network: {:.1f}%\n".format(accuracy_pruned))
@@ -310,7 +310,7 @@ weight matrix.
 
 .. GENERATED FROM PYTHON SOURCE LINES 229-233
 
-.. code-block:: default
+.. code-block:: Python
 
 
     model.eval()
@@ -332,7 +332,7 @@ sparse matrices, which have a smaller memory footprint than dense matrices.
 
 .. GENERATED FROM PYTHON SOURCE LINES 244-258
 
-.. code-block:: default
+.. code-block:: Python
 
 
     import coremltools as ct
@@ -350,27 +350,19 @@ sparse matrices, which have a smaller memory footprint than dense matrices.
     coreml_model.save("~/.mnist_pruning_data/pruned_model.mlpackage")
 
 
-.. rst-class:: sphx-glr-timing
-
-   **Total running time of the script:** (0 minutes 0.000 seconds)
-
-
 .. _sphx_glr_download__examples_magnitude_pruning.py:
 
 .. only:: html
 
   .. container:: sphx-glr-footer sphx-glr-footer-example
 
+    .. container:: sphx-glr-download sphx-glr-download-jupyter
 
-
+      :download:`Download Jupyter notebook: magnitude_pruning.ipynb <magnitude_pruning.ipynb>`
 
     .. container:: sphx-glr-download sphx-glr-download-python
 
       :download:`Download Python source code: magnitude_pruning.py <magnitude_pruning.py>`
-
-    .. container:: sphx-glr-download sphx-glr-download-jupyter
-
-      :download:`Download Jupyter notebook: magnitude_pruning.ipynb <magnitude_pruning.ipynb>`
 
 
 .. only:: html

@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css" />
+  <title>coremltools.models.neural_network.quantization_utils &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -135,7 +134,9 @@
 <span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
 
 
-<div class="viewcode-block" id="QuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
+<div class="viewcode-block" id="QuantizedLayerSelector">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a>
+<span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is the base class to implement custom selectors to skip certain</span>
 <span class="sd">    layers during quantization. To implement a custom selector, create a class</span>
@@ -189,7 +190,10 @@
         <span class="k">return</span> <span class="n">layer</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantizable_layer_types</span></div>
 
 
-<div class="viewcode-block" id="AdvancedQuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">AdvancedQuantizedLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+
+<div class="viewcode-block" id="AdvancedQuantizedLayerSelector">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector">[docs]</a>
+<span class="k">class</span> <span class="nc">AdvancedQuantizedLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Quantized layer selector allowing the user to specify some types of</span>
 <span class="sd">    layers to skip during quantization process and the minimum size parameters</span>
 <span class="sd">    in quantized convolution layers.</span>
@@ -239,7 +243,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">minimum_conv_kernel_channels</span> <span class="o">=</span> <span class="n">minimum_conv_kernel_channels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">minimum_conv_weight_count</span> <span class="o">=</span> <span class="n">minimum_conv_weight_count</span>
 
-<div class="viewcode-block" id="AdvancedQuantizedLayerSelector.do_quantize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">[docs]</a>    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="AdvancedQuantizedLayerSelector.do_quantize">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">[docs]</a>
+    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot; weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
@@ -286,10 +292,14 @@
                     <span class="s2">&quot;Unrecognized quantization weight field </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">weight_param</span><span class="p">)</span>
                 <span class="p">)</span>
 
-        <span class="k">return</span> <span class="kc">True</span></div></div>
+        <span class="k">return</span> <span class="kc">True</span></div>
+</div>
 
 
-<div class="viewcode-block" id="MatrixMultiplyLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">MatrixMultiplyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MatrixMultiplyLayerSelector">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector">[docs]</a>
+<span class="k">class</span> <span class="nc">MatrixMultiplyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Layer selector object that allows users to select matrix multiplication layers</span>
 <span class="sd">    with one of the matrices being constant, based on some criterions like total</span>
@@ -329,7 +339,9 @@
                 <span class="s2">&quot;Property &#39;include_layers_with_names&#39; must be a list/tuple of str objects&quot;</span>
             <span class="p">)</span>
 
-<div class="viewcode-block" id="MatrixMultiplyLayerSelector.do_quantize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector.do_quantize">[docs]</a>    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MatrixMultiplyLayerSelector.do_quantize">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector.do_quantize">[docs]</a>
+    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -378,7 +390,9 @@
         <span class="k">elif</span> <span class="n">layer_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;loop&quot;</span><span class="p">,</span> <span class="s2">&quot;branch&quot;</span><span class="p">]:</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-        <span class="k">return</span> <span class="kc">False</span></div></div>
+        <span class="k">return</span> <span class="kc">False</span></div>
+</div>
+
 
 
 <span class="k">def</span> <span class="nf">_convert_1bit_array_to_byte_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
@@ -1352,7 +1366,9 @@
         <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PSNR: </span><span class="si">{}</span><span class="s2"> +/- </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_psnr</span><span class="p">),</span> <span class="n">_np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_psnr</span><span class="p">)))</span>
 
 
-<div class="viewcode-block" id="OutputMetric"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.OutputMetric">[docs]</a><span class="k">class</span> <span class="nc">OutputMetric</span><span class="p">:</span>
+<div class="viewcode-block" id="OutputMetric">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.OutputMetric">[docs]</a>
+<span class="k">class</span> <span class="nc">OutputMetric</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility class to calculate and hold metrics between</span>
 <span class="sd">    two model outputs</span>
@@ -1388,7 +1404,10 @@
             <span class="n">metric</span><span class="o">.</span><span class="n">display_metrics</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="ModelMetrics"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.ModelMetrics">[docs]</a><span class="k">class</span> <span class="nc">ModelMetrics</span><span class="p">:</span>
+
+<div class="viewcode-block" id="ModelMetrics">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.ModelMetrics">[docs]</a>
+<span class="k">class</span> <span class="nc">ModelMetrics</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility class to hold evaluation metrics</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1414,6 +1433,7 @@
                 <span class="n">dash</span> <span class="o">+=</span> <span class="s2">&quot;-&quot;</span>
             <span class="nb">print</span><span class="p">(</span><span class="n">dash</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">model_metrics</span><span class="p">[</span><span class="n">metric</span><span class="p">]</span><span class="o">.</span><span class="n">display_metrics</span><span class="p">()</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_characterize_qmodel_perf_with_data_dir</span><span class="p">(</span><span class="n">fpmodel</span><span class="p">,</span> <span class="n">qspec</span><span class="p">,</span> <span class="n">data_dir</span><span class="p">):</span>
@@ -1508,7 +1528,9 @@
     <span class="n">model_metrics</span><span class="o">.</span><span class="n">display_metrics</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="compare_models"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.compare_models">[docs]</a><span class="k">def</span> <span class="nf">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
+<div class="viewcode-block" id="compare_models">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.compare_models">[docs]</a>
+<span class="k">def</span> <span class="nf">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to compare the performance of a full precision vs quantized model</span>
 
@@ -1561,7 +1583,10 @@
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">emessage</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="activate_int8_int8_matrix_multiplications"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.activate_int8_int8_matrix_multiplications">[docs]</a><span class="k">def</span> <span class="nf">activate_int8_int8_matrix_multiplications</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+
+<div class="viewcode-block" id="activate_int8_int8_matrix_multiplications">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.activate_int8_int8_matrix_multiplications">[docs]</a>
+<span class="k">def</span> <span class="nf">activate_int8_int8_matrix_multiplications</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function that takes in either a full precision (float) spec or</span>
 <span class="sd">    an nbit quantized spec to selectively enable int8 activation + weight quantization</span>
@@ -1684,7 +1709,10 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Model Type </span><span class="si">{}</span><span class="s2"> not supported.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)))</span></div>
 
 
-<div class="viewcode-block" id="quantize_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights">[docs]</a><span class="k">def</span> <span class="nf">quantize_weights</span><span class="p">(</span>
+
+<div class="viewcode-block" id="quantize_weights">
+<a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights">[docs]</a>
+<span class="k">def</span> <span class="nf">quantize_weights</span><span class="p">(</span>
     <span class="n">full_precision_model</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">sample_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -1790,6 +1818,7 @@
         <span class="n">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">quantized_model</span></div>
+
 </pre></div>
 
            </div>

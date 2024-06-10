@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.control_flow &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.control_flow &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../../../../" id="documentation_options" src="../../../../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../../../../_static/jquery.js"></script>
-        <script src="../../../../../../../../_static/underscore.js"></script>
-        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -137,7 +136,9 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="cond"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.cond">[docs]</a><span class="nd">@register_op</span>
+<div class="viewcode-block" id="cond">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.cond">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">cond</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform a conditional execution. The return types must be identical</span>
@@ -233,18 +234,21 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="Const"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.Const">[docs]</a><span class="k">class</span> <span class="nc">Const</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+
+<div class="viewcode-block" id="Const">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.Const">[docs]</a>
+<span class="k">class</span> <span class="nc">Const</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A base class that returns constant values.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    val: const&lt;\*,T&gt; (Required)</span>
+
 <span class="sd">    mode: immediate_value, file_value (Optional)</span>
 <span class="sd">        * Determines how the constant value is stored in the internal MIL format.</span>
 <span class="sd">        * For large constants such as convolution weights, use ``file_value``.</span>
 <span class="sd">        * For smaller-size constants such as values of a stride, use ``immediate_value``.</span>
-
-<span class="sd">    val: const&lt;\*,T&gt; (Required)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -258,6 +262,10 @@
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">val</span><span class="o">=</span><span class="n">InternalInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Const</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">builtin_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
@@ -311,7 +319,26 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown value for constant: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="n">_</span><span class="p">,</span> <span class="n">builtin_type</span> <span class="o">=</span> <span class="n">numpy_val_to_builtin_val</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span></div>
+        <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">weight_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Weight id for the const. It is used for weight sharing across multiple functions.</span>
+<span class="sd">        Constants sharing the same weight_id will use the same blob file value when</span>
+<span class="sd">        lowering to milproto.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span>
+
+    <span class="nd">@weight_id</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">weight_id</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set weight id for the const.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">int</span><span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;weight_id must be type of int. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;cannot set </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> weight_id twice.&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_weight_id</span> <span class="o">=</span> <span class="n">val</span></div>
+
 
 
 <span class="nd">@register_op</span>
@@ -336,7 +363,9 @@
         <span class="k">return</span> <span class="n">val</span>
 
 
-<div class="viewcode-block" id="select"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select">[docs]</a><span class="nd">@register_op</span>
+<div class="viewcode-block" id="select">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">select</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.</span>
@@ -400,7 +429,10 @@
         <span class="k">return</span> <span class="n">res</span></div>
 
 
-<div class="viewcode-block" id="while_loop"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.while_loop">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="while_loop">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.while_loop">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">while_loop</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform the body repeatedly while the condition ``cond`` is true.</span>
@@ -451,7 +483,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_clean_up_child_ops</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
 
             <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
                 <span class="n">while_loop</span><span class="o">.</span><span class="n">_clean_up_child_ops</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
@@ -619,7 +651,10 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">sym_type</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="make_list"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.make_list">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="make_list">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.make_list">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">make_list</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a list of tensor elements. The elements should have the same shape.</span>
@@ -700,7 +735,10 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="list_length"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_length">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="list_length">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_length">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_length</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the length of ``ls``.</span>
@@ -731,7 +769,10 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="list_write"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_write">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="list_write">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_write">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_write</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Write a value into index ``index`` of ``ls``.</span>
@@ -790,7 +831,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">sym_type</span></div>
 
 
-<div class="viewcode-block" id="list_read"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_read">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="list_read">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_read">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_read</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read the value at location ``index`` of ``ls``.</span>
@@ -828,7 +872,10 @@
         <span class="k">return</span> <span class="n">list_elem_type</span></div>
 
 
-<div class="viewcode-block" id="list_gather"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_gather">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="list_gather">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_gather">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_gather</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return selected values in ``ls`` as a packed ``Tensor``.</span>
@@ -870,7 +917,10 @@
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="list_scatter"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_scatter">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="list_scatter">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_scatter">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_scatter</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scatter ``values`` to ``ls`` at locations ``indices``.</span>
@@ -931,6 +981,7 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Elem type mismatch: ls elem type </span><span class="si">{}</span><span class="s2"> vs &quot;</span> <span class="o">+</span> <span class="s2">&quot;value type </span><span class="si">{}</span><span class="s2">&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">list_elem_type</span><span class="p">,</span> <span class="n">elem_type</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">sym_type</span></div>
+
 </pre></div>
 
            </div>

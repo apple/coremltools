@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../../../../" id="documentation_options" src="../../../../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../../../../_static/jquery.js"></script>
-        <script src="../../../../../../../../_static/underscore.js"></script>
-        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -105,11 +104,12 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="n">InputSpec</span><span class="p">,</span> <span class="n">TensorInputType</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="n">restore_elements_from_packed_bits</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16</span> <span class="kn">import</span> <span class="n">_IOS16_TARGET</span>
 
 
-<div class="viewcode-block" id="constexpr_affine_dequantize"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+<div class="viewcode-block" id="constexpr_affine_dequantize">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">constexpr_affine_dequantize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon dequantizing its constant inputs.</span>
@@ -212,25 +212,45 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
         <span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">is_all_zeros</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="n">zero_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="n">zero_point</span><span class="p">)</span>
+
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+        <span class="n">param</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">quantized_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Promote param (i.e. zero point or scale) rank to same as quantized data,</span>
+<span class="sd">        so subtraction or multiplication can happen properly on the specified axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">]</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span>
 
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span>
+        <span class="n">quantized_data</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">scale</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
-        <span class="k">def</span> <span class="nf">rank_promoted_to_same_as_quantized_data</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">axes</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span> <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">]</span>
-                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">axes</span><span class="p">))</span>
-
-        <span class="n">sc</span> <span class="o">=</span> <span class="n">rank_promoted_to_same_as_quantized_data</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
-        <span class="n">zp</span> <span class="o">=</span> <span class="n">rank_promoted_to_same_as_quantized_data</span><span class="p">(</span><span class="n">zero_point</span><span class="p">)</span>
+        <span class="n">sc</span> <span class="o">=</span> <span class="n">constexpr_affine_dequantize</span><span class="o">.</span><span class="n">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+            <span class="n">scale</span><span class="p">,</span> <span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span>
+        <span class="p">)</span>
+        <span class="n">zp</span> <span class="o">=</span> <span class="n">constexpr_affine_dequantize</span><span class="o">.</span><span class="n">promote_rank_to_same_as_quantized_data</span><span class="p">(</span>
+            <span class="n">zero_point</span><span class="p">,</span> <span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span>
+        <span class="p">)</span>
         <span class="n">val</span> <span class="o">=</span> <span class="n">sc</span> <span class="o">*</span> <span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">-</span> <span class="n">zp</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="constexpr_cast"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+
+<div class="viewcode-block" id="constexpr_cast">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_cast">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">constexpr_cast</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon casting its constant input.</span>
@@ -273,7 +293,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_val</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="constexpr_lut_to_dense"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_lut_to_dense">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+
+<div class="viewcode-block" id="constexpr_lut_to_dense">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_lut_to_dense">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">constexpr_lut_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon decompressing</span>
@@ -368,13 +391,19 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">lut</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
+        <span class="c1"># Import here to avoid circular import.</span>
+        <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
+
         <span class="n">nbits</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">lut</span><span class="o">.</span><span class="n">size</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
-        <span class="n">indices</span> <span class="o">=</span> <span class="n">restore_elements_from_packed_bits</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">restore_elements_from_packed_bits</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
         <span class="n">flatten_val</span> <span class="o">=</span> <span class="n">lut</span><span class="p">[</span><span class="n">indices</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">flatten_val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="constexpr_sparse_to_dense"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_sparse_to_dense">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
+
+<div class="viewcode-block" id="constexpr_sparse_to_dense">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_sparse_to_dense">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">constexpr_sparse_to_dense</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A compile-time operation that returns a constant output value upon de-sparsification of its constant inputs.</span>
@@ -392,8 +421,8 @@
 
 <span class="sd">    shape: const tensor&lt;uint32, [K]&gt; (Required)</span>
 
-<span class="sd">	Notes</span>
-<span class="sd">	-----</span>
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
 <span class="sd">    * Any data is packed and read in a row-major order.</span>
 <span class="sd">    * ``mask`` contains ``M`` bytes, where ``M = ceil( product(shape) / 8)``. That is, each bit</span>
 <span class="sd">      field corresponds to one element in the output tensor.</span>
@@ -407,7 +436,7 @@
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        shape = (5,) =&gt; M = 1 bytes</span>
-<span class="sd">        </span>
+
 <span class="sd">                   MSB                  LSB</span>
 <span class="sd">                    |                    |</span>
 <span class="sd">        mask    =  |x  x  x  0  1  1  0  0 |      &lt;== packed elements</span>
@@ -471,6 +500,7 @@
             <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
         <span class="p">]</span> <span class="o">=</span> <span class="n">nonzero_data</span>
         <span class="k">return</span> <span class="n">flattend_val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

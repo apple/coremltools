@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.coreml._config &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css" />
+  <title>coremltools.optimize.coreml._config &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -99,18 +98,29 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">IO</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">cattrs</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">yaml</span>
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">define</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">validators</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">operation</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="n">is_builtin</span><span class="p">,</span> <span class="n">numpy_type_to_builtin_type</span>
+
+
+<span class="c1"># TODO: Share the enum between cto.coreml and cto.torch (rdar://124409664).</span>
+<span class="k">class</span> <span class="nc">CompressionGranularity</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">PER_TENSOR</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">PER_GROUPED_CHANNEL</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">PER_CHANNEL</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">PER_BLOCK</span> <span class="o">=</span> <span class="mi">4</span>
 
 
 <span class="k">class</span> <span class="nc">OpCompressorConfig</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
@@ -137,11 +147,84 @@
     <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\&quot;</span><span class="s2">weight_threshold</span><span class="se">\&quot;</span><span class="s2"> must be a non-negative integer. Got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
+<span class="k">def</span> <span class="nf">_normalize_dtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">string_to_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid dtype </span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2">. Only support int8/uint8/int4/uint4.&quot;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">issubdtype</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">integer</span><span class="p">):</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dtype=</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> is unsupported for OpLinearQuantizerConfig.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dtype</span>
+
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Linear Quantization configuration</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="OpLinearQuantizerConfig"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpLinearQuantizerConfig">[docs]</a><span class="nd">@define</span>
+
+<span class="k">def</span> <span class="nf">_normalize_granularity</span><span class="p">(</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CompressionGranularity</span><span class="p">]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CompressionGranularity</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">granularity</span><span class="p">,</span> <span class="n">CompressionGranularity</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">granularity</span>
+
+    <span class="k">if</span> <span class="n">granularity</span> <span class="o">==</span> <span class="s2">&quot;per_tensor&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_TENSOR</span>
+    <span class="k">elif</span> <span class="n">granularity</span> <span class="o">==</span> <span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_GROUPED_CHANNEL</span>
+    <span class="k">elif</span> <span class="n">granularity</span> <span class="o">==</span> <span class="s2">&quot;per_channel&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_CHANNEL</span>
+    <span class="k">elif</span> <span class="n">granularity</span> <span class="o">==</span> <span class="s2">&quot;per_block&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_BLOCK</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid granularity=</span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">check_block_size</span><span class="p">(</span><span class="n">instance</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">block_size</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validator for block_size.</span>
+
+<span class="sd">    Note the `instance` and `attr` are not used but required by attrs interface.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">block_size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;The block_size must be non-negative values, but got </span><span class="si">{</span><span class="n">block_size</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">it_block_size</span> <span class="ow">in</span> <span class="n">block_size</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">it_block_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="ow">or</span> <span class="n">it_block_size</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All values in block_size must be non-negative values.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The block_size should be int or list/tuple of int, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_structure_block_size_type</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The block_size&#39;s type Union[int, List[int], Tuple[int, ...]] need a custom structure hook</span>
+<span class="sd">    for attrs yaml conversion.</span>
+
+<span class="sd">    Note the `dtype` parameter is not used but required by attrs interface.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">block_size</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block_size</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;block_size&quot; must be int or list/tuple of int. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">block_size</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">block_size</span>
+
+
+<div class="viewcode-block" id="OpLinearQuantizerConfig">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.quantization.html#coremltools.optimize.coreml.OpLinearQuantizerConfig">[docs]</a>
+<span class="nd">@define</span>
 <span class="k">class</span> <span class="nc">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">OpCompressorConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parameters</span>
@@ -155,30 +238,97 @@
 <span class="sd">        * ``&quot;linear&quot;``: Input data are quantized in the range</span>
 <span class="sd">          :math:`[min(w_r), max(w_r)]`.</span>
 
-<span class="sd">    dtype: np.generic or mil.type type</span>
-<span class="sd">        Determines the quantized data type (int8/uint8).</span>
+<span class="sd">    dtype: str or np.generic or mil.type</span>
+<span class="sd">        Determines the quantized data type (int8/uint8/int4/uint4).</span>
 
 <span class="sd">        * The allowed values are:</span>
 <span class="sd">            * ``np.int8`` (the default)</span>
 <span class="sd">            * ``np.uint8``</span>
 <span class="sd">            * ``coremltools.converters.mil.mil.types.int8``</span>
 <span class="sd">            * ``coremltools.converters.mil.mil.types.uint8``</span>
+<span class="sd">            * ``coremltools.converters.mil.mil.types.int4``</span>
+<span class="sd">            * ``coremltools.converters.mil.mil.types.uint4``</span>
+<span class="sd">            * strings to specify dtype such as &quot;int4&quot;, &quot;uint4&quot;, etc</span>
+
+<span class="sd">    granularity: str</span>
+<span class="sd">        Granularity for quantization.</span>
+
+<span class="sd">        * ``&quot;per_tensor&quot;``</span>
+<span class="sd">        * ``&quot;per_channel&quot;`` (default)</span>
+<span class="sd">        * ``&quot;per_block&quot;``</span>
+
+<span class="sd">    block_size: int or List/Tuple of int</span>
+
+<span class="sd">        * Only effective when granularity is set to &quot;per_block&quot;.</span>
+<span class="sd">        * Determines size of the block, where all elements in a block share the same scale and zero_point.</span>
+<span class="sd">        * If it&#39;s int, the block size on each axis is auto determined for best performance. More specifially,</span>
+<span class="sd">          the block will have ``block_size`` on input axis and ``1`` on output axis, where input/output</span>
+<span class="sd">          axis is auto picked based on op type.</span>
+<span class="sd">          For example, if weight has shape [Cout, Cin], the block will have shape [1, block_size];</span>
+<span class="sd">          If the weight has shape [C_out, C_in, KH, KW], the block will has shape [1, block_size, KH, KW].</span>
+<span class="sd">        * If it&#39;s a tuple of int, it must have the same rank as the weight, which specify the block size on each axis.</span>
+<span class="sd">        * The value 0 means block size equal to dim size at the corresponding axis.</span>
+<span class="sd">        * If the dim size on any axis is not divisible by the corresponding block size, the op will be skipped.</span>
+
+<span class="sd">        The tuple input of ``block_size`` provides users fully control about the block.</span>
+<span class="sd">        Here are some examples about how different granularities could be achieved:</span>
+
+<span class="sd">        Given the weight of a 2D Conv which has shape [C_out, C_in, KH, KW]:</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+<span class="sd">        |      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+<span class="sd">        | Per Tensor             | 0                        | 0                         | [C_out, C_in, KH, KW]      |</span>
+<span class="sd">        | Per Input Channel      | 0                        | 1                         | [C_out, 1, KH, KW]         |</span>
+<span class="sd">        | Per Output Channel     | 1                        | 0                         | [1, C_in, KH, KW]          |</span>
+<span class="sd">        | Per Block              | 1                        | 32                        | [1, 32, KH, KW]            |</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+
+<span class="sd">        Given the weight of a linear layer which has shape [C_out, C_in]:</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+<span class="sd">        |      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+<span class="sd">        | Per Tensor             | 0                        | 0                         | [C_out, C_in]              |</span>
+<span class="sd">        | Per Input Channel      | 0                        | 1                         | [C_out, 1]                 |</span>
+<span class="sd">        | Per Output Channel     | 1                        | 0                         | [1, C_in]                  |</span>
+<span class="sd">        | Per Block              | 1                        | 32                        | [1, 32]                    |</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+
+<span class="sd">        Given the weight of matmul&#39;s y (transpose_y=False)  which has shape [..., C_in, C_out]:</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+<span class="sd">        |      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
+<span class="sd">        | Per Tensor             | 0                        | 0                         | [..., C_in, C_out]         |</span>
+<span class="sd">        | Per Input Channel      | 0                        | 1                         | [..., 1, C_out]            |</span>
+<span class="sd">        | Per Output Channel     | 1                        | 0                         | [..., C_in, 1]             |</span>
+<span class="sd">        | Per Block              | 1                        | 32                        | [..., 32, 1]               |</span>
+<span class="sd">        |------------------------|--------------------------|---------------------------|----------------------------|</span>
 
 <span class="sd">    weight_threshold: int</span>
 <span class="sd">        The size threshold, above which weights are pruned.</span>
 <span class="sd">        That is, a weight tensor is pruned only if its total number of elements are greater than ``weight_threshold``.</span>
+<span class="sd">        Default to 2048.</span>
 
 <span class="sd">        For example, if ``weight_threshold = 1024`` and a weight tensor is of shape ``[10, 20, 1, 1]``, hence ``200``</span>
 <span class="sd">        elements, it will not be pruned.</span>
-
-<span class="sd">        * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are compressed.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
-    <span class="n">dtype</span><span class="p">:</span> <span class="nb">type</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">type</span><span class="p">))</span>
+    <span class="n">dtype</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">converter</span><span class="o">=</span><span class="n">_normalize_dtype</span><span class="p">)</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CompressionGranularity</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_CHANNEL</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">CompressionGranularity</span><span class="p">),</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">_normalize_granularity</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">block_size</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">check_block_size</span>
+    <span class="p">)</span>
     <span class="n">weight_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_check_weight_threshold</span><span class="p">]))</span>
 
     <span class="n">_WEIGHT_AFFINE_QUANTIZATION_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span><span class="p">,</span> <span class="s2">&quot;LINEAR&quot;</span><span class="p">)</span>
-    <span class="n">_WEIGHT_AFFINE_DTYPES</span> <span class="o">=</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+    <span class="n">_VALID_GRANULARITIES</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_TENSOR</span><span class="p">,</span>
+        <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_CHANNEL</span><span class="p">,</span>
+        <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_BLOCK</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="nd">@mode</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">check_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
@@ -187,41 +337,46 @@
 
     <span class="nd">@dtype</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">check_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dtype=</span><span class="si">{</span><span class="n">dtype</span><span class="si">}</span><span class="s2"> is unsupported for affine_quantize_weights.&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid dtype. Should be builtin dtype, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">is_int</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span> <span class="ow">and</span> <span class="n">dtype</span><span class="o">.</span><span class="n">get_bitwidth</span><span class="p">()</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">}):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid dtype. Should be int4/8 or uint4/8, but got </span><span class="si">{</span><span class="n">types</span><span class="o">.</span><span class="n">builtin_to_string</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_WEIGHT_AFFINE_DTYPES</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="nd">@granularity</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">check_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">granularity</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">granularity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_GRANULARITIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;granularity&quot; must be one of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_VALID_GRANULARITIES</span><span class="si">}</span><span class="s1">, but got </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;OpLinearQuantizerConfig&quot;</span><span class="p">:</span>
-        <span class="k">def</span> <span class="nf">_structure_type</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
-                <span class="k">return</span> <span class="n">value</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">,</span> <span class="s2">&quot;uint8&quot;</span><span class="p">):</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="sa">f</span><span class="s1">&#39;&quot;dtype&quot; must be type of type or str [&quot;int8&quot;, &quot;uint8&quot;]. Got </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s1">&#39;</span>
-                    <span class="p">)</span>
-                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">np</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="c1"># Set nbits and signed for backward compatibility with existing code.</span>
+        <span class="k">if</span> <span class="n">types</span><span class="o">.</span><span class="n">is_int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nbits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">get_bitwidth</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">signed</span> <span class="o">=</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">is_unsigned</span><span class="p">()</span>
 
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">OpLinearQuantizerConfig</span><span class="p">:</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span><span class="nb">type</span><span class="p">,</span> <span class="n">_structure_type</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]],</span> <span class="n">_structure_block_size_type</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+
+
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Pruner configurations</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<div class="viewcode-block" id="OpThresholdPrunerConfig"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpThresholdPrunerConfig">[docs]</a><span class="nd">@define</span>
+<div class="viewcode-block" id="OpThresholdPrunerConfig">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.OpThresholdPrunerConfig">[docs]</a>
+<span class="nd">@define</span>
 <span class="k">class</span> <span class="nc">OpThresholdPrunerConfig</span><span class="p">(</span><span class="n">OpCompressorConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    All weights with absolute value smaller than ``threshold`` are changed to ``0``,</span>
@@ -288,7 +443,10 @@
         <span class="n">converter</span> <span class="o">=</span> <span class="n">cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OpMagnitudePrunerConfig"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig">[docs]</a><span class="nd">@define</span>
+
+<div class="viewcode-block" id="OpMagnitudePrunerConfig">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.pruning.html#coremltools.optimize.coreml.OpMagnitudePrunerConfig">[docs]</a>
+<span class="nd">@define</span>
 <span class="k">class</span> <span class="nc">OpMagnitudePrunerConfig</span><span class="p">(</span><span class="n">OpCompressorConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Prune the weight with a constant sparsity percentile, which can be specified by either ``target_sparsity`` or ``n_m_ratio``.</span>
@@ -511,11 +669,14 @@
         <span class="n">converter</span> <span class="o">=</span> <span class="n">cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
 
+
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Palettizer configuration</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="OpPalettizerConfig"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpPalettizerConfig">[docs]</a><span class="nd">@define</span>
+<div class="viewcode-block" id="OpPalettizerConfig">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.palettization.html#coremltools.optimize.coreml.OpPalettizerConfig">[docs]</a>
+<span class="nd">@define</span>
 <span class="k">class</span> <span class="nc">OpPalettizerConfig</span><span class="p">(</span><span class="n">OpCompressorConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parameters</span>
@@ -524,7 +685,7 @@
 <span class="sd">    nbits: int</span>
 <span class="sd">        Number of bits per weight. Required for ``kmeans`` or ``uniform`` mode, but must</span>
 <span class="sd">        not be set for ``unique`` or ``custom`` mode. A LUT would have</span>
-<span class="sd">        2\ :sup:`nbits` entries, where `nbits` can be ``{1, 2, 4, 6, 8}``.</span>
+<span class="sd">        2\ :sup:`nbits` entries, where `nbits` can be ``{1, 2, 3, 4, 6, 8}``.</span>
 
 <span class="sd">    mode: str</span>
 <span class="sd">        Determine how the LUT is constructed by specifying one of the following:</span>
@@ -610,6 +771,24 @@
 
 <span class="sd">               return lut, indices</span>
 
+<span class="sd">    granularity: str</span>
+<span class="sd">        Granularity for quantization.</span>
+<span class="sd">        * ``&quot;per_tensor&quot;`` (default)</span>
+<span class="sd">        * ``&quot;per_grouped_channel&quot;``</span>
+
+<span class="sd">    group_size: int</span>
+<span class="sd">        * Specify the number of channels in a group. Only effective when granularity is per_grouped_channel.</span>
+<span class="sd">        * Default to 32.</span>
+
+<span class="sd">    channel_axis: Optional[int] = None</span>
+<span class="sd">        * Specify the channel axis to form a group of channels. Only effective when granularity is per_grouped_channel.</span>
+<span class="sd">        * Default to None, where the axis is automatically picked based on op type.</span>
+
+<span class="sd">    num_kmeans_workers: int</span>
+<span class="sd">        * Number of worker processes to use for performing k-means. It is recommended to use more</span>
+<span class="sd">          than one worker process to parallelize the clustering, especially when multiple CPUs are available.</span>
+<span class="sd">        * Default to 1.</span>
+
 <span class="sd">    weight_threshold: int</span>
 <span class="sd">        The size threshold, above which weights are pruned.</span>
 <span class="sd">        That is, a weight tensor is pruned only if its total number of elements are greater than ``weight_threshold``.</span>
@@ -622,10 +801,22 @@
     <span class="n">mode</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">))</span>
     <span class="n">nbits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">lut_function</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Callable</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">granularity</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">CompressionGranularity</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_TENSOR</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">CompressionGranularity</span><span class="p">),</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">_normalize_granularity</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+    <span class="n">channel_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">num_kmeans_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
     <span class="n">weight_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_check_weight_threshold</span><span class="p">]))</span>
 
     <span class="n">_WEIGHT_PALETTIZATION_MODES</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;KMEANS&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIFORM&quot;</span><span class="p">,</span> <span class="s2">&quot;UNIQUE&quot;</span><span class="p">,</span> <span class="s2">&quot;CUSTOM&quot;</span><span class="p">)</span>
-    <span class="n">_VALID_NBITS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="n">_VALID_NBITS</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+    <span class="n">_VALID_GRANULARITIES</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_TENSOR</span><span class="p">,</span>
+        <span class="n">CompressionGranularity</span><span class="o">.</span><span class="n">PER_GROUPED_CHANNEL</span><span class="p">,</span>
+    <span class="p">)</span>
 
     <span class="nd">@nbits</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">check_nbits</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">nbits</span><span class="p">):</span>
@@ -647,7 +838,6 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_WEIGHT_PALETTIZATION_MODES</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Only modes </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_WEIGHT_PALETTIZATION_MODES</span><span class="si">}</span><span class="s2"> are supported for weight palettization. Got </span><span class="se">\&quot;</span><span class="s2">mode</span><span class="se">\&quot;</span><span class="s2">: </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
 
-
     <span class="nd">@lut_function</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">check_lut_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">lut_function</span><span class="p">):</span>
         <span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
@@ -661,11 +851,18 @@
         <span class="k">if</span> <span class="n">lut_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">lut_function</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A function object must be provided as </span><span class="se">\&quot;</span><span class="s2">lut_function</span><span class="se">\&quot;</span><span class="s2">. Got a </span><span class="se">\&quot;</span><span class="s2">lut_function</span><span class="se">\&quot;</span><span class="s2"> as type </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lut_function</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+    <span class="nd">@granularity</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">check_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">granularity</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">granularity</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_VALID_GRANULARITIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s1">&#39;&quot;granularity&quot; must be one of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_VALID_GRANULARITIES</span><span class="si">}</span><span class="s1">, but got </span><span class="si">{</span><span class="n">granularity</span><span class="si">}</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
 
     <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;OpPalettizerConfig&quot;</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">_from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">OpPalettizerConfig</span><span class="p">:</span>
         <span class="k">if</span> <span class="s2">&quot;lut_function&quot;</span> <span class="ow">in</span> <span class="n">config_dict</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;_from_dict method does not support lut_function. Please create the OpPalettizerConfig from scratch.&quot;</span>
@@ -673,7 +870,11 @@
         <span class="n">converter</span> <span class="o">=</span> <span class="n">cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OptimizationConfig"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig">[docs]</a><span class="nd">@define</span>
+
+
+<div class="viewcode-block" id="OptimizationConfig">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig">[docs]</a>
+<span class="nd">@define</span>
 <span class="k">class</span> <span class="nc">OptimizationConfig</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A configuration wrapper that enables fine-grained control when compressing a model,</span>
@@ -746,7 +947,9 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">OpCompressorConfig</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;config must be type of OpCompressorConfig. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">config</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="OptimizationConfig.set_global"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_global">[docs]</a>    <span class="k">def</span> <span class="nf">set_global</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_config</span><span class="p">:</span> <span class="n">OpCompressorConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="OptimizationConfig.set_global">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig.set_global">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_global</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_config</span><span class="p">:</span> <span class="n">OpCompressorConfig</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sets the global config that would be applied to all constant ops.</span>
 
@@ -767,7 +970,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_op_config_type</span><span class="p">(</span><span class="n">op_config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="o">=</span> <span class="n">op_config</span></div>
 
-<div class="viewcode-block" id="OptimizationConfig.set_op_type"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_op_type</span><span class="p">(</span>
+
+<div class="viewcode-block" id="OptimizationConfig.set_op_type">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig.set_op_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_op_type</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">op_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">op_config</span><span class="p">:</span> <span class="n">OpCompressorConfig</span><span class="p">,</span>
@@ -799,7 +1005,10 @@
             <span class="n">op_config</span><span class="o">.</span><span class="n">_validate_op_type</span><span class="p">(</span><span class="n">op_type</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">op_type_configs</span><span class="p">[</span><span class="n">op_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">op_config</span></div>
 
-<div class="viewcode-block" id="OptimizationConfig.set_op_name"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name">[docs]</a>    <span class="k">def</span> <span class="nf">set_op_name</span><span class="p">(</span>
+
+<div class="viewcode-block" id="OptimizationConfig.set_op_name">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig.set_op_name">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_op_name</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">op_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">op_config</span><span class="p">:</span> <span class="n">OpCompressorConfig</span><span class="p">,</span>
@@ -831,6 +1040,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_op_config_type</span><span class="p">(</span><span class="n">op_config</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">op_name_configs</span><span class="p">[</span><span class="n">op_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">op_config</span></div>
 
+
     <span class="nd">@_is_deprecated</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">check_is_deprecated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">_is_deprecated</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_deprecated</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_op_selector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -859,14 +1069,13 @@
             <span class="k">return</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_op_config_type</span><span class="p">(</span><span class="n">global_config</span><span class="p">)</span>
 
-
-    <span class="k">def</span> <span class="nf">_get_op_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_op_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">operation</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This utility function retrieve the compression config for an non-const Operation instance.</span>
+<span class="sd">        This utility function retrieve the compression config for an non-const operation.Operation instance.</span>
 <span class="sd">        The priority is by: op name -&gt; op type -&gt; global</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Operation</span><span class="p">):</span>
-           <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op must be type of Operation. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">operation</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op must be type of operation.Operation. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;op must not be of type const&quot;</span><span class="p">)</span>
@@ -878,16 +1087,16 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span>
 
-    <span class="k">def</span> <span class="nf">_get_const_op_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_const_op_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">operation</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        This utility function retrieves the compression config by an const Operation instance.</span>
+<span class="sd">        This utility function retrieves the compression config by an const operation.Operation instance.</span>
 <span class="sd">        If the const is fed into multiple operations, an error would be thrown if a conflict is detected.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">Operation</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op must be type of Operation. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">operation</span><span class="o">.</span><span class="n">Operation</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op must be type of operation.Operation. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">op</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op must be of type const. Got </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">or</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;op must be of type const or constexpr. Got </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_name_configs</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_name_configs</span><span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
@@ -899,9 +1108,13 @@
 
         <span class="c1"># If the constant&#39;s output is only connected to the block output, we don&#39;t do compression</span>
         <span class="c1"># Due to this bug: rdar://108274019 ([Bug] constexpr ops cannot be directly fed to block output)</span>
-        <span class="n">child_ops</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span>
+        <span class="n">child_ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">child_op</span> <span class="k">for</span> <span class="n">op_output</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span> <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">op_output</span><span class="o">.</span><span class="n">child_ops</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># If the const is fed into constexpr ops, we follow the chain to get the non-constexpr.</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">child_op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">child_ops</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_const_op_config</span><span class="p">(</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
         <span class="n">op_configs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_op_config</span><span class="p">(</span><span class="n">op</span><span class="p">)</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">child_ops</span><span class="p">]</span>
 
@@ -919,7 +1132,9 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">op_name_configs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">op_name_configs</span> <span class="o">=</span> <span class="p">{}</span>
 
-<div class="viewcode-block" id="OptimizationConfig.from_dict"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="OptimizationConfig.from_dict">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;OptimizationConfig&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an ``OptimizationConfig`` instance from a nested dictionary.</span>
@@ -1018,7 +1233,10 @@
 
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">cls_attrs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="OptimizationConfig.from_yaml"><a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig.from_yaml">[docs]</a>    <span class="nd">@classmethod</span>
+
+<div class="viewcode-block" id="OptimizationConfig.from_yaml">
+<a class="viewcode-back" href="../../../../source/coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig.from_yaml">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">yml</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">IO</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;OptimizationConfig&quot;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an ``OptimizationConfig`` instance from a YAML file.</span>
@@ -1070,7 +1288,9 @@
                 <span class="n">config_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">config_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yml</span><span class="p">)</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span></div>
+</div>
+
 
 <span class="k">class</span> <span class="nc">_MetaDataDict</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>

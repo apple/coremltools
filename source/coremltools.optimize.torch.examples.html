@@ -1,35 +1,35 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Training-Time Compression Examples &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css" />
+  <title>Examples &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Magnitude Pruning" href="../_examples/magnitude_pruning.html" />
-    <link rel="prev" title="Training-Time Quantization" href="coremltools.optimize.torch.quantization.html" /> 
+    <link rel="prev" title="Quantization" href="coremltools.optimize.torch.quantization.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -44,7 +44,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -63,12 +63,11 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.optimize.html">Optimizers</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#post-training-compression">Post-Training Compression</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#training-time-compression">Training-Time Compression</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Training-Time Pruning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Training-Time Palettization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Training-Time Quantization</a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Training-Time Compression Examples</a><ul>
+<li class="toctree-l2 current"><a class="reference internal" href="coremltools.optimize.html#pytorch">PyTorch</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Palettization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Quantization</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Examples</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="../_examples/magnitude_pruning.html">Magnitude Pruning</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../_examples/linear_quantization.html">Linear Quantization</a></li>
 <li class="toctree-l4"><a class="reference internal" href="../_examples/dkm_palettization.html">Palettization Using Differentiable K-Means</a></li>
@@ -76,6 +75,7 @@
 </li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.optimize.html#core-ml">Core ML</a></li>
 </ul>
 </li>
 </ul>
@@ -102,7 +102,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="coremltools.optimize.html">Optimizers</a></li>
-      <li class="breadcrumb-item active">Training-Time Compression Examples</li>
+      <li class="breadcrumb-item active">Examples</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.optimize.torch.examples.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -112,8 +112,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="training-time-compression-examples">
-<h1>Training-Time Compression Examples<a class="headerlink" href="#training-time-compression-examples" title="Permalink to this heading"></a></h1>
+  <section id="examples">
+<h1>Examples<a class="headerlink" href="#examples" title="Link to this heading"></a></h1>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../_examples/magnitude_pruning.html">Magnitude Pruning</a></li>
@@ -127,7 +127,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="coremltools.optimize.torch.quantization.html" class="btn btn-neutral float-left" title="Training-Time Quantization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="coremltools.optimize.torch.quantization.html" class="btn btn-neutral float-left" title="Quantization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="../_examples/magnitude_pruning.html" class="btn btn-neutral float-right" title="Magnitude Pruning" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../../../../" id="documentation_options" src="../../../../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../../../../_static/jquery.js"></script>
-        <script src="../../../../../../../../_static/underscore.js"></script>
-        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -100,16 +99,19 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Var</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
 
 
-<div class="viewcode-block" id="remove_redundant_ops"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops">[docs]</a><span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="remove_redundant_ops">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">remove_redundant_ops</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If there are multiple ops with &quot;identical&quot; inputs, then they are redundant and all but one of them can be removed.</span>
@@ -150,7 +152,14 @@
 
     <span class="n">_NON_REDUNDANT_OPS</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
 
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_of_visited_ops</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="mi">0</span>  <span class="c1"># Testing purpose, making sure the algorithm performs in O(N)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Block</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Operation</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+
     <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_num_of_visited_ops</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_remove_redundant_ops_in_block_wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 
@@ -165,21 +174,20 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_candidate_ops_list</span><span class="p">(</span><span class="n">prospective_ops_list</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_candidate_ops_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prospective_ops_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]:</span>
         <span class="n">od</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
-        <span class="n">enclosing_block</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">prospective_ops_list</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">enclosing_block</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># all candidate ops must belong to the same block</span>
+        <span class="n">enclosing_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">prospective_ops_list</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">enclosing_blocks</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># all candidate ops must belong to the same block</span>
             <span class="k">return</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">prospective_ops_list</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">remove_redundant_ops</span><span class="o">.</span><span class="n">_is_op_eligible_to_be_removed</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
-                <span class="n">od</span><span class="p">[</span><span class="n">op</span><span class="p">]</span> <span class="o">=</span> <span class="n">enclosing_block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+                <span class="n">od</span><span class="p">[</span><span class="n">op</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">[</span><span class="n">enclosing_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">op</span><span class="p">]</span>
+
         <span class="c1"># Sort the ops according to their index of appearing in block.operations, which is</span>
         <span class="c1"># topologically sorted</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">od</span><span class="o">.</span><span class="n">items</span><span class="p">(),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">t</span><span class="p">:</span> <span class="n">t</span><span class="p">[</span><span class="mi">1</span><span class="p">])]</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="n">var</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Operation</span><span class="p">]]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a list of lists.</span>
 <span class="sd">        Each element is a list of a subset of the child ops of var, which satisfies the following conditions:</span>
@@ -199,7 +207,7 @@
 
         <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">op_types_to_ops</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">candidate_ops_list</span> <span class="o">=</span> <span class="n">remove_redundant_ops</span><span class="o">.</span><span class="n">_get_candidate_ops_list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">candidate_ops_list</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate_ops_list</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">candidate_ops_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="n">candidate_ops_lists</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">candidate_ops_list</span><span class="p">)</span>
 
@@ -280,6 +288,9 @@
         <span class="n">first_op</span> <span class="o">=</span> <span class="n">candidate_ops_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">block</span> <span class="o">=</span> <span class="n">first_op</span><span class="o">.</span><span class="n">enclosing_block</span>
 
+        <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
         <span class="c1"># currently, we only consider the cases when the op has 1 output.</span>
         <span class="c1"># The replace var logic below only handles the single output case.</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">first_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -287,6 +298,8 @@
 
         <span class="n">ops_to_remove</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">candidate_ops_list</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">continue</span>
             <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>  <span class="c1"># to make sure we don&#39;t remove an output op</span>
                 <span class="k">if</span> <span class="n">remove_redundant_ops</span><span class="o">.</span><span class="n">_are_ops_identical</span><span class="p">(</span><span class="n">first_op</span><span class="p">,</span> <span class="n">op</span><span class="p">):</span>
                     <span class="n">ops_to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
@@ -308,25 +321,44 @@
         <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">(</span><span class="n">ops_removed</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">True</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="n">parent_var</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_try_to_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        scan the children ops to parent_var, to find and remove identical ops, if any.</span>
 <span class="sd">        Returns True, if successful in finding such redundant ops.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">candidate_ops_lists</span> <span class="o">=</span> <span class="n">remove_redundant_ops</span><span class="o">.</span><span class="n">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="n">parent_var</span><span class="p">)</span>
+        <span class="n">candidate_ops_lists</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_candidate_ops_lists_from_var</span><span class="p">(</span><span class="n">parent_var</span><span class="p">)</span>
         <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">for</span> <span class="n">ops_list</span> <span class="ow">in</span> <span class="n">candidate_ops_lists</span><span class="p">:</span>
             <span class="c1"># Iterate through the child ops list, to make sure that we check all possible combinations.</span>
             <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ops_list</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="n">remove_redundant_ops</span><span class="o">.</span><span class="n">_try_to_remove_ops</span><span class="p">(</span><span class="n">ops_list</span><span class="p">[</span><span class="n">idx</span><span class="p">:]):</span>
+                    <span class="c1"># We shoud not break right alway, so that we can keep</span>
+                    <span class="c1"># the time complexity low.</span>
                     <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
-                    <span class="k">break</span>
+
         <span class="k">return</span> <span class="n">block_changed</span>
 
     <span class="nd">@block_context_manager</span>
     <span class="k">def</span> <span class="nf">_remove_redundant_ops_in_block_wrapper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">_cache_topological_order_of_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">:</span>
+                <span class="k">return</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">[</span><span class="n">block</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                    <span class="n">_cache_topological_order_of_ops_in_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span><span class="p">[</span><span class="n">block</span><span class="p">][</span><span class="n">op</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+
         <span class="k">def</span> <span class="nf">_remove_redundant_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+            <span class="c1"># cache the topological order of the ops,</span>
+            <span class="c1"># so that we would not to query the index every single time.</span>
+            <span class="c1"># Note that, the transformation in this particular graph pass</span>
+            <span class="c1"># is going to preserve the topological order. And that is the</span>
+            <span class="c1"># reason why we can do the cache in the very beginning.</span>
+            <span class="n">_cache_topological_order_of_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+
+            <span class="c1"># iterate over the block inputs</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
                 <span class="n">block_input_var_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
@@ -334,16 +366,18 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized type of block.inputs, its neither a list nor dict.&quot;</span><span class="p">)</span>
 
-            <span class="c1"># iterate over the block inputs</span>
             <span class="k">for</span> <span class="n">input_var</span> <span class="ow">in</span> <span class="n">block_input_var_list</span><span class="p">:</span>
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform</span><span class="p">(</span><span class="n">input_var</span><span class="p">)</span>
 
             <span class="c1"># iterate over the ops in the block</span>
             <span class="n">graph_updated</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+
                 <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
                     <span class="k">continue</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_num_of_visited_ops</span> <span class="o">+=</span> <span class="mi">1</span>
 
                 <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
                     <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
@@ -353,15 +387,17 @@
                 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
                     <span class="c1"># currently, we only check the first output of the op</span>
                     <span class="c1"># this can be extended, if required, to check for other outputs.</span>
-                    <span class="n">graph_updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
-                    <span class="c1"># has to break as the downstream iterator is affected.</span>
-                    <span class="k">if</span> <span class="n">graph_updated</span><span class="p">:</span>
-                        <span class="k">return</span> <span class="n">graph_updated</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_try_to_transform</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+                        <span class="c1"># we don&#39;t need to break right away, in order to</span>
+                        <span class="c1"># keep the time complexity fast.</span>
+                        <span class="n">graph_updated</span> <span class="o">=</span> <span class="kc">True</span>
             <span class="k">return</span> <span class="n">graph_updated</span>
 
         <span class="n">block_changed</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">while</span> <span class="n">block_changed</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ops_order</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="n">block_changed</span> <span class="o">=</span> <span class="n">_remove_redundant_ops_in_block</span><span class="p">(</span><span class="n">block</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>
