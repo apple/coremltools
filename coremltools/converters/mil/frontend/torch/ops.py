@@ -5493,7 +5493,7 @@ def ceil(context, node):
     context.add(mb.ceil(x=inputs[0], name=node.name))
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["clip"])
 def clamp(context, node):
     inputs = _get_inputs(context, node, expected=[1,2,3])
     x = inputs[0]
