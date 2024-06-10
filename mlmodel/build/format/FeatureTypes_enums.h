@@ -114,6 +114,22 @@ static const char * MLSequenceFeatureTypeType_Name(MLSequenceFeatureTypeType x) 
     return "INVALID";
 }
 
+enum MLStateFeatureTypeType: int {
+    MLStateFeatureTypeType_arrayType = 1,
+    MLStateFeatureTypeType_NOT_SET = 0,
+};
+
+__attribute__((__unused__))
+static const char * MLStateFeatureTypeType_Name(MLStateFeatureTypeType x) {
+    switch (x) {
+        case MLStateFeatureTypeType_arrayType:
+            return "MLStateFeatureTypeType_arrayType";
+        case MLStateFeatureTypeType_NOT_SET:
+            return "INVALID";
+    }
+    return "INVALID";
+}
+
 enum MLFeatureTypeType: int {
     MLFeatureTypeType_int64Type = 1,
     MLFeatureTypeType_doubleType = 2,
@@ -122,6 +138,7 @@ enum MLFeatureTypeType: int {
     MLFeatureTypeType_multiArrayType = 5,
     MLFeatureTypeType_dictionaryType = 6,
     MLFeatureTypeType_sequenceType = 7,
+    MLFeatureTypeType_stateType = 8,
     MLFeatureTypeType_NOT_SET = 0,
 };
 
@@ -142,6 +159,8 @@ static const char * MLFeatureTypeType_Name(MLFeatureTypeType x) {
             return "MLFeatureTypeType_dictionaryType";
         case MLFeatureTypeType_sequenceType:
             return "MLFeatureTypeType_sequenceType";
+        case MLFeatureTypeType_stateType:
+            return "MLFeatureTypeType_stateType";
         case MLFeatureTypeType_NOT_SET:
             return "INVALID";
     }

@@ -42,7 +42,7 @@ Model::~Model() {
     }
 }
 
-Model::Model(const std::string& urlStr, const std::string& computeUnits) {
+Model::Model(const std::string& urlStr, const std::string& computeUnits, const std::string& functionName) {
     @autoreleasepool {
         NSError *error = nil;
 
@@ -80,6 +80,12 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
         MLModelConfiguration *configuration = [MLModelConfiguration new];
         setComputeUnit(configuration, computeUnits);
 
+        if (!functionName.empty()) {
+#if BUILT_WITH_MACOS15_SDK
+            configuration.functionName = [NSString stringWithUTF8String:functionName.c_str()];
+#endif
+        }
+
         // Create MLModel
         m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
         Utils::handleError(error);
@@ -94,13 +100,28 @@ Model::Model(MLModel* mlModel, NSURL* compiledUrl, bool deleteCompiledModelOnExi
 {
 }
 
-py::dict Model::predict(const py::dict& input) const {
+
+py::dict Model::predict(const py::dict& input, State* state) const {
     @autoreleasepool {
         NSError *error = nil;
         MLDictionaryFeatureProvider *inFeatures = Utils::dictToFeatures(input, &error);
         Utils::handleError(error);
-        id<MLFeatureProvider> outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
-                                                                      error:&error];
+
+        id<MLFeatureProvider> outFeatures;
+#if BUILT_WITH_MACOS15_SDK
+        if (state == NULL) {
+          outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
+                                                            error:&error];
+        } else {
+           outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
+                                                        usingState:state->m_state
+                                                             error:&error];
+        }
+#else
+        outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
+                                                error:&error];
+#endif
+
         Utils::handleError(error);
         return Utils::featuresToDict(outFeatures);
     }
@@ -163,6 +184,15 @@ py::str Model::getCompiledModelPath() const {
 }
 
 
+#if BUILT_WITH_MACOS15_SDK
+State Model::newState() const {
+    State result;
+    result.m_state = [m_model newState];
+    return result;
+}
+#endif
+
+
 py::bytes Model::autoSetSpecificationVersion(const py::bytes& modelBytes) {
 
     CoreML::Specification::Model model;
@@ -207,13 +237,19 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
-        .def(py::init<const std::string&, const std::string&>())
+        .def(py::init<const std::string&, const std::string&, const std::string&>())
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
         .def("get_compiled_model_path", &Model::getCompiledModelPath)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion)
+#if BUILT_WITH_MACOS15_SDK
+        .def("newState", &Model::newState)
+#endif
         .def_static("compileModel", &Model::compileModel);
+
+
+    py::class_<State>(m, "_State", py::module_local());
 
     return m.ptr();
 }

@@ -7,11 +7,13 @@ import copy
 from collections import defaultdict
 from typing import Dict, List, Optional, Union
 
+import numpy as np
+
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 from .scope import ScopeSource
+
 
 class Var:
     """
@@ -133,7 +135,21 @@ class Var:
         self.is_descendant_of_const = Var._propagate_constness_upstream(self)
 
     def _adjust_sym_val(self):
-        pass
+        """For sub-byte dtype var, adjust the sym_val to make sure it reflects the true dtype."""
+        if types.is_list(self.sym_type):
+            return
+
+        if not types.is_sub_byte(self.dtype):
+            return
+
+        if isinstance(self.sym_val, (np.generic, np.ndarray)):
+            np_val = self._sym_val.val
+            if (
+                np_val.dtype.metadata is None
+                or types.SUB_BYTE_DTYPE_METADATA_KEY not in np_val.dtype.metadata
+            ):
+                target_np_dtype = types.nptype_from_builtin(self.dtype)
+                self._sym_val.val = np_val.astype(target_np_dtype)
 
     @property
     def nonreplaceable_vars_upstream(self):
@@ -214,6 +230,10 @@ class Var:
     def shape(self):
         if types.is_tensor(self._sym_type):
             return self._sym_type.get_shape()
+        if types.is_state(self._sym_type):
+            wrapped_type = self._sym_type.wrapped_type()
+            assert types.is_tensor(wrapped_type), "only tensor type is supported in state type."
+            return wrapped_type.get_shape()
         return tuple()
 
     @property
@@ -224,6 +244,10 @@ class Var:
     def dtype(self):
         if types.is_tensor(self._sym_type):
             return self._sym_type.get_primitive()
+        if types.is_state(self._sym_type):
+            wrapped_type = self._sym_type.wrapped_type()
+            assert types.is_tensor(wrapped_type), "only tensor type is supported in state type."
+            return wrapped_type.get_primitive()
         return self._sym_type
 
     @property
@@ -275,10 +299,13 @@ class Var:
     def type_str(self):
         is_tensor = types.is_tensor(self.sym_type)
         is_list = types.is_list(self.sym_type)
+        is_state = types.is_state(self.sym_type)
         if is_tensor:
             type_string = "(Tensor)"
         elif is_list:
             type_string = "(List)"
+        elif is_state:
+            type_string = "(State)"
         else:
             type_string = "(Scalar)"
         return type_string
@@ -288,8 +315,10 @@ class Var:
 
     def is_tensor_or_scalar_of(self, dtype: Union[str, type]):
         if isinstance(dtype, type):
-            dtype = builtin_to_string(dtype)
-        return (types.is_tensor(self.sym_type) or types.is_scalar(self.sym_type)) and builtin_to_string(self.dtype) == dtype
+            dtype = types.builtin_to_string(dtype)
+        return (
+            types.is_tensor(self.sym_type) or types.is_scalar(self.sym_type)
+        ) and types.builtin_to_string(self.dtype) == dtype
 
     def __str__(self):
         return "%" + self.name + ": " + self.shape_str() + self.type_str()

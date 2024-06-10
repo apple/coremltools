@@ -44,6 +44,7 @@ EXPECTED_MODULES = [
     "libmodelpackage",
     "libmilstoragepython",
     "optimize",
+    "StateType",
 ]
 
 
@@ -67,6 +68,9 @@ class TestApiVisibilities:
             "load_spec",
             "rename_feature",
             "save_spec",
+            "save_multifunction",
+            "MultiFunctionDescriptor",
+            "randomize_weights",
         ]
         _check_visible_modules(_get_visible_items(ct.utils), expected)
 
@@ -100,6 +104,7 @@ class TestApiVisibilities:
             "user_defined_metadata",
             "version",
             "weights_dir",
+            "make_state",
         ]
         _check_visible_modules(_get_visible_items(ct.models.MLModel), expected)
 
@@ -161,6 +166,7 @@ class TestApiVisibilities:
             "mil",
             "sklearn",
             "xgboost",
+            "StateType",
         ]
         _check_visible_modules(_get_visible_items(ct.converters), expected)
 
@@ -178,6 +184,7 @@ class TestApiVisibilities:
             "OpPalettizerConfig",
             "OptimizationConfig",
             "OpThresholdPrunerConfig",
+            "experimental",
             "linear_quantize_weights",
             "palettize_weights",
             "prune_weights",

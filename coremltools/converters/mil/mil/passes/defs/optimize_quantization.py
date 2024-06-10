@@ -146,7 +146,7 @@ class merge_affine_dequantize_with_consecutive_ops(AbstractGraphPass):
             )
 
         # after transformation, we create a new constexpr_affine_dequantize op and do the replacement
-        new_var = _utils._construct_constexpr_affine_op(
+        new_var = _utils._construct_constexpr_dequant_op(
             cursor,
             op.zero_point,
             op.scale,
@@ -799,25 +799,39 @@ class distributive_quantized_binary_op_scale_normalization(AbstractGraphPass):
             if new_s_x is None and new_s_z is None:
                 return False
 
+        def convert_mil_float_dtype_to_np(mil_dtype):
+            if mil_dtype == types.fp16 or mil_dtype == "float16":
+                np_dtype = np.float16
+            else:
+                np_dtype = np.float32
+            return np_dtype
+
+        new_s_x_dtype = convert_mil_float_dtype_to_np(dequantize_x.scale.val.dtype)
+        new_s_y_dtype = convert_mil_float_dtype_to_np(dequantize_y.scale.val.dtype)
+        new_s_z_dtype = convert_mil_float_dtype_to_np(quantize_z.scale.val.dtype)
+
         # insert normalized new_dequantize_x and new_dequantize_y before op
         new_dequantize_x = mb.dequantize(
             input=dequantize_x.input,
-            scale=new_s_x,
+            scale=new_s_x_dtype(new_s_x),
             zero_point=dequantize_x.zero_point,
             axis=dequantize_x.axis,
             before_op=op,
         )
         new_dequantize_y = mb.dequantize(
             input=dequantize_y.input,
-            scale=1.0 if dequantize_y.axis is None else np.full(dequantize_y.scale.val.shape, 1.0),
+            scale=new_s_y_dtype(1)
+            if dequantize_y.axis is None
+            else np.full(dequantize_y.scale.val.shape, 1.0),
             zero_point=dequantize_y.zero_point,
             axis=dequantize_y.axis,
             before_op=op,
         )
+
         # insert normalized new_quantize_z before quantize_z
         new_quantize_z = mb.quantize(
             input=quantize_z.input,
-            scale=new_s_z,
+            scale=new_s_z_dtype(new_s_z),
             zero_point=quantize_z.zero_point,
             axis=quantize_z.axis,
             output_dtype=quantize_z.output_dtype,
@@ -956,7 +970,7 @@ class dequantize_to_constexpr(AbstractGraphPass):
 
         axis = None if op.axis is None else op.axis.val
 
-        new_var = _utils._construct_constexpr_affine_op(
+        new_var = _utils._construct_constexpr_dequant_op(
             quantized_data,
             zero_point,
             scale,
@@ -968,3 +982,119 @@ class dequantize_to_constexpr(AbstractGraphPass):
         block = op.enclosing_block
         block.replace_uses_of_var_after_op(anchor_op=op, old_var=op.outputs[0], new_var=new_var)
         block.remove_ops([op])
+
+
+@register_pass(namespace="common")
+class reorder_lut_per_channel_scale(AbstractGraphPass):
+    """
+    The lut with per-channel-scale was represented as the following op combinations:
+        weight = constexpr_lut_to_dense()
+        weight = constexpr_blockwise_shift_scale(weight)
+        output = linear/matmul/conv(x, weight)
+    However, for ANE, it requires the scale to be after the linear/matmul/conv, which is:
+        weight = constexpr_lut_to_dense()
+        unscaled_output = linear/matmul(x, weight)
+        output = mul(unscaled_output, scale)
+    This graph pass finds the lut with per-channel-scale and move the scale to be ANE-friendly.
+    """
+
+    _OPS_SUPPORT_MOVE_SCALE = {"linear", "matmul", "conv"}
+
+    def apply(self, prog):
+        @block_context_manager
+        def apply_block(block: Block):
+            for op in list(block.operations):
+                for b in op.blocks:
+                    apply_block(b)
+
+                if op.op_type == "constexpr_lut_to_dense" and len(op.outputs[0].child_ops) == 1:
+                    child_op = op.outputs[0].child_ops[0]
+                    if child_op.op_type == "constexpr_blockwise_shift_scale":
+                        # Can move the scale when the constexpr op is only used to scale the weight.
+                        has_offset = child_op.offset is not None and child_op.offset.val.any()
+                        if types.is_float(child_op.data.dtype) and not has_offset:
+                            self._reorder_lut_per_channel_scale(block, op)
+
+        for f in prog.functions.values():
+            apply_block(f)
+
+    def _reorder_lut_per_channel_scale(self, block: Block, lut_op: Operation):
+        # Lazy import to avoid circular import error.
+        from coremltools.optimize.coreml import _utils as optimize_utils
+
+        # The original order is lut_op -> scale_op -> output_op.
+        scale_op = lut_op.outputs[0].child_ops[0]
+
+        # Only move the scale when all ops that consume this scale op support moving.
+        for output_op in scale_op.outputs[0].child_ops:
+            if output_op.op_type not in self._OPS_SUPPORT_MOVE_SCALE:
+                return
+
+            # Only the scale on output axis could be moved to get mathematically equivalent results.
+            scale_val: np.ndarray = scale_op.scale.val
+            output_axis = optimize_utils.select_input_output_channel_axis(scale_op)[1]
+            if output_axis < 0:
+                output_axis += len(scale_val.shape)
+            for axis, dim_size in enumerate(scale_val.shape):
+                if axis != output_axis and dim_size != 1:
+                    return
+
+        for output_op in list(scale_op.outputs[0].child_ops):
+            self._help_move_scale(block, lut_op, scale_op, output_op)
+            block.remove_ops([output_op])
+        block.remove_ops([scale_op])
+
+    @staticmethod
+    def _help_move_scale(
+        block: Block, lut_op: Operation, scale_op: Operation, output_op: Operation
+    ):
+        """Move the scale from `lut_op -> scale_op -> output_op` to `lut_op -> output_op -> mul`."""
+        scale_val: np.ndarray = scale_op.scale.val
+        inputs = output_op.inputs
+        if output_op.op_type == "linear":
+            scale_val = scale_val.T
+            inputs["weight"] = lut_op.outputs[0]
+            if getattr(output_op, "bias", None) and output_op.bias.val is not None:
+                original_bias = output_op.bias.val
+                new_bias = (original_bias / np.squeeze(scale_val)).astype(original_bias.dtype)
+                inputs["bias"] = new_bias
+        elif output_op.op_type == "matmul":
+            # Determine if the scaled weight is used by `x` or `y` in matmul.
+            if output_op.y == scale_op.outputs[0]:
+                if output_op.transpose_y.val is True:
+                    scale_val = scale_val.T
+                inputs["y"] = lut_op.outputs[0]
+            else:
+                if output_op.transpose_x.val is True:
+                    scale_val = scale_val.T
+                inputs["x"] = lut_op.outputs[0]
+        else:
+            if output_op.op_type != "conv":
+                raise AssertionError(
+                    "The scale could only be moved for linear/matmul/conv, "
+                    f"but got {output_op.op_type}"
+                )
+            # The weight of conv has C_out at axis=0, but in output the C_out is at axis=1
+            scale_val = np.squeeze(scale_val)
+            if len(scale_val.shape) > 1:
+                # The per-channel-scale should only have one axis with larger than 1 dim size.
+                return
+            channel_size = 1 if len(scale_val.shape) == 0 else scale_val.shape[0]
+            scale_val = scale_val.reshape((1, channel_size, 1, 1))
+            inputs["weight"] = lut_op.outputs[0]
+            if getattr(output_op, "bias", None) and output_op.bias.val is not None:
+                original_bias = output_op.bias.val
+                new_bias = (original_bias / np.squeeze(scale_val)).astype(original_bias.dtype)
+                inputs["bias"] = new_bias
+
+        # Reconstruct the unscaled output which uses lut output as weight (skip the original scale).
+        unscaled_output = getattr(mb, output_op.op_type)(**inputs, before_op=output_op)
+        scaled_output = mb.mul(x=unscaled_output, y=scale_val, before_op=output_op)
+
+        # Now the order is lut_op -> unscaled_output -> scaled_output.
+        block.replace_uses_of_var_after_op(
+            anchor_op=output_op,
+            old_var=output_op.outputs[0],
+            new_var=scaled_output,
+            force_replace=True,  # Need to force replace because it involves replacing constexpr op.
+        )

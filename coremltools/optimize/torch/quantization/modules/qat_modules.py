@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -84,55 +84,40 @@ class ConvAct1d(_ConvAct):
     root_mod = _nn.Conv1d
     qat_mod = _nnqat.Conv1d
     fused_mod = _fuse.ConvAct1d
-
-    def __init__(self, conv: _nnqat.Conv1d, act: _nn.Module, qconfig: _aoquant.QConfig):
-        super().__init__(conv, act, qconfig)
+    pass
 
 
 class ConvAct2d(_ConvAct):
     root_mod = _nn.Conv2d
     qat_mod = _nnqat.Conv2d
     fused_mod = _fuse.ConvAct2d
-
-    def __init__(self, conv: _nnqat.Conv2d, act: _nn.Module, qconfig: _aoquant.QConfig):
-        super().__init__(conv, act, qconfig)
+    pass
 
 
 class ConvAct3d(_ConvAct):
     root_mod = _nn.Conv3d
     qat_mod = _nnqat.Conv3d
     fused_mod = _fuse.ConvAct3d
-
-    def __init__(self, conv: _nnqat.Conv3d, act: _nn.Module, qconfig: _aoquant.QConfig):
-        super().__init__(conv, act, qconfig)
+    pass
 
 
 class ConvBnAct1d(_ConvBnAct):
     intr_mod = _nni.ConvBn1d
     qat_mod = _nniqat.ConvBn1d
     fused_mod = _fuse.ConvAct1d
-
-    def __init__(self, conv: _nniqat.ConvBn1d, act: _nn.Module, qconfig: _aoquant.QConfig):
-        super().__init__(conv, act, qconfig)
-
+    pass
 
 class ConvBnAct2d(_ConvBnAct):
     intr_mod = _nni.ConvBn2d
     qat_mod = _nniqat.ConvBn2d
     fused_mod = _fuse.ConvAct2d
-
-    def __init__(self, conv: _nniqat.ConvBn2d, act: _nn.Module, qconfig: _aoquant.QConfig):
-        super().__init__(conv, act, qconfig)
-
+    pass
 
 class ConvBnAct3d(_ConvBnAct):
     intr_mod = _nni.ConvBn3d
     qat_mod = _nniqat.ConvBn3d
     fused_mod = _fuse.ConvAct3d
-
-    def __init__(self, conv: _nniqat.ConvBn3d, act: _nn.Module, qconfig: _aoquant.QConfig):
-        super().__init__(conv, act, qconfig)
-
+    pass
 
 class LinearAct(_torch.nn.Sequential):
     def __init__(self, linear: _nnqat.Linear, act: _nn.Module, qconfig: _aoquant.QConfig):

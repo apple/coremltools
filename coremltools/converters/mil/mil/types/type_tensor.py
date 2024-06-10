@@ -201,6 +201,12 @@ def is_compatible_type(type1, type2):
     """
     Return if type1 and type2 are compatible.
     """
+    # For single-element tensor, it's compatible with scalar.
+    if is_tensor(type1) and len(type1.get_shape()) == 0:
+        type1 = type1.get_primitive()
+    if is_tensor(type2) and len(type2.get_shape()) == 0:
+        type2 = type2.get_primitive()
+
     if not is_subtype(type1, type2):
         is_comp, _ = is_tensor_and_is_compatible(type1, type2)
         return is_comp

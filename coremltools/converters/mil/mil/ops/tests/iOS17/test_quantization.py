@@ -24,13 +24,6 @@ torch.manual_seed(1042)
 np.random.seed(1042)
 
 
-def _set_backend_precision(backend, precision):
-    return BackendConfig(
-        backend=backend.backend,
-        precision=precision,
-        opset_version=backend.opset_version,
-    )
-
 class TestQuantizationBase:
     @staticmethod
     def get_random_quantization_params(
@@ -238,14 +231,14 @@ class TestQuantize(TestQuantizationBase):
 
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "compute_unit, backend, float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present",
+        "compute_unit, backend, float_dtype, quant_dtype, input_rank, axis, is_zp_present",
         itertools.product(
             compute_units,
             backends,
             (np.float32, np.float16),
             (np.int8, np.uint8),
-            ("fp32", "fp16"),
-            (1, 2, 3, 4, 5),
+            list(range(1, 6)),
+            [None] + list(range(-5, 5)),
             (True, False),
         ),
     )
@@ -255,10 +248,13 @@ class TestQuantize(TestQuantizationBase):
         backend,
         float_dtype,
         quant_dtype,
-        compute_precision,
         input_rank,
+        axis,
         is_zp_present,
     ):
+        if axis is not None and (axis < -input_rank or axis >= input_rank):
+            pytest.skip("axis should either be None or in [-input_rank, input_rank)")
+
         def build(x):
             x = mb.cast(x=x, dtype=builtin_to_string(numpy_type_to_builtin_type(float_dtype)))
             quantized = mb.quantize(
@@ -275,34 +271,33 @@ class TestQuantize(TestQuantizationBase):
             )
             return dequantized
 
-        for axis in [None] + [i for i in range(-input_rank, input_rank)]:
-            x_fp, scale, zero_point = self.get_random_quantization_params(
-                float_dtype, quant_dtype, input_rank, is_zp_present, axis
-            )
+        x_fp, scale, zero_point = self.get_random_quantization_params(
+            float_dtype, quant_dtype, input_rank, is_zp_present, axis
+        )
 
-            input_placeholders = {
-                "x": mb.placeholder(
-                    shape=x_fp.shape,
-                    dtype=numpy_type_to_builtin_type(float_dtype),
-                ),
-            }
-            input_values = {"x": x_fp}
+        input_placeholders = {
+            "x": mb.placeholder(
+                shape=x_fp.shape,
+                dtype=numpy_type_to_builtin_type(float_dtype),
+            ),
+        }
+        input_values = {"x": x_fp}
 
-            output_torch = self.torch_quantize(x_fp, scale, zero_point, axis, quant_dtype)
-            output_torch_val = output_torch.int_repr().numpy()
-            output_type = output_torch_val.shape + (numpy_type_to_builtin_type(np.float32),)
-            expected_outputs = [output_torch_val]
-            expected_output_types = [output_type]
+        output_torch = self.torch_quantize(x_fp, scale, zero_point, axis, quant_dtype)
+        output_torch_val = output_torch.int_repr().numpy()
+        output_type = output_torch_val.shape + (numpy_type_to_builtin_type(np.float32),)
+        expected_outputs = [output_torch_val]
+        expected_output_types = [output_type]
 
-            run_compare_builder(
-                build,
-                input_placeholders,
-                input_values,
-                expected_output_types,
-                expected_outputs=expected_outputs,
-                compute_unit=compute_unit,
-                backend=_set_backend_precision(backend, compute_precision),
-            )
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs=expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
 
 
 class TestDequantize(TestQuantizationBase):
@@ -374,7 +369,13 @@ class TestDequantize(TestQuantizationBase):
             expected_output_types=[expected_output_type],
             expected_outputs=[expected_output],
             compute_unit=compute_unit,
-            backend=_set_backend_precision(backend, "fp32"),
+            # Other test cases are mostly testing fp16 precision,
+            # so this one we explicitly test fp32 precision
+            backend=BackendConfig(
+                backend=backend.backend,
+                precision="fp32",
+                opset_version=backend.opset_version,
+            ),
             atol=1e-3,
             rtol=1e-3,
         )
@@ -409,21 +410,27 @@ class TestDequantize(TestQuantizationBase):
             expected_output_types=[expected_output_type],
             expected_outputs=[expected_output],
             compute_unit=compute_unit,
-            backend=_set_backend_precision(backend, "fp32"),
+            # Other test cases are mostly testing fp16 precision,
+            # so this one we explicitly test fp32 precision
+            backend=BackendConfig(
+                backend=backend.backend,
+                precision="fp32",
+                opset_version=backend.opset_version,
+            ),
             atol=1e-3,
             rtol=1e-3,
         )
 
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "compute_unit, backend, float_dtype, quant_dtype, compute_precision, input_rank, is_zp_present",
+        "compute_unit, backend, float_dtype, quant_dtype, input_rank, axis, is_zp_present",
         itertools.product(
             compute_units,
             backends,
             (np.float32, np.float16),
             (np.int8, np.uint8),
-            ("fp32", "fp16"),
-            (1, 2, 3, 4, 5),
+            list(range(1, 6)),
+            [None] + list(range(-5, 5)),
             (True, False),
         ),
     )
@@ -433,10 +440,13 @@ class TestDequantize(TestQuantizationBase):
         backend,
         float_dtype,
         quant_dtype,
-        compute_precision,
         input_rank,
+        axis,
         is_zp_present,
     ):
+        if axis is not None and (axis < -input_rank or axis >= input_rank):
+            pytest.skip("axis should either be None or in [-input_rank, input_rank)")
+
         def build(x):
             x = mb.cast(x=x, dtype=builtin_to_string(numpy_type_to_builtin_type(float_dtype)))
             # TODO(rdar://107430678): Replace scale=1 zero_point=0 quantize/dequantize with cast
@@ -453,33 +463,32 @@ class TestDequantize(TestQuantizationBase):
             )
             return dequantized
 
-        for axis in [None] + [i for i in range(-input_rank, input_rank)]:
-            x_fp, scale, zero_point = self.get_random_quantization_params(
-                float_dtype, quant_dtype, input_rank, is_zp_present, axis
-            )
+        x_fp, scale, zero_point = self.get_random_quantization_params(
+            float_dtype, quant_dtype, input_rank, is_zp_present, axis
+        )
 
-            x_q = self.torch_quantize(x_fp, scale, zero_point, axis, quant_dtype)
+        x_q = self.torch_quantize(x_fp, scale, zero_point, axis, quant_dtype)
 
-            output_torch_val = torch.dequantize(x_q).numpy()
-            output_type = output_torch_val.shape + (numpy_type_to_builtin_type(np.float32),)
+        output_torch_val = torch.dequantize(x_q).numpy()
+        output_type = output_torch_val.shape + (numpy_type_to_builtin_type(np.float32),)
 
-            input_placeholders = {
-                "x": mb.placeholder(
-                    shape=x_fp.shape,
-                    dtype=numpy_type_to_builtin_type(float_dtype),
-                ),
-            }
-            input_values = {"x": x_q.int_repr().numpy()}
+        input_placeholders = {
+            "x": mb.placeholder(
+                shape=x_fp.shape,
+                dtype=numpy_type_to_builtin_type(float_dtype),
+            ),
+        }
+        input_values = {"x": x_q.int_repr().numpy()}
 
-            expected_outputs = [output_torch_val]
-            expected_output_types = [output_type]
-            run_compare_builder(
-                build,
-                input_placeholders,
-                input_values,
-                expected_output_types,
-                expected_outputs=expected_outputs,
-                compute_unit=compute_unit,
-                backend=_set_backend_precision(backend, compute_precision),
-                rtol=1e-3,
-            )
+        expected_outputs = [output_torch_val]
+        expected_output_types = [output_type]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs=expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+            rtol=1e-3,
+        )

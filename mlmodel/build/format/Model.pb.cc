@@ -28,6 +28,8 @@ class Metadata_UserDefinedEntryDefaultTypeInternal : public ::google::protobuf::
 } _Metadata_UserDefinedEntry_default_instance_;
 class MetadataDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<Metadata> {
 } _Metadata_default_instance_;
+class FunctionDescriptionDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<FunctionDescription> {
+} _FunctionDescription_default_instance_;
 class ModelDescriptionDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<ModelDescription> {
 } _ModelDescription_default_instance_;
 class SerializedModelDefaultTypeInternal : public ::google::protobuf::internal::ExplicitlyConstructed<SerializedModel> {
@@ -95,6 +97,7 @@ PROTOBUF_CONSTEXPR_VAR ::google::protobuf::internal::ParseTable const
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
   { NULL, NULL, 0, -1, -1, false },
+  { NULL, NULL, 0, -1, -1, false },
 };
 
 
@@ -104,6 +107,7 @@ void TableStruct::Shutdown() {
   _PipelineRegressor_default_instance_.Shutdown();
   _FeatureDescription_default_instance_.Shutdown();
   _Metadata_default_instance_.Shutdown();
+  _FunctionDescription_default_instance_.Shutdown();
   _ModelDescription_default_instance_.Shutdown();
   _SerializedModel_default_instance_.Shutdown();
   _Model_default_instance_.Shutdown();
@@ -150,6 +154,7 @@ void TableStruct::InitDefaultsImpl() {
   _FeatureDescription_default_instance_.DefaultConstruct();
   _Metadata_UserDefinedEntry_default_instance_.DefaultConstruct();
   _Metadata_default_instance_.DefaultConstruct();
+  _FunctionDescription_default_instance_.DefaultConstruct();
   _ModelDescription_default_instance_.DefaultConstruct();
   _SerializedModel_default_instance_.DefaultConstruct();
   _Model_default_instance_.DefaultConstruct();
@@ -747,7 +752,7 @@ const ::CoreML::Specification::Pipeline& PipelineClassifier::pipeline() const {
                          : *::CoreML::Specification::Pipeline::internal_default_instance();
 }
 ::CoreML::Specification::Pipeline* PipelineClassifier::mutable_pipeline() {
-  
+
   if (pipeline_ == NULL) {
     pipeline_ = new ::CoreML::Specification::Pipeline;
   }
@@ -756,7 +761,7 @@ const ::CoreML::Specification::Pipeline& PipelineClassifier::pipeline() const {
 }
 ::CoreML::Specification::Pipeline* PipelineClassifier::release_pipeline() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.PipelineClassifier.pipeline)
-  
+
   ::CoreML::Specification::Pipeline* temp = pipeline_;
   pipeline_ = NULL;
   return temp;
@@ -765,9 +770,9 @@ void PipelineClassifier::set_allocated_pipeline(::CoreML::Specification::Pipelin
   delete pipeline_;
   pipeline_ = pipeline;
   if (pipeline) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PipelineClassifier.pipeline)
 }
@@ -977,7 +982,7 @@ const ::CoreML::Specification::Pipeline& PipelineRegressor::pipeline() const {
                          : *::CoreML::Specification::Pipeline::internal_default_instance();
 }
 ::CoreML::Specification::Pipeline* PipelineRegressor::mutable_pipeline() {
-  
+
   if (pipeline_ == NULL) {
     pipeline_ = new ::CoreML::Specification::Pipeline;
   }
@@ -986,7 +991,7 @@ const ::CoreML::Specification::Pipeline& PipelineRegressor::pipeline() const {
 }
 ::CoreML::Specification::Pipeline* PipelineRegressor::release_pipeline() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.PipelineRegressor.pipeline)
-  
+
   ::CoreML::Specification::Pipeline* temp = pipeline_;
   pipeline_ = NULL;
   return temp;
@@ -995,9 +1000,9 @@ void PipelineRegressor::set_allocated_pipeline(::CoreML::Specification::Pipeline
   delete pipeline_;
   pipeline_ = pipeline;
   if (pipeline) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.PipelineRegressor.pipeline)
 }
@@ -1294,13 +1299,13 @@ const ::std::string& FeatureDescription::name() const {
   return name_.GetNoArena();
 }
 void FeatureDescription::set_name(const ::std::string& value) {
-  
+
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.FeatureDescription.name)
 }
 #if LANG_CXX11
 void FeatureDescription::set_name(::std::string&& value) {
-  
+
   name_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.FeatureDescription.name)
@@ -1308,31 +1313,31 @@ void FeatureDescription::set_name(::std::string&& value) {
 #endif
 void FeatureDescription::set_name(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.FeatureDescription.name)
 }
 void FeatureDescription::set_name(const char* value, size_t size) {
-  
+
   name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.FeatureDescription.name)
 }
 ::std::string* FeatureDescription::mutable_name() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.FeatureDescription.name)
   return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* FeatureDescription::release_name() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.FeatureDescription.name)
-  
+
   return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void FeatureDescription::set_allocated_name(::std::string* name) {
   if (name != NULL) {
-    
+
   } else {
-    
+
   }
   name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureDescription.name)
@@ -1347,13 +1352,13 @@ const ::std::string& FeatureDescription::shortdescription() const {
   return shortdescription_.GetNoArena();
 }
 void FeatureDescription::set_shortdescription(const ::std::string& value) {
-  
+
   shortdescription_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.FeatureDescription.shortDescription)
 }
 #if LANG_CXX11
 void FeatureDescription::set_shortdescription(::std::string&& value) {
-  
+
   shortdescription_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.FeatureDescription.shortDescription)
@@ -1361,31 +1366,31 @@ void FeatureDescription::set_shortdescription(::std::string&& value) {
 #endif
 void FeatureDescription::set_shortdescription(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   shortdescription_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.FeatureDescription.shortDescription)
 }
 void FeatureDescription::set_shortdescription(const char* value, size_t size) {
-  
+
   shortdescription_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.FeatureDescription.shortDescription)
 }
 ::std::string* FeatureDescription::mutable_shortdescription() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.FeatureDescription.shortDescription)
   return shortdescription_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* FeatureDescription::release_shortdescription() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.FeatureDescription.shortDescription)
-  
+
   return shortdescription_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void FeatureDescription::set_allocated_shortdescription(::std::string* shortdescription) {
   if (shortdescription != NULL) {
-    
+
   } else {
-    
+
   }
   shortdescription_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), shortdescription);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureDescription.shortDescription)
@@ -1405,7 +1410,7 @@ const ::CoreML::Specification::FeatureType& FeatureDescription::type() const {
                          : *::CoreML::Specification::FeatureType::internal_default_instance();
 }
 ::CoreML::Specification::FeatureType* FeatureDescription::mutable_type() {
-  
+
   if (type_ == NULL) {
     type_ = new ::CoreML::Specification::FeatureType;
   }
@@ -1414,7 +1419,7 @@ const ::CoreML::Specification::FeatureType& FeatureDescription::type() const {
 }
 ::CoreML::Specification::FeatureType* FeatureDescription::release_type() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.FeatureDescription.type)
-  
+
   ::CoreML::Specification::FeatureType* temp = type_;
   type_ = NULL;
   return temp;
@@ -1423,9 +1428,9 @@ void FeatureDescription::set_allocated_type(::CoreML::Specification::FeatureType
   delete type_;
   type_ = type;
   if (type) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FeatureDescription.type)
 }
@@ -1875,13 +1880,13 @@ const ::std::string& Metadata::shortdescription() const {
   return shortdescription_.GetNoArena();
 }
 void Metadata::set_shortdescription(const ::std::string& value) {
-  
+
   shortdescription_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.Metadata.shortDescription)
 }
 #if LANG_CXX11
 void Metadata::set_shortdescription(::std::string&& value) {
-  
+
   shortdescription_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.Metadata.shortDescription)
@@ -1889,31 +1894,31 @@ void Metadata::set_shortdescription(::std::string&& value) {
 #endif
 void Metadata::set_shortdescription(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   shortdescription_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.Metadata.shortDescription)
 }
 void Metadata::set_shortdescription(const char* value, size_t size) {
-  
+
   shortdescription_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.Metadata.shortDescription)
 }
 ::std::string* Metadata::mutable_shortdescription() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.Metadata.shortDescription)
   return shortdescription_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* Metadata::release_shortdescription() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.Metadata.shortDescription)
-  
+
   return shortdescription_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void Metadata::set_allocated_shortdescription(::std::string* shortdescription) {
   if (shortdescription != NULL) {
-    
+
   } else {
-    
+
   }
   shortdescription_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), shortdescription);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Metadata.shortDescription)
@@ -1928,13 +1933,13 @@ const ::std::string& Metadata::versionstring() const {
   return versionstring_.GetNoArena();
 }
 void Metadata::set_versionstring(const ::std::string& value) {
-  
+
   versionstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.Metadata.versionString)
 }
 #if LANG_CXX11
 void Metadata::set_versionstring(::std::string&& value) {
-  
+
   versionstring_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.Metadata.versionString)
@@ -1942,31 +1947,31 @@ void Metadata::set_versionstring(::std::string&& value) {
 #endif
 void Metadata::set_versionstring(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   versionstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.Metadata.versionString)
 }
 void Metadata::set_versionstring(const char* value, size_t size) {
-  
+
   versionstring_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.Metadata.versionString)
 }
 ::std::string* Metadata::mutable_versionstring() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.Metadata.versionString)
   return versionstring_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* Metadata::release_versionstring() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.Metadata.versionString)
-  
+
   return versionstring_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void Metadata::set_allocated_versionstring(::std::string* versionstring) {
   if (versionstring != NULL) {
-    
+
   } else {
-    
+
   }
   versionstring_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), versionstring);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Metadata.versionString)
@@ -1981,13 +1986,13 @@ const ::std::string& Metadata::author() const {
   return author_.GetNoArena();
 }
 void Metadata::set_author(const ::std::string& value) {
-  
+
   author_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.Metadata.author)
 }
 #if LANG_CXX11
 void Metadata::set_author(::std::string&& value) {
-  
+
   author_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.Metadata.author)
@@ -1995,31 +2000,31 @@ void Metadata::set_author(::std::string&& value) {
 #endif
 void Metadata::set_author(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   author_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.Metadata.author)
 }
 void Metadata::set_author(const char* value, size_t size) {
-  
+
   author_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.Metadata.author)
 }
 ::std::string* Metadata::mutable_author() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.Metadata.author)
   return author_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* Metadata::release_author() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.Metadata.author)
-  
+
   return author_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void Metadata::set_allocated_author(::std::string* author) {
   if (author != NULL) {
-    
+
   } else {
-    
+
   }
   author_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), author);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Metadata.author)
@@ -2034,13 +2039,13 @@ const ::std::string& Metadata::license() const {
   return license_.GetNoArena();
 }
 void Metadata::set_license(const ::std::string& value) {
-  
+
   license_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.Metadata.license)
 }
 #if LANG_CXX11
 void Metadata::set_license(::std::string&& value) {
-  
+
   license_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.Metadata.license)
@@ -2048,31 +2053,31 @@ void Metadata::set_license(::std::string&& value) {
 #endif
 void Metadata::set_license(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   license_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.Metadata.license)
 }
 void Metadata::set_license(const char* value, size_t size) {
-  
+
   license_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.Metadata.license)
 }
 ::std::string* Metadata::mutable_license() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.Metadata.license)
   return license_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* Metadata::release_license() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.Metadata.license)
-  
+
   return license_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void Metadata::set_allocated_license(::std::string* license) {
   if (license != NULL) {
-    
+
   } else {
-    
+
   }
   license_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), license);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Metadata.license)
@@ -2101,12 +2106,652 @@ Metadata::mutable_userdefined() {
 // ===================================================================
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int FunctionDescription::kNameFieldNumber;
+const int FunctionDescription::kInputFieldNumber;
+const int FunctionDescription::kOutputFieldNumber;
+const int FunctionDescription::kStateFieldNumber;
+const int FunctionDescription::kPredictedFeatureNameFieldNumber;
+const int FunctionDescription::kPredictedProbabilitiesNameFieldNumber;
+#endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
+
+FunctionDescription::FunctionDescription()
+  : ::google::protobuf::MessageLite(), _internal_metadata_(NULL) {
+  if (GOOGLE_PREDICT_TRUE(this != internal_default_instance())) {
+    protobuf_Model_2eproto::InitDefaults();
+  }
+  SharedCtor();
+  // @@protoc_insertion_point(constructor:CoreML.Specification.FunctionDescription)
+}
+FunctionDescription::FunctionDescription(const FunctionDescription& from)
+  : ::google::protobuf::MessageLite(),
+      _internal_metadata_(NULL),
+      input_(from.input_),
+      output_(from.output_),
+      state_(from.state_),
+      _cached_size_(0) {
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.name().size() > 0) {
+    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
+  }
+  predictedfeaturename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.predictedfeaturename().size() > 0) {
+    predictedfeaturename_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedfeaturename_);
+  }
+  predictedprobabilitiesname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.predictedprobabilitiesname().size() > 0) {
+    predictedprobabilitiesname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedprobabilitiesname_);
+  }
+  // @@protoc_insertion_point(copy_constructor:CoreML.Specification.FunctionDescription)
+}
+
+void FunctionDescription::SharedCtor() {
+  name_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  predictedfeaturename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  predictedprobabilitiesname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  _cached_size_ = 0;
+}
+
+FunctionDescription::~FunctionDescription() {
+  // @@protoc_insertion_point(destructor:CoreML.Specification.FunctionDescription)
+  SharedDtor();
+}
+
+void FunctionDescription::SharedDtor() {
+  name_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  predictedfeaturename_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  predictedprobabilitiesname_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+void FunctionDescription::SetCachedSize(int size) const {
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+}
+const FunctionDescription& FunctionDescription::default_instance() {
+  protobuf_Model_2eproto::InitDefaults();
+  return *internal_default_instance();
+}
+
+FunctionDescription* FunctionDescription::New(::google::protobuf::Arena* arena) const {
+  FunctionDescription* n = new FunctionDescription;
+  if (arena != NULL) {
+    arena->Own(n);
+  }
+  return n;
+}
+
+void FunctionDescription::Clear() {
+// @@protoc_insertion_point(message_clear_start:CoreML.Specification.FunctionDescription)
+  input_.Clear();
+  output_.Clear();
+  state_.Clear();
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  predictedfeaturename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  predictedprobabilitiesname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+
+bool FunctionDescription::MergePartialFromCodedStream(
+    ::google::protobuf::io::CodedInputStream* input) {
+#define DO_(EXPRESSION) if (!GOOGLE_PREDICT_TRUE(EXPRESSION)) goto failure
+  ::google::protobuf::uint32 tag;
+  // @@protoc_insertion_point(parse_start:CoreML.Specification.FunctionDescription)
+  for (;;) {
+    ::std::pair< ::google::protobuf::uint32, bool> p = input->ReadTagWithCutoffNoLastTag(127u);
+    tag = p.first;
+    if (!p.second) goto handle_unusual;
+    switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
+      // string name = 1;
+      case 1: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(10u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_name()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->name().data(), this->name().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.FunctionDescription.name"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.FeatureDescription input = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(18u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_input()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.FeatureDescription output = 3;
+      case 3: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(26u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_output()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string predictedFeatureName = 4;
+      case 4: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(34u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_predictedfeaturename()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->predictedfeaturename().data(), this->predictedfeaturename().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.FunctionDescription.predictedFeatureName"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string predictedProbabilitiesName = 5;
+      case 5: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(42u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_predictedprobabilitiesname()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->predictedprobabilitiesname().data(), this->predictedprobabilitiesname().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.FunctionDescription.predictedProbabilitiesName"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.FeatureDescription state = 6;
+      case 6: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(50u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_state()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      default: {
+      handle_unusual:
+        if (tag == 0 ||
+            ::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
+            ::google::protobuf::internal::WireFormatLite::WIRETYPE_END_GROUP) {
+          goto success;
+        }
+        DO_(::google::protobuf::internal::WireFormatLite::SkipField(input, tag));
+        break;
+      }
+    }
+  }
+success:
+  // @@protoc_insertion_point(parse_success:CoreML.Specification.FunctionDescription)
+  return true;
+failure:
+  // @@protoc_insertion_point(parse_failure:CoreML.Specification.FunctionDescription)
+  return false;
+#undef DO_
+}
+
+void FunctionDescription::SerializeWithCachedSizes(
+    ::google::protobuf::io::CodedOutputStream* output) const {
+  // @@protoc_insertion_point(serialize_start:CoreML.Specification.FunctionDescription)
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  // string name = 1;
+  if (this->name().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->name().data(), this->name().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.FunctionDescription.name");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      1, this->name(), output);
+  }
+
+  // repeated .CoreML.Specification.FeatureDescription input = 2;
+  for (unsigned int i = 0, n = this->input_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      2, this->input(i), output);
+  }
+
+  // repeated .CoreML.Specification.FeatureDescription output = 3;
+  for (unsigned int i = 0, n = this->output_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      3, this->output(i), output);
+  }
+
+  // string predictedFeatureName = 4;
+  if (this->predictedfeaturename().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->predictedfeaturename().data(), this->predictedfeaturename().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.FunctionDescription.predictedFeatureName");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      4, this->predictedfeaturename(), output);
+  }
+
+  // string predictedProbabilitiesName = 5;
+  if (this->predictedprobabilitiesname().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->predictedprobabilitiesname().data(), this->predictedprobabilitiesname().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.FunctionDescription.predictedProbabilitiesName");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      5, this->predictedprobabilitiesname(), output);
+  }
+
+  // repeated .CoreML.Specification.FeatureDescription state = 6;
+  for (unsigned int i = 0, n = this->state_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      6, this->state(i), output);
+  }
+
+  // @@protoc_insertion_point(serialize_end:CoreML.Specification.FunctionDescription)
+}
+
+size_t FunctionDescription::ByteSizeLong() const {
+// @@protoc_insertion_point(message_byte_size_start:CoreML.Specification.FunctionDescription)
+  size_t total_size = 0;
+
+  // repeated .CoreML.Specification.FeatureDescription input = 2;
+  {
+    unsigned int count = this->input_size();
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->input(i));
+    }
+  }
+
+  // repeated .CoreML.Specification.FeatureDescription output = 3;
+  {
+    unsigned int count = this->output_size();
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->output(i));
+    }
+  }
+
+  // repeated .CoreML.Specification.FeatureDescription state = 6;
+  {
+    unsigned int count = this->state_size();
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->state(i));
+    }
+  }
+
+  // string name = 1;
+  if (this->name().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->name());
+  }
+
+  // string predictedFeatureName = 4;
+  if (this->predictedfeaturename().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->predictedfeaturename());
+  }
+
+  // string predictedProbabilitiesName = 5;
+  if (this->predictedprobabilitiesname().size() > 0) {
+    total_size += 1 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->predictedprobabilitiesname());
+  }
+
+  int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
+  GOOGLE_SAFE_CONCURRENT_WRITES_BEGIN();
+  _cached_size_ = cached_size;
+  GOOGLE_SAFE_CONCURRENT_WRITES_END();
+  return total_size;
+}
+
+void FunctionDescription::CheckTypeAndMergeFrom(
+    const ::google::protobuf::MessageLite& from) {
+  MergeFrom(*::google::protobuf::down_cast<const FunctionDescription*>(&from));
+}
+
+void FunctionDescription::MergeFrom(const FunctionDescription& from) {
+// @@protoc_insertion_point(class_specific_merge_from_start:CoreML.Specification.FunctionDescription)
+  GOOGLE_DCHECK_NE(&from, this);
+  _internal_metadata_.MergeFrom(from._internal_metadata_);
+  ::google::protobuf::uint32 cached_has_bits = 0;
+  (void) cached_has_bits;
+
+  input_.MergeFrom(from.input_);
+  output_.MergeFrom(from.output_);
+  state_.MergeFrom(from.state_);
+  if (from.name().size() > 0) {
+
+    name_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.name_);
+  }
+  if (from.predictedfeaturename().size() > 0) {
+
+    predictedfeaturename_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedfeaturename_);
+  }
+  if (from.predictedprobabilitiesname().size() > 0) {
+
+    predictedprobabilitiesname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedprobabilitiesname_);
+  }
+}
+
+void FunctionDescription::CopyFrom(const FunctionDescription& from) {
+// @@protoc_insertion_point(class_specific_copy_from_start:CoreML.Specification.FunctionDescription)
+  if (&from == this) return;
+  Clear();
+  MergeFrom(from);
+}
+
+bool FunctionDescription::IsInitialized() const {
+  return true;
+}
+
+void FunctionDescription::Swap(FunctionDescription* other) {
+  if (other == this) return;
+  InternalSwap(other);
+}
+void FunctionDescription::InternalSwap(FunctionDescription* other) {
+  input_.InternalSwap(&other->input_);
+  output_.InternalSwap(&other->output_);
+  state_.InternalSwap(&other->state_);
+  name_.Swap(&other->name_);
+  predictedfeaturename_.Swap(&other->predictedfeaturename_);
+  predictedprobabilitiesname_.Swap(&other->predictedprobabilitiesname_);
+  std::swap(_cached_size_, other->_cached_size_);
+}
+
+::std::string FunctionDescription::GetTypeName() const {
+  return "CoreML.Specification.FunctionDescription";
+}
+
+#if PROTOBUF_INLINE_NOT_IN_HEADERS
+// FunctionDescription
+
+// string name = 1;
+void FunctionDescription::clear_name() {
+  name_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& FunctionDescription::name() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FunctionDescription.name)
+  return name_.GetNoArena();
+}
+void FunctionDescription::set_name(const ::std::string& value) {
+
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.FunctionDescription.name)
+}
+#if LANG_CXX11
+void FunctionDescription::set_name(::std::string&& value) {
+
+  name_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.FunctionDescription.name)
+}
+#endif
+void FunctionDescription::set_name(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.FunctionDescription.name)
+}
+void FunctionDescription::set_name(const char* value, size_t size) {
+
+  name_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.FunctionDescription.name)
+}
+::std::string* FunctionDescription::mutable_name() {
+
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FunctionDescription.name)
+  return name_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* FunctionDescription::release_name() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.FunctionDescription.name)
+
+  return name_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void FunctionDescription::set_allocated_name(::std::string* name) {
+  if (name != NULL) {
+
+  } else {
+
+  }
+  name_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), name);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FunctionDescription.name)
+}
+
+// repeated .CoreML.Specification.FeatureDescription input = 2;
+int FunctionDescription::input_size() const {
+  return input_.size();
+}
+void FunctionDescription::clear_input() {
+  input_.Clear();
+}
+const ::CoreML::Specification::FeatureDescription& FunctionDescription::input(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FunctionDescription.input)
+  return input_.Get(index);
+}
+::CoreML::Specification::FeatureDescription* FunctionDescription::mutable_input(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FunctionDescription.input)
+  return input_.Mutable(index);
+}
+::CoreML::Specification::FeatureDescription* FunctionDescription::add_input() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.FunctionDescription.input)
+  return input_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >*
+FunctionDescription::mutable_input() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.FunctionDescription.input)
+  return &input_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >&
+FunctionDescription::input() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.FunctionDescription.input)
+  return input_;
+}
+
+// repeated .CoreML.Specification.FeatureDescription output = 3;
+int FunctionDescription::output_size() const {
+  return output_.size();
+}
+void FunctionDescription::clear_output() {
+  output_.Clear();
+}
+const ::CoreML::Specification::FeatureDescription& FunctionDescription::output(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FunctionDescription.output)
+  return output_.Get(index);
+}
+::CoreML::Specification::FeatureDescription* FunctionDescription::mutable_output(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FunctionDescription.output)
+  return output_.Mutable(index);
+}
+::CoreML::Specification::FeatureDescription* FunctionDescription::add_output() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.FunctionDescription.output)
+  return output_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >*
+FunctionDescription::mutable_output() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.FunctionDescription.output)
+  return &output_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >&
+FunctionDescription::output() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.FunctionDescription.output)
+  return output_;
+}
+
+// repeated .CoreML.Specification.FeatureDescription state = 6;
+int FunctionDescription::state_size() const {
+  return state_.size();
+}
+void FunctionDescription::clear_state() {
+  state_.Clear();
+}
+const ::CoreML::Specification::FeatureDescription& FunctionDescription::state(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FunctionDescription.state)
+  return state_.Get(index);
+}
+::CoreML::Specification::FeatureDescription* FunctionDescription::mutable_state(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FunctionDescription.state)
+  return state_.Mutable(index);
+}
+::CoreML::Specification::FeatureDescription* FunctionDescription::add_state() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.FunctionDescription.state)
+  return state_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >*
+FunctionDescription::mutable_state() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.FunctionDescription.state)
+  return &state_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >&
+FunctionDescription::state() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.FunctionDescription.state)
+  return state_;
+}
+
+// string predictedFeatureName = 4;
+void FunctionDescription::clear_predictedfeaturename() {
+  predictedfeaturename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& FunctionDescription::predictedfeaturename() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FunctionDescription.predictedFeatureName)
+  return predictedfeaturename_.GetNoArena();
+}
+void FunctionDescription::set_predictedfeaturename(const ::std::string& value) {
+
+  predictedfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.FunctionDescription.predictedFeatureName)
+}
+#if LANG_CXX11
+void FunctionDescription::set_predictedfeaturename(::std::string&& value) {
+
+  predictedfeaturename_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.FunctionDescription.predictedFeatureName)
+}
+#endif
+void FunctionDescription::set_predictedfeaturename(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+
+  predictedfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.FunctionDescription.predictedFeatureName)
+}
+void FunctionDescription::set_predictedfeaturename(const char* value, size_t size) {
+
+  predictedfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.FunctionDescription.predictedFeatureName)
+}
+::std::string* FunctionDescription::mutable_predictedfeaturename() {
+
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FunctionDescription.predictedFeatureName)
+  return predictedfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* FunctionDescription::release_predictedfeaturename() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.FunctionDescription.predictedFeatureName)
+
+  return predictedfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void FunctionDescription::set_allocated_predictedfeaturename(::std::string* predictedfeaturename) {
+  if (predictedfeaturename != NULL) {
+
+  } else {
+
+  }
+  predictedfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), predictedfeaturename);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FunctionDescription.predictedFeatureName)
+}
+
+// string predictedProbabilitiesName = 5;
+void FunctionDescription::clear_predictedprobabilitiesname() {
+  predictedprobabilitiesname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& FunctionDescription::predictedprobabilitiesname() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+  return predictedprobabilitiesname_.GetNoArena();
+}
+void FunctionDescription::set_predictedprobabilitiesname(const ::std::string& value) {
+
+  predictedprobabilitiesname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+}
+#if LANG_CXX11
+void FunctionDescription::set_predictedprobabilitiesname(::std::string&& value) {
+
+  predictedprobabilitiesname_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+}
+#endif
+void FunctionDescription::set_predictedprobabilitiesname(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+
+  predictedprobabilitiesname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+}
+void FunctionDescription::set_predictedprobabilitiesname(const char* value, size_t size) {
+
+  predictedprobabilitiesname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+}
+::std::string* FunctionDescription::mutable_predictedprobabilitiesname() {
+
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+  return predictedprobabilitiesname_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* FunctionDescription::release_predictedprobabilitiesname() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+
+  return predictedprobabilitiesname_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void FunctionDescription::set_allocated_predictedprobabilitiesname(::std::string* predictedprobabilitiesname) {
+  if (predictedprobabilitiesname != NULL) {
+
+  } else {
+
+  }
+  predictedprobabilitiesname_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), predictedprobabilitiesname);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.FunctionDescription.predictedProbabilitiesName)
+}
+
+#endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
+
+// ===================================================================
+
+#if !defined(_MSC_VER) || _MSC_VER >= 1900
+const int ModelDescription::kFunctionsFieldNumber;
+const int ModelDescription::kDefaultFunctionNameFieldNumber;
+const int ModelDescription::kMetadataFieldNumber;
 const int ModelDescription::kInputFieldNumber;
 const int ModelDescription::kOutputFieldNumber;
+const int ModelDescription::kStateFieldNumber;
 const int ModelDescription::kPredictedFeatureNameFieldNumber;
 const int ModelDescription::kPredictedProbabilitiesNameFieldNumber;
 const int ModelDescription::kTrainingInputFieldNumber;
-const int ModelDescription::kMetadataFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ModelDescription::ModelDescription()
@@ -2122,6 +2767,8 @@ ModelDescription::ModelDescription(const ModelDescription& from)
       _internal_metadata_(NULL),
       input_(from.input_),
       output_(from.output_),
+      state_(from.state_),
+      functions_(from.functions_),
       traininginput_(from.traininginput_),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
@@ -2132,6 +2779,10 @@ ModelDescription::ModelDescription(const ModelDescription& from)
   predictedprobabilitiesname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (from.predictedprobabilitiesname().size() > 0) {
     predictedprobabilitiesname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedprobabilitiesname_);
+  }
+  defaultfunctionname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  if (from.defaultfunctionname().size() > 0) {
+    defaultfunctionname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.defaultfunctionname_);
   }
   if (from.has_metadata()) {
     metadata_ = new ::CoreML::Specification::Metadata(*from.metadata_);
@@ -2144,6 +2795,7 @@ ModelDescription::ModelDescription(const ModelDescription& from)
 void ModelDescription::SharedCtor() {
   predictedfeaturename_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   predictedprobabilitiesname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  defaultfunctionname_.UnsafeSetDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   metadata_ = NULL;
   _cached_size_ = 0;
 }
@@ -2156,6 +2808,7 @@ ModelDescription::~ModelDescription() {
 void ModelDescription::SharedDtor() {
   predictedfeaturename_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   predictedprobabilitiesname_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  defaultfunctionname_.DestroyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (this != internal_default_instance()) {
     delete metadata_;
   }
@@ -2183,9 +2836,12 @@ void ModelDescription::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.ModelDescription)
   input_.Clear();
   output_.Clear();
+  state_.Clear();
+  functions_.Clear();
   traininginput_.Clear();
   predictedfeaturename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   predictedprobabilitiesname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+  defaultfunctionname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
   if (GetArenaNoVirtual() == NULL && metadata_ != NULL) {
     delete metadata_;
   }
@@ -2252,6 +2908,46 @@ bool ModelDescription::MergePartialFromCodedStream(
             this->predictedprobabilitiesname().data(), this->predictedprobabilitiesname().length(),
             ::google::protobuf::internal::WireFormatLite::PARSE,
             "CoreML.Specification.ModelDescription.predictedProbabilitiesName"));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.FeatureDescription state = 13;
+      case 13: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(106u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_state()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // repeated .CoreML.Specification.FunctionDescription functions = 20;
+      case 20: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(162u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
+                input, add_functions()));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // string defaultFunctionName = 21;
+      case 21: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(170u)) {
+          DO_(::google::protobuf::internal::WireFormatLite::ReadString(
+                input, this->mutable_defaultfunctionname()));
+          DO_(::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+            this->defaultfunctionname().data(), this->defaultfunctionname().length(),
+            ::google::protobuf::internal::WireFormatLite::PARSE,
+            "CoreML.Specification.ModelDescription.defaultFunctionName"));
         } else {
           goto handle_unusual;
         }
@@ -2341,6 +3037,28 @@ void ModelDescription::SerializeWithCachedSizes(
       12, this->predictedprobabilitiesname(), output);
   }
 
+  // repeated .CoreML.Specification.FeatureDescription state = 13;
+  for (unsigned int i = 0, n = this->state_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      13, this->state(i), output);
+  }
+
+  // repeated .CoreML.Specification.FunctionDescription functions = 20;
+  for (unsigned int i = 0, n = this->functions_size(); i < n; i++) {
+    ::google::protobuf::internal::WireFormatLite::WriteMessage(
+      20, this->functions(i), output);
+  }
+
+  // string defaultFunctionName = 21;
+  if (this->defaultfunctionname().size() > 0) {
+    ::google::protobuf::internal::WireFormatLite::VerifyUtf8String(
+      this->defaultfunctionname().data(), this->defaultfunctionname().length(),
+      ::google::protobuf::internal::WireFormatLite::SERIALIZE,
+      "CoreML.Specification.ModelDescription.defaultFunctionName");
+    ::google::protobuf::internal::WireFormatLite::WriteStringMaybeAliased(
+      21, this->defaultfunctionname(), output);
+  }
+
   // repeated .CoreML.Specification.FeatureDescription trainingInput = 50;
   for (unsigned int i = 0, n = this->traininginput_size(); i < n; i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessage(
@@ -2382,6 +3100,28 @@ size_t ModelDescription::ByteSizeLong() const {
     }
   }
 
+  // repeated .CoreML.Specification.FeatureDescription state = 13;
+  {
+    unsigned int count = this->state_size();
+    total_size += 1UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->state(i));
+    }
+  }
+
+  // repeated .CoreML.Specification.FunctionDescription functions = 20;
+  {
+    unsigned int count = this->functions_size();
+    total_size += 2UL * count;
+    for (unsigned int i = 0; i < count; i++) {
+      total_size +=
+        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+          this->functions(i));
+    }
+  }
+
   // repeated .CoreML.Specification.FeatureDescription trainingInput = 50;
   {
     unsigned int count = this->traininginput_size();
@@ -2405,6 +3145,13 @@ size_t ModelDescription::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::StringSize(
         this->predictedprobabilitiesname());
+  }
+
+  // string defaultFunctionName = 21;
+  if (this->defaultfunctionname().size() > 0) {
+    total_size += 2 +
+      ::google::protobuf::internal::WireFormatLite::StringSize(
+        this->defaultfunctionname());
   }
 
   // .CoreML.Specification.Metadata metadata = 100;
@@ -2435,6 +3182,8 @@ void ModelDescription::MergeFrom(const ModelDescription& from) {
 
   input_.MergeFrom(from.input_);
   output_.MergeFrom(from.output_);
+  state_.MergeFrom(from.state_);
+  functions_.MergeFrom(from.functions_);
   traininginput_.MergeFrom(from.traininginput_);
   if (from.predictedfeaturename().size() > 0) {
 
@@ -2443,6 +3192,10 @@ void ModelDescription::MergeFrom(const ModelDescription& from) {
   if (from.predictedprobabilitiesname().size() > 0) {
 
     predictedprobabilitiesname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.predictedprobabilitiesname_);
+  }
+  if (from.defaultfunctionname().size() > 0) {
+
+    defaultfunctionname_.AssignWithDefault(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), from.defaultfunctionname_);
   }
   if (from.has_metadata()) {
     mutable_metadata()->::CoreML::Specification::Metadata::MergeFrom(from.metadata());
@@ -2467,9 +3220,12 @@ void ModelDescription::Swap(ModelDescription* other) {
 void ModelDescription::InternalSwap(ModelDescription* other) {
   input_.InternalSwap(&other->input_);
   output_.InternalSwap(&other->output_);
+  state_.InternalSwap(&other->state_);
+  functions_.InternalSwap(&other->functions_);
   traininginput_.InternalSwap(&other->traininginput_);
   predictedfeaturename_.Swap(&other->predictedfeaturename_);
   predictedprobabilitiesname_.Swap(&other->predictedprobabilitiesname_);
+  defaultfunctionname_.Swap(&other->defaultfunctionname_);
   std::swap(metadata_, other->metadata_);
   std::swap(_cached_size_, other->_cached_size_);
 }
@@ -2480,6 +3236,128 @@ void ModelDescription::InternalSwap(ModelDescription* other) {
 
 #if PROTOBUF_INLINE_NOT_IN_HEADERS
 // ModelDescription
+
+// repeated .CoreML.Specification.FunctionDescription functions = 20;
+int ModelDescription::functions_size() const {
+  return functions_.size();
+}
+void ModelDescription::clear_functions() {
+  functions_.Clear();
+}
+const ::CoreML::Specification::FunctionDescription& ModelDescription::functions(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ModelDescription.functions)
+  return functions_.Get(index);
+}
+::CoreML::Specification::FunctionDescription* ModelDescription::mutable_functions(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.functions)
+  return functions_.Mutable(index);
+}
+::CoreML::Specification::FunctionDescription* ModelDescription::add_functions() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ModelDescription.functions)
+  return functions_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FunctionDescription >*
+ModelDescription::mutable_functions() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ModelDescription.functions)
+  return &functions_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FunctionDescription >&
+ModelDescription::functions() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ModelDescription.functions)
+  return functions_;
+}
+
+// string defaultFunctionName = 21;
+void ModelDescription::clear_defaultfunctionname() {
+  defaultfunctionname_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+const ::std::string& ModelDescription::defaultfunctionname() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ModelDescription.defaultFunctionName)
+  return defaultfunctionname_.GetNoArena();
+}
+void ModelDescription::set_defaultfunctionname(const ::std::string& value) {
+
+  defaultfunctionname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ModelDescription.defaultFunctionName)
+}
+#if LANG_CXX11
+void ModelDescription::set_defaultfunctionname(::std::string&& value) {
+
+  defaultfunctionname_.SetNoArena(
+    &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
+  // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ModelDescription.defaultFunctionName)
+}
+#endif
+void ModelDescription::set_defaultfunctionname(const char* value) {
+  GOOGLE_DCHECK(value != NULL);
+
+  defaultfunctionname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.ModelDescription.defaultFunctionName)
+}
+void ModelDescription::set_defaultfunctionname(const char* value, size_t size) {
+
+  defaultfunctionname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
+      ::std::string(reinterpret_cast<const char*>(value), size));
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ModelDescription.defaultFunctionName)
+}
+::std::string* ModelDescription::mutable_defaultfunctionname() {
+
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.defaultFunctionName)
+  return defaultfunctionname_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+::std::string* ModelDescription::release_defaultfunctionname() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ModelDescription.defaultFunctionName)
+
+  return defaultfunctionname_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
+}
+void ModelDescription::set_allocated_defaultfunctionname(::std::string* defaultfunctionname) {
+  if (defaultfunctionname != NULL) {
+
+  } else {
+
+  }
+  defaultfunctionname_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), defaultfunctionname);
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ModelDescription.defaultFunctionName)
+}
+
+// .CoreML.Specification.Metadata metadata = 100;
+bool ModelDescription::has_metadata() const {
+  return this != internal_default_instance() && metadata_ != NULL;
+}
+void ModelDescription::clear_metadata() {
+  if (GetArenaNoVirtual() == NULL && metadata_ != NULL) delete metadata_;
+  metadata_ = NULL;
+}
+const ::CoreML::Specification::Metadata& ModelDescription::metadata() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ModelDescription.metadata)
+  return metadata_ != NULL ? *metadata_
+                         : *::CoreML::Specification::Metadata::internal_default_instance();
+}
+::CoreML::Specification::Metadata* ModelDescription::mutable_metadata() {
+
+  if (metadata_ == NULL) {
+    metadata_ = new ::CoreML::Specification::Metadata;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.metadata)
+  return metadata_;
+}
+::CoreML::Specification::Metadata* ModelDescription::release_metadata() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.ModelDescription.metadata)
+
+  ::CoreML::Specification::Metadata* temp = metadata_;
+  metadata_ = NULL;
+  return temp;
+}
+void ModelDescription::set_allocated_metadata(::CoreML::Specification::Metadata* metadata) {
+  delete metadata_;
+  metadata_ = metadata;
+  if (metadata) {
+
+  } else {
+
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ModelDescription.metadata)
+}
 
 // repeated .CoreML.Specification.FeatureDescription input = 1;
 int ModelDescription::input_size() const {
@@ -2541,6 +3419,36 @@ ModelDescription::output() const {
   return output_;
 }
 
+// repeated .CoreML.Specification.FeatureDescription state = 13;
+int ModelDescription::state_size() const {
+  return state_.size();
+}
+void ModelDescription::clear_state() {
+  state_.Clear();
+}
+const ::CoreML::Specification::FeatureDescription& ModelDescription::state(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ModelDescription.state)
+  return state_.Get(index);
+}
+::CoreML::Specification::FeatureDescription* ModelDescription::mutable_state(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.state)
+  return state_.Mutable(index);
+}
+::CoreML::Specification::FeatureDescription* ModelDescription::add_state() {
+  // @@protoc_insertion_point(field_add:CoreML.Specification.ModelDescription.state)
+  return state_.Add();
+}
+::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >*
+ModelDescription::mutable_state() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.ModelDescription.state)
+  return &state_;
+}
+const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDescription >&
+ModelDescription::state() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.ModelDescription.state)
+  return state_;
+}
+
 // string predictedFeatureName = 11;
 void ModelDescription::clear_predictedfeaturename() {
   predictedfeaturename_.ClearToEmptyNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
@@ -2550,13 +3458,13 @@ const ::std::string& ModelDescription::predictedfeaturename() const {
   return predictedfeaturename_.GetNoArena();
 }
 void ModelDescription::set_predictedfeaturename(const ::std::string& value) {
-  
+
   predictedfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ModelDescription.predictedFeatureName)
 }
 #if LANG_CXX11
 void ModelDescription::set_predictedfeaturename(::std::string&& value) {
-  
+
   predictedfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ModelDescription.predictedFeatureName)
@@ -2564,31 +3472,31 @@ void ModelDescription::set_predictedfeaturename(::std::string&& value) {
 #endif
 void ModelDescription::set_predictedfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   predictedfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ModelDescription.predictedFeatureName)
 }
 void ModelDescription::set_predictedfeaturename(const char* value, size_t size) {
-  
+
   predictedfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ModelDescription.predictedFeatureName)
 }
 ::std::string* ModelDescription::mutable_predictedfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.predictedFeatureName)
   return predictedfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* ModelDescription::release_predictedfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ModelDescription.predictedFeatureName)
-  
+
   return predictedfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void ModelDescription::set_allocated_predictedfeaturename(::std::string* predictedfeaturename) {
   if (predictedfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   predictedfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), predictedfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ModelDescription.predictedFeatureName)
@@ -2603,13 +3511,13 @@ const ::std::string& ModelDescription::predictedprobabilitiesname() const {
   return predictedprobabilitiesname_.GetNoArena();
 }
 void ModelDescription::set_predictedprobabilitiesname(const ::std::string& value) {
-  
+
   predictedprobabilitiesname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
 }
 #if LANG_CXX11
 void ModelDescription::set_predictedprobabilitiesname(::std::string&& value) {
-  
+
   predictedprobabilitiesname_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
@@ -2617,31 +3525,31 @@ void ModelDescription::set_predictedprobabilitiesname(::std::string&& value) {
 #endif
 void ModelDescription::set_predictedprobabilitiesname(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   predictedprobabilitiesname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
 }
 void ModelDescription::set_predictedprobabilitiesname(const char* value, size_t size) {
-  
+
   predictedprobabilitiesname_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
 }
 ::std::string* ModelDescription::mutable_predictedprobabilitiesname() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
   return predictedprobabilitiesname_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* ModelDescription::release_predictedprobabilitiesname() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
-  
+
   return predictedprobabilitiesname_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void ModelDescription::set_allocated_predictedprobabilitiesname(::std::string* predictedprobabilitiesname) {
   if (predictedprobabilitiesname != NULL) {
-    
+
   } else {
-    
+
   }
   predictedprobabilitiesname_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), predictedprobabilitiesname);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ModelDescription.predictedProbabilitiesName)
@@ -2675,45 +3583,6 @@ const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::FeatureDesc
 ModelDescription::traininginput() const {
   // @@protoc_insertion_point(field_list:CoreML.Specification.ModelDescription.trainingInput)
   return traininginput_;
-}
-
-// .CoreML.Specification.Metadata metadata = 100;
-bool ModelDescription::has_metadata() const {
-  return this != internal_default_instance() && metadata_ != NULL;
-}
-void ModelDescription::clear_metadata() {
-  if (GetArenaNoVirtual() == NULL && metadata_ != NULL) delete metadata_;
-  metadata_ = NULL;
-}
-const ::CoreML::Specification::Metadata& ModelDescription::metadata() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.ModelDescription.metadata)
-  return metadata_ != NULL ? *metadata_
-                         : *::CoreML::Specification::Metadata::internal_default_instance();
-}
-::CoreML::Specification::Metadata* ModelDescription::mutable_metadata() {
-  
-  if (metadata_ == NULL) {
-    metadata_ = new ::CoreML::Specification::Metadata;
-  }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.ModelDescription.metadata)
-  return metadata_;
-}
-::CoreML::Specification::Metadata* ModelDescription::release_metadata() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.ModelDescription.metadata)
-  
-  ::CoreML::Specification::Metadata* temp = metadata_;
-  metadata_ = NULL;
-  return temp;
-}
-void ModelDescription::set_allocated_metadata(::CoreML::Specification::Metadata* metadata) {
-  delete metadata_;
-  metadata_ = metadata;
-  if (metadata) {
-    
-  } else {
-    
-  }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ModelDescription.metadata)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS
@@ -2957,13 +3826,13 @@ const ::std::string& SerializedModel::identifier() const {
   return identifier_.GetNoArena();
 }
 void SerializedModel::set_identifier(const ::std::string& value) {
-  
+
   identifier_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.SerializedModel.identifier)
 }
 #if LANG_CXX11
 void SerializedModel::set_identifier(::std::string&& value) {
-  
+
   identifier_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.SerializedModel.identifier)
@@ -2971,31 +3840,31 @@ void SerializedModel::set_identifier(::std::string&& value) {
 #endif
 void SerializedModel::set_identifier(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   identifier_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.SerializedModel.identifier)
 }
 void SerializedModel::set_identifier(const char* value, size_t size) {
-  
+
   identifier_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.SerializedModel.identifier)
 }
 ::std::string* SerializedModel::mutable_identifier() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.SerializedModel.identifier)
   return identifier_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* SerializedModel::release_identifier() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.SerializedModel.identifier)
-  
+
   return identifier_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void SerializedModel::set_allocated_identifier(::std::string* identifier) {
   if (identifier != NULL) {
-    
+
   } else {
-    
+
   }
   identifier_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), identifier);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SerializedModel.identifier)
@@ -3010,13 +3879,13 @@ const ::std::string& SerializedModel::model() const {
   return model_.GetNoArena();
 }
 void SerializedModel::set_model(const ::std::string& value) {
-  
+
   model_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.SerializedModel.model)
 }
 #if LANG_CXX11
 void SerializedModel::set_model(::std::string&& value) {
-  
+
   model_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.SerializedModel.model)
@@ -3024,31 +3893,31 @@ void SerializedModel::set_model(::std::string&& value) {
 #endif
 void SerializedModel::set_model(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   model_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.SerializedModel.model)
 }
 void SerializedModel::set_model(const void* value, size_t size) {
-  
+
   model_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.SerializedModel.model)
 }
 ::std::string* SerializedModel::mutable_model() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.SerializedModel.model)
   return model_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 ::std::string* SerializedModel::release_model() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.SerializedModel.model)
-  
+
   return model_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 void SerializedModel::set_allocated_model(::std::string* model) {
   if (model != NULL) {
-    
+
   } else {
-    
+
   }
   model_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), model);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.SerializedModel.model)
@@ -4760,7 +5629,7 @@ void Model::clear_specificationversion() {
   return specificationversion_;
 }
 void Model::set_specificationversion(::google::protobuf::int32 value) {
-  
+
   specificationversion_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Model.specificationVersion)
 }
@@ -4779,7 +5648,7 @@ const ::CoreML::Specification::ModelDescription& Model::description() const {
                          : *::CoreML::Specification::ModelDescription::internal_default_instance();
 }
 ::CoreML::Specification::ModelDescription* Model::mutable_description() {
-  
+
   if (description_ == NULL) {
     description_ = new ::CoreML::Specification::ModelDescription;
   }
@@ -4788,7 +5657,7 @@ const ::CoreML::Specification::ModelDescription& Model::description() const {
 }
 ::CoreML::Specification::ModelDescription* Model::release_description() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.Model.description)
-  
+
   ::CoreML::Specification::ModelDescription* temp = description_;
   description_ = NULL;
   return temp;
@@ -4797,9 +5666,9 @@ void Model::set_allocated_description(::CoreML::Specification::ModelDescription*
   delete description_;
   description_ = description;
   if (description) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.description)
 }
@@ -4813,7 +5682,7 @@ bool Model::isupdatable() const {
   return isupdatable_;
 }
 void Model::set_isupdatable(bool value) {
-  
+
   isupdatable_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.Model.isUpdatable)
 }

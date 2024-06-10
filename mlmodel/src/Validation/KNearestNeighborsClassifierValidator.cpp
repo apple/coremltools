@@ -95,15 +95,15 @@ namespace CoreML {
                 out << "KNearestNeighborsClassifier requires a weighting scheme to be set." << std::endl;
                 return Result(ResultType::INVALID_MODEL_PARAMETERS, out.str());
         }
-        
+
         int intLabelCount = knnClassifier.has_int64classlabels() ? knnClassifier.int64classlabels().vector_size() : 0;
         int stringLabelCount = knnClassifier.has_stringclasslabels() ? knnClassifier.stringclasslabels().vector_size() : 0;
-        
+
         int labelCount = MAX(intLabelCount, stringLabelCount);
-        
+
         auto classLabelCase = knnClassifier.ClassLabels_case();
         auto defaultClassLabelIsInt64 = false;
-        
+
         switch (knnClassifier.DefaultClassLabel_case()) {
             case Specification::KNearestNeighborsClassifier::kDefaultStringLabel:
                 if (classLabelCase != Specification::KNearestNeighborsClassifier::CLASSLABELS_NOT_SET &&
@@ -114,7 +114,7 @@ namespace CoreML {
                 }
                 defaultClassLabelIsInt64 = false;
                 break;
-                    
+
             case Specification::KNearestNeighborsClassifier::kDefaultInt64Label:
                 if (classLabelCase != Specification::KNearestNeighborsClassifier::CLASSLABELS_NOT_SET &&
                     classLabelCase != Specification::KNearestNeighborsClassifier::kInt64ClassLabels) {
@@ -124,7 +124,7 @@ namespace CoreML {
                 }
                 defaultClassLabelIsInt64 = true;
                 break;
-                
+
             case Specification::KNearestNeighborsClassifier::DEFAULTCLASSLABEL_NOT_SET:
                 if (labelCount == 0) {
                     std::stringstream out;
@@ -132,13 +132,13 @@ namespace CoreML {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, out.str());
                 }
         }
-        
+
         res = validateClassifierInterface(format, format.knearestneighborsclassifier(), true, defaultClassLabelIsInt64);
         if (!res.good()) {
             return res;
         }
 
-        
+
         return validateNearestNeighborsIndex(format, labelCount);
 
     }

@@ -14,7 +14,10 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.defs.iOS16 import constexpr_ops
 from coremltools.converters.mil.mil.ops.tests.iOS16 import backends
-from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.mil.ops.tests.testing_utils import (
+    mark_api_breaking,
+    run_compare_builder,
+)
 from coremltools.converters.mil.testing_utils import get_op_types_in_program, ssa_fn
 
 compute_units = testing_reqs.compute_units
@@ -332,6 +335,7 @@ class TestConstexprCast:
         assert "constexpr_cast" in get_op_types_in_program(prog)
 
 class TestConstexprLutToDense:
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS18)
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
@@ -385,6 +389,7 @@ class TestConstexprLutToDense:
         prog = mlmodel._mil_program
         assert "constexpr_lut_to_dense" in get_op_types_in_program(prog)
 
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS18)
     @pytest.mark.parametrize("backend", backends)
     def test_shape_of_constexpr_is_replaceable(self, backend):
         @mb.program(input_specs=[], opset_version=backend.opset_version)
@@ -473,6 +478,7 @@ class TestConstexprLutToDense:
                     }
                     yield params
 
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS18)
     @pytest.mark.parametrize(
         "compute_unit, backend, config",
         itertools.product(compute_units, backends, lut_config_generator.__func__()),
@@ -522,6 +528,7 @@ class TestConstexprLutToDense:
             raise AssertionError("Invalidated: Test Failed")
 
 class TestConstexprSparseToDense:
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS18)
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
     def test_builder_to_backend_smoke(self, compute_unit, backend):
 
@@ -608,6 +615,7 @@ class TestConstexprSparseToDense:
                 }
                 yield params
 
+    @mark_api_breaking(breaking_opset_version=ct.target.iOS18)
     @pytest.mark.parametrize(
         "compute_unit, backend, config",
         itertools.product(compute_units, backends, sparse_config_generator.__func__()),

@@ -257,10 +257,10 @@ class InternalTorchIRNode:
                     raise AssertionError(f"Unhandled type of the node: {type(i)}")
             return tuple(args)
 
+        # TODO (rdar://128768037) handle kwargs
         inputs = get_arguments(node.args)
-        outputs = [
-            node.name
-        ]  # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
+        # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
+        outputs = [node.name]
 
         try:
             kind = node.target.name()

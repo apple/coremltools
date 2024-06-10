@@ -17,7 +17,13 @@ from coremltools.converters.mil.testing_utils import macos_compatible_with_deplo
 _SUPPORTED_BACKENDS = ("neuralnetwork", "mlprogram")
 _SUPPORTED_PRECISIONS = ("fp32", "fp16")
 _SUPPORTED_OPSET_VERSIONS_NN = (ct.target.iOS14,)
-_SUPPORTED_OPSET_VERSIONS_MLPROGRAM = (ct.target.iOS15, ct.target.iOS16, ct.target.iOS17)
+_SUPPORTED_OPSET_VERSIONS_MLPROGRAM = (
+    ct.target.iOS15,
+    ct.target.iOS16,
+    ct.target.iOS17,
+    ct.target.iOS18,
+)
+
 
 @define(frozen=True)
 class BackendConfig:

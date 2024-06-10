@@ -135,6 +135,9 @@ extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
 class SquaredEuclideanDistance;
 class SquaredEuclideanDistanceDefaultTypeInternal;
 extern SquaredEuclideanDistanceDefaultTypeInternal _SquaredEuclideanDistance_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -925,7 +928,7 @@ inline const ::CoreML::Specification::NearestNeighborsIndex& KNearestNeighborsCl
                          : *::CoreML::Specification::NearestNeighborsIndex::internal_default_instance();
 }
 inline ::CoreML::Specification::NearestNeighborsIndex* KNearestNeighborsClassifier::mutable_nearestneighborsindex() {
-  
+
   if (nearestneighborsindex_ == NULL) {
     nearestneighborsindex_ = new ::CoreML::Specification::NearestNeighborsIndex;
   }
@@ -934,7 +937,7 @@ inline ::CoreML::Specification::NearestNeighborsIndex* KNearestNeighborsClassifi
 }
 inline ::CoreML::Specification::NearestNeighborsIndex* KNearestNeighborsClassifier::release_nearestneighborsindex() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.KNearestNeighborsClassifier.nearestNeighborsIndex)
-  
+
   ::CoreML::Specification::NearestNeighborsIndex* temp = nearestneighborsindex_;
   nearestneighborsindex_ = NULL;
   return temp;
@@ -943,9 +946,9 @@ inline void KNearestNeighborsClassifier::set_allocated_nearestneighborsindex(::C
   delete nearestneighborsindex_;
   nearestneighborsindex_ = nearestneighborsindex;
   if (nearestneighborsindex) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.KNearestNeighborsClassifier.nearestNeighborsIndex)
 }
@@ -964,7 +967,7 @@ inline const ::CoreML::Specification::Int64Parameter& KNearestNeighborsClassifie
                          : *::CoreML::Specification::Int64Parameter::internal_default_instance();
 }
 inline ::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::mutable_numberofneighbors() {
-  
+
   if (numberofneighbors_ == NULL) {
     numberofneighbors_ = new ::CoreML::Specification::Int64Parameter;
   }
@@ -973,7 +976,7 @@ inline ::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::mut
 }
 inline ::CoreML::Specification::Int64Parameter* KNearestNeighborsClassifier::release_numberofneighbors() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
-  
+
   ::CoreML::Specification::Int64Parameter* temp = numberofneighbors_;
   numberofneighbors_ = NULL;
   return temp;
@@ -982,9 +985,9 @@ inline void KNearestNeighborsClassifier::set_allocated_numberofneighbors(::CoreM
   delete numberofneighbors_;
   numberofneighbors_ = numberofneighbors;
   if (numberofneighbors) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.KNearestNeighborsClassifier.numberOfNeighbors)
 }
@@ -1345,7 +1348,7 @@ inline ::google::protobuf::int32 NearestNeighborsIndex::numberofdimensions() con
   return numberofdimensions_;
 }
 inline void NearestNeighborsIndex::set_numberofdimensions(::google::protobuf::int32 value) {
-  
+
   numberofdimensions_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.NearestNeighborsIndex.numberOfDimensions)
 }
@@ -1567,7 +1570,7 @@ inline ::google::protobuf::int32 SingleKdTreeIndex::leafsize() const {
   return leafsize_;
 }
 inline void SingleKdTreeIndex::set_leafsize(::google::protobuf::int32 value) {
-  
+
   leafsize_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.SingleKdTreeIndex.leafSize)
 }

@@ -171,6 +171,7 @@ class NameSanitizer:
             "uint16",
             "uint32",
             "uint64",
+            "state",
         ]
         if new_name in reserved_names:
             new_name += "_workaround"
@@ -306,13 +307,15 @@ class sanitize_input_output_names(AbstractGraphPass):
         sanitizer_ops = NameSanitizer(prefix="op_")
 
         # sanitize the input/output of the main block
-        NameSanitizer.sanitize_block(
-            prog.functions["main"],
-            sanitizer_vars,
-            sanitizer_ops,
-            prog.functions["main"].input_types,
-            sanitize_model_inputs_outputs_only=True,
-        )
+        # TODO: rdar://126498947 ([Infra] Investigate the name sanitizer on multifunction model)
+        if "main" in prog.functions:
+            NameSanitizer.sanitize_block(
+                prog.functions["main"],
+                sanitizer_vars,
+                sanitizer_ops,
+                prog.functions["main"].input_types,
+                sanitize_model_inputs_outputs_only=True,
+            )
 
 
 # TODO: rdar://122845072 ([Infra] Refactor the transform_function_signatures, adjust_io_to_supported_types and update_output_dtypes using a shared graph pass)

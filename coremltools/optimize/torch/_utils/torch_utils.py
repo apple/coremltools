@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -7,12 +7,17 @@ import logging as _logging
 import operator as _operator
 import re as _re
 from contextlib import contextmanager
+from distutils.version import StrictVersion as _StrictVersion
+from typing import Any as _Any
+from typing import Dict as _Dict
 from typing import List as _List
 from typing import Tuple as _Tuple
+from typing import Type as _Type
 from typing import Union as _Union
 
 import numpy as _np
 import torch as _torch
+import torch.nn as _nn
 
 _logger = _logging.getLogger(__name__)
 
@@ -45,11 +50,54 @@ def list_or_str_to_tensor(alist: _Union[_List[int], str, _torch.Tensor]) -> _tor
     )
 
 
+def _get_dtype_info(dtype: _torch.dtype):
+    if dtype.is_floating_point:
+        info_fn = _torch.finfo
+    else:
+        info_fn = _torch.iinfo
+
+    return info_fn(dtype)
+
+
+def get_n_bits_from_dtype(dtype: _Union[str, _torch.dtype]) -> int:
+    if type(dtype) is _torch.dtype:
+        dtype_info = _get_dtype_info(dtype)
+        return dtype_info.bits
+    elif type(dtype) is str:
+        return int(_re.search(r"\d+", dtype).group())
+    else:
+        raise TypeError(
+            "dtype must either be a string or an instance of torch.dtype," f" not {type(dtype)}"
+        )
+
+
+def get_sign_from_dtype(dtype: _Union[str, _torch.dtype]) -> int:
+    if type(dtype) is _torch.dtype:
+        dtype_info = _get_dtype_info(dtype)
+        return dtype_info.min < 0
+    elif type(dtype) is str:
+        return not dtype.startswith("u")
+    else:
+        raise TypeError(
+            "dtype must either be a string or an instance of torch.dtype," f" not {type(dtype)}"
+        )
+
+
 def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype:
     _str_to_dtype_map = {
         "quint8": _torch.quint8,
         "qint8": _torch.qint8,
         "float32": _torch.float32,
+        "int8": _torch.int8,
+        "uint8": _torch.uint8,
+        # Torch doesn't support int4 or int3
+        # but we can represent it as int8
+        "int4": _torch.int8,
+        "uint4": _torch.uint8,
+        "qint4": _torch.qint8,
+        "quint4": _torch.quint8,
+        "uint3": _torch.uint8,
+        "int3": _torch.int8,
     }
     if isinstance(dtype, str):
         dtype = dtype.lower()
@@ -81,7 +129,7 @@ def maybe_convert_str_to_mod_type(mod_type: str):
 
 
 @contextmanager
-def get_eval_model(model):
+def get_eval_model(model: _nn.Module):
     train_flag = model.training
     try:
         yield model.eval()
@@ -98,3 +146,63 @@ def get_parent_child_name(name: str) -> _Tuple[str, str]:
         return "", split[0]
     else:
         return split[0], split[1]
+
+
+def get_fully_qualified_name(model: _torch.nn.Module, module: _torch.nn.Module) -> str:
+    """
+    Returns fully qualified name for a module if it exists in the model. The fully qualified
+    name can be used to fetch the module using ``model.get_submodule``.
+    """
+    for mod_name, mod in model.named_modules(remove_duplicate=True):
+        if mod == module:
+            return mod_name
+    raise ValueError(f"Module: {module} is not a submodule of {model}.")
+
+
+def get_atomic_layers(
+    module: _nn.Module, layer_types: _List[_Type], name_prefix: str = ""
+) -> _Dict[str, _nn.Module]:
+    """
+    Returns a dictionary of layer_name: layer for every layer in the module which
+    matches the types specified in layers_to_find.
+    """
+    if isinstance(module, tuple(layer_types)):
+        return {name_prefix: module}
+    result = {}
+    for name, child in module.named_children():
+        result.update(
+            get_atomic_layers(
+                child,
+                layer_types=layer_types,
+                name_prefix=name_prefix + "." + name if name_prefix != "" else name,
+            )
+        )
+
+    return result
+
+
+def clone_tensor_object(obj: _Any):
+    """
+    Clone a nested list, tuple or dict of tensors.
+    """
+    if isinstance(obj, _torch.Tensor):
+        return obj.clone()
+    elif isinstance(obj, tuple):
+        return tuple(clone_tensor_object(item) for item in obj)
+    elif isinstance(obj, list):
+        return [clone_tensor_object(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: clone_tensor_object(val) for key, val in obj.items()}
+    else:
+        raise ValueError(f"Cannot clone unrecognized object type: {obj}.")
+
+
+def get_torch_version(version):
+    """
+    returns torch version given a version string. Works for versions like
+    "2.1.1", "2.1.1+cpu", "2.1.1+rc" etc and would return 2.1.1 for these
+    cases
+    """
+    version_regex = r"\d+\.\d+\.\d+"
+    version = _re.search(version_regex, str(version)).group(0)
+    return _StrictVersion(version)

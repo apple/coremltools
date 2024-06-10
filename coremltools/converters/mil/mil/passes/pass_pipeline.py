@@ -11,12 +11,13 @@ from tqdm import tqdm
 
 from coremltools import _logger as logger
 from coremltools.converters._profile_utils import _profile
-from coremltools.converters.mil import Program
+from coremltools.converters.mil.mil import Program
 from coremltools.converters.mil.mil.passes.graph_pass import PassOption
 from coremltools.converters.mil.mil.passes.helper import classproperty as _classproperty
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
 _COMMON_PASSES: List[Text] = [
+    "common::reorder_lut_per_channel_scale",
     "common::lower_complex_dialect_ops",
     "common::update_output_dtypes",
     "common::cast_optimization",
@@ -382,7 +383,11 @@ class PassPipeline:
                 f"There is no pipeline for `{pipeline_name}`. "
                 f"Available pipelines: {cls._PIPELINE_NAME_TO_PASSES.keys()}"
             )
-        return PassPipeline(cls._PIPELINE_NAME_TO_PASSES[pipeline_name], pipeline_name)
+        # We need to copy the pass names when initialize a PassPipeline object,
+        # to prevent the member functions of PassPipeline from potentially modifying the original
+        # data in _PIPELINE_NAME_TO_PASSES.
+        passes = list(cls._PIPELINE_NAME_TO_PASSES[pipeline_name])
+        return PassPipeline(passes, pipeline_name)
 
     @classmethod
     def list_available_pipelines(cls) -> List[str]:

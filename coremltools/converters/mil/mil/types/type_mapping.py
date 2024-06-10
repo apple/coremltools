@@ -24,11 +24,27 @@ from .type_double import fp16 as types_fp16
 from .type_double import fp32 as types_fp32
 from .type_double import fp64 as types_fp64
 from .type_double import is_float
+from .type_int import SUB_BYTE_DTYPE_METADATA_KEY
+from .type_int import int4 as types_int4
 from .type_int import int8 as types_int8
 from .type_int import int16 as types_int16
 from .type_int import int32 as types_int32
 from .type_int import int64 as types_int64
-from .type_int import is_int
+from .type_int import (
+    is_int,
+    is_sub_byte,
+    np_int4_dtype,
+    np_uint1_dtype,
+    np_uint2_dtype,
+    np_uint3_dtype,
+    np_uint4_dtype,
+    np_uint6_dtype,
+)
+from .type_int import uint1 as types_uint1
+from .type_int import uint2 as types_uint2
+from .type_int import uint3 as types_uint3
+from .type_int import uint4 as types_uint4
+from .type_int import uint6 as types_uint6
 from .type_int import uint8 as types_uint8
 from .type_int import uint16 as types_uint16
 from .type_int import uint32 as types_uint32
@@ -39,10 +55,16 @@ from .type_unknown import unknown
 
 _TYPES_TO_NPTYPES = {
     types_bool: np.bool_,
+    types_int4: np_int4_dtype,
     types_int8: np.int8,
     types_int16: np.int16,
     types_int32: np.int32,
     types_int64: np.int64,
+    types_uint1: np_uint1_dtype,
+    types_uint2: np_uint2_dtype,
+    types_uint3: np_uint3_dtype,
+    types_uint4: np_uint4_dtype,
+    types_uint6: np_uint6_dtype,
     types_uint8: np.uint8,
     types_uint16: np.uint16,
     types_uint32: np.uint32,
@@ -75,10 +97,16 @@ _NPTYPES_TO_STRINGS = {
 
 _TYPES_TO_STRINGS = {
     types_bool: "bool",
+    types_int4: "int4",
     types_int8: "int8",
     types_int16: "int16",
     types_int32: "int32",
     types_int64: "int64",
+    types_uint1: "uint1",
+    types_uint2: "uint2",
+    types_uint3: "uint3",
+    types_uint4: "uint4",
+    types_uint6: "uint6",
     types_uint8: "uint8",
     types_uint16: "uint16",
     types_uint32: "uint32",
@@ -93,7 +121,13 @@ _TYPES_TO_STRINGS = {
 
 _TYPES_TO_RESOLUTION = {
     types_bool: 1,
+    types_int4: 1,
     types_int8: 1,
+    types_uint1: 1,
+    types_uint2: 1,
+    types_uint3: 1,
+    types_uint4: 1,
+    types_uint6: 1,
     types_uint8: 1,
     types_int16: 1,
     types_uint16: 1,
@@ -108,7 +142,13 @@ RangeTuple = namedtuple("RangeTuple", "low high")
 
 _TYPES_TO_RANGE = {
     types_bool: RangeTuple(0, 1),
+    types_int4: RangeTuple(np.iinfo(np.int8).min >> 4, np.iinfo(np.int8).max >> 4),
     types_int8: RangeTuple(np.iinfo(np.int8).min, np.iinfo(np.int8).max),
+    types_uint1: RangeTuple(np.iinfo(np.uint8).min >> 7, np.iinfo(np.uint8).max >> 7),
+    types_uint2: RangeTuple(np.iinfo(np.uint8).min >> 6, np.iinfo(np.uint8).max >> 6),
+    types_uint3: RangeTuple(np.iinfo(np.uint8).min >> 5, np.iinfo(np.uint8).max >> 5),
+    types_uint4: RangeTuple(np.iinfo(np.uint8).min >> 4, np.iinfo(np.uint8).max >> 4),
+    types_uint6: RangeTuple(np.iinfo(np.uint8).min >> 2, np.iinfo(np.uint8).max >> 2),
     types_uint8: RangeTuple(np.iinfo(np.uint8).min, np.iinfo(np.uint8).max),
     types_int16: RangeTuple(np.iinfo(np.int16).min, np.iinfo(np.int16).max),
     types_uint16: RangeTuple(np.iinfo(np.uint16).min, np.iinfo(np.uint16).max),
@@ -129,7 +169,13 @@ BUILTIN_TO_PROTO_TYPES = {
     types_fp64: _mil_pm.FLOAT64,
 
     # int
+    types_uint1: _mil_pm.UINT1,
+    types_uint2: _mil_pm.UINT2,
+    types_uint3: _mil_pm.UINT3,
+    types_uint4: _mil_pm.UINT4,
+    types_uint6: _mil_pm.UINT6,
     types_uint8: _mil_pm.UINT8,
+    types_int4: _mil_pm.INT4,
     types_int8: _mil_pm.INT8,
 
     types_uint16: _mil_pm.UINT16,
@@ -160,6 +206,16 @@ def np_dtype_to_py_type(np_dtype):
 PROTO_TO_BUILTIN_TYPE = {v: k for k, v in BUILTIN_TO_PROTO_TYPES.items()}
 _STRINGS_TO_TYPES = {v: k for k, v in _TYPES_TO_STRINGS.items()}
 _STRINGS_TO_NPTYPES = {v: k for k, v in _NPTYPES_TO_STRINGS.items()}
+_STRINGS_TO_NPTYPES.update(
+    {
+        "int4": np_int4_dtype,
+        "uint1": np_uint1_dtype,
+        "uint2": np_uint2_dtype,
+        "uint3": np_uint3_dtype,
+        "uint4": np_uint4_dtype,
+        "uint6": np_uint6_dtype,
+    }
+)
 
 def string_to_builtin(s):
     """
@@ -344,6 +400,10 @@ def is_builtin(t):
 
 
 def _numpy_dtype_instance_to_builtin_type(np_dtype: np.dtype) -> Optional[type]:
+    metadata_dict = np_dtype.metadata
+    if metadata_dict is not None and SUB_BYTE_DTYPE_METADATA_KEY in metadata_dict:
+        return metadata_dict[SUB_BYTE_DTYPE_METADATA_KEY]
+
     if np_dtype in _NPTYPES_TO_STRINGS:
         return string_to_builtin(_NPTYPES_TO_STRINGS[np_dtype])
     return None
@@ -489,6 +549,13 @@ def is_subtype(type1, type2):
 
 
 def _numpy_val_to_bytes(val: Union[np.ndarray, np.generic]) -> bytes:
+    # Import here to avoid circular import.
+    from coremltools.optimize.coreml import _utils as optimize_utils
+
+    builtin_type = numpy_type_to_builtin_type(val.dtype)
+    if is_sub_byte(builtin_type):
+        val = optimize_utils.pack_elements_into_bits(val, builtin_type.get_bitwidth())
+
     return val.tobytes()
 
 def np_val_to_py_type(val):
@@ -537,3 +604,9 @@ def infer_fp_dtype_from_complex(complex_dtype):
         return types_fp64
     else:
         raise ValueError(f"Unsupported complex dtype ({complex_dtype}).")
+
+
+def get_nbits_int_builtin_type(nbits: int, signed: True) -> type:
+    """Get the nbits int built-in type."""
+    type_prefix = "u" if not signed else ""
+    return string_to_builtin(f"{type_prefix}int{nbits}")

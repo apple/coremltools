@@ -12,6 +12,7 @@ import torch
 import torchvision
 
 import coremltools as ct
+import coremltools.optimize as cto
 from coremltools import TensorType
 from coremltools._deps import (
     _HAS_TORCH,
@@ -19,7 +20,16 @@ from coremltools._deps import (
     MSG_TORCH_NOT_FOUND,
     MSG_TORCH_VISION_NOT_FOUND,
 )
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.optimize.coreml import _quantization_passes
+from coremltools.test.ml_program.test_compression import get_test_model_and_data
+from coremltools.test.optimize.coreml.test_post_training_quantization import (
+    create_quantize_friendly_weight,
+    create_sparse_weight,
+    create_unique_weight,
+)
 
 from .testing_utils import TorchBaseTest
 
@@ -28,6 +38,7 @@ pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 torch.manual_seed(30)
 np.random.seed(30)
 torch.backends.quantized.engine = "qnnpack"
+compute_units = testing_reqs.compute_units
 
 
 def _force_quantize_model(
@@ -384,10 +395,17 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         self.run_compare_torch(input_shape, model)
 
     @pytest.mark.parametrize(
-        "quant_dtype, channel_axis",
-        itertools.product([torch.quint8, torch.qint8], [0, 1, None]),
+        "compute_unit, quant_dtype, channel_axis, minimum_deployment_target",
+        itertools.product(
+            compute_units,
+            [torch.quint8, torch.qint8],
+            [0, 1, None],
+            [ct.target.iOS16, ct.target.iOS17, ct.target.iOS18],
+        ),
     )
-    def test_quantized_params(self, quant_dtype, channel_axis):
+    def test_quantized_params(
+        self, compute_unit, quant_dtype, channel_axis, minimum_deployment_target
+    ):
         class Model(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -400,9 +418,17 @@ class TestPytorchQuantizedOps(TorchQuantizationBaseTest):
         model = Model()
         model = _force_quantize_model(model, q_dtype=quant_dtype, channel_axis=channel_axis)
         input_shape = [(3, 5)]
-        res = self.run_compare_torch(input_shape, model)
+        res = self.run_compare_torch(
+            input_shape,
+            model,
+            minimum_deployment_target=minimum_deployment_target,
+            compute_unit=compute_unit,
+        )
         prog = res[1]._mil_program
-        assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize", "linear"]
+        if minimum_deployment_target < ct.target.iOS18:
+            assert get_op_types_in_program(prog) == ["constexpr_affine_dequantize", "linear"]
+        else:
+            assert get_op_types_in_program(prog) == ["constexpr_blockwise_shift_scale", "matmul"]
 
 
 @pytest.mark.skipif(not _HAS_TORCH_VISION, reason=MSG_TORCH_VISION_NOT_FOUND)
@@ -418,3 +444,485 @@ class TestTorchvisionQuantizedModels(TorchQuantizationBaseTest):
     def test_quantized_mobilenetv2(self):
         model = torchvision.models.quantization.mobilenet_v2(pretrained=True, quantize=True)
         self.run_compare_torch([(1, 3, 224, 224)], model, atol=1.0)
+
+
+class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
+    """Test compressed PyTorch models which use register_buffer to carry compression info."""
+
+    @pytest.mark.parametrize(
+        "compute_unit, n_bits, signed, minimum_deployment_target",
+        itertools.product(
+            compute_units,
+            [4, 8],
+            [True, False],
+            [ct.target.iOS16, ct.target.iOS18],
+        ),
+    )
+    def test_quantization(self, compute_unit, n_bits, signed, minimum_deployment_target):
+        if n_bits == 4 and minimum_deployment_target < ct.target.iOS18:
+            pytest.skip("Sub-byte quantization is only supported since iOS18.")
+
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
+            quantize_config=cto.coreml.OpLinearQuantizerConfig(
+                mode="linear_symmetric",
+                dtype=types.get_nbits_int_builtin_type(n_bits, signed),
+                granularity="per_tensor",
+            )
+        )
+
+        scale = np.array([2.0], dtype=np.float32).reshape(1, 1, 1, 1)
+        zero_point = np.array(
+            [0 if signed else 2 ** (n_bits - 1)], dtype=np.int8 if signed else np.uint8
+        ).reshape(1, 1, 1, 1)
+
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(2))
+        model.register_buffer("_COREML_/weight/compression_type", torch.tensor([3]))
+        model.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(n_bits))
+        model.register_buffer("_COREML_/weight/quantization_scale", torch.from_numpy(scale))
+        model.register_buffer("_COREML_/weight/zero_point", torch.from_numpy(zero_point))
+
+        traced_model = torch.jit.trace(model, torch_input_values)
+        input_shape = [input.shape.to_list() for input in inputs]
+        res = self.run_compare_torch(
+            input_shape,
+            traced_model,
+            minimum_deployment_target=minimum_deployment_target,
+            compute_unit=compute_unit,
+            converter=ct.convert,
+            rtol=1e-04,
+            atol=1e-03,
+        )
+        main_func = res[1]._mil_program.functions["main"]
+
+        target_dtype_str = ("int" if signed else "uint") + str(n_bits)
+        if minimum_deployment_target >= ct.target.iOS18:
+            quantize_ops = main_func.find_ops(op_type="constexpr_blockwise_shift_scale")
+            assert len(quantize_ops) > 0
+            for quantize_op in quantize_ops:
+                assert types.builtin_to_string(quantize_op.data.dtype) == target_dtype_str
+                if not signed:
+                    assert types.builtin_to_string(quantize_op.offset.dtype) == target_dtype_str
+        else:
+            quantize_ops = main_func.find_ops(op_type="constexpr_affine_dequantize")
+            assert len(quantize_ops) > 0
+            for quantize_op in quantize_ops:
+                assert types.builtin_to_string(quantize_op.quantized_data.dtype) == target_dtype_str
+                assert types.builtin_to_string(quantize_op.zero_point.dtype) == target_dtype_str
+
+    @pytest.mark.parametrize(
+        "compute_unit, n_bits, minimum_deployment_target",
+        itertools.product(compute_units, [4, 8], [ct.target.iOS16, ct.target.iOS18]),
+    )
+    def test_multiple_parameters_in_same_layer(
+        self, compute_unit, n_bits, minimum_deployment_target
+    ):
+        """Test one layer has multiple parameters (such as weight and bias in a linear layer)"""
+        if n_bits == 4 and minimum_deployment_target < ct.target.iOS18:
+            pytest.skip("Sub-byte quantization is only supported since iOS18.")
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+                self.linear_1 = torch.nn.Linear(16, 32)
+                self.linear_2 = torch.nn.Linear(32, 64)
+
+            def forward(self, x):
+                return self.linear_2(self.linear_1(x))
+
+        model = Model().eval()
+        with torch.no_grad():
+            fake_weight_scale = 2 if n_bits == 4 else 40
+            model.linear_2.weight = torch.nn.Parameter(
+                torch.from_numpy(
+                    np.ones_like(model.linear_2.weight.detach().numpy()) * fake_weight_scale
+                ).float()
+            )
+            model.linear_2.bias = torch.nn.Parameter(
+                torch.from_numpy(
+                    np.ones_like(model.linear_2.bias.detach().numpy()) * fake_weight_scale
+                ).float()
+            )
+
+        # Register buffers for both weight and bias for linear_2 layer.
+        weight_scale = np.array([2.0], dtype=np.float32).reshape(1, 1)
+        bias_scale = np.array([2.0], dtype=np.float32)
+        model.linear_2.register_buffer("_COREML_/weight/compression_type", torch.tensor([3]))
+        model.linear_2.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(n_bits))
+        model.linear_2.register_buffer(
+            "_COREML_/weight/quantization_scale", torch.from_numpy(weight_scale)
+        )
+        model.linear_2.register_buffer("_COREML_/bias/compression_type", torch.tensor([3]))
+        model.linear_2.register_buffer("_COREML_/bias/quantization_n_bits", torch.tensor(n_bits))
+        model.linear_2.register_buffer(
+            "_COREML_/bias/quantization_scale", torch.from_numpy(bias_scale)
+        )
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(2))
+
+        torch_input_values = torch.rand((8, 16))
+        traced_model = torch.jit.trace(model, torch_input_values)
+        res = self.run_compare_torch(
+            [(8, 16)],
+            traced_model,
+            minimum_deployment_target=minimum_deployment_target,
+            compute_unit=compute_unit,
+            converter=ct.convert,
+        )
+        main_func = res[1]._mil_program.functions["main"]
+
+        quantize_op_type = (
+            "constexpr_blockwise_shift_scale"
+            if minimum_deployment_target >= ct.target.iOS18
+            else "constexpr_affine_dequantize"
+        )
+        # Only the linear_2 layer got quantized based on registered buffers.
+        linear_ops = main_func.find_ops(op_type="linear")
+        assert linear_ops[0].weight.op.op_type == "const"
+        assert linear_ops[0].bias.op.op_type == "const"
+        assert linear_ops[1].weight.op.op_type == quantize_op_type
+        assert linear_ops[1].bias.op.op_type == quantize_op_type
+
+        quantize_ops = main_func.find_ops(op_type=quantize_op_type)
+        assert len(quantize_ops) == 2
+        for quantize_op in quantize_ops:
+            if minimum_deployment_target >= ct.target.iOS18:
+                assert types.builtin_to_string(quantize_op.data.dtype) == f"uint{n_bits}"
+            else:
+                assert types.builtin_to_string(quantize_op.quantized_data.dtype) == f"uint{n_bits}"
+
+    def test_invalid_compression_info(self):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
+
+        # Invalid key combination (didn't specify compression schema)
+        model.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(4))
+        with pytest.raises(
+            ValueError,
+            match="There are coreml compression related buffers registered in the torch .* but "
+            "the 'compression_type' is not set",
+        ):
+            self.run_compare_torch(
+                [input.shape.to_list() for input in inputs],
+                torch.jit.trace(model, torch_input_values),
+                minimum_deployment_target=ct.target.iOS18,
+                compute_unit=ct.ComputeUnit.CPU_ONLY,
+                converter=ct.convert,
+            )
+
+        # Invalid key names.
+        model.register_buffer("_COREML_/weight/invalid_key", torch.tensor(4))
+        with pytest.raises(AttributeError, match="has no attribute 'invalid_key'"):
+            self.run_compare_torch(
+                [input.shape.to_list() for input in inputs],
+                torch.jit.trace(model, torch_input_values),
+                minimum_deployment_target=ct.target.iOS18,
+                compute_unit=ct.ComputeUnit.CPU_ONLY,
+                converter=ct.convert,
+            )
+
+        # The lut must be specified for palettization.
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
+        model.register_buffer("_COREML_/weight/compression_type", torch.tensor([2]))
+        with pytest.raises(
+            ValueError, match="Missing lut in compression info. Please register a buffer for lut."
+        ):
+            self.run_compare_torch(
+                [input.shape.to_list() for input in inputs],
+                torch.jit.trace(model, torch_input_values),
+                minimum_deployment_target=ct.target.iOS18,
+                compute_unit=ct.ComputeUnit.CPU_ONLY,
+                converter=ct.convert,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, n_bits, group_size, channel_axis, minimum_deployment_target",
+        itertools.product(
+            compute_units,
+            [4, 8],
+            [0, 1, 2],
+            [0, 1],
+            [ct.target.iOS16, ct.target.iOS18],
+        ),
+    )
+    def test_palettization(
+        self, compute_unit, n_bits, group_size, channel_axis, minimum_deployment_target
+    ):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
+            multi_layer=True
+        )
+
+        # per-channel scales for the [32, 64, 2, 2] and [64, 32, 2, 2] weight.
+        scale_1 = np.array([2.0] * 32, dtype=np.float32).reshape(32, 1, 1, 1)
+        scale_2 = np.array([3.0] * 64, dtype=np.float32).reshape(64, 1, 1, 1)
+
+        unique_weight_1 = create_unique_weight(model.conv_1.weight, nbits=n_bits)
+        unique_weight_2 = create_unique_weight(model.conv_2.weight, nbits=n_bits)
+
+        # Use grouped-channel-wise lut for conv1 for iOS18+.
+        block_sizes = [0] * len(unique_weight_1.shape)
+        if minimum_deployment_target >= ct.target.iOS18:
+            block_sizes[channel_axis] = group_size
+        lut_1_params = _quantization_passes.palettize_weights.blockwise_compress(
+            unique_weight_1,
+            "UNIQUE",
+            nbits=n_bits,
+            block_sizes=block_sizes,
+        )
+
+        # Use per-tensor lut for conv2.
+        lut_2_params = _quantization_passes.palettize_weights.blockwise_compress(
+            unique_weight_2, "UNIQUE", nbits=n_bits, block_sizes=[0] * len(unique_weight_2.shape)
+        )
+
+        if minimum_deployment_target >= ct.target.iOS18:
+            # Only do per-channel-scale for iOS18+.
+            unique_weight_1 *= scale_1
+            unique_weight_2 *= scale_2
+
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(torch.Tensor(unique_weight_1))
+            model.conv_2.weight = torch.nn.Parameter(torch.Tensor(unique_weight_2))
+
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(1))
+        if minimum_deployment_target >= ct.target.iOS18:
+            model.conv_1.register_buffer("_COREML_/weight/compression_type", torch.tensor([2]))
+            model.conv_1.register_buffer("_COREML_/weight/lut", torch.tensor(lut_1_params.lut))
+            model.conv_1.register_buffer(
+                "_COREML_/weight/palettization_scale", torch.from_numpy(scale_1)
+            )
+        model.conv_2.register_buffer("_COREML_/weight/compression_type", torch.tensor([2]))
+        model.conv_2.register_buffer("_COREML_/weight/lut", torch.tensor(lut_2_params.lut))
+        if minimum_deployment_target >= ct.target.iOS18:
+            model.conv_2.register_buffer(
+                "_COREML_/weight/palettization_scale", torch.from_numpy(scale_2)
+            )
+
+        traced_model = torch.jit.trace(model, torch_input_values)
+        input_shape = [input.shape.to_list() for input in inputs]
+        res = self.run_compare_torch(
+            input_shape,
+            traced_model,
+            minimum_deployment_target=minimum_deployment_target,
+            compute_unit=compute_unit,
+            converter=ct.convert,
+        )
+        main_func = res[1]._mil_program.functions["main"]
+
+        if minimum_deployment_target >= ct.target.iOS18:
+            expected_dtype = f"uint{n_bits}"
+            expected_quantize_ops_num = 0  # The scale is moved to post-conv.
+            expected_palettize_ops_num = 2
+            # The lut op is directly fed into conv because the quant scale is no longer there.
+            palettize_op_child_op_type = "conv"
+        else:
+            expected_dtype = "uint8"
+            expected_quantize_ops_num = 0
+            expected_palettize_ops_num = 1
+            # The iOS16 doesn't have per-channel-scale, so lut output is directly fed into conv.
+            palettize_op_child_op_type = "conv"
+
+        quantize_ops = main_func.find_ops(op_type="constexpr_blockwise_shift_scale")
+        assert len(quantize_ops) == expected_quantize_ops_num
+        palettize_ops = main_func.find_ops(op_type="constexpr_lut_to_dense")
+        assert len(palettize_ops) == expected_palettize_ops_num
+        for palettize_op in palettize_ops:
+            assert types.builtin_to_string(palettize_op.indices.dtype) == expected_dtype
+            assert palettize_op.outputs[0].child_ops[0].op_type == palettize_op_child_op_type
+
+    @pytest.mark.parametrize(
+        "compute_unit, sparse_ratio, minimum_deployment_target",
+        itertools.product(
+            compute_units,
+            [0.01, 0.5, 0.99],
+            [ct.target.iOS16, ct.target.iOS18],
+        ),
+    )
+    def test_pruning(self, compute_unit, sparse_ratio, minimum_deployment_target):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
+            multi_layer=True
+        )
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(
+                torch.Tensor(
+                    create_sparse_weight(model.conv_1.weight, target_sparsity=sparse_ratio)
+                )
+            )
+            model.conv_2.weight = torch.nn.Parameter(
+                torch.Tensor(
+                    create_sparse_weight(model.conv_2.weight, target_sparsity=sparse_ratio)
+                )
+            )
+
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(1))
+        model.conv_1.register_buffer("_COREML_/weight/compression_type", torch.tensor([1]))
+        model.conv_2.register_buffer("_COREML_/weight/compression_type", torch.tensor([1]))
+
+        traced_model = torch.jit.trace(model, torch_input_values)
+        input_shape = [input.shape.to_list() for input in inputs]
+        res = self.run_compare_torch(
+            input_shape,
+            traced_model,
+            minimum_deployment_target=minimum_deployment_target,
+            compute_unit=compute_unit,
+            converter=ct.convert,
+        )
+        main_func = res[1]._mil_program.functions["main"]
+        sparse_ops = main_func.find_ops(op_type="constexpr_sparse_to_dense")
+        assert len(sparse_ops) == 2
+
+        for sparse_op in sparse_ops:
+            assert sparse_op.outputs[0].child_ops[0].op_type == "conv"
+            assert types.builtin_to_string(sparse_op.nonzero_data.dtype) == "fp32"
+            if minimum_deployment_target >= ct.target.iOS18:
+                assert types.builtin_to_string(sparse_op.mask.dtype) == "uint1"
+            else:
+                assert types.builtin_to_string(sparse_op.mask.dtype) == "uint8"
+                assert types.builtin_to_string(sparse_op.shape.dtype) == "uint32"
+
+    @pytest.mark.parametrize(
+        "compute_unit, n_bits, signed",
+        itertools.product(
+            compute_units,
+            [4, 8],
+            [True, False],
+        ),
+    )
+    def test_joint_pruning_quantization(self, compute_unit, n_bits, signed):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
+            multi_layer=True,
+        )
+
+        # Make the weight sparse and also quantization-friendly.
+        weight_1, scale_1, zero_point_1 = create_quantize_friendly_weight(
+            model.conv_1.weight.detach().numpy(), nbits=n_bits, signed=signed
+        )
+        weight_1 *= np.random.randint(low=0, high=2, size=model.conv_1.weight.shape)
+        weight_2, scale_2, zero_point_2 = create_quantize_friendly_weight(
+            model.conv_2.weight.detach().numpy(), nbits=n_bits, signed=signed
+        )
+        weight_2 *= np.random.randint(low=0, high=2, size=model.conv_2.weight.shape)
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(torch.Tensor(weight_1))
+            model.conv_2.weight = torch.nn.Parameter(torch.Tensor(weight_2))
+
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(2))
+        model.conv_1.register_buffer("_COREML_/weight/compression_type", torch.tensor([1, 3]))
+        model.conv_1.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(n_bits))
+        model.conv_1.register_buffer(
+            "_COREML_/weight/quantization_scale", torch.from_numpy(scale_1)
+        )
+        model.conv_1.register_buffer("_COREML_/weight/zero_point", torch.from_numpy(zero_point_1))
+        model.conv_2.register_buffer("_COREML_/weight/compression_type", torch.tensor([1, 3]))
+        model.conv_2.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(n_bits))
+        model.conv_2.register_buffer(
+            "_COREML_/weight/quantization_scale", torch.from_numpy(scale_2)
+        )
+        model.conv_2.register_buffer("_COREML_/weight/zero_point", torch.from_numpy(zero_point_2))
+
+        traced_model = torch.jit.trace(model, torch_input_values)
+        input_shape = [input.shape.to_list() for input in inputs]
+        res = self.run_compare_torch(
+            input_shape,
+            traced_model,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_unit=compute_unit,
+            converter=ct.convert,
+            atol=1e-2,
+        )
+        main_func = res[1]._mil_program.functions["main"]
+
+        sparse_quantize_ops = main_func.find_ops(op_type="constexpr_sparse_blockwise_shift_scale")
+        assert len(sparse_quantize_ops) == 2
+        for sparse_quantize_op in sparse_quantize_ops:
+            expected_dtype = f"int{n_bits}" if signed else f"uint{n_bits}"
+            assert types.builtin_to_string(sparse_quantize_op.nonzero_data.dtype) == expected_dtype
+            assert types.builtin_to_string(sparse_quantize_op.data_mask.dtype) == "uint1"
+            assert types.builtin_to_string(sparse_quantize_op.scale.dtype) == "fp32"
+            assert sparse_quantize_op.outputs[1].child_ops[0].op_type == "constexpr_sparse_to_dense"
+
+        sparse_ops = main_func.find_ops(op_type="constexpr_sparse_to_dense")
+        assert len(sparse_ops) == 2
+        for sparse_op in sparse_ops:
+            assert types.builtin_to_string(sparse_op.mask.dtype) == "uint1"
+            assert types.builtin_to_string(sparse_op.nonzero_data.dtype) == "fp32"
+            assert sparse_op.outputs[0].child_ops[0].op_type == "conv"
+
+    @pytest.mark.parametrize(
+        "compute_unit, n_bits, group_size",
+        itertools.product(
+            compute_units,
+            [4, 8],
+            [0, 1, 2],
+        ),
+    )
+    def test_joint_pruning_palettization(self, compute_unit, n_bits, group_size):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
+            multi_layer=True
+        )
+
+        # Make the weight sparse and also can be represented by lut.
+        weight_1 = create_unique_weight(model.conv_1.weight, nbits=n_bits) * np.random.randint(
+            low=0, high=2, size=model.conv_1.weight.shape
+        )
+        weight_2 = create_unique_weight(model.conv_2.weight, nbits=n_bits) * np.random.randint(
+            low=0, high=2, size=model.conv_2.weight.shape
+        )
+
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(torch.Tensor(weight_1))
+            model.conv_2.weight = torch.nn.Parameter(torch.Tensor(weight_2))
+
+        lut_1_params = _quantization_passes.palettize_weights.blockwise_compress(
+            weight_1,
+            "UNIQUE",
+            nbits=n_bits,
+            block_sizes=[group_size] + [0] * (len(weight_1.shape) - 1),
+        )
+        lut_2_params = _quantization_passes.palettize_weights.blockwise_compress(
+            weight_2,
+            "UNIQUE",
+            nbits=n_bits,
+            block_sizes=[group_size] + [0] * (len(weight_2.shape) - 1),
+        )
+
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(1))
+        model.conv_1.register_buffer("_COREML_/weight/compression_type", torch.tensor([1, 2]))
+        model.conv_1.register_buffer("_COREML_/weight/lut", torch.tensor(lut_1_params.lut))
+        model.conv_2.register_buffer("_COREML_/weight/compression_type", torch.tensor([1, 2]))
+        model.conv_2.register_buffer("_COREML_/weight/lut", torch.tensor(lut_2_params.lut))
+
+        traced_model = torch.jit.trace(model, torch_input_values)
+        input_shape = [input.shape.to_list() for input in inputs]
+        res = self.run_compare_torch(
+            input_shape,
+            traced_model,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_unit=compute_unit,
+            converter=ct.convert,
+        )
+        main_func = res[1]._mil_program.functions["main"]
+
+        sparse_palettize_ops = main_func.find_ops(op_type="constexpr_lut_to_sparse")
+        assert len(sparse_palettize_ops) == 2
+        for sparse_palettize_op in sparse_palettize_ops:
+            assert (
+                types.builtin_to_string(sparse_palettize_op.indices_nonzero_data.dtype)
+                == f"uint{n_bits}"
+            )
+            assert types.builtin_to_string(sparse_palettize_op.indices_mask.dtype) == "uint1"
+            assert types.builtin_to_string(sparse_palettize_op.lut.dtype) == "fp32"
+            assert (
+                sparse_palettize_op.outputs[1].child_ops[0].op_type == "constexpr_sparse_to_dense"
+            )
+            # As both palettization and pruning is on the original weight, the shape of lut should
+            # match the original weight's shape except on the output channel.
+            weight_shape = sparse_palettize_op.outputs[1].child_ops[0].outputs[0].shape
+            expected_lut_shape = [1] * len(weight_shape) + [2**n_bits] + [1]
+            if group_size > 0:
+                expected_lut_shape[0] = weight_shape[0] // group_size
+            assert sparse_palettize_op.lut.shape == tuple(expected_lut_shape)
+
+        sparse_ops = main_func.find_ops(op_type="constexpr_sparse_to_dense")
+        assert len(sparse_ops) == 2
+        for sparse_op in sparse_ops:
+            assert types.builtin_to_string(sparse_op.mask.dtype) == "uint1"
+            assert types.builtin_to_string(sparse_op.nonzero_data.dtype) == "fp32"
+            assert sparse_op.outputs[0].child_ops[0].op_type == "conv"

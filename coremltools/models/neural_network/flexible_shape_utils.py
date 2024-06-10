@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 """
-Utilities to annotate Neural Network Features with flexible shape information.
+Utilities to annotate neural network features with flexible shape information.
 """
 
 from typing import List as _List
@@ -43,8 +43,8 @@ class Size(Shape):
 class NeuralNetworkMultiArrayShape:
     """
     An object representing a shape for a multiArray feature in a
-    neural network. Valid shapes must have have only the Channel [C]
-    shape or the Channel, Height and Width [C, H, W] shapes populated
+    neural network. Valid shapes must have have only the Channel ``[C]``
+    shape or the Channel, Height and Width ``[C, H, W]`` shapes populated
     """
 
     def __init__(self, channel=None, height=None, width=None):
@@ -162,8 +162,8 @@ class ShapeRange:
 class NeuralNetworkMultiArrayShapeRange:
     """
     An object representing a range of shapes for a multiArray feature in a
-    neural network. Valid shape ranges must have have only the Channel [C]
-    range or the Channel, Height and Width [C, H, W] ranges populated. A "-1"
+    neural network. Valid shape ranges must have have only the Channel ``[C]``
+    range or the Channel, Height and Width ``[C, H, W]`` ranges populated. A ``-1``
     value in an upper bound represents an unbounded range.
     """
 
@@ -252,7 +252,7 @@ class NeuralNetworkMultiArrayShapeRange:
 class NeuralNetworkImageSizeRange:
     """
     An object representing a range of sizes for an image feature inside a
-    neural network. Valid ranges for height and width are > 0. A "-1"
+    neural network. Valid ranges for height and width are > 0. A ``-1``
     upper bound value for either width or height represents an unbounded size
     for that dimension.
     """
@@ -446,20 +446,20 @@ def _add_enumerated_image_sizes_for_feature(
 
 def add_enumerated_multiarray_shapes(spec, feature_name, shapes):
     """
-    Annotate an input or output multiArray feature in a Neural Network spec to
-    to accommodate a list of enumerated array shapes
+    Annotate an input or output multiArray feature in a neural network spec to
+    to accommodate a list of enumerated array shapes.
 
     :param spec: MLModel
-        The MLModel spec containing the feature
+        The MLModel spec containing the feature.
 
     :param feature_name: str
         The name of the image feature for which to add shape information.
         If the feature is not found in the input or output descriptions then
-        an exception is thrown
+        an exception is thrown.
 
     :param shapes: [] | NeuralNetworkMultiArrayShape
         A single or a list of NeuralNetworkImageSize objects which encode valid
-        size information for a image feature
+        size information for a image feature.
 
     Examples
     --------
@@ -533,20 +533,20 @@ def add_enumerated_multiarray_shapes(spec, feature_name, shapes):
 
 def add_enumerated_image_sizes(spec, feature_name, sizes):
     """
-    Annotate an input or output image feature in a Neural Network spec to
-    to accommodate a list of enumerated image sizes
+    Annotate an input or output image feature in a neural network spec to
+    to accommodate a list of enumerated image sizes.
 
     :param spec: MLModel
-        The MLModel spec containing the feature
+        The MLModel spec containing the feature.
 
     :param feature_name: str
         The name of the image feature for which to add size information.
         If the feature is not found in the input or output descriptions then
-        an exception is thrown
+        an exception is thrown.
 
     :param sizes:  [] | NeuralNetworkImageSize
         A single or a list of NeuralNetworkImageSize objects which encode valid
-        size information for a image feature
+        size information for a image feature.
 
     Examples
     --------
@@ -603,16 +603,16 @@ def add_enumerated_image_sizes(spec, feature_name, sizes):
 
 def update_image_size_range(spec, feature_name, size_range):
     """
-    Annotate an input or output Image feature in a Neural Network spec to
-    to accommodate a range of image sizes
+    Annotate an input or output Image feature in a neural network spec to
+    to accommodate a range of image sizes.
 
     :param spec: MLModel
-        The MLModel spec containing the feature
+        The MLModel spec containing the feature.
 
     :param feature_name: str
         The name of the Image feature for which to add shape information.
         If the feature is not found in the input or output descriptions then
-        an exception is thrown
+        an exception is thrown.
 
     :param size_range: NeuralNetworkImageSizeRange
         A NeuralNetworkImageSizeRange object with the populated image size
@@ -647,22 +647,22 @@ def update_image_size_range(spec, feature_name, size_range):
 
 def update_multiarray_shape_range(spec, feature_name, shape_range):
     """
-    Annotate an input or output MLMultiArray feature in a Neural Network spec
-    to accommodate a range of shapes
+    Annotate an input or output MLMultiArray feature in a neural network spec
+    to accommodate a range of shapes.
 
     :param spec: MLModel
-        The MLModel spec containing the feature
+        The MLModel spec containing the feature.
 
     :param feature_name: str
         The name of the feature for which to add shape range
         information. If the feature is not found in the input or output
-        descriptions then an exception is thrown
+        descriptions then an exception is thrown.
 
     :param shape_range: NeuralNetworkMultiArrayShapeRange
         A NeuralNetworkMultiArrayShapeRange object with the populated shape
         range information. The shape_range object must either contain only
         shape information for channel or channel, height and width. If
-        the object is invalid then an exception is thrown
+        the object is invalid then an exception is thrown.
 
     Examples
     --------
@@ -681,7 +681,7 @@ def update_multiarray_shape_range(spec, feature_name, shape_range):
         )
 
     :return:
-        None. The spec is updated
+        None. The spec is updated.
     """
     if not isinstance(shape_range, NeuralNetworkMultiArrayShapeRange):
         raise Exception("Shape range should be of type MultiArrayShapeRange")
@@ -718,27 +718,27 @@ def update_multiarray_shape_range(spec, feature_name, shape_range):
 
 def set_multiarray_ndshape_range(spec, feature_name, lower_bounds, upper_bounds):
     """
-    Annotate an input or output MLMultiArray feature in a Neural Network spec
+    Annotate an input or output MLMultiArray feature in a neural network spec
     to accommodate a range of shapes.
-    This is different from "update_multiarray_shape_range", which works with rank 5
+    This is different from ``update_multiarray_shape_range``, which works with rank 5
     SBCHW mapping.
 
     :param spec: MLModel
-        The MLModel spec containing the feature
+        The MLModel spec containing the feature.
 
     :param feature_name: str
         The name of the feature for which to add shape range
         information. If the feature is not found in the input or output
-        descriptions then an exception is thrown
+        descriptions then an exception is thrown.
 
     :param lower_bounds: List[int]
         list of integers specifying the lower bounds of each dimension.
-        Length must be same as the rank (length of shape) of the feature_name.
+        Length must be same as the rank (length of shape) of the ``feature_name``.
 
     :param upper_bounds: List[int]
         list of integers specifying the upper bounds of each dimension.
-        -1 corresponds to unbounded range.
-        Length must be same as the rank (length of shape) of the feature_name.
+        ``-1`` corresponds to unbounded range.
+        Length must be same as the rank (length of shape) of the ``feature_name``.
 
 
     Examples
@@ -758,7 +758,7 @@ def set_multiarray_ndshape_range(spec, feature_name, lower_bounds, upper_bounds)
         )
 
     :return:
-        None. The spec is updated
+        None. The spec is updated.
     """
     feature = _get_feature(spec, feature_name)
     _set_multiarray_ndshape_range_for_feature(feature, lower_bounds, upper_bounds)
@@ -770,11 +770,13 @@ def set_multiarray_ndshape_range(spec, feature_name, lower_bounds, upper_bounds)
 
 def add_multiarray_ndshape_enumeration(spec, feature_name, enumerated_shapes):
     """
-    Annotate an input or output MLMultiArray feature in a Neural Network spec
+    Annotate an input or output MLMultiArray feature in a neural network spec
     to accommodate a range of shapes.
+
     Add provided enumerated shapes to the list of shapes already present.
-    This method is different from "add_enumerated_multiarray_shapes", which is applicable
-    for rank 5 mapping, SBCHW, arrays.
+
+    This method is different from ``add_enumerated_multiarray_shapes``, which is applicable
+    for rank 5 mapping, SBCHW, and arrays.
 
     :param spec: MLModel
         The MLModel spec containing the feature
@@ -802,7 +804,7 @@ def add_multiarray_ndshape_enumeration(spec, feature_name, enumerated_shapes):
         )
 
     :return:
-        None. The spec is updated
+        None. The spec is updated.
     """
     feature = _get_feature(spec, feature_name)
     _add_multiarray_ndshape_enumeration_for_feature(feature, enumerated_shapes)

@@ -57,6 +57,11 @@ class dead_code_elimination(AbstractGraphPass):
         # mark block's outputs to used
         used_vars.update(block.outputs)
 
+        # mark outputs from coreml_update_state to used
+        for op in block.operations:
+            if op.op_type == "coreml_update_state":
+                used_vars.update(op.outputs)
+
         for op in reversed(block.operations):
             # if none of op's output is used, delete op
             if not set(op.outputs).intersection(used_vars):

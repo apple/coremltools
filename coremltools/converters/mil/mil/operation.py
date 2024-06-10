@@ -8,7 +8,6 @@ from typing import Any, Dict, Optional, Tuple
 import numpy as np
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 from . import SPACES
@@ -326,7 +325,7 @@ class Operation:
                 # Check type inference
                 if overwrite_output:
                     out_var._sym_type = sym_type
-                elif not is_compatible_type(sym_type, out_var.sym_type):
+                elif not types.is_compatible_type(sym_type, out_var.sym_type):
                     msg = "Output Var {} in op {} type changes with new input Vars"
                     raise ValueError(msg.format(out_var.name, self.name))
 
@@ -494,7 +493,10 @@ class Operation:
         def check_and_detach(v_new, v_old, op, no_check_var_types):
             # Check new var's sym_type is compatible with the
             # existing's sym_type.
-            if not is_compatible_type(v_new.sym_type, v_old.sym_type) and not no_check_var_types:
+            if (
+                not types.is_compatible_type(v_new.sym_type, v_old.sym_type)
+                and not no_check_var_types
+            ):
                 raise ValueError(
                     f"New var type `{v_new.sym_type}` not a "
                     f"subtype of existing var type `{v_old.sym_type}`."

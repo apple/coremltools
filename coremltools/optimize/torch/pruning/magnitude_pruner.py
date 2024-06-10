@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -301,12 +301,6 @@ class ModuleMagnitudePrunerConfig(_ModuleOptimizationConfig):
                     f"When n_m_ratio != None, the only allowed value of granularity is "
                     f"per_scalar."
                 )
-            if self.initial_sparsity is not None and self.initial_sparsity > 0.0:
-                raise ValueError(
-                    f"Received initial_sparsity = {self.initial_sparsity} and "
-                    f"n_m_ratio = {self.nm_ratio}. When n_m_ratio != None, the only allowed "
-                    f"value of initial_sparsity is 0."
-                )
 
 
 _ModuleTypeConfigType = _NewType(
@@ -456,7 +450,7 @@ class MagnitudePruner(_BasePrunerWithPruningMethod):
                 loss_fn = define_loss()  # define the loss function
 
                 # initialize pruner and configure it
-                # we only prune the first conv layer
+                # we only prune the fisrt conv layer
                 config = MagnitudePrunerConfig.from_dict(
                     {
                         "module_name_configs": {

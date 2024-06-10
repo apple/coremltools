@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -7,10 +7,14 @@ import copy
 
 import pytest
 import torch
-import torch.functional as F
 import torch.nn as nn
+import torch.nn.functional as F
 
-from coremltools.optimize.torch.palettization import DKMPalettizer, DKMPalettizerConfig
+from coremltools.optimize.torch.palettization import (
+    DKMPalettizer,
+    DKMPalettizerConfig,
+    ModuleDKMPalettizerConfig,
+)
 from coremltools.optimize.torch.palettization.palettization_config import (
     DEFAULT_PALETTIZATION_SCHEME,
 )
@@ -19,6 +23,16 @@ from coremltools.test.optimize.torch.palettization.palettization_utils import (
     _assert_changes_post_prepare,
 )
 
+REGEX_YAML = """
+module_name_configs:
+  conv\d+:
+    - n_bits: 4
+      weight_threshold: 400
+      palett_tau: 0.000004
+    - n_bits: 2
+      weight_threshold: 1000
+      palett_tau: 0.000004
+"""
 
 def _create_simple_model():
     class Net(nn.Module):
@@ -73,6 +87,82 @@ def test_inplace_false_attach_config(simple_model):
         DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc2)]["n_bits"],
         DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc2)]["cluster_dim"],
     )
+
+
+def test_empty_dict_for_config(simple_model):
+    ## This test should behave the same as that when a None config is passed to DKMPalettizer
+    config = DKMPalettizerConfig.from_dict({})
+    palettizer = DKMPalettizer(simple_model, config)
+    prepared_model = palettizer.prepare()
+
+    assert not hasattr(simple_model.conv1, "qconfig")
+    assert not hasattr(simple_model.conv2, "qconfig")
+    assert not hasattr(simple_model.fc1, "qconfig")
+    assert not hasattr(simple_model.fc2, "qconfig")
+    assert not hasattr(simple_model.fc3, "qconfig")
+
+    _assert_changes_post_attach(
+        prepared_model.conv2,
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.conv2)]["n_bits"],
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.conv2)]["cluster_dim"],
+    )
+    _assert_changes_post_attach(
+        prepared_model.fc1,
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc1)]["n_bits"],
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc1)]["cluster_dim"],
+    )
+    _assert_changes_post_attach(
+        prepared_model.fc2,
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc2)]["n_bits"],
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc2)]["cluster_dim"],
+    )
+
+
+@pytest.fixture(scope="session")
+def test_empty_yaml_for_config(simple_model, tmp_path_factory):
+    ## This test should behave the same as that when a None config is passed to DKMPalettizer
+    fname = tmp_path_factory.mktemp("test_configs") / "empty_config.yaml"
+    with open(fname, "w") as file:
+        file.write("\n")
+    config = DKMPalettizerConfig.from_yaml(fname)
+    palettizer = DKMPalettizer(simple_model, config)
+    prepared_model = palettizer.prepare()
+
+    assert not hasattr(simple_model.conv1, "qconfig")
+    assert not hasattr(simple_model.conv2, "qconfig")
+    assert not hasattr(simple_model.fc1, "qconfig")
+    assert not hasattr(simple_model.fc2, "qconfig")
+    assert not hasattr(simple_model.fc3, "qconfig")
+
+    _assert_changes_post_attach(
+        prepared_model.conv2,
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.conv2)]["n_bits"],
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.conv2)]["cluster_dim"],
+    )
+    _assert_changes_post_attach(
+        prepared_model.fc1,
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc1)]["n_bits"],
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc1)]["cluster_dim"],
+    )
+    _assert_changes_post_attach(
+        prepared_model.fc2,
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc2)]["n_bits"],
+        DEFAULT_PALETTIZATION_SCHEME[type(simple_model.fc2)]["cluster_dim"],
+    )
+
+
+@pytest.fixture(scope="session")
+def test_regex_module_name_configs(simple_model, tmp_path_factory):
+    fname = tmp_path_factory.mktemp("test_configs") / "regex_config.yaml"
+    with open(fname, "w") as file:
+        file.write(REGEX_YAML)
+    config = DKMPalettizerConfig.from_yaml(fname)
+    palettizer = DKMPalettizer(simple_model, config)
+    palettizer.prepare(inplace=True)
+
+    assert hasattr(simple_model.fc1, "qconfig") and simple_model.fc1.qconfig is None
+    _assert_changes_post_attach(simple_model.conv1, 4, 1)
+    _assert_changes_post_attach(simple_model.conv2, 2, 1)
 
 
 def test_attach_config_simple_model_uniform_palettization_config(simple_model):
@@ -273,7 +363,6 @@ def test_inplace_true_prepare_palettizer(simple_model):
         custom_config[nn.Linear]["cluster_dim"],
         custom_config[nn.Linear]["kmeans_max_iter"],
     )
-
 
 
 def test_prepare_palettizer_simple_model_custom_palettization_config_milestone_1(simple_model):
@@ -561,3 +650,26 @@ def test_inplace_true_prepare_palettizer(simple_model):
         custom_config[nn.Linear]["cluster_dim"],
         custom_config[nn.Linear]["kmeans_max_iter"],
     )
+
+
+def test_quantize_activations_flag(simple_model):
+    config = DKMPalettizerConfig.from_dict(
+        {"global_config": {"n_bits": 2, "cluster_dim": 1, "quantize_activations": True}}
+    )
+
+    palettizer = DKMPalettizer(simple_model, config)
+
+    palettizer.prepare()
+    for _ in range(3):
+        palettizer.step()
+
+    assert not isinstance(palettizer._model.conv2.activation_post_process, torch.nn.Identity)
+
+
+def test_deprecated_api():
+    with pytest.raises(DeprecationWarning):
+        config = DKMPalettizerConfig.from_dict({"global_config": {"partition_size": 100}})
+
+    config = DKMPalettizerConfig(global_config=ModuleDKMPalettizerConfig())
+    with pytest.raises(DeprecationWarning):
+        config.global_config.partition_size = 100

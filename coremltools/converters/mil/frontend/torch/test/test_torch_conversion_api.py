@@ -454,7 +454,7 @@ class TestPyTorchConverterExamples:
         assert isinstance(model, ct.converters.mil.Program)
 
     @staticmethod
-    def test_torch_classifier():
+    def _get_classifier_model():
         class Net(torch.nn.Module):
             def __init__(self):
                 super(Net, self).__init__()
@@ -475,23 +475,36 @@ class TestPyTorchConverterExamples:
         traced_model = torch.jit.trace(model, example_input)
         traced_model.eval()
 
+        return traced_model, example_input
+
+    @staticmethod
+    def _convert_classifier_model(traced_model, example_input, class_type, backend="mlprogram"):
+        label = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        if class_type == "str":
+            label = list(map(lambda x: str(x), label))
+        classifier_config = ct.ClassifierConfig(label)
+        return ct.convert(
+            traced_model,
+            source="pytorch",
+            convert_to=backend,
+            inputs=[
+                ct.TensorType(
+                    name="input",
+                    shape=example_input.shape,
+                    dtype=example_input.numpy().dtype,
+                )
+            ],
+            classifier_config=classifier_config,
+        )
+
+    @staticmethod
+    def test_torch_classifier():
         def _test_classifier(traced_model, example_input, class_type, backend):
-            label = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-            if class_type == "str":
-                label = list(map(lambda x: str(x), label))
-            classifier_config = ct.ClassifierConfig(label)
-            mlmodel = ct.convert(
+            mlmodel = TestPyTorchConverterExamples._convert_classifier_model(
                 traced_model,
-                source='pytorch',
-                convert_to=backend,
-                inputs=[
-                    ct.TensorType(
-                        name="input",
-                        shape=example_input.shape,
-                        dtype=example_input.numpy().dtype,
-                    )
-                ],
-                classifier_config=classifier_config
+                example_input,
+                class_type,
+                backend,
             )
             if ct.utils._is_macos():
                 coreml_out = mlmodel.predict({"input": example_input.detach().numpy()})
@@ -500,6 +513,7 @@ class TestPyTorchConverterExamples:
                 assert isinstance(coreml_out["classLabel"], key_type)
 
         for class_type in ("str", "int"):
+            traced_model, example_input = TestPyTorchConverterExamples._get_classifier_model()
             _test_classifier(traced_model, example_input, class_type, "neuralnetwork")
             if ct.utils._macos_version() >= (12, 0):
                 _test_classifier(traced_model, example_input, class_type, "mlprogram")

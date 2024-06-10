@@ -4,14 +4,13 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import atexit as _atexit
-from copy import deepcopy as _deepcopy
 import json
 import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
-from typing import Optional as _Optional
 import warnings as _warnings
-
+from copy import deepcopy as _deepcopy
+from typing import Optional as _Optional
 
 import numpy as _np
 import numpy as _numpy
@@ -28,11 +27,11 @@ from .utils import (
     _MLPACKAGE_AUTHOR_NAME,
     _MLPACKAGE_EXTENSION,
     _MODEL_FILE_NAME,
-    _WEIGHTS_DIR_NAME,
     _create_mlpackage,
     _has_custom_layer,
     _is_macos,
     _macos_version,
+    _try_get_weights_dir_path,
 )
 from .utils import load_spec as _load_spec
 from .utils import save_spec as _save_spec
@@ -139,22 +138,18 @@ class _FeatureDescription:
             yield f.name
 
 
-def _try_get_weights_dir_path(mlpackage_path):
-    """
-    Try to find the weights in mlpackage and return the path to the weights directory if found.
-    Return None if not found.
-    :param mlpackage_path: str, path to the mlpackage directory
-    :return: path to the weights directory inside the mlpackage directory
-    """
-    weights_dir = None
-    try:
-        if _ModelPackage.isValid(mlpackage_path):
-            item_info = _ModelPackage(mlpackage_path).findItemByNameAuthor(_WEIGHTS_DIR_NAME, _MLPACKAGE_AUTHOR_NAME)
-            if item_info is not None:
-                weights_dir = item_info.path()
-    except:
-        pass
-    return weights_dir
+class MLState:
+    def __init__(self, proxy):
+        """
+        Holds state for an MLModel.
+
+        This is an opaque object. Nothing can be done with it except pass it to MLModel.predict.
+
+        See Also
+        --------
+        ct.MLModel.predict
+        """
+        self.__proxy__ = proxy
 
 
 class MLModel:
@@ -167,7 +162,7 @@ class MLModel:
     - Model parameters: The set of parameters required to represent a specific instance of the model.
     - Metadata: Information about the origin, license, and author of the model.
 
-    With this class, you can inspect a CoreML model, modify metadata, and make
+    With this class, you can inspect a Core ML model, modify metadata, and make
     predictions for the purposes of testing (on select platforms).
 
     Examples
@@ -210,6 +205,9 @@ class MLModel:
         # if model type is mlprogram, i.e. spec.WhichOneof('Type') == "mlProgram", then:
         model = MLModel(spec, weights_dir=model.weights_dir)
 
+        # Load a non-default function from a multifunction .mlpackage
+        model = MLModel("MultifunctionModel.mlpackage", function_name="deep_features")
+
     See Also
     --------
     predict
@@ -223,6 +221,7 @@ class MLModel:
         skip_model_load=False,
         compute_units=_ComputeUnit.ALL,
         weights_dir=None,
+        function_name=None,
     ):
         """
         Construct an MLModel from an ``.mlmodel``.
@@ -250,7 +249,7 @@ class MLModel:
         mil_program: coremltools.converters.mil.Program
             Set to the MIL program object, if available.
             It is available whenever an MLModel object is constructed using
-            the unified converter API `coremltools.convert() <https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry>`_.
+            the unified converter API `coremltools.convert() <https://apple.github.io/coremltools/source/coremltools.converters.convert.html>`_.
 
         skip_model_load: bool
             Set to ``True`` to prevent Core ML Tools from calling into the Core ML framework
@@ -279,6 +278,10 @@ class MLModel:
             Path to the weight directory, required when loading an MLModel of type ``mlprogram``,
             from a spec object, such as when the argument ``model`` is of type ``Model_pb2``.
 
+        function_name : str
+            The name of the function from ``model`` to load.
+            If not provided, ``function_name`` will be set to the ``defaultFunctionName`` in the proto.
+
         Notes
         -----
         Internally this maintains the following:
@@ -296,8 +299,8 @@ class MLModel:
         --------
         .. sourcecode:: python
 
-			loaded_model = MLModel('my_model.mlmodel')
-			loaded_model = MLModel("my_model.mlpackage")
+            loaded_model = MLModel("my_model.mlmodel")
+            loaded_model = MLModel("my_model.mlpackage")
 
         """
 
@@ -340,6 +343,7 @@ class MLModel:
                 'coremltools.ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
             )
         self.compute_unit = compute_units
+        self.function_name = function_name
 
         self.is_package = False
         self.is_temp_package = False
@@ -395,12 +399,24 @@ class MLModel:
         if self.is_package and self.is_temp_package:
             _atexit.register(cleanup, self.package_path)
 
+        # If function_name is not passed, self.function_name defaults to defaultFunctionName in the proto.
+        default_function_name = self._spec.description.defaultFunctionName
+        if self.function_name is None and len(default_function_name) > 0:
+            self.function_name = default_function_name
 
-    def _get_proxy_and_spec(self,
-                            filename: str,
-                            compute_units: _ComputeUnit,
-                            skip_model_load: _Optional[bool] = False):
+        if self.function_name is not None:
+            if not self._is_multifunction() and self.function_name != "main":
+                raise ValueError('function_name must be "main" for non multifunction model')
 
+        # Updated self._model_input_names_set based on self.function_name.
+        # self._model_input_names_set defines the allowed input keys for the data dictionary passed to self.predict().
+        if self.function_name is not None and self._is_multifunction():
+            f = self._get_function_description(self.function_name)
+            self._model_input_names_set = set([i.name for i in f.input])
+
+    def _get_proxy_and_spec(
+        self, filename: str, compute_units: _ComputeUnit, skip_model_load: _Optional[bool] = False
+    ):
         filename = _os.path.expanduser(filename)
         specification = _load_spec(filename)
 
@@ -413,8 +429,14 @@ class MLModel:
                 # version of the engine can support so we'll not try to have a proxy object
                 return None, specification, None
 
+            function_name = "" if self.function_name is None else self.function_name
+
             try:
-                return _MLModelProxy(filename, compute_units.name), specification, None
+                return (
+                    _MLModelProxy(filename, compute_units.name, function_name),
+                    specification,
+                    None,
+                )
             except RuntimeError as e:
                 _warnings.warn(
                     "You will not be able to run predict() on this Core ML model."
@@ -494,8 +516,8 @@ class MLModel:
         --------
         .. sourcecode:: python
 
-			model.save('my_model_file.mlmodel')
-			loaded_model = MLModel('my_model_file.mlmodel')
+            model.save("my_model_file.mlmodel")
+            loaded_model = MLModel("my_model_file.mlmodel")
 
         """
         save_path = _os.path.expanduser(save_path)
@@ -572,13 +594,13 @@ class MLModel:
         --------
         .. sourcecode:: python
 
-			spec = model.get_spec()
+            spec = model.get_spec()
 
         """
         return _deepcopy(self._spec)
 
 
-    def predict(self, data):
+    def predict(self, data, state: _Optional[MLState] = None):
         """
         Return predictions for the model.
 
@@ -590,6 +612,9 @@ class MLModel:
 
             The following dictionary values types are acceptable: list, array, numpy.ndarray, tensorflow.Tensor
             and torch.Tensor.
+
+        state : MLState
+            Optional state object as returned by ``make_state()``.
 
         Returns
         -------
@@ -603,12 +628,14 @@ class MLModel:
         --------
         .. sourcecode:: python
 
-			data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
-			predictions = model.predict(data)
+            data = {"bedroom": 1.0, "bath": 1.0, "size": 1240}
+            predictions = model.predict(data)
 
-			data = [ {'bedroom': 1.0, 'bath': 1.0, 'size': 1240},
-					 {'bedroom': 4.0, 'bath': 2.5, 'size': 2400} ]
-			batch_predictions = model.predict(data)
+            data = [
+                {"bedroom": 1.0, "bath": 1.0, "size": 1240},
+                {"bedroom": 4.0, "bath": 2.5, "size": 2400},
+            ]
+            batch_predictions = model.predict(data)
 
         """
         def verify_and_convert_input_dict(d):
@@ -624,7 +651,10 @@ class MLModel:
         MLModel._check_predict_data(data)
 
         if self.__proxy__:
-            return MLModel._get_predictions(self.__proxy__, verify_and_convert_input_dict, data)
+            return self._get_predictions(self.__proxy__,
+                                         verify_and_convert_input_dict,
+                                         data,
+                                         state)
         else:   # Error case
             if _macos_version() < (10, 13):
                 raise Exception(
@@ -655,6 +685,7 @@ class MLModel:
                 else:
                     raise Exception("Unable to load CoreML.framework. Cannot make predictions.")
 
+
     @staticmethod
     def _check_predict_data(data):
         if type(data) not in (list, dict):
@@ -664,15 +695,64 @@ class MLModel:
 
 
     @staticmethod
-    def _get_predictions(proxy, preprocess_method, data):
+    def _get_predictions(proxy, preprocess_method, data, state):
         if type(data) == dict:
             preprocess_method(data)
-            return proxy.predict(data)
+            state = None if state is None else state.__proxy__
+            return proxy.predict(data, state)
         else:
             assert type(data) == list
+            assert state is None, "State can only be used for unbatched predictions"
             for i in data:
                 preprocess_method(i)
             return proxy.batchPredict(data)
+
+    def _is_stateful(self) -> bool:
+        model_desc = self._spec.description
+
+        # For a single function model, we check if len(state) > 0
+        if len(model_desc.functions) == 0:
+            return len(model_desc.state) > 0
+
+        # For a multifunction model, we first get the corresponding function description,
+        # and check the state field.
+        f = list(filter(lambda f: f.name == self.function_name, model_desc.functions))
+        return len(f.state) > 0
+
+    def _is_multifunction(self) -> bool:
+        return len(self._spec.description.functions) > 0
+
+    def _get_function_description(self, function_name: str) -> _proto.Model_pb2.FunctionDescription:
+        f = list(filter(lambda f: f.name == function_name, self._spec.description.functions))
+
+        if len(f) == 0:
+            raise ValueError(f"function_name {function_name} not found in the model.")
+
+        assert len(f) == 1, f"Invalid proto: two functions with the same name {function_name}."
+
+        return f[0]
+
+    def make_state(self) -> MLState:
+        """
+        Returns a new state object, which can be passed to the ``predict`` method.
+
+        State functionality is only supported on macOS 15+
+
+        Examples
+        --------
+        .. sourcecode:: python
+
+            state = model.make_state()
+            predictions = model.predict(x, state)
+
+        See Also
+        --------
+        predict
+        """
+        if not _is_macos() or _macos_version() < (15, 0):
+            raise Exception("State functionality is only supported on macOS 15+")
+
+        return MLState(self.__proxy__.newState())
 
 
     def _input_has_infinite_upper_bound(self) -> bool:
@@ -714,7 +794,7 @@ class MLModel:
         """
         Get a deep copy of the MIL program object, if available.
         It's available whenever an MLModel object is constructed using
-        the unified converter API [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert).
+        the unified converter API [``coremltools.convert()``](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert).
 
         Returns
         -------
@@ -724,7 +804,7 @@ class MLModel:
         --------
         .. sourcecode:: python
 
-			mil_prog = model._get_mil_internal()
+            mil_prog = model._get_mil_internal()
 
         """
         return _deepcopy(self._mil_program)

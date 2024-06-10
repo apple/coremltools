@@ -9,6 +9,7 @@ import unittest
 
 import numpy as np
 import pytest
+import torch
 
 import coremltools as ct
 import coremltools.optimize as cto
@@ -37,6 +38,9 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
 )
 from coremltools.models.utils import _macos_version
+from coremltools.test.optimize.coreml.test_post_training_quantization import (
+    get_test_model_and_data_complex,
+)
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
@@ -5661,6 +5665,26 @@ class TestSanitizeInputOutputNames:
         relu_layer = spec.neuralNetwork.layers[0]
         assert relu_layer.output[0] == "relu/1"
 
+    @staticmethod
+    def test_sanitize_input_named_state():
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((2, 3), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state):
+            return mb.read_state(input=state)
+
+        _, _, block = apply_pass_and_basic_check(
+            prog,
+            "common::sanitize_input_output_names",
+            skip_input_name_check=True,
+        )
+
+        assert len(block.inputs) == 1
+        assert "state_workaround" in block.inputs
+        assert block.inputs["state_workaround"].name == "state_workaround"
 
 class TestUpdateOutputDtypes:
     def test_single_output(self):
@@ -5821,8 +5845,10 @@ class TestFuseLayerNormOrInstanceNorm:
             prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
         )
 
-    @pytest.mark.parametrize("with_affine", [True, False])
-    def test_ane_layer_norm(self, with_affine):
+    @pytest.mark.parametrize(
+        "with_affine, constexpr_beta", itertools.product([True, False], [True, False])
+    )
+    def test_ane_layer_norm(self, with_affine, constexpr_beta):
         """
         Detect layer norm pattern, found in models based on ml-ane-transformers.
 
@@ -5836,7 +5862,7 @@ class TestFuseLayerNormOrInstanceNorm:
         """
         shape = (3, 5, 1, 6)
 
-        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)], opset_version=ct.target.iOS16)
         def prog(x):
             x1 = mb.reduce_mean(x=x, axes=[1], keep_dims=True) # mean
             x2 = mb.sub(x=x, y=x1) # x - mean
@@ -5847,7 +5873,14 @@ class TestFuseLayerNormOrInstanceNorm:
             y = mb.mul(x=x2, y=x6) # (x - mean) * rsqrt(variance + eps)
 
             if with_affine:
-                y = mb.add(x=y, y=np.random.rand(1, shape[1], 1, 1))
+                beta = np.random.rand(1, shape[1], 1, 1)
+                if constexpr_beta:
+                    beta = mb.constexpr_lut_to_dense(
+                        lut=np.arange(2, dtype=np.float32),
+                        indices=np.ones((int(np.ceil(np.prod(beta.shape) / 8)),), dtype=np.uint8),
+                        shape=np.array(beta.shape, dtype=np.uint32),
+                    )
+                y = mb.add(x=y, y=beta)
                 y = mb.mul(x=y, y=np.random.rand(1, shape[1], 1, 1))
 
             return y
@@ -5855,7 +5888,7 @@ class TestFuseLayerNormOrInstanceNorm:
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "common::fuse_layernorm_or_instancenorm"
         )
-        assert get_op_types_in_program(prev_prog) == [
+        prev_expected_ops = [
             "reduce_mean",
             "sub",
             "mul",
@@ -5863,10 +5896,22 @@ class TestFuseLayerNormOrInstanceNorm:
             "add",
             "rsqrt",
             "mul",
-        ] + (["add", "mul"] if with_affine else [])
-        assert get_op_types_in_program(prog) == ["layer_norm"]
+        ]
+        if with_affine:
+            if constexpr_beta:
+                prev_expected_ops.append("constexpr_lut_to_dense")
+            prev_expected_ops += ["add", "mul"]
+
+        assert get_op_types_in_program(prev_prog) == prev_expected_ops
+        if with_affine and constexpr_beta:
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            assert get_op_types_in_program(prog) == ["layer_norm"]
         assert_model_is_valid(
-            prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
+            prog,
+            {"x": shape},
+            expected_output_shapes={block.outputs[0].name: shape},
+            minimum_deployment_target=ct.target.iOS16,
         )
 
     @pytest.mark.parametrize("with_affine", [True, False])
@@ -6994,3 +7039,76 @@ class TestGraphPassScopePreservation:
         assert transpose_op.scopes[ScopeSource.TORCHSCRIPT_MODULE_TYPE] == [
             "module_2",
         ]
+
+
+class TestRandomizeWeights:
+    @staticmethod
+    def assert_weights_changed(prog1, prog2):
+        changed = False
+        const_ops_before = prog1.find_ops(op_type="const")
+        const_ops_after = prog2.find_ops(op_type="const")
+        assert len(const_ops_before) == len(const_ops_after)
+        for i, op in enumerate(const_ops_before):
+            weight_before = op.outputs[0].val
+            weight_after = const_ops_after[i].outputs[0].val
+            if not np.array_equal(weight_before, weight_after):
+                changed = True
+                break
+        assert changed
+
+    @staticmethod
+    def test_randomize_weights_pass():
+        """
+        Test the WeightRandomizer graph pass
+
+                     const
+                       |
+                       v
+        input -----> matmul -----> out
+
+        const needs to large enough that should_use_weight_file==True
+
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 10))])
+        def prog(x):
+            weights_val = np.random.rand(2, 10).T.astype(np.float32)
+            weights = mb.const(val=weights_val)
+
+            return mb.matmul(x=x, y=weights)
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::WeightRandomizer")
+        # check ops haven't changed
+        assert get_op_types_in_program(prog) == ["matmul"]
+
+        # check the weights have changed
+        TestRandomizeWeights.assert_weights_changed(prev_prog, prog)
+
+    @staticmethod
+    def test_utils_randomize_weights():
+        """
+        Test ct.models.utils.randomize_weights method end to end
+        """
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            compute_precision=ct.precision.FLOAT32,
+        )
+
+        # randomize weights
+        randomized_mlmodel = ct.models.utils.randomize_weights(mlmodel)
+
+        # get before/after mil
+        prog_before = mlmodel._mil_program
+        prog_after = randomized_mlmodel._mil_program
+
+        # check ops haven't changed
+        assert get_op_types_in_program(prog_before) == get_op_types_in_program(prog_after)
+        assert prog_before.find_ops(op_type="conv")[1].weight.op.op_type == "const"
+        assert prog_after.find_ops(op_type="conv")[1].weight.op.op_type == "const"
+
+        # check the weights have changed
+        TestRandomizeWeights.assert_weights_changed(prog_before, prog_after)

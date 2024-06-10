@@ -165,9 +165,12 @@ def _adjust_main_outputs(func):
     new_outputs = []
     for output_var in func.outputs:
         output_type = output_var.sym_type
+        # classify outputs contains type int64 output variables, which should not be casted.
         if (
-            types.is_tensor(output_type) or types.is_scalar(output_type)
-        ) and output_var.dtype not in _IO_SUPPORTED_TYPES:
+            (types.is_tensor(output_type) or types.is_scalar(output_type))
+            and output_var.dtype not in _IO_SUPPORTED_TYPES
+            and output_var.op.op_type != "classify"
+        ):
             output_dtype_str = types.builtin_to_string(output_var.dtype)
             target_dtype = "int32" if types.is_int(output_var.dtype) else "fp32"
             logger.warning(

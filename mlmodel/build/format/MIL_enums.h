@@ -4,6 +4,8 @@ enum MLDataType: int {
     MLDataTypeUNUSED_TYPE = 0,
     MLDataTypeBOOL = 1,
     MLDataTypeSTRING = 2,
+    MLDataTypeFLOAT8E4M3FN = 40,
+    MLDataTypeFLOAT8E5M2 = 41,
     MLDataTypeFLOAT16 = 10,
     MLDataTypeFLOAT32 = 11,
     MLDataTypeFLOAT64 = 12,
@@ -12,10 +14,16 @@ enum MLDataType: int {
     MLDataTypeINT16 = 22,
     MLDataTypeINT32 = 23,
     MLDataTypeINT64 = 24,
+    MLDataTypeINT4 = 25,
     MLDataTypeUINT8 = 31,
     MLDataTypeUINT16 = 32,
     MLDataTypeUINT32 = 33,
     MLDataTypeUINT64 = 34,
+    MLDataTypeUINT4 = 35,
+    MLDataTypeUINT2 = 36,
+    MLDataTypeUINT1 = 37,
+    MLDataTypeUINT6 = 38,
+    MLDataTypeUINT3 = 39,
 };
 
 enum MLBindingbinding: int {
@@ -42,6 +50,7 @@ enum MLValueTypetype: int {
     MLValueTypetype_listType = 2,
     MLValueTypetype_tupleType = 3,
     MLValueTypetype_dictionaryType = 4,
+    MLValueTypetype_stateType = 5,
     MLValueTypetype_NOT_SET = 0,
 };
 
@@ -56,6 +65,8 @@ static const char * MLValueTypetype_Name(MLValueTypetype x) {
             return "MLValueTypetype_tupleType";
         case MLValueTypetype_dictionaryType:
             return "MLValueTypetype_dictionaryType";
+        case MLValueTypetype_stateType:
+            return "MLValueTypetype_stateType";
         case MLValueTypetype_NOT_SET:
             return "INVALID";
     }

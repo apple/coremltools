@@ -24,16 +24,23 @@ scipy==1.9.2; python_version == '3.11'
 six
 sympy > 1.6
 gast==0.4.0
-torch==2.2.0
-torchaudio==2.2.0
-torchvision==0.17.0
+torch==2.2.0; platform_machine != "arm64"
+torch==2.3.0; platform_machine == "arm64"
+executorch==0.2.0; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
+torchaudio==2.2.0; platform_machine != "arm64"
+torchaudio==2.3.0; platform_machine == "arm64"
+torchvision==0.17.0; platform_machine != "arm64"
+torchvision==0.18.0; platform_machine == "arm64"
+torchsr==1.0.4; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
+timm==0.6.13; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
 xgboost==1.4.2; platform_machine != "arm64"
 mock
 wrapt
 tqdm
 pytest-timeout
 
-transformers==4.26.0
+transformers==4.26.0; platform_machine != "arm64"
+transformers==4.38.2; platform_machine == "arm64"
 
 # coremltools.optimize.torch
 filelock==3.6.0

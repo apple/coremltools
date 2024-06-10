@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -27,6 +27,18 @@ _`LinearQuantizer`
 
 .. autoclass::  coremltools.optimize.torch.quantization.QuantizationScheme
 
+_`PostTrainingQuantization`
+============================
+
+.. autoclass:: coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig
+    :members: from_dict, as_dict, from_yaml
+
+.. autoclass:: coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig
+    :members: set_global, set_module_type, set_module_name, from_dict, as_dict, from_yaml
+
+.. autoclass:: coremltools.optimize.torch.quantization.PostTrainingQuantizer
+    :members: compress
+
 """
 
 from .quantization_config import (
@@ -36,3 +48,8 @@ from .quantization_config import (
     QuantizationScheme,
 )
 from .quantizer import LinearQuantizer
+from .post_training_quantization import (
+    ModulePostTrainingQuantizerConfig,
+    PostTrainingQuantizer,
+    PostTrainingQuantizerConfig,
+)

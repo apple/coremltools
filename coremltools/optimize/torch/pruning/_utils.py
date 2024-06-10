@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -9,8 +9,11 @@ from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import cast as _cast
 
-import numpy as _np
 import torch as _torch
+
+from coremltools.optimize.torch._utils.metadata_utils import (
+    CompressionMetadata as _CompressionMetadata,
+)
 
 logger = _logging.getLogger(__name__)
 
@@ -70,11 +73,6 @@ def magnitude_ranked_mask(
             )
             ch_shape = magnitude_map.shape[0]
             assert ch_shape % block_size == 0
-
-        if block_size > ch_shape / 2:
-            raise ValueError(
-                f"Pruning block size ({block_size}) can be at most half the number of output channels ({ch_shape}/2={ch_shape/2})"
-            )
 
         # Reshape to expose the "block" sub-axis
         s = list(magnitude_map.shape)  # block exposed shape
@@ -188,63 +186,6 @@ def unstructured_sparsity(weight: _torch.Tensor) -> _torch.Tensor:
     return weight.eq(0.0).float().mean().item()
 
 
-def unstructured_sparsity_matrix(
-    name: str, weight: _torch.Tensor, block_size: int
-) -> _torch.Tensor:
-    import matplotlib
-
-    matplotlib.use("agg")
-    import matplotlib.pyplot as plt
-
-    rank = len(weight.shape)
-
-    weight = weight.clone().detach()
-
-    if block_size is not None and block_size > 1:
-        C_out, C_in = weight.shape[:2]
-        assert C_out % block_size == 0
-        if rank > 2:
-            weight = weight.flatten(2).view(C_out // block_size, block_size, C_in, -1)
-        else:
-            weight = weight.view(C_out // 2, 2, C_in)
-
-        sparsity_matrix = weight.sum(1).eq(0.0).float()
-    else:
-        sparsity_matrix = weight.eq(0.0).float()
-
-    if rank > 2:
-        max_kernel_support = _np.prod(sparsity_matrix.shape[2:])
-        sparsity_matrix = sparsity_matrix.sum(dim=tuple(range(2, len(sparsity_matrix.shape))))
-    else:
-        max_kernel_support = 1
-
-    f = plt.figure()
-    ax = f.gca()
-    ax.imshow(
-        max_kernel_support - sparsity_matrix.cpu().numpy(),
-        cmap="jet",
-        interpolation="nearest",
-        vmin=0,
-        vmax=max_kernel_support,
-    )
-    ax.set_xlabel("Input channels index")
-    ax.set_ylabel("Output channels index")
-    sparsity_type = (
-        f"Block-{block_size}" if block_size is not None and block_size > 1 else "Unstructured"
-    )
-    ax.set_title(f"{sparsity_type} Sparsity Matrix for Layer {name}")
-    ax.set_xticks([])
-    ax.set_yticks([])
-    f.canvas.draw()
-
-    im = _np.frombuffer(f.canvas.tostring_rgb(), dtype=_np.uint8).copy()
-    im = im.reshape((1,) + f.canvas.get_width_height()[::-1] + (3,))
-
-    f.clear()
-    plt.close(f)
-    return _torch.from_numpy(im)
-
-
 def get_global_sparsity_summaries(
     layer_sparsities: _List[_torch.Tensor], layer_numel: _List[int]
 ) -> float:
@@ -273,3 +214,10 @@ def validate_allowed_granularity_values(instance, attribute, value):
             f"Allowed values for granularity are: {', '.join(allowed_values)}. "
             f"Received: {value}"
         )
+
+
+def register_compression_metadata(submodule, config):
+    param_name = config.param_name
+    metadata = _CompressionMetadata(param_name)
+    metadata.compression_type = ["pruning"]
+    metadata.register(submodule)

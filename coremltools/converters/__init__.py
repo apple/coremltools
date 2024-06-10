@@ -4,16 +4,15 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 # expose directories as imports
-from . import libsvm
-from . import sklearn
-from . import xgboost
+from . import libsvm, sklearn, xgboost
 from ._converters_entry import convert
 from .mil import (
     ClassifierConfig,
     ColorLayout,
-    TensorType,
+    EnumeratedShapes,
     ImageType,
     RangeDim,
     Shape,
-    EnumeratedShapes,
+    StateType,
+    TensorType,
 )

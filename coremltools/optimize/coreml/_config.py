@@ -3,18 +3,29 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from __future__ import annotations
+
 import sys
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from typing import IO, Any, Callable, Dict, Optional, Tuple, Union
+from enum import Enum
+from typing import IO, Any, Callable, Dict, List, Optional, Tuple, Union
 
 import cattrs
 import numpy as np
 import yaml
 from attrs import define, field, validators
 
-from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil import operation, types
 from coremltools.converters.mil.mil.types.type_mapping import is_builtin, numpy_type_to_builtin_type
+
+
+# TODO: Share the enum between cto.coreml and cto.torch (rdar://124409664).
+class CompressionGranularity(Enum):
+    PER_TENSOR = 1
+    PER_GROUPED_CHANNEL = 2
+    PER_CHANNEL = 3
+    PER_BLOCK = 4
 
 
 class OpCompressorConfig(ABC):
@@ -41,9 +52,80 @@ def _check_weight_threshold(instance, attribute, value):
     if value is not None and value < 0:
         raise ValueError(f"\"weight_threshold\" must be a non-negative integer. Got {value}.")
 
+def _normalize_dtype(dtype: Union[str, type]) -> type:
+    if isinstance(dtype, str):
+        try:
+            dtype = types.string_to_builtin(dtype)
+        except KeyError:
+            raise ValueError(f"Invalid dtype {dtype}. Only support int8/uint8/int4/uint4.")
+    elif np.issubdtype(dtype, np.integer):
+        dtype = types.numpy_type_to_builtin_type(dtype)
+    elif not types.is_builtin(dtype):
+        raise ValueError(f"dtype={dtype} is unsupported for OpLinearQuantizerConfig.")
+    return dtype
+
+
 """
 Linear Quantization configuration
 """
+
+
+def _normalize_granularity(
+    granularity: Union[str, CompressionGranularity]
+) -> CompressionGranularity:
+    if isinstance(granularity, CompressionGranularity):
+        return granularity
+
+    if granularity == "per_tensor":
+        return CompressionGranularity.PER_TENSOR
+    elif granularity == "per_grouped_channel":
+        return CompressionGranularity.PER_GROUPED_CHANNEL
+    elif granularity == "per_channel":
+        return CompressionGranularity.PER_CHANNEL
+    elif granularity == "per_block":
+        return CompressionGranularity.PER_BLOCK
+    else:
+        raise ValueError(f"Invalid granularity={granularity}")
+
+
+def check_block_size(instance, attr, block_size):
+    """
+    Validator for block_size.
+
+    Note the `instance` and `attr` are not used but required by attrs interface.
+    """
+    if block_size is not None:
+        if isinstance(block_size, int):
+            if block_size < 0:
+                raise ValueError(
+                    f"The block_size must be non-negative values, but got {block_size}"
+                )
+        elif isinstance(block_size, (list, tuple)):
+            for it_block_size in block_size:
+                if not isinstance(it_block_size, int) or it_block_size < 0:
+                    raise ValueError("All values in block_size must be non-negative values.")
+        else:
+            raise ValueError(
+                f"The block_size should be int or list/tuple of int, but got {type(block_size)}."
+            )
+
+
+def _structure_block_size_type(block_size, dtype):
+    """
+    The block_size's type Union[int, List[int], Tuple[int, ...]] need a custom structure hook
+    for attrs yaml conversion.
+
+    Note the `dtype` parameter is not used but required by attrs interface.
+    """
+    if isinstance(block_size, int):
+        return block_size
+    else:
+        if not isinstance(block_size, (list, tuple)):
+            raise ValueError(
+                f'"block_size" must be int or list/tuple of int. Got {type(block_size)}'
+            )
+        return block_size
+
 
 @define
 class OpLinearQuantizerConfig(OpCompressorConfig):
@@ -59,30 +141,97 @@ class OpLinearQuantizerConfig(OpCompressorConfig):
         * ``"linear"``: Input data are quantized in the range
           :math:`[min(w_r), max(w_r)]`.
 
-    dtype: np.generic or mil.type type
-        Determines the quantized data type (int8/uint8).
+    dtype: str or np.generic or mil.type
+        Determines the quantized data type (int8/uint8/int4/uint4).
 
         * The allowed values are:
             * ``np.int8`` (the default)
             * ``np.uint8``
             * ``coremltools.converters.mil.mil.types.int8``
             * ``coremltools.converters.mil.mil.types.uint8``
+            * ``coremltools.converters.mil.mil.types.int4``
+            * ``coremltools.converters.mil.mil.types.uint4``
+            * strings to specify dtype such as "int4", "uint4", etc
+
+    granularity: str
+        Granularity for quantization.
+
+        * ``"per_tensor"``
+        * ``"per_channel"`` (default)
+        * ``"per_block"``
+
+    block_size: int or List/Tuple of int
+
+        * Only effective when granularity is set to "per_block".
+        * Determines size of the block, where all elements in a block share the same scale and zero_point.
+        * If it's int, the block size on each axis is auto determined for best performance. More specifially,
+          the block will have ``block_size`` on input axis and ``1`` on output axis, where input/output
+          axis is auto picked based on op type.
+          For example, if weight has shape [Cout, Cin], the block will have shape [1, block_size];
+          If the weight has shape [C_out, C_in, KH, KW], the block will has shape [1, block_size, KH, KW].
+        * If it's a tuple of int, it must have the same rank as the weight, which specify the block size on each axis.
+        * The value 0 means block size equal to dim size at the corresponding axis.
+        * If the dim size on any axis is not divisible by the corresponding block size, the op will be skipped.
+
+        The tuple input of ``block_size`` provides users fully control about the block.
+        Here are some examples about how different granularities could be achieved:
+
+        Given the weight of a 2D Conv which has shape [C_out, C_in, KH, KW]:
+        |------------------------|--------------------------|---------------------------|----------------------------|
+        |      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |
+        |------------------------|--------------------------|---------------------------|----------------------------|
+        | Per Tensor             | 0                        | 0                         | [C_out, C_in, KH, KW]      |
+        | Per Input Channel      | 0                        | 1                         | [C_out, 1, KH, KW]         |
+        | Per Output Channel     | 1                        | 0                         | [1, C_in, KH, KW]          |
+        | Per Block              | 1                        | 32                        | [1, 32, KH, KW]            |
+        |------------------------|--------------------------|---------------------------|----------------------------|
+
+        Given the weight of a linear layer which has shape [C_out, C_in]:
+        |------------------------|--------------------------|---------------------------|----------------------------|
+        |      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |
+        |------------------------|--------------------------|---------------------------|----------------------------|
+        | Per Tensor             | 0                        | 0                         | [C_out, C_in]              |
+        | Per Input Channel      | 0                        | 1                         | [C_out, 1]                 |
+        | Per Output Channel     | 1                        | 0                         | [1, C_in]                  |
+        | Per Block              | 1                        | 32                        | [1, 32]                    |
+        |------------------------|--------------------------|---------------------------|----------------------------|
+
+        Given the weight of matmul's y (transpose_y=False)  which has shape [..., C_in, C_out]:
+        |------------------------|--------------------------|---------------------------|----------------------------|
+        |      Granularity       | output_channel_block_size| input_channel_block_size  | Weight Shape of Each Block |
+        |------------------------|--------------------------|---------------------------|----------------------------|
+        | Per Tensor             | 0                        | 0                         | [..., C_in, C_out]         |
+        | Per Input Channel      | 0                        | 1                         | [..., 1, C_out]            |
+        | Per Output Channel     | 1                        | 0                         | [..., C_in, 1]             |
+        | Per Block              | 1                        | 32                        | [..., 32, 1]               |
+        |------------------------|--------------------------|---------------------------|----------------------------|
 
     weight_threshold: int
         The size threshold, above which weights are pruned.
         That is, a weight tensor is pruned only if its total number of elements are greater than ``weight_threshold``.
+        Default to 2048.
 
         For example, if ``weight_threshold = 1024`` and a weight tensor is of shape ``[10, 20, 1, 1]``, hence ``200``
         elements, it will not be pruned.
-
-        * If not provided, it will be set to ``2048``, in which weights bigger than ``2048`` elements are compressed.
     """
     mode: str = field(default="linear_symmetric", validator=validators.instance_of(str))
-    dtype: type = field(default=np.int8, validator=validators.instance_of(type))
+    dtype: Union[str, type] = field(default=types.int8, converter=_normalize_dtype)
+    granularity: Union[str, CompressionGranularity] = field(
+        default=CompressionGranularity.PER_CHANNEL,
+        validator=validators.instance_of(CompressionGranularity),
+        converter=_normalize_granularity,
+    )
+    block_size: Union[int, List[int], Tuple[int, ...]] = field(
+        default=32, validator=check_block_size
+    )
     weight_threshold: Optional[int] = field(default=2048, validator=validators.optional([validators.instance_of(int), _check_weight_threshold]))
 
     _WEIGHT_AFFINE_QUANTIZATION_MODES = ("LINEAR_SYMMETRIC", "LINEAR")
-    _WEIGHT_AFFINE_DTYPES = (types.int8, types.uint8)
+    _VALID_GRANULARITIES = (
+        CompressionGranularity.PER_TENSOR,
+        CompressionGranularity.PER_CHANNEL,
+        CompressionGranularity.PER_BLOCK,
+    )
 
     @mode.validator
     def check_mode(self, attr, mode):
@@ -91,36 +240,38 @@ class OpLinearQuantizerConfig(OpCompressorConfig):
 
     @dtype.validator
     def check_dtype(self, attr, dtype):
-        msg = f"dtype={dtype} is unsupported for affine_quantize_weights."
-        if not is_builtin(dtype):
-            try:
-                dtype = numpy_type_to_builtin_type(dtype)
-            except TypeError:
-                raise ValueError(msg)
+        if not types.is_builtin(dtype):
+            raise ValueError(f"Invalid dtype. Should be builtin dtype, but got {type(dtype)}")
+        if not (types.is_int(dtype) and dtype.get_bitwidth() in {4, 8}):
+            raise ValueError(
+                f"Invalid dtype. Should be int4/8 or uint4/8, but got {types.builtin_to_string(dtype)}"
+            )
 
-        if dtype not in self._WEIGHT_AFFINE_DTYPES:
-            raise ValueError(msg)
+    @granularity.validator
+    def check_granularity(self, attr, granularity):
+        if granularity not in self._VALID_GRANULARITIES:
+            raise ValueError(
+                f'"granularity" must be one of {self._VALID_GRANULARITIES}, but got {granularity}'
+            )
 
     def __attrs_post_init__(self):
         self.mode = self.mode.upper()
         if not is_builtin(self.dtype):
             self.dtype = numpy_type_to_builtin_type(self.dtype)
 
-    @classmethod
-    def _from_dict(cls, config_dict: Dict[str, Any]) -> "OpLinearQuantizerConfig":
-        def _structure_type(value, dtype):
-            if isinstance(value, type):
-                return value
-            else:
-                if not isinstance(value, str) or value not in ("int8", "uint8"):
-                    raise ValueError(
-                        f'"dtype" must be type of type or str ["int8", "uint8"]. Got {value}'
-                    )
-                return getattr(np, value)
+        # Set nbits and signed for backward compatibility with existing code.
+        if types.is_int(self.dtype):
+            self.nbits = self.dtype.get_bitwidth()
+            self.signed = not self.dtype.is_unsigned()
 
+    @classmethod
+    def _from_dict(cls, config_dict: Dict[str, Any]) -> OpLinearQuantizerConfig:
         converter = cattrs.Converter(forbid_extra_keys=True)
-        converter.register_structure_hook(type, _structure_type)
+        converter.register_structure_hook(
+            Union[int, List[int], Tuple[int, ...]], _structure_block_size_type
+        )
         return converter.structure(config_dict, cls)
+
 
 """
 Pruner configurations
@@ -428,7 +579,7 @@ class OpPalettizerConfig(OpCompressorConfig):
     nbits: int
         Number of bits per weight. Required for ``kmeans`` or ``uniform`` mode, but must
         not be set for ``unique`` or ``custom`` mode. A LUT would have
-        2\ :sup:`nbits` entries, where `nbits` can be ``{1, 2, 4, 6, 8}``.
+        2\ :sup:`nbits` entries, where `nbits` can be ``{1, 2, 3, 4, 6, 8}``.
 
     mode: str
         Determine how the LUT is constructed by specifying one of the following:
@@ -514,6 +665,24 @@ class OpPalettizerConfig(OpCompressorConfig):
 
                return lut, indices
 
+    granularity: str
+        Granularity for quantization.
+        * ``"per_tensor"`` (default)
+        * ``"per_grouped_channel"``
+
+    group_size: int
+        * Specify the number of channels in a group. Only effective when granularity is per_grouped_channel.
+        * Default to 32.
+
+    channel_axis: Optional[int] = None
+        * Specify the channel axis to form a group of channels. Only effective when granularity is per_grouped_channel.
+        * Default to None, where the axis is automatically picked based on op type.
+
+    num_kmeans_workers: int
+        * Number of worker processes to use for performing k-means. It is recommended to use more
+          than one worker process to parallelize the clustering, especially when multiple CPUs are available.
+        * Default to 1.
+
     weight_threshold: int
         The size threshold, above which weights are pruned.
         That is, a weight tensor is pruned only if its total number of elements are greater than ``weight_threshold``.
@@ -526,10 +695,22 @@ class OpPalettizerConfig(OpCompressorConfig):
     mode: str = field(default="kmeans", validator=validators.instance_of(str))
     nbits: Optional[int] = field(default=None)
     lut_function: Optional[Callable] = field(default=None)
+    granularity: Union[str, CompressionGranularity] = field(
+        default=CompressionGranularity.PER_TENSOR,
+        validator=validators.instance_of(CompressionGranularity),
+        converter=_normalize_granularity,
+    )
+    group_size: int = field(default=32)
+    channel_axis: Optional[int] = field(default=None)
+    num_kmeans_workers: int = field(default=1, validator=validators.instance_of(int))
     weight_threshold: Optional[int] = field(default=2048, validator=validators.optional([validators.instance_of(int), _check_weight_threshold]))
 
     _WEIGHT_PALETTIZATION_MODES = ("KMEANS", "UNIFORM", "UNIQUE", "CUSTOM")
-    _VALID_NBITS = (1, 2, 4, 6, 8)
+    _VALID_NBITS = (1, 2, 3, 4, 6, 8)
+    _VALID_GRANULARITIES = (
+        CompressionGranularity.PER_TENSOR,
+        CompressionGranularity.PER_GROUPED_CHANNEL,
+    )
 
     @nbits.validator
     def check_nbits(self, attr, nbits):
@@ -551,7 +732,6 @@ class OpPalettizerConfig(OpCompressorConfig):
         if not mode.upper() in self._WEIGHT_PALETTIZATION_MODES:
             raise ValueError(f"Only modes {self._WEIGHT_PALETTIZATION_MODES} are supported for weight palettization. Got \"mode\": \"{mode}\".")
 
-
     @lut_function.validator
     def check_lut_function(self, attr, lut_function):
         mode = self.mode.upper()
@@ -565,17 +745,25 @@ class OpPalettizerConfig(OpCompressorConfig):
         if lut_function is not None and not callable(lut_function):
             raise ValueError(f"A function object must be provided as \"lut_function\". Got a \"lut_function\" as type {type(self.lut_function)}")
 
+    @granularity.validator
+    def check_granularity(self, attr, granularity):
+        if granularity not in self._VALID_GRANULARITIES:
+            raise ValueError(
+                f'"granularity" must be one of {self._VALID_GRANULARITIES}, but got {granularity}'
+            )
+
     def __attrs_post_init__(self):
         self.mode = self.mode.upper()
 
     @classmethod
-    def _from_dict(cls, config_dict: Dict[str, Any]) -> "OpPalettizerConfig":
+    def _from_dict(cls, config_dict: Dict[str, Any]) -> OpPalettizerConfig:
         if "lut_function" in config_dict:
             raise ValueError(
                 "_from_dict method does not support lut_function. Please create the OpPalettizerConfig from scratch."
             )
         converter = cattrs.Converter(forbid_extra_keys=True)
         return converter.structure(config_dict, cls)
+
 
 @define
 class OptimizationConfig:
@@ -763,14 +951,13 @@ class OptimizationConfig:
             return
         self._check_op_config_type(global_config)
 
-
-    def _get_op_config(self, op: Operation):
+    def _get_op_config(self, op: operation.Operation):
         """
-        This utility function retrieve the compression config for an non-const Operation instance.
+        This utility function retrieve the compression config for an non-const operation.Operation instance.
         The priority is by: op name -> op type -> global
         """
-        if not isinstance(op, Operation):
-           raise TypeError(f"op must be type of Operation. Got {type(op)}")
+        if not isinstance(op, operation.Operation):
+            raise TypeError(f"op must be type of operation.Operation. Got {type(op)}")
 
         if op.op_type == "const":
             raise TypeError("op must not be of type const")
@@ -782,13 +969,13 @@ class OptimizationConfig:
 
         return self.global_config
 
-    def _get_const_op_config(self, op: Operation):
+    def _get_const_op_config(self, op: operation.Operation):
         """
-        This utility function retrieves the compression config by an const Operation instance.
+        This utility function retrieves the compression config by an const operation.Operation instance.
         If the const is fed into multiple operations, an error would be thrown if a conflict is detected.
         """
-        if not isinstance(op, Operation):
-            raise TypeError(f"op must be type of Operation. Got {type(op)}")
+        if not isinstance(op, operation.Operation):
+            raise TypeError(f"op must be type of operation.Operation. Got {type(op)}")
 
         if not (op.op_type == "const" or op.op_type.startswith("constexpr_")):
             raise TypeError(f"op must be of type const or constexpr. Got {op.op_type}")
@@ -803,9 +990,13 @@ class OptimizationConfig:
 
         # If the constant's output is only connected to the block output, we don't do compression
         # Due to this bug: rdar://108274019 ([Bug] constexpr ops cannot be directly fed to block output)
-        child_ops = op.outputs[0].child_ops
+        child_ops = [child_op for op_output in op.outputs for child_op in op_output.child_ops]
         if len(child_ops) == 0:
             return None
+
+        # If the const is fed into constexpr ops, we follow the chain to get the non-constexpr.
+        if all(child_op.op_type.startswith("constexpr_") for child_op in child_ops):
+            return self._get_const_op_config(child_ops[0])
 
         op_configs = [self._get_op_config(op) for op in child_ops]
 

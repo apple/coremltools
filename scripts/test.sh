@@ -127,6 +127,12 @@ if [[ $COV != "" ]]; then
 fi
 
 echo ${TEST_CMD}
-eval ${TEST_CMD}
+eval ${TEST_CMD}" &"
+init_pid="$!"
+init_exit_code=0
+wait ${init_pid} || init_exit_code=$?
+if [[ "${init_exit_code}" != "0" ]]; then
+    eval ${TEST_CMD}" --last-failed"
+fi
 
 pip uninstall -y coremltools

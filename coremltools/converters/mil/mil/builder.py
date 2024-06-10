@@ -16,7 +16,7 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 from .block import Function, curr_block
 from .input_type import InternalInputType, ListOrTensorInputType, TensorInputType, TupleInputType
-from .program import Placeholder
+from .program import Placeholder, StateTensorPlaceholder
 from .scope import (
     SCOPE_STACK,
     VALID_OPS_TO_COPY_SCOPE_INFO,
@@ -218,6 +218,14 @@ class Builder:
         return Placeholder(shape, dtype)
 
     @staticmethod
+    def StateTensorSpec(shape, dtype=None):
+        return StateTensorPlaceholder(shape, dtype)
+
+    @staticmethod
+    def state_tensor_placeholder(shape, dtype=None):
+        return StateTensorPlaceholder(shape, dtype)
+
+    @staticmethod
     def _create_function(
         main_block: Callable,
         input_specs: Optional[List[Placeholder]] = None,
@@ -338,7 +346,7 @@ class Builder:
 
         Examples
         --------
-        Here is an example of creating a scope for torchscript module heirarchy with type and name information.
+        The following is an example of creating a scope for torchscript module heirarchy with type and name information.
 
         .. sourcecode:: python
 
@@ -351,11 +359,11 @@ class Builder:
                     return mb.add(x=x, y=4.3, name="add_1")
 
 
-        In the above example, the "add_1" op will have two scope attributes, for torchscipt module type and name:
+        In the previous example, the "add_1" op will have two scope attributes, for torchscipt module type and name:
             * TORCHSCRIPT_MODULE_TYPE: ["Module1"]
             * TORCHSCRIPT_MODULE_NAME: ["module_1"]
 
-        Here is an example of creating nested scopes:
+        The following is an example of creating nested scopes:
 
         .. sourcecode:: python
 
@@ -371,7 +379,7 @@ class Builder:
                     ):
                         return mb.add(x=x, y=3.2, name="add_2")
 
-        In the above example, the "add_1" op would have a scope attribute:
+        In the previous example, the "add_1" op would have a scope attribute:
             * TORCHSCRIPT_MODULE_TYPE: ["Module1"]
 
         while the "add_2" op would have scope attributes:

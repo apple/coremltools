@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -12,13 +12,17 @@ from typing import Tuple as _Tuple
 import torch as _torch
 import torch.ao.quantization as _aoquant
 import torch.nn.intrinsic.qat as _nnintrinsicqat
+from torch.ao.quantization.fx.custom_config import ConvertCustomConfig as _ConvertCustomConfig
 from torch.ao.quantization.fx.custom_config import PrepareCustomConfig as _PrepareCustomConfig
 from torch.ao.quantization.quantize_fx import convert_to_reference_fx as _convert_to_reference_fx
 
 from coremltools.optimize.torch._utils.math_utils import rmse_error as _rmse_error
+from coremltools.optimize.torch._utils.metadata_utils import (
+    register_metadata_version as _register_metadata_version,
+)
 from coremltools.optimize.torch._utils.torch_utils import get_eval_model as _get_eval_model
 from coremltools.optimize.torch.base_model_optimizer import (
-    BaseModelOptimizer as _BaseModelOptimizer,
+    BaseTrainingTimeModelOptimizer as _BaseTrainingTimeModelOptimizer,
 )
 from coremltools.optimize.torch.base_model_optimizer import _Report
 from coremltools.optimize.torch.quantization._backend_config import (
@@ -31,6 +35,9 @@ from coremltools.optimize.torch.quantization._configure import (
     QATConfigurationHandler as _QATConfigurationHandler,
 )
 from coremltools.optimize.torch.quantization._qconfig_mapping import _QConfigMappingBuilder
+from coremltools.optimize.torch.quantization._utils import (
+    register_compression_metadata as _register_compression_metadata,
+)
 from coremltools.optimize.torch.quantization.quantization_config import (
     LinearQuantizerConfig as _LinearQuantizerConfig,
 )
@@ -41,7 +48,7 @@ from coremltools.optimize.torch.quantization.quantization_config import (
 _logger = _logging.getLogger(__name__)
 
 
-class Quantizer(_BaseModelOptimizer):
+class Quantizer(_BaseTrainingTimeModelOptimizer):
     pass
 
 
@@ -140,12 +147,14 @@ class LinearQuantizer(Quantizer):
                 return config
         return _ModuleLinearQuantizerConfig()
 
-    def prepare(self, example_inputs: _Any, inplace: bool = False) -> _torch.nn.Module:
+    def prepare(self, example_inputs: _Tuple[_Any, ...], inplace: bool = False) -> _torch.nn.Module:
         """
         Prepares the model for quantization aware training by inserting
         :py:class:`torch.ao.quantization.FakeQuantize` layers in the model in appropriate places.
 
         Args:
+            example_inputs (:obj:`Tuple[Any, ...]`): Example inputs for forward function of the model,
+                tuple of positional args (keyword args can be passed as positional args as well)
             inplace (:obj:`bool`): If ``True``, model transformations are carried out in-place and
                 the original module is mutated, otherwise a copy of the model is mutated and returned.
 
@@ -163,12 +172,13 @@ class LinearQuantizer(Quantizer):
                 "will be a no-op."
             )
             return self._model
-        model = self._model
-        if not inplace:
-            model = _copy.deepcopy(self._model)
+        model = self._get_model_for_compression(inplace=inplace)
         model.train()
         prepare_custom_config = _PrepareCustomConfig().set_non_traceable_module_names(
             self._config.non_traceable_module_names
+        )
+        prepare_custom_config = prepare_custom_config.set_preserved_attributes(
+            self._config.preserved_attributes
         )
         qat_handler = _QATConfigurationHandler(
             prepare_custom_config=prepare_custom_config,
@@ -245,9 +255,21 @@ class LinearQuantizer(Quantizer):
         if not inplace:
             model = _copy.deepcopy(model)
         model.eval()
-        finalized_model = _convert_to_reference_fx(
-            model, qconfig_mapping=self._qconfig_mapping, backend_config=_get_backend_config()
+        convert_custom_config = _ConvertCustomConfig().set_preserved_attributes(
+            self._config.preserved_attributes
         )
+        finalized_model = _convert_to_reference_fx(
+            model,
+            convert_custom_config=convert_custom_config,
+            qconfig_mapping=self._qconfig_mapping,
+            backend_config=_get_backend_config(),
+        )
+        _register_metadata_version(finalized_model)
+        for name, submodule in finalized_model.named_modules(remove_duplicate=True):
+            if hasattr(submodule, "weight_scale"):
+                submod_config = self._config.get_module_config(name, submodule)
+                _register_compression_metadata(submodule, submod_config)
+
         if model is None:
             self._model = finalized_model
         return finalized_model

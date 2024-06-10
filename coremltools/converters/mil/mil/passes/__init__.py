@@ -34,6 +34,7 @@ from coremltools.converters.mil.mil.passes.defs import (
     cleanup,
     lower_complex_dialect_ops,
     optimize_activation,
+    optimize_activation_quantization,
     optimize_conv,
     optimize_elementwise_binary,
     optimize_linear,

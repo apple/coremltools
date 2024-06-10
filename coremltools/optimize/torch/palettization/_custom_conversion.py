@@ -1,10 +1,15 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import torch as _torch
 import torch.nn as _nn
 import torch.nn.qat as _nnqat
+
+from coremltools.optimize.torch._utils.metadata_utils import (
+    CompressionMetadata as _CompressionMetadata,
+)
 
 from ._supported_modules import Conv1d, Embedding, LayerNorm, MultiheadAttention
 
@@ -25,15 +30,37 @@ class PalettizationCustomConversionBase(_nn.Module):
             observed_module, "qconfig"
         ), f"Module {type(observed_module)} has no attribute qconfig"
         assert hasattr(observed_module, "activation_post_process"), (
-            f"Module {type(observed_module)} has no " f"attribute activation_post_process "
+            f"Module {type(observed_module)} has no " f"attribute activation_post_process"
         )
         assert hasattr(observed_module, "weight_fake_quant"), (
-            f"Module {type(observed_module)} has no attribute " f"weight_fake_quant "
+            f"Module {type(observed_module)} has no attribute " f"weight_fake_quant"
         )
 
     @classmethod
     def get_finalized_weights(cls, observed_module: _nn.Module):
         return observed_module.weight_fake_quant.forward(observed_module.weight.detach())
+
+    @classmethod
+    def add_metadata(cls, observed_module: _nn.Module, return_module: _nn.Module):
+        for dir_key in dir(observed_module):
+            if "_fake_quant" in dir_key:
+                if not isinstance(getattr(observed_module, dir_key).centroids[0], _torch.Tensor):
+                    break
+                param_name = dir_key.replace("_fake_quant", "")
+                compression_metadata = _CompressionMetadata(param_name)
+                compression_metadata.compression_type = ["palettization"]
+                lut = _torch.stack(getattr(observed_module, dir_key).centroids, dim=0)
+                for i in range(observed_module.weight.dim() + 2 - lut.dim()):
+                    lut = lut.unsqueeze(-3)
+                compression_metadata.lut = lut
+                if getattr(observed_module, dir_key).enable_per_channel_scale:
+                    per_channel_scaling_factor = getattr(
+                        observed_module, dir_key
+                    ).per_channel_scaling_factor
+                    for _ in range(observed_module.weight.dim() - per_channel_scaling_factor.dim()):
+                        per_channel_scaling_factor = per_channel_scaling_factor.unsqueeze(-1)
+                    compression_metadata.palettization_scale = per_channel_scaling_factor
+                compression_metadata.register(return_module)
 
     @classmethod
     def from_observed(cls, observed_module: _nn.Module):
@@ -64,6 +91,7 @@ class LinearPalettizationConversion(PalettizationCustomConversionBase):
             dtype=observed_module.dtype if hasattr(observed_module, "dtype") else None,
         )
         return_module.weight = _nn.Parameter(finalized_weights)
+        cls.add_metadata(observed_module, return_module)
         if observed_module.bias is not None:
             return_module.bias = _nn.Parameter(observed_module.bias.detach())
         return_module.activation_post_process = observed_module.activation_post_process
@@ -96,6 +124,7 @@ class Conv1dPalettizationConversion(PalettizationCustomConversionBase):
             dtype=observed_module.dtype if hasattr(observed_module, "dtype") else None,
         )
         return_module.weight = _nn.Parameter(finalized_weights)
+        cls.add_metadata(observed_module, return_module)
         if observed_module.bias is not None:
             return_module.bias = _nn.Parameter(observed_module.bias.detach())
         return_module.activation_post_process = observed_module.activation_post_process
@@ -128,6 +157,7 @@ class Conv2dPalettizationConversion(PalettizationCustomConversionBase):
             dtype=observed_module.dtype if hasattr(observed_module, "dtype") else None,
         )
         return_module.weight = _nn.Parameter(finalized_weights)
+        cls.add_metadata(observed_module, return_module)
         if observed_module.bias is not None:
             return_module.bias = _nn.Parameter(observed_module.bias.detach())
         return_module.activation_post_process = observed_module.activation_post_process
@@ -160,6 +190,7 @@ class Conv3dPalettizationConversion(PalettizationCustomConversionBase):
             dtype=observed_module.dtype if hasattr(observed_module, "dtype") else None,
         )
         return_module.weight = _nn.Parameter(finalized_weights)
+        cls.add_metadata(observed_module, return_module)
         if observed_module.bias is not None:
             return_module.bias = _nn.Parameter(observed_module.bias.detach())
         return_module.activation_post_process = observed_module.activation_post_process
@@ -189,6 +220,7 @@ class LayerNormPalettizationConversion(PalettizationCustomConversionBase):
             return_module.weight = _nn.Parameter(finalized_weights)
             if observed_module.bias:
                 return_module.bias = _nn.Parameter(observed_module.bias.detach())
+        cls.add_metadata(observed_module, return_module)
         return_module.activation_post_process = observed_module.activation_post_process
         return return_module
 
@@ -202,15 +234,45 @@ class MultiheadAttentionPalettizationConversion(PalettizationCustomConversionBas
         super().__init__()
 
     @classmethod
+    def do_attribute_assertions(cls, observed_module: _nn.Module):
+        assert hasattr(
+            observed_module, "qconfig"
+        ), f"Module {type(observed_module)} has no attribute qconfig"
+        assert hasattr(observed_module, "activation_post_process"), (
+            f"Module {type(observed_module)} has no " f"attribute activation_post_process"
+        )
+
+        assert hasattr(observed_module.out_proj, "weight_fake_quant"), (
+            f"Module {type(observed_module.out_proj)} has no attribute " f"q_proj_weight_fake_quant"
+        )
+        if not observed_module._qkv_same_embed_dim:
+            assert hasattr(observed_module, "q_proj_weight_fake_quant"), (
+                f"Module {type(observed_module)} has no attribute " f"q_proj_weight_fake_quant"
+            )
+            assert hasattr(observed_module, "k_proj_weight_fake_quant"), (
+                f"Module {type(observed_module)} has no attribute " f"k_proj_weight_fake_quant"
+            )
+            assert hasattr(observed_module, "v_proj_weight_fake_quant"), (
+                f"Module {type(observed_module)} has no attribute " f"v_proj_weight_fake_quant"
+            )
+        else:
+            assert hasattr(observed_module, "in_proj_weight_fake_quant"), (
+                f"Module {type(observed_module)} has no attribute " f"in_proj_weight_fake_quant"
+            )
+
+    @classmethod
     def from_observed(cls, observed_module: _nn.Module):
         cls.do_attribute_assertions(observed_module)
-        finalized_weights = cls.get_finalized_weights(observed_module)
+        add_bias_kv = observed_module.bias_k is not None and observed_module.bias_v is not None
+        bias = (
+            observed_module.out_proj.bias is not None and observed_module.in_proj_bias is not None
+        )
         return_module = _nn.MultiheadAttention(
             embed_dim=observed_module.embed_dim,
             num_heads=observed_module.num_heads,
             dropout=observed_module.dropout,
-            bias=observed_module.bias is not None,
-            add_bias_kv=observed_module.add_bias_kv,
+            bias=bias,
+            add_bias_kv=add_bias_kv,
             add_zero_attn=observed_module.add_zero_attn,
             kdim=observed_module.kdim,
             vdim=observed_module.vdim,
@@ -218,13 +280,40 @@ class MultiheadAttentionPalettizationConversion(PalettizationCustomConversionBas
             device=observed_module.device if hasattr(observed_module, "device") else None,
             dtype=observed_module.dtype if hasattr(observed_module, "dtype") else None,
         )
-        return_module.weight = _nn.Parameter(finalized_weights)
-        return_module.bias = _nn.Parameter(observed_module.bias.detach())
-        if observed_module.add_bias_kv:
+        if not observed_module._qkv_same_embed_dim:
+            return_module.q_proj_weight = _nn.Parameter(
+                observed_module.q_proj_weight_fake_quant.forward(
+                    observed_module.q_proj_weight.detach()
+                )
+            )
+            return_module.k_proj_weight = _nn.Parameter(
+                observed_module.k_proj_weight_fake_quant.forward(
+                    observed_module.k_proj_weight.detach()
+                )
+            )
+            return_module.v_proj_weight = _nn.Parameter(
+                observed_module.v_proj_weight_fake_quant.forward(
+                    observed_module.v_proj_weight.detach()
+                )
+            )
+        else:
+            return_module.in_proj_weight = _nn.Parameter(
+                observed_module.in_proj_weight_fake_quant.forward(
+                    observed_module.in_proj_weight.detach()
+                )
+            )
+        return_module.out_proj.weight = _nn.Parameter(
+            observed_module.out_proj.weight_fake_quant.forward(
+                observed_module.out_proj.weight.detach()
+            )
+        )
+        if bias:
+            return_module.out_proj.bias = _nn.Parameter(observed_module.out_proj.bias.detach())
+            return_module.in_proj_bias = _nn.Parameter(observed_module.in_proj_bias.detach())
+        if add_bias_kv:
             return_module.bias_k = _nn.Parameter(observed_module.bias_k.detach())
             return_module.bias_v = _nn.Parameter(observed_module.bias_v.detach())
-        else:
-            return_module.bias_k = return_module.bias_v = None
+        cls.add_metadata(observed_module, return_module)
         return_module.activation_post_process = observed_module.activation_post_process
         return return_module
 
@@ -254,6 +343,7 @@ class EmbeddingPalettizationConversion(PalettizationCustomConversionBase):
             dtype=observed_module.dtype if hasattr(observed_module, "dtype") else None,
         )
         return_module.weight = _nn.Parameter(finalized_weights)
+        cls.add_metadata(observed_module, return_module)
         return_module.activation_post_process = observed_module.activation_post_process
         return return_module
 

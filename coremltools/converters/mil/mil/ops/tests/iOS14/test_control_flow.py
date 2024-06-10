@@ -588,3 +588,28 @@ class TestConst:
         else:
             target_dtype = dtype
         assert const_op.outputs[0].dtype == types.numpy_type_to_builtin_type(target_dtype)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dtype_str",
+        itertools.product(
+            compute_units, backends, ("int4", "uint1", "uint2", "uint3", "uint4", "uint6")
+        ),
+    )
+    def test_const_sub_byte_dtype(self, compute_unit, backend, dtype_str):
+        builtin_dtype = types.string_to_builtin(dtype_str)
+        upper_bound = types.type_mapping.builtin_to_range(builtin_dtype).high
+        original_data = np.random.randint(0, upper_bound + 1, (2, 3))
+        np_dtype = types.nptype_from_builtin(builtin_dtype)
+
+        @mb.program(input_specs=[], opset_version=backend.opset_version)
+        def prog():
+            return mb.const(val=original_data.astype(np_dtype))
+
+        const_op = prog.functions["main"].find_ops(op_type="const")[0]
+        assert types.builtin_to_string(const_op.outputs[0].dtype) == dtype_str
+        expected_underlying_dtype = np.int8 if dtype_str.startswith("i") else np.uint8
+        assert const_op.outputs[0].val.dtype == expected_underlying_dtype
+        assert const_op.outputs[0].val.dtype.metadata["true_dtype"] == types.string_to_builtin(
+            dtype_str
+        )
+        np.testing.assert_equal(const_op.outputs[0].val, original_data)

@@ -721,6 +721,8 @@ class Block:
                             res = ["__COREML__::TORCHSCRIPT_PLACEHOLDER"]
                         elif val == ScopeSource.TORCHSCRIPT_MODULE_NAME:
                             res = [f"__COREML__::TORCHSCRIPT_PLACEHOLDER_{src.name}"]
+                        elif val == ScopeSource.EXIR_STACK_TRACE:
+                            res = [None]
                         elif val == ScopeSource.EXIR_DEBUG_HANDLE:
                             res = [None]
                         else:

@@ -5,7 +5,7 @@
 
 import numpy as _np
 
-from coremltools.converters.mil import Operation as _Operation
+from coremltools.converters.mil.mil import Operation as _Operation
 from coremltools.models._deprecation import deprecated as _deprecated
 from coremltools.optimize.coreml import (
     OpLinearQuantizerConfig as _OpLinearQuantizerConfig,

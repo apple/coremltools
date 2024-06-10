@@ -16,7 +16,7 @@ namespace CoreML {
  * Reader/Writer interface for a GLM.
  *
  * A construction class that, in the end, outputs a properly constructed
- * specification that is guaranteed to load in an LinearModelSpec class.
+ * specification that is gauranteed to load in an LinearModelSpec class.
  *
  */
 class EXPORT LogisticModel : public Model {

@@ -19,6 +19,11 @@ class sanitize_name_strings(AbstractGraphPass):
         for f in prog.functions.values():
             sanitizer_vars = NameSanitizer(prefix="var_")
             sanitizer_ops = NameSanitizer(prefix="op_")
-            NameSanitizer.sanitize_block(
-                f, sanitizer_vars, sanitizer_ops, prog.functions["main"].input_types
-            )
+            # TODO: rdar://126498947 ([Infra] Investigate the name sanitizer on multifunction model)
+            if "main" in prog.functions:
+                NameSanitizer.sanitize_block(
+                    f,
+                    sanitizer_vars,
+                    sanitizer_ops,
+                    prog.functions["main"].input_types,
+                )

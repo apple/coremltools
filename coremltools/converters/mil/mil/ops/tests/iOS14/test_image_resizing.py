@@ -395,12 +395,13 @@ class TestCrop:
 class TestCropResize:
     @mark_api_breaking(breaking_opset_version=ct.target.iOS17)
     @pytest.mark.parametrize(
-        "compute_unit, backend, is_symbolic",
-        itertools.product(compute_units, backends, [True, False]),
+        "compute_unit, backend, is_symbolic, mode",
+        itertools.product(compute_units, backends, [True, False], list(range(5))),
     )
-    def test_builder_to_backend_smoke(self, compute_unit, backend, is_symbolic):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, is_symbolic, mode):
         if backend.backend == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398582 (TestCropResize failing on mlprogram + GPU)")
+
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
             dtype=np.float32,
@@ -536,13 +537,12 @@ class TestCropResize:
             np.array([11, 10, 7, 6], dtype=np.float32).reshape(1, 1, 1, 2, 2),
         ]
 
-        for mode in range(5):
-            run_compare_builder(
-                functools.partial(build, mode=mode),
-                input_placeholder_dict,
-                input_value_dict,
-                expected_output_type[mode],
-                expected_output[mode],
-                compute_unit=compute_unit,
-                backend=backend,
-            )
+        run_compare_builder(
+            functools.partial(build, mode=mode),
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type[mode],
+            expected_output[mode],
+            compute_unit=compute_unit,
+            backend=backend,
+        )

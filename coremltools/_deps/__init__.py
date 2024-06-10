@@ -153,7 +153,7 @@ MSG_TF2_NOT_FOUND = "TensorFlow 2.x not found."
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "2.2.0"
+_TORCH_MAX_VERSION = "2.3.0"
 _HAS_TORCH_EXPORT_API = False
 try:
     import torch

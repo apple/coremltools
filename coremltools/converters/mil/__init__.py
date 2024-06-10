@@ -11,6 +11,6 @@ from .mil import (SPACES, SUPPORT_FLOAT_TYPES, SUPPORT_INT_TYPES, Block,
                   get_existing_symbol, get_new_symbol, get_new_variadic_symbol,
                   mil_list, register_op)
 from .input_types import (ClassifierConfig, ColorLayout, EnumeratedShapes,
-                          ImageType, InputType, RangeDim, Shape, TensorType)
+                          ImageType, InputType, RangeDim, Shape, TensorType, StateType)
 from .frontend.tensorflow.tf_op_registry import register_tf_op
 from .frontend.torch import register_torch_op

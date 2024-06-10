@@ -5616,12 +5616,6 @@ class TestTopK(TensorFlowBaseTest):
             pytest.skip("iOS16 version topk needed for sort = False")
         if not sort and _macos_version() < (13, 0):
             pytest.skip("New functionality in macOS13/iOS16")
-        if rank == 5 and k is None and sort and (
-            backend[0] == "neuralnetwork" or (
-                platform.machine() == "x86_64" and _macos_version() < (15, 0)
-            )
-        ):
-            pytest.xfail("rdar://120891130: TopK failing randomly")
 
         # TensorFlow only supports last dimension (axis = -1).
         shape = np.random.randint(low=3, high=4, size=rank)

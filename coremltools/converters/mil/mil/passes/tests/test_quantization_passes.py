@@ -1799,6 +1799,220 @@ class TestDequantizeToConstexpr:
         assert get_op_types_in_program(prog) == ["dequantize"]
 
 
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
+class TestReorderLutPerChannelScale:
+    @staticmethod
+    def _verify_numerical(prev_prog, prog, block, input_shape, rtol=1e-7, atol=0.0):
+        # Verify the numerical output matches before and after the reordering.
+        prev_model = ct.convert(
+            prev_prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+        model = ct.convert(
+            prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+        output_name = block.outputs[0].name
+        x_val = np.random.rand(*input_shape).astype(np.float16)
+        input_dict = {"x": x_val}
+        prev_output = prev_model.predict(input_dict)[output_name]
+        output = model.predict(input_dict)[output_name]
+        np.testing.assert_allclose(prev_output, output, rtol=rtol, atol=atol)
+
+    @staticmethod
+    def _get_lut_pcs_weight(shape: Tuple[int, ...], nbits=4, scale_axis: int = 0):
+        """Get a specific shape of weight produced by lut with per-channel-scale (pcs)."""
+        num_palette = 2**nbits
+        np_dtype = types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}"))
+        indices = np.arange(np.prod(shape)).reshape(shape).astype(np_dtype)
+        lut_shape = shape + (num_palette, 1)
+        lut = np.arange(np.prod(lut_shape)).reshape(lut_shape).astype(np.float16)
+
+        lut_op = mb.constexpr_lut_to_dense(indices=indices, lut=lut)
+        scale_shape = [1] * len(shape)
+        scale_shape[scale_axis] = shape[scale_axis]
+        scale_shape = tuple(scale_shape)
+        scale_val = np.arange(1, np.prod(scale_shape) + 1).reshape(scale_shape).astype(np.float16)
+        return mb.constexpr_blockwise_shift_scale(
+            data=lut_op,
+            scale=scale_val,
+        )
+
+    @pytest.mark.parametrize(
+        "input_shape, has_bias", itertools.product([(4, 3), (2, 3, 2), (1, 2, 3, 4)], [True, False])
+    )
+    def test_reorder_scale_linear(self, input_shape: Tuple[int, ...], has_bias: bool):
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            scaled_weight = self._get_lut_pcs_weight((2, input_shape[-1]))
+            bias = np.array([20, 50], dtype=np.float16) if has_bias else None
+            output = mb.linear(x=x, weight=scaled_weight, bias=bias)
+            return mb.add(x=output, y=np.float16(1.0))
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::reorder_lut_per_channel_scale", skip_essential_scope_check=True
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "linear",
+            "add",
+        ]
+        assert get_op_types_in_program(prog) == ["constexpr_lut_to_dense", "linear", "mul", "add"]
+        self._verify_numerical(prev_prog, prog, block, input_shape)
+
+    @pytest.mark.parametrize(
+        "use_y_as_weight, transpose_x, transpose_y",
+        itertools.product([True, False], [True, False], [True, False]),
+    )
+    def test_reorder_scale_matmul(self, use_y_as_weight, transpose_x, transpose_y):
+        input_shape = (3, 4)
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            if use_y_as_weight:
+                if transpose_x:  # x shape is (4, 3)
+                    weight_shape = (2, 3) if transpose_y else (3, 2)
+                else:  # x shape is (3, 4)
+                    weight_shape = (2, 4) if transpose_y else (4, 2)
+                scaled_weight = self._get_lut_pcs_weight(
+                    weight_shape, scale_axis=0 if transpose_y else 1
+                )
+                output = mb.matmul(
+                    x=x, y=scaled_weight, transpose_x=transpose_x, transpose_y=transpose_y
+                )
+            else:
+                if transpose_y:  # y shape is (4, 3)
+                    weight_shape = (4, 2) if transpose_x else (2, 4)
+                else:  # y shape is (3, 4)
+                    weight_shape = (3, 2) if transpose_x else (2, 3)
+                scaled_weight = self._get_lut_pcs_weight(
+                    weight_shape, scale_axis=1 if transpose_x else 0
+                )
+                output = mb.matmul(
+                    x=scaled_weight, y=x, transpose_x=transpose_x, transpose_y=transpose_y
+                )
+            return mb.add(x=output, y=np.float16(1.0))
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::reorder_lut_per_channel_scale", skip_essential_scope_check=True
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "matmul",
+            "add",
+        ]
+        assert get_op_types_in_program(prog) == ["constexpr_lut_to_dense", "matmul", "mul", "add"]
+        self._verify_numerical(prev_prog, prog, block, input_shape)
+
+    @pytest.mark.parametrize(
+        "pad_type, has_bias, has_strides_dilations",
+        itertools.product(["valid", "same", "same_lower", "custom"], [True, False], [True, False]),
+    )
+    def test_reorder_scale_conv(self, pad_type, has_bias, has_strides_dilations):
+        input_shape = (4, 3, 4, 3)
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            scaled_weight = self._get_lut_pcs_weight((2, 3, 2, 2), nbits=6)
+            bias = np.array([20, 50], dtype=np.float16) if has_bias else None
+            pad = [1, 1, 1, 1] if pad_type == "custom" else None
+            strides = [1, 2] if has_strides_dilations else None
+            dilations = [1, 2] if has_strides_dilations else None
+            output = mb.conv(
+                x=x,
+                weight=scaled_weight,
+                strides=strides,
+                pad_type=pad_type,
+                pad=pad,
+                dilations=dilations,
+                bias=bias,
+            )
+            return mb.add(x=output, y=np.float16(1.0))
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::reorder_lut_per_channel_scale", skip_essential_scope_check=True
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "conv",
+            "add",
+        ]
+        assert get_op_types_in_program(prog) == ["constexpr_lut_to_dense", "conv", "mul", "add"]
+        self._verify_numerical(prev_prog, prog, block, input_shape)
+
+    @pytest.mark.parametrize(
+        "input_shape, has_bias", itertools.product([(4, 3), (2, 3, 2), (1, 2, 3, 4)], [True, False])
+    )
+    def test_reorder_multiple_usages(self, input_shape: Tuple[int, ...], has_bias: bool):
+        """The scaled weight is used by multiple ops."""
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            scaled_weight = self._get_lut_pcs_weight((2, input_shape[-1]))
+            bias = np.array([20, 50], dtype=np.float16) if has_bias else None
+            linear_output = mb.linear(x=x, weight=scaled_weight, bias=bias)
+            matmul_output = mb.matmul(x=x, y=scaled_weight, transpose_x=False, transpose_y=True)
+            return mb.add(x=linear_output, y=matmul_output)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::reorder_lut_per_channel_scale", skip_essential_scope_check=True
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "linear",
+            "matmul",
+            "add",
+        ]
+        assert get_op_types_in_program(prog) == [
+            "constexpr_lut_to_dense",
+            "linear",
+            "mul",
+            "matmul",
+            "mul",
+            "add",
+        ]
+        self._verify_numerical(prev_prog, prog, block, input_shape)
+
+    def test_reorder_not_happen(self):
+        """The scale won't be moved when the scaled weight is used in unsupported ops."""
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(4, 16), dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            scaled_weight = self._get_lut_pcs_weight((2, 16))
+            linear_output1 = mb.linear(x=x, weight=scaled_weight)
+            add_out = mb.add(x=scaled_weight, y=np.float16(1.0))
+            linear_output2 = mb.linear(x=x, weight=add_out)
+            return mb.add(x=linear_output1, y=linear_output2)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::reorder_lut_per_channel_scale", skip_essential_scope_check=True
+        )
+        assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+
+
 class TestFP16CastTransform:
     def assertEqual(self, first, second):
         """A convenience method to migrate from unittest (self.assertEqual) to pytest."""
@@ -1932,7 +2146,7 @@ class TestFP16CastTransform:
         )
 
         mlmodel = ct.convert(prog, compute_units=ct.ComputeUnit.CPU_ONLY)
-        input_dict = {"x": np.random.rand(10, 20)}
+        input_dict = {"x": np.random.rand(10, 20) * 1e-3}
 
         if _IS_MACOS:
             prediction = mlmodel.predict(input_dict)

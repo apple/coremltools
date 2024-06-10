@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -24,23 +24,17 @@ class _QuantizedConvAct(_nn.Sequential):
 
 class QuantizedConvAct1d(_QuantizedConvAct):
     ref_quant_mod = _reference.Conv1d
-
-    def __init__(self, conv: _reference.Conv1d, act: _nn.Module):
-        super().__init__(conv, act)
+    pass
 
 
 class QuantizedConvAct2d(_QuantizedConvAct):
     ref_quant_mod = _reference.Conv2d
-
-    def __init__(self, conv: _reference.Conv2d, act: _nn.Module):
-        super().__init__(conv, act)
+    pass
 
 
 class QuantizedConvAct3d(_QuantizedConvAct):
     ref_quant_mod = _reference.Conv3d
-
-    def __init__(self, conv: _reference.Conv3d, act: _nn.Module):
-        super().__init__(conv, act)
+    pass
 
 
 class QuantizedLinearAct(_nn.Sequential):

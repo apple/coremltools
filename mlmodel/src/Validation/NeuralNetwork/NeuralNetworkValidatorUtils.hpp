@@ -33,12 +33,12 @@ inline Result validateTensorMessage(const Specification::Tensor& tensor, const S
 inline Result checkRank(const Specification::NeuralNetworkLayer& layer,
                         const std::string &layerType, int min, int max,
                         const std::string &blobType, int rank) {
-    
+
     // blobType: "input" or "output"
-    
+
     assert( min <= max || max < 0 );
     std::string err;
-    
+
     if (max > 0 && max == min && rank != max) {
         err = "Layer '" + layer.name() + "' of type '" + layerType + + "' has " + blobType  + " rank " + std::to_string(rank) + " but expects rank exactly " + std::to_string(min) + ".";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
@@ -58,17 +58,17 @@ inline Result checkRank(const Specification::NeuralNetworkLayer& layer,
 inline Result validateRankCount(const Specification::NeuralNetworkLayer& layer,
                                 const std::string &layerType, int min, int max,
                                 std::map<std::string, int>& blobNameToRank) {
-    
+
     Result r;
-    
+
     // check that 1st input's rank is within permissible limits
     if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end()) {
         int rank = blobNameToRank.at(layer.input(0));
         r = checkRank(layer, layerType, min, max, "input", rank);
     }
-    
+
     if (!r.good()) {return r;}
-    
+
     // check that 2nd input's rank is within permissible limits
     if (blobNameToRank.find(layer.output(0)) != blobNameToRank.end()) {
         int rank = blobNameToRank.at(layer.output(0));
@@ -79,7 +79,7 @@ inline Result validateRankCount(const Specification::NeuralNetworkLayer& layer,
 
 inline Result validateInputOutputRankEquality(const Specification::NeuralNetworkLayer& layer, std::string layerType,
                                               std::map<std::string, int>& blobNameToRank) {
-    
+
     if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end() &&
         blobNameToRank.find(layer.output(0)) != blobNameToRank.end()) {
         if (blobNameToRank.at(layer.input(0)) != blobNameToRank.at(layer.output(0))) {
@@ -94,10 +94,10 @@ inline Result validateInputOutputRankEquality(const Specification::NeuralNetwork
 // Min and max are the minimum and maximum number of possible inputs.
 // negative values are interpreted as no bound
 inline Result validateInputCount(const Specification::NeuralNetworkLayer& layer, int min, int max) {
-    
+
     assert( min <= max || max < 0 );
     std::string err;
-    
+
     if (max > 0 && max == min && layer.input_size() != max) {
         err = "Layer '" + std::string(layer.name()) + "' of type " + std::to_string(layer.layer_case()) + " has " + std::to_string(layer.input_size()) + " inputs but expects exactly " + std::to_string(min) + ".";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
@@ -122,6 +122,7 @@ inline Result validateInputOutputTypes(const ::google::protobuf::RepeatedPtrFiel
         switch (feature.type().Type_case()) {
             case Specification::FeatureType::kImageType:
             case Specification::FeatureType::kMultiArrayType:
+            case Specification::FeatureType::kStateType:
                 return true;
             default:
                 return false;
@@ -130,7 +131,7 @@ inline Result validateInputOutputTypes(const ::google::protobuf::RepeatedPtrFiel
 
     if (!std::all_of(features.cbegin(), features.cend(), checkFeatures)) {
          return Result(ResultType::INVALID_MODEL_INTERFACE, reason,
-                       "Neural Networks require " + featureTypesDesc + " to be images or MLMultiArray.");
+                       "Neural Networks require " + featureTypesDesc + " to be images, MLMultiArray, or State.");
     }
 
     return Result();
@@ -158,10 +159,10 @@ inline Result validateNdMultiArrayInputType(const Specification::ArrayFeatureTyp
 }
 
 inline Result validateOutputCount(const Specification::NeuralNetworkLayer& layer, int min, int max) {
-    
+
     assert( min <= max || max < 0 );
     std::string err;
-    
+
     if (max > 0 && max == min && layer.output_size() != max) {
         err = "Layer '" + layer.name() + "' of type " + std::to_string(layer.layer_case()) + + " has " + std::to_string(layer.output_size()) + " outputs but expects exactly " + std::to_string(min) + ".";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
@@ -180,7 +181,7 @@ inline Result validateOutputCount(const Specification::NeuralNetworkLayer& layer
 }
 
 inline Result validateRankExists(const Specification::NeuralNetworkLayer& layer) {
-    
+
     if (layer.inputtensor_size() == 0 || layer.outputtensor_size() == 0) {
         std::string err = "Layer '" + std::string(layer.name()) + "' must have rank specified for its input and output.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
@@ -250,7 +251,7 @@ inline bool isWeightParamTypeCompatible(const std::vector<WeightParamType>& weig
 inline Result validateLSTMWeightParams(const Specification::LSTMWeightParams& lstmWeightParams, const Specification::LSTMParams lstmParams) {
     bool has_peephole_vector = lstmParams.haspeepholevectors();
     bool has_bias_vector = lstmParams.hasbiasvectors();
-    
+
     // Validate all weightParam types match
     std::vector<CoreML::WeightParamType> weightTypes;
     weightTypes.push_back(valueType(lstmWeightParams.inputgateweightmatrix()));

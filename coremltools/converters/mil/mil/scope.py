@@ -36,6 +36,10 @@ class ScopeSource(Enum):
           and then undergoes "add_fp16_cast".
 
     # Torch export related:
+    EXIR_STACK_TRACE:
+        * The ``stack_trace`` metadata inherited from torch.fx.Node.meta in EXIR
+        * This metadata traces the MIL op back to original python source code
+
     EXIR_DEBUG_HANDLE:
         * The ``debug_handle`` metadata inherited from torch.fx.Node.meta in EXIR
         * This metadata enables post-run analysis in ExecuTorch integration
@@ -77,7 +81,8 @@ class ScopeSource(Enum):
     TORCHSCRIPT_MODULE_TYPE = 0
     TORCHSCRIPT_MODULE_NAME = 1
     COREMLTOOLS_GRAPH_PASS = 2
-    EXIR_DEBUG_HANDLE = 3
+    EXIR_STACK_TRACE = 3  # no serialization for such debug info should be allowed yet
+    EXIR_DEBUG_HANDLE = 4
 
 
 class ScopeStack(defaultdict):

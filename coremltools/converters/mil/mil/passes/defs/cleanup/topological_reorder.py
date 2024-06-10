@@ -114,6 +114,10 @@ class topological_reorder(AbstractGraphPass):
                 if not isinstance(new_var, (list, tuple)):
                     new_var = [new_var]
 
+                # the new var should have the same name as the old var
+                for i, old_var in enumerate(op.outputs):
+                    new_var[i].name = old_var.name
+
                 # Override current_op to be newly created op to ensure `first_use`
                 # points to newly created op instead of old one.
                 current_op = new_var[0].op

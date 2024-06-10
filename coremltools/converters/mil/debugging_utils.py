@@ -24,8 +24,8 @@ def extract_submodel(
     """
     This utility function lets you extract a submodel from a Core ML model.
 
-    For a NeuralNetwork model, the function extracts only in-memory Core ML models.
-    You should always call this function to a model directly from ``ct.convert``. It is not
+    For a neural network model, the function extracts only in-memory Core ML models.
+    You should always call this function for a model directly from :py:class:`~coremltools.converters._converters_entry.convert`. It is not
     allowed to load the model from disk and then call this API.
 
     For an ML program model, both cases (in-memory and from disk) are supported.
@@ -43,19 +43,19 @@ def extract_submodel(
         If not provided, the inputs from the original model are used.
 
     function_name: str (Optional)
-        Name of the function where the subgraph is extracted. Default ``main``.
+        Name of the function where the subgraph is extracted. Default is ``main``.
 
     Examples
     --------
 
-    NeuralNetwork:
+    Neural network:
 
         >>> from coremltools.converters.mil.debugging_utils import extract_submodel
         >>> mlmodel = ct.convert(model, convert_to="neuralnetwork")
         >>> outputs = ["output_0", "output_1"]
         >>> submodel = extract_submodel(mlmodel, outputs)
 
-    ML Program:
+    ML program:
 
         >>> from coremltools.converters.mil.debugging_utils import extract_submodel
         >>> mlmodel = ct.convert(model, convert_to="mlprogram")

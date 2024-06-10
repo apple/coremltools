@@ -19,3 +19,4 @@ from ._post_training_quantization import (
     palettize_weights,
     prune_weights,
 )
+from . import experimental

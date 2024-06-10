@@ -11,20 +11,21 @@ from typing import Tuple as _Tuple
 
 import torch as _torch
 import torch.nn.functional as _F
+
+_IS_TORCH_OLDER_THAN_2_3 = tuple(map(int, _torch.__version__.split(".")[:2])) < (2, 3)
 _IS_TORCH_OLDER_THAN_2_4 = tuple(map(int, _torch.__version__.split(".")[:2])) < (2, 4)
 if _IS_TORCH_OLDER_THAN_2_4:
     from torch.ao.quantization.pt2e.utils import get_aten_graph_module
 else:
     from torch.ao.quantization.pt2e.utils import _get_aten_graph_module_for_pattern
+
 from torch.ao.quantization.quantizer.quantizer import (
     FixedQParamsQuantizationSpec as _FixedQParamsQuantizationSpec,
 )
 from torch.ao.quantization.quantizer.quantizer import (
     QuantizationAnnotation as _QuantizationAnnotation,
 )
-from torch.ao.quantization.quantizer.quantizer import (
-    QuantizationSpec as _TorchQuantizationSpec,
-)
+from torch.ao.quantization.quantizer.quantizer import QuantizationSpec as _TorchQuantizationSpec
 from torch.ao.quantization.quantizer.quantizer import (
     QuantizationSpecBase as _TorchQuantizationSpecBase,
 )
@@ -75,8 +76,10 @@ _conv_fn_map = {1: _F.conv1d, 2: _F.conv2d, 3: _F.conv3d}
 def _get_aten_graph_module(
     pattern: _torch.nn.Module, example_inputs: _Tuple[_torch.Tensor], is_cuda: bool = False
 ):
-    if _IS_TORCH_OLDER_THAN_2_4:
+    if _IS_TORCH_OLDER_THAN_2_3:
         return get_aten_graph_module(pattern.forward, example_inputs, is_cuda)
+    elif _IS_TORCH_OLDER_THAN_2_4:
+        return get_aten_graph_module(pattern, example_inputs, is_cuda)
     else:
         return _get_aten_graph_module_for_pattern(pattern, example_inputs, is_cuda)
 

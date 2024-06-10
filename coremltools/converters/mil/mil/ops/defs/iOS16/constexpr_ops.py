@@ -9,7 +9,6 @@ from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.input_type import InputSpec, TensorInputType
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import restore_elements_from_packed_bits
 from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 
 
@@ -289,8 +288,11 @@ class constexpr_lut_to_dense(Operation):
 
     @staticmethod
     def decompress(lut, indices, shape):
+        # Import here to avoid circular import.
+        from coremltools.optimize.coreml import _utils as optimize_utils
+
         nbits = np.log2(lut.size).astype(np.int32)
-        indices = restore_elements_from_packed_bits(indices, nbits, np.prod(shape))
+        indices = optimize_utils.restore_elements_from_packed_bits(indices, nbits, np.prod(shape))
         flatten_val = lut[indices]
         return flatten_val.reshape(shape)
 

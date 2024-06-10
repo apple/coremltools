@@ -7,25 +7,15 @@ import math
 
 import numpy as np
 
-from coremltools.converters.mil.mil import (
-    get_new_symbol,
-    get_new_variadic_symbol,
-    types,
-)
+from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     InputSpec,
-    ListOrTensorInputType,
+    InternalInputType,
     TensorInputType,
     TupleInputType,
 )
-from coremltools.converters.mil.mil.operation import (
-    NONE,
-    SYMBOL,
-    VALUE,
-    Operation,
-    precondition,
-)
+from coremltools.converters.mil.mil.operation import NONE, SYMBOL, VALUE, Operation, precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import MAX_SIZE_CONSTANT_FOLDING
 from coremltools.converters.mil.mil.types.symbolic import (
@@ -692,8 +682,13 @@ class tile(Operation):
                 if rep <= 0:
                     raise ValueError("All entries of reps parameter must be greater than 0")
 
-            if is_symbolic(rep) or is_symbolic(x_shape[i]):
+            if is_symbolic(rep):
                 out_shape.append(get_new_symbol())
+            elif is_symbolic(x_shape[i]):
+                if rep == 1:
+                    out_shape.append(x_shape[i])
+                else:
+                    out_shape.append(get_new_symbol())
             else:
                 out_shape.append(rep * x_shape[i])
 
@@ -1339,9 +1334,7 @@ class identity(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(
-        x=ListOrTensorInputType()
-    )
+    input_spec = InputSpec(x=InternalInputType())
 
     def type_inference(self):
         return self.x.sym_type

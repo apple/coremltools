@@ -24,7 +24,7 @@ def deprecated(obj=None, suffix="", version="", obj_prefix=""):
                 )
             if suffix:
                 msg += f"; {suffix}"
-            warnings.warn(msg, category=FutureWarning)
+            warnings.warn(msg, category=DeprecationWarning)
             return obj(*args, **kwargs)
 
         return wrapped

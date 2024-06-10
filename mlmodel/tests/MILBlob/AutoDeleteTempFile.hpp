@@ -12,8 +12,7 @@ namespace TestUtil {
 
 class AutoDeleteTempFile {
 public:
-    enum FileType
-    {
+    enum FileType {
         FILE = 0,
         DIR = 1
     };

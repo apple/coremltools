@@ -116,6 +116,9 @@ extern SequenceFeatureTypeDefaultTypeInternal _SequenceFeatureType_default_insta
 class SizeRange;
 class SizeRangeDefaultTypeInternal;
 extern SizeRangeDefaultTypeInternal _SizeRange_default_instance_;
+class StateFeatureType;
+class StateFeatureTypeDefaultTypeInternal;
+extern StateFeatureTypeDefaultTypeInternal _StateFeatureType_default_instance_;
 class StringFeatureType;
 class StringFeatureTypeDefaultTypeInternal;
 extern StringFeatureTypeDefaultTypeInternal _StringFeatureType_default_instance_;
@@ -551,7 +554,7 @@ inline ::google::protobuf::uint64 ItemSimilarityRecommender_ConnectedItem::itemi
   return itemid_;
 }
 inline void ItemSimilarityRecommender_ConnectedItem::set_itemid(::google::protobuf::uint64 value) {
-  
+
   itemid_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.ConnectedItem.itemId)
 }
@@ -565,7 +568,7 @@ inline double ItemSimilarityRecommender_ConnectedItem::similarityscore() const {
   return similarityscore_;
 }
 inline void ItemSimilarityRecommender_ConnectedItem::set_similarityscore(double value) {
-  
+
   similarityscore_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.ConnectedItem.similarityScore)
 }
@@ -583,7 +586,7 @@ inline ::google::protobuf::uint64 ItemSimilarityRecommender_SimilarItems::itemid
   return itemid_;
 }
 inline void ItemSimilarityRecommender_SimilarItems::set_itemid(::google::protobuf::uint64 value) {
-  
+
   itemid_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.SimilarItems.itemId)
 }
@@ -627,7 +630,7 @@ inline double ItemSimilarityRecommender_SimilarItems::itemscoreadjustment() cons
   return itemscoreadjustment_;
 }
 inline void ItemSimilarityRecommender_SimilarItems::set_itemscoreadjustment(double value) {
-  
+
   itemscoreadjustment_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.SimilarItems.itemScoreAdjustment)
 }
@@ -680,7 +683,7 @@ inline const ::CoreML::Specification::StringVector& ItemSimilarityRecommender::i
                          : *::CoreML::Specification::StringVector::internal_default_instance();
 }
 inline ::CoreML::Specification::StringVector* ItemSimilarityRecommender::mutable_itemstringids() {
-  
+
   if (itemstringids_ == NULL) {
     itemstringids_ = new ::CoreML::Specification::StringVector;
   }
@@ -689,7 +692,7 @@ inline ::CoreML::Specification::StringVector* ItemSimilarityRecommender::mutable
 }
 inline ::CoreML::Specification::StringVector* ItemSimilarityRecommender::release_itemstringids() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.itemStringIds)
-  
+
   ::CoreML::Specification::StringVector* temp = itemstringids_;
   itemstringids_ = NULL;
   return temp;
@@ -698,9 +701,9 @@ inline void ItemSimilarityRecommender::set_allocated_itemstringids(::CoreML::Spe
   delete itemstringids_;
   itemstringids_ = itemstringids;
   if (itemstringids) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.itemStringIds)
 }
@@ -719,7 +722,7 @@ inline const ::CoreML::Specification::Int64Vector& ItemSimilarityRecommender::it
                          : *::CoreML::Specification::Int64Vector::internal_default_instance();
 }
 inline ::CoreML::Specification::Int64Vector* ItemSimilarityRecommender::mutable_itemint64ids() {
-  
+
   if (itemint64ids_ == NULL) {
     itemint64ids_ = new ::CoreML::Specification::Int64Vector;
   }
@@ -728,7 +731,7 @@ inline ::CoreML::Specification::Int64Vector* ItemSimilarityRecommender::mutable_
 }
 inline ::CoreML::Specification::Int64Vector* ItemSimilarityRecommender::release_itemint64ids() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.itemInt64Ids)
-  
+
   ::CoreML::Specification::Int64Vector* temp = itemint64ids_;
   itemint64ids_ = NULL;
   return temp;
@@ -737,9 +740,9 @@ inline void ItemSimilarityRecommender::set_allocated_itemint64ids(::CoreML::Spec
   delete itemint64ids_;
   itemint64ids_ = itemint64ids;
   if (itemint64ids) {
-    
+
   } else {
-    
+
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.itemInt64Ids)
 }
@@ -753,13 +756,13 @@ inline const ::std::string& ItemSimilarityRecommender::iteminputfeaturename() co
   return iteminputfeaturename_.GetNoArena();
 }
 inline void ItemSimilarityRecommender::set_iteminputfeaturename(const ::std::string& value) {
-  
+
   iteminputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
 }
 #if LANG_CXX11
 inline void ItemSimilarityRecommender::set_iteminputfeaturename(::std::string&& value) {
-  
+
   iteminputfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
@@ -767,31 +770,31 @@ inline void ItemSimilarityRecommender::set_iteminputfeaturename(::std::string&& 
 #endif
 inline void ItemSimilarityRecommender::set_iteminputfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   iteminputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
 }
 inline void ItemSimilarityRecommender::set_iteminputfeaturename(const char* value, size_t size) {
-  
+
   iteminputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
 }
 inline ::std::string* ItemSimilarityRecommender::mutable_iteminputfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
   return iteminputfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* ItemSimilarityRecommender::release_iteminputfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
-  
+
   return iteminputfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void ItemSimilarityRecommender::set_allocated_iteminputfeaturename(::std::string* iteminputfeaturename) {
   if (iteminputfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   iteminputfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), iteminputfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.itemInputFeatureName)
@@ -806,13 +809,13 @@ inline const ::std::string& ItemSimilarityRecommender::numrecommendationsinputfe
   return numrecommendationsinputfeaturename_.GetNoArena();
 }
 inline void ItemSimilarityRecommender::set_numrecommendationsinputfeaturename(const ::std::string& value) {
-  
+
   numrecommendationsinputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
 }
 #if LANG_CXX11
 inline void ItemSimilarityRecommender::set_numrecommendationsinputfeaturename(::std::string&& value) {
-  
+
   numrecommendationsinputfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
@@ -820,31 +823,31 @@ inline void ItemSimilarityRecommender::set_numrecommendationsinputfeaturename(::
 #endif
 inline void ItemSimilarityRecommender::set_numrecommendationsinputfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   numrecommendationsinputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
 }
 inline void ItemSimilarityRecommender::set_numrecommendationsinputfeaturename(const char* value, size_t size) {
-  
+
   numrecommendationsinputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
 }
 inline ::std::string* ItemSimilarityRecommender::mutable_numrecommendationsinputfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
   return numrecommendationsinputfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* ItemSimilarityRecommender::release_numrecommendationsinputfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
-  
+
   return numrecommendationsinputfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void ItemSimilarityRecommender::set_allocated_numrecommendationsinputfeaturename(::std::string* numrecommendationsinputfeaturename) {
   if (numrecommendationsinputfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   numrecommendationsinputfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), numrecommendationsinputfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.numRecommendationsInputFeatureName)
@@ -859,13 +862,13 @@ inline const ::std::string& ItemSimilarityRecommender::itemrestrictioninputfeatu
   return itemrestrictioninputfeaturename_.GetNoArena();
 }
 inline void ItemSimilarityRecommender::set_itemrestrictioninputfeaturename(const ::std::string& value) {
-  
+
   itemrestrictioninputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
 }
 #if LANG_CXX11
 inline void ItemSimilarityRecommender::set_itemrestrictioninputfeaturename(::std::string&& value) {
-  
+
   itemrestrictioninputfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
@@ -873,31 +876,31 @@ inline void ItemSimilarityRecommender::set_itemrestrictioninputfeaturename(::std
 #endif
 inline void ItemSimilarityRecommender::set_itemrestrictioninputfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   itemrestrictioninputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
 }
 inline void ItemSimilarityRecommender::set_itemrestrictioninputfeaturename(const char* value, size_t size) {
-  
+
   itemrestrictioninputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
 }
 inline ::std::string* ItemSimilarityRecommender::mutable_itemrestrictioninputfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
   return itemrestrictioninputfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* ItemSimilarityRecommender::release_itemrestrictioninputfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
-  
+
   return itemrestrictioninputfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void ItemSimilarityRecommender::set_allocated_itemrestrictioninputfeaturename(::std::string* itemrestrictioninputfeaturename) {
   if (itemrestrictioninputfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   itemrestrictioninputfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), itemrestrictioninputfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.itemRestrictionInputFeatureName)
@@ -912,13 +915,13 @@ inline const ::std::string& ItemSimilarityRecommender::itemexclusioninputfeature
   return itemexclusioninputfeaturename_.GetNoArena();
 }
 inline void ItemSimilarityRecommender::set_itemexclusioninputfeaturename(const ::std::string& value) {
-  
+
   itemexclusioninputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
 }
 #if LANG_CXX11
 inline void ItemSimilarityRecommender::set_itemexclusioninputfeaturename(::std::string&& value) {
-  
+
   itemexclusioninputfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
@@ -926,31 +929,31 @@ inline void ItemSimilarityRecommender::set_itemexclusioninputfeaturename(::std::
 #endif
 inline void ItemSimilarityRecommender::set_itemexclusioninputfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   itemexclusioninputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
 }
 inline void ItemSimilarityRecommender::set_itemexclusioninputfeaturename(const char* value, size_t size) {
-  
+
   itemexclusioninputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
 }
 inline ::std::string* ItemSimilarityRecommender::mutable_itemexclusioninputfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
   return itemexclusioninputfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* ItemSimilarityRecommender::release_itemexclusioninputfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
-  
+
   return itemexclusioninputfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void ItemSimilarityRecommender::set_allocated_itemexclusioninputfeaturename(::std::string* itemexclusioninputfeaturename) {
   if (itemexclusioninputfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   itemexclusioninputfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), itemexclusioninputfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.itemExclusionInputFeatureName)
@@ -965,13 +968,13 @@ inline const ::std::string& ItemSimilarityRecommender::recommendeditemlistoutput
   return recommendeditemlistoutputfeaturename_.GetNoArena();
 }
 inline void ItemSimilarityRecommender::set_recommendeditemlistoutputfeaturename(const ::std::string& value) {
-  
+
   recommendeditemlistoutputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
 }
 #if LANG_CXX11
 inline void ItemSimilarityRecommender::set_recommendeditemlistoutputfeaturename(::std::string&& value) {
-  
+
   recommendeditemlistoutputfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
@@ -979,31 +982,31 @@ inline void ItemSimilarityRecommender::set_recommendeditemlistoutputfeaturename(
 #endif
 inline void ItemSimilarityRecommender::set_recommendeditemlistoutputfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   recommendeditemlistoutputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
 }
 inline void ItemSimilarityRecommender::set_recommendeditemlistoutputfeaturename(const char* value, size_t size) {
-  
+
   recommendeditemlistoutputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
 }
 inline ::std::string* ItemSimilarityRecommender::mutable_recommendeditemlistoutputfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
   return recommendeditemlistoutputfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* ItemSimilarityRecommender::release_recommendeditemlistoutputfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
-  
+
   return recommendeditemlistoutputfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void ItemSimilarityRecommender::set_allocated_recommendeditemlistoutputfeaturename(::std::string* recommendeditemlistoutputfeaturename) {
   if (recommendeditemlistoutputfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   recommendeditemlistoutputfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), recommendeditemlistoutputfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.recommendedItemListOutputFeatureName)
@@ -1018,13 +1021,13 @@ inline const ::std::string& ItemSimilarityRecommender::recommendeditemscoreoutpu
   return recommendeditemscoreoutputfeaturename_.GetNoArena();
 }
 inline void ItemSimilarityRecommender::set_recommendeditemscoreoutputfeaturename(const ::std::string& value) {
-  
+
   recommendeditemscoreoutputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), value);
   // @@protoc_insertion_point(field_set:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)
 }
 #if LANG_CXX11
 inline void ItemSimilarityRecommender::set_recommendeditemscoreoutputfeaturename(::std::string&& value) {
-  
+
   recommendeditemscoreoutputfeaturename_.SetNoArena(
     &::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::move(value));
   // @@protoc_insertion_point(field_set_rvalue:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)
@@ -1032,31 +1035,31 @@ inline void ItemSimilarityRecommender::set_recommendeditemscoreoutputfeaturename
 #endif
 inline void ItemSimilarityRecommender::set_recommendeditemscoreoutputfeaturename(const char* value) {
   GOOGLE_DCHECK(value != NULL);
-  
+
   recommendeditemscoreoutputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), ::std::string(value));
   // @@protoc_insertion_point(field_set_char:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)
 }
 inline void ItemSimilarityRecommender::set_recommendeditemscoreoutputfeaturename(const char* value, size_t size) {
-  
+
   recommendeditemscoreoutputfeaturename_.SetNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(),
       ::std::string(reinterpret_cast<const char*>(value), size));
   // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)
 }
 inline ::std::string* ItemSimilarityRecommender::mutable_recommendeditemscoreoutputfeaturename() {
-  
+
   // @@protoc_insertion_point(field_mutable:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)
   return recommendeditemscoreoutputfeaturename_.MutableNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline ::std::string* ItemSimilarityRecommender::release_recommendeditemscoreoutputfeaturename() {
   // @@protoc_insertion_point(field_release:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)
-  
+
   return recommendeditemscoreoutputfeaturename_.ReleaseNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited());
 }
 inline void ItemSimilarityRecommender::set_allocated_recommendeditemscoreoutputfeaturename(::std::string* recommendeditemscoreoutputfeaturename) {
   if (recommendeditemscoreoutputfeaturename != NULL) {
-    
+
   } else {
-    
+
   }
   recommendeditemscoreoutputfeaturename_.SetAllocatedNoArena(&::google::protobuf::internal::GetEmptyStringAlreadyInited(), recommendeditemscoreoutputfeaturename);
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.ItemSimilarityRecommender.recommendedItemScoreOutputFeatureName)

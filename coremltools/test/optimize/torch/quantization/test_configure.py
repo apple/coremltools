@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -20,7 +20,11 @@ import torch.nn.quantized
 from coremltools.optimize.torch.quantization import LinearQuantizer, LinearQuantizerConfig
 from coremltools.optimize.torch.quantization._backend_config import _mod_activations
 from coremltools.optimize.torch.quantization._qconfig_mapping import _QConfigMappingBuilder
-from coremltools.optimize.torch.quantization._utils import find_module, is_activation_post_process
+from coremltools.optimize.torch.quantization._utils import (
+    find_module,
+    get_quant_range,
+    is_activation_post_process,
+)
 from coremltools.optimize.torch.quantization.modules import fused_modules as _fused
 from coremltools.optimize.torch.quantization.modules import qat_modules as _qat
 from coremltools.optimize.torch.quantization.modules import quantized_modules as _quantized
@@ -30,6 +34,7 @@ from coremltools.optimize.torch.quantization.quantization_config import Quantiza
 def get_configs_for_qscheme(
     activation_dtype=torch.quint8,
     weight_per_channel=True,
+    weight_dtype=torch.qint8,
 ) -> List[LinearQuantizerConfig]:
     return [
         LinearQuantizerConfig.from_dict(
@@ -37,6 +42,7 @@ def get_configs_for_qscheme(
                 "global_config": {
                     "quantization_scheme": QuantizationScheme.symmetric,
                     "milestones": [0, 0, 10, 10],
+                    "weight_dtype": weight_dtype,
                     "activation_dtype": activation_dtype,
                     "weight_per_channel": weight_per_channel,
                 }
@@ -47,6 +53,7 @@ def get_configs_for_qscheme(
                 "global_config": {
                     "quantization_scheme": QuantizationScheme.affine,
                     "milestones": [0, 0, 10, 10],
+                    "weight_dtype": weight_dtype,
                     "activation_dtype": activation_dtype,
                     "weight_per_channel": weight_per_channel,
                 }
@@ -57,15 +64,24 @@ def get_configs_for_qscheme(
 
 def quantize_model(model, data, config=None):
     quantizer = LinearQuantizer(model, config)
-    prepared_model = quantizer.prepare(example_inputs=data, inplace=False)
+    prepared_model = quantizer.prepare(example_inputs=(data,), inplace=False)
     quantizer.step()
     prepared_model(data)
     return prepared_model, quantizer
 
 
+def _verify_quant_range(fake_quant, weight_n_bits, weight_dtype):
+    quant_min, quant_max = get_quant_range(n_bits=weight_n_bits, dtype=weight_dtype)
+    assert fake_quant.quant_min == quant_min
+    assert fake_quant.quant_max == quant_max
+
+
 @pytest.mark.parametrize(
     "config",
-    get_configs_for_qscheme() + get_configs_for_qscheme(weight_per_channel=False),
+    get_configs_for_qscheme()
+    + get_configs_for_qscheme(weight_per_channel=False)
+    + get_configs_for_qscheme(weight_dtype="qint8")
+    + get_configs_for_qscheme(weight_dtype=torch.quint8),
 )
 def test_conv_relu_fusion(config):
     model = nn.Sequential(
@@ -81,6 +97,11 @@ def test_conv_relu_fusion(config):
     prepared_model, quantizer = quantize_model(model, data, config)
 
     assert isinstance(prepared_model.conv, torch.nn.intrinsic.qat.ConvReLU2d)
+    _verify_quant_range(
+        prepared_model.conv.weight_fake_quant,
+        weight_n_bits=config.global_config.weight_n_bits,
+        weight_dtype=config.global_config.weight_dtype,
+    )
 
     converted_model = quantizer.finalize(inplace=False)
 
@@ -90,7 +111,10 @@ def test_conv_relu_fusion(config):
 
 @pytest.mark.parametrize(
     "config",
-    get_configs_for_qscheme() + get_configs_for_qscheme(weight_per_channel=False),
+    get_configs_for_qscheme()
+    + get_configs_for_qscheme(weight_per_channel=False)
+    + get_configs_for_qscheme(weight_dtype="qint4")
+    + get_configs_for_qscheme(weight_dtype="quint4"),
 )
 @pytest.mark.parametrize("activation_fn", list(_mod_activations))
 def test_conv_act_fusion(config, activation_fn):
@@ -104,6 +128,11 @@ def test_conv_act_fusion(config, activation_fn):
 
     assert isinstance(prepared_model.conv, _qat.ConvAct2d)
     assert isinstance(prepared_model.conv.act, activation_fn)
+    _verify_quant_range(
+        prepared_model.conv.conv.weight_fake_quant,
+        weight_n_bits=config.global_config.weight_n_bits,
+        weight_dtype=config.global_config.weight_dtype,
+    )
 
     converted_model = quantizer.finalize(inplace=False)
 
@@ -113,7 +142,10 @@ def test_conv_act_fusion(config, activation_fn):
 
 @pytest.mark.parametrize(
     "config",
-    get_configs_for_qscheme() + get_configs_for_qscheme(weight_per_channel=False),
+    get_configs_for_qscheme()
+    + get_configs_for_qscheme(weight_per_channel=False)
+    + get_configs_for_qscheme(weight_dtype="qint4")
+    + get_configs_for_qscheme(weight_dtype="quint4"),
 )
 def test_conv_bn_relu_fusion(config):
     model = nn.Sequential(
@@ -130,6 +162,11 @@ def test_conv_bn_relu_fusion(config):
     prepared_model, quantizer = quantize_model(model, data, config)
 
     assert isinstance(prepared_model.conv, torch.nn.intrinsic.qat.ConvBnReLU2d)
+    _verify_quant_range(
+        prepared_model.conv.weight_fake_quant,
+        weight_n_bits=config.global_config.weight_n_bits,
+        weight_dtype=config.global_config.weight_dtype,
+    )
 
     converted_model = quantizer.finalize(inplace=False)
 
@@ -139,7 +176,10 @@ def test_conv_bn_relu_fusion(config):
 
 @pytest.mark.parametrize(
     "config",
-    get_configs_for_qscheme() + get_configs_for_qscheme(weight_per_channel=False),
+    get_configs_for_qscheme()
+    + get_configs_for_qscheme(weight_per_channel=False)
+    + get_configs_for_qscheme(weight_dtype="qint4")
+    + get_configs_for_qscheme(weight_dtype="quint4"),
 )
 @pytest.mark.parametrize("activation_fn", list(_mod_activations))
 def test_conv_bn_act_fusion(config, activation_fn):
@@ -154,6 +194,11 @@ def test_conv_bn_act_fusion(config, activation_fn):
 
     assert isinstance(prepared_model.conv, _qat.ConvBnAct2d)
     assert isinstance(prepared_model.conv.act, activation_fn)
+    _verify_quant_range(
+        prepared_model.conv.conv.weight_fake_quant,
+        weight_n_bits=config.global_config.weight_n_bits,
+        weight_dtype=config.global_config.weight_dtype,
+    )
 
     converted_model = quantizer.finalize(inplace=False)
 
@@ -163,7 +208,10 @@ def test_conv_bn_act_fusion(config, activation_fn):
 
 @pytest.mark.parametrize(
     "config",
-    get_configs_for_qscheme() + get_configs_for_qscheme(weight_per_channel=False),
+    get_configs_for_qscheme()
+    + get_configs_for_qscheme(weight_per_channel=False)
+    + get_configs_for_qscheme(weight_dtype="qint4")
+    + get_configs_for_qscheme(weight_dtype="quint4"),
 )
 def test_linear_relu_fusion(config):
     model = nn.Sequential(OrderedDict({"linear": nn.Linear(20, 100), "act": nn.ReLU()}))
@@ -172,6 +220,11 @@ def test_linear_relu_fusion(config):
     prepared_model, quantizer = quantize_model(model, data, config)
 
     assert isinstance(prepared_model.linear, torch.nn.intrinsic.qat.LinearReLU)
+    _verify_quant_range(
+        prepared_model.linear.weight_fake_quant,
+        weight_n_bits=config.global_config.weight_n_bits,
+        weight_dtype=config.global_config.weight_dtype,
+    )
 
     converted_model = quantizer.finalize(inplace=False)
 
@@ -181,7 +234,10 @@ def test_linear_relu_fusion(config):
 
 @pytest.mark.parametrize(
     "config",
-    get_configs_for_qscheme() + get_configs_for_qscheme(weight_per_channel=False),
+    get_configs_for_qscheme()
+    + get_configs_for_qscheme(weight_per_channel=False)
+    + get_configs_for_qscheme(weight_dtype="qint4")
+    + get_configs_for_qscheme(weight_dtype="quint4"),
 )
 @pytest.mark.parametrize("activation_fn", list(_mod_activations))
 def test_linear_act_fusion(config, activation_fn):
@@ -195,6 +251,11 @@ def test_linear_act_fusion(config, activation_fn):
 
     assert isinstance(prepared_model.linear, _qat.LinearAct)
     assert isinstance(prepared_model.linear.act, activation_fn)
+    _verify_quant_range(
+        prepared_model.linear.linear.weight_fake_quant,
+        weight_n_bits=config.global_config.weight_n_bits,
+        weight_dtype=config.global_config.weight_dtype,
+    )
 
     converted_model = quantizer.finalize(inplace=False)
 
@@ -288,7 +349,7 @@ def test_sequential_network_config_for_symmetric(mnist_model_quantization):
     """
     Tests a sequential network with multiple modules is configured correctly.
     This network has layers where input and output observers are shared. We test
-    that for these layers, we set activation quantizer correctly for always affine layers
+    that for these layers, we set acitvation quantizer correctly for always affine layers
     """
     data = torch.randn(1, 1, 28, 28)
     prepared_model, quantizer = quantize_model(mnist_model_quantization, data)

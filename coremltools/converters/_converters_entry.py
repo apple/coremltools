@@ -29,6 +29,7 @@ from coremltools.converters.mil.input_types import (
     InputType,
     RangeDim,
     Shape,
+    StateType,
     TensorType,
 )
 from coremltools.converters.mil.mil import Program, types
@@ -73,6 +74,7 @@ def convert(
     package_dir=None,
     debug=False,
     pass_pipeline: Optional[PassPipeline] = None,
+    states=None,
 ):
     """
     Convert a TensorFlow or PyTorch model to the Core ML model format as either
@@ -403,7 +405,7 @@ def convert(
         returned.
 
         An enum with the following possible values:
-        
+
         * ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the neural engine.
         * ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
         * ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the neural engine.
@@ -477,6 +479,50 @@ def convert(
 
              mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION)
 
+    states:
+        Create a stateful ``mlprogram`` model
+        by providing the ``StateType`` in the ``states`` argument (for details see `MIL Input Types <https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html>`_).
+        The stateful model is useful when converting a large language model with KV-Cache.
+        The name of ``StateType`` must match the key of the PyTorch ``named_buffers()`` method in the source traced model.
+
+        The following example converts a torch model with a buffer called ``state_1``.
+
+        .. sourcecode:: python
+
+            class UpdateBufferModel(torch.nn.Module):
+                def __init__(self):
+                    super(UpdateBufferModel, self).__init__()
+                    self.register_buffer(
+                        "state_1", torch.tensor(np.array([0, 0, 0], dtype=np.float32))
+                    )
+
+                def forward(self, x):
+                    # In place update of the model state
+                    self.state_1.add_(x)
+                    return self.state_1
+
+
+            model = UpdateBufferModel()
+            traced_model = torch.jit.trace(model, torch.tensor([1, 2, 3], dtype=torch.float32))
+
+            inputs = [
+                ct.TensorType(shape=(1, 2)),
+            ]
+            states = [
+                ct.StateType(
+                    wrapped_type=ct.TensorType(
+                        shape=(1, 2),
+                    ),
+                    name="state_1",
+                ),
+            ]
+            mlmodel = ct.convert(
+                traced_model,
+                inputs=inputs,
+                states=states,
+                minimum_deployment_target=ct.target.iOS18,
+            )
+
     Returns
     -------
 
@@ -526,8 +572,7 @@ def convert(
             >>> results = mlmodel.predict({"input": example_input.numpy()})
             >>> print(results['1651']) # 1651 is the node name given by PyTorch's JIT
 
-    See `Conversion Options <https://apple.github.io/coremltools/docs-guides/source/conversion-options.html>`_ for
-    more advanced options.
+    For more options see `Conversion Options <https://apple.github.io/coremltools/docs-guides/source/conversion-options.html>`_.
     """
     _check_deployment_target(minimum_deployment_target)
     outputs_as_strings, outputs_as_tensor_or_image_types = _validate_outputs_argument(outputs)
@@ -578,6 +623,15 @@ def convert(
         and need_fp16_cast_pass
     )
 
+    # Verify the inputs cannot contains state
+    if states is None:
+        states = []
+    _verify_inputs_doesnot_contains_states(inputs)
+
+    # states can only passed if the source is pytorch
+    if len(states) > 0 and exact_source != "pytorch":
+        raise ValueError("'states' can only be passed with pytorch source model.")
+
     mlmodel = mil_convert(
         model,
         convert_from=exact_source,
@@ -592,6 +646,7 @@ def convert(
         specification_version=specification_version,
         main_pipeline=pass_pipeline,
         use_default_fp16_io=use_default_fp16_io,
+        states=states,
     )
 
     if exact_target == "mlprogram" and mlmodel._input_has_infinite_upper_bound():
@@ -656,6 +711,20 @@ def _check_deployment_target(minimum_deployment_target):
             "For example, coremltools.target.iOS13"
         )
         raise TypeError(msg.format(minimum_deployment_target))
+
+
+def _verify_inputs_doesnot_contains_states(
+    inputs: List[InputType],
+) -> None:
+    """
+    Verify that StateType is not present in the inputs.
+    """
+    if inputs is None:
+        return
+
+    for val in inputs:
+        if isinstance(val, StateType):
+            raise ValueError("'inputs' cannot contain an instance of StateType.")
 
 
 def _validate_outputs_argument(outputs):
@@ -848,9 +917,9 @@ def _validate_conversion_arguments(
 
     elif exact_source == "pytorch":
         if _HAS_TORCH_EXPORT_API and isinstance(model, ExportedProgram):
-            if model.dialect != "EDGE":
+            if model.dialect not in ("ATEN", "EDGE"):
                 raise NotImplementedError(
-                    f"Conversion for models with only EDGE dialect is supported/tested. Provided Dialect: {model.dialect}"
+                    f"Conversion for models with only ATEN or EDGE dialect is supported/tested. Provided Dialect: {model.dialect}"
                 )
 
             # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)

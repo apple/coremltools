@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -26,16 +26,19 @@ from coremltools.optimize.torch.optimization_config import (
     ModuleOptimizationConfig as _ModuleOptimizationConfig,
 )
 from coremltools.optimize.torch.optimization_config import OptimizationConfig as _OptimizationConfig
-from coremltools.optimize.torch.optimization_config import _validate_module_type_keys_factory
+from coremltools.optimize.torch.optimization_config import (
+    PalettizationGranularity,
+    _deprecated_field,
+    _validate_module_type_keys_factory,
+)
 
 # Default advanced options for palettization
 DEFAULT_PALETTIZATION_ADVANCED_OPTIONS = {
-    "partition_size": 2000000000,
     "cluster_permute": None,
     "palett_max_mem": 1.0,
     "kmeans_max_iter": 3,
-    "prune_threshold": 0.0,
-    "kmeans_init": "cpu.kmeans++",
+    "prune_threshold": 1e-7,
+    "kmeans_init": "auto",
     "kmeans_opt1d_threshold": 1024,
     "enforce_zero": False,
     "palett_mode": "dkm",
@@ -43,7 +46,18 @@ DEFAULT_PALETTIZATION_ADVANCED_OPTIONS = {
     "palett_epsilon": 0.0001,
     "palett_lambda": 0.0,
     "add_extra_centroid": False,
-    "palett_cluster_tol": 0.05,
+    "palett_cluster_tol": 0.0,
+    "palett_min_tsize": 64 * 1024,
+    "palett_unique": False,
+    "palett_shard": False,
+    "palett_batch_mode": False,
+    "palett_dist": False,
+    "per_channel_scaling_factor_scheme": "min_max",
+    "percentage_palett_enable": 1.0,
+    "kmeans_batch_threshold": 4,
+    "kmeans_n_init": 100,
+    "zero_threshold": 1e-7,
+    "kmeans_error_bnd": 0.0,
 }
 
 
@@ -55,6 +69,9 @@ DEFAULT_PALETTIZATION_OPTIONS = {
     "weight_threshold": 2048,
     "milestone": 0,
     "quantize_activations": False,
+    "enable_per_channel_scale": False,
+    "granularity": "per_tensor",
+    "group_size": None,
 }
 
 
@@ -106,7 +123,16 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         n_bits (:obj:`int`): Number of clusters. The number of clusters used is :math:`2^{n\_bits}`.
             Defaults to ``4`` for linear layers and ``2`` for all other layers.
         weight_threshold (:obj:`int`): A module is only palettized if the number of elements in
-            its weight matrix exceeds ``weight_threshold``. Defaults to ``2048``.
+            its weight matrix exceeds ``weight_threshold``. If there are multiple weights in a
+            module (like :py:class:`torch.nn.MultiheadAttention`), all of them must have
+            more elements than the ``weight_threshold`` for the module to be palettized.
+            Defaults to ``2048``.
+        granularity (:py:class:`PalettizationGranularity`) – Granularity for palettization.
+            One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.
+        group_size (:obj:`int`): Specify the number of channels in a group.
+            Only effective when granularity is ``per_grouped_channel``.
+        enable_per_channel_scale (:obj:`bool`): When set to ``True``, per channel scaling is used along the channel
+            dimension.
         milestone (:obj:`int`): Step or epoch at which palettization begins. Defaults to ``0``.
         cluster_dim (:obj:`int`, ``optional``): The dimension of each cluster. Defaults to ``1``.
         quant_min: (:obj:`int`, ``optional``): The minimum value for each element in the weight clusters if they are
@@ -120,8 +146,6 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
             by default, the clusters aren't quantized.
         quantize_activations (:obj:`bool`, ``optional``): When ``True``, the activation are quantized.
             Defaults to ``False``.
-        partition_size (:obj:`int`, ``optional``): partition_size helps in per channel palettization.
-            Defaults to ``2000000000``.
         cluster_permute (:obj:`tuple`, ``optional``): Permutation order to apply to weight partitions.
             Defaults to ``None``.
         palett_max_mem (:obj:`float`, ``optional``): Proportion of available GPU memory that should be used for
@@ -129,9 +153,9 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         kmeans_max_iter (:obj:`int`, ``optional``): Maximum number of differentiable ``k-means`` iterations.
             Defaults to ``3``.
         prune_threshold (:obj:`float`, ``optional``): Hard-shrinks weights between [``-prune_threshold``,
-            ``prune_threshold``] to zero. Useful for joint pruning and palettization. Defaults to ``0.0``.
+            ``prune_threshold``] to zero. Useful for joint pruning and palettization. Defaults to ``1e-7``.
         kmeans_init (:obj:`str`, ``optional``): ``k-means`` algorithm to use. Allowed options are
-            ``efficient_kmeans``, ``cpu.kmeans++`` and ``kmeans_pp``. Defaults to ``cpu.kmeans++``.
+            ``opt1d``, ``cpu.kmeans++`` and ``kmeans++``. Defaults to ``auto``.
         kmeans_opt1d_threshold (:obj:`int`, ``optional``): Channel threshold to decide if ``opt1d kmeans``
             should be used. Defaults to ``1024``.
         enforce_zero (:obj:`bool`, ``optional``): If ``True``, enforces the LUT centroid which is closest to
@@ -147,7 +171,46 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         add_extra_centroid (:obj:`bool`, ``optional``): If ``True``, adds an extra centroid to the LUT.
             Defaults to ``False``.
         palett_cluster_tol (:obj:`float`, ``optional``): Tolerance for non-unique centroids in the LUT.
-            The higher the number, the more tolerance for non-unique centroids. Defaults to ``0.05``.
+            The higher the number, the more tolerance for non-unique centroids. Defaults to ``0.0``.
+        palett_min_tsize (:obj:`int`, ``optional``): Weight threshold beyond which to use custom packing and unpacking
+            hook for autograd. Defaults to ``64*1024``.
+        palett_unique (:obj:`bool`, ``optional``): If ``True``, reduces the attention map by leveraging the fact that
+            FP16 only has ``2^16`` unique values. Useful for Large Models like LLMs where attention maps can be huge.
+            Defaults to ``False``. More details can be found `eDKM: An Efficient and Accurate Train-time Weight
+            Clustering for Large Language Models <https://arxiv.org/pdf/2309.00964.pdf>`_ .
+        palett_shard (:obj:`bool`, ``optional``): If ``True``, the index list is sharded across GPUs.
+            Defaults to ``False``. More details can be found `eDKM: An Efficient and Accurate Train-time Weight
+            Clustering for Large Language Models <https://arxiv.org/pdf/2309.00964.pdf>`_ .
+        palett_batch_mode (:obj:`bool`, ``optional``): If ``True``, performs batch DKM across different partitions
+            created for different blocks. Defaults to ``False``. More details can be found `eDKM: An Efficient and Accurate Train-time Weight
+            Clustering for Large Language Models <https://arxiv.org/pdf/2309.00964.pdf>`_ .
+        palett_dist (:obj:`bool`, ``optional``): If ``True``, performs distributed distance calculation in batch_mode if
+            distributed torch is available. Defaults to ``False``.
+        per_channel_scaling_factor_scheme (:obj:`str`, ``optional``): Criteria to calculate the
+            ``per_channel_scaling_factor``. Allowed options are ``min_max`` and ``abs``. Defaults to ``min_max``.
+        percentage_palett_enable (:obj:`float`, ``optional``): Percentage partitions to enable for DKM.
+                    Defaults to ``1.0``.
+        kmeans_batch_threshold (:obj:`int`, ``optional``): Threshold to decide at what num_partitions to go through with
+            sharded centroids list. num_partitions is calculated by dividing the channel size with the group_size
+            provided. If the kmeans_batch_threshold, the algorithm resorts to performing distirbuted kmeans for lower
+            partition numbers, given that num_partition number of GPUs are available. Defaults to ``4``.
+        kmeans_n_init (:obj:`int`, ``optional``): Number of time the k-means algorithm will be run with different
+            centroid seeds. The final results will be the best output of kmeans_n_init consecutive runs in terms of inertia.
+        zero_threshold (:obj:`int`, ``optional``): Zero threshold to be used to decide min value of clamp for softmax
+            . Defaults to ``1e-7``.
+        kmeans_error_bnd (:obj:`float`, ``optional``): Distance threshold to decide at what distance between parameters
+            and clusters to stop the kmeans operation. Defaults to ``0.0``.
+
+    This class supports few different configurations to structure the palettization:
+
+    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single look-up
+    table. The ``granularity`` is set to ``per_tensor`` and ``group_size`` is ``None``.
+
+    2. **Per-grouped-channel palettization**: In this configuration, ``group_size`` number of channels along
+    ``channel_axis`` share the same look-up table. For example, for a weight matrix of shape ``(16, 25)``, if we provide
+     ``group_size = 8``, the shape of the look-up table would be ``(2, 2^n_bits)``.
+
+    NOTE: Currently grouping is only supported along output channel axis.
     """
     n_bits: _Optional[int] = _field(
         default=None, validator=_validators.optional(_validators.instance_of(int))
@@ -155,6 +218,19 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
     weight_threshold: int = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["weight_threshold"],
         validator=_validators.instance_of(int),
+    )
+    granularity: PalettizationGranularity = _field(
+        default=DEFAULT_PALETTIZATION_OPTIONS["granularity"],
+        converter=PalettizationGranularity,
+        validator=_validators.in_(PalettizationGranularity),
+    )
+    group_size: _Optional[int] = _field(
+        default=DEFAULT_PALETTIZATION_OPTIONS["group_size"],
+        validator=_validators.optional(_validators.instance_of(int)),
+    )
+    enable_per_channel_scale: bool = _field(
+        default=DEFAULT_PALETTIZATION_OPTIONS["enable_per_channel_scale"],
+        validator=_validators.instance_of(bool),
     )
     milestone: int = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["milestone"],
@@ -174,7 +250,10 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
     dtype: _torch.dtype = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["dtype"],
         converter=_maybe_convert_str_to_dtype,
-        validator=_validators.instance_of(_torch.dtype),
+        validator=[
+            _validators.instance_of(_torch.dtype),
+            _validators.in_([_torch.qint8, _torch.quint8, _torch.float32]),
+        ],
     )
     cluster_dtype: str = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["cluster_dtype"],
@@ -183,10 +262,6 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
     quantize_activations: bool = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["quantize_activations"],
         validator=_validators.instance_of(bool),
-    )
-    partition_size: int = _field(
-        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["partition_size"],
-        validator=_validators.instance_of(int),
     )
     cluster_permute: _Optional[tuple] = _field(
         default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["cluster_permute"],
@@ -240,6 +315,68 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_cluster_tol"],
         validator=_validators.instance_of(float),
     )
+    palett_min_tsize: int = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_min_tsize"],
+        validator=_validators.instance_of(int),
+    )
+    palett_unique: bool = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_unique"],
+        validator=_validators.instance_of(bool),
+    )
+    palett_shard: bool = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_shard"],
+        validator=_validators.instance_of(bool),
+    )
+    palett_batch_mode: bool = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_batch_mode"],
+        validator=_validators.instance_of(bool),
+    )
+    palett_dist: bool = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["palett_dist"],
+        validator=_validators.instance_of(bool),
+    )
+    per_channel_scaling_factor_scheme: str = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["per_channel_scaling_factor_scheme"],
+        validator=_validators.and_(
+            _validators.instance_of(str), _validators.in_(["min_max", "abs"])
+        ),
+    )
+    percentage_palett_enable: float = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["percentage_palett_enable"],
+        validator=_validators.instance_of(float),
+    )
+    kmeans_batch_threshold: int = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_batch_threshold"],
+        validator=_validators.instance_of(int),
+    )
+    kmeans_n_init: int = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_n_init"],
+        validator=_validators.instance_of(int),
+    )
+    zero_threshold: float = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["zero_threshold"],
+        validator=_validators.instance_of(float),
+    )
+    kmeans_error_bnd: float = _field(
+        default=DEFAULT_PALETTIZATION_ADVANCED_OPTIONS["kmeans_error_bnd"],
+        validator=_validators.instance_of(float),
+    )
+    partition_size: int = _deprecated_field(
+        message=(
+            "partition_size is being deprecated and will be removed in "
+            "future versions. Please use group_size parameter instead."
+        )
+    )
+
+    @group_size.validator
+    def per_grouped_channel_granularity(self, attribute, value):
+        if self.granularity == PalettizationGranularity.per_grouped_channel:
+            assert (
+                value is not None
+            ), "group_size has to be specified along with per_grouped_channel granularity."
+            assert value > 0, "group_size should be greater than zero"
+        else:
+            assert value is None, "group_size can't be specified along with per_tensor granularity."
 
 
 _default_module_type_configs = _OrderedDict(
@@ -335,9 +472,7 @@ class DKMPalettizerConfig(_OptimizationConfig):
         factory=_OrderedDict,
         validator=_validators.deep_mapping(
             key_validator=_validators.instance_of(str),
-            value_validator=_validators.optional(
-                _validators.instance_of(ModuleDKMPalettizerConfig)
-            ),
+            value_validator=_validate_dkm_config_type,
             mapping_validator=_validators.instance_of(dict),
         ),
     )

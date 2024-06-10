@@ -109,4 +109,3 @@ int testMMapFileReaderTestsReadStruct()
 
     return 0;
 }
-

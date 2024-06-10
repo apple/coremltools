@@ -379,6 +379,8 @@ class FP16ComputePrecision(CastTypeQuantization):
         "list_read",
         "list_write",
         "list_length",
+        "read_state",
+        "coreml_update_state",
     }
 
     def __init__(self, op_selector=None):

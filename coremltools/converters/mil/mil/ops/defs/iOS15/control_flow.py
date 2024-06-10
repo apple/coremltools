@@ -163,6 +163,10 @@ class Const(Operation):
         val=InternalInputType(const=True),
     )
 
+    def __init__(self, **kwargs):
+        super(Const, self).__init__(**kwargs)
+        self._weight_id = None
+
     def type_inference(self):
         builtin_type, _ = self._get_type_val(self.val.val)
         return builtin_type
@@ -216,6 +220,24 @@ class Const(Operation):
 
         _, builtin_type = numpy_val_to_builtin_val(value)
         return builtin_type, value
+
+    @property
+    def weight_id(self) -> int:
+        """
+        Weight id for the const. It is used for weight sharing across multiple functions.
+        Constants sharing the same weight_id will use the same blob file value when
+        lowering to milproto.
+        """
+        return self._weight_id
+
+    @weight_id.setter
+    def weight_id(self, val: int) -> None:
+        """
+        Set weight id for the const.
+        """
+        assert isinstance(val, int), f"weight_id must be type of int. Got {type(val)}."
+        assert self._weight_id is None, f"cannot set {self.name} weight_id twice."
+        self._weight_id = val
 
 
 @register_op

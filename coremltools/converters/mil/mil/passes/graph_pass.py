@@ -6,8 +6,8 @@
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Text, Union
 
-from coremltools.converters.mil import Operation, Program
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Operation, Program
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 
 

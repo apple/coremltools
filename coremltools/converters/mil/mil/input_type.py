@@ -23,7 +23,7 @@ SUPPORT_INT_TYPES = [
     types.int16,
     types.int32,
     types.int64,
-]
+] + list(types._SUB_BYTE_TYPES)
 
 SUPPORT_COMPLEX_TYPES = [
     types.complex64,
@@ -35,6 +35,7 @@ _SUPPORT_TYPES = (
     + SUPPORT_INT_TYPES
     + SUPPORT_COMPLEX_TYPES
     + [types.bool, types.str]
+    + list(types._SUB_BYTE_TYPES)
 )
 
 
@@ -217,7 +218,7 @@ class _InputType:
     @property
     def type_str(self):
         """Descriptive string describing expected mil types"""
-        return self.__str__(self)
+        return self.__str__()
 
 
 class TensorInputType(_InputType):
@@ -355,6 +356,13 @@ class InternalInputType(_InputType):
     def _is_compatible(self, v):
         return True  # skip type check by default for InternalInputType.
 
+class StateInputType(_InputType):
+    """
+    StateInputType allows inputs of type types.state
+    """
+
+    def _is_compatible(self, v):
+        return types.is_state(v.sym_type)
 
 class PyFunctionInputType(InternalInputType):
     """

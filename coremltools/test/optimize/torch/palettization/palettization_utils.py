@@ -1,4 +1,4 @@
-#  Copyright (c) 2023, Apple Inc. All rights reserved.
+#  Copyright (c) 2024, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -12,9 +12,14 @@ def _assert_changes_post_attach(module, n_bits, cluster_dim):
     assert module.qconfig.weight.p.keywords["cluster_dim"] == cluster_dim
 
 
-def _assert_changes_post_prepare(original_module, palettized_module, n_bits, cluster_dim, kmeans_max_iter):
-    assert type(palettized_module) == quantization_mappings.DEFAULT_QAT_MODULE_MAPPINGS[type(original_module)]
-    assert palettized_module.weight_fake_quant.n_clusters[0] == 2 ** n_bits
+def _assert_changes_post_prepare(
+    original_module, palettized_module, n_bits, cluster_dim, kmeans_max_iter
+):
+    assert (
+        type(palettized_module)
+        == quantization_mappings.DEFAULT_QAT_MODULE_MAPPINGS[type(original_module)]
+    )
+    assert palettized_module.weight_fake_quant.n_clusters == 2**n_bits
     assert palettized_module.weight_fake_quant.cluster_dim == cluster_dim
     assert palettized_module.weight_fake_quant.kmeans_max_iter == kmeans_max_iter
 

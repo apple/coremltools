@@ -90,6 +90,13 @@ conv (iOS 17+)
    .. autoclass:: conv
    .. autoclass:: conv_transpose
 
+coreml_update_state
+---------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.coreml_dialect.ops
+
+   .. autoclass:: coreml_update_state
+
 elementwise\_binary
 ------------------------------------------------------------------
 
@@ -332,6 +339,13 @@ scatter\_gather (iOS 17+)
    .. autoclass:: scatter_along_axis
    .. autoclass:: scatter_nd
 
+states (iOS 18+)
+--------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS18.states
+
+   .. autoclass:: read_state
+
 tensor\_operation (iOS 15+)
 ----------------------------------------------------------------
 
@@ -414,4 +428,18 @@ tensor\_transformation (iOS 17+)
    .. autoclass:: sliding_windows
    .. autoclass:: squeeze
    .. autoclass:: transpose
+
+tensor\_transformation (iOS 18+)
+---------------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS18.tensor_transformation
+
+   .. autoclass:: slice_update
+
+transformers (iOS 18+)
+---------------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS18.transformers
+
+   .. autoclass:: scaled_dot_product_attention
 

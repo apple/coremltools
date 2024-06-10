@@ -207,6 +207,12 @@ message SequenceFeatureType {
     SizeRange sizeRange = 101;
 }
 
+message StateFeatureType {
+    oneof Type {
+        ArrayFeatureType arrayType = 1;
+    }
+}
+
 /*
  * A feature, which may be optional.
  */
@@ -219,8 +225,8 @@ message FeatureType {
         ArrayFeatureType multiArrayType = 5;
         DictionaryFeatureType dictionaryType = 6;
         SequenceFeatureType sequenceType = 7;
+        StateFeatureType stateType = 8;
     }
 
     bool isOptional = 1000;
 }
-

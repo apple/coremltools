@@ -14,7 +14,7 @@ namespace Blob {
 // ---: Blob Storage File Format :---
 // Default file format for CoreML (iOS15 onwards)
 //
-// ---: File structure :---
+// ---: File sturcture :---
 // File is structured as below:
 // 1. Storage header: `struct storage_header`
 // 2. Followed by pair: `struct blob_metadata` and `raw_data`
@@ -42,20 +42,25 @@ constexpr uint64_t BlobMetadataSentinel = 0xDEADBEEF;
 
 /**
  * blob_metadata: stores information of blob present in weight file
+ *
+ * Before ios18, the reserved fields were uninitialized and could have any values if not specified.
+ * From ios18 on, the reserved fields are initialized to 0 by default.
+ * To extend the format, make sure to bump the version number in storage_header.
  */
 struct blob_metadata {
     uint32_t sentinel = BlobMetadataSentinel;  // for validating correctness of metadata.
 
-    BlobDataType mil_dtype;       // data type of the blob data.
-    uint64_t sizeInBytes;         // size of the blob data in bytes.
-    uint64_t offset;              // offset in file for blob data.
-
+    BlobDataType mil_dtype = BlobDataType::Float16;  // data type of the blob data.
+    uint64_t sizeInBytes = 0;                        // size of the blob data in bytes.
+    uint64_t offset = 0;                             // offset in file for blob data.
+    uint64_t padding_size_in_bits = 0;               // describes the number of unused bits in this blob,
+                                                     // required to calculate the actual size for spans of
+                                                     // sub-btye-sized types.  Unused otherwise
     // Reserve fields
-    uint64_t reserved_0;
-    uint64_t reserved_1;
-    uint64_t reserved_2;
-    uint64_t reserved_3;
-    uint64_t reserved_4;
+    uint64_t reserved_1 = 0;
+    uint64_t reserved_2 = 0;
+    uint64_t reserved_3 = 0;
+    uint64_t reserved_4 = 0;
 };
 
 /**
