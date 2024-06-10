@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters._converters_entry &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css" />
+  <title>coremltools.converters._converters_entry &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
-        <script src="../../../_static/jquery.js"></script>
-        <script src="../../../_static/underscore.js"></script>
-        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../_static/doctools.js"></script>
-        <script src="../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
@@ -125,6 +124,7 @@
     <span class="n">InputType</span><span class="p">,</span>
     <span class="n">RangeDim</span><span class="p">,</span>
     <span class="n">Shape</span><span class="p">,</span>
+    <span class="n">StateType</span><span class="p">,</span>
     <span class="n">TensorType</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
@@ -147,16 +147,16 @@
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">torch</span>
 
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">_torchscript_from_spec</span> <span class="k">as</span> <span class="n">try_load_torchscript</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> <span class="n">is_torch_model</span>
 
     <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">torch.export</span> <span class="kn">import</span> <span class="n">ExportedProgram</span>
 
 
 
-<div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../../source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">[docs]</a><span class="nd">@_profile</span>
+<div class="viewcode-block" id="convert">
+<a class="viewcode-back" href="../../../source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">[docs]</a>
+<span class="nd">@_profile</span>
 <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span>
     <span class="n">source</span><span class="o">=</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span>
@@ -171,6 +171,7 @@
     <span class="n">package_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">pass_pipeline</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PassPipeline</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">states</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a TensorFlow or PyTorch model to the Core ML model format as either</span>
@@ -501,7 +502,7 @@
 <span class="sd">        returned.</span>
 
 <span class="sd">        An enum with the following possible values:</span>
-<span class="sd">        </span>
+
 <span class="sd">        * ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the neural engine.</span>
 <span class="sd">        * ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">        * ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the neural engine.</span>
@@ -575,6 +576,50 @@
 
 <span class="sd">             mlmodel = ct.convert(model, pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION)</span>
 
+<span class="sd">    states:</span>
+<span class="sd">        Create a stateful ``mlprogram`` model</span>
+<span class="sd">        by providing the ``StateType`` in the ``states`` argument (for details see `MIL Input Types &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html&gt;`_).</span>
+<span class="sd">        The stateful model is useful when converting a large language model with KV-Cache.</span>
+<span class="sd">        The name of ``StateType`` must match the key of the PyTorch ``named_buffers()`` method in the source traced model.</span>
+
+<span class="sd">        The following example converts a torch model with a buffer called ``state_1``.</span>
+
+<span class="sd">        .. sourcecode:: python</span>
+
+<span class="sd">            class UpdateBufferModel(torch.nn.Module):</span>
+<span class="sd">                def __init__(self):</span>
+<span class="sd">                    super(UpdateBufferModel, self).__init__()</span>
+<span class="sd">                    self.register_buffer(</span>
+<span class="sd">                        &quot;state_1&quot;, torch.tensor(np.array([0, 0, 0], dtype=np.float32))</span>
+<span class="sd">                    )</span>
+
+<span class="sd">                def forward(self, x):</span>
+<span class="sd">                    # In place update of the model state</span>
+<span class="sd">                    self.state_1.add_(x)</span>
+<span class="sd">                    return self.state_1</span>
+
+
+<span class="sd">            model = UpdateBufferModel()</span>
+<span class="sd">            traced_model = torch.jit.trace(model, torch.tensor([1, 2, 3], dtype=torch.float32))</span>
+
+<span class="sd">            inputs = [</span>
+<span class="sd">                ct.TensorType(shape=(1, 2)),</span>
+<span class="sd">            ]</span>
+<span class="sd">            states = [</span>
+<span class="sd">                ct.StateType(</span>
+<span class="sd">                    wrapped_type=ct.TensorType(</span>
+<span class="sd">                        shape=(1, 2),</span>
+<span class="sd">                    ),</span>
+<span class="sd">                    name=&quot;state_1&quot;,</span>
+<span class="sd">                ),</span>
+<span class="sd">            ]</span>
+<span class="sd">            mlmodel = ct.convert(</span>
+<span class="sd">                traced_model,</span>
+<span class="sd">                inputs=inputs,</span>
+<span class="sd">                states=states,</span>
+<span class="sd">                minimum_deployment_target=ct.target.iOS18,</span>
+<span class="sd">            )</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 
@@ -624,8 +669,7 @@
 <span class="sd">            &gt;&gt;&gt; results = mlmodel.predict({&quot;input&quot;: example_input.numpy()})</span>
 <span class="sd">            &gt;&gt;&gt; print(results[&#39;1651&#39;]) # 1651 is the node name given by PyTorch&#39;s JIT</span>
 
-<span class="sd">    See `Conversion Options &lt;https://apple.github.io/coremltools/docs-guides/source/conversion-options.html&gt;`_ for</span>
-<span class="sd">    more advanced options.</span>
+<span class="sd">    For more options see `Conversion Options &lt;https://apple.github.io/coremltools/docs-guides/source/conversion-options.html&gt;`_.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_check_deployment_target</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">)</span>
     <span class="n">outputs_as_strings</span><span class="p">,</span> <span class="n">outputs_as_tensor_or_image_types</span> <span class="o">=</span> <span class="n">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
@@ -676,6 +720,15 @@
         <span class="ow">and</span> <span class="n">need_fp16_cast_pass</span>
     <span class="p">)</span>
 
+    <span class="c1"># Verify the inputs cannot contains state</span>
+    <span class="k">if</span> <span class="n">states</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">states</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">_verify_inputs_doesnot_contains_states</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="c1"># states can only passed if the source is pytorch</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">states</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">exact_source</span> <span class="o">!=</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;states&#39; can only be passed with pytorch source model.&quot;</span><span class="p">)</span>
+
     <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">mil_convert</span><span class="p">(</span>
         <span class="n">model</span><span class="p">,</span>
         <span class="n">convert_from</span><span class="o">=</span><span class="n">exact_source</span><span class="p">,</span>
@@ -690,6 +743,7 @@
         <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">main_pipeline</span><span class="o">=</span><span class="n">pass_pipeline</span><span class="p">,</span>
         <span class="n">use_default_fp16_io</span><span class="o">=</span><span class="n">use_default_fp16_io</span><span class="p">,</span>
+        <span class="n">states</span><span class="o">=</span><span class="n">states</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="ow">and</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">_input_has_infinite_upper_bound</span><span class="p">():</span>
@@ -713,6 +767,7 @@
     <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">source_dialect</span><span class="o">=</span><span class="n">source_dialect</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">mlmodel</span></div>
+
 
 
 <span class="k">def</span> <span class="nf">_need_fp16_cast_pass</span><span class="p">(</span>
@@ -754,6 +809,20 @@
             <span class="s2">&quot;For example, coremltools.target.iOS13&quot;</span>
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_verify_inputs_doesnot_contains_states</span><span class="p">(</span>
+    <span class="n">inputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InputType</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify that StateType is not present in the inputs.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">StateType</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;inputs&#39; cannot contain an instance of StateType.&quot;</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
@@ -829,7 +898,7 @@
     <span class="n">compute_precision</span><span class="p">,</span>
     <span class="n">convert_to</span><span class="p">,</span>
     <span class="n">minimum_deployment_target</span><span class="p">,</span>
-<span class="p">):</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate and process model, inputs, classifier_config based on</span>
 <span class="sd">    `exact_source` (which cannot be `auto`) and `exact_target`.</span>
@@ -946,9 +1015,9 @@
 
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">dialect</span> <span class="o">!=</span> <span class="s2">&quot;EDGE&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">dialect</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;ATEN&quot;</span><span class="p">,</span> <span class="s2">&quot;EDGE&quot;</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Conversion for models with only EDGE dialect is supported/tested. Provided Dialect: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">dialect</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;Conversion for models with only ATEN or EDGE dialect is supported/tested. Provided Dialect: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">dialect</span><span class="si">}</span><span class="s2">&quot;</span>
                 <span class="p">)</span>
 
             <span class="c1"># TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)</span>
@@ -959,13 +1028,7 @@
                 <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;&#39;outputs&#39; argument should be None for ExportedProgram&quot;</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="n">try_load_torchscript</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-                <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">except</span><span class="p">:</span>
-                <span class="k">pass</span>
-            <span class="k">if</span> <span class="n">is_torch_load_successful</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_torch_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
                 <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="s1">&#39;Expected argument &quot;inputs&quot; for TorchScript models not provided&#39;</span>
@@ -980,7 +1043,7 @@
                     <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
-                    <span class="s2">&quot;@model must either be a TorchScript object (or .pt or .pth file) or an ExportedProgram object (if using torch.export based API), received: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="s2">&quot;Model must either be a TorchScript object (or .pt or .pth file) or an ExportedProgram object (if using torch.export based API), received: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
                     <span class="p">)</span>
                 <span class="p">)</span>
@@ -1008,14 +1071,14 @@
 <span class="k">def</span> <span class="nf">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
                       <span class="n">output_names</span><span class="p">,</span>
                       <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
-                      <span class="n">output_argument_as_specified_by_user</span><span class="p">):</span>
+                      <span class="n">output_argument_as_specified_by_user</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer source (which can be auto) to the precise framework.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">source</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">source</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;auto&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">,</span> <span class="s2">&quot;milinternal&quot;</span><span class="p">}:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s1">&#39;Unrecognized value of argument &quot;source&quot;: </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s1">. It must be one of [&quot;auto&quot;, &quot;tensorflow&quot;, &quot;pytorch&quot;].&#39;</span>
+            <span class="sa">f</span><span class="s1">&#39;Unrecognized value of argument &quot;source&quot;: </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s1">. It must be one of [&quot;auto&quot;, &quot;tensorflow&quot;, &quot;pytorch&quot;, &quot;milinternal&quot;].&#39;</span>
         <span class="p">)</span>
 
     <span class="c1"># Determine tensorflow version</span>
@@ -1047,13 +1110,7 @@
         <span class="k">if</span> <span class="n">_HAS_TORCH_EXPORT_API</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">ExportedProgram</span><span class="p">):</span>
             <span class="k">return</span> <span class="s2">&quot;pytorch&quot;</span>
 
-        <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">False</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">try_load_torchscript</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-            <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">except</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">if</span> <span class="n">is_torch_load_successful</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_torch_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
             <span class="c1"># validate that the outputs passed by the user are of type ImageType/TensorType</span>
             <span class="k">if</span> <span class="n">output_argument_as_specified_by_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
                 <span class="p">[</span>
@@ -1082,14 +1139,14 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">convert_to</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
             <span class="s2">&quot;When both &#39;convert_to&#39; and &#39;minimum_deployment_target&#39; not specified, &quot;</span>
-            <span class="s2">&quot;&#39;convert_to&#39; is set to </span><span class="se">\&quot;</span><span class="s2">mlprogram</span><span class="se">\&quot;</span><span class="s2"> and &#39;minimum_deployment_targer&#39; is set to &quot;</span>
+            <span class="s2">&quot;&#39;convert_to&#39; is set to </span><span class="se">\&quot;</span><span class="s2">mlprogram</span><span class="se">\&quot;</span><span class="s2"> and &#39;minimum_deployment_target&#39; is set to &quot;</span>
             <span class="s2">&quot;ct.target.iOS15 (which is same as ct.target.macOS12). &quot;</span>
             <span class="s2">&quot;Note: the model will not run on systems older than iOS15/macOS12/watchOS8/tvOS15. &quot;</span>
             <span class="s2">&quot;In order to make your model run on older system, please set the &#39;minimum_deployment_target&#39; to iOS14/iOS13. &quot;</span>

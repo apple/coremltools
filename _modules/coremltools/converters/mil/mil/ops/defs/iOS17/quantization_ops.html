@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../../../../" id="documentation_options" src="../../../../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../../../../_static/jquery.js"></script>
-        <script src="../../../../../../../../_static/underscore.js"></script>
-        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -156,7 +155,9 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Params scale &amp; zero_point should both be scalars or vectors&quot;</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="quantize"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.quantize">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
+<div class="viewcode-block" id="quantize">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.quantize">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">quantize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs affine/linear quantization on an input tensor.</span>
@@ -189,11 +190,11 @@
 <span class="sd">                  ``input.shape[axis]``; that is, equal to ``3``.</span>
 <span class="sd">                - This is broadcasted to ``(1, 3, 1, 1)``.</span>
 
-<span class="sd">    axis: const tensor&lt;int32, []&gt; (Optional)</span>
-
 <span class="sd">    output_dtype: const tensor&lt;string, []&gt; (Required)</span>
 <span class="sd">        * This parameter can take ``&quot;uint8&quot;``, ``&quot;int8&quot;`` as values.</span>
 <span class="sd">        * The ``output_dtype`` value must match the ``zero_point`` dtype.</span>
+
+<span class="sd">    axis: const tensor&lt;int32, []&gt; (Optional)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -258,7 +259,10 @@
         <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">zero_point</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="dequantize"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.dequantize">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
+
+<div class="viewcode-block" id="dequantize">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS17.quantization_ops.dequantize">[docs]</a>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS17_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">dequantize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs dequantization on an input tensor with affine/linear quantization.</span>
@@ -320,8 +324,21 @@
         <span class="n">_check_scale_zp_shapes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
-    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
-    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">can_materialize_val</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">materialized_val_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">can_materialize_val</span><span class="p">():</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
         <span class="n">quantized_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">val</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">zero_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span>
@@ -336,6 +353,7 @@
         <span class="n">zp</span> <span class="o">=</span> <span class="n">_rank_promoted_to_same_as_data</span><span class="p">(</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">)</span>
         <span class="n">val</span> <span class="o">=</span> <span class="n">sc</span> <span class="o">*</span> <span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span> <span class="o">-</span> <span class="n">zp</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">scale</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Block</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+
+
+<div class="viewcode-block" id="expand_dynamic_linear">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">expand_dynamic_linear</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translate to ``linear`` when the operand is a descendant of const, since such an operand</span>
+<span class="sd">    may be folded into const or fused into constexpr later by graph passes. In op translation,</span>
+<span class="sd">    we prefer ``linear`` whenever possible because it requires const or constexpr ``weight`` and ``bias``.</span>
+
+<span class="sd">    If such const folding or constexpr fusion did not happen, this pass would clean up</span>
+<span class="sd">    the too-ambitious ``linear`` ops by replacing them with ``matmul`` ops.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_expand_dynamic_linear_block</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+
+    <span class="nd">@block_context_manager</span>
+    <span class="k">def</span> <span class="nf">_expand_dynamic_linear_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># use shallow copy to hide changes on block.operations during the loop,</span>
+        <span class="c1"># since we do not need to deal with the newly expanded matmul + add ops</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_expand_dynamic_linear_block</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_try_expand_dynamic_linear</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">block</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_is_operand_static</span><span class="p">(</span><span class="n">var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">var</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="n">op</span> <span class="o">=</span> <span class="n">var</span><span class="o">.</span><span class="n">op</span>
+        <span class="k">if</span> <span class="n">op</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">op_type</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span>
+        <span class="k">return</span> <span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">or</span> <span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;constexpr_&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_try_expand_dynamic_linear</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">block</span><span class="p">:</span> <span class="n">Block</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="s2">&quot;Should only apply to linear op&quot;</span>
+
+        <span class="n">is_weight_static</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_operand_static</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+        <span class="n">is_bias_static</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_operand_static</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">bias</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">is_weight_static</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_bias_static</span><span class="p">:</span>
+                <span class="c1"># static weight and bias, linear is good</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># static weight with dynamic bias, so linear for weight matmul + add for bias add</span>
+                <span class="n">matmul</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">)</span>
+                <span class="n">add</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">matmul</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                    <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">new_var</span><span class="o">=</span><span class="n">add</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">remove_from_block</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># dynamic weight, have to expand to at least matmul</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">transpose_y</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">)</span>
+            <span class="c1"># static bias, try skipping add if all zero</span>
+            <span class="k">if</span> <span class="n">is_bias_static</span><span class="p">:</span>
+                <span class="n">force_replace</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="c1"># if no bias provided, default to 0, can skip</span>
+                <span class="c1"># if bias provided, need to inspect its value</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">bias_op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">op</span>
+                    <span class="n">bias_op_type</span> <span class="o">=</span> <span class="n">bias_op</span><span class="o">.</span><span class="n">op_type</span>
+                    <span class="k">if</span> <span class="n">bias_op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
+                        <span class="n">is_nonzero_bias</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">bias</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">bias_op_type</span> <span class="o">==</span> <span class="s2">&quot;constexpr_affine_dequantize&quot;</span><span class="p">:</span>
+                            <span class="n">is_nonzero_bias</span> <span class="o">=</span> <span class="ow">not</span> <span class="n">bias_op</span><span class="o">.</span><span class="n">is_all_zeros</span><span class="p">()</span>
+                        <span class="c1"># cowardly treat other types of compressed bias as if nonzero</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">is_nonzero_bias</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="c1"># For such a compressed all-zero bias, if we skip add, then</span>
+                        <span class="c1"># the result (matmul output) would only descend from weight but not bias,</span>
+                        <span class="c1"># i.e. need to force replacing descendant of bias</span>
+                        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_nonzero_bias</span><span class="p">:</span>
+                            <span class="n">force_replace</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">if</span> <span class="n">is_nonzero_bias</span><span class="p">:</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                    <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">new_var</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                    <span class="n">force_replace</span><span class="o">=</span><span class="n">force_replace</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">remove_from_block</span><span class="p">()</span>
+            <span class="c1"># dynamic bias, have to further expand to matmul + add</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">result</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">op</span><span class="p">,</span>
+                    <span class="n">old_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">new_var</span><span class="o">=</span><span class="n">result</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="n">op</span><span class="o">.</span><span class="n">remove_from_block</span><span class="p">()</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

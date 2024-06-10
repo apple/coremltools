@@ -1,34 +1,34 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Optimizers &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css" />
+  <title>Optimizers &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Post-Training Compression" href="coremltools.optimize.coreml.post_training_quantization.html" />
+    <link rel="next" title="Palettization" href="coremltools.optimize.torch.palettization.html" />
     <link rel="prev" title="MIL Graph Passes" href="coremltools.converters.mil.mil.passes.defs.html" /> 
 </head>
 
@@ -44,7 +44,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -63,16 +63,18 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Optimizers</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#post-training-compression">Post-Training Compression</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.post_training_quantization.html">Post-Training Compression</a></li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.config.html">Compression Configuration</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pytorch">PyTorch</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Palettization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Quantization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.examples.html">Examples</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#training-time-compression">Training-Time Compression</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Training-Time Pruning</a></li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Training-Time Palettization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Training-Time Quantization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.examples.html">Training-Time Compression Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#core-ml">Core ML</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.palettization.html">Palettization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.pruning.html">Pruning</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.quantization.html">Quantization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html">Utilities</a></li>
 </ul>
 </li>
 </ul>
@@ -111,31 +113,33 @@
            <div itemprop="articleBody">
              
   <section id="optimizers">
-<h1>Optimizers<a class="headerlink" href="#optimizers" title="Permalink to this heading"></a></h1>
+<h1>Optimizers<a class="headerlink" href="#optimizers" title="Link to this heading"></a></h1>
 <p>To deploy models on devices such as the iPhone, you often need to optimize the models to
 use less storage space, reduce power consumption, and reduce latency during inference.
 For an overview, see Optimizing Models Post-Training
 (<a class="reference external" href="https://coremltools.readme.io/docs/compressing-ml-program-weights">Compressing ML Program Weights</a>
 and <a class="reference external" href="https://coremltools.readme.io/docs/quantization">Compressing Neural Network Weights</a>).</p>
-<section id="post-training-compression">
-<h2>Post-Training Compression<a class="headerlink" href="#post-training-compression" title="Permalink to this heading"></a></h2>
-<p>Post-training compression for Core ML models:</p>
+<section id="pytorch">
+<h2>PyTorch<a class="headerlink" href="#pytorch" title="Link to this heading"></a></h2>
+<p>Compression for PyTorch models:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.coreml.post_training_quantization.html">Post-Training Compression</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.coreml.config.html">Compression Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.examples.html">Examples</a></li>
 </ul>
 </div>
 </section>
-<section id="training-time-compression">
-<h2>Training-Time Compression<a class="headerlink" href="#training-time-compression" title="Permalink to this heading"></a></h2>
-<p>Training-time compression for PyTorch models:</p>
+<section id="core-ml">
+<h2>Core ML<a class="headerlink" href="#core-ml" title="Link to this heading"></a></h2>
+<p>Compression for Core ML models:</p>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.pruning.html">Training-Time Pruning</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.palettization.html">Training-Time Palettization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.quantization.html">Training-Time Quantization</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.torch.examples.html">Training-Time Compression Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.coreml.palettization.html">Palettization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.coreml.pruning.html">Pruning</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.coreml.quantization.html">Quantization</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html">Utilities</a></li>
 </ul>
 </div>
 </section>
@@ -146,7 +150,7 @@ and <a class="reference external" href="https://coremltools.readme.io/docs/quant
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="coremltools.converters.mil.mil.passes.defs.html" class="btn btn-neutral float-left" title="MIL Graph Passes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="coremltools.optimize.coreml.post_training_quantization.html" class="btn btn-neutral float-right" title="Post-Training Compression" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.optimize.torch.palettization.html" class="btn btn-neutral float-right" title="Palettization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

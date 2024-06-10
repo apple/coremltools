@@ -1,5 +1,5 @@
-Training-Time Pruning
-=====================
+Pruning
+=======
 
 Pruning a model is the process of sparsifying the weight matrices of the
 model's layers, thereby reducing its storage size. You can also use pruning to reduce a

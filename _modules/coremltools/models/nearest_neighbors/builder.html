@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.models.nearest_neighbors.builder &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css" />
+  <title>coremltools.models.nearest_neighbors.builder &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -107,7 +106,9 @@
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">datatypes</span>
 
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">[docs]</a><span class="k">class</span> <span class="nc">KNearestNeighborsClassifierBuilder</span><span class="p">:</span>
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">[docs]</a>
+<span class="k">class</span> <span class="nc">KNearestNeighborsClassifierBuilder</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Construct a CoreML KNearestNeighborsClassifier specification.</span>
 
@@ -153,7 +154,9 @@
     <span class="n">_PARAMETER_DEFAULT_LEAF_SIZE</span> <span class="o">=</span> <span class="mi">30</span>
     <span class="n">_PARAMETER_DEFAULT_INPUT_TYPE</span> <span class="o">=</span> <span class="s2">&quot;NotSpecified&quot;</span>
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.__init__"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.__init__">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__">[docs]</a>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">input_name</span><span class="p">,</span>
         <span class="n">output_name</span><span class="p">,</span>
@@ -283,6 +286,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">nearestNeighborsIndex</span><span class="o">.</span><span class="n">squaredEuclideanDistance</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span>
             <span class="sa">b</span><span class="s2">&quot;&quot;</span>
         <span class="p">)</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">author</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -442,7 +446,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_index_type</span>
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.set_index_type"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">[docs]</a>    <span class="k">def</span> <span class="nf">set_index_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_type</span><span class="p">,</span> <span class="n">leaf_size</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.set_index_type">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_index_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index_type</span><span class="p">,</span> <span class="n">leaf_size</span><span class="o">=</span><span class="mi">30</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the index type for the KNearestNeighborsClassifier model.</span>
 <span class="sd">        </span>
@@ -475,6 +481,7 @@
 
         <span class="c1"># storing this in the object is just a convenience</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_index_type</span> <span class="o">=</span> <span class="n">index_type</span></div>
+
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">leaf_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -534,7 +541,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">numberOfNeighbors</span><span class="o">.</span><span class="n">defaultValue</span>
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">[docs]</a>    <span class="k">def</span> <span class="nf">set_number_of_neighbors_with_bounds</span><span class="p">(</span>
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">[docs]</a>
+    <span class="k">def</span> <span class="nf">set_number_of_neighbors_with_bounds</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">number_of_neighbors</span><span class="p">,</span> <span class="n">allowed_range</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allowed_set</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -617,7 +626,10 @@
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;number_of_neighbors is not a valid value&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">[docs]</a>    <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">[docs]</a>
+    <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_range</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the range of allowed values for the numberOfNeighbors parameter.</span>
 <span class="sd">        </span>
@@ -632,7 +644,10 @@
             <span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">[docs]</a>    <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">[docs]</a>
+    <span class="k">def</span> <span class="nf">number_of_neighbors_allowed_set</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get the set of allowed values for the numberOfNeighbors parameter.</span>
 <span class="sd">        </span>
@@ -651,7 +666,10 @@
             <span class="k">return</span> <span class="n">allowed_values</span>
         <span class="k">return</span> <span class="kc">None</span></div>
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.add_samples"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples">[docs]</a>    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_points</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder.add_samples">
+<a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_samples</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_points</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add some samples to the KNearestNeighborsClassifier model.</span>
 <span class="sd">        </span>
@@ -702,6 +720,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">kNearestNeighborsClassifier</span><span class="o">.</span><span class="n">stringClassLabels</span><span class="o">.</span><span class="n">vector</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                     <span class="n">label</span>
                 <span class="p">)</span></div>
+
 
     <span class="k">def</span> <span class="nf">_validate_label_types</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -758,6 +777,7 @@
 <span class="sd">        True if a valid number type, False otherwise.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">integer</span><span class="p">))</span></div>
+
 </pre></div>
 
            </div>

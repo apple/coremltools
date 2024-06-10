@@ -1,30 +1,29 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MIL Graph Passes &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css" />
+  <title>MIL Graph Passes &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -44,7 +43,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -67,6 +66,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination"><code class="docutils literal notranslate"><span class="pre">const_elimination</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination"><code class="docutils literal notranslate"><span class="pre">dead_code_elimination</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names"><code class="docutils literal notranslate"><span class="pre">dedup_op_and_var_names</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear"><code class="docutils literal notranslate"><span class="pre">expand_dynamic_linear</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.fuse_reduce_mean"><code class="docutils literal notranslate"><span class="pre">fuse_reduce_mean</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination"><code class="docutils literal notranslate"><span class="pre">loop_invariant_elimination</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination"><code class="docutils literal notranslate"><span class="pre">noop_elimination</span></code></a></li>
@@ -102,6 +102,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_linear">optimize_linear</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_linear_bias"><code class="docutils literal notranslate"><span class="pre">fuse_linear_bias</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_matmul_weight_bias"><code class="docutils literal notranslate"><span class="pre">fuse_matmul_weight_bias</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_transpose_matmul"><code class="docutils literal notranslate"><span class="pre">fuse_transpose_matmul</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization">optimize_normalization</a><ul>
@@ -109,6 +110,7 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">optimize_quantization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.merge_affine_dequantize_with_consecutive_ops"><code class="docutils literal notranslate"><span class="pre">merge_affine_dequantize_with_consecutive_ops</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization"><code class="docutils literal notranslate"><span class="pre">int_op_canonicalization</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point"><code class="docutils literal notranslate"><span class="pre">nullify_redundant_quantization_zero_point</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination"><code class="docutils literal notranslate"><span class="pre">dequantize_quantize_pair_elimination</span></code></a></li>
@@ -181,13 +183,13 @@
            <div itemprop="articleBody">
              
   <section id="mil-graph-passes">
-<h1>MIL Graph Passes<a class="headerlink" href="#mil-graph-passes" title="Permalink to this heading"></a></h1>
+<h1>MIL Graph Passes<a class="headerlink" href="#mil-graph-passes" title="Link to this heading"></a></h1>
 <p>Graph Passes supported by the Model Intermediate Language (MIL):</p>
 <section id="module-coremltools.converters.mil.mil.passes.defs.cleanup">
-<span id="cleanup"></span><h2>cleanup<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.cleanup" title="Permalink to this heading"></a></h2>
+<span id="cleanup"></span><h2>cleanup<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.cleanup" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">const_deduplication</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/const_deduplication.html#const_deduplication"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">const_deduplication</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/const_deduplication.html#const_deduplication"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_deduplication" title="Link to this definition"></a></dt>
 <dd><p>Remove duplicated large constants (tensor with 100+ elements)</p>
 <p>For example</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span> <span class="p">(</span><span class="n">where</span> <span class="n">weight</span> <span class="ow">and</span> <span class="n">bias</span> <span class="n">are</span> <span class="n">large</span> <span class="n">constants</span><span class="p">):</span>
@@ -218,7 +220,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">const_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/const_elimination.html#const_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">const_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/const_elimination.html#const_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.const_elimination" title="Link to this definition"></a></dt>
 <dd><p>Replace non-<code class="docutils literal notranslate"><span class="pre">const</span></code> ops that have <code class="docutils literal notranslate"><span class="pre">const</span></code> Var. Outputs are replaced with the <code class="docutils literal notranslate"><span class="pre">const</span></code> op. Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
     <span class="o">%</span><span class="mi">2</span><span class="p">,</span> <span class="o">%</span><span class="mi">3</span> <span class="o">=</span> <span class="n">non_const_op</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>  <span class="c1"># %2 is const, %3 isn&#39;t const</span>
@@ -238,7 +240,7 @@
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">dead_code_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/dead_code_elimination.html#dead_code_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">dead_code_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/dead_code_elimination.html#dead_code_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dead_code_elimination" title="Link to this definition"></a></dt>
 <dd><p>Eliminate unused ops in program. Ops whose outputs do not contribute to final outputs will be
 deleted.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before dead_code_elimination pass.</span>
@@ -269,7 +271,7 @@ its input ops (<code class="docutils literal notranslate"><span class="pre">%tx_
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">dedup_op_and_var_names</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/dedup_op_and_var_names.html#dedup_op_and_var_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">dedup_op_and_var_names</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/dedup_op_and_var_names.html#dedup_op_and_var_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.dedup_op_and_var_names" title="Link to this definition"></a></dt>
 <dd><p>For each function, this pass renames ops and variables with the same name
 as any preceding ops/variables across all scopes in the given function,
 where the precedence is implementation-specific. Note that an op name and
@@ -290,8 +292,18 @@ dedup without changing the input/output var names.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">expand_dynamic_linear</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/expand_dynamic_linear.html#expand_dynamic_linear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.expand_dynamic_linear" title="Link to this definition"></a></dt>
+<dd><p>Translate to <code class="docutils literal notranslate"><span class="pre">linear</span></code> when the operand is a descendant of const, since such an operand
+may be folded into const or fused into constexpr later by graph passes. In op translation,
+we prefer <code class="docutils literal notranslate"><span class="pre">linear</span></code> whenever possible because it requires const or constexpr <code class="docutils literal notranslate"><span class="pre">weight</span></code> and <code class="docutils literal notranslate"><span class="pre">bias</span></code>.</p>
+<p>If such const folding or constexpr fusion did not happen, this pass would clean up
+the too-ambitious <code class="docutils literal notranslate"><span class="pre">linear</span></code> ops by replacing them with <code class="docutils literal notranslate"><span class="pre">matmul</span></code> ops.</p>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.fuse_reduce_mean">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">fuse_reduce_mean</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/fuse_reduce_mean.html#fuse_reduce_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.fuse_reduce_mean" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">fuse_reduce_mean</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/fuse_reduce_mean.html#fuse_reduce_mean"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.fuse_reduce_mean" title="Link to this definition"></a></dt>
 <dd><p>Detect the <code class="docutils literal notranslate"><span class="pre">reduce_sum</span></code> —&gt; <code class="docutils literal notranslate"><span class="pre">mul/real_div</span></code> pattern than can be mapped to <code class="docutils literal notranslate"><span class="pre">reduce_mean</span></code>.
 That is, the operation <code class="docutils literal notranslate"><span class="pre">reduce_sum/count</span> <span class="pre">==</span> <span class="pre">reduce_mean</span></code>.</p>
 <p><cite>Input graph</cite></p>
@@ -308,7 +320,7 @@ That is, the operation <code class="docutils literal notranslate"><span class="p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">loop_invariant_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/loop_invariant_elimination.html#loop_invariant_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">loop_invariant_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/loop_invariant_elimination.html#loop_invariant_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.loop_invariant_elimination" title="Link to this definition"></a></dt>
 <dd><p>When a block does not modify a block input var, eliminate that block
 input var and use the corresponding var in the outer scope. Example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before loop_invariant_elimination pass.</span>
@@ -348,7 +360,7 @@ instead of 2 outputs. We also preserve the return var names with identity.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">noop_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/noop_elimination.html#noop_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">noop_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/noop_elimination.html#noop_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.noop_elimination" title="Link to this definition"></a></dt>
 <dd><p>Remove ops that have no effect.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
     <span class="o">%</span><span class="mi">1</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="n">fp32</span><span class="p">)</span> <span class="o">=</span> <span class="o">...</span>
@@ -367,7 +379,7 @@ instead of 2 outputs. We also preserve the return var names with identity.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">remove_redundant_ops</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/remove_redundant_ops.html#remove_redundant_ops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">remove_redundant_ops</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/remove_redundant_ops.html#remove_redundant_ops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.remove_redundant_ops" title="Link to this definition"></a></dt>
 <dd><p>If there are multiple ops with “identical” inputs, then they are redundant and all but one of them can be removed.
 This pass checks and removes such ops.</p>
 <p>Since all inputs to ops in MIL are named, two ops with same <code class="docutils literal notranslate"><span class="pre">op_types</span></code> can be compared by comparing their
@@ -403,7 +415,7 @@ For more examples, see “TestRemoveRedundantOpsPass”.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.remove_symbolic_reshape">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">remove_symbolic_reshape</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/remove_symbolic_reshape.html#remove_symbolic_reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.remove_symbolic_reshape" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">remove_symbolic_reshape</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/remove_symbolic_reshape.html#remove_symbolic_reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.remove_symbolic_reshape" title="Link to this definition"></a></dt>
 <dd><p>Convert symbolic shape in <code class="docutils literal notranslate"><span class="pre">reshape</span></code> to integers.</p>
 <p>Note: This does not perform any optimization, but simply
 replaces symbols with positive integers if solved from volumetric
@@ -431,7 +443,7 @@ needs to be resolved to -1.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">topological_reorder</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/topological_reorder.html#topological_reorder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.cleanup.</span></span><span class="sig-name descname"><span class="pre">topological_reorder</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/cleanup/topological_reorder.html#topological_reorder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.cleanup.topological_reorder" title="Link to this definition"></a></dt>
 <dd><p>Topologically re-orders the list of operations in a program by places each operation closer to its
 first use, or at the end if it’s not consumed by any other operation.</p>
 <p>Currently, This pass re-orders only Transpose and Cast operations.</p>
@@ -485,10 +497,10 @@ first use, or at the end if it’s not consumed by any other operation.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_activation">
-<span id="optimize-activation"></span><h2>optimize_activation<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_activation" title="Permalink to this heading"></a></h2>
+<span id="optimize-activation"></span><h2>optimize_activation<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_activation" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_exact">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_gelu_exact</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_gelu_exact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_exact" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_gelu_exact</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_gelu_exact"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_exact" title="Link to this definition"></a></dt>
 <dd><p>Identify the pattern that corresponds to the exact version of <code class="docutils literal notranslate"><span class="pre">gelu</span></code>, and replace it with a single
 <code class="docutils literal notranslate"><span class="pre">gelu</span></code> layer with <code class="docutils literal notranslate"><span class="pre">mode=EXACT</span></code>. The pattern is <code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">0.5</span> <span class="pre">*</span> <span class="pre">x</span> <span class="pre">*</span> <span class="pre">(1</span> <span class="pre">+</span> <span class="pre">erf</span> <span class="pre">(x</span> <span class="pre">/</span> <span class="pre">srqt</span> <span class="pre">(2))</span></code>, which
 can be represented by one of the following:</p>
@@ -518,7 +530,7 @@ can be represented by one of the following:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_tanh_approximation">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_gelu_tanh_approximation</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_gelu_tanh_approximation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_tanh_approximation" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_gelu_tanh_approximation</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_gelu_tanh_approximation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_gelu_tanh_approximation" title="Link to this definition"></a></dt>
 <dd><p>Identify the pattern that corresponds to the <code class="docutils literal notranslate"><span class="pre">tanh</span></code> approximate version of <code class="docutils literal notranslate"><span class="pre">gelu</span></code>, and replace it
 with a single <code class="docutils literal notranslate"><span class="pre">gelu</span></code> layer with <code class="docutils literal notranslate"><span class="pre">mode=TANH_APPROXIMATION</span></code>.</p>
 <p>The implementation of this pass uses the generic graph pattern matching and transform algorithm
@@ -547,7 +559,7 @@ documented in <code class="docutils literal notranslate"><span class="pre">corem
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_leaky_relu">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_leaky_relu</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_leaky_relu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_leaky_relu" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_leaky_relu</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_leaky_relu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_leaky_relu" title="Link to this definition"></a></dt>
 <dd><p>Detect the <code class="docutils literal notranslate"><span class="pre">mul</span></code> —&gt; <code class="docutils literal notranslate"><span class="pre">max</span></code> pattern than can be mapped to <code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code>.</p>
 <p><cite>In code form - Input</cite></p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span><span class="mi">2</span> <span class="o">=</span> <span class="n">const</span><span class="p">(</span><span class="n">value</span> <span class="o">=</span> <span class="n">alpha</span><span class="p">)</span> <span class="c1"># where 0 &lt;= alpha &lt;= 1</span>
@@ -575,7 +587,7 @@ documented in <code class="docutils literal notranslate"><span class="pre">corem
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_prelu">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_prelu</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_prelu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_prelu" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">fuse_prelu</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#fuse_prelu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.fuse_prelu" title="Link to this definition"></a></dt>
 <dd><p>Detect the following patterns that can be mapped to a <code class="docutils literal notranslate"><span class="pre">prelu</span></code> op.
 Essentially, the <code class="docutils literal notranslate"><span class="pre">prelu</span></code> op can be broken down into the following ops:</p>
 <p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">a</span> <span class="pre">*</span> <span class="pre">relu(-1</span> <span class="pre">*</span> <span class="pre">x)</span> <span class="pre">+</span> <span class="pre">relu(x)</span></code></p>
@@ -613,16 +625,16 @@ Essentially, the <code class="docutils literal notranslate"><span class="pre">pr
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_activation.prelu_to_lrelu">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">prelu_to_lrelu</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#prelu_to_lrelu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.prelu_to_lrelu" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_activation.</span></span><span class="sig-name descname"><span class="pre">prelu_to_lrelu</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_activation.html#prelu_to_lrelu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_activation.prelu_to_lrelu" title="Link to this definition"></a></dt>
 <dd><p>If <code class="docutils literal notranslate"><span class="pre">prelu</span></code> has the same leakage factor across all channels, it will be converted to <code class="docutils literal notranslate"><span class="pre">leaky_relu</span></code>.</p>
 </dd></dl>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_conv">
-<span id="optimize-conv"></span><h2>optimize_conv<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_conv" title="Permalink to this heading"></a></h2>
+<span id="optimize-conv"></span><h2>optimize_conv<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_conv" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_conv.add_conv_transpose_output_shape">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">add_conv_transpose_output_shape</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#add_conv_transpose_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.add_conv_transpose_output_shape" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">add_conv_transpose_output_shape</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#add_conv_transpose_output_shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.add_conv_transpose_output_shape" title="Link to this definition"></a></dt>
 <dd><p>The <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> input <code class="docutils literal notranslate"><span class="pre">output_shape</span></code> is an optional input.
 Since we can infer the output shape from <code class="docutils literal notranslate"><span class="pre">type_inference</span></code>, we add
 <code class="docutils literal notranslate"><span class="pre">output_shape</span></code> input whenever it is known to be constant at
@@ -639,7 +651,7 @@ compile time. For example:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_conv.compose_conv1d">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">compose_conv1d</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#compose_conv1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.compose_conv1d" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">compose_conv1d</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#compose_conv1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.compose_conv1d" title="Link to this definition"></a></dt>
 <dd><p>In <a class="reference external" href="https://github.com/tensorflow/tensorflow/blob/r1.15/tensorflow/python/ops/nn_ops.py#L1657">TensorFlow</a>,
 <code class="docutils literal notranslate"><span class="pre">tf.keras.layers.Conv1D</span></code> is a composite op:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">expand</span> <span class="n">a</span> <span class="n">dummy</span> <span class="n">dim</span> <span class="o">-&gt;</span> <span class="n">Conv2D</span> <span class="o">-&gt;</span> <span class="n">squeeze</span> <span class="n">the</span> <span class="n">dummy</span> <span class="n">dim</span>
@@ -680,7 +692,7 @@ so we should recompose the fragments back to MIL <code class="docutils literal n
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_batchnorm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_conv_batchnorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_conv_batchnorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_batchnorm" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_conv_batchnorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_conv_batchnorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_batchnorm" title="Link to this definition"></a></dt>
 <dd><p>Fuse the following <code class="docutils literal notranslate"><span class="pre">batch_norm</span></code> layer into <code class="docutils literal notranslate"><span class="pre">conv</span></code> and <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code>.
 That is, convert <code class="docutils literal notranslate"><span class="pre">conv</span> <span class="pre">+</span> <span class="pre">batch_norm</span></code> to <code class="docutils literal notranslate"><span class="pre">conv</span></code>, by modifying the weight and bias in the <code class="docutils literal notranslate"><span class="pre">conv</span></code> layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
@@ -698,7 +710,7 @@ That is, convert <code class="docutils literal notranslate"><span class="pre">co
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_bias">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_conv_bias</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_conv_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_bias" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_conv_bias</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_conv_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_bias" title="Link to this definition"></a></dt>
 <dd><p>Fold <code class="docutils literal notranslate"><span class="pre">add</span></code>/<code class="docutils literal notranslate"><span class="pre">sub</span></code> into <code class="docutils literal notranslate"><span class="pre">bias</span></code> of <code class="docutils literal notranslate"><span class="pre">conv</span></code> and <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code>.
 That is, convert <code class="docutils literal notranslate"><span class="pre">conv</span> <span class="pre">+</span> <span class="pre">add/sub</span></code> to <code class="docutils literal notranslate"><span class="pre">conv</span></code>, when <code class="docutils literal notranslate"><span class="pre">add</span></code>/<code class="docutils literal notranslate"><span class="pre">sub</span></code> is adding a constant.</p>
 <p>Two patterns are supported:</p>
@@ -731,7 +743,7 @@ That is, convert <code class="docutils literal notranslate"><span class="pre">co
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_scale">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_conv_scale</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_conv_scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_scale" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_conv_scale</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_conv_scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_conv_scale" title="Link to this definition"></a></dt>
 <dd><p>Fold <code class="docutils literal notranslate"><span class="pre">mul</span></code>/<code class="docutils literal notranslate"><span class="pre">div</span></code> into <code class="docutils literal notranslate"><span class="pre">conv</span></code>/<code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> by updating the weight/bias of the convolution layers.</p>
 <p>The scale <code class="docutils literal notranslate"><span class="pre">const</span></code> can be a single number (scalar) or a vector with a broadcastable shape.
 For example, if the output of the <code class="docutils literal notranslate"><span class="pre">conv</span></code>/<code class="docutils literal notranslate"><span class="pre">deconv</span></code> layer is <code class="docutils literal notranslate"><span class="pre">(B,</span> <span class="pre">Cout,</span> <span class="pre">H,</span> <span class="pre">W)</span></code>,
@@ -751,7 +763,7 @@ For example, if the output of the <code class="docutils literal notranslate"><sp
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_pad_conv">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_pad_conv</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_pad_conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_pad_conv" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_conv.</span></span><span class="sig-name descname"><span class="pre">fuse_pad_conv</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_conv.html#fuse_pad_conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_conv.fuse_pad_conv" title="Link to this definition"></a></dt>
 <dd><p>When we observe <code class="docutils literal notranslate"><span class="pre">pad</span> <span class="pre">-&gt;</span> <span class="pre">transpose</span> <span class="pre">-&gt;</span> <span class="pre">conv</span></code>, we move the <code class="docutils literal notranslate"><span class="pre">pad</span></code> to be next to <code class="docutils literal notranslate"><span class="pre">conv</span></code>.
 This allows us to meld <code class="docutils literal notranslate"><span class="pre">pad</span> <span class="pre">+</span> <span class="pre">conv</span></code> if possible.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Given:
@@ -771,16 +783,16 @@ Result:
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary">
-<span id="optimize-elementwise-binary"></span><h2>optimize_elementwise_binary<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary" title="Permalink to this heading"></a></h2>
+<span id="optimize-elementwise-binary"></span><h2>optimize_elementwise_binary<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.divide_to_multiply">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">divide_to_multiply</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#divide_to_multiply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.divide_to_multiply" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">divide_to_multiply</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#divide_to_multiply"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.divide_to_multiply" title="Link to this definition"></a></dt>
 <dd><p>Convert divide into multiply if the divisor is <code class="docutils literal notranslate"><span class="pre">const</span></code>.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.select_optimization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">select_optimization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#select_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.select_optimization" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">select_optimization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#select_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.select_optimization" title="Link to this definition"></a></dt>
 <dd><p>For <code class="docutils literal notranslate"><span class="pre">select(cond,</span> <span class="pre">a,</span> <span class="pre">b)</span></code>, there are 2 cases where we can replace it with a single simpler op</p>
 <ol class="arabic">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">cond</span></code> is a const scalar (or a const tensor but all elements are the same, which is
@@ -836,7 +848,7 @@ Output graph:
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">fuse_elementwise_to_batchnorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#fuse_elementwise_to_batchnorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">fuse_elementwise_to_batchnorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#fuse_elementwise_to_batchnorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.fuse_elementwise_to_batchnorm" title="Link to this definition"></a></dt>
 <dd><p>Fold <code class="docutils literal notranslate"><span class="pre">mul</span></code> + <code class="docutils literal notranslate"><span class="pre">add</span></code> into a <code class="docutils literal notranslate"><span class="pre">batchnorm</span></code>
 if the <code class="docutils literal notranslate"><span class="pre">const</span></code> feeding into the <code class="docutils literal notranslate"><span class="pre">mul</span></code>/<code class="docutils literal notranslate"><span class="pre">add</span></code> is of shape <code class="docutils literal notranslate"><span class="pre">(1,C,1,1)</span></code> or <code class="docutils literal notranslate"><span class="pre">(C,1,1)</span></code>
 and input to <code class="docutils literal notranslate"><span class="pre">mul</span></code> is of rank 4.</p>
@@ -869,7 +881,7 @@ and input to <code class="docutils literal notranslate"><span class="pre">mul</s
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.rank0_expand_dims_swap">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">rank0_expand_dims_swap</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#rank0_expand_dims_swap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.rank0_expand_dims_swap" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">rank0_expand_dims_swap</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_elementwise_binary.html#rank0_expand_dims_swap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_elementwise_binary.rank0_expand_dims_swap" title="Link to this definition"></a></dt>
 <dd><p>Identify the pattern of a <code class="docutils literal notranslate"><span class="pre">rank-0</span></code> binary elementwise operation followed by an <code class="docutils literal notranslate"><span class="pre">expand_dims</span></code> op.
 In the MIL backend, the output of the <code class="docutils literal notranslate"><span class="pre">elementwise</span></code> op becomes rank 1. Hence, an <code class="docutils literal notranslate"><span class="pre">expand_dims</span></code> op
 should be added after both of the <code class="docutils literal notranslate"><span class="pre">rank-0</span></code> tensors, and the final <code class="docutils literal notranslate"><span class="pre">expand_dims</span></code> should be removed.
@@ -903,10 +915,10 @@ is inserted.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_linear">
-<span id="optimize-linear"></span><h2>optimize_linear<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_linear" title="Permalink to this heading"></a></h2>
+<span id="optimize-linear"></span><h2>optimize_linear<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_linear" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_linear_bias">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_linear.</span></span><span class="sig-name descname"><span class="pre">fuse_linear_bias</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_linear.html#fuse_linear_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_linear_bias" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_linear.</span></span><span class="sig-name descname"><span class="pre">fuse_linear_bias</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_linear.html#fuse_linear_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_linear_bias" title="Link to this definition"></a></dt>
 <dd><p>Convert <code class="docutils literal notranslate"><span class="pre">linear</span> <span class="pre">+</span> <span class="pre">add/sub</span></code> to a single <code class="docutils literal notranslate"><span class="pre">linear</span></code> by updating the weight and bias of the <code class="docutils literal notranslate"><span class="pre">linear</span></code> layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Example</span> <span class="mi">1</span><span class="p">:</span>
     <span class="n">Original</span><span class="p">:</span>
@@ -936,7 +948,7 @@ is inserted.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_matmul_weight_bias">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_linear.</span></span><span class="sig-name descname"><span class="pre">fuse_matmul_weight_bias</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_linear.html#fuse_matmul_weight_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_matmul_weight_bias" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_linear.</span></span><span class="sig-name descname"><span class="pre">fuse_matmul_weight_bias</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_linear.html#fuse_matmul_weight_bias"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_matmul_weight_bias" title="Link to this definition"></a></dt>
 <dd><p>Convert <code class="docutils literal notranslate"><span class="pre">matmul</span> <span class="pre">+</span> <span class="pre">add/sub</span></code> to <code class="docutils literal notranslate"><span class="pre">linear</span></code> whenever possible.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
     <span class="o">%</span><span class="mi">3</span> <span class="o">=</span> <span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="o">=%</span><span class="mi">1</span><span class="p">,</span> <span class="n">y</span><span class="o">=%</span><span class="mi">2</span><span class="p">)</span>  <span class="c1"># %1 or %2 is const and rank 2 (weight)</span>
@@ -951,12 +963,38 @@ is inserted.</p>
 </div>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_transpose_matmul">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_linear.</span></span><span class="sig-name descname"><span class="pre">fuse_transpose_matmul</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_linear.html#fuse_transpose_matmul"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_linear.fuse_transpose_matmul" title="Link to this definition"></a></dt>
+<dd><p>Fuse <code class="docutils literal notranslate"><span class="pre">transpose</span> <span class="pre">+</span> <span class="pre">matmul</span></code> to <code class="docutils literal notranslate"><span class="pre">matmul</span></code> if possible,
+since <code class="docutils literal notranslate"><span class="pre">matmul</span></code> has args <code class="docutils literal notranslate"><span class="pre">transpose_x</span></code> and <code class="docutils literal notranslate"><span class="pre">transpose_y</span></code> to transpose last 2 dims</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Positive</span> <span class="n">example</span><span class="p">:</span>
+    <span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+        <span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-|</span>
+                                     <span class="o">|-&gt;</span> <span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">transposed_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">transposed_y</span><span class="p">)</span>
+        <span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-|</span>
+
+    <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+        <span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">transpose_x</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">transpose_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">Negative</span> <span class="n">example</span><span class="p">:</span>
+    <span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+        <span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-|</span>
+                                        <span class="o">|-&gt;</span> <span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">transposed_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">transposed_y</span><span class="p">)</span>
+        <span class="n">transpose</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">y</span><span class="p">,</span> <span class="n">perm</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">-|</span>
+
+    <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+        <span class="n">Same</span> <span class="n">to</span> <span class="nb">input</span> <span class="n">graph</span><span class="p">,</span> <span class="n">nothing</span> <span class="n">changes</span>
+</pre></div>
+</div>
+</dd></dl>
+
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_normalization">
-<span id="optimize-normalization"></span><h2>optimize_normalization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization" title="Permalink to this heading"></a></h2>
+<span id="optimize-normalization"></span><h2>optimize_normalization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_normalization" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_normalization.</span></span><span class="sig-name descname"><span class="pre">fuse_layernorm_or_instancenorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_normalization.html#fuse_layernorm_or_instancenorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_normalization.</span></span><span class="sig-name descname"><span class="pre">fuse_layernorm_or_instancenorm</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_normalization.html#fuse_layernorm_or_instancenorm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_normalization.fuse_layernorm_or_instancenorm" title="Link to this definition"></a></dt>
 <dd><p>A graph optimization pass on PyMIL to detect and fuse several variants of <code class="docutils literal notranslate"><span class="pre">layer_norm</span></code> or
 <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. Pattern 1 corresponds to either <code class="docutils literal notranslate"><span class="pre">layer_norm</span></code> or <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. Patterns 2-4
 are <code class="docutils literal notranslate"><span class="pre">instance_norm</span></code>. Pattern 5 is <code class="docutils literal notranslate"><span class="pre">layer_norm</span></code>. You can find these patterns in the methods for
@@ -966,10 +1004,34 @@ the end of the class definition.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_quantization">
-<span id="optimize-quantization"></span><h2>optimize_quantization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization" title="Permalink to this heading"></a></h2>
+<span id="optimize-quantization"></span><h2>optimize_quantization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_quantization" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.merge_affine_dequantize_with_consecutive_ops">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">merge_affine_dequantize_with_consecutive_ops</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#merge_affine_dequantize_with_consecutive_ops"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.merge_affine_dequantize_with_consecutive_ops" title="Link to this definition"></a></dt>
+<dd><p>This graph pass does const folding to a chain of supported ops starts with a
+<code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> op. More types of op are supported when quantization
+is tensor-wise, and only a subset is supported for channel-wise. For example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">data</span> <span class="o">-&gt;</span> <span class="n">constexpr_affine_dequantize</span> <span class="o">-&gt;</span> <span class="n">transpose</span> <span class="o">-&gt;</span> <span class="n">expand_dims</span> <span class="o">-&gt;</span> <span class="n">out</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">new_data</span> <span class="o">-&gt;</span> <span class="n">constexpr_affine_dequantize</span> <span class="o">-&gt;</span> <span class="n">out</span>
+</pre></div>
+</div>
+<p>where <code class="docutils literal notranslate"><span class="pre">new_data</span></code> is computed by <code class="docutils literal notranslate"><span class="pre">data</span> <span class="pre">-&gt;</span> <span class="pre">transpose</span> <span class="pre">-&gt;</span> <span class="pre">expand_dims</span></code>.</p>
+<p>Note that, the graph pass only supports const folding of a single linked list pattern.
+For example, the following pattern will not be changed</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>      <span class="o">|-&gt;</span> <span class="n">constexpr_affine_dequantize</span> <span class="o">-&gt;</span> <span class="n">transpose</span> <span class="o">-&gt;</span> <span class="n">out</span>
+<span class="n">data</span> <span class="o">-|</span>
+      <span class="o">|-&gt;</span> <span class="n">constexpr_affine_dequantize</span> <span class="o">-&gt;</span> <span class="n">reshape</span> <span class="o">-&gt;</span> <span class="n">out_2</span>
+</pre></div>
+</div>
+<p>since the quantized data is used by multiple <code class="docutils literal notranslate"><span class="pre">constexpr</span></code></p>
+</dd></dl>
+
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">int_op_canonicalization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#int_op_canonicalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">int_op_canonicalization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#int_op_canonicalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.int_op_canonicalization" title="Link to this definition"></a></dt>
 <dd><p>For general quantized operators, in Core ML, we represent them as
 <code class="docutils literal notranslate"><span class="pre">dequantize</span> <span class="pre">-&gt;</span> <span class="pre">the</span> <span class="pre">floating-point</span> <span class="pre">version</span> <span class="pre">of</span> <span class="pre">this</span> <span class="pre">operator</span> <span class="pre">-&gt;</span> <span class="pre">quantize</span></code>,
 because mathematically it is the floating-point tensor rather than
@@ -984,7 +1046,7 @@ Examples are:</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">nullify_redundant_quantization_zero_point</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#nullify_redundant_quantization_zero_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">nullify_redundant_quantization_zero_point</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#nullify_redundant_quantization_zero_point"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.nullify_redundant_quantization_zero_point" title="Link to this definition"></a></dt>
 <dd><p>In Core ML quantization, the performance is better when <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">0</span></code>,
 so we try to make <code class="docutils literal notranslate"><span class="pre">zero</span> <span class="pre">point</span> <span class="pre">=</span> <span class="pre">0</span></code> if possible:</p>
 <ul class="simple">
@@ -1051,7 +1113,7 @@ Output graph:
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">dequantize_quantize_pair_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#dequantize_quantize_pair_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">dequantize_quantize_pair_elimination</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#dequantize_quantize_pair_elimination"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_quantize_pair_elimination" title="Link to this definition"></a></dt>
 <dd><p>When a <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> is followed by an identical <code class="docutils literal notranslate"><span class="pre">quantize</span></code> (same scale,
 zero point, axis), they cancel out and can be eliminated</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
@@ -1079,7 +1141,7 @@ loss of information about the quantization parameters of the output var of op1</
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">distributive_quantized_binary_op_scale_normalization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#distributive_quantized_binary_op_scale_normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">distributive_quantized_binary_op_scale_normalization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#distributive_quantized_binary_op_scale_normalization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.distributive_quantized_binary_op_scale_normalization" title="Link to this definition"></a></dt>
 <dd><p>In the backend, for better performance, quantized op can have 1 input scale
 fused within the quantized op kernel. For binary ops, there are 2 inputs,
 but only 1 can get fused. For example, for quantized <code class="docutils literal notranslate"><span class="pre">add</span></code></p>
@@ -1141,7 +1203,7 @@ to be explored, due to the broadcasting complication.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">dequantize_to_constexpr</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#dequantize_to_constexpr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_quantization.</span></span><span class="sig-name descname"><span class="pre">dequantize_to_constexpr</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_quantization.html#dequantize_to_constexpr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_quantization.dequantize_to_constexpr" title="Link to this definition"></a></dt>
 <dd><p><code class="docutils literal notranslate"><span class="pre">dequantize</span></code> op with constant input is equivalent to <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code>.
 This is one of the canonicalization pass that transforms all such
 <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> ops to respective <code class="docutils literal notranslate"><span class="pre">constexpr_affine_dequantize</span></code> ops.</p>
@@ -1162,10 +1224,10 @@ constant weights/tensors remain compressed at serialization.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops">
-<span id="optimize-repeat-ops"></span><h2>optimize_repeat_ops<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops" title="Permalink to this heading"></a></h2>
+<span id="optimize-repeat-ops"></span><h2>optimize_repeat_ops<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">cast_optimization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#cast_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">cast_optimization</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#cast_optimization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.cast_optimization" title="Link to this definition"></a></dt>
 <dd><p>This optimization pass performs the following:</p>
 <ul class="simple">
 <li><p>Removes redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op; that is, <code class="docutils literal notranslate"><span class="pre">cast</span></code> where source and destination tensors have same dtypes.</p></li>
@@ -1173,61 +1235,61 @@ constant weights/tensors remain compressed at serialization.</p>
 </ul>
 <p>This is a non-algebraic translation which assumes that the upcasting doesn’t change the user’s intent.</p>
 <ol class="arabic">
-<li><dl>
-<dt>Example for redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op removal:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span><span class="p">(</span><span class="n">fp16</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
+<li><p>Example for redundant <code class="docutils literal notranslate"><span class="pre">cast</span></code> op removal:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   Input graph:
+   input(fp16) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; relu -&gt; out
 
-<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">relu</span> <span class="o">-&gt;</span> <span class="n">out</span>
+   Output graph:
+   input -&gt; relu -&gt; out
+
+The input and output tensors for the ``cast`` op are both with type of ``fp16``.
+Hence, it can be removed.
 </pre></div>
 </div>
-<p>The input and output tensors for the <code class="docutils literal notranslate"><span class="pre">cast</span></code> op are both with type of <code class="docutils literal notranslate"><span class="pre">fp16</span></code>.
-Hence, it can be removed.</p>
-</dd>
-</dl>
 </li>
-<li><dl>
-<dt>Example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+<li><p>Example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   <span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+   <span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
 
-<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+   <span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+   <span class="nb">input</span><span class="p">(</span><span class="n">int8</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+
+<span class="n">The</span> <span class="n">data</span> <span class="nb">range</span> <span class="ow">and</span> <span class="n">resolution</span> <span class="n">of</span> <span class="n">the</span> <span class="n">above</span> <span class="n">graph</span> <span class="n">are</span> <span class="n">limited</span> <span class="n">by</span> <span class="n">the</span> <span class="n">int8</span> <span class="nb">input</span><span class="p">,</span>
+<span class="n">so</span> <span class="n">the</span> <span class="n">fusion</span> <span class="ow">is</span> <span class="n">allowed</span><span class="o">.</span>
 </pre></div>
 </div>
-<p>The data range and resolution of the above graph are limited by the int8 input,
-so the fusion is allowed.</p>
-</dd>
-</dl>
 </li>
-<li><dl>
-<dt>Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span><span class="p">(</span><span class="n">fp32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+<li><p>Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   Input graph:
+   input(fp32) -&gt; cast(dtype=&quot;bool&quot;) -&gt; cast(dtype=&quot;fp16&quot;) -&gt; out
 
-<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
-<span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
+   Output graph:
+   Same as input graph.
+
+The above two ``cast`` ops cannot be merged, since after the first cast,
+the resolution of the numerical output is downcasted to binary (``0, 1``).
+If we fuse them, the output would be in the range and resolution of ``fp16`` instead.
 </pre></div>
 </div>
-<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since after the first cast,
-the resolution of the numerical output is downcasted to binary (<code class="docutils literal notranslate"><span class="pre">0,</span> <span class="pre">1</span></code>).
-If we fuse them, the output would be in the range and resolution of <code class="docutils literal notranslate"><span class="pre">fp16</span></code> instead.</p>
-</dd>
-</dl>
 </li>
-<li><dl>
-<dt>Another Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:</dt><dd><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
-<span class="nb">input</span><span class="p">(</span><span class="n">int32</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">cast</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">out</span>
+<li><p>Another Negative example for two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops fusion:
+.. code-block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>   Input graph:
+   input(int32) -&gt; cast(dtype=&quot;int8&quot;) -&gt; cast(dtype=&quot;uint8&quot;) -&gt; out
 
-<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
-<span class="n">Same</span> <span class="k">as</span> <span class="nb">input</span> <span class="n">graph</span><span class="o">.</span>
+   Output graph:
+   Same as input graph.
+
+The above two ``cast`` ops cannot be merged, since in the original graph,
+by going through two casts, the output numerical range is capped to ``[0, 127]``.
+However, if two ``cast`` ops are reduced to 1 ``cast(dtype=&quot;uint8&quot;)``, the output
+numerical would in the range of ``[0, 255]``. The fusion would cause numerical
+issue for the numbers between ``[128, 255]``, which is prohibited.
 </pre></div>
 </div>
-<p>The above two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops cannot be merged, since in the original graph,
-by going through two casts, the output numerical range is capped to <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">127]</span></code>.
-However, if two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops are reduced to 1 <code class="docutils literal notranslate"><span class="pre">cast(dtype=&quot;uint8&quot;)</span></code>, the output
-numerical would in the range of <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>. The fusion would cause numerical
-issue for the numbers between <code class="docutils literal notranslate"><span class="pre">[128,</span> <span class="pre">255]</span></code>, which is prohibited.</p>
-</dd>
-</dl>
 </li>
 </ol>
 <p>In general, two <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops can be merged if the output data range and resolution is not affected.</p>
@@ -1236,7 +1298,7 @@ issue for the numbers between <code class="docutils literal notranslate"><span c
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_paddings">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_paddings</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_paddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_paddings" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_paddings</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_paddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_paddings" title="Link to this definition"></a></dt>
 <dd><p>Identify two consecutive <code class="docutils literal notranslate"><span class="pre">pad</span></code> layers which could be merged into a single <code class="docutils literal notranslate"><span class="pre">pad</span></code> layer.</p>
 <p>This is possible only if one of the following conditions is satisfied:</p>
 <ul class="simple">
@@ -1254,7 +1316,7 @@ issue for the numbers between <code class="docutils literal notranslate"><span c
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_relus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_relus</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_relus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_relus" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_relus</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_relus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_relus" title="Link to this definition"></a></dt>
 <dd><p>Identify consecutive <code class="docutils literal notranslate"><span class="pre">relu</span></code> layers which could be merged into a single <code class="docutils literal notranslate"><span class="pre">relu</span></code> layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span> <span class="o">------&gt;</span> <span class="n">relu</span> <span class="o">-----&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">more</span> <span class="n">relu</span> <span class="n">layers</span> <span class="o">---&gt;</span> <span class="n">out</span>
@@ -1267,7 +1329,7 @@ issue for the numbers between <code class="docutils literal notranslate"><span c
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_reshapes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_reshapes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_reshapes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_reshapes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_reshapes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_reshapes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_reshapes" title="Link to this definition"></a></dt>
 <dd><p>Identify consecutive <code class="docutils literal notranslate"><span class="pre">reshape</span></code> ops which could be merged into a single <code class="docutils literal notranslate"><span class="pre">reshape</span></code>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">reshape</span> <span class="o">-&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">more</span> <span class="n">reshapes</span> <span class="o">-&gt;</span> <span class="n">output</span>
@@ -1280,7 +1342,7 @@ issue for the numbers between <code class="docutils literal notranslate"><span c
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_transposes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_transposes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_transposes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_transposes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">merge_consecutive_transposes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#merge_consecutive_transposes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.merge_consecutive_transposes" title="Link to this definition"></a></dt>
 <dd><p>Identify consecutive ‘transpose’ layers which could be merged into a single ‘transpose’ layer.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 <span class="nb">input</span> <span class="o">------&gt;</span> <span class="n">transpose</span> <span class="o">-----&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">more</span> <span class="n">transpose</span> <span class="n">layers</span> <span class="o">---&gt;</span> <span class="n">out</span>
@@ -1293,7 +1355,7 @@ issue for the numbers between <code class="docutils literal notranslate"><span c
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">reduce_transposes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#reduce_transposes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.</span></span><span class="sig-name descname"><span class="pre">reduce_transposes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_repeat_ops.html#reduce_transposes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes" title="Link to this definition"></a></dt>
 <dd><p>Reduce transposes when it is applicable. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Example 1</span>
     <span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
@@ -1410,10 +1472,10 @@ with transpose nodes highlighted.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation">
-<span id="optimize-tensor-operation"></span><h2>optimize_tensor_operation<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation" title="Permalink to this heading"></a></h2>
+<span id="optimize-tensor-operation"></span><h2>optimize_tensor_operation<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">concat_to_pixel_shuffle</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#concat_to_pixel_shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">concat_to_pixel_shuffle</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#concat_to_pixel_shuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle" title="Link to this definition"></a></dt>
 <dd><p>Identify nested, interleaved <code class="docutils literal notranslate"><span class="pre">concat</span></code> ops which can be replaced by a single <code class="docutils literal notranslate"><span class="pre">concat</span></code> and a <cite>pixel shuffle</cite> layer.</p>
 <p>This pattern occurs with the faster up-convolution from the FCRN model (Laina et al., 2016).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Before the concat_to_pixel_shuffle pass.</span>
@@ -1445,7 +1507,7 @@ with transpose nodes highlighted.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">detect_concat_interleave</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#detect_concat_interleave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">detect_concat_interleave</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#detect_concat_interleave"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave" title="Link to this definition"></a></dt>
 <dd><p>Detect the pattern <code class="docutils literal notranslate"><span class="pre">concat--&gt;reshape---&gt;transpose---&gt;reshape</span></code>, where <code class="docutils literal notranslate"><span class="pre">concat</span></code> is
 along the channel axis <code class="docutils literal notranslate"><span class="pre">(axis=-3)</span></code>, and map this pattern to the <code class="docutils literal notranslate"><span class="pre">concat</span></code> with <code class="docutils literal notranslate"><span class="pre">interleave</span></code> op.</p>
 <p>This pattern occurs, for example, in the <code class="docutils literal notranslate"><span class="pre">shufflenet</span></code> model in <code class="docutils literal notranslate"><span class="pre">torchvision</span></code>.</p>
@@ -1463,7 +1525,7 @@ along the channel axis <code class="docutils literal notranslate"><span class="p
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">expand_high_rank_reshape_and_transpose</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#expand_high_rank_reshape_and_transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">expand_high_rank_reshape_and_transpose</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#expand_high_rank_reshape_and_transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.expand_high_rank_reshape_and_transpose" title="Link to this definition"></a></dt>
 <dd><p>Detect the pattern <code class="docutils literal notranslate"><span class="pre">reshape_1--&gt;transpose--&gt;reshape_2</span></code>, where <code class="docutils literal notranslate"><span class="pre">reshape_1</span></code> has
 an output tensor with <code class="docutils literal notranslate"><span class="pre">rank</span> <span class="pre">&gt;=</span> <span class="pre">6</span></code>, and <code class="docutils literal notranslate"><span class="pre">reshape_2</span></code> produces a tensor with <code class="docutils literal notranslate"><span class="pre">rank</span> <span class="pre">&lt;=</span> <span class="pre">5</span></code>.</p>
 <p>In general, we can expand this pattern into a sequence of rank 4 <code class="docutils literal notranslate"><span class="pre">reshape</span></code> and <code class="docutils literal notranslate"><span class="pre">transpose</span></code> ops,
@@ -1487,7 +1549,7 @@ which is supported by the Core ML runtime.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">fuse_onehot_matmul_to_gather</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#fuse_onehot_matmul_to_gather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">fuse_onehot_matmul_to_gather</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#fuse_onehot_matmul_to_gather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.fuse_onehot_matmul_to_gather" title="Link to this definition"></a></dt>
 <dd><p>Detect if <code class="docutils literal notranslate"><span class="pre">onehot</span> <span class="pre">(axis=-1,</span> <span class="pre">on_value=1,</span> <span class="pre">off_value=0)</span></code> is followed by a <code class="docutils literal notranslate"><span class="pre">matmul</span></code> op (no bias).
 If so, they can be replaced by a <code class="docutils literal notranslate"><span class="pre">gather</span></code> op.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span><span class="p">:</span>
@@ -1503,7 +1565,7 @@ If so, they can be replaced by a <code class="docutils literal notranslate"><spa
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.replace_stack_reshape">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">replace_stack_reshape</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#replace_stack_reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.replace_stack_reshape" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">replace_stack_reshape</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#replace_stack_reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.replace_stack_reshape" title="Link to this definition"></a></dt>
 <dd><p>A stack followed by a reshape layer can be replaced by a <code class="docutils literal notranslate"><span class="pre">concat</span></code> if the reshape
 simply removes the new axis and doubles the size of one of the axes next to it.</p>
 <p>If the new axis is reshaped to the “right” (that is, the axis just after it is
@@ -1537,7 +1599,7 @@ just before it is doubled), then the <code class="docutils literal notranslate">
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.use_reflection_padding">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">use_reflection_padding</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#use_reflection_padding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.use_reflection_padding" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.</span></span><span class="sig-name descname"><span class="pre">use_reflection_padding</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_tensor_operation.html#use_reflection_padding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.use_reflection_padding" title="Link to this definition"></a></dt>
 <dd><p>Identify a reflection padding layer composed out of <cite>slices</cite> and <cite>concats</cite>.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
 
@@ -1556,10 +1618,10 @@ just before it is doubled), then the <code class="docutils literal notranslate">
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.preprocess">
-<span id="preprocess"></span><h2>preprocess<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.preprocess" title="Permalink to this heading"></a></h2>
+<span id="preprocess"></span><h2>preprocess<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.preprocess" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.preprocess.image_input_preprocess">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.preprocess.</span></span><span class="sig-name descname"><span class="pre">image_input_preprocess</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/preprocess.html#image_input_preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.preprocess.image_input_preprocess" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.preprocess.</span></span><span class="sig-name descname"><span class="pre">image_input_preprocess</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/preprocess.html#image_input_preprocess"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.preprocess.image_input_preprocess" title="Link to this definition"></a></dt>
 <dd><p>Plug in to <code class="docutils literal notranslate"><span class="pre">transpose</span></code> image input in NHWC format to NCHW format.</p>
 <p>Follow these steps:</p>
 <ol class="arabic">
@@ -1581,7 +1643,7 @@ We convert the input into a “channel_first” input, and plug in a
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.preprocess.sanitize_input_output_names">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.preprocess.</span></span><span class="sig-name descname"><span class="pre">sanitize_input_output_names</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/preprocess.html#sanitize_input_output_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.preprocess.sanitize_input_output_names" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.preprocess.</span></span><span class="sig-name descname"><span class="pre">sanitize_input_output_names</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/preprocess.html#sanitize_input_output_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.preprocess.sanitize_input_output_names" title="Link to this definition"></a></dt>
 <dd><p>Sanitize the names of model input and output vars to make sure
 that they are of the format as described in the NameSanitizer class; that is,
 of the format <code class="docutils literal notranslate"><span class="pre">[a-zA-Z_][a-zA-Z0-9_]*</span></code>.</p>
@@ -1589,20 +1651,20 @@ of the format <code class="docutils literal notranslate"><span class="pre">[a-zA
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.preprocess.update_output_dtypes">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.preprocess.</span></span><span class="sig-name descname"><span class="pre">update_output_dtypes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/preprocess.html#update_output_dtypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.preprocess.update_output_dtypes" title="Permalink to this definition"></a></dt>
-<dd><p>Update the dtypes of output vars of the main block to match the dtypes
-provided in <code class="docutils literal notranslate"><span class="pre">prog.main_output_types</span></code>, which in turn is populated by the
-<code class="docutils literal notranslate"><span class="pre">outputs</span></code> argument provided by the user in the <code class="docutils literal notranslate"><span class="pre">coremltools.convert()</span></code> API.
-This graph pass assumes that the list of outputs in <code class="docutils literal notranslate"><span class="pre">prog.main_output_types</span></code> (if not <code class="docutils literal notranslate"><span class="pre">None</span></code>),
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.preprocess.</span></span><span class="sig-name descname"><span class="pre">update_output_dtypes</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/preprocess.html#update_output_dtypes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.preprocess.update_output_dtypes" title="Link to this definition"></a></dt>
+<dd><p>Update the dtypes of output vars of each function block to match the dtypes
+provided in <code class="docutils literal notranslate"><span class="pre">function.output_types</span></code>. The output types for the main function
+is populated by the <code class="docutils literal notranslate"><span class="pre">outputs</span></code> argument provided by the user in the <code class="docutils literal notranslate"><span class="pre">coremltools.convert()</span></code> API.
+This graph pass assumes that the list of outputs in <code class="docutils literal notranslate"><span class="pre">function.output_types</span></code> (if not <code class="docutils literal notranslate"><span class="pre">None</span></code>),
 are in the same order as the output vars.</p>
 </dd></dl>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.quantization">
-<span id="quantization"></span><h2>quantization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.quantization" title="Permalink to this heading"></a></h2>
+<span id="quantization"></span><h2>quantization<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.quantization" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.quantization.add_fp16_cast">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.quantization.</span></span><span class="sig-name descname"><span class="pre">add_fp16_cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/quantization.html#add_fp16_cast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.quantization.add_fp16_cast" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.quantization.</span></span><span class="sig-name descname"><span class="pre">add_fp16_cast</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">op_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/quantization.html#add_fp16_cast"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.quantization.add_fp16_cast" title="Link to this definition"></a></dt>
 <dd><p>For each input of dtype float32, inject a <code class="docutils literal notranslate"><span class="pre">cast</span></code> op to change it to float16 dtype.</p>
 <p>For each output of dtype float16, inject a <code class="docutils literal notranslate"><span class="pre">cast</span></code> op to change it back to float32.</p>
 <p>This pass is the registered interface for FP16ComputePrecision, which makes it consistent with

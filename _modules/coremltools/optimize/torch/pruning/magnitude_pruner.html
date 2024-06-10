@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.pruning.magnitude_pruner &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.optimize.torch.pruning.magnitude_pruner &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../_static/jquery.js"></script>
-        <script src="../../../../../_static/underscore.js"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -94,7 +93,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for coremltools.optimize.torch.pruning.magnitude_pruner</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -151,7 +150,9 @@
 <span class="n">_SUPPORTED_MODULES</span> <span class="o">=</span> <span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv3d</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ModuleMagnitudePrunerConfig"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig">[docs]</a><span class="nd">@_define</span>
+<div class="viewcode-block" id="ModuleMagnitudePrunerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.ModuleMagnitudePrunerConfig">[docs]</a>
+<span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleMagnitudePrunerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying global and module level pruning options for magnitude pruning</span>
@@ -396,13 +397,8 @@
                     <span class="sa">f</span><span class="s2">&quot;Received granularity = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">granularity</span><span class="si">}</span><span class="s2"> and n_m_ratio = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n_m_ratio</span><span class="si">}</span><span class="s2">. &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;When n_m_ratio != None, the only allowed value of granularity is &quot;</span>
                     <span class="sa">f</span><span class="s2">&quot;per_scalar.&quot;</span>
-                <span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_sparsity</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_sparsity</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Received initial_sparsity = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">initial_sparsity</span><span class="si">}</span><span class="s2"> and &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;n_m_ratio = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nm_ratio</span><span class="si">}</span><span class="s2">. When n_m_ratio != None, the only allowed &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;value of initial_sparsity is 0.&quot;</span>
                 <span class="p">)</span></div>
+
 
 
 <span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_NewType</span><span class="p">(</span>
@@ -411,7 +407,9 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="MagnitudePrunerConfig"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig">[docs]</a><span class="nd">@_define</span>
+<div class="viewcode-block" id="MagnitudePrunerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig">[docs]</a>
+<span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">MagnitudePrunerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying how different submodules in a model are pruned by :py:class:`MagnitudePruner`.</span>
@@ -465,7 +463,9 @@
         <span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">global_config</span> <span class="o">=</span> <span class="n">ModuleMagnitudePrunerConfig</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MagnitudePrunerConfig.from_dict"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="MagnitudePrunerConfig.from_dict">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePrunerConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;MagnitudePrunerConfig&quot;</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -473,7 +473,9 @@
             <span class="n">_ModuleTypeConfigType</span><span class="p">,</span>
             <span class="n">_structure_from_dict_hook_factory</span><span class="p">(</span><span class="n">ModuleMagnitudePrunerConfig</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="k">class</span> <span class="nc">_MagnitudePruningMethod</span><span class="p">(</span><span class="n">_ScheduledBaseDynamicPruningMethod</span><span class="p">):</span>
@@ -521,7 +523,9 @@
     <span class="n">sparsity_level</span><span class="p">:</span> <span class="nb">float</span>
 
 
-<div class="viewcode-block" id="MagnitudePruner"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner">[docs]</a><span class="k">class</span> <span class="nc">MagnitudePruner</span><span class="p">(</span><span class="n">_BasePrunerWithPruningMethod</span><span class="p">):</span>
+<div class="viewcode-block" id="MagnitudePruner">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner">[docs]</a>
+<span class="k">class</span> <span class="nc">MagnitudePruner</span><span class="p">(</span><span class="n">_BasePrunerWithPruningMethod</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pruning algorithm based on `To prune, or not to prune: exploring the efficacy of</span>
 <span class="sd">    pruning for model compression &lt;https://arxiv.org/pdf/1710.01878.pdf&gt;`_. It extends the idea in the paper</span>
@@ -552,7 +556,7 @@
 <span class="sd">                loss_fn = define_loss()  # define the loss function</span>
 
 <span class="sd">                # initialize pruner and configure it</span>
-<span class="sd">                # we only prune the first conv layer</span>
+<span class="sd">                # we only prune the fisrt conv layer</span>
 <span class="sd">                config = MagnitudePrunerConfig.from_dict(</span>
 <span class="sd">                    {</span>
 <span class="sd">                        &quot;module_name_configs&quot;: {</span>
@@ -592,7 +596,9 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">MagnitudePrunerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 
-<div class="viewcode-block" id="MagnitudePruner.prepare"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.prepare">[docs]</a>    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
+<div class="viewcode-block" id="MagnitudePruner.prepare">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.prepare">[docs]</a>
+    <span class="k">def</span> <span class="nf">prepare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inplace</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">:</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Model has already been prepared for pruning. This API call &quot;</span>
@@ -624,7 +630,10 @@
                 <span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span></div>
 
-<div class="viewcode-block" id="MagnitudePruner.step"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MagnitudePruner.step">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner.step">[docs]</a>
+    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_prepared</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="s2">&quot;Model has not been prepared for pruning. This API call &quot;</span>
@@ -644,7 +653,9 @@
                     <span class="n">pruner_info</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">pruning_method</span><span class="o">.</span><span class="n">update_mask</span><span class="p">(</span>
                         <span class="n">pruner_info</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">sparsity_level</span>
                     <span class="p">)</span>
-                <span class="n">pruner_info</span><span class="o">.</span><span class="n">sparsity_level</span> <span class="o">=</span> <span class="n">sparsity_level</span></div></div>
+                <span class="n">pruner_info</span><span class="o">.</span><span class="n">sparsity_level</span> <span class="o">=</span> <span class="n">sparsity_level</span></div>
+</div>
+
 </pre></div>
 
            </div>

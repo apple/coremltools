@@ -47,6 +47,12 @@ Input types supported by the Model Intermediate Language (MIL):
       :members:
 
 
+   StateType
+   ---------
+   .. autoclass:: StateType
+      :members:
+
+
    TensorType
    ----------
    

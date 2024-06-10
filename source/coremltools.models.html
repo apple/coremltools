@@ -1,30 +1,29 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Model APIs &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css" />
+  <title>Model APIs &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,7 +44,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -64,6 +63,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.__init__"><code class="docutils literal notranslate"><span class="pre">MLModel.__init__()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.get_compiled_model_path"><code class="docutils literal notranslate"><span class="pre">MLModel.get_compiled_model_path()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.get_spec"><code class="docutils literal notranslate"><span class="pre">MLModel.get_spec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.make_state"><code class="docutils literal notranslate"><span class="pre">MLModel.make_state()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">MLModel.predict()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.save"><code class="docutils literal notranslate"><span class="pre">MLModel.save()</span></code></a></li>
 </ul>
@@ -73,6 +73,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#compiled-mlmodel">Compiled MLModel</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.CompiledMLModel"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.CompiledMLModel.__init__"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.CompiledMLModel.make_state"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel.make_state()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.CompiledMLModel.predict"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel.predict()</span></code></a></li>
 </ul>
 </li>
@@ -165,6 +166,13 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.utils">utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor"><code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor.__init__"><code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor.add_function"><code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor.add_function()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor.add_model"><code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor.add_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor.remove_function"><code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor.remove_function()</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.compile_model"><code class="docutils literal notranslate"><span class="pre">compile_model()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.convert_double_to_float_multiarray_type"><code class="docutils literal notranslate"><span class="pre">convert_double_to_float_multiarray_type()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier()</span></code></a></li>
@@ -173,7 +181,9 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_transformer"><code class="docutils literal notranslate"><span class="pre">evaluate_transformer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.load_spec"><code class="docutils literal notranslate"><span class="pre">load_spec()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.make_pipeline"><code class="docutils literal notranslate"><span class="pre">make_pipeline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.randomize_weights"><code class="docutils literal notranslate"><span class="pre">randomize_weights()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.rename_feature"><code class="docutils literal notranslate"><span class="pre">rename_feature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.save_multifunction"><code class="docutils literal notranslate"><span class="pre">save_multifunction()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.save_spec"><code class="docutils literal notranslate"><span class="pre">save_spec()</span></code></a></li>
 </ul>
 </li>
@@ -218,20 +228,20 @@
            <div itemprop="articleBody">
              
   <section id="model-apis">
-<h1>Model APIs<a class="headerlink" href="#model-apis" title="Permalink to this heading"></a></h1>
+<h1>Model APIs<a class="headerlink" href="#model-apis" title="Link to this heading"></a></h1>
 <section id="module-coremltools.models.model">
-<span id="mlmodel"></span><h2>MLModel<a class="headerlink" href="#module-coremltools.models.model" title="Permalink to this heading"></a></h2>
+<span id="mlmodel"></span><h2>MLModel<a class="headerlink" href="#module-coremltools.models.model" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.model.</span></span><span class="sig-name descname"><span class="pre">MLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel" title="Permalink to this definition"></a></dt>
-<dd><p>This class defines the minimal interface to a CoreML object in Python.</p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.model.</span></span><span class="sig-name descname"><span class="pre">MLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel" title="Link to this definition"></a></dt>
+<dd><p>This class defines the minimal interface to a Core ML object in Python.</p>
 <p>At a high level, the protobuf specification consists of:</p>
 <ul class="simple">
 <li><p>Model description: Encodes names and type information of the inputs and outputs to the model.</p></li>
 <li><p>Model parameters: The set of parameters required to represent a specific instance of the model.</p></li>
 <li><p>Metadata: Information about the origin, license, and author of the model.</p></li>
 </ul>
-<p>With this class, you can inspect a CoreML model, modify metadata, and make
+<p>With this class, you can inspect a Core ML model, modify metadata, and make
 predictions for the purposes of testing (on select platforms).</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
@@ -275,11 +285,14 @@ predictions for the purposes of testing (on select platforms).</p>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 <span class="c1"># if model type is mlprogram, i.e. spec.WhichOneof(&#39;Type&#39;) == &quot;mlProgram&quot;, then:</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">)</span>
+
+<span class="c1"># Load a non-default function from a multifunction .mlpackage</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;MultifunctionModel.mlpackage&quot;</span><span class="p">,</span> <span class="n">function_name</span><span class="o">=</span><span class="s2">&quot;deep_features&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.__init__" title="Link to this definition"></a></dt>
 <dd><p>Construct an MLModel from an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -300,7 +313,7 @@ or type <code class="docutils literal notranslate"><span class="pre">Model_pb2</
 </dd>
 <dt><strong>mil_program: coremltools.converters.mil.Program</strong></dt><dd><p>Set to the MIL program object, if available.
 It is available whenever an MLModel object is constructed using
-the unified converter API <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry">coremltools.convert()</a>.</p>
+the unified converter API <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html">coremltools.convert()</a>.</p>
 </dd>
 <dt><strong>skip_model_load: bool</strong></dt><dd><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to prevent Core ML Tools from calling into the Core ML framework
 to compile and load the model. In that case, the returned model object cannot
@@ -327,6 +340,9 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 <dt><strong>weights_dir: str</strong></dt><dd><p>Path to the weight directory, required when loading an MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>,
 from a spec object, such as when the argument <code class="docutils literal notranslate"><span class="pre">model</span></code> is of type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>.</p>
 </dd>
+<dt><strong>function_name</strong><span class="classifier">str</span></dt><dd><p>The name of the function from <code class="docutils literal notranslate"><span class="pre">model</span></code> to load.
+If not provided, <code class="docutils literal notranslate"><span class="pre">function_name</span></code> will be set to the <code class="docutils literal notranslate"><span class="pre">defaultFunctionName</span></code> in the proto.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -341,7 +357,7 @@ weights, and so on).</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">weights_dir</span></code> (mlprogram only): Directory containing weights inside the package_path.</p></li>
 </ul>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlmodel&quot;</span><span class="p">)</span>
 <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -349,7 +365,7 @@ weights, and so on).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.get_compiled_model_path">
-<span class="sig-name descname"><span class="pre">get_compiled_model_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.get_compiled_model_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.get_compiled_model_path" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_compiled_model_path</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.get_compiled_model_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.get_compiled_model_path" title="Link to this definition"></a></dt>
 <dd><p>Returns the path for the underlying compiled ML Model.</p>
 <p><strong>Important</strong>: This path is available only for the lifetime of this Python object. If you want
 the compiled model to persist, you need to make a copy.</p>
@@ -357,7 +373,7 @@ the compiled model to persist, you need to make a copy.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.get_spec">
-<span class="sig-name descname"><span class="pre">get_spec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.get_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.get_spec" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">get_spec</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.get_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.get_spec" title="Link to this definition"></a></dt>
 <dd><p>Get a deep copy of the protobuf specification of the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -374,8 +390,26 @@ the compiled model to persist, you need to make a copy.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.model.MLModel.make_state">
+<span class="sig-name descname"><span class="pre">make_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MLState</span></span></span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.make_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.make_state" title="Link to this definition"></a></dt>
+<dd><p>Returns a new state object, which can be passed to the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
+<p>State functionality is only supported on macOS 15+</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.model.MLModel.predict" title="coremltools.models.model.MLModel.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">make_state</span><span class="p">()</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.predict" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MLState</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.predict" title="Link to this definition"></a></dt>
 <dd><p>Return predictions for the model.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -384,6 +418,8 @@ the compiled model to persist, you need to make a copy.</p>
 For batch predictons, use a list of such dictionaries.</p>
 <p>The following dictionary values types are acceptable: list, array, numpy.ndarray, tensorflow.Tensor
 and torch.Tensor.</p>
+</dd>
+<dt><strong>state</strong><span class="classifier">MLState</span></dt><dd><p>Optional state object as returned by <code class="docutils literal notranslate"><span class="pre">make_state()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -397,11 +433,13 @@ and torch.Tensor.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;bedroom&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">},</span>
-                 <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">2400</span><span class="p">}</span> <span class="p">]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;bedroom&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;bedroom&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">2400</span><span class="p">},</span>
+<span class="p">]</span>
 <span class="n">batch_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -409,7 +447,7 @@ and torch.Tensor.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.save">
-<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.save" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.save" title="Link to this definition"></a></dt>
 <dd><p>Save the model to an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code> format. For an MIL program, the <code class="docutils literal notranslate"><span class="pre">save_path</span></code> is
 a package directory containing the <code class="docutils literal notranslate"><span class="pre">mlmodel</span></code> and weights.</p>
 <dl class="field-list simple">
@@ -420,8 +458,8 @@ a package directory containing the <code class="docutils literal notranslate"><s
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
-<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;my_model_file.mlmodel&quot;</span><span class="p">)</span>
+<span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model_file.mlmodel&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -430,13 +468,13 @@ a package directory containing the <code class="docutils literal notranslate"><s
 
 </section>
 <section id="compiled-mlmodel">
-<h2>Compiled MLModel<a class="headerlink" href="#compiled-mlmodel" title="Permalink to this heading"></a></h2>
+<h2>Compiled MLModel<a class="headerlink" href="#compiled-mlmodel" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.CompiledMLModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.</span></span><span class="sig-name descname"><span class="pre">CompiledMLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.</span></span><span class="sig-name descname"><span class="pre">CompiledMLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel" title="Link to this definition"></a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.CompiledMLModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.__init__" title="Link to this definition"></a></dt>
 <dd><p>Loads a compiled Core ML model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -467,20 +505,39 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </div>
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_compiled_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">CompiledMLModel</span><span class="p">(</span><span class="s2">&quot;my_model_path.mlmodelc&quot;</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">my_compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">my_compiled_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">})</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.CompiledMLModel.make_state">
+<span class="sig-name descname"><span class="pre">make_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MLState</span></span></span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.make_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.make_state" title="Link to this definition"></a></dt>
+<dd><p>Returns a new state object, which can be passed to the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.CompiledMLModel.predict" title="coremltools.models.CompiledMLModel.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">state</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">make_state</span><span class="p">()</span>
+<span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.CompiledMLModel.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.predict" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">state</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MLState</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/_compiled_model.html#CompiledMLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.CompiledMLModel.predict" title="Link to this definition"></a></dt>
 <dd><p>Return predictions for the model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>data: dict[str, value] or list[dict[str, value]]</strong></dt><dd><p>Dictionary of data to use for predictions, where the keys are the names of the input features.
 For batch predictons, use a list of such dictionaries.</p>
+</dd>
+<dt><strong>state</strong><span class="classifier">MLState</span></dt><dd><p>Optional state object as returned by <code class="docutils literal notranslate"><span class="pre">make_state()</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -494,11 +551,13 @@ For batch predictons, use a list of such dictionaries.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;bedroom&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
 <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="p">[</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">},</span>
-                 <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">2400</span><span class="p">}</span> <span class="p">]</span>
+<span class="n">data</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;bedroom&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;bedroom&quot;</span><span class="p">:</span> <span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">2400</span><span class="p">},</span>
+<span class="p">]</span>
 <span class="n">batch_predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -508,7 +567,7 @@ For batch predictons, use a list of such dictionaries.</p>
 
 </section>
 <section id="compression-utils">
-<h2>compression_utils<a class="headerlink" href="#compression-utils" title="Permalink to this heading"></a></h2>
+<h2>compression_utils<a class="headerlink" href="#compression-utils" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.ml_program.html"><code class="docutils literal notranslate"><span class="pre">affine_quantize_weights()</span></code></a></li>
@@ -518,10 +577,10 @@ For batch predictons, use a list of such dictionaries.</p>
 </div>
 </section>
 <section id="module-coremltools.models.array_feature_extractor">
-<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Permalink to this heading"></a></h2>
+<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.array_feature_extractor.create_array_feature_extractor">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></span><span class="sig-name descname"><span class="pre">create_array_feature_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/array_feature_extractor.html#create_array_feature_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></span><span class="sig-name descname"><span class="pre">create_array_feature_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/array_feature_extractor.html#create_array_feature_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Link to this definition"></a></dt>
 <dd><p>Creates a feature extractor from an input array <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">return)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -539,13 +598,13 @@ If a list, the output type is an array.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.debugging_utils">
-<span id="extract-submodel"></span><h2>extract_submodel<a class="headerlink" href="#module-coremltools.converters.mil.debugging_utils" title="Permalink to this heading"></a></h2>
+<span id="extract-submodel"></span><h2>extract_submodel<a class="headerlink" href="#module-coremltools.converters.mil.debugging_utils" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.converters.mil.debugging_utils.extract_submodel">
-<span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.debugging_utils.</span></span><span class="sig-name descname"><span class="pre">extract_submodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/debugging_utils.html#extract_submodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.debugging_utils.extract_submodel" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.debugging_utils.</span></span><span class="sig-name descname"><span class="pre">extract_submodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/debugging_utils.html#extract_submodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.debugging_utils.extract_submodel" title="Link to this definition"></a></dt>
 <dd><p>This utility function lets you extract a submodel from a Core ML model.</p>
-<p>For a NeuralNetwork model, the function extracts only in-memory Core ML models.
-You should always call this function to a model directly from <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>. It is not
+<p>For a neural network model, the function extracts only in-memory Core ML models.
+You should always call this function for a model directly from <a class="reference internal" href="coremltools.converters.convert.html#coremltools.converters._converters_entry.convert" title="coremltools.converters._converters_entry.convert"><code class="xref py py-class docutils literal notranslate"><span class="pre">convert</span></code></a>. It is not
 allowed to load the model from disk and then call this API.</p>
 <p>For an ML program model, both cases (in-memory and from disk) are supported.</p>
 <dl class="field-list simple">
@@ -558,20 +617,20 @@ allowed to load the model from disk and then call this API.</p>
 <dt><strong>inputs: list[str] (Optional)</strong></dt><dd><p>A list of names of Vars, which are the inputs of the extracted submodel.
 If not provided, the inputs from the original model are used.</p>
 </dd>
-<dt><strong>function_name: str (Optional)</strong></dt><dd><p>Name of the function where the subgraph is extracted. Default <code class="docutils literal notranslate"><span class="pre">main</span></code>.</p>
+<dt><strong>function_name: str (Optional)</strong></dt><dd><p>Name of the function where the subgraph is extracted. Default is <code class="docutils literal notranslate"><span class="pre">main</span></code>.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<p>NeuralNetwork:</p>
+<p>Neural network:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;neuralnetwork&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">submodel</span> <span class="o">=</span> <span class="n">extract_submodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>ML Program:</p>
+<p>ML program:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
@@ -589,10 +648,10 @@ If not provided, the inputs from the original model are used.</p>
 
 </section>
 <section id="module-coremltools.models.feature_vectorizer">
-<span id="feature-vectorizer"></span><h2>feature_vectorizer<a class="headerlink" href="#module-coremltools.models.feature_vectorizer" title="Permalink to this heading"></a></h2>
+<span id="feature-vectorizer"></span><h2>feature_vectorizer<a class="headerlink" href="#module-coremltools.models.feature_vectorizer" title="Link to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.feature_vectorizer.create_feature_vectorizer">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.feature_vectorizer.</span></span><span class="sig-name descname"><span class="pre">create_feature_vectorizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_size_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/feature_vectorizer.html#create_feature_vectorizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.feature_vectorizer.create_feature_vectorizer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.feature_vectorizer.</span></span><span class="sig-name descname"><span class="pre">create_feature_vectorizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_size_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/feature_vectorizer.html#create_feature_vectorizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.feature_vectorizer.create_feature_vectorizer" title="Link to this definition"></a></dt>
 <dd><p>Create a feature vectorizer from input features. This returns a 2-tuple
 <code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">num_dimension)</span></code> for a feature vectorizer that puts everything into a
 single array with a length equal to the total size of all the input features.</p>
@@ -623,10 +682,10 @@ given as dictionaries of index to value.</p>
 
 </section>
 <section id="module-coremltools.models.nearest_neighbors.builder">
-<span id="nearest-neighbors"></span><h2>nearest_neighbors<a class="headerlink" href="#module-coremltools.models.nearest_neighbors.builder" title="Permalink to this heading"></a></h2>
+<span id="nearest-neighbors"></span><h2>nearest_neighbors<a class="headerlink" href="#module-coremltools.models.nearest_neighbors.builder" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.nearest_neighbors.builder.</span></span><span class="sig-name descname"><span class="pre">KNearestNeighborsClassifierBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.nearest_neighbors.builder.</span></span><span class="sig-name descname"><span class="pre">KNearestNeighborsClassifierBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder" title="Link to this definition"></a></dt>
 <dd><p>Construct a CoreML KNearestNeighborsClassifier specification.</p>
 <p>Please see the Core ML Nearest Neighbors protobuf message for more information
 on KNearestNeighborsClassifier parameters.</p>
@@ -646,7 +705,7 @@ on KNearestNeighborsClassifier parameters.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__" title="Link to this definition"></a></dt>
 <dd><p>Create a KNearestNeighborsClassifierBuilder object.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -678,7 +737,7 @@ between 1-1000.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples">
-<span class="sig-name descname"><span class="pre">add_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.add_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_samples</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.add_samples"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples" title="Link to this definition"></a></dt>
 <dd><p>Add some samples to the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -699,7 +758,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">author</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">author</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author" title="Link to this definition"></a></dt>
 <dd><p>Get the author for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -712,7 +771,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">description</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description" title="Link to this definition"></a></dt>
 <dd><p>Get the description for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -725,7 +784,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_type</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">index_type</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type" title="Link to this definition"></a></dt>
 <dd><p>Get the index type for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -738,7 +797,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_updatable</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_updatable</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable" title="Link to this definition"></a></dt>
 <dd><p>Check if the KNearestNeighborsClassifier is updatable.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -751,7 +810,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">leaf_size</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">leaf_size</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size" title="Link to this definition"></a></dt>
 <dd><p>Get the leaf size for the KNearestNeighborsClassifier.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -764,7 +823,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">license</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">license</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license" title="Link to this definition"></a></dt>
 <dd><p>Get the author for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -777,7 +836,7 @@ between 1-1000.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_dimensions</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_dimensions</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions" title="Link to this definition"></a></dt>
 <dd><p>Get the number of dimensions of the input data for the
 KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
@@ -791,7 +850,7 @@ KNearestNeighborsClassifier model.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_neighbors</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">number_of_neighbors</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors" title="Link to this definition"></a></dt>
 <dd><p>Get the number of neighbors value for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -804,7 +863,7 @@ KNearestNeighborsClassifier model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">
-<span class="sig-name descname"><span class="pre">number_of_neighbors_allowed_range</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">number_of_neighbors_allowed_range</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range" title="Link to this definition"></a></dt>
 <dd><p>Get the range of allowed values for the numberOfNeighbors parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -817,7 +876,7 @@ KNearestNeighborsClassifier model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">
-<span class="sig-name descname"><span class="pre">number_of_neighbors_allowed_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">number_of_neighbors_allowed_set</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set" title="Link to this definition"></a></dt>
 <dd><p>Get the set of allowed values for the numberOfNeighbors parameter.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -831,7 +890,7 @@ KNearestNeighborsClassifier model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">
-<span class="sig-name descname"><span class="pre">set_index_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.set_index_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_index_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.set_index_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type" title="Link to this definition"></a></dt>
 <dd><p>Set the index type for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -852,7 +911,7 @@ KNearestNeighborsClassifier model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">
-<span class="sig-name descname"><span class="pre">set_number_of_neighbors_with_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_neighbors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_number_of_neighbors_with_bounds</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_neighbors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds" title="Link to this definition"></a></dt>
 <dd><p>Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -873,7 +932,7 @@ KNearestNeighborsClassifier model.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighting_scheme</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weighting_scheme</span></span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme" title="Link to this definition"></a></dt>
 <dd><p>Get the weighting scheme for the KNearestNeighborsClassifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -888,7 +947,7 @@ KNearestNeighborsClassifier model.</p>
 
 </section>
 <section id="neural-network">
-<h2>neural_network<a class="headerlink" href="#neural-network" title="Permalink to this heading"></a></h2>
+<h2>neural_network<a class="headerlink" href="#neural-network" title="Link to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html">neural_network.builder</a></li>
@@ -899,11 +958,11 @@ KNearestNeighborsClassifier model.</p>
 </div>
 </section>
 <section id="module-coremltools.models.pipeline">
-<span id="pipeline"></span><h2>pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Permalink to this heading"></a></h2>
+<span id="pipeline"></span><h2>pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Link to this heading"></a></h2>
 <p>Pipeline utils for this package.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.Pipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline" title="Link to this definition"></a></dt>
 <dd><p>A pipeline model that exposes a sequence of models as a single model,
 It requires a set of inputs, a sequence of other models and a set of outputs.</p>
 <p>This class is the base class for <a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier" title="coremltools.models.pipeline.PipelineClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PipelineClassifier</span></code></a> and
@@ -912,7 +971,7 @@ or regressor and themselves behave like a classifier or regressor.  This class
 may be used directly for a sequence of feature transformer objects.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.Pipeline.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.__init__" title="Link to this definition"></a></dt>
 <dd><p>Create a pipeline of models to be executed sequentially.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -934,7 +993,7 @@ contained models.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.Pipeline.add_model">
-<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.add_model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.add_model" title="Link to this definition"></a></dt>
 <dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
 <p>All input features of this model must either match the input_features
 of the pipeline, or match the outputs of a previous model.</p>
@@ -950,7 +1009,7 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.Pipeline.set_training_input">
-<span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.set_training_input" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#Pipeline.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.set_training_input" title="Link to this definition"></a></dt>
 <dd><p>Set the training inputs of the network spec.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -966,14 +1025,14 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineClassifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></span><span class="sig-name descname"><span class="pre">PipelineClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></span><span class="sig-name descname"><span class="pre">PipelineClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier" title="Link to this definition"></a></dt>
 <dd><p>A pipeline model that exposes a sequence of models as a single model,
 It requires a set of inputs, a sequence of other models and a set of outputs.
 In this case the pipeline itself behaves as a classification model by designating
 a discrete categorical output feature as its ‘predicted feature’.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineClassifier.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.__init__" title="Link to this definition"></a></dt>
 <dd><p>Create a set of pipeline models given a set of model specs.  The last
 model in this list must be a classifier model.</p>
 <dl class="field-list simple">
@@ -1001,7 +1060,7 @@ scores is set to the default value of <cite>“classProbability.”</cite></p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineClassifier.add_model">
-<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.add_model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.add_model" title="Link to this definition"></a></dt>
 <dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
 <p>All input features of this model must either match the input_features
 of the pipeline, or match the outputs of a previous model.</p>
@@ -1017,7 +1076,7 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineClassifier.set_training_input">
-<span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.set_training_input" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineClassifier.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.set_training_input" title="Link to this definition"></a></dt>
 <dd><p>Set the training inputs of the network spec.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1033,14 +1092,14 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineRegressor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></span><span class="sig-name descname"><span class="pre">PipelineRegressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></span><span class="sig-name descname"><span class="pre">PipelineRegressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor" title="Link to this definition"></a></dt>
 <dd><p>A pipeline model that exposes a sequence of models as a single model,
 It requires a set of inputs, a sequence of other models and a set of outputs.
 In this case the pipeline itself behaves as a regression model by designating
 a real valued output feature as its ‘predicted feature’.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineRegressor.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.__init__" title="Link to this definition"></a></dt>
 <dd><p>Create a set of pipeline models given a set of model specs.  The final
 output model must be a regression model.</p>
 <dl class="field-list simple">
@@ -1063,7 +1122,7 @@ contained models.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineRegressor.add_model">
-<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.add_model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.add_model" title="Link to this definition"></a></dt>
 <dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
 <p>All input features of this model must either match the input_features
 of the pipeline, or match the outputs of a previous model.</p>
@@ -1079,7 +1138,7 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.PipelineRegressor.set_training_input">
-<span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.set_training_input" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_training_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/pipeline.html#PipelineRegressor.set_training_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.set_training_input" title="Link to this definition"></a></dt>
 <dd><p>Set the training inputs of the network spec.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1095,23 +1154,23 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 </section>
 <section id="module-coremltools.models.tree_ensemble">
-<span id="tree-ensemble"></span><h2>tree_ensemble<a class="headerlink" href="#module-coremltools.models.tree_ensemble" title="Permalink to this heading"></a></h2>
+<span id="tree-ensemble"></span><h2>tree_ensemble<a class="headerlink" href="#module-coremltools.models.tree_ensemble" title="Link to this heading"></a></h2>
 <p>Tree ensemble builder class to construct CoreML models.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></span><span class="sig-name descname"><span class="pre">TreeEnsembleBase</span></span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></span><span class="sig-name descname"><span class="pre">TreeEnsembleBase</span></span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase" title="Link to this definition"></a></dt>
 <dd><p>Base class for the tree ensemble builder class.  This should be instantiated
 either through the <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></a> or
 <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">TreeEnsembleClassifier</span></code></a> classes.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__" title="Link to this definition"></a></dt>
 <dd><p>High level Python API to build a tree ensemble model for Core ML.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node">
-<span class="sig-name descname"><span class="pre">add_branch_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_child_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_child_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_hit_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_value_tracks_true_child</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.add_branch_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_branch_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_child_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_child_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_hit_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_value_tracks_true_child</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.add_branch_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node" title="Link to this definition"></a></dt>
 <dd><p>Add a branch node to the tree ensemble.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1177,7 +1236,7 @@ flag determines which direction a NaN value traverses.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node">
-<span class="sig-name descname"><span class="pre">add_leaf_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_hit_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.add_leaf_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">add_leaf_node</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_hit_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.add_leaf_node"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node" title="Link to this definition"></a></dt>
 <dd><p>Add a leaf node to the tree ensemble.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1202,7 +1261,7 @@ when <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeE
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value">
-<span class="sig-name descname"><span class="pre">set_default_prediction_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.set_default_prediction_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_default_prediction_value</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.set_default_prediction_value"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="Link to this definition"></a></dt>
 <dd><p>Set the default prediction value(s).</p>
 <p>The values given here form the base prediction value that the values
 at activated leaves are added to.  If values is a scalar, then
@@ -1220,7 +1279,7 @@ must be a list with length matching the dimension of values in the tree.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform">
-<span class="sig-name descname"><span class="pre">set_post_evaluation_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.set_post_evaluation_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">set_post_evaluation_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleBase.set_post_evaluation_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform" title="Link to this definition"></a></dt>
 <dd><p>Set the post processing transform applied after the prediction value
 from the tree ensemble.</p>
 <dl class="field-list">
@@ -1259,7 +1318,7 @@ with multiclass classification.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleClassifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></span><span class="sig-name descname"><span class="pre">TreeEnsembleClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></span><span class="sig-name descname"><span class="pre">TreeEnsembleClassifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleClassifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="Link to this definition"></a></dt>
 <dd><p>Tree Ensemble builder class to construct a Tree Ensemble classification model.</p>
 <p>The TreeEnsembleClassifier class constructs a Tree Ensemble model incrementally
 using methods to add branch and leaf nodes specifying the behavior of the model.</p>
@@ -1308,7 +1367,7 @@ recommended practice but not required.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleClassifier.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__" title="Link to this definition"></a></dt>
 <dd><p>Create a tree ensemble classifier model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1338,7 +1397,7 @@ scores is set to the default value of <code class="docutils literal notranslate"
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleRegressor">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></span><span class="sig-name descname"><span class="pre">TreeEnsembleRegressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleRegressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></span><span class="sig-name descname"><span class="pre">TreeEnsembleRegressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleRegressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="Link to this definition"></a></dt>
 <dd><p>Tree Ensemble builder class to construct a Tree Ensemble regression model.</p>
 <p>The TreeEnsembleRegressor class constructs a Tree Ensemble model incrementally
 using methods to add branch and leaf nodes specifying the behavior of the model.</p>
@@ -1393,7 +1452,7 @@ recommended practice but not required.</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleRegressor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/tree_ensemble.html#TreeEnsembleRegressor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__" title="Link to this definition"></a></dt>
 <dd><p>Create a Tree Ensemble regression model that takes one or more input
 features and maps them to an output feature.</p>
 <dl class="field-list simple">
@@ -1416,17 +1475,89 @@ the features.</p>
 
 </section>
 <section id="module-coremltools.models.utils">
-<span id="utils"></span><h2>utils<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this heading"></a></h2>
+<span id="utils"></span><h2>utils<a class="headerlink" href="#module-coremltools.models.utils" title="Link to this heading"></a></h2>
 <p>Utilities for the entire package.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">MultiFunctionDescriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor" title="Link to this definition"></a></dt>
+<dd><p>The data class defines how to construct a multifunction model from different model sources.
+The users can use the <code class="docutils literal notranslate"><span class="pre">add_function</span></code> method to specify the path to the source <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>,
+along with the source and target function names.</p>
+<p>After setting the <code class="docutils literal notranslate"><span class="pre">default_function_name</span></code> to the <code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor</span></code> instance,
+a multifunction model can be exported using the <code class="docutils literal notranslate"><span class="pre">save_multifunction</span></code> method.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.save_multifunction" title="coremltools.models.utils.save_multifunction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_multifunction</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
+
+<span class="c1"># Initialize a MultiFunctionDescriptor instance with functions in an existing mlpackage.</span>
+<span class="c1"># desc will constain all functions in &quot;my_model.mlpackage&quot;</span>
+<span class="n">desc</span> <span class="o">=</span> <span class="n">MultiFunctionDescriptor</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+
+<span class="c1"># Construct a MultiFunctionDescriptor instance from scratch.</span>
+<span class="c1"># The below code inserts &quot;main&quot; function from &quot;my_model.mlpackage&quot; as &quot;main_1&quot;,</span>
+<span class="c1"># and inserts &quot;main&quot; function from &quot;my_model_2.mlpackage&quot; as &quot;main_2&quot;.</span>
+<span class="n">desc</span> <span class="o">=</span> <span class="n">MultiFunctionDescriptor</span><span class="p">()</span>
+<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="o">=</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">,</span>
+    <span class="n">source_function_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;main_1&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="o">=</span><span class="s2">&quot;my_model_2.mlpackage&quot;</span><span class="p">,</span>
+    <span class="n">source_function_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;main_2&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Each MultiFunctionDescriptor must has a default function name before saved</span>
+<span class="c1"># as a multifunction mlpackage on disk.</span>
+<span class="n">desc</span><span class="o">.</span><span class="n">default_function_name</span> <span class="o">=</span> <span class="s2">&quot;main_1&quot;</span>
+<span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;my_multifunction_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.__init__" title="Link to this definition"></a></dt>
+<dd><p>If <code class="docutils literal notranslate"><span class="pre">model_path</span></code> is passed to the constructor, it must be a str pointing to a
+mlpackage on disk. The MultiFunctionDescriptor instance will be initiated
+with functions in <code class="docutils literal notranslate"><span class="pre">model_path</span></code>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.add_function">
+<span class="sig-name descname"><span class="pre">add_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.add_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.add_function" title="Link to this definition"></a></dt>
+<dd><p>Insert <code class="docutils literal notranslate"><span class="pre">src_function_name</span></code> function from <code class="docutils literal notranslate"><span class="pre">model_path</span></code> as <code class="docutils literal notranslate"><span class="pre">target_function_name</span></code>
+function in the multifunction descriptor.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.add_model">
+<span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.add_model" title="Link to this definition"></a></dt>
+<dd><p>Insert all functions in <code class="docutils literal notranslate"><span class="pre">model_path</span></code> into the multifunction descriptor.
+Same function names in the original model will be applied.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.remove_function">
+<span class="sig-name descname"><span class="pre">remove_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.remove_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.remove_function" title="Link to this definition"></a></dt>
+<dd><p>Remove function <code class="docutils literal notranslate"><span class="pre">function_name</span></code> from the multifunction descriptor.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.compile_model">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">compile_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#compile_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.compile_model" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">compile_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#compile_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.compile_model" title="Link to this definition"></a></dt>
 <dd><p>Compiles a Core ML model spec.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>model: Model_pb2</strong></dt><dd><p>Spec/protobuf to compile.</p>
-<p>Note: an mlprogam which uses a blob file is not supported.</p>
+<p>Note: an <code class="docutils literal notranslate"><span class="pre">mlprogam</span></code> which uses a blob file is not supported.</p>
 </dd>
 <dt><strong>destination_path: str</strong></dt><dd><p>Path where the compiled model will be saved.</p>
 </dd>
@@ -1434,7 +1565,7 @@ the features.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt><strong>str</strong><span class="classifier">Path to compiled model directory</span></dt><dd><p>If the destination_path is specified, that is the value that will be returned.</p>
+<dt><strong>str</strong><span class="classifier">Path to compiled model directory</span></dt><dd><p>If the <code class="docutils literal notranslate"><span class="pre">destination_path</span></code> is specified, that is the value that will be returned.</p>
 </dd>
 </dl>
 </dd>
@@ -1454,13 +1585,13 @@ the features.</p>
 <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span>
 
 <span class="n">input_</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-<span class="n">input_</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;x&#39;</span>
+<span class="n">input_</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;x&quot;</span>
 <span class="n">input_</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">doubleType</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 
 <span class="n">output_</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-<span class="n">output_</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span>
+<span class="n">output_</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
 <span class="n">output_</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">doubleType</span><span class="o">.</span><span class="n">MergeFromString</span><span class="p">(</span><span class="sa">b</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
-<span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedFeatureName</span> <span class="o">=</span> <span class="s1">&#39;y&#39;</span>
+<span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedFeatureName</span> <span class="o">=</span> <span class="s2">&quot;y&quot;</span>
 
 <span class="n">lr</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">glmRegressor</span>
 <span class="n">lr</span><span class="o">.</span><span class="n">offset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
@@ -1469,20 +1600,20 @@ the features.</p>
 
 <span class="n">compiled_model_path</span> <span class="o">=</span> <span class="n">compile_model</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">CompiledMLModel</span><span class="p">(</span><span class="n">compiled_model_path</span><span class="p">)</span>
-<span class="n">y</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">})</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.convert_double_to_float_multiarray_type">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">convert_double_to_float_multiarray_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#convert_double_to_float_multiarray_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.convert_double_to_float_multiarray_type" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">convert_double_to_float_multiarray_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#convert_double_to_float_multiarray_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.convert_double_to_float_multiarray_type" title="Link to this definition"></a></dt>
 <dd><p>Convert all double multiarrays feature descriptions (input, output, training input)
-to float multiarrays</p>
+to float multiarrays.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>spec: Model_pb</strong></dt><dd><p>The specification containing the multiarrays types to convert</p>
+<dt><strong>spec: Model_pb</strong></dt><dd><p>The specification containing the multiarrays types to convert.</p>
 </dd>
 </dl>
 </dd>
@@ -1498,22 +1629,22 @@ to float multiarrays</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.evaluate_classifier">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_classifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_classifier"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Link to this definition"></a></dt>
 <dd><p>Evaluate a Core ML classifier model and compare against predictions
 from the original framework (for testing correctness of conversion).
 Use this evaluation for models that don’t deal with probabilities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>filename: list of str or list of MLModel</strong></dt><dd><p>File from where to load the model from (OR) a loaded
+<dt><strong>filename: list of str or list of MLModel</strong></dt><dd><p>File to load the model from, or a loaded
 version of the MLModel.</p>
 </dd>
 <dt><strong>data: list of str or list of Dataframe</strong></dt><dd><p>Test data on which to evaluate the models (dataframe,
-or path to a csv file).</p>
+or path to a CSV file).</p>
 </dd>
-<dt><strong>target: str</strong></dt><dd><p>Column to interpret as the target column</p>
+<dt><strong>target: str</strong></dt><dd><p>Column to interpret as the target column.</p>
 </dd>
-<dt><strong>verbose: bool</strong></dt><dd><p>Set to true for a more verbose output.</p>
+<dt><strong>verbose: bool</strong></dt><dd><p>Set to true for more verbose output.</p>
 </dd>
 </dl>
 </dd>
@@ -1536,18 +1667,18 @@ or path to a csv file).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.evaluate_classifier_with_probabilities">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_classifier_with_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'probabilities'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_classifier_with_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_classifier_with_probabilities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'probabilities'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_classifier_with_probabilities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Link to this definition"></a></dt>
 <dd><p>Evaluate a classifier specification for testing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>filename: [str | Model]</strong></dt><dd><p>File from where to load the model from (OR) a loaded
+<dt><strong>filename: [str | Model]</strong></dt><dd><p>File to load the model from, or a loaded
 version of the MLModel.</p>
 </dd>
 <dt><strong>data: [str | Dataframe]</strong></dt><dd><p>Test data on which to evaluate the models (dataframe,
-or path to a csv file).</p>
+or path to a CSV file).</p>
 </dd>
-<dt><strong>probabilities: str</strong></dt><dd><p>Column to interpret as the probabilities column</p>
+<dt><strong>probabilities: str</strong></dt><dd><p>Column to interpret as the probabilities column.</p>
 </dd>
 <dt><strong>verbose: bool</strong></dt><dd><p>Verbosity levels of the predictions.</p>
 </dd>
@@ -1558,17 +1689,17 @@ or path to a csv file).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.evaluate_regressor">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_regressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Permalink to this definition"></a></dt>
-<dd><p>Evaluate a CoreML regression model and compare against predictions
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_regressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_regressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Link to this definition"></a></dt>
+<dd><p>Evaluate a Core ML regression model and compare against predictions
 from the original framework (for testing correctness of conversion).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>model: MLModel or str</strong></dt><dd><p>A loaded MLModel or a path to a saved MLModel</p>
+<dt><strong>model: MLModel or str</strong></dt><dd><p>A loaded MLModel or a path to a saved MLModel.</p>
 </dd>
-<dt><strong>data: Dataframe</strong></dt><dd><p>Test data on which to evaluate the models</p>
+<dt><strong>data: Dataframe</strong></dt><dd><p>Test data on which to evaluate the models.</p>
 </dd>
-<dt><strong>target: str</strong></dt><dd><p>Name of the column in the dataframe to be compared against the prediction</p>
+<dt><strong>target: str</strong></dt><dd><p>Name of the column in the dataframe to be compared against the prediction.</p>
 </dd>
 <dt><strong>verbose: bool</strong></dt><dd><p>Set to true for a more verbose output.</p>
 </dd>
@@ -1593,13 +1724,13 @@ from the original framework (for testing correctness of conversion).</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.evaluate_transformer">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_transformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_transformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_transformer" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">evaluate_transformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#evaluate_transformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.evaluate_transformer" title="Link to this definition"></a></dt>
 <dd><p>Evaluate a transformer specification for testing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>spec: list of str or list of MLModel</strong></dt><dd><p>File from where to load the Model from (OR) a loaded
-version of MLModel.</p>
+<dt><strong>spec: list of str or list of MLModel</strong></dt><dd><p>File to load the Model from, or a loaded
+version of the MLModel.</p>
 </dd>
 <dt><strong>input_data: list of dict</strong></dt><dd><p>Test data on which to evaluate the models.</p>
 </dd>
@@ -1628,8 +1759,8 @@ version of MLModel.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.load_spec">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">load_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'coremltools.proto.Model_pb2'</span> <span class="pre">from</span> <span class="pre">'/Users/tonybove/opt/coremltools/coremltools/proto/Model_pb2.py'&gt;</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#load_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Permalink to this definition"></a></dt>
-<dd><p>Load a protobuf model specification from file (mlmodel) or directory (mlpackage).</p>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">load_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'coremltools.proto.Model_pb2'</span> <span class="pre">from</span> <span class="pre">'/Volumes/DevData/workspace/coremltools/coremltools/proto/Model_pb2.py'&gt;</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#load_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Link to this definition"></a></dt>
+<dd><p>Load a protobuf model specification from file (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code>) or directory (<code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1638,7 +1769,7 @@ version of MLModel.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>model_spec: Model_pb</dt><dd><p>Protobuf representation of the model</p>
+<dt>model_spec: Model_pb</dt><dd><p>Protobuf representation of the model.</p>
 </dd>
 </dl>
 </dd>
@@ -1658,7 +1789,7 @@ version of MLModel.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.make_pipeline">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Union</span><span class="p"><span class="pre">[</span></span><span class="pre">None</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ComputeUnit</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Link to this definition"></a></dt>
 <dd><p>Makes a pipeline with the given models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1694,22 +1825,49 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_model1</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;/tmp/m1.mlpackage&#39;</span><span class="p">)</span>
-<span class="n">my_model2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;/tmp/m2.mlmodel&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">my_model1</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;/tmp/m1.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">my_model2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;/tmp/m2.mlmodel&quot;</span><span class="p">)</span>
 
 <span class="n">my_pipeline_model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">make_pipeline</span><span class="p">(</span><span class="n">my_model1</span><span class="p">,</span> <span class="n">my_model2</span><span class="p">)</span>
 
-<span class="n">y</span> <span class="o">=</span> <span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
+<span class="n">y</span> <span class="o">=</span> <span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">})</span>
 
-<span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;/tmp/my_pipeline.mlpackage&#39;</span><span class="p">)</span>
-<span class="n">new_my_pipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;/tmp/my_pipeline.mlpackage&#39;</span><span class="p">)</span>
+<span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/my_pipeline.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">new_my_pipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;/tmp/my_pipeline.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.models.utils.randomize_weights">
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">randomize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#randomize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.randomize_weights" title="Link to this definition"></a></dt>
+<dd><p>Utility function to randomize weights</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mlmodel: MLModel</strong></dt><dd><p>Model which will be randomized.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The MLModel with randomized weights.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">randomized_mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">randomize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.rename_feature">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">rename_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#rename_feature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.rename_feature" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">rename_feature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#rename_feature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.rename_feature" title="Link to this definition"></a></dt>
 <dd><p>Rename a feature in the specification.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1721,11 +1879,11 @@ is a no-op.</p>
 </dd>
 <dt><strong>new_name: str</strong></dt><dd><p>New name of the feature.</p>
 </dd>
-<dt><strong>rename_inputs: bool</strong></dt><dd><p>Search for <cite>current_name</cite> only in the input features (i.e ignore output
-features)</p>
+<dt><strong>rename_inputs: bool</strong></dt><dd><p>Search for <code class="docutils literal notranslate"><span class="pre">current_name</span></code> only in the input features (that is, ignore output
+features).</p>
 </dd>
-<dt><strong>rename_outputs: bool</strong></dt><dd><p>Search for <cite>current_name</cite> only in the output features (i.e ignore input
-features)</p>
+<dt><strong>rename_outputs: bool</strong></dt><dd><p>Search for <code class="docutils literal notranslate"><span class="pre">current_name</span></code> only in the output features (that is, ignore input
+features).</p>
 </dd>
 </dl>
 </dd>
@@ -1753,20 +1911,53 @@ features)</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="coremltools.models.utils.save_multifunction">
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">save_multifunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">desc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor" title="coremltools.models.utils.MultiFunctionDescriptor"><span class="pre">MultiFunctionDescriptor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#save_multifunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.save_multifunction" title="Link to this definition"></a></dt>
+<dd><p>Save a MultiFunctionDescriptor instance into a multifunction <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>.
+The utility also performs constant deduplication across functions to allow weight sharing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>desc</strong><span class="classifier">MultiFunctionDescriptor</span></dt><dd><p>Multifunction descriptor to save on the disk.</p>
+</dd>
+<dt><strong>destination_path</strong><span class="classifier">str</span></dt><dd><p>The saved <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model path.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor" title="coremltools.models.utils.MultiFunctionDescriptor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MultiFunctionDescriptor</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
+
+<span class="n">desc</span> <span class="o">=</span> <span class="n">MultiFunctionDescriptor</span><span class="p">(</span><span class="s2">&quot;my_model_1.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s2">&quot;my_model_2.mlpackage&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="s2">&quot;main_2&quot;</span><span class="p">)</span>
+<span class="n">desc</span><span class="o">.</span><span class="n">default_function_name</span> <span class="o">=</span> <span class="s2">&quot;main_2&quot;</span>
+
+<span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;multifunctino_model.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.save_spec">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">save_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_set_specification_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#save_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.save_spec" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">save_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_set_specification_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#save_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.save_spec" title="Link to this definition"></a></dt>
 <dd><p>Save a protobuf model specification to file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>spec: Model_pb</strong></dt><dd><p>Protobuf representation of the model</p>
+<dt><strong>spec: Model_pb</strong></dt><dd><p>Protobuf representation of the model.</p>
 </dd>
-<dt><strong>filename: str</strong></dt><dd><p>File path where the spec gets saved.</p>
+<dt><strong>filename: str</strong></dt><dd><p>File path where the spec is saved.</p>
 </dd>
-<dt><strong>auto_set_specification_version: bool</strong></dt><dd><p>If True, will always try to set specification version automatically.</p>
+<dt><strong>auto_set_specification_version: bool</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, will always try to set specification version automatically.</p>
 </dd>
 <dt><strong>weights_dir: str</strong></dt><dd><p>Path to the directory containing the weights.bin file. This is required
-when the spec has model type mlprogram. If the mlprogram does not contain
+when the spec has model type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>. If the <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> does not contain
 any weights, this path can be an empty directory.</p>
 </dd>
 </dl>

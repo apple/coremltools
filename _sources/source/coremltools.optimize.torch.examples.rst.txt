@@ -1,5 +1,5 @@
-Training-Time Compression Examples
-==================================
+Examples
+========
 
 .. toctree::
     :maxdepth: 1

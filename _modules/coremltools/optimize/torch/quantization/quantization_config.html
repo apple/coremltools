@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.quantization.quantization_config &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.optimize.torch.quantization.quantization_config &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../_static/jquery.js"></script>
-        <script src="../../../../../_static/underscore.js"></script>
-        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../_static/doctools.js"></script>
-        <script src="../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
@@ -94,7 +93,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for coremltools.optimize.torch.quantization.quantization_config</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -119,6 +118,9 @@
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">get_n_bits_from_dtype</span> <span class="k">as</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">maybe_convert_str_to_dtype</span> <span class="k">as</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="p">(</span>
@@ -133,7 +135,9 @@
 <span class="n">_logger</span> <span class="o">=</span> <span class="n">_logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="ObserverType"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ObserverType">[docs]</a><span class="nd">@_unique</span>
+<div class="viewcode-block" id="ObserverType">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ObserverType">[docs]</a>
+<span class="nd">@_unique</span>
 <span class="k">class</span> <span class="nc">ObserverType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An enum indicating the type of observer. Allowed options are moving_average_min_max and mix_max.</span>
@@ -155,7 +159,10 @@
         <span class="k">return</span> <span class="n">_str_to_observer_map</span><span class="p">[</span><span class="n">observer_name</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="QuantizationScheme"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.QuantizationScheme">[docs]</a><span class="nd">@_unique</span>
+
+<div class="viewcode-block" id="QuantizationScheme">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.QuantizationScheme">[docs]</a>
+<span class="nd">@_unique</span>
 <span class="k">class</span> <span class="nc">QuantizationScheme</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An enum indicating the type of quantization to be performed. Allowed options are symmetric</span>
@@ -181,6 +188,7 @@
         <span class="k">return</span> <span class="n">_str_to_qscheme_map</span><span class="p">[</span><span class="n">quantization_scheme_name</span><span class="p">]</span></div>
 
 
+
 <span class="n">_default_quantization_options</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span>
     <span class="s2">&quot;weight_per_channel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
@@ -190,7 +198,13 @@
 <span class="p">}</span>
 
 
-<div class="viewcode-block" id="ModuleLinearQuantizerConfig"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig">[docs]</a><span class="nd">@_define</span>
+<span class="c1"># Backends only support 4 and 8 bit quantization</span>
+<span class="n">_SUPPORTED_N_BITS</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">32</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="ModuleLinearQuantizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig">[docs]</a>
+<span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleLinearQuantizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying global and module level quantization options for linear quantization</span>
@@ -255,9 +269,10 @@
 <span class="sd">            # mode, thus more closely simulating the inference numerics during training time.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. When dtype</span>
-<span class="sd">            is set to :py:class:`torch.float32`, the weights corresponding to that layer are not quantized.</span>
-<span class="sd">            Defaults to :py:class:`torch.qint8`.</span>
+<span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
+<span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
+<span class="sd">            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.int8` which corresponds to</span>
+<span class="sd">            8-bit quantization.</span>
 <span class="sd">        weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights. Defaults</span>
 <span class="sd">            to ``moving_average_min_max``.</span>
 <span class="sd">        weight_per_channel (:obj:`bool`): When ``True``, weights are quantized per channel; otherwise, per tensor.</span>
@@ -277,16 +292,11 @@
 <span class="sd">            quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.</span>
 <span class="sd">            Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and</span>
 <span class="sd">            all observers and quantization simulation will be turned on from the first step, batch norm layers always</span>
-<span class="sd">            operate in training mode, and mean and variance statistics collection is not frozen.</span>
+<span class="sd">            operate in training mode, and mean and varaince statistics collection is not frozen.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+    <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;weight_dtype&quot;</span><span class="p">],</span>
-        <span class="n">converter</span><span class="o">=</span><span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
-        <span class="n">validator</span><span class="o">=</span><span class="p">[</span>
-            <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
-            <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]),</span>
-        <span class="p">],</span>
     <span class="p">)</span>
     <span class="n">weight_observer</span><span class="p">:</span> <span class="n">ObserverType</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">_default_quantization_options</span><span class="p">[</span><span class="s2">&quot;observer&quot;</span><span class="p">],</span>
@@ -326,6 +336,13 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of (_torch.qint8, _torch.quint8, _torch.float32) not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">==</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation_dtype</span> <span class="o">!=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unsupported configuration: weight_dtype = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">, &quot;</span>
@@ -340,7 +357,20 @@
                 <span class="sa">f</span><span class="s2">&quot;Received milestones = </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Milestones should be of length 4. &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;Refer to docs for more information.&quot;</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="ModuleLinearQuantizerConfig.from_dict">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">):</span>
+        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
+            <span class="k">lambda</span> <span class="n">obj</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">obj</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+</div>
+
 
 
 <span class="n">_ModuleTypeConfigType</span> <span class="o">=</span> <span class="n">_NewType</span><span class="p">(</span>
@@ -349,7 +379,9 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="LinearQuantizerConfig"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig">[docs]</a><span class="nd">@_define</span>
+<div class="viewcode-block" id="LinearQuantizerConfig">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig">[docs]</a>
+<span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">LinearQuantizerConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying how different submodules of a model are</span>
@@ -394,6 +426,17 @@
 <span class="sd">                }</span>
 <span class="sd">            )</span>
 
+<span class="sd">            # If model has some methods and attributes which are not used in the forward</span>
+<span class="sd">            # pass, but are needed to be preserved after quantization is added, they can</span>
+<span class="sd">            # be preserved on the quantized model by passing them in preserved_attributes</span>
+<span class="sd">            # parameter</span>
+
+<span class="sd">            model = MyModel()</span>
+<span class="sd">            model.key_1 = value_1</span>
+<span class="sd">            model.key_2 = value_2</span>
+
+<span class="sd">            config = LinearQuantizerConfig.from_dict({&quot;preserved_attributes&quot;: [&quot;key_1&quot;, &quot;key_2&quot;]})</span>
+
 <span class="sd">    Args:</span>
 <span class="sd">        global_config (:py:class:`ModuleLinearQuantizerConfig`): Config to be applied globally</span>
 <span class="sd">            to all supported modules. Missing values are chosen from the default config.</span>
@@ -407,6 +450,9 @@
 <span class="sd">            from the top level module using the ``module.get_submodule(target)`` method.</span>
 <span class="sd">        non_traceable_module_names (:obj:`list` of :obj:`str`):</span>
 <span class="sd">            Names of modules which cannot be traced using ``torch.fx``.</span>
+<span class="sd">        preserved_attributes (:obj:`list` of :obj:`str`): Names of attributes of the model</span>
+<span class="sd">            which should be preserved on the prepared and finalized models, even if they are not</span>
+<span class="sd">            used in the model&#39;s forward pass.</span>
 
 <span class="sd">    .. note::</span>
 <span class="sd">        The ``quantization_scheme`` parameter must be the same across all configs.</span>
@@ -443,6 +489,12 @@
             <span class="n">member_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
         <span class="p">),</span>
     <span class="p">)</span>
+    <span class="n">preserved_attributes</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">factory</span><span class="o">=</span><span class="nb">list</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">deep_iterable</span><span class="p">(</span>
+            <span class="n">member_validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
+        <span class="p">),</span>
+    <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="p">(</span>
@@ -457,15 +509,23 @@
         <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_same_params</span><span class="p">([</span><span class="s2">&quot;quantization_scheme&quot;</span><span class="p">])</span>
 
-<div class="viewcode-block" id="LinearQuantizerConfig.from_dict"><a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="LinearQuantizerConfig.from_dict">
+<a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;LinearQuantizerConfig&quot;</span><span class="p">:</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
         <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
+            <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">],</span>
+            <span class="k">lambda</span> <span class="n">obj</span><span class="p">,</span> <span class="nb">type</span><span class="p">:</span> <span class="n">obj</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">converter</span><span class="o">.</span><span class="n">register_structure_hook</span><span class="p">(</span>
             <span class="n">_ModuleTypeConfigType</span><span class="p">,</span>
             <span class="n">_structure_from_dict_hook_factory</span><span class="p">(</span><span class="n">ModuleLinearQuantizerConfig</span><span class="p">),</span>
         <span class="p">)</span>
-        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
            </div>

@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css" />
+  <title>coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../../../../../" id="documentation_options" src="../../../../../../../../_static/documentation_options.js"></script>
-        <script src="../../../../../../../../_static/jquery.js"></script>
-        <script src="../../../../../../../../_static/underscore.js"></script>
-        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../../../../../_static/doctools.js"></script>
-        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../../search.html" method="get">
@@ -103,25 +102,15 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">get_new_symbol</span><span class="p">,</span>
-    <span class="n">get_new_variadic_symbol</span><span class="p">,</span>
-    <span class="n">types</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span><span class="p">,</span> <span class="n">get_new_variadic_symbol</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">ListOrTensorInputType</span><span class="p">,</span>
+    <span class="n">InternalInputType</span><span class="p">,</span>
     <span class="n">TensorInputType</span><span class="p">,</span>
     <span class="n">TupleInputType</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">NONE</span><span class="p">,</span>
-    <span class="n">SYMBOL</span><span class="p">,</span>
-    <span class="n">VALUE</span><span class="p">,</span>
-    <span class="n">Operation</span><span class="p">,</span>
-    <span class="n">precondition</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">NONE</span><span class="p">,</span> <span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">precondition</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="n">MAX_SIZE_CONSTANT_FOLDING</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="p">(</span>
@@ -131,7 +120,9 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="band_part"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.band_part">[docs]</a><span class="nd">@register_op</span>
+<div class="viewcode-block" id="band_part">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.band_part">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">band_part</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor setting everything outside a center band to zeros for the innermost</span>
@@ -200,7 +191,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">band</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="cumsum"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.cumsum">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="cumsum">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.cumsum">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">cumsum</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the cumulative sum of the input along the given axis.</span>
@@ -276,7 +270,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span></div>
 
 
-<div class="viewcode-block" id="fill"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.fill">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="fill">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.fill">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">fill</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor with a given shape filled with a constant value.</span>
@@ -330,7 +327,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">fill_value</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="non_maximum_suppression"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_maximum_suppression">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="non_maximum_suppression">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_maximum_suppression">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">non_maximum_suppression</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Applies non-maximum suppression (NMS) on the input box coordinates according</span>
@@ -409,7 +409,10 @@
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="non_zero"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_zero">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="non_zero">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.non_zero">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">non_zero</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns the indices of the elements in the given tensor that are non-zero.</span>
@@ -451,7 +454,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="one_hot"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.one_hot">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="one_hot">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.one_hot">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">one_hot</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns one-hot vectors whose locations represented in ``indices`` take the ``on_value``,</span>
@@ -461,7 +467,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    indices: tensor&lt;[D], i32&gt; (Required)</span>
 <span class="sd">        * Tensor, values indicate the locations for each one-hot vector to take the ``on_value``.</span>
-<span class="sd">    one_got_vector_size: i32 (Required)</span>
+<span class="sd">    one_hot_vector_size: i32 (Required)</span>
 <span class="sd">        * Indicates the number of returning vectors.</span>
 <span class="sd">    axis: const i32 (Optional)</span>
 <span class="sd">        * Indicates which dimension to append the new axis.</span>
@@ -537,10 +543,13 @@
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">on_type</span><span class="p">,</span> <span class="n">retshape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="pad"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.pad">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="pad">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.pad">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">pad</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Pad a tensor.</span>
+<span class="sd">    Pads a tensor.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -659,17 +668,20 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">pad_val</span><span class="p">,</span> <span class="n">mode</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="range_1d"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.range_1d">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="range_1d">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.range_1d">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">range_1d</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a numpy-like 1-D range sequence.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    end: &lt;T&gt; (Required)</span>
-<span class="sd">        * The upper limit of the sequence, exclusive.</span>
 <span class="sd">    start: &lt;T&gt; (Required)</span>
 <span class="sd">        * The start point of the sequence.</span>
+<span class="sd">    end: &lt;T&gt; (Required)</span>
+<span class="sd">        * The upper limit of the sequence, exclusive.</span>
 <span class="sd">    step: &lt;T&gt; (Required)</span>
 <span class="sd">        * Number that increments ``start``.</span>
 
@@ -733,7 +745,10 @@
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="tile"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.tile">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="tile">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.tile">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">tile</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a new tensor by replicating input ``x`` multiples times.</span>
@@ -788,8 +803,13 @@
                 <span class="k">if</span> <span class="n">rep</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
                     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All entries of reps parameter must be greater than 0&quot;</span><span class="p">)</span>
 
-            <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">rep</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+            <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">rep</span><span class="p">):</span>
                 <span class="n">out_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+            <span class="k">elif</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">rep</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">out_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">out_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">out_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rep</span> <span class="o">*</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
 
@@ -805,7 +825,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">reps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reps</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="argsort"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.argsort">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="argsort">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.argsort">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">argsort</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor containing the indices of the sorted values along a given axis</span>
@@ -859,7 +882,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="topk"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="topk">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">topk</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor containing top or bottom ``k`` values and the corresponding</span>
@@ -935,7 +961,10 @@
         <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">indices</span></div>
 
 
-<div class="viewcode-block" id="flatten2d"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.flatten2d">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="flatten2d">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.flatten2d">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">flatten2d</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Flattens input tensor into 2d tensor by flattening dimensions before and</span>
@@ -1000,7 +1029,10 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dim_pre_axis</span><span class="p">,</span> <span class="n">dim_post_axis</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="shape"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.shape">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="shape">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.shape">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">shape</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a 1-dimensional tensor with the shape of the input tensor.</span>
@@ -1040,7 +1072,10 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="concat"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.concat">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="concat">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.concat">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">concat</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Concatenates tensors along a dimension.</span>
@@ -1201,7 +1236,10 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="split"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.split">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="split">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.split">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">split</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Split tensors into a tuple</span>
@@ -1212,6 +1250,10 @@
 <span class="sd">        * The tensor to split.</span>
 <span class="sd">        * The tensors may be variadic, but the number of tensors must be determined</span>
 <span class="sd">          at compile time (i.e. a tuple).</span>
+
+<span class="sd">    axis: const&lt;i32&gt; (Required)</span>
+<span class="sd">        * The dimension along which to concatenate. Must be in the</span>
+<span class="sd">          range ``[-rank(x), rank(x))``.</span>
 
 <span class="sd">    num_splits: &lt;i32&gt; (Optional)</span>
 <span class="sd">        If specified, divide ``x`` into ``num_splits`` tensors along ``axis``.</span>
@@ -1229,10 +1271,6 @@
 <span class="sd">    split_sizes: const&lt;S, i32&gt; (Optional)</span>
 <span class="sd">        * Sizes to split to. The sum of ``split_sizes`` must equal to</span>
 <span class="sd">          ``value.shape[axis]``.</span>
-
-<span class="sd">    axis: const&lt;i32&gt; (Required)</span>
-<span class="sd">        * The dimension along which to concatenate. Must be in the</span>
-<span class="sd">          range ``[-rank(x), rank(x))``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -1331,7 +1369,10 @@
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span> <span class="n">split_indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="stack"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.stack">[docs]</a><span class="nd">@register_op</span>
+
+<div class="viewcode-block" id="stack">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.stack">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">stack</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Concatenates tensors along a dimension.</span>
@@ -1413,9 +1454,12 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
+
 <span class="c1"># identity is used for renaming and is rarely necessary. See</span>
 <span class="c1"># `loop_invariant_elimination` pass for a rare use case.</span>
-<div class="viewcode-block" id="identity"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.identity">[docs]</a><span class="nd">@register_op</span>
+<div class="viewcode-block" id="identity">
+<a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.identity">[docs]</a>
+<span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">identity</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a tensor with the same shape and contents as input.</span>
@@ -1435,9 +1479,7 @@
 <span class="sd">    T: fp16, fp32, i32, bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ListOrTensorInputType</span><span class="p">()</span>
-    <span class="p">)</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">InternalInputType</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -1445,6 +1487,7 @@
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span></div>
+
 </pre></div>
 
            </div>

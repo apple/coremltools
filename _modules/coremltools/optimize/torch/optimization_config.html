@@ -1,29 +1,28 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en">
+<html class="writer-html5" lang="en" data-content_root="../../../../">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>coremltools.optimize.torch.optimization_config &mdash; coremltools API Reference 7.1 documentation</title>
-      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css" />
+  <title>coremltools.optimize.torch.optimization_config &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/norightmargin.css?v=eea1f72d" />
 
   
   <!--[if lt IE 9]>
     <script src="../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
-        <script src="../../../../_static/jquery.js"></script>
-        <script src="../../../../_static/underscore.js"></script>
-        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../../../../_static/doctools.js"></script>
-        <script src="../../../../_static/sphinx_highlight.js"></script>
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" /> 
@@ -41,7 +40,7 @@
             coremltools API Reference
           </a>
               <div class="version">
-                7.1
+                8.0b1
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
@@ -94,65 +93,53 @@
            <div itemprop="articleBody">
              
   <h1>Source code for coremltools.optimize.torch.optimization_config</h1><div class="highlight"><pre>
-<span></span><span class="c1">#  Copyright (c) 2023, Apple Inc. All rights reserved.</span>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">import</span> <span class="nn">re</span> <span class="k">as</span> <span class="nn">_re</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">IO</span> <span class="k">as</span> <span class="n">_IO</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span> <span class="k">as</span> <span class="n">_Enum</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Type</span> <span class="k">as</span> <span class="n">_Type</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 
-<span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
 <span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
-<span class="kn">import</span> <span class="nn">yaml</span> <span class="k">as</span> <span class="nn">_yaml</span>
 <span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">Factory</span> <span class="k">as</span> <span class="n">_Factory</span>
-<span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">asdict</span> <span class="k">as</span> <span class="n">_asdict</span>
 <span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
+<span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">field</span> <span class="k">as</span> <span class="n">_field</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.python_utils</span> <span class="kn">import</span> <span class="n">DictableDataClass</span> <span class="k">as</span> <span class="n">_DictableDataClass</span>
+
+
+<span class="k">class</span> <span class="nc">QuantizationGranularity</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum to denote granularity at which different compression schemes are applied.</span>
+<span class="sd">    See specific algorithm for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">per_tensor</span> <span class="o">=</span> <span class="s2">&quot;per_tensor&quot;</span>
+    <span class="n">per_channel</span> <span class="o">=</span> <span class="s2">&quot;per_channel&quot;</span>
+    <span class="n">per_block</span> <span class="o">=</span> <span class="s2">&quot;per_block&quot;</span>
+
+<span class="k">class</span> <span class="nc">PalettizationGranularity</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Enum to denote granularity at which different compression schemes are applied.</span>
+<span class="sd">    See specific algorithm for more details.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">per_tensor</span> <span class="o">=</span> <span class="s2">&quot;per_tensor&quot;</span>
+    <span class="n">per_grouped_channel</span> <span class="o">=</span> <span class="s2">&quot;per_grouped_channel&quot;</span>
+
+<span class="k">class</span> <span class="nc">ModuleOptimizationConfig</span><span class="p">(</span><span class="n">_DictableDataClass</span><span class="p">):</span>
+    <span class="k">pass</span>
 
 
 <span class="nd">@_define</span>
-<span class="k">class</span> <span class="nc">ModuleOptimizationConfig</span><span class="p">:</span>
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;ModuleOptimizationConfig&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create class from a dictionary of string keys and values.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            config_dict (:obj:`dict` of :obj:`str` and values): A nested dictionary of strings</span>
-<span class="sd">                and values.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c1"># passing forbid_extra_keys=True doesn&#39;t prevent silent failure when keys are mis-spelled</span>
-        <span class="n">_validate_config_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">)</span>
-        <span class="n">converter</span> <span class="o">=</span> <span class="n">_cattrs</span><span class="o">.</span><span class="n">Converter</span><span class="p">(</span><span class="n">forbid_extra_keys</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">converter</span><span class="o">.</span><span class="n">structure_attrs_fromdict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">,</span> <span class="bp">cls</span><span class="p">)</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">yml</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_IO</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;ModuleOptimizationConfig&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create class from a yaml stream.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            yml: An :py:class:`IO` stream containing yaml or a :obj:`str`</span>
-<span class="sd">                path to the yaml file.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">yml</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the config as a dictionary.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-
-<span class="nd">@_define</span>
-<span class="k">class</span> <span class="nc">OptimizationConfig</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">OptimizationConfig</span><span class="p">(</span><span class="n">_DictableDataClass</span><span class="p">):</span>
     <span class="n">global_config</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleOptimizationConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">module_type_configs</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span>
         <span class="n">_Union</span><span class="p">[</span><span class="n">_Callable</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleOptimizationConfig</span><span class="p">]</span>
@@ -191,9 +178,10 @@
     <span class="k">def</span> <span class="nf">get_module_config</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">module</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">ModuleOptimizationConfig</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
-        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">mod_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">_re</span><span class="o">.</span><span class="n">fullmatch</span><span class="p">(</span><span class="n">mod_name</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="p">[</span><span class="n">mod_name</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">module</span><span class="p">)]</span>
         <span class="k">elif</span> <span class="n">module</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="p">[</span><span class="n">module</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">]</span>
@@ -210,25 +198,8 @@
 <span class="sd">                and values.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># passing forbid_extra_keys=True doesn&#39;t prevent silent failure when keys are mis-spelled</span>
-        <span class="n">_validate_config_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_validate_dict</span><span class="p">(</span><span class="n">config_dict</span><span class="p">)</span>
         <span class="k">return</span>
-
-    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">yml</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_IO</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;OptimizationConfig&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Create class from a yaml stream.</span>
-
-<span class="sd">        Args:</span>
-<span class="sd">            yml: An :py:class:`IO` stream containing yaml or a :obj:`str`</span>
-<span class="sd">                path to the yaml file.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_from_yaml</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">yml</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">as_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Returns the config as a dictionary.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_validate_same_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_names</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">str</span><span class="p">]):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -295,27 +266,6 @@
     <span class="k">return</span> <span class="n">_structure_from_dict_hook</span>
 
 
-<span class="k">def</span> <span class="nf">_validate_config_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">:</span> <span class="n">_Type</span><span class="p">,</span> <span class="n">config_dict</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Any</span><span class="p">]):</span>
-    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">config_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found unrecognized key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2"> in config_dict: </span><span class="si">{</span><span class="n">config_dict</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
-
-
-<span class="k">def</span> <span class="nf">_from_yaml</span><span class="p">(</span>
-    <span class="bp">cls</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_Type</span><span class="p">[</span><span class="n">OptimizationConfig</span><span class="p">],</span> <span class="n">_Type</span><span class="p">[</span><span class="n">ModuleOptimizationConfig</span><span class="p">]],</span> <span class="n">yml</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="n">_IO</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
-<span class="p">):</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">yml</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yml</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
-            <span class="n">dict_from_yml</span> <span class="o">=</span> <span class="n">_yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">dict_from_yml</span> <span class="o">=</span> <span class="n">_yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">yml</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dict_from_yml</span><span class="p">,</span> <span class="nb">dict</span><span class="p">),</span> <span class="p">(</span>
-        <span class="s2">&quot;Invalid yaml received. yaml stream should return a dict &quot;</span>
-        <span class="sa">f</span><span class="s2">&quot;on parsing. Received type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dict_from_yml</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span>
-    <span class="p">)</span>
-    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">dict_from_yml</span><span class="p">)</span>
-
-
 <span class="k">def</span> <span class="nf">_validate_module_type_keys_factory</span><span class="p">(</span><span class="n">supported_modules</span><span class="p">):</span>
     <span class="n">supported_module_names</span> <span class="o">=</span> <span class="p">[</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">supported_modules</span><span class="p">]</span>
 
@@ -332,6 +282,14 @@
             <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">validate_module_type_key</span>
+
+
+<span class="k">def</span> <span class="nf">_deprecated_field</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s2">&quot;This field is deprecated&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">validator</span><span class="p">(</span><span class="n">inst</span><span class="p">,</span> <span class="n">attr</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">DeprecationWarning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validator</span><span class="p">,</span> <span class="n">on_setattr</span><span class="o">=</span><span class="n">validator</span><span class="p">)</span>
 </pre></div>
 
            </div>
