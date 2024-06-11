@@ -112,7 +112,10 @@ The  [`get_weights_metadata()`](https://apple.github.io/coremltools/source/corem
 
 For example, if you want to compare the weights of a model showing unexpected results with the weights of a model with predictable results, you can use `get_weights_metadata()` to get a list of all the weights with their metadata. Use the `weight_threshold` parameter to set which weights are returned. A weight is included in the resulting dictionary only if its total number of elements are greater than `weight_threshold`. 
 
-The metadata returned by the utility also offers information about the child ops the weight feeds into. The data returned by the API can then be used to customize the optimization of the model via the `ct.optimize.coreml` API -- for details, see [Customizing Ops to Compress](optimizecoreml-api-overview.md#customizing-ops-to-compress).
+The metadata returned by the utility also offers 
+information about the child ops the weight feeds into. 
+The data returned by the API can then be used to customize the 
+optimization of the model via the `ct.optimize.coreml` API. 
 
 
 ### Using the Metadata 

@@ -1,0 +1,1012 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Optimizing OPT Model &#8212; Guide to Core ML Tools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/opt-opt1_3';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Optimization Workflow" href="opt-workflow.html" />
+    <link rel="prev" title="Optimizing ResNet50 Model" href="opt-resnet.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guide to Core ML Tools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-neural-network.html">Convert Models to Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stateful-models.html">Stateful Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Optimizing OPT Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="multifunction-models.html">Multifunction Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/opt-opt1_3.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Optimizing OPT Model</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantization">Quantization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-compression">Data-free compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#results">Results</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithm-runtime">Algorithm Runtime</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#palettization">Palettization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Data-free compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-data-based-compression">Calibration data based compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#effect-of-per-channel-scales">Effect of per channel scales</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#impact-on-latency">Impact on Latency</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Algorithm Runtime</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusions">Conclusions</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="optimizing-opt-model">
+<h1>Optimizing OPT Model<a class="headerlink" href="#optimizing-opt-model" title="Permalink to this heading">#</a></h1>
+<p>In this tutorial, we will explore how we can use Core ML Tools APIs
+for compressing an <a class="reference external" href="https://huggingface.co/docs/transformers/en/model_doc/opt">OPT-1.3B</a> model.
+<code class="docutils literal notranslate"><span class="pre">OPT-1.3B</span></code> is a decoder-only pretrained transformer model, with 1.3 billion parameters, which
+is about <code class="docutils literal notranslate"><span class="pre">2.6</span> <span class="pre">GB</span></code> in size when stored in <code class="docutils literal notranslate"><span class="pre">FP16</span></code>.</p>
+<p>Let’s first load the model from <a class="reference external" href="https://huggingface.co/docs/transformers/en/model_doc/opt">HuggingFace</a>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">OPTForCausalLM</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">OPTForCausalLM</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+    <span class="s2">&quot;facebook/opt-1.3b&quot;</span><span class="p">,</span> <span class="n">torch_dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">use_cache</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>We will use <a class="reference external" href="https://huggingface.co/docs/transformers/en/perplexity">perplexity</a>
+on <a class="reference external" href="https://huggingface.co/datasets/allenai/c4">c4</a> and <a class="reference external" href="https://huggingface.co/datasets/Salesforce/wikitext">wikitext2</a>
+datasets to evaluate the models. A lower perplexity is better.</p>
+<p>We will also look at knowledge score,
+an average of 9 different question-answering tasks, such as <a class="reference external" href="https://allenai.org/data/arc">arc_challenge</a>,
+<a class="reference external" href="https://allenai.org/data/arc">arc_easy</a>,
+<a class="reference external" href="https://huggingface.co/datasets/EleutherAI/lambada_openai">lambada_openai</a>,
+<a class="reference external" href="https://nlp.cs.washington.edu/triviaqa/">triviaqa</a>, etc. A higher knowledge score is better.</p>
+<p>We will look at two different compression modes to compress the model:
+<a class="reference internal" href="opt-quantization.html"><span class="std std-doc">quantization</span></a> and <a class="reference internal" href="opt-palettization.html"><span class="std std-doc">palettization</span></a>.</p>
+<section id="quantization">
+<h2>Quantization<a class="headerlink" href="#quantization" title="Permalink to this heading">#</a></h2>
+<section id="data-free-compression">
+<h3>Data-free compression<a class="headerlink" href="#data-free-compression" title="Permalink to this heading">#</a></h3>
+<p>Let us use <code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizer</span></code>, which scales and rounds weights to the nearest integer in the specified dtype.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="n">PostTrainingQuantizer</span><span class="p">,</span> \ 
+    <span class="n">PostTrainingQuantizerConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingQuantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;granularity&quot;</span><span class="p">:</span> <span class="s2">&quot;per_block&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;block_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">quantizer</span> <span class="o">=</span> <span class="n">PostTrainingQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">compress</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>In this example, we are using 4 bits to represent the weights, with block-wise quantization, where
+for a linear layer, <code class="docutils literal notranslate"><span class="pre">32</span></code> elements along a row in the weight matrix share the same quantization scales.
+One could also use <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> and <code class="docutils literal notranslate"><span class="pre">per_channel</span></code> granularity, and <code class="docutils literal notranslate"><span class="pre">int8</span></code> dtype.</p>
+<p>In the above code snippet, we apply data free compression directly to the PyTorch model.
+However, you can also use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights">ct.optimize.coreml.linear_quantize_weights</a>
+to apply quantization directly on the Core ML model.</p>
+</section>
+<section id="results">
+<h3>Results<a class="headerlink" href="#results" title="Permalink to this heading">#</a></h3>
+<p>Let’s look at the model size vs accuracy trade-off for these different configurations:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Config</p></th>
+<th class="head text-center"><p>Model Size (GB)</p></th>
+<th class="head text-center"><p>c4 Perplexity</p></th>
+<th class="head text-center"><p>wikitext2 Perplexity</p></th>
+<th class="head text-center"><p>Knowledge Score (% correct)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>Uncompressed</p></td>
+<td class="text-center"><p>2.63</p></td>
+<td class="text-center"><p>16.07</p></td>
+<td class="text-center"><p>14.62</p></td>
+<td class="text-center"><p>45.81</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>8 bits per tensor</p></td>
+<td class="text-center"><p>1.32</p></td>
+<td class="text-center"><p>16.15</p></td>
+<td class="text-center"><p>14.61</p></td>
+<td class="text-center"><p>45.71</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>8 bits per channel</p></td>
+<td class="text-center"><p>1.32</p></td>
+<td class="text-center"><p>16.08</p></td>
+<td class="text-center"><p>14.61</p></td>
+<td class="text-center"><p>45.98</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per tensor</p></td>
+<td class="text-center"><p>0.66</p></td>
+<td class="text-center"><p>18763</p></td>
+<td class="text-center"><p>31087</p></td>
+<td class="text-center"><p>21.66</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per channel</p></td>
+<td class="text-center"><p>0.66</p></td>
+<td class="text-center"><p>31.51</p></td>
+<td class="text-center"><p>31.91</p></td>
+<td class="text-center"><p>38.78</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per block, block size 1024</p></td>
+<td class="text-center"><p>0.668</p></td>
+<td class="text-center"><p>23.12</p></td>
+<td class="text-center"><p>22.63</p></td>
+<td class="text-center"><p>41.39</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per block, block size 32</p></td>
+<td class="text-center"><p>0.747</p></td>
+<td class="text-center"><p>17.02</p></td>
+<td class="text-center"><p>15.28</p></td>
+<td class="text-center"><p>45.16</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><strong>4 bits per block, block size 16</strong></p></td>
+<td class="text-center"><p><strong>0.829</strong></p></td>
+<td class="text-center"><p><strong>16.78</strong></p></td>
+<td class="text-center"><p><strong>14.9</strong></p></td>
+<td class="text-center"><p>45.26</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per block, block size 8</p></td>
+<td class="text-center"><p>0.993</p></td>
+<td class="text-center"><p>16.55</p></td>
+<td class="text-center"><p>14.83</p></td>
+<td class="text-center"><p>45.60</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per block, block size 4</p></td>
+<td class="text-center"><p>1.32</p></td>
+<td class="text-center"><p>16.33</p></td>
+<td class="text-center"><p>14.64</p></td>
+<td class="text-center"><p>45.63</p></td>
+</tr>
+</tbody>
+</table>
+<p>We see that there is barely any loss in accuracy with <code class="docutils literal notranslate"><span class="pre">8-bit</span></code> quantization (<code class="docutils literal notranslate"><span class="pre">per-channel</span></code> or <code class="docutils literal notranslate"><span class="pre">per-tensor</span></code>),
+with a <code class="docutils literal notranslate"><span class="pre">2x</span></code>reduction in model size.</p>
+<p>As we look to compress the model more with <code class="docutils literal notranslate"><span class="pre">4</span></code> bits instead, the <code class="docutils literal notranslate"><span class="pre">per-tensor</span></code>/<code class="docutils literal notranslate"><span class="pre">per-channel</span></code> modes break down,
+and even block size <code class="docutils literal notranslate"><span class="pre">1024</span></code> gives poor perplexity. As the block size is decreased,
+we use more granular quantization, where fewer elements share the same scales, thus reducing the
+quantization error. We can see that as quantization error reduces, the perplexity values improve.
+However, this comes with an increase in model size, because we now need to store
+more quantization parameters per weight. This overhead of storing quantization parameters becomes
+significant when using very small block sizes.</p>
+<p>From the table above, we can see that with post training data free quantization,
+we can go down to about <code class="docutils literal notranslate"><span class="pre">0.83</span> <span class="pre">GB</span></code>,  which is about <code class="docutils literal notranslate"><span class="pre">3.2x</span></code> reduction in model size,
+while keeping the increase in perplexity within <code class="docutils literal notranslate"><span class="pre">~5%</span></code> of the uncompressed value,
+and an even smaller decrease (<code class="docutils literal notranslate"><span class="pre">~1.2%</span></code>)  in knowledge score (the row in <strong>bold</strong>).
+With more granular compression (block size &lt; <code class="docutils literal notranslate"><span class="pre">16</span></code>), we can limit the perplexity
+increase further down to <code class="docutils literal notranslate"><span class="pre">~3%</span></code>, with a compression ratio of about <code class="docutils literal notranslate"><span class="pre">~2.6x</span></code>.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">per-channel</span></code> quantization configs, the model will run efficiently on either Neural
+Engine (NE) or GPU, whereas using the <code class="docutils literal notranslate"><span class="pre">per-block</span></code> config is beneficial for models that are
+being deployed on a Mac and running on the GPU specifically.</p>
+<p>Runtime memory and latency should improve compared to the uncompressed model,
+with the gains dependent on the model type, device, macOS version.</p>
+</section>
+<section id="algorithm-runtime">
+<h3>Algorithm Runtime<a class="headerlink" href="#algorithm-runtime" title="Permalink to this heading">#</a></h3>
+<p>Since <code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizer</span></code> is data free, it’s very fast, and it only takes a few seconds
+to compress OPT-1.3B model.</p>
+</section>
+</section>
+<section id="palettization">
+<h2>Palettization<a class="headerlink" href="#palettization" title="Permalink to this heading">#</a></h2>
+<section id="id1">
+<h3>Data-free compression<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<p>For palettization in a data free manner, we will use <code class="docutils literal notranslate"><span class="pre">PostTrainingPalettizer</span></code>. This algorithm performs k-means to compress
+the model’s weights.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="n">PostTrainingPalettizer</span><span class="p">,</span> <span class="n">PostTrainingPalettizerConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingPalettizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;n_bits&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">&quot;granularity&quot;</span><span class="p">:</span> <span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;group_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+            <span class="s2">&quot;enable_per_channel_scale&quot;</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="p">},</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">palettizer</span> <span class="o">=</span> <span class="n">PostTrainingPalettizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">num_kmeans_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code> granularity with <code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">32</span></code> allows each group of 32 rows in the weight
+matrix to share a look-up table.</p>
+<p><code class="docutils literal notranslate"><span class="pre">enable_per_channel_scale</span></code> option can be turned on to have an output
+scale for each row in the weight matrix, which may help offset some of the effects of outliers by
+allowing weight values to be scaled to be between <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> before palettization.</p>
+<p>In the above code snippet, we apply data free compression directly to the PyTorch model.
+However, you can also use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">ct.optimize.coreml.palettize_weights</a>
+to directly palettize a Core ML model.</p>
+<p>Here, we are using <code class="docutils literal notranslate"><span class="pre">32</span></code> parallel processes to perform k-means, to speed up the computation.
+All k-means operations are performed independently of each other, and hence can be massively
+parallelized. <code class="docutils literal notranslate"><span class="pre">num_kmeans_workers</span></code> can be set to the number of CPU cores available.</p>
+</section>
+<section id="calibration-data-based-compression">
+<h3>Calibration data based compression<a class="headerlink" href="#calibration-data-based-compression" title="Permalink to this heading">#</a></h3>
+<p>For palettization with calibration data, we will use <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>, which implements  the algorithm
+described in <a class="reference external" href="https://arxiv.org/pdf/2306.07629.pdf">SqueezeLLM: Dense-and-Sparse Quantization</a>,
+and performs weighted k-means to compress the model’s weights.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">transformers</span> <span class="kn">import</span> <span class="n">AutoTokenizer</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="n">SKMPalettizer</span><span class="p">,</span> <span class="n">SKMPalettizerConfig</span>
+
+<span class="n">config</span> <span class="o">=</span> <span class="n">SKMPalettizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;n_bits&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">&quot;granularity&quot;</span><span class="p">:</span> <span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;group_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
+            <span class="s2">&quot;enable_per_channel_scale&quot;</span><span class="p">:</span> <span class="kc">False</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;calibration_nsamples&quot;</span><span class="p">:</span> <span class="mi">128</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_c4</span><span class="p">(</span><span class="n">nsamples</span><span class="p">,</span> <span class="n">seqlen</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function for loading a subset for c4 training dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">train_data</span> <span class="o">=</span> <span class="n">load_dataset</span><span class="p">(</span><span class="o">...</span><span class="p">)</span> <span class="c1"># Load allenai/c4 dataset</span>
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;facebook/opt-1.3b&quot;</span><span class="p">)</span>
+    
+    <span class="c1"># tokenize train_data and chunk it into sequences of length </span>
+    <span class="c1"># nsamples sequences of length seqlen</span>
+    
+    <span class="k">return</span> <span class="n">tokenized_train_data</span>
+
+<span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform forward pass on the model and compute loss </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lm_logits</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">logits</span>
+    <span class="n">shift_logits</span> <span class="o">=</span> <span class="n">lm_logits</span><span class="p">[:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">contiguous</span><span class="p">()</span>
+    <span class="n">shift_labels</span> <span class="o">=</span> <span class="n">data</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">:]</span>
+
+    <span class="n">loss_fct</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">CrossEntropyLoss</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">loss_fct</span><span class="p">(</span><span class="n">shift_logits</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">shift_logits</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">shift_labels</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+
+<span class="n">palettizer</span> <span class="o">=</span> <span class="n">SKMPalettizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">dataloader</span><span class="o">=</span><span class="n">get_c4</span><span class="p">(</span><span class="n">nsamples</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">seqlen</span><span class="o">=</span><span class="mi">2048</span><span class="p">),</span>
+                                       <span class="n">loss_fn</span><span class="o">=</span><span class="n">loss_fn</span><span class="p">,</span>
+                                       <span class="n">num_kmeans_workers</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code> is similar to <code class="docutils literal notranslate"><span class="pre">PostTrainingPalettizer</span></code>, but it requires some calibration data
+and a loss function as inputs to the <code class="docutils literal notranslate"><span class="pre">compress</span></code> method. These are used to compute gradients
+of the model’s weights, which are in turn used to compute Fisher information matrices. These matrices
+serve as importance weights used in weighted k-means operations performed by <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>. We only
+need a few data samples (128 sequences in this example) to compute a reliable estimate of Fisher information
+matrices.</p>
+</section>
+<section id="id2">
+<h3>Results<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
+<p>As before, let us look at the model size vs accuracy trade-off for these different configurations and algorithms:</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Config</p></th>
+<th class="head text-center"><p>Model Size (GB)</p></th>
+<th class="head text-center"><p>c4 Perplexity (<code class="docutils literal notranslate"><span class="pre">PostTrainingPalettizer</span></code>)</p></th>
+<th class="head text-center"><p>c4 Perplexity (<code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>Uncompressed</p></td>
+<td class="text-center"><p>2.63</p></td>
+<td class="text-center"><p>16.07</p></td>
+<td class="text-center"><p>16.07</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per tensor</p></td>
+<td class="text-center"><p>0.819</p></td>
+<td class="text-center"><p>21.57</p></td>
+<td class="text-center"><p>17.02</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per grouped channel, group size 8</p></td>
+<td class="text-center"><p>0.821</p></td>
+<td class="text-center"><p>17.80</p></td>
+<td class="text-center"><p>16.58</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><em>4 bits per grouped channel, group size 4</em></p></td>
+<td class="text-center"><p><em>0.823</em></p></td>
+<td class="text-center"><p>17.41</p></td>
+<td class="text-center"><p><em>16.51</em></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per grouped channel, group size 2</p></td>
+<td class="text-center"><p>0.827</p></td>
+<td class="text-center"><p>17.34</p></td>
+<td class="text-center"><p>16.47</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><strong>4 bits per channel</strong></p></td>
+<td class="text-center"><p><strong>0.834</strong></p></td>
+<td class="text-center"><p>17.07</p></td>
+<td class="text-center"><p><strong>16.41</strong></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>3 bits per channel</p></td>
+<td class="text-center"><p>0.676</p></td>
+<td class="text-center"><p>93.35</p></td>
+<td class="text-center"><p>18.24</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>2 bits per channel</p></td>
+<td class="text-center"><p>0.521</p></td>
+<td class="text-center"><p>6704</p></td>
+<td class="text-center"><p>456</p></td>
+</tr>
+</tbody>
+</table>
+<p>With palettization, as group size is decreased, the overhead of storing extra look up tables doesn’t increase as
+dramatically, as it does for quantization parameters. As a result, we are able to achieve a better accuracy-size trade-off
+of <code class="docutils literal notranslate"><span class="pre">~2%</span></code> degradation in perplexity with <code class="docutils literal notranslate"><span class="pre">3.2x</span></code> reduction (config in <strong>bold</strong> in table above). We can also observe
+that calibration data based algorithm improves over the performance of the data free algorithm, and provides a better
+accuracy-size trade-off. The difference between the two is more pronounced when group size is large,
+when <code class="docutils literal notranslate"><span class="pre">per-tensor</span></code> is used or when the bits are below 4.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>+<code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">bits</span> <span class="pre">per</span> <span class="pre">grouped</span> <span class="pre">channel,</span> <span class="pre">group</span> <span class="pre">size</span> <span class="pre">4</span></code> config, the knowledge score is <code class="docutils literal notranslate"><span class="pre">45.16</span></code>,
+whereas for <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>+<code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">bits</span> <span class="pre">per</span> <span class="pre">channel</span></code> model, the score is <code class="docutils literal notranslate"><span class="pre">45.68</span></code>, and thus is limited within
+<code class="docutils literal notranslate"><span class="pre">~1%</span></code> of the uncompressed model.</p>
+<p>The model degrades considerably in sub-4 bit compression regime, and this degradation is even more stark for the
+data free algorithm.</p>
+<section id="effect-of-per-channel-scales">
+<h4>Effect of per channel scales<a class="headerlink" href="#effect-of-per-channel-scales" title="Permalink to this heading">#</a></h4>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Config</p></th>
+<th class="head text-center"><p>Model Size (GB)</p></th>
+<th class="head text-center"><p>c4 Perplexity (<code class="docutils literal notranslate"><span class="pre">PostTrainingPalettizer</span></code>)</p></th>
+<th class="head text-center"><p>c4 Perplexity Perplexity (<code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>Uncompressed</p></td>
+<td class="text-center"><p>2.63</p></td>
+<td class="text-center"><p>16.07</p></td>
+<td class="text-center"><p>16.07</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per tensor</p></td>
+<td class="text-center"><p>0.820</p></td>
+<td class="text-center"><p>18.71</p></td>
+<td class="text-center"><p>16.78</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per grouped channel, group size 8</p></td>
+<td class="text-center"><p>0.822</p></td>
+<td class="text-center"><p>17.43</p></td>
+<td class="text-center"><p>16.58</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per grouped channel, group size 4</p></td>
+<td class="text-center"><p>0.824</p></td>
+<td class="text-center"><p>17.43</p></td>
+<td class="text-center"><p>16.53</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per grouped channel, group size 2</p></td>
+<td class="text-center"><p>0.828</p></td>
+<td class="text-center"><p>17.23</p></td>
+<td class="text-center"><p>16.48</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per channel</p></td>
+<td class="text-center"><p>0.835</p></td>
+<td class="text-center"><p>17.08</p></td>
+<td class="text-center"><p>16.41</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>3 bits per channel</p></td>
+<td class="text-center"><p>0.677</p></td>
+<td class="text-center"><p>93.35</p></td>
+<td class="text-center"><p>18.24</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>2 bits per channel</p></td>
+<td class="text-center"><p>0.522</p></td>
+<td class="text-center"><p>6703</p></td>
+<td class="text-center"><p>456</p></td>
+</tr>
+</tbody>
+</table>
+<p>For this model, using <code class="docutils literal notranslate"><span class="pre">per-channel</span></code> scales doesn’t improve the results much for <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>, because it
+automatically preserves sensitive values. However, for <code class="docutils literal notranslate"><span class="pre">PostTrainingPalettizer</span></code>, there is some benefit to using
+<code class="docutils literal notranslate"><span class="pre">per-channel</span></code> scales, especially when no grouping is used. At smaller group sizes, the improvement disappears
+for data free algorithm as well.</p>
+</section>
+</section>
+<section id="impact-on-latency">
+<h3>Impact on Latency<a class="headerlink" href="#impact-on-latency" title="Permalink to this heading">#</a></h3>
+<p>Now, let’s take a look at the impact of palettization on model latency. The model latency only depends on
+the config used for palettization (number of bits, group size, etc.) and not on which algorithm
+was used for compression. Hence, we only look at latency numbers for models produced by <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>.</p>
+<p>We measure latency for generating next token for a prompt for length 64. The measurements
+are made on iPhone 15 Pro, iOS18 seed build, for the model running on the Neural Engine (NE).
+Models compressed with <code class="docutils literal notranslate"><span class="pre">per</span> <span class="pre">grouped</span> <span class="pre">channel</span></code> palettization run efficiently on NE.</p>
+<table class="table">
+<thead>
+<tr class="row-odd"><th class="head text-left"><p>Config</p></th>
+<th class="head text-center"><p>Model Latency (ms)</p></th>
+<th class="head text-center"><p>Speed-up</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td class="text-left"><p>Uncompressed</p></td>
+<td class="text-center"><p>92.15</p></td>
+<td class="text-center"><p>1x</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per tensor</p></td>
+<td class="text-center"><p>14.76</p></td>
+<td class="text-center"><p>6.24x</p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per grouped channel, group size 8</p></td>
+<td class="text-center"><p>15.49</p></td>
+<td class="text-center"><p>5.95x</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p><em>4 bits per grouped channel, group size 4</em></p></td>
+<td class="text-center"><p><em>17.07</em></p></td>
+<td class="text-center"><p><em>5.4x</em></p></td>
+</tr>
+<tr class="row-even"><td class="text-left"><p>4 bits per grouped channel, group size 2</p></td>
+<td class="text-center"><p>30.72</p></td>
+<td class="text-center"><p>3x</p></td>
+</tr>
+<tr class="row-odd"><td class="text-left"><p>4 bits per channel</p></td>
+<td class="text-center"><p>59.11</p></td>
+<td class="text-center"><p>1.6x</p></td>
+</tr>
+</tbody>
+</table>
+<p>From the table above, we observe that for group size up to <code class="docutils literal notranslate"><span class="pre">4</span></code>, we get almost <code class="docutils literal notranslate"><span class="pre">~6x</span></code> speed-up.
+This is because  the uncompressed model is very large, and most of the inference time is spent
+on reading model weights into the memory. Such a model is called weight <strong>memory bound</strong>.
+For OPT-1.3B model, below group size <code class="docutils literal notranslate"><span class="pre">4</span></code>, the overhead of de-compressing
+multiple look up tables for each weight at runtime starts to become significant,
+leading to a marked increase in latency.</p>
+<p>The relative speed up you see will depend on numerous factors such as the
+model architecture, how it’s defined, values of various parameters (embedding size, sequence length etc.),
+how the model is exported (static or dynamic input shapes, stateful K-V cache or not, etc.).
+In most cases, for transformer based models that are weight memory bound, you would see
+latency gains with palettization on NE, all the way from a few percentage points to
+considerable gains, as with this specific OPT model.</p>
+<p>From this data, we can conclude that <code class="docutils literal notranslate"><span class="pre">4</span> <span class="pre">bits</span> <span class="pre">per</span> <span class="pre">grouped</span> <span class="pre">channel</span> <span class="pre">palettization</span></code> with group size <code class="docutils literal notranslate"><span class="pre">4</span></code> using
+<code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code> gives the best trade-off between model size, model latency and model accuracy, achieving
+<code class="docutils literal notranslate"><span class="pre">5.4x</span></code> improvement in model runtime, with about <code class="docutils literal notranslate"><span class="pre">~3%</span></code> degradation in model’s perplexity (<em>italicized</em> above).</p>
+<p><strong>Note:</strong> The latency numbers above are for relative comparison between compressed and uncompressed only.
+These were obtained on an iPhone 15 Pro with iOS18 seed 1 build. The actual numbers may vary
+depending on the iOS version, state of the device, model authoring code etc.</p>
+</section>
+<section id="id3">
+<h3>Algorithm Runtime<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h3>
+<p>Depending on the type and number of GPUs used, and the number of calibration samples,
+it can take several minutes to compute the Fisher information matrices
+for <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>. For example, it takes about a minute to compute it, when using
+8 <code class="docutils literal notranslate"><span class="pre">A100</span></code> GPUs. Once importance scores are computed, both <code class="docutils literal notranslate"><span class="pre">SKMPalettizer</span></code>
+and <code class="docutils literal notranslate"><span class="pre">PostTrainingPalettizer</span></code> take about <code class="docutils literal notranslate"><span class="pre">10</span> <span class="pre">-</span> <span class="pre">30</span></code> mins to compress the model. The time
+taken is more when using larger smaller group size (more k-means operations need to be
+performed) and when the number of bits is large.</p>
+</section>
+</section>
+<section id="conclusions">
+<h2>Conclusions<a class="headerlink" href="#conclusions" title="Permalink to this heading">#</a></h2>
+<p>In this tutorial, we looked at data free and calibration data based algorithms for
+compressing a large model. We learnt that calibration data based algorithms tend to
+provide better trade-off between model size and latency vs model accuracy, than data free algorithms.
+These algorithms run almost as fast as data free algorithms and require very little data,
+much less than fine-tuning based compression algorithms.</p>
+<p>Models with a large number of parameters, where each parameter is itself large,
+are often weight memory bound, and thus reducing the model size correlates with
+reduction in model runtime latency. Model accuracy can be traded-off with model size
+and runtime latency by using higher granularity of compression and this often produces
+good quality models which run fast.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="opt-resnet.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Optimizing ResNet50 Model</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="opt-workflow.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Optimization Workflow</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#quantization">Quantization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-compression">Data-free compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#results">Results</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithm-runtime">Algorithm Runtime</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#palettization">Palettization</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Data-free compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-data-based-compression">Calibration data based compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id2">Results</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#effect-of-per-channel-scales">Effect of per channel scales</a></li>
+</ul>
+</li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#impact-on-latency">Impact on Latency</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">Algorithm Runtime</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#conclusions">Conclusions</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>

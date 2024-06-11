@@ -22,7 +22,7 @@ This page offers frequently asked questions (FAQs):
 
 ### coremltools 7
 
-For an overview, see [New Features](new-features). This release includes more APIs for optimizing the models to use less storage space, reduce power consumption, and reduce latency during inference. Key optimization techniques include pruning, quantization, and palettization. For details, see [Optimizing Models](optimizing-models).
+For an overview, see [New Features](new-features). This release includes more APIs for optimizing the models to use less storage space, reduce power consumption, and reduce latency during inference. Key optimization techniques include pruning, quantization, and palettization. For details, see [Optimizing Models](opt-overview).
 
 For details about the release, see [Release Notes](https://github.com/apple/coremltools/releases/).
 
@@ -170,7 +170,13 @@ For details and examples of using flexible input shapes, see [Flexible Input Sha
 
 ## Why `optimize.torch` is better than PyTorch's default quantization
 
-You can use PyTorch's quantization APIs directly, and then convert the model to Core ML. However, the converted model performance may not be optimal. The PyTorch API default settings (symmetric asymmetric quantization modes and which ops are quantized) are not optimal for the Core ML stack and Apple hardware. If you use the Core ML Tools `coremltools.optimize.torch` APIs, as described in [Training-Time Quantization](data-dependent-quantization), the correct default settings are applied automatically.
+You can use PyTorch's quantization APIs directly, and then convert the model to Core ML. 
+However, the converted model performance may not be optimal. 
+The PyTorch API default settings 
+(symmetric asymmetric quantization modes and which ops are quantized) 
+are not optimal for the Core ML stack and Apple hardware. 
+If you use the Core ML Tools `coremltools.optimize.torch` APIs 
+the correct default settings are applied automatically.
 
 ## Use a compiled model for faster initialization
 

@@ -53,12 +53,16 @@ This guide includes instructions and examples. For details about using the API c
    :maxdepth: 1
    :caption: Optimization
 
-   source/optimizing-models.rst
-   source/api-overview.rst
-   source/pruning.rst
-   source/palettization.rst
-   source/quantization-aware-training.rst
+   source/opt-overview.md
+   source/opt-whats-new.md
+   source/opt-overview-examples.rst
+   source/opt-workflow.md
+   source/opt-palettization.rst
+   source/opt-quantization.rst
+   source/opt-pruning.rst
+   source/opt-conversion.md
    source/quantization-neural-network.md
+
 
 
 .. toctree::
@@ -75,6 +79,7 @@ This guide includes instructions and examples. For details about using the API c
    :caption: MLModel
 
    source/mlmodel.md
+   source/multifunction-models.md
    source/xcode-model-preview-types.md
    source/mlmodel-utilities.md
    source/model-prediction.md
