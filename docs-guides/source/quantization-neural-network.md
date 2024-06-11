@@ -8,7 +8,12 @@
 
 ```{admonition} For Neural Network Format Only
 
-This page describes the API to compress the weights of a Core ML model that is of type `neuralnetwork`. For the [`mlprogram`](target-conversion-formats) model type, see the [Optimize API Overview](api-overview).
+This page describes the API to compress the weights 
+of a Core ML model that is of type `neuralnetwork`. 
+For the [`mlprogram`](target-conversion-formats) model type, 
+see the [Optimization Overview](opt-overview).
+All the APIs available within `ct.optimize.*` operate for
+`mlprogram` model type only. 
 ```
 
 The Core ML Tools package includes a utility to compress the weights of a Core ML neural network model. Weight compression reduces the space occupied by the model. However, the precision of the intermediate tensors and the compute precision of the ops are not altered.
