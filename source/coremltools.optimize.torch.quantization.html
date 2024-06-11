@@ -74,6 +74,9 @@
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">ModulePostTrainingQuantizerConfig</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.PostTrainingQuantizer"><code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizer</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizerConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig"><code class="docutils literal notranslate"><span class="pre">LayerwiseCompressorConfig</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor"><code class="docutils literal notranslate"><span class="pre">LayerwiseCompressor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id4">GPTQ</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.examples.html">Examples</a></li>
@@ -652,6 +655,212 @@ corresponding :py:class:<a href="#id2"><span class="problematic" id="id3">`</spa
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.layerwise_compression.</span></span><span class="sig-name descname"><span class="pre">LayerwiseCompressorConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">Module</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ModuleList</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">global_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">LayerwiseCompressionAlgorithmConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_type_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleTypeConfigType</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_name_configs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">LayerwiseCompressionAlgorithmConfig</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">NOTHING</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_cacher</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'default'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_nsamples</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/layerwise_compressor.html#LayerwiseCompressorConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig" title="Link to this definition"></a></dt>
+<dd><p>Configuration class for specifying how different submodules of a model are
+compressed by <a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor" title="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerwiseCompressor</span></code></a>.</p>
+<p>Only sequential models are supported.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – List of layers
+which should be compressed. The layer names can also be specified as a regex.
+The layers listed should be immediate child modules of the parent container
+<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Sequential</span></code> model and they should be contiguous, i.e.,
+output of layer <code class="docutils literal notranslate"><span class="pre">n</span></code> should be input of layer <code class="docutils literal notranslate"><span class="pre">n+1</span></code>.</p></li>
+<li><p><strong>global_config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Config to be applied globally
+to all supported modules. Missing values are chosen from the default config.</p></li>
+<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Module type configs applied to a specific
+module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>. The keys can be either strings
+or module classes.</p></li>
+<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Module level configs applied to specific modules.
+The name of the module must either be a regex or a fully qualified name that can be used
+to fetch it from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method.</p></li>
+<li><p><strong>input_cacher</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">FirstLayerInputCacher</span></code>) – Cacher object
+which caches inputs which are fed to the first layer which is set up for compression</p></li>
+<li><p><strong>calibration_nsamples</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of samples to be used for calibration.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig.as_dict">
+<span class="sig-name descname"><span class="pre">as_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig.as_dict" title="Link to this definition"></a></dt>
+<dd><p>Returns the config as a dictionary.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_dict</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig" title="coremltools.optimize.torch.layerwise_compression.layerwise_compressor.LayerwiseCompressorConfig"><span class="pre">LayerwiseCompressorConfig</span></a></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/layerwise_compressor.html#LayerwiseCompressorConfig.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig.from_dict" title="Link to this definition"></a></dt>
+<dd><p>Create class from a dictionary of string keys and values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config_dict</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> and values) – A nested dictionary of strings
+and values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig.from_yaml">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yml</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">IO</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">DictableDataClass</span></span></span><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig.from_yaml" title="Link to this definition"></a></dt>
+<dd><p>Create class from a yaml stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>yml</strong> – An <code class="xref py py-class docutils literal notranslate"><span class="pre">IO</span></code> stream containing yaml or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>
+path to the yaml file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.layerwise_compression.</span></span><span class="sig-name descname"><span class="pre">LayerwiseCompressor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig" title="coremltools.optimize.torch.layerwise_compression.layerwise_compressor.LayerwiseCompressorConfig"><span class="pre">LayerwiseCompressorConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/layerwise_compressor.html#LayerwiseCompressor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor" title="Link to this definition"></a></dt>
+<dd><p>A post training compression algorithm which compresses a sequential model layer by layer.
+The implementation supports two variations of this algorithm:</p>
+<ol class="arabic simple">
+<li><p><a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">GPTQ</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/pdf/2301.00774.pdf">SparseGPT</a></p></li>
+</ol>
+<p>At a high level, it compresses weights of a model layer by layer,
+by minimizing the L2 norm of the difference between the original activations and
+activations obtained on compressing the weights of a layer. The activations
+are computed using a few samples of training data.</p>
+<p>Only sequential models are supported, where output of one layer feeds into the
+input of the next layer.</p>
+<p>For HuggingFace models, disable use_cache config. This is used to speed up decoding but,
+to generalize forward pass for LayerwiseCompressor algorithms across all
+model types we need to disable this behavior.</p>
+<p class="rubric">Example</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch.layerwise_compression</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">LayerwiseCompressor</span><span class="p">,</span>
+    <span class="n">LayerwiseCompressorConfig</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+    <span class="n">OrderedDict</span><span class="p">(</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;conv&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+            <span class="s2">&quot;relu1&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+            <span class="s2">&quot;conv2&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+            <span class="s2">&quot;relu2&quot;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+        <span class="p">}</span>
+    <span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">dataloder</span> <span class="o">=</span> <span class="n">load_calibration_data</span><span class="p">()</span>
+
+<span class="c1"># initialize the quantizer</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">LayerwiseCompressorConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;algorithm&quot;</span><span class="p">:</span> <span class="s2">&quot;gptq&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int4&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;input_cacher&quot;</span><span class="p">:</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;calibration_nsamples&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">,</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+
+<span class="n">compressor</span> <span class="o">=</span> <span class="n">LayerwiseCompressor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+<span class="n">compressed_model</span> <span class="o">=</span> <span class="n">compressor</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">dataloader</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>) – Module to be compressed.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig" title="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LayerwiseCompressorConfig</span></code></a>) – Config that specifies how
+different submodules in the model will be compressed.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor.compress">
+<span class="sig-name descname"><span class="pre">compress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataloader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Module</span></span></span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/layerwise_compressor.html#LayerwiseCompressor.compress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor.compress" title="Link to this definition"></a></dt>
+<dd><p>Compresses model using samples from <code class="docutils literal notranslate"><span class="pre">dataloader</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataloader</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code>) – An iterable where each element
+is an input to the model to be compressed.</p></li>
+<li><p><strong>device</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – Device string for device to run compression on.</p></li>
+<li><p><strong>inplace</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – If <code class="docutils literal notranslate"><span class="pre">True</span></code>, model transformations are carried out in-place and
+the original module is mutated, otherwise a copy of the model is mutated and returned.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<section id="id4">
+<h2>GPTQ<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.layerwise_compression.algorithms.</span></span><span class="sig-name descname"><span class="pre">ModuleGPTQConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dtype</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'uint8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'per_channel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symmetric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_normal_float</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_dampening</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_activation_order_heuristic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_group_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gptq'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/algorithms.html#ModuleGPTQConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LayerwiseCompressionAlgorithmConfig</span></code></p>
+<p>Configuration class for specifying global and module level compression options for
+<a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">GPTQ</a> algorithm.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul>
+<li><p><strong>weight_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the weights. The number of bits used
+for quantization is inferred from the dtype. When dtype is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the weights
+corresponding to that layer are not quantized.  Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code> which corresponds to
+8-bit quantization.</p></li>
+<li><p><strong>granularity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationGranularity</span></code>) – Specifies the granularity at which quantization parameters
+will be computed. Can be one of <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_block</span></code>. When using <code class="docutils literal notranslate"><span class="pre">per_block</span></code>,
+<code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument must be specified.  Defaults to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>.</p></li>
+<li><p><strong>quantization_scheme</strong> –</p>
+<dl class="simple">
+<dt>(<a class="reference internal" href="#coremltools.optimize.torch.quantization.QuantizationScheme" title="coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>): Type of</dt><dd><p>quantization configuration to use. When this parameter is set to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>, all
+weights are quantized with zero point as zero. When it is set to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.affine</span></code>, zero point
+can be set anywhere in the range of values allowed for the quantized weight.
+Defaults to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>.</p>
+</dd>
+<dt>block_size (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>): When <code class="docutils literal notranslate"><span class="pre">block_size</span></code> is specified, <code class="docutils literal notranslate"><span class="pre">block_size</span></code></dt><dd><p>number of values will share the same quantization parameters of scale (and zero point if applicable) across
+the input-channel axis.  Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>enable_normal_float</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, normal float format is used for quantization. It’s
+only supported when <code class="docutils literal notranslate"><span class="pre">weight_dtype</span></code> is equal to <code class="docutils literal notranslate"><span class="pre">int3</span></code> and <code class="docutils literal notranslate"><span class="pre">int4</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p><strong>hessian_dampening</strong> – (<code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code>): Dampening factor added to the diagonal of the
+Hessian used by GPTQ algorithm. Defaults to <code class="docutils literal notranslate"><span class="pre">0.01</span></code>.</p></li>
+<li><p><strong>use_activation_order_heuristic</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, columns of weight are sorted
+in descending order of values of Hessian diagonal elements. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><strong>processing_group_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The weights are updated in
+blocks of size processing_group_size. Defaults to <code class="docutils literal notranslate"><span class="pre">128</span></code>.</p></li>
+<li><p><strong>.. note</strong> – Currently blocking is limited to only the input-channel axis for GPTQ.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.algorithms.GPTQ">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.layerwise_compression.algorithms.</span></span><span class="sig-name descname"><span class="pre">GPTQ</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig" title="coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig"><span class="pre">ModuleGPTQConfig</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/algorithms.html#GPTQ"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.algorithms.GPTQ" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">OBSCompressionAlgorithm</span></code></p>
+<p>A post training compression algorithm based on the paper
+<a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers</a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layer</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">torch.nn.Module</span></code>) – Module to be compressed.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig" title="coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code></a>) – Config specifying hyper-parameters
+for the GPTQ algorithm.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 </section>
 
 
