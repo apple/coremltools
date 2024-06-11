@@ -9,6 +9,7 @@ This section describes conversion options to use with `convert() <https://apple.
    new-conversion-options.md
    model-input-and-output-types.md
    image-inputs.md
+   stateful-models.md
    classifiers.md
    flexible-inputs.md
    composite-operators.md

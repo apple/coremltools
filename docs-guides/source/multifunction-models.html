@@ -1,0 +1,710 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Multifunction Models &#8212; Guide to Core ML Tools</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+
+  
+  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
+  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'source/multifunction-models';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Xcode Model Preview Types" href="xcode-model-preview-types.html" />
+    <link rel="prev" title="MLModel Overview" href="mlmodel.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">Guide to Core ML Tools</p>
+  
+</a></div>
+        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">coremltools API Reference</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Model Format</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="overview-coremltools.html">What Is Core ML Tools?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installing-coremltools.html">Installing Core ML Tools</a></li>
+<li class="toctree-l1"><a class="reference internal" href="introductory-quickstart.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="new-features.html">New Features</a></li>
+<li class="toctree-l1"><a class="reference internal" href="faqs.html">Core ML Tools FAQs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools-examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="how-to-contribute.html">Contributing</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-to-neural-network.html">Convert Models to Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="comparing-ml-programs-and-neural-networks.html">Comparing ML Programs and Neural Networks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-nlp-model.html">Converting a Natural Language Processing Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
+<li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stateful-models.html">Stateful Models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="classifiers.html">Classifiers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flexible-inputs.html">Flexible Input Shapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="composite-operators.html">Composite Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
+<li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Converters</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="libsvm-conversion.html">LibSVM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sci-kit-learn-conversion.html">Scikit-learn</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xgboost-conversion.html">XGBoost</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">MLModel</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="mlmodel.html">MLModel Overview</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Multifunction Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
+<li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
+</ul>
+</li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</label></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+<a href="https://github.com/apple/coremltools" target="_blank"
+   class="btn btn-sm btn-source-repository-button"
+   title="Source repository"
+   data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+
+</a>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/source/multifunction-models.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  </button>
+`);
+</script>
+
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+  </button>
+`);
+</script>
+<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</label>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Multifunction Models</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-combine-models">Why Combine Models?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#combining-models-toy-example-with-lora-adapters">Combining models: toy example with LoRA adapters</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <section id="multifunction-models">
+<span id="index-0"></span><h1>Multifunction Models<a class="headerlink" href="#multifunction-models" title="Permalink to this heading">#</a></h1>
+<p>An <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> Core ML model typically contains a single function, called “main”.
+This is the default form in which a model is constructed, say when its produced via
+the conversion process. Starting with <code class="docutils literal notranslate"><span class="pre">iOS18</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS15</span></code>, you can produce an mlprogram
+with multiple functions in it.
+Each function, indexed by its unique name, can then be independently
+loaded and invoked for inference.</p>
+<p>Consider a scenario, where you have separate models that
+share weights and run in the same app.
+For example, as illustrated in the following figure, one model
+may have a feature extractor,
+followed by a classifier to produce a classification output.
+Another model may use the same feature extractor,
+followed by a regressor to produce the regression output.</p>
+<p><img alt="Model 1" src="../_images/multifunction-flow1.png" /></p>
+<p><img alt="Model 2" src="../_images/multifunction-flow2.png" /></p>
+<p>Using Core ML Tools, you can merge these models to produce a
+single <code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code> asset, with multiple functions,
+such that the common weights (feature extractor in this case) are shared between those.
+During the process of merging, Core ML Tools deduplicates shared weights by
+calculating the hash of the weight values.
+The merged multifunction model can do both tasks based on the function chosen to run.</p>
+<p><img alt="Multifunction model" src="../_images/multifunction-combination.png" /></p>
+<section id="why-combine-models">
+<h2>Why Combine Models?<a class="headerlink" href="#why-combine-models" title="Permalink to this heading">#</a></h2>
+<p>In the example above, the two models used a common backbone.
+While utilizing multifunctions and producing a single model asset is definitely
+beneficial, there does exist a reasonable workaround in this case:
+simply breaking up the models into 3 sub models: backbone, classifier head and
+regressor head, and using two of them in sequence based on the use case.</p>
+<p>However, there are scenarios when such a workaround would not be available.
+An example of this is the case of parameter efficient fine-tuning (PEFT),
+which is a common approach for specializing large models to particular tasks.
+In the case of PEFT, “adapters” are attached to the base model, typically
+at multiple points within the network (as shown in the
+figures below), and only the parameters in these adapters
+are fine-tuned for a specific task. This is much more efficient than fine-tuning
+the whole base model which has many more parameters.</p>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/multifunction-adapter-1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction-adapter-1.png" style="width: 350px;" /></a>
+</figure>
+<figure class="align-default">
+<a class="reference internal image-reference" href="../_images/multifunction-adapter-2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction-adapter-2.png" style="width: 350px;" /></a>
+</figure>
+<p>In this case, you can use a multifunction model to
+capture the multiple variations in a single model.
+A separate function could be defined for each adapter.
+The weights for the base model will be shared.</p>
+<p><img alt="Multifunction adapter 3" src="../_images/multifunction-adapter-3.png" /></p>
+<p>For an example, see the “Deploy machine learning and AI models on-device with Core ML”
+<a class="reference external" href="https://developer.apple.com/videos/play/wwdc2024/10161/">session video</a> in WWDC 2024
+to learn more about integrating multifunction models into your app.
+It includes a text-to-image example in which a single
+model with multiple adapters is used to generate images with different styles.</p>
+</section>
+<section id="combining-models-toy-example-with-lora-adapters">
+<h2>Combining models: toy example with LoRA adapters<a class="headerlink" href="#combining-models-toy-example-with-lora-adapters" title="Permalink to this heading">#</a></h2>
+<p>Lets define base model with two linear layers</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span> <span class="c1"># torch==2.3.0</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+
+<span class="k">class</span> <span class="nc">Base</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">6000</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+<span class="n">base_model</span> <span class="o">=</span> <span class="n">Base</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Now lets update this model by attaching to it,
+one of the most common type of adpater, i.e. <a class="reference external" href="https://huggingface.co/docs/peft/en/package_reference/lora">LoRA</a>
+(low rank approximation), and
+convert the model.
+We will use the HuggingFace <a class="reference external" href="https://github.com/huggingface/peft">peft</a>
+package to do so.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">peft</span> <span class="kn">import</span> <span class="n">get_peft_model</span><span class="p">,</span> <span class="n">LoraConfig</span> <span class="c1"># peft==0.11.1</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">adapt_model_with_lora</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="n">lora_config</span> <span class="o">=</span> <span class="n">LoraConfig</span><span class="p">(</span><span class="n">target_modules</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;linear1&quot;</span><span class="p">,</span> <span class="s2">&quot;linear2&quot;</span><span class="p">],</span> <span class="n">r</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">lora_alpha</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="c1"># rank 32 </span>
+    <span class="n">adapted_model</span> <span class="o">=</span> <span class="n">get_peft_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">lora_config</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">adapted_model</span>
+</pre></div>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">adapted_model_1</span> <span class="o">=</span> <span class="n">adapt_model_with_lora</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>At this stage you would typically fine tune the model. We will skip that,
+since this is an illustrative example,
+and directly go the next stage of converting the model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span> 
+
+<span class="n">mlmodel_1</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">adapted_model_1</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)),</span> 
+                       <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_adpated_model_1&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">))],</span>
+                       <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;out_adpated_model_1&quot;</span><span class="p">)],</span>
+                       <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS18</span><span class="p">,</span>
+                      <span class="p">)</span>
+<span class="n">mlmodel_1</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;adapted_model_1.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now lets create a different adapter model,
+which we would in practice fine tune to a different task.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">adapted_model_2</span> <span class="o">=</span> <span class="n">adapt_model_with_lora</span><span class="p">(</span><span class="n">base_model</span><span class="p">)</span>
+<span class="n">mlmodel_2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">adapted_model_2</span><span class="o">.</span><span class="n">eval</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)),</span> 
+                       <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;input_adpated_model_2&quot;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">))],</span>
+                       <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;out_adpated_model_2&quot;</span><span class="p">)],</span>
+                       <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS18</span><span class="p">,</span>
+                      <span class="p">)</span>
+<span class="n">mlmodel_2</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;adapted_model_2.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>If we want to deploy both these variants of models in a
+single app, we can combine them into a single model.
+This can be done by creating a <code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor</span></code>
+to specify what models to merge and the new function name in the merged model.
+You can then use the <code class="docutils literal notranslate"><span class="pre">save_multifunction</span></code>
+utility to produce a merged multifunction Core ML model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">desc</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">MultiFunctionDescriptor</span><span class="p">()</span>
+
+<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
+    <span class="s2">&quot;adapted_model_1.mlpackage&quot;</span><span class="p">,</span>
+    <span class="n">src_function_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;adapter_1&quot;</span>
+<span class="p">)</span>
+<span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
+    <span class="s2">&quot;adapted_model_2.mlpackage&quot;</span><span class="p">,</span>
+    <span class="n">src_function_name</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="p">,</span>
+    <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;adapter_2&quot;</span>
+<span class="p">)</span>
+
+<span class="n">desc</span><span class="o">.</span><span class="n">default_function_name</span> <span class="o">=</span> <span class="s2">&quot;adapter_1&quot;</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;combined_adpater_models.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When loading the multifunction model, you can specify the
+<code class="docutils literal notranslate"><span class="pre">function_name</span></code> to load the specific function and then do the prediction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span> 
+
+<span class="n">mlmodel_1</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;combined_adpater_models.mlpackage&quot;</span><span class="p">)</span>  <span class="c1"># Uses default function</span>
+<span class="n">y_1</span> <span class="o">=</span> <span class="n">mlmodel_1</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;input_adpated_model_1&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)})</span>
+
+<span class="n">mlmodel_2</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;combined_adpater_models.mlpackage&quot;</span><span class="p">,</span> <span class="n">function_name</span><span class="o">=</span><span class="s2">&quot;adapter_2&quot;</span><span class="p">)</span>
+<span class="n">y_2</span> <span class="o">=</span> <span class="n">mlmodel_2</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;input_adpated_model_2&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6000</span><span class="p">)})</span>
+</pre></div>
+</div>
+<p>The number of parameters in the base model are roughly 72M (6000x6000 = 36M
+for each of the two linear layers) (ignorning the bias vectors).
+LoRA adapters that we have used here, of rank 32, will attach
+two linear layers of shapes, (6000, 32) and (32, 6000), to each of
+the linear modules in the base model.
+This will result in 4x6000x32 = 0.768M parameters to be added,
+which is a fraction of the base model.
+The combined model will share the 72M parameters of
+the based model and only have the additonal adapter parameters.
+We can see this in the model sizes:</p>
+<figure class="align-center">
+<a class="reference internal image-reference" href="../_images/multifunction_model_sizes_lora_example.png"><img alt="Model sizes LoRA toy example" src="../_images/multifunction_model_sizes_lora_example.png" style="width: 440px;" /></a>
+</figure>
+<p>This is how the model interface for a multifunction model
+would show up in the Xcode predictions tab:</p>
+<figure class="align-left">
+<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction_input_output_xcode_adapted_model_1.png" style="width: 360px; height: 360px;" /></a>
+</figure>
+<figure class="align-default">
+<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction_input_output_xcode_adapted_model_2.png" style="width: 360px; height: 360px;" /></a>
+</figure>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The multifunction model feature is available starting with
+<code class="docutils literal notranslate"><span class="pre">iOS18</span></code>/<code class="docutils literal notranslate"><span class="pre">macOS15</span></code> for the <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> model type.</p>
+</div>
+<p><strong>Tip</strong>:
+You can specify the <code class="docutils literal notranslate"><span class="pre">function_name</span></code> argument when loading a
+<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#compiled-mlmodel"><code class="docutils literal notranslate"><span class="pre">CompiledMLModel</span></code></a>
+as well.</p>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="mlmodel.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">MLModel Overview</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="xcode-model-preview-types.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Xcode Model Preview Types</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-combine-models">Why Combine Models?</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#combining-models-toy-example-with-lora-adapters">Combining models: toy example with LoRA adapters</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By Apple
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  <p class="copyright">
+    
+      © Copyright 2023, Apple Inc.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
