@@ -11,7 +11,9 @@ You can linearly quantize the weights of your Core ML model by using the
 ```python
 import coremltools.optimize as cto
 
-op_config = cto.coreml.OpLinearQuantizerConfig(mode="linear_symmetric", weight_threshold=512)
+op_config = cto.coreml.OpLinearQuantizerConfig(
+    mode="linear_symmetric", weight_threshold=512
+)
 config = cto.coreml.OptimizationConfig(global_config=op_config)
 
 compressed_8_bit_model = cto.coreml.linear_quantize_weights(model, config=config)
