@@ -1537,6 +1537,8 @@ def div(context, node):
     else:
         res = mb.real_div(x=x, y=y, name=node.name)
 
+    context.add(res)
+
 
 @register_torch_op(torch_alias=["floordiv"])
 def floor_divide(context, node):
