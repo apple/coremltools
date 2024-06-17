@@ -1505,12 +1505,12 @@ def div(context, node):
     x = inputs[0]
     y = inputs[1]
     if not types.is_float(x.dtype) and not types.is_float(y.dtype):
-        x = mb.cast(x, dtype="fp32")
-        y = mb.cast(y, dtype="fp32")
+        x = mb.cast(x=x, dtype="fp32")
+        y = mb.cast(x=y, dtype="fp32")
     elif not types.is_float(x.dtype):
-        x = mb.cast(x, dtype=y.dtype)
+        x = mb.cast(x=x, dtype=y.dtype)
     elif not types.is_float(y.dtype):
-        y = mb.cast(y, dtype=x.dtype)
+        y = mb.cast(x=y, dtype=x.dtype)
 
     if len(inputs) > 2 and inputs[2] is not None:
         rounding_mode = inputs[2].val
