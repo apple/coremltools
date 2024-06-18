@@ -445,6 +445,8 @@ def numpy_type_to_builtin_type(nptype) -> type:
         return types_uint64
     elif np.issubclass_(nptype, np.int64):
         return types_int64
+    elif np.issubclass_(nptype, np.intc):
+        return types_int32
     elif np.issubclass_(nptype, int) or nptype == int:
         # Catch all int
         return types_int32
