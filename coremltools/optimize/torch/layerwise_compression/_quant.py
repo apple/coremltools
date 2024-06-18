@@ -120,10 +120,10 @@ class Quantizer(_torch.nn.Module):
         x_max = _torch.maximum(x.max(1)[0], tmp)
 
         if self._symmetric:
-            xmax = _torch.maximum(_torch.abs(x_min), x_max)
+            x_max = _torch.maximum(_torch.abs(x_min), x_max)
             tmp = x_min < 0
             if _torch.any(tmp):
-                x_min[tmp] = -xmax[tmp]
+                x_min[tmp] = -x_max[tmp]
         tmp = (x_min == 0) & (x_max == 0)
         x_min[tmp] = -1
         x_max[tmp] = +1
