@@ -22,19 +22,19 @@ The following example shows `6-bit` palettization applied to all the ops which h
 This is controlled by setting the `weight_threshold` parameter to 512.
 ```python
 import coremltools as ct
-import coremltools.optimize.coreml as cto
+import coremltools.optimize as cto
 
 # load model
 mlmodel = ct.models.MLModel(uncompressed_model_path)
 
 # define op config 
-op_config = cto.OpPalettizerConfig(nbits=6, weight_threshold=512)
+op_config = cto.coreml.OpPalettizerConfig(nbits=6, weight_threshold=512)
 
 # define optimization config by applying the op config globally to all ops 
-config = cto.OptimizationConfig(global_config=op_config)
+config = cto.coreml.OptimizationConfig(global_config=op_config)
 
 # palettize weights
-compressed_mlmodel = cto.palettize_weights(mlmodel, config)
+compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, config)
 ```
 Some key parameters that the config accepts are:
 - `n_bits` : This controls the number of clusters, which are `2^n_bits` .
@@ -54,18 +54,18 @@ to `8-bits`, and two of the conv ops (named `conv1` and `conv3`) are omitted fro
 
 ```python
 import coremltools as ct
-import coremltools.optimize.coreml as cto
+import coremltools.optimize as cto
 
 mlmodel = ct.models.MLModel(uncompressed_model_path)
 
-global_config = cto.OpPalettizerConfig(nbits=6)
-linear_config = cto.OpPalettizerConfig(nbits=8)
-config = cto.OptimizationConfig(
+global_config = cto.coreml.OpPalettizerConfig(nbits=6)
+linear_config = cto.coreml.OpPalettizerConfig(nbits=8)
+config = cto.coreml.OptimizationConfig(
     global_config=global_config,
     op_type_configs={"linear": linear_config},
     op_name_configs={"conv1": None, "conv3": None},
 )
-compressed_mlmodel = cto.palettize_weights(mlmodel, config)
+compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, config)
 ```
 
 For more details, please follow the detailed API page for [coremltools.optimize.coreml.palettize_weights](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights)
