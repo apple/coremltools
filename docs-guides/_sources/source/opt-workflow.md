@@ -134,15 +134,15 @@ followed by data free palettization etc.
 Sample pseudocode of applying palettization to an `mlpackage` model:
 ```python
 import coremltools as ct
-import coremltools.optimize.coreml as cto
+import coremltools.optimize as cto
 
 mlmodel = ct.models.MLModel(uncompressed_model_path)
-op_config = cto.OpPalettizerConfig(mode="kmeans", 
+op_config = cto.coreml.OpPalettizerConfig(mode="kmeans",
                                    nbits=4, 
                                    granularity="per_grouped_channel", 
                                    group_size=16) 
-model_config = cto.OptimizationConfig(global_config=op_config)
-compressed_mlmodel = cto.palettize_weights(mlmodel, model_config)
+model_config = cto.coreml.OptimizationConfig(global_config=op_config)
+compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, model_config)
 ```
 
 Sample pseudocode of applying palettization to a torch model:
@@ -191,7 +191,7 @@ Quantizing activations can be applied either to the torch model, or
 directly to an `mlpackage` model as well. Sample pseudocode snippet to do so: 
 ```python
 import coremltools as ct 
-import coremltools.optimize.coreml as cto
+import coremltools.optimize as cto
 # The following API is for coremltools==8.0b1
 # It will be moved out of "experimental" in later versions of coremltools 
 from coremltools.optimize.coreml.experimental import OpActivationLinearQuantizerConfig, \
@@ -201,16 +201,16 @@ mlmodel = ct.models.MLModel(uncompressed_model_path)
 
 # quantize activations to 8 bits (this will give an A8W16 model)
 act_quant_op_config = OpActivationLinearQuantizerConfig(mode="linear_symmetric")
-act_quant_model_config = cto.OptimizationConfig(global_config=act_quant_op_config)
+act_quant_model_config = cto.coreml.OptimizationConfig(global_config=act_quant_op_config)
 mlmodel_compressed_activations = linear_quantize_activations(mlmodel, 
                                                              act_quant_model_config,
                                                              sample_data=...)
 
 # quantize weights to 8 bits (this will give an A8W8 model)
-weight_quant_op_config = cto.OpLinearQuantizerConfig(mode="linear_symmetric",
+weight_quant_op_config = cto.coreml.OpLinearQuantizerConfig(mode="linear_symmetric",
                                                      dtype="int8")
-weight_quant_model_config = cto.OptimizationConfig(weight_quant_op_config)
-mlmodel_compressed = cto.linear_quantize_weights(mlmodel_compressed_activations,
+weight_quant_model_config = cto.coreml.OptimizationConfig(weight_quant_op_config)
+mlmodel_compressed = cto.coreml.linear_quantize_weights(mlmodel_compressed_activations,
                                                  weight_quant_model_config)
 ```
 
