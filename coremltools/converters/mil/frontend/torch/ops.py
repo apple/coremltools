@@ -2216,7 +2216,7 @@ def _bool(context, node):
     _cast(context, node, bool, "bool")
 
 
-@register_torch_op(torch_alias=["int"])
+@register_torch_op(torch_alias=["int", "intimplicit"])
 def _int(context, node):
     _cast(context, node, int, "int32")
 
