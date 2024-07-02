@@ -176,8 +176,8 @@ desc.default_function_name = "adapter_1"
 ct.utils.save_multifunction(desc, "combined_adpater_models.mlpackage")
 ```
 
-When loading the multifunction model, you can specify the 
-`function_name` to load the specific function and then do the prediction:
+When loading the multifunction model, you can specify the optional
+`function_name` to load a specific function and then do the prediction. If `function_name` is not provided, the `default_function_name` field of the serialized multifunction model asset gets used to load the default function:
 
 ```python
 import numpy as np 
