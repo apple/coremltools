@@ -177,6 +177,6 @@ def extract_submodel(
         PASS_REGISTRY["common::dead_code_elimination"](prog)
 
     prog.skip_all_passes = True
-    submodel = ct.convert(prog, convert_to=backend, compute_units=model.compute_unit)
+    submodel = ct.convert(prog, convert_to=backend, compute_units=model.compute_unit, minimum_deployment_target=func.opset_version)
 
     return submodel
