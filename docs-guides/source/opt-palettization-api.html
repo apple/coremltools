@@ -455,19 +455,19 @@ has already been converted to Core ML.</p>
 <p>The following example shows <code class="docutils literal notranslate"><span class="pre">6-bit</span></code> palettization applied to all the ops which have number of parameters greater than 512.
 This is controlled by setting the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter to 512.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 
 <span class="c1"># load model</span>
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">uncompressed_model_path</span><span class="p">)</span>
 
 <span class="c1"># define op config </span>
-<span class="n">op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
+<span class="n">op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span> <span class="n">weight_threshold</span><span class="o">=</span><span class="mi">512</span><span class="p">)</span>
 
 <span class="c1"># define optimization config by applying the op config globally to all ops </span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">op_config</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">op_config</span><span class="p">)</span>
 
 <span class="c1"># palettize weights</span>
-<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Some key parameters that the config accepts are:</p>
@@ -486,18 +486,18 @@ along with the ops each weight feeds into.</p>
 <p>The following example shows <code class="docutils literal notranslate"><span class="pre">6-bit</span></code> palettization applied to all ops, with the exception that all the <code class="docutils literal notranslate"><span class="pre">linear</span></code> ops are set
 to <code class="docutils literal notranslate"><span class="pre">8-bits</span></code>, and two of the conv ops (named <code class="docutils literal notranslate"><span class="pre">conv1</span></code> and <code class="docutils literal notranslate"><span class="pre">conv3</span></code>) are omitted from palettization.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">uncompressed_model_path</span><span class="p">)</span>
 
-<span class="n">global_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
-<span class="n">linear_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
+<span class="n">global_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+<span class="n">linear_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">nbits</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
     <span class="n">global_config</span><span class="o">=</span><span class="n">global_config</span><span class="p">,</span>
     <span class="n">op_type_configs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;linear&quot;</span><span class="p">:</span> <span class="n">linear_config</span><span class="p">},</span>
     <span class="n">op_name_configs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;conv1&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;conv3&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
 <span class="p">)</span>
-<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For more details, please follow the detailed API page for <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">coremltools.optimize.coreml.palettize_weights</a></p>

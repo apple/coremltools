@@ -558,15 +558,15 @@ For instance, if you are experimenting with multiple rounds of compression, say,
 followed by data free palettization etc.</p>
 <p>Sample pseudocode of applying palettization to an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
-<span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 
 <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">uncompressed_model_path</span><span class="p">)</span>
-<span class="n">op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> 
+<span class="n">op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpPalettizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span>
                                    <span class="n">nbits</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> 
                                    <span class="n">granularity</span><span class="o">=</span><span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span> 
                                    <span class="n">group_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span> 
-<span class="n">model_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">op_config</span><span class="p">)</span>
-<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">model_config</span><span class="p">)</span>
+<span class="n">model_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">op_config</span><span class="p">)</span>
+<span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">model_config</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Sample pseudocode of applying palettization to a torch model:</p>
@@ -612,7 +612,7 @@ the loss function and gradient computation.</p>
 <p>Quantizing activations can be applied either to the torch model, or
 directly to an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model as well. Sample pseudocode snippet to do so:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span> 
-<span class="kn">import</span> <span class="nn">coremltools.optimize.coreml</span> <span class="k">as</span> <span class="nn">cto</span>
+<span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 <span class="c1"># The following API is for coremltools==8.0b1</span>
 <span class="c1"># It will be moved out of &quot;experimental&quot; in later versions of coremltools </span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml.experimental</span> <span class="kn">import</span> <span class="n">OpActivationLinearQuantizerConfig</span><span class="p">,</span> \
@@ -622,16 +622,16 @@ directly to an <code class="docutils literal notranslate"><span class="pre">mlpa
 
 <span class="c1"># quantize activations to 8 bits (this will give an A8W16 model)</span>
 <span class="n">act_quant_op_config</span> <span class="o">=</span> <span class="n">OpActivationLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">)</span>
-<span class="n">act_quant_model_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">act_quant_op_config</span><span class="p">)</span>
+<span class="n">act_quant_model_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">global_config</span><span class="o">=</span><span class="n">act_quant_op_config</span><span class="p">)</span>
 <span class="n">mlmodel_compressed_activations</span> <span class="o">=</span> <span class="n">linear_quantize_activations</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> 
                                                              <span class="n">act_quant_model_config</span><span class="p">,</span>
                                                              <span class="n">sample_data</span><span class="o">=...</span><span class="p">)</span>
 
 <span class="c1"># quantize weights to 8 bits (this will give an A8W8 model)</span>
-<span class="n">weight_quant_op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span>
+<span class="n">weight_quant_op_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OpLinearQuantizerConfig</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span>
                                                      <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>
-<span class="n">weight_quant_model_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">weight_quant_op_config</span><span class="p">)</span>
-<span class="n">mlmodel_compressed</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">linear_quantize_weights</span><span class="p">(</span><span class="n">mlmodel_compressed_activations</span><span class="p">,</span>
+<span class="n">weight_quant_model_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span><span class="n">weight_quant_op_config</span><span class="p">)</span>
+<span class="n">mlmodel_compressed</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">linear_quantize_weights</span><span class="p">(</span><span class="n">mlmodel_compressed_activations</span><span class="p">,</span>
                                                  <span class="n">weight_quant_model_config</span><span class="p">)</span>
 </pre></div>
 </div>
