@@ -17,7 +17,7 @@ from coremltools import _SPECIFICATION_VERSION_IOS_18, proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.mil.builder import Builder as mb
-from coremltools.models.utils import MultiFunctionDescriptor, load_spec, save_multifunction
+from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec
 
 
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0),
@@ -892,3 +892,188 @@ class TestMultiFunctionModelEnd2End:
                 == 10
             )
         shutil.rmtree(saved_package_path)
+
+
+class TestBisectModel:
+
+    @staticmethod
+    def get_test_model_path(minimum_deployment_target=ct.target.iOS16):
+        # pytorch model and tracing
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear1 = torch.nn.Linear(6000, 6000)
+                self.relu = torch.nn.ReLU()
+                self.linear2 = torch.nn.Linear(6000, 6000)
+
+            def forward(self, x):
+                x = self.linear1(x)
+                x = self.relu(x)
+                x = self.linear2(x)
+                x = torch.sin(x)
+                return x
+
+        example_input = torch.rand(1, 6000)
+        model = Model().eval()
+        traced_model = torch.jit.trace(model, example_input)
+
+        # convert to mlpackage and save it on the disk
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=(1, 6000), name="input")],
+            minimum_deployment_target=minimum_deployment_target,
+        )
+        package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel.save(package_path)
+
+        return package_path
+
+    def test_remove_original_model(self):
+        model_path = self.get_test_model_path()
+        output_dir = str(tempfile.TemporaryDirectory())
+
+        # By sepcifying remove_original = True, the API would delete the original model
+        bisect_model(
+            model_path,
+            output_dir,
+            remove_original=True,
+        )
+        assert not os.path.isdir(model_path)
+
+        # cleanup
+        shutil.rmtree(output_dir)
+
+    def test_invalid_mlpackage(self):
+        traced_model = TestMultiFunctionModelEnd2End._get_test_model()
+        input = np.random.rand(1, 1, 28, 28)
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="x", shape=(1, 1, 28, 28))],
+            outputs=[ct.TensorType(name="out")],
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel.save(package_path)
+
+        # function name other than "main" will error out
+        desc = MultiFunctionDescriptor()
+        desc.add_function(package_path, "main", "main_1")
+        desc.default_function_name = "main_1"
+        saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        save_multifunction(desc, saved_package_path)
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            with pytest.raises(ValueError, match="only support model with a single"):
+                bisect_model(
+                    saved_package_path,
+                    output_dir=output_dir,
+                )
+            shutil.rmtree(saved_package_path)
+
+            # multi-function model is not supported
+            desc = MultiFunctionDescriptor()
+            desc.add_function(package_path, "main", "main")
+            desc.add_function(package_path, "main", "main_1")
+            desc.default_function_name = "main"
+            saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
+            save_multifunction(desc, saved_package_path)
+            with pytest.raises(ValueError, match="only support model with a single"):
+                bisect_model(
+                    saved_package_path,
+                    output_dir=output_dir,
+                )
+            shutil.rmtree(saved_package_path)
+            shutil.rmtree(package_path)
+
+    def test_pipeline(self):
+        model_path = self.get_test_model_path()
+        output_dir = str(tempfile.TemporaryDirectory())
+
+        # The API will bisect the model into two chunks, and produces a pipeline model
+        bisect_model(
+            model_path,
+            output_dir,
+            merge_chunks_to_pipeline=True,
+        )
+
+        # check the file name is correct
+        mlpackage_name = os.path.basename(model_path)
+        name, _ = os.path.splitext(mlpackage_name)
+        pipeline_path = os.path.join(output_dir, f"{name}_chunked_pipeline.mlpackage")
+        assert os.path.isdir(pipeline_path)
+
+        # check the Core ML model is a pipeline model
+        spec = load_spec(pipeline_path)
+        assert spec.WhichOneof("Type") == "pipeline"
+
+        # cleanup
+        shutil.rmtree(model_path)
+        shutil.rmtree(output_dir)
+
+    def test_basic(self):
+        def check_spec_op_type(model_path, expected_ops):
+            spec = load_spec(model_path)
+            mil = spec.mlProgram
+            for function in mil.functions.values():
+                for block in function.block_specializations.values():
+                    ops = list(block.operations)
+                    for i, op_type in enumerate(expected_ops):
+                        assert ops[i].type == op_type
+
+        def check_spec_version(model_path, expected_spec_version):
+            spec = load_spec(model_path)
+            assert spec.specificationVersion == expected_spec_version
+
+        model_path = self.get_test_model_path(ct.target.iOS17)
+        output_dir = str(tempfile.TemporaryDirectory())
+
+        # By bisecting the model into half, there will be two new mlpackages, with suffix `_chunk1.mlpackage` and `_chunk2.mlpackage`
+        # in the target `output_dir`.
+        bisect_model(
+            model_path,
+            output_dir,
+        )
+
+        # check the API doesn't delete the original mlpackage
+        assert os.path.isdir(model_path)
+
+        # check the file names are correct
+        mlpackage_name = os.path.basename(model_path)
+        name, _ = os.path.splitext(mlpackage_name)
+        chunk1_path = os.path.join(output_dir, f"{name}_chunk1.mlpackage")
+        chunk2_path = os.path.join(output_dir, f"{name}_chunk2.mlpackage")
+        assert os.path.isdir(chunk1_path)
+        assert os.path.isdir(chunk2_path)
+
+        # check the model op type
+        check_spec_op_type(
+            chunk1_path,
+            [
+                "const",
+                "const",
+                "linear",
+                "const",
+                "cast",
+            ]
+        )
+        check_spec_op_type(
+            chunk2_path,
+            [
+                "const",
+                "cast",
+                "relu",
+                "const",
+                "const",
+                "linear",
+                "sin",
+            ]
+        )
+
+        # check the spec has the correct version
+        check_spec_version(chunk1_path, ct.target.iOS17)
+        check_spec_version(chunk2_path, ct.target.iOS17)
+
+        # cleanup
+        shutil.rmtree(model_path)
+        shutil.rmtree(output_dir)
