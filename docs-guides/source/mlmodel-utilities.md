@@ -172,3 +172,36 @@ config = cto.coreml.OptimizationConfig(
 compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, config)
 
 ```
+
+## Bisect Model
+
+When working with large Core ML models, for instance a big [Stable Diffusion](https://github.com/apple/ml-stable-diffusion) model, the process might be killed due to memory issues. You can solve the issue by chunking the previously exported model into two pieces, and combine them into a Core ML pipeline model.
+
+The example below shows how to bisect a model, test the accuracy, and savethem on disk.
+
+```python
+import coremltools as ct
+
+# The following code produces two chunks models:
+# `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`.
+ct.models.utils.bisect_model(
+    model,
+    output_dir,
+)
+
+# The following command produces a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`.
+ct.models.utils.bisect_model(
+    model,
+    output_dir,
+    merge_chunks_to_pipeline=True,
+)
+
+# If you want to compare the output numerical of the original Core ML model with the chunked models / pipeline,
+# the following code will do so and report the PSNR in dB.
+# Please note that, this feature is going to use more memory.
+ct.models.utils.bisect_model(
+    model,
+    output_dir,
+    check_output_correctness=True,
+)
+```
