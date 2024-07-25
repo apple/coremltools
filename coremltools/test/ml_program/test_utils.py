@@ -17,6 +17,7 @@ from coremltools import _SPECIFICATION_VERSION_IOS_18, proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.mil.builder import Builder as mb
+from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP
 from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec
 
 
@@ -1025,6 +1026,15 @@ class TestBisectModel:
             spec = load_spec(model_path)
             assert spec.specificationVersion == expected_spec_version
 
+        def check_output_dtype(model_path, expected_output_dtype):
+            spec = load_spec(model_path)
+            assert_spec_output_type(spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_output_dtype])
+
+        def check_input_dtype(model_path, expected_input_dtype):
+            spec = load_spec(model_path)
+            assert_spec_input_type(spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_input_dtype])
+
+
         model_path = self.get_test_model_path(ct.target.iOS17)
         output_dir = str(tempfile.TemporaryDirectory())
 
@@ -1073,6 +1083,15 @@ class TestBisectModel:
         # check the spec has the correct version
         check_spec_version(chunk1_path, ct.target.iOS17)
         check_spec_version(chunk2_path, ct.target.iOS17)
+
+        # the i/o dtype of the two chunk models should be:
+        # 1. fp16 -> fp32
+        # 2. fp32 -> fp16
+        check_input_dtype(chunk1_path, "fp16")
+        check_output_dtype(chunk1_path, "fp32")
+        
+        check_input_dtype(chunk2_path, "fp32")
+        check_output_dtype(chunk2_path, "fp16")
 
         # cleanup
         shutil.rmtree(model_path)
