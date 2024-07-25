@@ -1693,9 +1693,6 @@ def bisect_model(
     """
     Utility function to split a mlpackage model into two mlpackages of approximately same file size.
 
-    The implementation of this util is mainly migrated from the below source:
-    https://github.com/apple/ml-stable-diffusion/blob/main/python_coreml_stable_diffusion/chunk_mlprogram.py
-
     Parameters
     ----------
     model_path: str
