@@ -1925,7 +1925,7 @@ def _verify_output_correctness_of_chunks(
         outputs_from_second_chunk_model = second_chunk_model.predict(second_chunk_input_dict)
         final_outputs = outputs_from_second_chunk_model
     else:
-        raise ValueError("Either a single Pipeline model or two model chunkc should be provided.")
+        raise ValueError("Either a single Pipeline model or two model chunks should be provided.")
 
     # Verify correctness across all outputs from second chunk and full model
     for out_name in outputs_from_full_model.keys():
