@@ -1686,7 +1686,6 @@ def randomize_weights(mlmodel: "_ct.models.MLModel"):
 def bisect_model(
     model: _Union[str, "ct.models.MLModel"],
     output_dir: str,
-    remove_original: _Optional[bool] = False,
     merge_chunks_to_pipeline: _Optional[bool] = False,
     check_output_correctness: _Optional[bool] = False,
 ):
@@ -1710,9 +1709,6 @@ def bisect_model(
         1. first chunk model: `{output_dir}/chunk1.mlpackage`
         2. second chunk model: `{output_dir}/chunk2.mlpackage`
         3. chunked pipeline model: `{output_dir}/chunked_pipeline.mlpackage`
-
-    remove_original: bool
-        If True, removes the original (non-chunked) model to avoid duplicating storage.
 
     merge_chunks_to_pipeline: bool
         If True, model chunks are managed inside a single pipeline model for easier asset maintenance.
@@ -1860,12 +1856,6 @@ def bisect_model(
             first_chunk_model=model_chunk1,
             second_chunk_model=model_chunk2,
         )
-
-    # Remove original (non-chunked) model if requested
-    if remove_original:
-        _logger.info("Removing original (non-chunked) model at {args.mlpackage_path}")
-        _shutil.rmtree(model)
-        _logger.info("Done.")
 
     # save model chunks
     _os.makedirs(output_dir, exist_ok=True)

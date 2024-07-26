@@ -935,21 +935,6 @@ class TestBisectModel:
 
         return package_path
 
-    def test_remove_original_model(self):
-        model_path = self.get_test_model_path()
-        output_dir = str(tempfile.TemporaryDirectory())
-
-        # By sepcifying remove_original = True, the API would delete the original model
-        bisect_model(
-            model_path,
-            output_dir,
-            remove_original=True,
-        )
-        assert not os.path.isdir(model_path)
-
-        # cleanup
-        shutil.rmtree(output_dir)
-
     def test_invalid_mlpackage(self):
         traced_model = TestMultiFunctionModelEnd2End._get_test_model()
         input = np.random.rand(1, 1, 28, 28)
