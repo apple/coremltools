@@ -1684,7 +1684,7 @@ def randomize_weights(mlmodel: "_ct.models.MLModel"):
 
 
 def bisect_model(
-    model: _Union[str, "ct.models.MLModel"],
+    model: _Union[str, "_ct.models.MLModel"],
     output_dir: str,
     merge_chunks_to_pipeline: _Optional[bool] = False,
     check_output_correctness: _Optional[bool] = False,
