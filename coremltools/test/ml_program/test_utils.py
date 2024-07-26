@@ -1130,15 +1130,6 @@ class TestBisectModel:
             merge_chunks_to_pipeline=True,
         )
 
-        # If you want to compare the output numerical of the original Core ML model with the chunked models / pipeline,
-        # the following code will do so and report the PSNR in dB.
-        # Please note that, this feature is going to use more memory.
-        ct.models.utils.bisect_model(
-            model_path,
-            output_dir,
-            check_output_correctness=True,
-        )
-
         # You can also pass the MLModel object directly
         mlmodel = ct.models.MLModel(model_path)
         ct.models.utils.bisect_model(

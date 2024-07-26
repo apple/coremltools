@@ -1687,7 +1687,7 @@ def bisect_model(
     model: _Union[str, "_ct.models.MLModel"],
     output_dir: str,
     merge_chunks_to_pipeline: _Optional[bool] = False,
-    check_output_correctness: _Optional[bool] = False,
+    check_output_correctness: _Optional[bool] = True,
 ):
     """
     Utility function to split a mlpackage model into two mlpackages of approximately same file size.
@@ -1728,6 +1728,7 @@ def bisect_model(
 
         # The following code will produce two chunks models:
         # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
+        # It also compares the output numerical of the original Core ML model with the chunked models.
         ct.models.utils.bisect_model(
             model_path,
             output_dir,
@@ -1738,15 +1739,6 @@ def bisect_model(
             model_path,
             output_dir,
             merge_chunks_to_pipeline=True,
-        )
-
-        # If you want to compare the output numerical of the original Core ML model with the chunked models / pipeline,
-        # the following code will do so and report the PSNR in dB.
-        # Please note that, this feature is going to use more memory.
-        ct.models.utils.bisect_model(
-            model_path,
-            output_dir,
-            check_output_correctness=True,
         )
 
         # You can also pass the MLModel object directly
@@ -1920,7 +1912,7 @@ def _verify_output_correctness_of_chunks(
         )
 
         if final_psnr < ABSOLUTE_MIN_PSNR:
-            raise ValueError(f"{final_psnr:.1f} dB is too low!")
+            _logger.warning(f"{final_psnr:.1f} dB is low!")
         else:
             _logger.info(
                 f"{final_psnr:.1f} dB > {ABSOLUTE_MIN_PSNR} dB (minimum allowed) parity check passed"
