@@ -778,7 +778,7 @@ def evaluate_transformer(model, input_data, reference_output, verbose=False):
 
     Parameters
     ----------
-    spec: list of str or list of MLModel
+    model: list of str or list of MLModel
         File to load the Model from, or a loaded
         version of the MLModel.
 
@@ -1684,7 +1684,7 @@ def randomize_weights(mlmodel: "_ct.models.MLModel"):
 
 
 def bisect_model(
-    model_path: str,
+    model: _Union[str, "ct.models.MLModel"],
     output_dir: str,
     remove_original: _Optional[bool] = False,
     merge_chunks_to_pipeline: _Optional[bool] = False,
@@ -1695,16 +1695,21 @@ def bisect_model(
 
     Parameters
     ----------
-    model_path: str
-        Path to the mlpackage file to be split into two mlpackages of approximately same file size.
+    model: str or MLModel
+        Path to the mlpackage file, or a Core ML model, to be split into two mlpackages of approximately same file size.
 
     output_dir: str
         Path to output directory where the two model chunks / pipeline model would be saved.
-        If the `model_path` is `{path}/{model_name}.mlpackage`, the chunks models are going to be saved as:
 
+        If the `model` is `{path}/{model_name}.mlpackage`, the chunk models are going to be saved as:
         1. first chunk model: `{output_dir}/{model_name}_chunk1.mlpackage`
         2. second chunk model: `{output_dir}/{model_name}_chunk2.mlpackage`
         3. chunked pipeline model: `{output_dir}/{model_name}_chunked_pipeline.mlpackage`
+
+        If the `model` is type of `MLModel`, the chunk models are saved as:
+        1. first chunk model: `{output_dir}/chunk1.mlpackage`
+        2. second chunk model: `{output_dir}/chunk2.mlpackage`
+        3. chunked pipeline model: `{output_dir}/chunked_pipeline.mlpackage`
 
     remove_original: bool
         If True, removes the original (non-chunked) model to avoid duplicating storage.
@@ -1722,35 +1727,60 @@ def bisect_model(
 
         import coremltools as ct
 
-        model = ct.models.MLModel("my_model.mlpackage")
+        model_path = "my_model.mlpackage"
         output_dir = "./output/"
 
         # The following code will produce two chunks models:
         # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
         ct.models.utils.bisect_model(
-            model,
+            model_path,
             output_dir,
         )
 
         # The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`
         ct.models.utils.bisect_model(
-            model,
+            model_path,
+            output_dir,
+            merge_chunks_to_pipeline=True,
+        )
+
+        # If you want to compare the output numerical of the original Core ML model with the chunked models / pipeline,
+        # the following code will do so and report the PSNR in dB.
+        # Please note that, this feature is going to use more memory.
+        ct.models.utils.bisect_model(
+            model_path,
+            output_dir,
+            check_output_correctness=True,
+        )
+
+        # You can also pass the MLModel object directly
+        mlmodel = ct.models.MLModel(model_path)
+        ct.models.utils.bisect_model(
+            mlmodel,
             output_dir,
             merge_chunks_to_pipeline=True,
         )
     """
     # We do the lazy import to prevent circular import
+    from . import MLModel
     from coremltools.converters.mil.converter import mil_convert as _mil_convert
 
-    def get_pymil_prog_and_spec_from_model_path(model_path: str):
-        spec = load_spec(model_path)
+    def get_pymil_prog_and_spec_from_model(model):
+
+        # get the model spec and weight directory
+        if isinstance(model, str):
+            spec = load_spec(model)
+            weights_dir = _try_get_weights_dir_path(model)
+        else:
+            spec = model._spec
+            weights_dir = model.weights_dir
 
         # convert the model spec into pymil program,
         # we also convert operations into type of List
         prog = _milproto_to_pymil.load(
             spec,
             spec.specificationVersion,
-            _try_get_weights_dir_path(model_path),
+            weights_dir,
         )
         if len(prog.functions) > 1 or "main" not in prog.functions:
             raise ValueError("'bisect_model' only support model with a single 'main' function.")
@@ -1760,15 +1790,18 @@ def bisect_model(
 
         return prog, spec
 
+    # check the input type of model
+    if not isinstance(model, (str, MLModel)):
+        raise ValueError(f"'model' must be type of [str, MLModel]. Got {type(model)}.")
+
     # The below implementation assumes that the model is single function, with a "main" function.
-    prog, spec = get_pymil_prog_and_spec_from_model_path(model_path)
+    prog, spec = get_pymil_prog_and_spec_from_model(model)
     spec_version = spec.specificationVersion
 
     # Compute the incision point by bisecting the program based on weights size
     op_idx, first_chunk_weights_size, total_weights_size = _get_op_idx_split_location(prog)
     main_block = prog.functions["main"]
     incision_op = main_block.operations[op_idx]
-    _logger.info(f"{model_path} will chunked into two pieces.")
     _logger.info(
         f"The incision op: name={incision_op.name}, type={incision_op.op_type}, index={op_idx}/{len(main_block.operations)}"
     )
@@ -1782,7 +1815,7 @@ def bisect_model(
     # when the first chunk is created, the prog is modified in-place, so we need to re-convert a new pymil
     # program for the second chunk.
     prog_chunk2 = _make_second_chunk_prog(
-        get_pymil_prog_and_spec_from_model_path(model_path)[0],
+        get_pymil_prog_and_spec_from_model(model)[0],
         op_idx,
     )
 
@@ -1816,9 +1849,14 @@ def bisect_model(
     # Verify output correctness
     if check_output_correctness:
         _logger.info("Verifying output correctness of chunks")
-        model = _ct.models.MLModel(model_path, compute_units=_ct.ComputeUnit.CPU_ONLY)
+
+        if isinstance(model, str):
+            mlmodel = _ct.models.MLModel(model, compute_units=_ct.ComputeUnit.CPU_ONLY)
+        else:
+            mlmodel = model
+
         _verify_output_correctness_of_chunks(
-            full_model=model,
+            full_model=mlmodel,
             first_chunk_model=model_chunk1,
             second_chunk_model=model_chunk2,
         )
@@ -1826,18 +1864,23 @@ def bisect_model(
     # Remove original (non-chunked) model if requested
     if remove_original:
         _logger.info("Removing original (non-chunked) model at {args.mlpackage_path}")
-        _shutil.rmtree(model_path)
+        _shutil.rmtree(model)
         _logger.info("Done.")
 
     # save model chunks
     _os.makedirs(output_dir, exist_ok=True)
-    mlpackage_name = _os.path.basename(model_path)
-    name, _ = _os.path.splitext(mlpackage_name)
+
+    if isinstance(model, str):
+        mlpackage_name = _os.path.basename(model)
+        name, _ = _os.path.splitext(mlpackage_name)
+        name += "_"
+    else:
+        name = ""
 
     if merge_chunks_to_pipeline:
         # Make a single pipeline model to manage the model chunks
         pipeline_model = make_pipeline(model_chunk1, model_chunk2)
-        out_path_pipeline = _os.path.join(output_dir, name + "_chunked_pipeline.mlpackage")
+        out_path_pipeline = _os.path.join(output_dir, name + "chunked_pipeline.mlpackage")
         pipeline_model.save(out_path_pipeline)
 
         # reload to ensure CPU placement
@@ -1847,13 +1890,13 @@ def bisect_model(
                 out_path_pipeline, compute_units=_ct.ComputeUnit.CPU_ONLY
             )
             _verify_output_correctness_of_chunks(
-                full_model=model,
+                full_model=mlmodel,
                 pipeline_model=pipeline_model,
             )
     else:
         # Save the chunked models to disk
-        out_path_chunk1 = _os.path.join(output_dir, name + "_chunk1.mlpackage")
-        out_path_chunk2 = _os.path.join(output_dir, name + "_chunk2.mlpackage")
+        out_path_chunk1 = _os.path.join(output_dir, name + "chunk1.mlpackage")
+        out_path_chunk2 = _os.path.join(output_dir, name + "chunk2.mlpackage")
         model_chunk1.save(out_path_chunk1)
         model_chunk2.save(out_path_chunk2)
         _logger.info(

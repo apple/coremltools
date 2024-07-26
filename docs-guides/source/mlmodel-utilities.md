@@ -182,16 +182,19 @@ The example below shows how to bisect a model, test the accuracy, and savethem o
 ```python
 import coremltools as ct
 
-# The following code produces two chunks models:
-# `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`.
+model_path = "my_model.mlpackage"
+output_dir = "./output/"
+
+# The following code will produce two chunks models:
+# `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
 ct.models.utils.bisect_model(
-    model,
+    model_path,
     output_dir,
 )
 
-# The following command produces a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`.
+# The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`
 ct.models.utils.bisect_model(
-    model,
+    model_path,
     output_dir,
     merge_chunks_to_pipeline=True,
 )
@@ -200,8 +203,16 @@ ct.models.utils.bisect_model(
 # the following code will do so and report the PSNR in dB.
 # Please note that, this feature is going to use more memory.
 ct.models.utils.bisect_model(
-    model,
+    model_path,
     output_dir,
     check_output_correctness=True,
+)
+
+# You can also pass the MLModel object directly
+mlmodel = ct.models.MLModel(model_path)
+ct.models.utils.bisect_model(
+    mlmodel,
+    output_dir,
+    merge_chunks_to_pipeline=True,
 )
 ```
