@@ -1726,7 +1726,7 @@ def bisect_model(
         model_path = "my_model.mlpackage"
         output_dir = "./output/"
 
-        # The following code will produce two chunks models:
+        # The following code will produce two smaller models:
         # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
         # It also compares the output numerical of the original Core ML model with the chunked models.
         ct.models.utils.bisect_model(

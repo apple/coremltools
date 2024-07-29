@@ -175,18 +175,20 @@ compressed_mlmodel = cto.coreml.palettize_weights(mlmodel, config)
 
 ## Bisect Model
 
-When working with large Core ML models, for instance a big [Stable Diffusion](https://github.com/apple/ml-stable-diffusion) model, the process might be killed due to memory issues. You can solve the issue by chunking the previously exported model into two pieces, and combine them into a Core ML pipeline model.
+In certain scenarios, you may want to break a large Core ML model into two smaller models. For instance, if you are deploying a model to run on neural engine on an iPhone, it cannot be larger than 1 GB. If you are working with, say, [Stable Diffusion](https://github.com/apple/ml-stable-diffusion) 1.5 model which is 1.72 GB large (Float 16 precision), then it needs to be broken up into two chunks, each less than 1 GB. The utility `ct.models.utils.bisect_model` will allow you to do exactly that. When using this API, you can also opt-in to package the two chunks of the model into a pipeline model, so that its still a single mlpackage file, with the two models arranged in a sequential manner.
 
-The example below shows how to bisect a model, test the accuracy, and savethem on disk.
+The example below shows how to bisect a model, test the accuracy, and save them on disk.
 
 ```python
+
 import coremltools as ct
 
 model_path = "my_model.mlpackage"
 output_dir = "./output/"
 
-# The following code will produce two chunks models:
+# The following code will produce two smaller models:
 # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
+# It also compares the output numerical of the original Core ML model with the chunked models.
 ct.models.utils.bisect_model(
     model_path,
     output_dir,
@@ -197,15 +199,6 @@ ct.models.utils.bisect_model(
     model_path,
     output_dir,
     merge_chunks_to_pipeline=True,
-)
-
-# If you want to compare the output numerical of the original Core ML model with the chunked models / pipeline,
-# the following code will do so and report the PSNR in dB.
-# Please note that, this feature is going to use more memory.
-ct.models.utils.bisect_model(
-    model_path,
-    output_dir,
-    check_output_correctness=True,
 )
 
 # You can also pass the MLModel object directly
