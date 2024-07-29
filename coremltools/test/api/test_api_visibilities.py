@@ -71,6 +71,7 @@ class TestApiVisibilities:
             "save_multifunction",
             "MultiFunctionDescriptor",
             "randomize_weights",
+            "bisect_model",
         ]
         _check_visible_modules(_get_visible_items(ct.utils), expected)
 

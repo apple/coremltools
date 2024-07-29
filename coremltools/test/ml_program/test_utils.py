@@ -17,8 +17,9 @@ from coremltools import _SPECIFICATION_VERSION_IOS_18, proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.mil.builder import Builder as mb
-from coremltools.models.utils import MultiFunctionDescriptor, load_spec, save_multifunction
-
+from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP
+from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec
+import coremltools.optimize as cto
 
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0),
                     reason="Multi-function only supported on macOS 15+")
@@ -892,3 +893,299 @@ class TestMultiFunctionModelEnd2End:
                 == 10
             )
         shutil.rmtree(saved_package_path)
+
+
+class TestBisectModel:
+
+    @staticmethod
+    def check_spec_op_type(model_path, expected_ops):
+        spec = load_spec(model_path)
+        mil = spec.mlProgram
+        for function in mil.functions.values():
+            for block in function.block_specializations.values():
+                ops = list(block.operations)
+                for i, op_type in enumerate(expected_ops):
+                    assert ops[i].type == op_type
+
+    @staticmethod
+    def get_test_model_path(minimum_deployment_target=ct.target.iOS16, return_as_mlmodel=False):
+        # pytorch model and tracing
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear1 = torch.nn.Linear(6000, 6000)
+                self.relu = torch.nn.ReLU()
+                self.linear2 = torch.nn.Linear(6000, 6000)
+
+            def forward(self, x):
+                x = self.linear1(x)
+                x = self.relu(x)
+                x = self.linear2(x)
+                x = torch.sin(x)
+                return x
+
+        example_input = torch.rand(1, 6000)
+        model = Model().eval()
+        traced_model = torch.jit.trace(model, example_input)
+
+        # convert to mlpackage
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=(1, 6000), name="input")],
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+        # return as mlmodel
+        if return_as_mlmodel:
+            return mlmodel
+
+        # save on disk and return the model path
+        package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel.save(package_path)
+
+        return package_path
+
+    def test_invalid_mlpackage(self):
+        traced_model = TestMultiFunctionModelEnd2End._get_test_model()
+        input = np.random.rand(1, 1, 28, 28)
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="x", shape=(1, 1, 28, 28))],
+            outputs=[ct.TensorType(name="out")],
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel.save(package_path)
+
+        # function name other than "main" will error out
+        desc = MultiFunctionDescriptor()
+        desc.add_function(package_path, "main", "main_1")
+        desc.default_function_name = "main_1"
+        saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        save_multifunction(desc, saved_package_path)
+
+        with tempfile.TemporaryDirectory() as output_dir:
+            with pytest.raises(ValueError, match="only support model with a single"):
+                bisect_model(
+                    saved_package_path,
+                    output_dir=output_dir,
+                )
+            shutil.rmtree(saved_package_path)
+
+            # multi-function model is not supported
+            desc = MultiFunctionDescriptor()
+            desc.add_function(package_path, "main", "main")
+            desc.add_function(package_path, "main", "main_1")
+            desc.default_function_name = "main"
+            saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
+            save_multifunction(desc, saved_package_path)
+            with pytest.raises(ValueError, match="only support model with a single"):
+                bisect_model(
+                    saved_package_path,
+                    output_dir=output_dir,
+                )
+            shutil.rmtree(saved_package_path)
+            shutil.rmtree(package_path)
+
+    @pytest.mark.parametrize(
+        "mlmodel_as_input",
+        [True, False],
+    )
+    def test_pipeline(self, mlmodel_as_input):
+        model = self.get_test_model_path(return_as_mlmodel=mlmodel_as_input)
+        output_dir = str(tempfile.TemporaryDirectory())
+
+        # The API will bisect the model into two chunks, and produces a pipeline model
+        bisect_model(
+            model,
+            output_dir,
+            merge_chunks_to_pipeline=True,
+        )
+
+        # check the file name is correct
+        if mlmodel_as_input:
+            name = ""
+        else:
+            mlpackage_name = os.path.basename(model)
+            name, _ = os.path.splitext(mlpackage_name)
+            name += "_"
+
+        pipeline_path = os.path.join(output_dir, f"{name}chunked_pipeline.mlpackage")
+        assert os.path.isdir(pipeline_path)
+
+        # check the Core ML model is a pipeline model
+        spec = load_spec(pipeline_path)
+        assert spec.WhichOneof("Type") == "pipeline"
+
+        # cleanup
+        if not mlmodel_as_input:
+            shutil.rmtree(model)
+        shutil.rmtree(output_dir)
+
+    def test_compressed_model(self):
+        # use coremltools.optimizee to palettize a Core ML model
+        model = self.get_test_model_path(return_as_mlmodel=True)
+        op_config = cto.coreml.OpPalettizerConfig(mode="kmeans", nbits=8)
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+        model = cto.coreml.palettize_weights(model, config)
+
+        # test that the bisect API works
+        output_dir = str(tempfile.TemporaryDirectory())
+        bisect_model(
+            model,
+            output_dir,
+        )
+
+        # test the models contain correct ops
+        name = ""
+        chunk1_path = os.path.join(output_dir, f"{name}chunk1.mlpackage")
+        chunk2_path = os.path.join(output_dir, f"{name}chunk2.mlpackage")
+        assert os.path.isdir(chunk1_path)
+        assert os.path.isdir(chunk2_path)
+
+        self.check_spec_op_type(
+            chunk1_path,
+            [
+                "constexpr_lut_to_dense", 
+                "const", 
+                "linear", 
+                "const", 
+                "cast",
+            ]
+        )
+        self.check_spec_op_type(
+            chunk2_path,
+            [
+                "const",
+                "cast",
+                "relu",
+                "constexpr_lut_to_dense",
+                "const",
+                "linear",
+                "sin",
+            ]
+        )
+
+        # cleanup
+        shutil.rmtree(output_dir)
+
+           
+    @pytest.mark.parametrize(
+        "mlmodel_as_input",
+        [True, False],
+    )
+    def test_basic(self, mlmodel_as_input):
+        def check_spec_version(model_path, expected_spec_version):
+            spec = load_spec(model_path)
+            assert spec.specificationVersion == expected_spec_version
+
+        def check_output_dtype(model_path, expected_output_dtype):
+            spec = load_spec(model_path)
+            assert_spec_output_type(spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_output_dtype])
+
+        def check_input_dtype(model_path, expected_input_dtype):
+            spec = load_spec(model_path)
+            assert_spec_input_type(spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_input_dtype])
+
+
+        model = self.get_test_model_path(ct.target.iOS17, return_as_mlmodel=mlmodel_as_input)
+        output_dir = str(tempfile.TemporaryDirectory())
+
+        # By bisecting the model into half, there will be two new mlpackages, with suffix `_chunk1.mlpackage` and `_chunk2.mlpackage`
+        # in the target `output_dir`.
+        bisect_model(
+            model,
+            output_dir,
+        )
+
+        # check the API doesn't delete the original mlpackage
+        if not mlmodel_as_input:
+            assert os.path.isdir(model)
+
+        # check the file names are correct
+        if mlmodel_as_input:
+            name = ""
+        else:
+            mlpackage_name = os.path.basename(model)
+            name, _ = os.path.splitext(mlpackage_name)
+            name += "_"
+
+        chunk1_path = os.path.join(output_dir, f"{name}chunk1.mlpackage")
+        chunk2_path = os.path.join(output_dir, f"{name}chunk2.mlpackage")
+        assert os.path.isdir(chunk1_path)
+        assert os.path.isdir(chunk2_path)
+
+        # check the model op type
+        self.check_spec_op_type(
+            chunk1_path,
+            [
+                "const",
+                "const",
+                "linear",
+                "const",
+                "cast",
+            ]
+        )
+        self.check_spec_op_type(
+            chunk2_path,
+            [
+                "const",
+                "cast",
+                "relu",
+                "const",
+                "const",
+                "linear",
+                "sin",
+            ]
+        )
+
+        # check the spec has the correct version
+        check_spec_version(chunk1_path, ct.target.iOS17)
+        check_spec_version(chunk2_path, ct.target.iOS17)
+
+        # the i/o dtype of the two chunk models should be:
+        # 1. fp16 -> fp32
+        # 2. fp32 -> fp16
+        check_input_dtype(chunk1_path, "fp16")
+        check_output_dtype(chunk1_path, "fp32")
+        
+        check_input_dtype(chunk2_path, "fp32")
+        check_output_dtype(chunk2_path, "fp16")
+
+        # cleanup
+        if not mlmodel_as_input:
+            shutil.rmtree(model)
+        shutil.rmtree(output_dir)
+
+    def test_api_example(self):
+        """
+        Test the API example in https://apple.github.io/coremltools/docs-guides/source/mlmodel-utilities.html
+        """
+        model_path = self.get_test_model_path()
+        output_dir = str(tempfile.TemporaryDirectory())
+
+        # The following code will produce two chunks models:
+        # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
+        ct.models.utils.bisect_model(
+            model_path,
+            output_dir,
+        )
+
+        # The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`
+        ct.models.utils.bisect_model(
+            model_path,
+            output_dir,
+            merge_chunks_to_pipeline=True,
+        )
+
+        # You can also pass the MLModel object directly
+        mlmodel = ct.models.MLModel(model_path)
+        ct.models.utils.bisect_model(
+            mlmodel,
+            output_dir,
+        )
+
+        # clean up
+        shutil.rmtree(output_dir)
+        shutil.rmtree(model_path)

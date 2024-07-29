@@ -6,8 +6,9 @@
 """
 Utilities for the entire package.
 """
-
+from collections import OrderedDict as _OrderedDict
 import copy as _copy
+import gc as _gc
 import math as _math
 import os as _os
 import shutil as _shutil
@@ -19,6 +20,7 @@ from collections.abc import Iterable as _Iterable
 from functools import lru_cache as _lru_cache
 from typing import Callable as _Callable
 from typing import Dict as _Dict
+from typing import List as _List
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
 from typing import Union as _Union
@@ -26,18 +28,22 @@ from typing import Union as _Union
 import numpy as _np
 
 import coremltools as _ct
+from coremltools import _logger
 from coremltools import _SPECIFICATION_VERSION_IOS_16, _SPECIFICATION_VERSION_IOS_18
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import proto as _proto
 from coremltools.converters.mil import mil as _mil
 from coremltools.converters.mil.frontend.milproto import load as _milproto_to_pymil
+from coremltools.converters.mil.mil import Builder as _mb
 from coremltools.converters.mil.mil import Program as _Program
 from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer as _NameSanitizer
 from coremltools.converters.mil.mil.passes.defs.randomize import (
     WeightRandomizer as _WeightRandomizer,
 )
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass as _AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager as _block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY as _PASS_REGISTRY
+from coremltools.converters.mil.mil.program import Placeholder as _Placeholder
 
 from .._deps import _HAS_SCIPY
 
@@ -772,7 +778,7 @@ def evaluate_transformer(model, input_data, reference_output, verbose=False):
 
     Parameters
     ----------
-    spec: list of str or list of MLModel
+    model: list of str or list of MLModel
         File to load the Model from, or a loaded
         version of the MLModel.
 
@@ -1675,3 +1681,416 @@ def randomize_weights(mlmodel: "_ct.models.MLModel"):
     )
 
     return randomized_mlmodel
+
+
+def bisect_model(
+    model: _Union[str, "_ct.models.MLModel"],
+    output_dir: str,
+    merge_chunks_to_pipeline: _Optional[bool] = False,
+    check_output_correctness: _Optional[bool] = True,
+):
+    """
+    Utility function to split a mlpackage model into two mlpackages of approximately same file size.
+
+    Parameters
+    ----------
+    model: str or MLModel
+        Path to the mlpackage file, or a Core ML model, to be split into two mlpackages of approximately same file size.
+
+    output_dir: str
+        Path to output directory where the two model chunks / pipeline model would be saved.
+
+        If the `model` is `{path}/{model_name}.mlpackage`, the chunk models are going to be saved as:
+        1. first chunk model: `{output_dir}/{model_name}_chunk1.mlpackage`
+        2. second chunk model: `{output_dir}/{model_name}_chunk2.mlpackage`
+        3. chunked pipeline model: `{output_dir}/{model_name}_chunked_pipeline.mlpackage`
+
+        If the `model` is type of `MLModel`, the chunk models are saved as:
+        1. first chunk model: `{output_dir}/chunk1.mlpackage`
+        2. second chunk model: `{output_dir}/chunk2.mlpackage`
+        3. chunked pipeline model: `{output_dir}/chunked_pipeline.mlpackage`
+
+    merge_chunks_to_pipeline: bool
+        If True, model chunks are managed inside a single pipeline model for easier asset maintenance.
+
+    check_output_correctness: bool
+        - If True, compares the outputs of original Core ML model with that of pipelined CoreML model chunks and reports PSNR in dB.
+        - Enabling this feature uses more memory. Disable it if your machine runs out of memory.
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        import coremltools as ct
+
+        model_path = "my_model.mlpackage"
+        output_dir = "./output/"
+
+        # The following code will produce two smaller models:
+        # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`
+        # It also compares the output numerical of the original Core ML model with the chunked models.
+        ct.models.utils.bisect_model(
+            model_path,
+            output_dir,
+        )
+
+        # The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`
+        ct.models.utils.bisect_model(
+            model_path,
+            output_dir,
+            merge_chunks_to_pipeline=True,
+        )
+
+        # You can also pass the MLModel object directly
+        mlmodel = ct.models.MLModel(model_path)
+        ct.models.utils.bisect_model(
+            mlmodel,
+            output_dir,
+            merge_chunks_to_pipeline=True,
+        )
+    """
+    # We do the lazy import to prevent circular import
+    from . import MLModel
+    from coremltools.converters.mil.converter import mil_convert as _mil_convert
+
+    def get_pymil_prog_and_spec_from_model(model):
+
+        # get the model spec and weight directory
+        if isinstance(model, str):
+            spec = load_spec(model)
+            weights_dir = _try_get_weights_dir_path(model)
+        else:
+            spec = model._spec
+            weights_dir = model.weights_dir
+
+        # convert the model spec into pymil program,
+        # we also convert operations into type of List
+        prog = _milproto_to_pymil.load(
+            spec,
+            spec.specificationVersion,
+            weights_dir,
+        )
+        if len(prog.functions) > 1 or "main" not in prog.functions:
+            raise ValueError("'bisect_model' only support model with a single 'main' function.")
+        
+        func = prog.functions["main"]
+        func.operations = list(func.operations)
+
+        return prog, spec
+
+    # check the input type of model
+    if not isinstance(model, (str, MLModel)):
+        raise ValueError(f"'model' must be type of [str, MLModel]. Got {type(model)}.")
+
+    # The below implementation assumes that the model is single function, with a "main" function.
+    prog, spec = get_pymil_prog_and_spec_from_model(model)
+    spec_version = spec.specificationVersion
+
+    # Compute the incision point by bisecting the program based on weights size
+    op_idx, first_chunk_weights_size, total_weights_size = _get_op_idx_split_location(prog)
+    main_block = prog.functions["main"]
+    incision_op = main_block.operations[op_idx]
+    _logger.info(
+        f"The incision op: name={incision_op.name}, type={incision_op.op_type}, index={op_idx}/{len(main_block.operations)}"
+    )
+    _logger.info(f"First chunk size = {first_chunk_weights_size:.2f} MB")
+    _logger.info(f"Second chunk size = {total_weights_size - first_chunk_weights_size:.2f} MB")
+
+    # Build first chunk (in-place modifies prog by declaring early exits and removing unused subgraph)
+    prog_chunk1 = _make_first_chunk_prog(prog, op_idx)
+
+    # Build the second chunk
+    # when the first chunk is created, the prog is modified in-place, so we need to re-convert a new pymil
+    # program for the second chunk.
+    prog_chunk2 = _make_second_chunk_prog(
+        get_pymil_prog_and_spec_from_model(model)[0],
+        op_idx,
+    )
+
+    # Convert the MIL Program objects into MLModels
+    # We skip_model_load if check_output_correctness=False
+    _logger.info("Converting the two programs")
+    model_chunk1 = _mil_convert(
+        prog_chunk1,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=spec_version,
+        compute_units=_ct.ComputeUnit.CPU_ONLY,
+        skip_model_load=(not check_output_correctness),
+    )
+    del prog_chunk1
+    _gc.collect()
+    _logger.info("Conversion of first chunk done.")
+
+    model_chunk2 = _mil_convert(
+        prog_chunk2,
+        convert_to="mlprogram",
+        convert_from="milinternal",
+        specification_version=spec_version,
+        compute_units=_ct.ComputeUnit.CPU_ONLY,
+        skip_model_load=(not check_output_correctness),
+    )
+    del prog_chunk2
+    _gc.collect()
+    _logger.info("Conversion of second chunk done.")
+
+    # Verify output correctness
+    if check_output_correctness:
+        _logger.info("Verifying output correctness of chunks")
+
+        if isinstance(model, str):
+            mlmodel = _ct.models.MLModel(model, compute_units=_ct.ComputeUnit.CPU_ONLY)
+        else:
+            mlmodel = model
+
+        _verify_output_correctness_of_chunks(
+            full_model=mlmodel,
+            first_chunk_model=model_chunk1,
+            second_chunk_model=model_chunk2,
+        )
+
+    # save model chunks
+    _os.makedirs(output_dir, exist_ok=True)
+
+    if isinstance(model, str):
+        mlpackage_name = _os.path.basename(model)
+        name, _ = _os.path.splitext(mlpackage_name)
+        name += "_"
+    else:
+        name = ""
+
+    if merge_chunks_to_pipeline:
+        # Make a single pipeline model to manage the model chunks
+        pipeline_model = make_pipeline(model_chunk1, model_chunk2)
+        out_path_pipeline = _os.path.join(output_dir, name + "chunked_pipeline.mlpackage")
+        pipeline_model.save(out_path_pipeline)
+
+        # reload to ensure CPU placement
+        if check_output_correctness:
+            _logger.info("Verifying output correctness of pipeline model")
+            pipeline_model = _ct.models.MLModel(
+                out_path_pipeline, compute_units=_ct.ComputeUnit.CPU_ONLY
+            )
+            _verify_output_correctness_of_chunks(
+                full_model=mlmodel,
+                pipeline_model=pipeline_model,
+            )
+    else:
+        # Save the chunked models to disk
+        out_path_chunk1 = _os.path.join(output_dir, name + "chunk1.mlpackage")
+        out_path_chunk2 = _os.path.join(output_dir, name + "chunk2.mlpackage")
+        model_chunk1.save(out_path_chunk1)
+        model_chunk2.save(out_path_chunk2)
+        _logger.info(
+            f"Saved chunks in {output_dir} with the suffix _chunk1.mlpackage and _chunk2.mlpackage"
+        )
+
+def _verify_output_correctness_of_chunks(
+    full_model: "_ct.models.MLModel",
+    first_chunk_model: _Optional["_ct.models.MLModel"] = None,
+    second_chunk_model: _Optional["_ct.models.MLModel"] = None,
+    pipeline_model: _Optional["_ct.models.MLModel"] = None,
+) -> None:
+    """Verifies the end-to-end output correctness of full (original) model versus chunked models"""
+    # lazy import avoids circular error
+    from coremltools.converters.mil.testing_utils import random_gen_input_feature_type as random_gen_input_feature_type
+    from coremltools.converters.mil.testing_utils import compute_snr_and_psnr
+
+    def report_correctness(original_outputs: _np.ndarray, final_outputs: _np.ndarray, log_prefix: str):
+        """ Report PSNR values across two compatible tensors.
+        This util is from https://github.com/apple/ml-stable-diffusion/blob/main/python_coreml_stable_diffusion/torch2coreml.py#L80,
+        with a slightly modification.
+        """
+        ABSOLUTE_MIN_PSNR = 35
+
+        _, original_psnr = compute_snr_and_psnr(original_outputs, original_outputs)
+        _, final_psnr = compute_snr_and_psnr(original_outputs, final_outputs)
+
+        dB_change = final_psnr - original_psnr
+        _logger.info(
+            f"{log_prefix}: PSNR changed by {dB_change:.1f} dB ({original_psnr:.1f} -> {final_psnr:.1f})"
+        )
+
+        if final_psnr < ABSOLUTE_MIN_PSNR:
+            _logger.warning(f"{final_psnr:.1f} dB is low!")
+        else:
+            _logger.info(
+                f"{final_psnr:.1f} dB > {ABSOLUTE_MIN_PSNR} dB (minimum allowed) parity check passed"
+            )
+        return final_psnr
+
+    
+    # Generate inputs for first chunk and full model
+    input_dict = {}
+    for input_desc in full_model._spec.description.input:
+        input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
+
+    # Generate outputs for full model
+    outputs_from_full_model = full_model.predict(input_dict)
+
+    if pipeline_model is not None:
+        outputs_from_pipeline_model = pipeline_model.predict(input_dict)
+        final_outputs = outputs_from_pipeline_model
+
+    elif first_chunk_model is not None and second_chunk_model is not None:
+        # Generate outputs for first chunk
+        outputs_from_first_chunk_model = first_chunk_model.predict(input_dict)
+
+        # Prepare inputs for second chunk model from first chunk's outputs and regular inputs
+        second_chunk_input_dict = {}
+        for input_desc in second_chunk_model._spec.description.input:
+            if input_desc.name in outputs_from_first_chunk_model:
+                second_chunk_input_dict[input_desc.name] = outputs_from_first_chunk_model[
+                    input_desc.name
+                ]
+            else:
+                second_chunk_input_dict[input_desc.name] = input_dict[input_desc.name]
+
+        # Generate output for second chunk model
+        outputs_from_second_chunk_model = second_chunk_model.predict(second_chunk_input_dict)
+        final_outputs = outputs_from_second_chunk_model
+    else:
+        raise ValueError("Either a single Pipeline model or two model chunks should be provided.")
+
+    # Verify correctness across all outputs from second chunk and full model
+    for out_name in outputs_from_full_model.keys():
+        report_correctness(
+            original_outputs=outputs_from_full_model[out_name],
+            final_outputs=final_outputs[out_name],
+            log_prefix=f"{out_name}",
+        )
+
+
+def _get_op_idx_split_location(prog: _mil.Program) -> _Tuple[int, int, int]:
+    """Find the op that approximately bisects the graph as measure by weights size on each side"""
+    main_block = prog.functions["main"]
+    total_size_in_mb = 0
+
+    for op in main_block.operations:
+        if op.op_type == "const" and isinstance(op.val.val, _np.ndarray):
+            size_in_mb = op.val.val.size * op.val.val.itemsize / (1024 * 1024)
+            total_size_in_mb += size_in_mb
+    half_size = total_size_in_mb / 2
+
+    # Find the first non const op (single child), where the total cumulative size exceeds
+    # the half size for the first time
+    cumulative_size_in_mb = 0
+    for op in main_block.operations:
+        if op.op_type == "const" and isinstance(op.val.val, _np.ndarray):
+            size_in_mb = op.val.val.size * op.val.val.itemsize / (1024 * 1024)
+            cumulative_size_in_mb += size_in_mb
+
+        # Note: The condition "not op.op_type.startswith("const")" is to make sure that the
+        # incision op is neither of type "const" nor "constexpr_*" ops that
+        # are used to store compressed weights
+        if (
+            cumulative_size_in_mb >= half_size
+            and not op.op_type.startswith("const")
+            and len(op.outputs) == 1
+            and len(op.outputs[0].child_ops) == 1
+        ):
+            op_idx = main_block.operations.index(op)
+            return op_idx, cumulative_size_in_mb, total_size_in_mb
+
+    raise ValueError("Not able to find the bisect point in the model.")
+
+
+def _get_first_chunk_outputs(block: _mil.Block, op_idx: int) -> _List[_mil.Var]:
+    # Get the list of all vars that go across from first program (all ops from 0 to op_idx (inclusive))
+    # to the second program (all ops from op_idx+1 till the end). These all vars need to be made the output
+    # of the first program and the input of the second program
+    boundary_vars = set()
+    for i in range(op_idx + 1):
+        op = block.operations[i]
+        if not op.op_type.startswith("const"):
+            for var in op.outputs:
+                if var.val is None:  # only consider non const vars
+                    for child_op in var.child_ops:
+                        child_op_idx = block.operations.index(child_op)
+                        if child_op_idx > op_idx:
+                            boundary_vars.add(var)
+    return list(boundary_vars)
+
+
+@_block_context_manager
+def _add_fp32_casts(block: _mil.Block, boundary_vars: _List[_mil.Var]) -> None:
+    new_boundary_vars = []
+    for var in boundary_vars:
+        if var.dtype != _mil.types.fp16:
+            new_boundary_vars.append(var)
+        else:
+            fp32_var = _mb.cast(x=var, dtype="fp32", name=var.name)
+            new_boundary_vars.append(fp32_var)
+    return new_boundary_vars
+
+
+def _make_first_chunk_prog(
+    prog: _mil.Program,
+    op_idx: int,
+) -> _mil.Program:
+    """Build first chunk by declaring early outputs and removing unused subgraph"""
+    block = prog.functions["main"]
+    boundary_vars = _get_first_chunk_outputs(block, op_idx)
+
+    # Due to possible numerical issues, cast any fp16 var to fp32
+    new_boundary_vars = _add_fp32_casts(block, boundary_vars)
+
+    block.outputs.clear()
+    block.set_outputs(new_boundary_vars)
+    _PASS_REGISTRY["common::dead_code_elimination"](prog)
+    return prog
+
+
+def _make_second_chunk_prog(prog: _mil.Program, op_idx: int) -> _mil.Program:
+    """Build second chunk by rebuilding a pristine MIL Program from MLModel"""
+    block = prog.functions["main"]
+    block.opset_version = _ct.target.iOS16
+
+    # First chunk outputs are second chunk inputs (e.g. skip connections)
+    boundary_vars = _get_first_chunk_outputs(block, op_idx)
+
+    # This op will not be included in this program. Its output var will be made into an input
+    boundary_op = block.operations[op_idx]
+
+    # Add all boundary ops as inputs
+    with block:
+        for var in boundary_vars:
+            new_placeholder = _Placeholder(
+                sym_shape=var.shape,
+                dtype=var.dtype if var.dtype != _mil.types.fp16 else _mil.types.fp32,
+                name=var.name,
+            )
+
+            block._input_dict[new_placeholder.outputs[0].name] = new_placeholder.outputs[0]
+
+            block.function_inputs = tuple(block._input_dict.values())
+            new_var = None
+            if var.dtype == _mil.types.fp16:
+                new_var = _mb.cast(x=new_placeholder.outputs[0], dtype="fp16", before_op=var.op)
+            else:
+                new_var = new_placeholder.outputs[0]
+
+            block.replace_uses_of_var_after_op(
+                anchor_op=boundary_op,
+                old_var=var,
+                new_var=new_var,
+                # This is needed if the program contains "constexpr_*" ops. In normal cases, there are stricter
+                # rules for removing them, and their presence may prevent replacing this var.
+                # However in this case, since we want to remove all the ops in chunk 1, we can safely
+                # set this to True.
+                force_replace=True,
+            )
+
+    _PASS_REGISTRY["common::dead_code_elimination"](prog)
+
+    # Remove any unused inputs
+    new_input_dict = _OrderedDict()
+    for k, v in block._input_dict.items():
+        if len(v.child_ops) > 0:
+            new_input_dict[k] = v
+    block._input_dict = new_input_dict
+    block.function_inputs = tuple(block._input_dict.values())
+
+    return prog
+
+
