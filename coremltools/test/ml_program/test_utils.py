@@ -19,7 +19,7 @@ from coremltools.converters.mil.converter import mil_convert as _mil_convert
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP
 from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec
-
+import coremltools.optimize as cto
 
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0),
                     reason="Multi-function only supported on macOS 15+")
@@ -898,6 +898,16 @@ class TestMultiFunctionModelEnd2End:
 class TestBisectModel:
 
     @staticmethod
+    def check_spec_op_type(model_path, expected_ops):
+        spec = load_spec(model_path)
+        mil = spec.mlProgram
+        for function in mil.functions.values():
+            for block in function.block_specializations.values():
+                ops = list(block.operations)
+                for i, op_type in enumerate(expected_ops):
+                    assert ops[i].type == op_type
+
+    @staticmethod
     def get_test_model_path(minimum_deployment_target=ct.target.iOS16, return_as_mlmodel=False):
         # pytorch model and tracing
         class Model(torch.nn.Module):
@@ -1012,21 +1022,60 @@ class TestBisectModel:
         if not mlmodel_as_input:
             shutil.rmtree(model)
         shutil.rmtree(output_dir)
+
+    def test_compressed_model(self):
+        # use coremltools.optimizee to palettize a Core ML model
+        model = self.get_test_model_path(return_as_mlmodel=True)
+        op_config = cto.coreml.OpPalettizerConfig(mode="kmeans", nbits=8)
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+        model = cto.coreml.palettize_weights(model, config)
+
+        # test that the bisect API works
+        output_dir = str(tempfile.TemporaryDirectory())
+        bisect_model(
+            model,
+            output_dir,
+        )
+
+        # test the models contain correct ops
+        name = ""
+        chunk1_path = os.path.join(output_dir, f"{name}chunk1.mlpackage")
+        chunk2_path = os.path.join(output_dir, f"{name}chunk2.mlpackage")
+        assert os.path.isdir(chunk1_path)
+        assert os.path.isdir(chunk2_path)
+
+        self.check_spec_op_type(
+            chunk1_path,
+            [
+                "constexpr_lut_to_dense", 
+                "const", 
+                "linear", 
+                "const", 
+                "cast",
+            ]
+        )
+        self.check_spec_op_type(
+            chunk2_path,
+            [
+                "const",
+                "cast",
+                "relu",
+                "constexpr_lut_to_dense",
+                "const",
+                "linear",
+                "sin",
+            ]
+        )
+
+        # cleanup
+        shutil.rmtree(output_dir)
+
            
     @pytest.mark.parametrize(
         "mlmodel_as_input",
         [True, False],
     )
     def test_basic(self, mlmodel_as_input):
-        def check_spec_op_type(model_path, expected_ops):
-            spec = load_spec(model_path)
-            mil = spec.mlProgram
-            for function in mil.functions.values():
-                for block in function.block_specializations.values():
-                    ops = list(block.operations)
-                    for i, op_type in enumerate(expected_ops):
-                        assert ops[i].type == op_type
-
         def check_spec_version(model_path, expected_spec_version):
             spec = load_spec(model_path)
             assert spec.specificationVersion == expected_spec_version
@@ -1068,7 +1117,7 @@ class TestBisectModel:
         assert os.path.isdir(chunk2_path)
 
         # check the model op type
-        check_spec_op_type(
+        self.check_spec_op_type(
             chunk1_path,
             [
                 "const",
@@ -1078,7 +1127,7 @@ class TestBisectModel:
                 "cast",
             ]
         )
-        check_spec_op_type(
+        self.check_spec_op_type(
             chunk2_path,
             [
                 "const",
