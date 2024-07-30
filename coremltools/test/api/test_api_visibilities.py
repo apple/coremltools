@@ -77,6 +77,7 @@ class TestApiVisibilities:
 
     def test_models(self):
         expected = [
+            "array_feature_extractor",
             "CompiledMLModel",
             "MLModel",
             "datatypes",
