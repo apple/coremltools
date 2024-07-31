@@ -238,7 +238,7 @@ toy example.
 
 We start with a toy model with simple attention, where the `query`, `key`, and `value` are calculated by a linear layer
 and then fed into the `scaled_dot_product_attention`.
-This toy example only focus on stateful kv-cache, so it omits some other details such as multi-head, multi-layer,
+This toy example only focuses on stateful kv-cache, so it omits other details such as multi-head, multi-layer,
 positional encoding, final logits, etc.
 ```python
 import torch
@@ -270,7 +270,7 @@ class ToyModel(nn.Module):
          return self.fc(attention_output)
 ```
 
-To use key cache and value cache in the attention, we can write a new class `SimpleAttentionWithKeyValueCache` which
+To use key cache and value cache for attention, we can write a new class `SimpleAttentionWithKeyValueCache` which
 inherits the `SimpleAttention`, and the in the `forward` function we re-use previously computed `k` and `v`, 
 and fill the newly computed `k` and `v` back to the cache.
 ```python
@@ -364,10 +364,10 @@ We can time the prediction of the stateless model
 from time import perf_counter
 
 t_start: float = perf_counter()
-for token_id in range(0, num_iterations):
+for token_id in range(num_iterations):
      inputs = {"input_ids": np.array([list(range(token_id + 1))], dtype=np.int32)}
      converted_model.predict(inputs)
-print(f"Time (ms) without kv-cache: {(perf_counter() - t_start) * 1.0e3}")
+print(f"Time without kv-cache: {(perf_counter() - t_start) * 1.0e3} ms")
 ```
 
 Now let's initialize and convert the stateful kv-cache model in a similar way
@@ -426,14 +426,14 @@ We can also time the prediction of this stateful kv-cache model
 past_kv_len = 0
 kv_cache_state = converted_model_kvcache.make_state()
 t_start: float = perf_counter()
-for token_id in range(0, num_iterations):
+for token_id in range(num_iterations):
     inputs = {
         "input_ids": np.array([[token_id]], dtype=np.int32),
         "causal_mask": np.zeros((1, 1, past_kv_len + 1), dtype=np.float16),
     }
     converted_model_kvcache.predict(inputs, kv_cache_state)
     past_kv_len += 1
-print(f"Time (ms) with kv-cache: {(perf_counter() - t_start) * 1.0e3}")
+print(f"Time with kv-cache: {(perf_counter() - t_start) * 1.0e3} ms")
 ```
 
 After running the prediction, we can get the following output (on a MacBook Pro with M3 Max chip)
