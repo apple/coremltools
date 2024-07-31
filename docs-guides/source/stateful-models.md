@@ -227,7 +227,9 @@ potential runtime performance improvements.
 For instance, please check out the [2024 WWDC session](https://developer.apple.com/videos/play/wwdc2024/10159/) for an 
 example that uses the [Mistral 7B model](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)
 and utilizes the stateful prediction feature for improved performance on a GPU on a macbook pro.  
-The code for converting and deploying Mistral 7B model is released at https://huggingface.co/blog/mistral-coreml.
+The code for converting and deploying Mistral 7B model is released in [Hugging Face Mistral7B Example](
+https://github.com/huggingface/swift-transformers/blob/preview/Examples/Mistral7B/export.py) along with the
+[blog article](https://huggingface.co/blog/mistral-coreml).
 
 ## Example: Toy Attention Model with Stateful KV-Cache
 
