@@ -6892,9 +6892,16 @@ def scaled_dot_product_attention(context, node):
 
     # When len(inputs) == 7, the inputs are (q, k, v, attn_mask, dropout, is_causal, scale)
     if len(inputs) == 7 and inputs[6] is not None:
-        raise NotImplementedError(
-            "scaled_dot_product_attention op: scale parameter is not handled."
-        )
+        default_scale = q.shape[-1] ** -0.5
+        scale = inputs[6]
+
+        if scale.val == default_scale:
+            # No need to apply scale if it is the default value
+            pass
+        elif scale.val != 1.0:
+            # Apply correction to desired scale since default_scale will be applied downstream regardless
+            corrected_scale = scale.val / default_scale
+            q = mb.mul(x=corrected_scale, y=q, name=q.name + "_scaled")
 
     if attn_mask is not None and is_causal:
         raise ValueError(
