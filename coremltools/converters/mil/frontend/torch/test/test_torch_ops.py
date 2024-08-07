@@ -11325,6 +11325,77 @@ class TestScaledDotProductAttention(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, minimum_deployment_target, seq_lengths, bool_mask, dynamic, scale"
+        itertools.product(
+            compute_units,
+            backends,
+            frontends,
+            [None, ct.target.iOS18],
+            [(5, 5), (7, 5)],
+            [False, True],
+            [False, True],
+            [None, 0.5, 1.],
+        ),
+    )
+    def test_scale_argument(
+        self,
+        compute_unit,
+        backend,
+        frontend,
+        minimum_deployment_target,
+        seq_lengths,
+        bool_mask,
+        dynamic,
+        scale,
+    ):
+        if frontend == TorchFrontend.TORCHSCRIPT and bool_mask:
+            pytest.xfail(
+                "rdar://110499660 ([CI][Bug] test_attn_mask is occasionally failing when bool_mask = True)"
+            )
+
+        source_seq_len, target_seq_len = seq_lengths
+        query_shape = (2, 3, target_seq_len, 7)
+        key_shape = (2, 3, source_seq_len, 7)
+        value_shape = key_shape
+        mask_shape = (target_seq_len, source_seq_len)
+
+        query = generate_input_data(query_shape)
+        key = generate_input_data(key_shape)
+        value = generate_input_data(value_shape)
+        if bool_mask:
+            mask = torch.rand(mask_shape) > 0.5
+            mask = mask.bool()
+        else:
+            mask = generate_input_data(mask_shape)
+
+        model = ModuleWrapper(
+            function=nn.functional.scaled_dot_product_attention,
+            kwargs={"scale": scale},
+        )
+
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(
+                    shape=(ct.RangeDim(upper_bound=10, default=input_data.shape[0]),)
+                    + input_data.shape[1:]
+                )
+                for input_data in [query, key, value, mask]
+            ]
+        else:
+            converter_input_type = None
+
+        self.run_compare_torch(
+            (query, key, value, mask),
+            model,
+            frontend=frontend,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, frontend, minimum_deployment_target, mask_as_input, dynamic",
         itertools.product(
             compute_units,
