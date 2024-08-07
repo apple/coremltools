@@ -1374,8 +1374,8 @@ def _try_get_weights_dir_path(mlpackage_path):
 
 class MultiFunctionDescriptor:
     """
-    The data class defines how to construct a multifunction model from different model sources.
-    The users can use the ``add_function`` method to specify the path to the source ``mlpackage``,
+    This data class defines how to construct a multifunction model from different model sources.
+    Use the ``add_function`` method to specify the path to the source ``mlpackage``,
     along with the source and target function names.
 
     After setting the ``default_function_name`` to the ``MultiFunctionDescriptor`` instance,

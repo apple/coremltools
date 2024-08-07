@@ -197,7 +197,7 @@ class TensorType(InputType):
 
         Examples
         --------
-        * ``ct.TensorType(name="input", shape=(1, 2, 3))` implies `dtype ==
+        * ``ct.TensorType(name="input", shape=(1, 2, 3))`` implies ``dtype ==
           np.float32``
 
         * ``ct.TensorType(name="input", shape=(1, 2, 3), dtype=np.int32)``
@@ -297,7 +297,7 @@ class StateType(InputType):
         ----------
         wrapped_type: coremltools.converters.mil.input_types.InputType
             - The type wrapped in the state. 
-            - Can be ``TensorType``.
+            - Must be ``TensorType``.
               Note that the ``name`` and ``default_value`` of the wrapped ``TensorType`` must not be provided.
 
         name: str
