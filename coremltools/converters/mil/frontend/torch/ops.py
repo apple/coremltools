@@ -6899,7 +6899,8 @@ def scaled_dot_product_attention(context, node):
             # No need to apply scale if it is the default value
             pass
         elif scale.val != 1.0:
-            # Apply correction to desired scale since default_scale will be applied downstream regardless
+            # Apply correction to desired scale since default_scale
+            # will be applied downstream regardless
             corrected_scale = scale.val / default_scale
             q = mb.mul(x=corrected_scale, y=q, name=q.name + "_scaled")
 
