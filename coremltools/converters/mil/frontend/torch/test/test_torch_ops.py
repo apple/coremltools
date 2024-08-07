@@ -11325,7 +11325,7 @@ class TestScaledDotProductAttention(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, frontend, minimum_deployment_target, seq_lengths, bool_mask, dynamic, scale"
+        "compute_unit, backend, frontend, minimum_deployment_target, seq_lengths, bool_mask, dynamic, scale",
         itertools.product(
             compute_units,
             backends,
