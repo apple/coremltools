@@ -736,7 +736,12 @@ class MLModel:
         """
         Returns a new state object, which can be passed to the ``predict`` method.
 
-        State functionality is only supported on macOS 15+
+        Returns
+        _______
+        state: MLState
+            Holds state for an MLModel.
+
+        State functionality is only supported on macOS 15+.
 
         Examples
         --------
