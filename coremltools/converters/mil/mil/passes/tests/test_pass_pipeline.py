@@ -118,31 +118,6 @@ class TestPassPipeline:
         assert "default" in available_pipelines
         assert "default_palettization" in available_pipelines
 
-    def test_merge_reshape_in_nested_block(self):
-        INPUT_SHAPE = (6, 7)
-        OUTPUT_SHAPE = (7, 6)
-
-        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
-        def prog(x):
-            loop_var = np.int32(2)
-            def while_cond(loop_Var, _x):
-                return mb.equal(x=loop_Var, y=np.int32(0))
-
-            def while_body(loop_var, x):
-                # Do reshapes of the input
-                y1 = mb.reshape(x=x, shape=(3, 2, 7))
-                y2 = mb.reshape(x=y1, shape=(7, 2, 3))
-                y3 = mb.reshape(x=y2, shape=(14, 3))
-                y4 = mb.reshape(x=y3, shape=OUTPUT_SHAPE)
-                return mb.add(x=loop_var, y=np.int(-1)), y4
-
-            while_results = mb.while_loop(_cond=while_cond, _body=while_body, loop_vars=(loop_var, x))
-            return while_results[1]
-
-        pipeline = PassPipeline.EMPTY
-        pipeline.append_pass("common::merge_consecutive_reshapes")
-        PassPipelineManager.apply_pipeline(prog, pipeline)
-
     @staticmethod
     def test_get_pipeline_should_use_copy():
         pipeline = PassPipeline.DEFAULT_PRUNING

@@ -1680,13 +1680,13 @@ class TestMergeConsecutiveReshapes:
     )
     def test_merge_reshape_in_nested_block(self, backend):
         INPUT_SHAPE = (6, 7)
-        OUTPUT_SHAPE = (14, 3)
+        OUTPUT_SHAPE = (7, 6)
 
         @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
         def prog(x):
             loop_var = np.int32(2)
-            def while_cond(loop_Var, _x):
-                return mb.equal(x=loop_Var, y=np.int32(0))
+            def while_cond(loop_var, _x):
+                return mb.equal(x=loop_var, y=np.int32(0))
 
             def while_body(loop_var, x):
                 # Do reshapes of the input
@@ -1700,6 +1700,8 @@ class TestMergeConsecutiveReshapes:
             return while_results[1]
 
         prev_prog, _, block = apply_pass_and_basic_check(prog, "common::merge_consecutive_reshapes")
+        assert get_op_types_in_program(prev_prog, recurse=True) == ["while_loop", "equal", "reshape", "reshape", "reshape", "reshape", "add"]
+        assert get_op_types_in_program(prog, recurse=True) == ["while_loop", "equal", "reshape", "add"]
 
         assert len(block.outputs) == 1
         assert_model_is_valid(
