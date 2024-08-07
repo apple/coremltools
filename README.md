@@ -33,7 +33,7 @@ pip install coremltools==8.0b1
 
 
 ## Install Version 7.2
-To install the lastest non-beta version, run the following command in your terminal:
+To install the latest non-beta version, run the following command in your terminal:
 ```shell
 pip install -U coremltools
 ```
