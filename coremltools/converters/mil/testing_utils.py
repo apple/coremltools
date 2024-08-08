@@ -271,7 +271,7 @@ def get_op_names_in_program(prog, func_name="main", skip_const_ops=True):
     return op_names_in_program
 
 
-def get_op_types_in_block(block: Block, skip_const_ops: bool = True):
+def get_op_types_in_block(block: Block, skip_const_ops: bool = True, recurse: bool = False):
     """
     Return the operation types in block,
     in the same order as they are stored (topological)
@@ -282,16 +282,23 @@ def get_op_types_in_block(block: Block, skip_const_ops: bool = True):
             if op.op_type == "const":
                 continue
         op_types_in_block.append(op.op_type)
+
+        if recurse:
+            for child_block in op.blocks:
+                child_ops = get_op_types_in_block(child_block, skip_const_ops, recurse)
+                op_types_in_block += child_ops
+
     return op_types_in_block
 
 
-def get_op_types_in_program(prog: Program, func_name: str = "main", skip_const_ops: bool = True):
+def get_op_types_in_program(prog: Program, func_name: str = "main", skip_const_ops: bool = True, recurse: bool = False):
     """
     Return the operation types in prog[func_name],
     in the same order as they are stored (topological)
     If ``skip_const_ops = True``, const ops are not returned.
+    If ``recurse = True``, the ops of all nested blocks are returned.
     """
-    return get_op_types_in_block(prog[func_name], skip_const_ops)
+    return get_op_types_in_block(prog[func_name], skip_const_ops, recurse)
 
 def random_gen(
     shape,
