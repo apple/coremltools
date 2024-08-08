@@ -143,6 +143,7 @@ def extract_submodel(
         raise ValueError(f"outputs {outputs_not_found} not found in the function.")
 
     func.set_outputs(new_outputs)
+    func.set_output_types([ct.TensorType(dtype=o.dtype) for o in new_outputs])
 
     # Clean up the graph
     PASS_REGISTRY["common::dead_code_elimination"](prog)
