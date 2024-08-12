@@ -6,6 +6,7 @@
 # Original implementation from https://github.com/IST-DASLab/sparsegpt
 # Copyright 2023 IST Austria Distributed Algorithms and Systems Lab. All Rights Reserved.
 
+import copy as _copy
 import logging as _logging
 import math as _math
 import time as _time
@@ -87,7 +88,9 @@ class ModuleGPTQConfig(LayerwiseCompressionAlgorithmConfig):
             blocks of size processing_group_size. Defaults to ``128``.
 
         .. note:
-            Currently blocking is limited to only the input-channel axis for GPTQ.
+            Currently blocking is limited to only the input-channel axis for GPTQ. For a linear layer of shape (C_o x C_i), and block_size B,
+            the quantization scales will have shape (C_o x C_i/B). For a 2D conv layer of shape (C_o x C_i x H x W), the
+            quantization scales will have shape (C_o x C_i/B x 1 x 1).
     """
 
     weight_dtype: _Union[str, _torch.dtype] = _field(
@@ -328,13 +331,13 @@ class OBSCompressionAlgorithm(LayerwiseCompressionAlgorithm):
     def _get_compression_metadata(self, param_name, param):
         raise NotImplementedError("Method not implemented in base class.")
 
-    def _store_quantization_params(self):
-        if self._quantizer is not None:
-            scale = self._quantizer.scale
+    def _store_quantization_params(self, quantizer: _Quantizer):
+        if quantizer is not None:
+            scale = quantizer.scale
             scale_store = _torch.empty_like(scale, device=_torch.device("cpu")).copy_(scale)
             self._scale.append(scale_store)
             if not self._enable_normal_float:
-                zero_point = self._quantizer.zero_point
+                zero_point = quantizer.zero_point
                 zero_point_store = _torch.empty_like(zero_point, device=_torch.device("cpu")).copy_(
                     zero_point
                 )
@@ -370,6 +373,10 @@ class GPTQ(OBSCompressionAlgorithm):
         self._enable_normal_float = config.enable_normal_float
         self._hessian_dampening = config.hessian_dampening
         self._use_activation_order_heuristic = config.use_activation_order_heuristic
+        # static grouping leads to all quantization parameters being pre-computed,
+        # rather than dynamically during algorithm execution. This is necessary when
+        # activation_order_heuristic is turned on to make sure the model is still exportable
+        self._enable_static_blocking = config.use_activation_order_heuristic
         self._quantizer = None
         if self._weight_n_bits < 16:
             per_channel = config.granularity in [
@@ -388,21 +395,32 @@ class GPTQ(OBSCompressionAlgorithm):
     def _compress_impl(self):
         weight = self._layer.weight.data.clone()
         if isinstance(self._layer, _nn.Conv2d):
+            if self._block_size is not None:
+                self._block_size = self._block_size * weight.shape[2] * weight.shape[3]
             weight = weight.flatten(1)
+
         weight = weight.float()
 
         tick = _time.time()
 
         if not self._quantizer.ready():
             self._quantizer.find_params(weight, weight=True)
-            if self._block_size == None:
-                self._store_quantization_params()
+            if self._block_size is None:
+                self._store_quantization_params(self._quantizer)
 
         hessian = self._hessian
         del self._hessian
         dead = _torch.diag(hessian) == 0
         hessian[dead, dead] = 1
         weight[:, dead] = 0
+
+        blocks = []
+        if self._enable_static_blocking and self._block_size is not None:
+            for i in range(0, self._columns, self._block_size):
+                quantizer = _copy.deepcopy(self._quantizer)
+                quantizer.find_params(weight[:, i : (i + self._block_size)], weight=True)
+                blocks.append(quantizer)
+                self._store_quantization_params(quantizer)
 
         perm = None
         if self._use_activation_order_heuristic:
@@ -436,12 +454,16 @@ class GPTQ(OBSCompressionAlgorithm):
                 d = hessian_inverse_block[i, i]
 
                 if self._block_size is not None:
-                    if (i1 + i) % self._block_size == 0:
-                        self._quantizer.find_params(
-                            weight[:, (i1 + i) : (i1 + i + self._block_size)],
-                            weight=True,
-                        )
-                        self._store_quantization_params()
+                    if self._enable_static_blocking:
+                        idx = perm[i1 + i]
+                        self._quantizer = blocks[idx // self._block_size]
+                    else:
+                        if (i1 + i) % self._block_size == 0:
+                            self._quantizer.find_params(
+                                weight[:, (i1 + i) : (i1 + i + self._block_size)],
+                                weight=True,
+                            )
+                            self._store_quantization_params(self._quantizer)
 
                 q = _quantize(
                     w.unsqueeze(1),
@@ -554,7 +576,7 @@ class SparseGPT(OBSCompressionAlgorithm):
 
         if self._quantizer is not None and not self._quantizer.ready():
             self._quantizer.find_params(weight, weight=True)
-            self._store_quantization_params()
+            self._store_quantization_params(self._quantizer)
 
         tick = _time.time()
 

@@ -519,9 +519,9 @@ class TestSpecAndMLModelAPIs:
 
     def setup_class(self):
         # define an mlprogram, which has weights
-        @mb.program(input_specs=[mb.TensorSpec(shape=(4, 5000))])
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4, 500))])
         def linear_prog(input):
-            W = mb.const(val=np.random.rand(100, 5000), name="const_W")
+            W = mb.const(val=np.random.rand(100, 500), name="const_W")
             out = mb.linear(x=input, weight=W, name="output")
             return out
 

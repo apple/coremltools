@@ -22,6 +22,7 @@ from coremltools.test.optimize.torch.palettization.palettization_utils import (
     _assert_changes_post_attach,
     _assert_changes_post_prepare,
 )
+from coremltools.test.optimize.torch.utils import get_logging_capture_context_manager
 
 REGEX_YAML = """
 module_name_configs:
@@ -33,6 +34,7 @@ module_name_configs:
       weight_threshold: 1000
       palett_tau: 0.000004
 """
+
 
 def _create_simple_model():
     class Net(nn.Module):
@@ -215,8 +217,8 @@ def test_attach_config_simple_model_weight_threshold_test(simple_model):
 def test_attach_config_simple_model_weight_threshold_range_test(simple_model):
     custom_config = {
         nn.Conv2d: [
-            {"n_bits": 4, "cluster_dim": 4, "weight_threshold": 1000},
-            {"n_bits": 2, "cluster_dim": 2, "weight_threshold": 400},
+            {"n_bits": 4, "cluster_dim": 1, "weight_threshold": 1000},
+            {"n_bits": 2, "cluster_dim": 1, "weight_threshold": 400},
         ]
     }
     config = DKMPalettizerConfig.from_dict({"module_type_configs": custom_config})
@@ -312,6 +314,83 @@ def test_prepare_palettizer_simple_model_custom_palettization_config(simple_mode
         custom_config[nn.Linear]["cluster_dim"],
         custom_config[nn.Linear]["kmeans_max_iter"],
     )
+
+
+@pytest.mark.parametrize(
+    "cluster_dim_expected_std_outputs",
+    [
+        (4, None),
+        (
+            5,
+            [
+                "WARNING:coremltools.optimize.torch._utils.validation_utils:conv2.weight: The number of channels in channel axis dimension: "
+                "0, 16 is not divisible by cluster_dim=5"
+            ],
+        ),
+    ],
+)
+def test_prepare_palettizer_simple_model_cluster_dim_mil_check(
+    simple_model, cluster_dim_expected_std_outputs
+):
+    cluster_dim, expected_std_outputs = cluster_dim_expected_std_outputs
+    custom_config = {nn.Conv2d: {"n_bits": 2, "cluster_dim": cluster_dim}}
+    config = DKMPalettizerConfig.from_dict({"module_type_configs": custom_config})
+    palettizer = DKMPalettizer(simple_model, config)
+    logging_context_manager = get_logging_capture_context_manager()
+    with logging_context_manager(
+        "coremltools.optimize.torch._utils.validation_utils"
+    ) as log_capture:
+        simple_model = palettizer.prepare()
+    output_capture = log_capture.getvalue()
+
+    if expected_std_outputs:
+        assert not hasattr(simple_model.conv2, "weight_fake_quant")
+        for expected_std_output in expected_std_outputs:
+            assert expected_std_output in output_capture
+    else:
+        assert hasattr(simple_model.conv2, "weight_fake_quant")
+
+
+@pytest.mark.parametrize(
+    "block_size_expected_std_outputs",
+    [
+        (
+            5,
+            [
+                "WARNING:coremltools.optimize.torch._utils.validation_utils:conv2.weight: axis_length=16 is not divisible by group_size=5",
+                "INFO:coremltools.optimize.torch._utils.validation_utils:Skipping compression for conv2.weight",
+            ],
+        ),
+        (4, None),
+    ],
+)
+def test_prepare_palettizer_simple_model_block_size_mil_check(
+    simple_model, block_size_expected_std_outputs
+):
+    curr_block_size, expected_std_outputs = block_size_expected_std_outputs
+    custom_config = {
+        nn.Conv2d: {
+            "n_bits": 2,
+            "cluster_dim": 4,
+            "granularity": "per_grouped_channel",
+            "group_size": curr_block_size,
+        }
+    }
+    config = DKMPalettizerConfig.from_dict({"module_type_configs": custom_config})
+    palettizer = DKMPalettizer(simple_model, config)
+    logging_context_manager = get_logging_capture_context_manager()
+    with logging_context_manager(
+        "coremltools.optimize.torch._utils.validation_utils"
+    ) as log_capture:
+        simple_model = palettizer.prepare()
+    output_capture = log_capture.getvalue()
+
+    if expected_std_outputs:
+        assert not hasattr(simple_model.conv2, "weight_fake_quant")
+        for expected_std_output in expected_std_outputs:
+            assert expected_std_output in output_capture
+    else:
+        assert hasattr(simple_model.conv2, "weight_fake_quant")
 
 
 def test_inplace_true_prepare_palettizer(simple_model):
@@ -443,11 +522,13 @@ def test_prepare_palettizer_different_milestone_per_module_type(simple_model):
 
 
 def test_attach_config_weight_threshold_range_different_milestone(simple_model):
-    custom_config = {nn.Conv2d: [{"n_bits": 4, "cluster_dim": 4, "weight_threshold": 1000, "milestone": 2},
-                                 {"n_bits": 2, "cluster_dim": 2, "weight_threshold": 400, "milestone": 1}]}
-    config = DKMPalettizerConfig.from_dict(
-        {"module_type_configs": custom_config}
-    )
+    custom_config = {
+        nn.Conv2d: [
+            {"n_bits": 4, "cluster_dim": 2, "weight_threshold": 1000, "milestone": 2},
+            {"n_bits": 2, "cluster_dim": 1, "weight_threshold": 400, "milestone": 1},
+        ]
+    }
+    config = DKMPalettizerConfig.from_dict({"module_type_configs": custom_config})
     palettizer = DKMPalettizer(simple_model, config)
     prepared_model = palettizer.prepare()
 
@@ -664,6 +745,17 @@ def test_quantize_activations_flag(simple_model):
         palettizer.step()
 
     assert not isinstance(palettizer._model.conv2.activation_post_process, torch.nn.Identity)
+
+
+def test_finalize_without_forward(simple_model):
+    config = DKMPalettizerConfig.from_dict({"global_config": {"n_bits": 2, "cluster_dim": 1}})
+
+    palettizer = DKMPalettizer(simple_model, config)
+
+    prepared_model = palettizer.prepare()
+    palettizer.step()
+    finalized_model = palettizer.finalize(prepared_model)
+    assert torch.equal(simple_model.fc2.weight, finalized_model.fc2.weight)
 
 
 def test_deprecated_api():

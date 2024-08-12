@@ -347,7 +347,7 @@ class Operation:
 
     def _auto_val(self, output_types):
         """
-        # Evaluation is two stage:
+        # Evaluation has two stages:
         #
         # Stage 1: Check whether the method value_inference() is implemented
         #

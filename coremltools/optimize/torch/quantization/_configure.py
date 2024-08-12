@@ -19,6 +19,7 @@ from torch.ao.quantization.fx.custom_config import PrepareCustomConfig as _Prepa
 from torch.quantization.quantize_fx import prepare_qat_fx as _prepare_qat_fx
 
 import coremltools.optimize.torch.quantization.modules.qat_modules as _qat
+from coremltools.optimize.torch._utils.graph_utils import count_model_params as _count_model_params
 from coremltools.optimize.torch._utils.torch_utils import (
     get_parent_child_name as _get_parent_child_name,
 )
@@ -37,8 +38,12 @@ from coremltools.optimize.torch.quantization._utils import (
     is_activation_post_process as _is_activation_post_process,
 )
 from coremltools.optimize.torch.quantization._utils import is_quantized as _is_quantized
+from coremltools.optimize.torch.quantization.modules.observers import NoopObserver as _NoopObserver
 from coremltools.optimize.torch.quantization.quantization_config import (
     QuantizationScheme as _QuantizationScheme,
+)
+from coremltools.optimize.torch.quantization.quantization_config import (
+    _default_quantization_options,
 )
 
 # layers which only scale the output and hence can use zero point = 0 if needed
@@ -74,62 +79,64 @@ _always_affine_layers = {
     _nni.BNReLU3d,
 }
 
+# fused quantized layers
+_fused_quantized_layers = {
+    _qat.ConvAct1d,
+    _qat.ConvBnAct1d,
+    _qat.ConvAct2d,
+    _qat.ConvBnAct2d,
+    _qat.ConvAct3d,
+    _qat.ConvBnAct3d,
+    _qat.ConvTransposeAct1d,
+    _qat.ConvTransposeBnAct1d,
+    _qat.ConvTransposeAct2d,
+    _qat.ConvTransposeBnAct2d,
+    _qat.ConvTransposeAct3d,
+    _qat.ConvTransposeBnAct3d,
+    _qat.LinearAct,
+}
 
-def _get_affine_act_post_process(module: _aoquant.FakeQuantizeBase):
-    """
-    Returns activation post process module which is same as module but with
-    affine qscheme.
-    """
-    _common_observer_param_names = [
+_common_observer_param_names = [
+    "dtype",
+    "qscheme",
+    "reduce_range",
+    "quant_min",
+    "quant_max",
+    "eps",
+]
+
+_observer_type_to_param_names = {
+    _aoquant.MinMaxObserver: list(_common_observer_param_names),
+    _aoquant.PerChannelMinMaxObserver: list(_common_observer_param_names) + ["ch_axis"],
+    _aoquant.MovingAverageMinMaxObserver: list(_common_observer_param_names)
+    + ["averaging_constant"],
+    _aoquant.MovingAveragePerChannelMinMaxObserver: list(_common_observer_param_names)
+    + ["averaging_constant", "ch_axis"],
+    _aoquant.HistogramObserver: [
+        "bins",
+        "upsample_rate",
         "dtype",
         "qscheme",
         "reduce_range",
+        "eps",
+    ],
+    _aoquant.PlaceholderObserver: [
+        "dtype",
         "quant_min",
         "quant_max",
-        "eps",
-    ]
-    _observer_type_to_param_names = {
-        _aoquant.MinMaxObserver: list(_common_observer_param_names),
-        _aoquant.PerChannelMinMaxObserver: list(_common_observer_param_names) + ["ch_axis"],
-        _aoquant.MovingAverageMinMaxObserver: list(_common_observer_param_names)
-        + ["averaging_constant"],
-        _aoquant.MovingAveragePerChannelMinMaxObserver: list(_common_observer_param_names)
-        + ["averaging_constant", "ch_axis"],
-        _aoquant.HistogramObserver: [
-            "bins",
-            "upsample_rate",
-            "dtype",
-            "qscheme",
-            "reduce_range",
-            "eps",
-        ],
-        _aoquant.PlaceholderObserver: [
-            "dtype",
-            "quant_min",
-            "quant_max",
-            "custom_op_name",
-        ],
-        _aoquant.NoopObserver: ["dtype", "custom_op_name"],
-        _aoquant.FixedQParamsObserver: [
-            "scale",
-            "zero_point",
-            "dtype",
-            "qscheme",
-            "quant_min",
-            "quant_max",
-        ],
-    }
-
-    activation_post_process = module.activation_post_process
-    if type(activation_post_process) not in _observer_type_to_param_names:
-        raise ValueError(f"Found unrecognized observer type {type(activation_post_process)}.")
-    observer_type = type(activation_post_process)
-    observer_param_names = _observer_type_to_param_names[observer_type]
-    kwargs = {k: getattr(activation_post_process, k) for k in observer_param_names}
-    if "qscheme" in kwargs:
-        kwargs["qscheme"] = _torch.per_tensor_affine
-    new_act_post_process = _aoquant.FakeQuantize(observer=observer_type, **kwargs)
-    return new_act_post_process
+        "custom_op_name",
+    ],
+    _aoquant.NoopObserver: ["dtype", "custom_op_name"],
+    _NoopObserver: ["dtype", "custom_op_name"],
+    _aoquant.FixedQParamsObserver: [
+        "scale",
+        "zero_point",
+        "dtype",
+        "qscheme",
+        "quant_min",
+        "quant_max",
+    ],
+}
 
 
 class QATConfigurationHandler:
@@ -152,6 +159,7 @@ class QATConfigurationHandler:
         self._prepare_custom_config = prepare_custom_config
         self._backend_config = backend_config
         self._share_qparams_ops = _get_share_qparams_ops(self._backend_config)
+        self._device = None
         self._act_quant_groups = dict()
         self._modules_to_replace = _defaultdict(list)
         self._new_act_post_process = dict()
@@ -168,6 +176,7 @@ class QATConfigurationHandler:
             backend_config=self._backend_config,
         )
 
+        self._setup_fake_quant_module_device(model, example_inputs)
         self._act_quant_groups = _group_activation_quantization_modules_by_id(model)
         if self._quantization_scheme == _QuantizationScheme.symmetric:
             self._mark_always_affine_layers_for_replacement(model)
@@ -177,6 +186,53 @@ class QATConfigurationHandler:
         model = self._replace_activation_quantizers(model)
         model = self._remove_activation_quantizer_after_dropout(model)
         return model
+
+    def _setup_fake_quant_module_device(
+        self, model: _fx.GraphModule, example_inputs: _Tuple[_Any, ...]
+    ):
+        """
+        Set device for all fake quantize modules by inferring from model and/or data
+        """
+        # Record the device of the model
+        count_params = _count_model_params(model)
+        if count_params > 0:
+            self._device = next(model.parameters()).device
+        elif len(example_inputs) > 0:
+            self._device = example_inputs[0].device
+        else:
+            self._device = _torch.device("cpu")
+
+        for name, module in model.named_modules(remove_duplicate=True):
+            if (
+                hasattr(module, "weight_fake_quant")
+                and module.weight_fake_quant is not None
+                and hasattr(module, "set_device")
+            ):
+                module.weight_fake_quant.set_device(self._device)
+            elif not name.endswith(".weight_fake_quant") and hasattr(module, "set_device"):
+                module.set_device(self._device)
+
+    def _get_affine_act_post_process_mod_from_symmetric(self, module: _aoquant.FakeQuantizeBase):
+        """
+        Returns activation post process module which is same as module but with
+        affine qscheme instead of symmetric.
+        """
+        activation_post_process = module.activation_post_process
+        observer_type = type(activation_post_process)
+        if observer_type not in _observer_type_to_param_names:
+            raise ValueError(f"Found unrecognized observer type {type(activation_post_process)}.")
+        observer_param_names = _observer_type_to_param_names[observer_type]
+        kwargs = {k: getattr(activation_post_process, k) for k in observer_param_names}
+        if "qscheme" in kwargs:
+            kwargs["qscheme"] = _torch.per_tensor_affine
+
+        if module.ch_axis != -1:
+            new_act_post_process = _aoquant.FakeQuantize(
+                observer=observer_type, ch_axis=module.ch_axis, **kwargs
+            )
+        else:
+            new_act_post_process = _aoquant.FakeQuantize(observer=observer_type, **kwargs)
+        return new_act_post_process
 
     def _replace_activation_quantizers(self, model: _fx.GraphModule) -> _fx.GraphModule:
         """
@@ -202,7 +258,7 @@ class QATConfigurationHandler:
         self,
         node: _fx.Node,
         model: _fx.GraphModule,
-        new_act_post_process: _Optional[_aoquant.FakeQuantize] = None,
+        new_act_post_process: _Optional[_aoquant.FakeQuantizeBase] = None,
     ):
         """
         Marks an activation post process layer (activation quantizer) for replacement.
@@ -229,7 +285,9 @@ class QATConfigurationHandler:
                             self._modules_to_replace[child_node] = []
                 self._modules_to_replace[next_node] = shared_qparam_nodes
                 if new_act_post_process is None:
-                    new_act_post_process = _get_affine_act_post_process(next_module)
+                    new_act_post_process = self._get_affine_act_post_process_mod_from_symmetric(
+                        next_module
+                    )
                 self._new_act_post_process[next_node] = new_act_post_process
 
     @staticmethod
@@ -294,7 +352,7 @@ class QATConfigurationHandler:
                 layer = _find_target(model, node.target)
                 if type(layer) in _always_affine_layers:
                     self._mark_act_post_process_for_replacement(node, model)
-                elif isinstance(layer, (_qat.ConvAct2d, _qat.ConvBnAct2d, _qat.LinearAct)):
+                elif isinstance(layer, tuple(_fused_quantized_layers)):
                     if type(layer.act) in _always_affine_layers:
                         self._mark_act_post_process_for_replacement(node, model)
                 # layers which only scale the output can also use affine qcheme
@@ -373,7 +431,7 @@ class QATConfigurationHandler:
         for node in model.graph.nodes:
             if node.op == "call_module":
                 layer = _find_target(model, node.target)
-                if isinstance(layer, (_qat.ConvAct2d, _qat.ConvBnAct2d, _qat.LinearAct)):
+                if isinstance(layer, tuple(_fused_quantized_layers)):
                     # If output of this layer is being cat with another layer, we don't want
                     # to enforce that layer to use the same activation quantizer, so we ignore it
                     if _torch.cat in [
@@ -393,13 +451,21 @@ class QATConfigurationHandler:
         for node in model.graph.nodes:
             if node.op == "call_module":
                 layer = _find_target(model, node.target)
-                if isinstance(layer, _torch.nn.Embedding) and hasattr(layer, "weight_fake_quant"):
+                if (
+                    isinstance(layer, _torch.nn.Embedding)
+                    and hasattr(layer, "weight_fake_quant")
+                    and isinstance(layer.weight_fake_quant, _aoquant.FakeQuantize)
+                ):
                     weight_dtype = layer.weight_fake_quant.dtype
                     delattr(layer, "weight_fake_quant")
+
+                    observer_cls = type(layer.qconfig.weight().activation_post_process)
+
                     layer.weight_fake_quant = _aoquant.FakeQuantize(
-                        observer=type(layer.qconfig.weight().activation_post_process),
+                        observer=observer_cls,
                         dtype=weight_dtype,
                         qscheme=_QuantizationScheme.get_qscheme(
                             self._quantization_scheme, is_per_channel=True
                         ),
+                        ch_axis=_default_quantization_options["weight_ch_axis"],
                     )

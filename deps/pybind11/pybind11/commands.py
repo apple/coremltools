@@ -1,9 +1,11 @@
+from __future__ import annotations
+
 import os
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 
 
-def get_include(user: bool = False) -> str:  # pylint: disable=unused-argument
+def get_include(user: bool = False) -> str:  # noqa: ARG001
     """
     Return the path to the pybind11 include directory. The historical "user"
     argument is unused, and may be removed.

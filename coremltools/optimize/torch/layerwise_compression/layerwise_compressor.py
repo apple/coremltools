@@ -301,7 +301,10 @@ class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
         layer_config = self._config.get_module_config(atomic_layer_name, atomic_layer)
         if layer_config is not None:
             algo_class = _LayerwiseCompressionAlgorithm.get_class(layer_config.algorithm)
-            return algo_class(atomic_layer, layer_config)
+            try:
+                return algo_class(atomic_layer, layer_config)
+            except ValueError as error:
+                _logger.info(f"Skipping compression for {atomic_layer_name}. Reason={error}")
         return None
 
     def _register_activation_processing_hook(

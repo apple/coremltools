@@ -5,3 +5,6 @@ pillow
 pytest==7.1.2
 pytest-timeout
 tensorflow==1.15.4
+
+# TF1 only support protobuf <= 3.20
+protobuf==3.20.3

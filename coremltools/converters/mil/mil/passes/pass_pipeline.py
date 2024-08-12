@@ -17,7 +17,6 @@ from coremltools.converters.mil.mil.passes.helper import classproperty as _class
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
 _COMMON_PASSES: List[Text] = [
-    "common::reorder_lut_per_channel_scale",
     "common::lower_complex_dialect_ops",
     "common::update_output_dtypes",
     "common::cast_optimization",
@@ -61,6 +60,7 @@ _COMMON_PASSES: List[Text] = [
     "common::replace_stack_reshape",
     # should come before detect_concat_interleave since it may add concat
     "common::reduce_transposes",
+    "common::fuse_dilated_conv",
     "common::fuse_conv_scale",
     "common::fuse_conv_bias",
     "common::fuse_onehot_matmul_to_gather",
@@ -96,6 +96,14 @@ _COMMON_PASSES: List[Text] = [
     "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
     "common::add_int16_cast",  # Will be removed if compute precision is not FP16.
     "common::update_output_dtypes",  # Must run again after `add_fp16_cast` and `add_int16_cast`.
+    "common::const_elimination",
+    "common::dead_code_elimination",
+    "common::cast_optimization",
+    "common::dead_code_elimination",  # must follow cast_optimization
+    "common::const_elimination",
+    # After all fusions have settled, start inserting state ops
+    "common::canonicalize_inplace_pattern",  # always start with canonicalizations
+    "common::prefer_state_in_downstream",
     "common::const_elimination",
     "common::dead_code_elimination",  # always end with dce
 ]

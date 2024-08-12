@@ -9,12 +9,12 @@ import unittest
 import pandas as pd
 import pytest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.ensemble import RandomForestRegressor
 
     from coremltools.converters import sklearn as skl_converter
@@ -34,11 +34,11 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         # Load data and train model
         scikit_data = load_boston()
         self.scikit_data = scikit_data
-        self.X = scikit_data.data.astype("f").astype(
+        self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data
-        self.target = scikit_data.target
-        self.feature_names = scikit_data.feature_names
+        self.target = scikit_data["target"]
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def _check_metrics(self, metrics, params={}):
@@ -88,7 +88,7 @@ class RandomForestRegressorBostonHousingScikitNumericTest(unittest.TestCase):
 
         ## These are all the options in decision tree regression of scikit-learn
         options = dict(
-            criterion=["mse"],
+            criterion=["friedman_mse"],
             n_estimators=[1, 5, 10],
             max_depth=[1, 5],
             min_samples_split=[2, 10, 0.5],

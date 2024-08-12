@@ -54,7 +54,7 @@ MSG_ONLY_MACOS = "Only supported on macOS"
 _HAS_SKLEARN = True
 _SKLEARN_VERSION = None
 _SKLEARN_MIN_VERSION = "0.17"
-_SKLEARN_MAX_VERSION = "1.1.2"
+_SKLEARN_MAX_VERSION = "1.5.1"
 
 
 def __get_sklearn_version(version):
@@ -196,6 +196,14 @@ except:
     _HAS_SCIPY = False
 else:
     _HAS_SCIPY = True
+
+# ---------------------------------------------------------------------------------------
+try:
+    import transformers
+except:
+    _HAS_HF = False
+else:
+    _HAS_HF = True
 
 # General utils
 def version_ge(module, target_version):

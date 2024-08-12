@@ -65,6 +65,7 @@ class TestApiVisibilities:
             "evaluate_regressor",
             "evaluate_transformer",
             "make_pipeline",
+            "materialize_dynamic_shape_mlmodel",
             "load_spec",
             "rename_feature",
             "save_spec",

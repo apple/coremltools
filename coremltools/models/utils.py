@@ -42,6 +42,9 @@ from coremltools.converters.mil.mil.passes.defs.randomize import (
 )
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass as _AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager as _block_context_manager
+from coremltools.converters.mil.mil.passes.pass_pipeline import (
+    PassPipelineManager as _PassPipelineManager,
+)
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY as _PASS_REGISTRY
 from coremltools.converters.mil.mil.program import Placeholder as _Placeholder
 
@@ -1272,7 +1275,6 @@ def _convert_model_spec_to_pymil_prog(
     mlmodel: "_ct.models.MLModel",
     specification_version: int,
     pymil_load_func: _Callable,
-    skip_model_load: bool = False,
 ) -> _Program:
     """
     A utility that converts an ``mlprogram`` model into PyMIL program.
@@ -1302,7 +1304,6 @@ def _convert_model_spec_to_pymil_prog(
         model_spec=model_spec,
         specification_version=specification_version,
         file_weights_dir=mlmodel.weights_dir,
-        skip_model_load=skip_model_load,
     )
     return prog
 
@@ -1311,26 +1312,27 @@ def _apply_graph_pass(
     mlmodel: "_ct.models.MLModel",
     graph_pass: _AbstractGraphPass,
     spec_version: int = _SPECIFICATION_VERSION_IOS_16,
-    skip_model_load: bool = False,
+    skip_model_load: _Optional[bool] = None,
     pymil_load_func: _Callable = _milproto_to_pymil.load,
     return_pymil_prog: bool = False,
 ) -> _Union["_ct.models.MLModel", _Program]:
     # We do the lazy import to prevent circular import
     from coremltools.converters.mil.converter import mil_convert as _mil_convert
 
+    if skip_model_load is None:
+        # Determine if skip the model load by the original mlmodel.
+        skip_model_load = mlmodel.__proxy__ is None
+
     # Utility function which compresses a Core ML model
     # Converts the full precision mlmodel into a pymil program
     model_spec = mlmodel.get_spec()
     specification_version = max(model_spec.specificationVersion, spec_version)
-    prog = _convert_model_spec_to_pymil_prog(
-        mlmodel, specification_version, pymil_load_func, skip_model_load
-    )
+    prog = _convert_model_spec_to_pymil_prog(mlmodel, specification_version, pymil_load_func)
 
     # Apply graph pass.
-    print(type(graph_pass))
     assert isinstance(
         graph_pass, _AbstractGraphPass
-    ), "graph pass must be an AbstractGraphPass instance"
+    ), f"graph pass must be an AbstractGraphPass instance, but got {type(graph_pass)}"
     graph_pass.apply(prog)
 
     # An early return can prevent running all other optimization paths triggered by _mil_convert.
@@ -1503,6 +1505,15 @@ class MultiFunctionDescriptor:
         del self._name_to_source_function[function_name]
 
 
+def _multifunction_program_append_unifunction_program(
+    multifunction_prog: _mil.Program,
+    unifunction_prog: _mil.Program,
+    src_func_name: str,
+    target_func_name: str,
+) -> None:
+    multifunction_prog.add_function(target_func_name, unifunction_prog.functions[src_func_name])
+
+
 def save_multifunction(
     desc: MultiFunctionDescriptor,
     destination_path: str,
@@ -1529,7 +1540,7 @@ def save_multifunction(
         desc.add_function("my_model_2.mlpackage", "main", "main_2")
         desc.default_function_name = "main_2"
 
-        save_multifunction(desc, "multifunctino_model.mlpackage")
+        save_multifunction(desc, "multifunction_model.mlpackage")
 
     See Also
     --------
@@ -1601,7 +1612,9 @@ def save_multifunction(
         model_path = v[0]
         src_func_name = v[1]
         prog = modelpath_to_pymil[model_path]
-        multifunction_prog.add_function(target_func_name, prog.functions[src_func_name])
+        _ct.utils._multifunction_program_append_unifunction_program(
+            multifunction_prog, prog, src_func_name, target_func_name
+        )
 
         # get the corresponding function description from the spec
         spec = modelpath_to_spec_and_weightdir[model_path][0]
@@ -1649,6 +1662,151 @@ def save_multifunction(
         skip_model_load=True,
     )
     mlmodel.save(destination_path)
+
+
+def materialize_dynamic_shape_mlmodel(
+    dynamic_shape_mlmodel: "_ct.models.MLModel",
+    function_name_to_materialization_map: _Dict[str, _Dict[str, _Tuple[int]]],
+    destination_path: str,
+    source_function_name: str = "main",
+) -> None:
+    """
+    Given a dynamic-shape mlmodel, materialize symbols to create fixed-shape functions,
+    then save as an .mlpackage to destination path.
+    To save memory, the pymil program of input dynamic-shape mlmodel is re-used.
+    Constant deduplication across functions is performed to allow weight sharing.
+
+    Parameters
+    ----------
+    dynamic_shape_mlmodel : ct.models.MLModel
+        A dynamic-shape mlmodel to be materialized
+
+    function_name_to_materialization_map: Dict[str, Dict[str, Tuple[int]]]
+        A dictionary specifying the name of new functions to be created,
+        and for each new function what is the new fixed shapes for inputs.
+        If a new function has the same name as an old function,
+        then the old function will be overridden
+
+    destination_path : str
+        The saved .mlpackage model path
+
+    source_function_name: str
+        The name of the source symbolic-shape function to be materialized, default = main
+
+    Examples
+    --------
+    .. sourcecode:: python
+
+        from coremltools.utils import materialize_dynamic_shape_mlmodel
+
+        # A dynamic-shape mlmodel you have converted
+        dynamic_shape_mlmodel: ct.models.MLModel
+
+        # As an example, let us assume the inputs are
+        # 1. ``input_ids (1, query_length)``
+        # 2. ``mask (query_length, context_length)``
+        function_name_to_materialization_map = {
+            "function_name_to_materialization_map": {
+                "materialization_2_3": {"input_ids": (1, 2), "mask": (2, 3)},
+                "materialization_4_5": {"input_ids": (1, 4), "mask": (4, 5)},
+            }
+        }
+
+        materialize_dynamic_shape_mlmodel(
+            dynamic_shape_mlmodel,
+            function_name_to_materialization_map,
+            "materialized_model.mlpackage",
+        )
+
+    To make prediction from the materialized mlmodel, load the desired materialized function
+
+    .. sourcecode:: python
+
+        materialization_2_3 = ct.models.MLModel(
+            "materialized_model.mlpackage", function_name="materialization_2_3"
+        )
+        materialization_4_5 = ct.models.MLModel(
+            "materialized_model.mlpackage", function_name="materialization_4_5"
+        )
+
+    See Also
+    --------
+    coremltools.converters.mil.mil.passes.defs.experiment.materialize_symbolic_shape_program
+
+    """
+    # We do the lazy import to prevent circular import
+    from coremltools.converters.mil.converter import mil_convert as _mil_convert
+
+    if not isinstance(dynamic_shape_mlmodel, _ct.models.MLModel):
+        raise ValueError(
+            "Dynamic shape mlmodel must be type of ct.models.MLModel, "
+            f"but got {type(dynamic_shape_mlmodel)}"
+        )
+    for input in dynamic_shape_mlmodel._spec.description.input:
+        if input.type.WhichOneof("Type") != "multiArrayType":
+            raise NotImplementedError("Only tensor input is handled yet")
+    for output in dynamic_shape_mlmodel._spec.description.output:
+        if output.type.WhichOneof("Type") != "multiArrayType":
+            raise NotImplementedError("Only tensor output is handled yet")
+
+    if dynamic_shape_mlmodel._mil_program is not None:
+        dynamic_shape_prog = dynamic_shape_mlmodel._mil_program
+    else:
+        dynamic_shape_prog = _milproto_to_pymil.load(
+            dynamic_shape_mlmodel._spec,
+            dynamic_shape_mlmodel._spec.specificationVersion,
+            dynamic_shape_mlmodel.weights_dir,
+        )
+
+    # Materialize symbolic shapes, then run all optimization passes
+    pass_pipeline = _ct.PassPipeline.DEFAULT
+    pass_pipeline.insert_pass(0, "common::materialize_symbolic_shape_program")
+    pass_pipeline.set_options(
+        "common::materialize_symbolic_shape_program",
+        {
+            "function_name_to_materialization_map": function_name_to_materialization_map,
+            "source_function_name": source_function_name,
+        },
+    )
+    _PassPipelineManager.apply_pipeline(dynamic_shape_prog, pass_pipeline)
+
+    # Weights are duplicated in each materialized new function
+    # By default, graph pass const_deduplication will not deduplicate across functions,
+    # so we need to call it explicitly here
+    const_deduplication_pass = _PASS_REGISTRY["common::const_deduplication"]
+    const_deduplication_pass._deduplicate_const_across_functions(dynamic_shape_prog)
+
+    export_multi_functions = True
+    # If source function is the only function in source model,
+    # and source function is replaced with materialization,
+    # and materialization does not create other functions,
+    # then we will end up with a unifunction model
+    # Core ML distinguishs "unifunction model" and "multifunction model with only 1 function"
+    if (
+        len(dynamic_shape_prog.functions) == 1
+        and len(function_name_to_materialization_map) == 1
+        and source_function_name in function_name_to_materialization_map
+    ):
+        export_multi_functions = False
+
+    # Multifunciton is added in iOS 18, so
+    # * if export multifunction, then specification version has to be iOS 18+
+    # * else, specification version can be the same as original version
+    specification_version = dynamic_shape_mlmodel._spec.specificationVersion
+    if export_multi_functions:
+        specification_version = max(_ct.target.iOS18, specification_version)
+
+    dynamic_shape_prog.skip_all_passes = True
+    materialized_mlmodel = _mil_convert(
+        dynamic_shape_prog,
+        convert_from="milinternal",
+        convert_to="mlprogram",
+        specification_version=specification_version,
+        compute_units=_ct.ComputeUnit.CPU_ONLY,
+        export_multi_functions=export_multi_functions,
+        skip_model_load=True,
+    )
+    materialized_mlmodel.save(destination_path)
 
 
 def randomize_weights(mlmodel: "_ct.models.MLModel"):

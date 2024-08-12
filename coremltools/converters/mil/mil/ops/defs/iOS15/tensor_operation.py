@@ -11,7 +11,7 @@ from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symb
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     InputSpec,
-    InternalInputType,
+    ListOrTensorOrDictInputType,
     TensorInputType,
     TupleInputType,
 )
@@ -1334,7 +1334,7 @@ class identity(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(x=InternalInputType())
+    input_spec = InputSpec(x=ListOrTensorOrDictInputType())
 
     def type_inference(self):
         return self.x.sym_type

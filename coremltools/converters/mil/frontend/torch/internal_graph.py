@@ -12,9 +12,9 @@ import torch
 from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import TensorType
 
-from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
-from .exir_utils import extract_inputs_from_exir_program
+from .exir_utils import extract_io_from_exir_program
 from .torchscript_utils import _expand_and_optimize_ir
+from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
 
 
 def _make_ssa_name(name: str) -> str:
@@ -418,6 +418,8 @@ class InternalTorchIRGraph:
         outputs: List[str],
         nodes: Optional[List["InternalTorchIRNode"]] = None,
         buffers: Optional[Dict[str, torch.Tensor]] = None,
+        input_name_to_source_buffer_name: Optional[Dict[str, str]] = None,
+        output_name_to_target_buffer_name: Optional[Dict[str, str]] = None,
     ):
         """
         Arguments:
@@ -426,12 +428,21 @@ class InternalTorchIRGraph:
             outputs: list[str], list of outputs from the graph.
             nodes: list of InternalTorchIRNode in the graph.
             buffers: Dict mapping torch model buffers to their names.
+            input_name_to_source_buffer_name: Dict[str, str] (EXIR only)
+                dictionary mapping input variable names to underlying mutable buffer names,
+                i.e. these input variables are "read" from mutable buffer
+            output_name_to_target_buffer_name: Dict[str, str] (EXIR only)
+                dictionary mapping output variable names to underlying mutable buffer names,
+                i.e. these output variables are "written" to mutable buffer
         """
         self.nodes = nodes
         self.params = params
         self.inputs = inputs
         self.outputs = outputs
         self.buffers = buffers
+        self.input_name_to_source_buffer_name = input_name_to_source_buffer_name
+        self.output_name_to_target_buffer_name = output_name_to_target_buffer_name
+
         self.params_scope = {}
 
     @classmethod
@@ -520,15 +531,18 @@ class InternalTorchIRGraph:
     @classmethod
     def from_exir(cls, exir):
         exported_program: torch.export.ExportedProgram = exir
-        user_inputs, lifted_parameters, lifted_buffers, lifted_constants = (
-            extract_inputs_from_exir_program(exported_program)
-        )
+        (
+            user_inputs,
+            user_outputs,
+            params,
+            buffers,
+            input_name_to_source_buffer_name,
+            output_name_to_target_buffer_name,
+        ) = extract_io_from_exir_program(exported_program)
 
-        params = {**lifted_parameters, **lifted_buffers, **lifted_constants}
         inputs = OrderedDict([(i.name, i) for i in user_inputs])
 
         nodes = []
-        outputs = []
         for node in exported_program.graph_module.graph.nodes:
             if node.op == "call_function":
                 nodes.append(InternalTorchIRNode.from_exir_node(node=node))
@@ -544,13 +558,19 @@ class InternalTorchIRGraph:
             elif node.op == "placeholder":
                 continue
             elif node.op == "output":
-                outputs = [
-                    node.name for node in node.args[0]
-                ]  # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
+                continue
             else:
                 raise NotImplementedError(f"Nodes of type {node.op} not yet implemented")
 
-        return cls(nodes=nodes, params=params, inputs=inputs, outputs=outputs)
+        return cls(
+            nodes=nodes,
+            params=params,
+            inputs=inputs,
+            outputs=user_outputs,
+            buffers=buffers,
+            input_name_to_source_buffer_name=input_name_to_source_buffer_name,
+            output_name_to_target_buffer_name=output_name_to_target_buffer_name,
+        )
 
     def __str__(self):
         graph_str = "graph(\n"

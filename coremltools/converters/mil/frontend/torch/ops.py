@@ -34,7 +34,7 @@ from coremltools.converters.mil.mil.types.type_mapping import builtin_to_string
 from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import build_einsum_mil, value_at
-from .internal_graph import InternalTorchIRGraph
+from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 from .utils import (
     NUM_TO_DTYPE_STRING,
@@ -79,8 +79,7 @@ def convert_nodes(
     Iterate over the nodes of a graph or block and convert to MIL.
 
     Arguments:
-        context: A TranscriptionContext object to pull node inputs and
-            assign node outputs.
+        context: A TranscriptionContext object to pull node inputs and assign node outputs.
         graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
     for node in _tqdm(graph.nodes, desc="Converting PyTorch Frontend ==> MIL Ops", unit=" ops"):
@@ -97,13 +96,12 @@ def convert_nodes(
             break
 
 
-def convert_single_node(context, node):
+def convert_single_node(context: TranscriptionContext, node: InternalTorchIRNode) -> None:
     """
     Converts a single lowered PyTorch op to MIL.
 
     Arguments:
-        context: A TranscriptionContext object to pull node inputs and
-            assign node outputs.
+        context: A TranscriptionContext object to pull node inputs and assign node outputs.
         node: lowered PyTorch op to convert.
     """
     op_lookup = node.kind
@@ -719,19 +717,19 @@ def reshape_as(context, node):
 @register_torch_op
 def unflatten(context, node):
     x, dim_var, unflattened_size_var = _get_inputs(context, node, expected=3)
-    x_shape = x.shape
-    dim = dim_var.val
-    unflattened_size = tuple(unflattened_size_var.val)
-    assert x_shape is not None
-    assert dim is not None
-    assert unflattened_size is not None
-    assert x_shape[dim] == _np.prod(unflattened_size)
 
+    dim = dim_var.val
+    if dim is None:
+        raise ValueError("In 'unflatten' op, the 'dim' must be provided.")
     if dim < 0:
         dim += x.rank
 
-    shape = x_shape[:dim] + unflattened_size + x_shape[dim + 1:]
-    y = mb.reshape(x=x, shape=shape, name=node.name)
+    x_shape = mb.shape(x=x)
+    pre_shape = mb.slice_by_index(x=x_shape, begin=[0], end=[dim])
+    post_shape = mb.slice_by_index(x=x_shape, begin=[dim + 1], end=[len(x.shape)])
+    target_shape = mb.concat(values=(pre_shape, unflattened_size_var, post_shape), axis=0)
+    target_shape = mb.cast(x=target_shape, dtype="int32")
+    y = mb.reshape(x=x, shape=target_shape, name=node.name)
     context.add(y)
 
 
@@ -968,8 +966,12 @@ def linear(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     x = inputs[0]
     W = inputs[1]
-    x, W = promote_input_dtypes([x, W])
     bias = inputs[2] if len(node.inputs) == 3 else None
+    if bias is not None:
+        x, W, bias = promote_input_dtypes([x, W, bias])
+    else:
+        x, W = promote_input_dtypes([x, W])
+
     res = _create_linear_layer(x, W, bias)
     context.add(res, torch_name=node.name)
 
@@ -1499,7 +1501,7 @@ def maximum(context, node):
     context.add(out)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["truediv"])
 def div(context, node):
     inputs = _get_inputs(context, node, expected=[2, 3])
     x = mb.cast(x=inputs[0], dtype="fp32")
@@ -1663,7 +1665,7 @@ def unsqueeze(context, node):
     context.add(unsqueeze)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["sym_size.int"])
 def size(context, node):
     inputs = _get_inputs(context, node, expected=[1, 2])
     x = inputs[0]
@@ -4058,7 +4060,7 @@ def index_put(context, node):
     context.add(result)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["_unsafe_index"])
 def index(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
@@ -4910,8 +4912,8 @@ def arange(context, node):
     # layout = inputs[-3]
     # device = inputs[-2]
     # pin_memory = inputs[-1]
-    if len(inputs) == 5:
-        # inputs are [end, dtype, layout, device, pin_memory]
+    if len(inputs) == 1 or len(inputs) == 5:
+        # inputs are [end] or [end, dtype, layout, device, pin_memory]
         start = 0
         end = inputs[0]
         step = 1
@@ -5023,6 +5025,7 @@ def meshgrid(context, node):
 # Defines all the nodes that are noOps
 @register_torch_op(
     torch_alias=[
+        "alias_copy",
         "clone",
         "contiguous",
         "detach",
@@ -5030,6 +5033,7 @@ def meshgrid(context, node):
         "dropout",
         "feature_dropout",
         "lift_fresh",
+        "lift_fresh_copy",
     ]
 )
 def noop(context, node):

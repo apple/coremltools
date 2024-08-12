@@ -182,14 +182,14 @@ class select_optimization(AbstractGraphPass):
         assert select_op.op_type == "select"
         assert cond_val is not None
 
-        # check if a or b is inf const
+        # check if a or b is all infinity constants
         # if a is not but b is, then swap a and b
         a: np.ndarray = None
         b: Var = None
-        if a_val is not None and np.all(np.abs(a_val) > 1e38):
+        if a_val is not None and np.all(np.logical_not(np.isfinite(a_val))):
             a = a_val
             b = select_op.b
-        elif b_val is not None and np.all(np.abs(b_val) > 1e38):
+        elif b_val is not None and np.all(np.logical_not(np.isfinite(b_val))):
             a = b_val
             b = select_op.a
             cond_val = np.logical_not(cond_val)

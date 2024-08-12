@@ -1,29 +1,35 @@
 boto3==1.14.8
 configparser
-h5py==2.10.0; platform_machine != "arm64" and python_version < "3.8"
-h5py==3.8.0; platform_machine != "arm64" and python_version >= "3.8"
 future
+
 numpy>1.18.4; platform_machine != "arm64"
-numpy==1.24.2; platform_machine == "arm64"
-libsvm; python_version < '3.11'
+numpy==2.0.0; python_version >= "3.9" and platform_machine == "arm64"
+
+# libsvm can not run with a version of scipy that supports numpy 2.0
+libsvm; python_version < '3.11' and platform_machine != "arm64"
+scipy>1.4 ; python_version < '3.8'
+scipy==1.8.1; python_version >= '3.8' and python_version < '3.11' and platform_machine != "arm64"
+scipy==1.9.2; python_version == '3.11' and platform_machine != "arm64"
+scipy; platform_machine == "arm64"
+
 olefile==0.44
 pandas
 parameterized==0.8.1
+protobuf
 pillow
 pytest==7.1.2
 pytest-cov
 pytest-sugar
 
 scikit-learn==0.19.2; python_version < '3.8'
-scikit-learn==1.1.2; python_version >= '3.8'
-
-scipy>1.4 ; python_version < '3.8'
-scipy==1.8.1; python_version >= '3.8' and python_version < '3.11'
-scipy==1.9.2; python_version == '3.11'
+scikit-learn==1.1.2; python_version == '3.8'
+scikit-learn==1.5.1; python_version > '3.8'
 
 six
 sympy > 1.6
 gast==0.4.0
+
+# torch 2.3 dropped support for x86 macOS
 torch==2.2.0; platform_machine != "arm64"
 torch==2.3.0; platform_machine == "arm64"
 executorch==0.2.0; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
@@ -31,6 +37,7 @@ torchaudio==2.2.0; platform_machine != "arm64"
 torchaudio==2.3.0; platform_machine == "arm64"
 torchvision==0.17.0; platform_machine != "arm64"
 torchvision==0.18.0; platform_machine == "arm64"
+
 torchsr==1.0.4; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
 timm==0.6.13; platform_machine == "arm64" and python_version >= '3.10' and python_version <= '3.11'
 xgboost==1.4.2; platform_machine != "arm64"
@@ -41,6 +48,7 @@ pytest-timeout
 
 transformers==4.26.0; platform_machine != "arm64"
 transformers==4.38.2; platform_machine == "arm64"
+peft
 
 # coremltools.optimize.torch
 filelock==3.6.0

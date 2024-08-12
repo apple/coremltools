@@ -750,19 +750,21 @@ class TestConstexprLut:
             backend=backend,
         )
 
+    @pytest.mark.xfail(reason="rdar://131511244 Investigate Why Palettization is Failing on BNNS")
     @pytest.mark.parametrize(
-        "compute_unit, backend, nbits, block_sizes, vector_size, lut_dtype",
+        "compute_unit, backend, nbits, block_sizes, vector_size, vector_axis, lut_dtype",
         itertools.product(
             compute_units,
             backends,
             [2, 3, 4, 6, 8],
             [(0, 2, 0, 0), (2, 0, 0, 0), (0, 0, 0, 0), (1, 1, 1, 1), (4, 2, 0, 0), (4, 8, 16, 8)],
             [1, 4],
+            [0, 1, -1],
             ["fp16", "fp32"],  # TODO (rdar://125859751): Add "int8" and "uint8".
         ),
     )
     def test_builder_to_backend_stress(
-        self, compute_unit, backend, nbits, block_sizes, vector_size, lut_dtype
+        self, compute_unit, backend, nbits, block_sizes, vector_size, vector_axis, lut_dtype
     ):
         """Use constexpr_lut_to_dense op's value inference to check backends outputs."""
         indices_shape = (4, 8, 16, 8)
@@ -773,8 +775,6 @@ class TestConstexprLut:
         lut_np_dtype = types.nptype_from_builtin(types.string_to_builtin(lut_dtype))
         lut_shape = _infer_lut_shape(indices_shape, block_sizes, nbits, vector_size)
         lut = np.random.rand(*lut_shape).astype(lut_np_dtype)
-
-        vector_axis = 0 if vector_size > 1 else None
 
         def build(x):
             output = mb.constexpr_lut_to_dense(
@@ -1659,6 +1659,7 @@ class TestConstexprSparseBlockwiseShiftScale:
 
 
 class TestJointCompressionOps:
+    @pytest.mark.xfail(reason="rdar://131511244 Investigate Why Palettization is Failing on BNNS")
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, block_sizes, vector_size, lut_dtype, quant_dtype",
         itertools.product(

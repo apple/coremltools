@@ -15,7 +15,12 @@ from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 from .block import Function, curr_block
-from .input_type import InternalInputType, ListOrTensorInputType, TensorInputType, TupleInputType
+from .input_type import (
+    InternalInputType,
+    ListOrTensorOrDictInputType,
+    TensorInputType,
+    TupleInputType,
+)
 from .program import Placeholder, StateTensorPlaceholder
 from .scope import (
     SCOPE_STACK,
@@ -82,15 +87,15 @@ class Builder:
     @classmethod
     def _add_const(cls, val, name, before_op):
         if not is_python_value(val):
-            raise ValueError("Cannot add const {}".format(val))
-        if any_symbolic(val):
-            msg = (
-                "Python native vals (list, tuple), np.array that are"
-                + "operation inputs cannot have symbolic values. Consider feeding"
-                + "symbolic shape in through placeholder and use mb.shape() "
-                + "operator. Input {}: {}"
-            )
-            raise ValueError(msg.format(name, val))
+            err_msg = f"Cannot add const {val}"
+            if any_symbolic(val):
+                err_msg += (
+                    "\nPython native vals (list, tuple), np.array that are"
+                    + "operation inputs cannot have symbolic values. Consider feeding"
+                    + "symbolic shape in through placeholder and use mb.shape() "
+                    + f"operator. Input {name}: {val}"
+                )
+            raise ValueError(err_msg)
         const_name = cls._get_free_name(name)
         logger.debug("Adding const op '{}'".format(const_name))
         output_var = cls.const(val=val, name=const_name,
@@ -152,7 +157,7 @@ class Builder:
                 update_dict[k] = var
                 continue
 
-            if isinstance(in_type, (TensorInputType, ListOrTensorInputType)):
+            if isinstance(in_type, (TensorInputType, ListOrTensorOrDictInputType)):
                 var = cls._add_const(val, new_var_name, before_op)
                 update_dict[k] = var
 

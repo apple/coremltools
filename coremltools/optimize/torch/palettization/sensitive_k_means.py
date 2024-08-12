@@ -121,6 +121,9 @@ class ModuleSKMPalettizerConfig(_ModuleOptimizationConfig):
         default=0,
         validator=_validators.optional([_validators.instance_of(int), _validators.in_([0, 1])]),
     )
+    cluster_dim: _Optional[int] = _field(
+        default=None, validator=_validators.optional(_validators.instance_of(int))
+    )
     enable_per_channel_scale: bool = _field(
         default=False, validator=_validators.optional(_validators.instance_of(bool))
     )
@@ -134,6 +137,13 @@ class ModuleSKMPalettizerConfig(_ModuleOptimizationConfig):
             assert value > 0, "group_size should be greater than zero"
         else:
             assert value is None, "group_size can't be specified along with per_tensor granularity."
+
+    @cluster_dim.validator
+    def no_per_channel_scale(self, attribute, value):
+        if value and value > 1:
+            assert (
+                self.enable_per_channel_scale == False
+            ), f"Enabling per_channel_scale is not supported for cluster_dim={value} larger than 1"
 
 
 _ModuleTypeConfigType = _NewType(
@@ -644,8 +654,9 @@ class SKMPalettizer(_BaseDataCalibratedModelOptimizer):
                 updated_config = _validate_param_config(
                     name + "." + param_name,
                     param,
+                    submodule,
                     submod_config,
-                    ["palettization_group_size"],
+                    ["palettization_group_size", "palettization_cluster_dim"],
                 )
                 if not updated_config:
                     continue
@@ -662,6 +673,7 @@ class SKMPalettizer(_BaseDataCalibratedModelOptimizer):
                     lut_dtype=updated_config.lut_dtype,
                     block_size=updated_config.group_size,
                     importance=sensitivity,
+                    cluster_dim=updated_config.cluster_dim,
                     enable_per_channel_scale=updated_config.enable_per_channel_scale,
                 )
 

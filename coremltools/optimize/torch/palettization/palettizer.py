@@ -17,6 +17,9 @@ from coremltools.optimize.torch._utils.metadata_utils import (
     register_metadata_version as _register_metadata_version,
 )
 from coremltools.optimize.torch._utils.torch_utils import get_eval_model as _get_eval_model
+from coremltools.optimize.torch._utils.validation_utils import (
+    validate_param_config as _validate_param_config,
+)
 from coremltools.optimize.torch.base_model_optimizer import (
     BaseTrainingTimeModelOptimizer as _BaseTrainingTimeModelOptimizer,
 )
@@ -115,7 +118,7 @@ class DKMPalettizer(Palettizer):
                     for submod_config in submod_configs:
                         if all(
                             param.numel() > submod_config.weight_threshold
-                            for param in _get_palettizable_parameters(submodule)
+                            for param, _ in _get_palettizable_parameters(submodule)
                         ):
                             module_level_advanced_options = self._get_module_level_advanced_options(
                                 submodule, submod_config
@@ -137,20 +140,38 @@ class DKMPalettizer(Palettizer):
                                     "enable_per_channel_scale"
                                 ]
                             )
+                            updated_config = None
+                            for param, param_name in _get_palettizable_parameters(submodule):
+                                updated_config = _validate_param_config(
+                                    name + "." + param_name,
+                                    param,
+                                    submodule,
+                                    submod_config,
+                                    [
+                                        "palettization_cluster_dim",
+                                        "palettization_group_size",
+                                    ],
+                                    module_level_advanced_options,
+                                )
+                                if not updated_config:
+                                    break
+                            if not updated_config:
+                                continue
+
                             self._palettize_module(
                                 submodule,
                                 n_bits,
                                 cluster_dim,
                                 enable_per_channel_scale,
-                                submod_config.group_size,
-                                submod_config.quant_min,
-                                submod_config.quant_max,
-                                submod_config.cluster_dtype,
-                                submod_config.dtype,
-                                submod_config.quantize_activations,
+                                updated_config.group_size,
+                                updated_config.quant_min,
+                                updated_config.quant_max,
+                                updated_config.lut_dtype,
+                                updated_config.dtype,
+                                updated_config.quantize_activations,
                                 module_level_advanced_options,
                             )
-                            self._milestones[name] = submod_config.milestone
+                            self._milestones[name] = updated_config.milestone
 
     @staticmethod
     def _palettize_module(
@@ -161,7 +182,7 @@ class DKMPalettizer(Palettizer):
         group_size: _Optional[int],
         quant_min: int,
         quant_max: int,
-        cluster_dtype: str,
+        lut_dtype: str,
         dtype: _torch.dtype,
         quantize_activations: bool,
         advanced_options: _Dict,
@@ -180,7 +201,7 @@ class DKMPalettizer(Palettizer):
             group_size=group_size,
             quant_min=quant_min,
             quant_max=quant_max,
-            cluster_dtype=cluster_dtype,
+            lut_dtype=lut_dtype,
             advanced_options=advanced_options,
         )
         if quantize_activations:
@@ -205,7 +226,7 @@ class DKMPalettizer(Palettizer):
         """
         module_level_advanced_options = {}
         for key in _DEFAULT_PALETTIZATION_ADVANCED_OPTIONS.keys():
-            if key == "cluster_permute" and module_level_config.cluster_dtype == "oc_last":
+            if key == "cluster_permute" and module_level_config.lut_dtype == "oc_last":
                 cluster_permute = list(range(module.weight.dim()))
                 cluster_permute = cluster_permute[1:] + cluster_permute[:1]
                 module_level_advanced_options[key] = cluster_permute
@@ -247,6 +268,7 @@ class DKMPalettizer(Palettizer):
         if model is None:
             model = self._model
         model.eval()
+
         finalized_model = _torch.quantization.convert(
             model, convert_custom_config_dict=_PALETTIZATION_CONVERT_DICT, inplace=inplace
         )
@@ -332,7 +354,7 @@ class DKMPalettizer(Palettizer):
                     if hasattr(module, "weight_fake_quant"):
                         module_summary["device"] = module.weight.device
                         qweight = module.weight_fake_quant.forward(module.weight.detach())
-                        cluster_dtype = module.weight_fake_quant.cluster_dtype
+                        lut_dtype = module.weight_fake_quant.lut_dtype
                         cluster_permute = module.weight_fake_quant.cluster_permute
                         module_summary["error"] = _rmse_error(
                             module.weight.detach(), qweight
@@ -341,7 +363,7 @@ class DKMPalettizer(Palettizer):
                         module_summary["#params"] = int(_torch.numel(qweight))
                         cluster_dim = module.weight_fake_quant.cluster_dim
                         module_summary["#dtype"] = (
-                            f":num_clusters: {n_clusters} <{cluster_dtype, cluster_permute}> "
+                            f":num_clusters: {n_clusters} <{lut_dtype, cluster_permute}> "
                             f"dim={cluster_dim}"
                         )
                         report[name] = module_summary

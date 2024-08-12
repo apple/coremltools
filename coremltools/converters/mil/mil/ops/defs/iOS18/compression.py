@@ -123,9 +123,16 @@ class constexpr_blockwise_shift_scale(Operation):
         return types.tensor(self.scale.dtype, self.data.shape)
 
     def materialized_val_inference(self):
+        data = self.data.val
+        scale = self.scale.val
+        if data is None and self.data.op.op_type.startswith("constexpr_"):
+            data = self.data.op.materialized_val_inference()
+        if scale is None and self.scale.op.op_type.startswith("constexpr_"):
+            scale = self.scale.op.materialized_val_inference()
+
         return self.decompress(
-            self.data.val,
-            self.scale.val,
+            data,
+            scale,
             None if self.offset is None else self.offset.val,
         )
 

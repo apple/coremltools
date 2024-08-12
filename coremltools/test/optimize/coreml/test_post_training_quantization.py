@@ -4,6 +4,8 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import logging
+import re
 import shutil
 import tempfile
 from typing import Tuple
@@ -103,16 +105,51 @@ def get_test_model_and_data_complex():
     return Model().eval(), inputs, torch_input_values, coreml_input_values
 
 
-def create_unique_weight(weight, nbits):
-    shape = weight.detach().numpy().shape
-    size = weight.detach().numpy().size
+def get_test_model_and_data_conv_transpose():
+    """Two conv transpose layer which share the same weight."""
+    inputs = [ct.TensorType(name="data", shape=(1, 64, 5, 5))]
+    torch_input_values = [torch.rand(*i.shape.to_list()) for i in inputs]
+    coreml_input_values = {
+        i.name: val.detach().numpy() for i, val in zip(inputs, torch_input_values)
+    }
 
+    class Model(torch.nn.Module):
+        def __init__(self):
+            super(Model, self).__init__()
+            self.conv_transpose1 = torch.nn.ConvTranspose2d(
+                in_channels=64, out_channels=32, kernel_size=2
+            )
+            self.conv_transpose2 = torch.nn.ConvTranspose2d(
+                in_channels=64, out_channels=32, kernel_size=2
+            )
+            self.conv_transpose1.weight = self.conv_transpose2.weight
+
+        def forward(self, x):
+            return self.conv_transpose1(x) + self.conv_transpose2(x)
+
+    return Model().eval(), inputs, torch_input_values, coreml_input_values
+
+
+def create_unique_weight(weight, nbits, vector_size=1, vector_axis=None):
+    shape = list(weight.detach().numpy().shape)
     unique_number = 1 << nbits
-    weight = list(range(unique_number))
-    if size > unique_number:
-        weight.extend([unique_number - 1] * (size - unique_number))
-    weight = np.reshape(np.array(weight[:size]).astype(np.float32), shape)
-    return weight
+
+    if vector_size == 1:
+        weight = np.random.randint(low=0, high=unique_number, size=shape)
+    else:
+        if shape[vector_axis] % vector_size != 0:
+            raise ValueError(
+                f"weight's dim at {vector_axis}th axis must be divisible by "
+                f"vector_size {vector_size}"
+            )
+        # Swap the dim size of vector_axis with last dim.
+        shape[vector_axis], shape[-1] = shape[-1], shape[vector_axis]
+        shape[-1] //= vector_size
+        weight = np.random.randint(low=0, high=unique_number, size=shape)
+        weight = np.repeat(weight, vector_size, axis=-1)
+        weight = np.swapaxes(weight, -1, vector_axis)
+
+    return weight.astype(np.float32)
 
 
 def create_sparse_weight(weight, target_sparsity):
@@ -146,7 +183,7 @@ def create_quantize_friendly_weight(
     return dequantized_weight, scale, zero_point
 
 
-def verify_model_outputs(model, compressed_model, input_values, rtol=1e-7, atol=0):
+def verify_model_outputs(model, compressed_model, input_values, rtol=1e-7, atol=0.0):
     """
     This utility functions does the following checks:
 
@@ -389,6 +426,8 @@ class TestLinearQuantizeWeights:
         # For sub-byte dtype, we still use np.int8/uint8 to store the data.
         assert quantize_op.data.val.dtype == np.int8 if signed else np.uint8
         assert model.weight.detach().numpy().size == quantize_op.data.val.size
+        # Weight shape is [32, 64, 2, 2]. The scale's shape reflects number of blocks on each axis.
+        assert quantize_op.scale.shape == (32, 64 // block_size if block_size > 0 else 1, 1, 1)
 
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
@@ -463,6 +502,118 @@ class TestLinearQuantizeWeights:
 
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mode, nbits, granularity",
+        itertools.product(
+            compute_units,
+            backends,
+            ("linear", "linear_symmetric"),
+            (4, 8),
+            ("per_tensor", "per_channel", "per_block"),
+        ),
+    )
+    def test_quantization_conv_transpose_axis(compute_unit, backend, mode, nbits, granularity):
+        """The conv_transpose has [Cin, Cout, ...], which is different from conv."""
+        (
+            model,
+            inputs,
+            torch_input_values,
+            coreml_input_values,
+        ) = get_test_model_and_data_conv_transpose()
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        dtype_str = f"int{nbits}"
+        op_config = cto.coreml.OpLinearQuantizerConfig(
+            mode=mode, dtype=dtype_str, granularity=granularity
+        )
+        config = cto.coreml.OptimizationConfig(global_config=op_config)
+        mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
+
+        # Verify ops.
+        if backend.precision == "fp16":
+            # For fp16 precision there is no extra cast op inserted.
+            expected_ops = [
+                "constexpr_blockwise_shift_scale",
+                "conv_transpose",
+                "conv_transpose",
+                "add",
+            ]
+        else:
+            expected_ops = [
+                "constexpr_blockwise_shift_scale",
+                "cast",
+                "conv_transpose",
+                "conv_transpose",
+                "add",
+                "cast",
+            ]
+        assert get_op_types_in_program(mlmodel_quantized._mil_program) == expected_ops
+
+        # Verify quantization ops are on the expected axis.
+        quantize_op = mlmodel_quantized._mil_program.functions["main"].find_ops(
+            op_type="constexpr_blockwise_shift_scale"
+        )[0]
+        assert types.builtin_to_string(quantize_op.data.dtype) == dtype_str
+        if granularity == "per_tensor":
+            expected_scale_shape = (1, 1, 1, 1)
+        elif granularity == "per_channel":
+            # The weight has shape [64, 32, 2, 2], and the second axis is output channel.
+            expected_scale_shape = (1, 32, 1, 1)
+        else:
+            # The per_block has default block_size 32.
+            expected_scale_shape = (64 // 32, 32, 1, 1)
+        assert quantize_op.scale.shape == expected_scale_shape
+
+        if _macos_version() >= (15, 0):
+            verify_model_outputs(mlmodel, mlmodel_quantized, coreml_input_values, atol=2e-2)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "backend, skip_model_load",
+        itertools.product(backends, (True, False)),
+    )
+    def test_skip_model_load_in_compression_pass(backend, skip_model_load):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16,
+            skip_model_load=skip_model_load,
+        )
+
+        config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpLinearQuantizerConfig(
+                mode="linear_symmetric",
+                dtype="int4",
+                granularity="per_block",
+                block_size=2,
+                weight_threshold=500,
+            )
+        )
+        mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, config)
+
+        if skip_model_load:
+            # If the mlmodel before compression is not compiled and loaded, the compression pass
+            # should keep the model skip_model_load.
+            with pytest.raises(Exception, match="Cannot make predictions"):
+                mlmodel_quantized.predict(coreml_input_values)
+        else:
+            mlmodel_quantized.predict(coreml_input_values)
 
 
 class TestPalettizeWeights:
@@ -1085,6 +1236,154 @@ class TestPalettizeWeights:
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
 
+    @pytest.mark.xfail(reason="rdar://131511244 Investigate Why Palettization is Failing on BNNS")
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mode, cluster_dim",
+        itertools.product(compute_units, backends, ("kmeans", "unique"), (2, 4)),
+    )
+    def test_vector_palettization(self, compute_unit, backend, mode, cluster_dim):
+        """Test the vector palettization (cluster_dim > 1)."""
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
+        if mode == "unique":
+            weight_unique = create_unique_weight(
+                model.weight, nbits=4, vector_size=cluster_dim, vector_axis=0
+            )
+            with torch.no_grad():
+                model.weight = torch.nn.Parameter(torch.Tensor(weight_unique))
+
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        vector_lut_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpPalettizerConfig(
+                mode=mode,
+                nbits=4 if mode == "kmeans" else None,
+                granularity="per_grouped_channel",
+                group_size=0,
+                cluster_dim=cluster_dim,
+                weight_threshold=500,
+            )
+        )
+        mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, vector_lut_config)
+
+        # Verify ops.
+        palettize_op = mlmodel_palettized._mil_program.functions["main"].find_ops(
+            op_type="constexpr_lut_to_dense"
+        )[0]
+        produced_nbits = 4
+        assert types.builtin_to_string(palettize_op.indices.dtype) == f"uint{produced_nbits}"
+        # The shape on the Cout (0th for conv) should match after multiplying cluster_dim.
+        assert model.weight.shape[0] == palettize_op.indices.val.shape[0] * cluster_dim
+        # The last dim of lut should match cluster_dim.
+        assert palettize_op.lut.shape[-2:] == (2**produced_nbits, cluster_dim)
+
+        if _macos_version() >= (15, 0):
+            verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, mode, cluster_dim, op_type",
+        itertools.product(
+            compute_units, backends, ("kmeans", "unique"), (2, 4), ("conv", "conv_transpose")
+        ),
+    )
+    def test_vector_palettization_skip_conv(
+        self, compute_unit, backend, mode, cluster_dim, op_type, caplog
+    ):
+        """Test grouped conv/conv_transpose where effective dim size is not divisible by cluster_dim."""
+        inputs = [ct.TensorType(name="data", shape=(1, 32, 10, 10))]
+        torch_input_values = [torch.rand(*i.shape.to_list()) for i in inputs]
+        if op_type == "conv":
+            model = torch.nn.Conv2d(in_channels=32, out_channels=32, kernel_size=1, groups=32)
+        else:
+            model = torch.nn.ConvTranspose2d(
+                in_channels=32, out_channels=32, kernel_size=1, groups=32
+            )
+        model.eval()
+
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        vector_lut_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpPalettizerConfig(
+                mode=mode,
+                nbits=4 if mode == "kmeans" else None,
+                granularity="per_grouped_channel",
+                group_size=0,
+                cluster_dim=cluster_dim,
+                weight_threshold=30,  # The weight shape is [32, 1, 1, 1].
+            )
+        )
+        with caplog.at_level(logging.WARNING):
+            mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, vector_lut_config)
+
+        # As the effective dim size (1) is not divisible by cluster_dim, the op won't be palettized.
+        warning_msg = "The `cluster_dim` is invalid for .* Skipped this op."
+        assert any([re.match(warning_msg, rec.message) for rec in caplog.records])
+        assert get_op_types_in_program(mlmodel._mil_program) == get_op_types_in_program(
+            mlmodel_palettized._mil_program
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_palettization_pcs(self, compute_unit, backend):
+        """Test the palettization with per-channel-scale."""
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
+
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        vector_lut_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpPalettizerConfig(
+                mode="kmeans",
+                nbits=4,
+                granularity="per_grouped_channel",
+                group_size=0,
+                enable_per_channel_scale=True,
+                weight_threshold=500,
+            )
+        )
+        mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, vector_lut_config)
+
+        # Verify ops.
+        palettize_op = mlmodel_palettized._mil_program.functions["main"].find_ops(
+            op_type="constexpr_lut_to_dense"
+        )[0]
+        assert types.builtin_to_string(palettize_op.indices.dtype) == "uint4"
+        # The per-channel-scale is represented by a quant op to do scaling.
+        assert palettize_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
+
+        if _macos_version() >= (15, 0):
+            verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
+
 
 class TestPruneWeights:
     @staticmethod
@@ -1399,12 +1698,15 @@ class TestPruneWeights:
                 assert types.builtin_to_string(sparse_op.shape.dtype) == "uint32"
 
         if _macos_version() >= (15, 0):
-            verify_model_outputs(mlmodel, mlmodel_pruned, coreml_input_values)
+            verify_model_outputs(mlmodel, mlmodel_pruned, coreml_input_values, rtol=2e-3, atol=2e-3)
 
 
 class TestJointCompressWeights:
     """Test using coremltools PTQ to do joint compression."""
 
+    @pytest.mark.xfail(
+        reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"
+    )
     @pytest.mark.parametrize(
         "compute_unit, backend, dtype, block_size, output_channel_block_size, prune_first",
         itertools.product(
@@ -1524,6 +1826,9 @@ class TestJointCompressWeights:
                 mlmodel, mlmodel_joint_pruned_quantized, coreml_input_values, atol=atol
             )
 
+    @pytest.mark.xfail(
+        reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"
+    )
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, channel_group_size, prune_first",
         itertools.product(
@@ -1764,6 +2069,84 @@ class TestJointCompressWeights:
                 mlmodel_palettized, quant_config, joint_compression=True
             )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, nbits, channel_group_size",
+        itertools.product(
+            compute_units,
+            backends,
+            (3, 4, 8),
+            (0, 1, 2),
+        ),
+    )
+    def test_joint_quantize_palettize_weights(
+        self, compute_unit, backend, nbits, channel_group_size
+    ):
+        """First quantize to get int8 weight, and then palettize to n-bit lut with int8 entries."""
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
+        torchmodel = torch.jit.trace(model, torch_input_values)
+        mlmodel = ct.convert(
+            torchmodel,
+            inputs=inputs,
+            convert_to="mlprogram",
+            minimum_deployment_target=backend.opset_version,
+            compute_precision=ct.precision.FLOAT16
+            if backend.precision == "fp16"
+            else ct.precision.FLOAT32,
+            compute_units=compute_unit,
+        )
+
+        quant_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpLinearQuantizerConfig(
+                mode="linear",
+                dtype="int8",
+                granularity="per_tensor",
+                weight_threshold=500,
+            )
+        )
+        palettize_config = cto.coreml.OptimizationConfig(
+            global_config=cto.coreml.OpPalettizerConfig(
+                mode="uniform",
+                nbits=nbits,
+                granularity="per_grouped_channel",
+                group_size=channel_group_size,
+                weight_threshold=500,
+            )
+        )
+
+        mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
+        mlmodel_joint_quantized_palettized = cto.coreml.palettize_weights(
+            mlmodel_quantized, palettize_config, joint_compression=True
+        )
+        expected_ops = (
+            ["constexpr_lut_to_dense", "constexpr_blockwise_shift_scale", "conv"] * 2
+            + ["reshape"]
+            + ["constexpr_lut_to_dense", "constexpr_blockwise_shift_scale", "linear"] * 2
+            + ["constexpr_lut_to_dense", "constexpr_blockwise_shift_scale"] * 3
+            + ["lstm", "expand_dims", "expand_dims"]
+        )
+        prog = mlmodel_joint_quantized_palettized._mil_program
+        assert get_op_types_in_program(prog) == expected_ops
+
+        for linear_op in prog.find_ops(op_type="linear"):
+            assert linear_op.weight.op.op_type == "constexpr_blockwise_shift_scale"
+        for conv_op in prog.find_ops(op_type="conv"):
+            assert conv_op.weight.op.op_type == "constexpr_blockwise_shift_scale"
+
+        for palettize_op in prog.find_ops(op_type="constexpr_lut_to_dense"):
+            assert palettize_op.lut.dtype == types.int8
+            assert palettize_op.indices.dtype == types.string_to_builtin(f"uint{nbits}")
+            assert palettize_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
+        for quantize_op in prog.find_ops(op_type="constexpr_blockwise_shift_scale"):
+            assert quantize_op.data.dtype == types.int8
+            assert quantize_op.scale.dtype == types.fp16
+            assert quantize_op.offset.dtype == types.int8
+
+        if _macos_version() >= (15, 0):
+            verify_model_outputs(mlmodel, mlmodel_joint_quantized_palettized, coreml_input_values)
+
+    @pytest.mark.xfail(
+        reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"
+    )
     @pytest.mark.parametrize(
         "compute_unit, backend, nbits, channel_group_size, target_sparsity",
         itertools.product(

@@ -3,7 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
 import math
+import os
 import platform
 import shutil
 import tempfile
@@ -22,7 +24,66 @@ from coremltools.converters.mil.mil.ops.tests.iOS18.test_compression import (
     TestConstexprLut as _TestConstexprLut,
 )
 from coremltools.converters.mil.mil.program import Symbol
+from coremltools.converters.mil.mil.types.type_mapping import string_to_nptype
 from coremltools.models.utils import _macos_version
+
+
+class TestWeightFileSerialization:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "dtype, opset_version",
+        itertools.product(
+            ["fp16", "fp32", "uint8", "int8", "uint16", "int16", "int32", "uint32"],
+            [ct.target.iOS16, ct.target.iOS18],
+        ),
+    )
+    def test_weight_serialization(dtype, opset_version):
+        if dtype == "uint32":
+            # There is a pass that casts the output to CoreML supported dtype.
+            # uint32 will fail because `cast` op doesn't accept such input type.
+            pytest.skip("uint32 is not supported in `cast` op.")
+        if dtype in ["uint8", "int8", "uint16", "int16"] and opset_version == ct.target.iOS16:
+            # iOS16 doesn't support the above dtype either
+            pytest.skip("dtype not support in iOS16")
+
+        if dtype in ["fp16", "fp32", "uint8", "int8"]:
+            should_serialize_weight = True
+        else:
+            should_serialize_weight = opset_version >= ct.target.iOS18
+
+        @mb.program(input_specs=[mb.TensorSpec((1,))], opset_version=opset_version)
+        def prog(x):
+            val = np.random.rand(1000).astype(string_to_nptype(dtype))
+            return mb.const(val=val), mb.add(x=x, y=1.0)
+
+        # we don't want the const to be constant folding after casting
+        pipeline = ct.PassPipeline()
+        pipeline.set_options("common::const_elimination", {"skip_const_by_size": "-1"})
+        mlmodel = ct.convert(
+            prog,
+            minimum_deployment_target=opset_version,
+            pass_pipeline=pipeline,
+        )
+        saved_package_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel.save(saved_package_path)
+
+        # check the weights are serialized as file value
+        if ct.utils._macos_version() >= (15, 0):
+            with tempfile.TemporaryDirectory() as serialize_dir:
+                os.system(f"coremlcompiler compile {saved_package_path} {serialize_dir}")
+                model_name_with_extension = os.path.basename(saved_package_path)
+                model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
+                mil_file = open(
+                    os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
+                )
+                mil_txt = mil_file.read()
+                if should_serialize_weight:
+                    assert f"tensor<{dtype}, [1000]>(BLOBFILE" in mil_txt
+                else:
+                    assert f"tensor<{dtype}, [1000]>(BLOBFILE" not in mil_txt
+
+        # cleanup
+        shutil.rmtree(saved_package_path)
 
 
 class TestMILFlexibleShapes:
@@ -991,6 +1052,49 @@ class TestStateModelLoad:
             prog,
             convert_to="mlprogram",
             minimum_deployment_target=ct.target.iOS18,
+            skip_model_load=True,
+        )
+
+        mil = mlmodel.get_spec().mlProgram
+
+        for function in mil.functions.values():
+            for block in function.block_specializations.values():
+                ops = list(block.operations)
+                expected_ops = [
+                    "write_state",
+                    "write_state",
+                    "write_state",
+                    "read_state",
+                ]
+                assert [val.type for val in ops] == expected_ops
+
+    @staticmethod
+    def test_coreml_update_state_lowering_with_prefer_state_in_downstream():
+        @mb.program(
+            input_specs=[
+                mb.StateTensorSpec((1,), dtype=types.fp16),
+                mb.TensorSpec((1,), dtype=types.fp16),
+                mb.TensorSpec((1,), dtype=types.fp16),
+                mb.TensorSpec((1,), dtype=types.fp16),
+            ],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(state, x, y, z):
+            # Although seemingly not used, graph pass prefer_state_in_downstream will
+            # make its output as identiy.x
+            mb.coreml_update_state(state=state, value=x)
+            # If value only feeds into coreml_update_state,
+            # the prefer_state_in_downstream has no affects
+            mb.coreml_update_state(state=state, value=y)
+            # This is the one that really is not used
+            mb.coreml_update_state(state=state, value=z)
+            return mb.identity(x=x), mb.coreml_update_state(state=state, value=y)
+
+        mlmodel = ct.convert(
+            prog,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+            skip_model_load=True,
         )
 
         mil = mlmodel.get_spec().mlProgram
@@ -999,7 +1103,10 @@ class TestStateModelLoad:
                 ops = list(block.operations)
                 expected_ops = [
                     "write_state",
+                    "read_state",
                     "write_state",
+                    "write_state",
+                    "identity",
                     "write_state",
                     "read_state",
                 ]

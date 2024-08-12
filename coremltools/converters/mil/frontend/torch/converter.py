@@ -6,7 +6,7 @@
 import math
 from collections import OrderedDict
 from enum import Enum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import attrs
 import numpy as np
@@ -24,6 +24,7 @@ from coremltools.converters.mil.mil import Function, Placeholder, Program, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.scope import ScopeInfo, ScopeSource
 from coremltools.converters.mil.mil.types import builtin_to_string, is_float
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.mil.var import Var
 from coremltools.optimize.coreml import _utils as optimize_utils
 from coremltools.optimize.coreml._quantization_passes import prune_weights
@@ -40,8 +41,7 @@ from .torchir_passes import (
     remove_getattr_nodes,
     transform_inplace_ops,
 )
-from .torchscript_utils import torch_to_mil_types
-from .utils import TorchFrontend
+from .utils import NUM_TO_NUMPY_DTYPE, TORCH_DTYPE_TO_MIL_DTYPE, TORCH_DTYPE_TO_NUM, TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
@@ -88,6 +88,11 @@ class CompressionInfo:
         default=None,
         validator=attrs.validators.optional([attrs.validators.instance_of(torch.Tensor)]),
     )
+    vector_axis: Optional[int] = attrs.field(
+        default=None,
+        validator=attrs.validators.optional([attrs.validators.instance_of(int)]),
+        converter=attrs.converters.optional(int),
+    )
 
     # Compression type indication fields.
     compression_type: Optional[List[int]] = attrs.field(
@@ -122,7 +127,7 @@ def _convert_to_torch_inputtype(inputs: List[TensorType]) -> List[TensorType]:
             input_type.append(_input)
         elif isinstance(_input, torch.Tensor):
             input_type.append(
-                TensorType(shape=_input.shape, dtype=torch_to_mil_types[_input.dtype])
+                TensorType(shape=_input.shape, dtype=TORCH_DTYPE_TO_MIL_DTYPE[_input.dtype])
             )
         else:
             raise ValueError("Unknown type {} for conversion to InputType.".format(type(_input)))
@@ -323,6 +328,11 @@ class TranscriptionContext:
         ``%read_x_cast`` is cached in ``name_to_source_state``, to make sure one
         state feeds into only one ``read_state`` op.
         """
+
+        # EXIR has nothing to prepare
+        if self.frontend == TorchFrontend.EXIR:
+            return
+
         for val in node.inputs:
             if val is None:
                 continue
@@ -421,6 +431,8 @@ class TranscriptionContext:
             }
 
         """
+        assert self.frontend != TorchFrontend.EXIR, "EXIR has no in-place op"
+
         if len(node.inputs) == 0:
             return
 
@@ -584,6 +596,31 @@ class TorchConverter:
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
             self.context = TranscriptionContext(frontend=TorchFrontend.EXIR)
             self.graph = InternalTorchIRGraph.from_exir(exir=loaded_model)
+            # For iOS 18+, create states for all mutable buffers
+            if self.opset_version >= _target.iOS18:
+                self.states = []
+                for name, tensor in self.graph.buffers.items():
+                    dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[tensor.dtype]]
+                    # For now, we check state dtype here since we construct input from EXIR program
+                    # TODO (rdar://115845792): Once we support user inputs,
+                    # we can migrate this check to inputs validation
+                    if dtype != np.float16:
+                        logger.warning(
+                            "Core ML only supports fp16 states, "
+                            f"so buffer {name} has been cast to fp16"
+                        )
+                        dtype = np.float16
+                    state = StateType(
+                        wrapped_type=TensorType(shape=tensor.shape, dtype=dtype), name=name
+                    )
+                    self.states.append(state)
+            # For iOS 17 or earlier, make sure there is no mutable buffer
+            # (We may workaround by out of place, i.e. have initial value as input
+            #  and mutated value as output. Let us see if there is such demand)
+            else:
+                if self.graph.buffers:
+                    raise ValueError("iOS 18+ is required to convert mutable buffer")
+
         else:
             raise ValueError(
                 "Model should be an instance of either torch.jit.ScriptModule or ExportedProgram"
@@ -607,7 +644,7 @@ class TorchConverter:
     def _validate_states(self) -> None:
         """
         Validate that the user provided states is consistent with the
-        registered buffer in the torchscript model.
+        registered buffer in the torchscript model, and add states to inputs
         """
         if len(self.states) > 0:
             for state in self.states:
@@ -620,12 +657,16 @@ class TorchConverter:
                         f"match the 'named_buffers()' in the source torch model: {list(self.graph.buffers.keys())}"
                     )
 
-                state_shape = state.shape.shape
+                state_shape = tuple(state.shape.symbolic_shape)
                 buffer_shape = tuple(self.graph.buffers[state.name].size())
-                if state_shape != buffer_shape:
-                    raise ValueError(
-                        f"StateType shape {state_shape} must matched the torch buffer shape {buffer_shape}."
-                    )
+                # If Core ML state has fixed shape, then we make sure it matches torch buffer shape
+                # Note: Although dynamic-shape state does not make sense at runtime,
+                #       for flexibility in graph manipulation, pymil allows symbolic-shape state
+                if not any_symbolic(state_shape):
+                    if state_shape != buffer_shape:
+                        raise ValueError(
+                            f"StateType shape {state_shape} must match the torch buffer shape {buffer_shape}."
+                        )
 
             if self.opset_version is None or self.opset_version < _target.iOS18:
                 raise ValueError(
@@ -766,6 +807,27 @@ class TorchConverter:
         """Check if the parameter carries compression info."""
         return param_name in self.param_to_compression_info
 
+    @staticmethod
+    def _interleave_repeat_scale_zp(
+        weight: np.ndarray, scale: np.ndarray, zero_point: Optional[np.ndarray]
+    ) -> Tuple[np.ndarray, Optional[np.ndarray]]:
+        """
+        The scale and zero-point both have shape [.., block_num, ..], which means each scale is
+        for one block. As weight has shape [.., block_num*block_size, ..], we need to interleave
+        repeat them, so they can be applied to all blocks at once.
+        """
+        scale_repeated = scale
+        zero_point_repeated = zero_point
+        for axis, weight_dim_size in enumerate(weight.shape):
+            scale_dim_size = scale.shape[axis]
+            if weight_dim_size != scale_dim_size and scale_dim_size != 1:
+                # Only repeat axis where dim size is not 1, because 1 will be auto-broadcast by np.
+                block_size = weight_dim_size // scale.shape[axis]
+                scale_repeated = np.repeat(scale_repeated, block_size, axis=axis)
+                if zero_point_repeated is not None:
+                    zero_point_repeated = np.repeat(zero_point_repeated, block_size, axis=axis)
+        return scale_repeated, zero_point_repeated
+
     def _construct_quantization_op(
         self,
         weight: np.ndarray,
@@ -798,6 +860,13 @@ class TorchConverter:
             if zero_point is not None:
                 zero_point = np.expand_dims(np.expand_dims(zero_point, axis=-1), axis=-1)
 
+        if compressed_var is not None and compressed_var.op.op_type == "constexpr_lut_to_dense":
+            # The quantization on lut could lead to extra two dims at the end.
+            if len(scale.shape) == len(weight.shape) + 2 and scale.shape[-2:] == (1, 1):
+                scale = np.squeeze(np.squeeze(scale, axis=-1), axis=-1)
+                if zero_point is not None:
+                    zero_point = np.squeeze(np.squeeze(zero_point, axis=-1), axis=-1)
+
         if len(weight.shape) != len(scale.shape):
             raise ValueError(
                 f"In {name}, the `weight` should have same rank as `scale`, but got {weight.shape} vs {scale.shape}"
@@ -808,19 +877,9 @@ class TorchConverter:
                     f"In {name}, the `weight` should have same rank as `zero_point`, but got {weight.shape} vs {zero_point.shape}"
                 )
 
-        # The scale has shape [.., block_num, ..], which means each scale is for one block. As
-        # weight has shape [.., block_num*block_size, ..], we need to interleave repeat it.
-        scale_repeated = scale
-        zero_point_repeated = zero_point
-        for axis, weight_dim_size in enumerate(weight.shape):
-            scale_dim_size = scale.shape[axis]
-            if weight_dim_size != scale_dim_size and scale_dim_size != 1:
-                # Only repeat axis where dim size is not 1, because 1 will be auto-broadcast by np.
-                block_size = weight_dim_size // scale.shape[axis]
-                scale_repeated = np.repeat(scale_repeated, block_size, axis=axis)
-                if zero_point_repeated is not None:
-                    zero_point_repeated = np.repeat(zero_point_repeated, block_size, axis=axis)
-
+        scale_repeated, zero_point_repeated = self._interleave_repeat_scale_zp(
+            weight, scale, zero_point
+        )
         quantized_data = np.round(weight / scale_repeated)
         if zero_point_repeated is not None:
             quantized_data += zero_point_repeated
@@ -856,15 +915,27 @@ class TorchConverter:
                     name=compressed_var.op.name + "_quantized",
                 )
                 return mb.constexpr_sparse_to_dense(nonzero_data=nonzero_data, mask=mask, name=name)
+            elif compressed_var.op.op_type == "constexpr_lut_to_dense":
+                if not types.is_int(compressed_var.dtype):
+                    raise ValueError(
+                        "The joint palettization+quantization only supports lut with "
+                        f"int entries, but got {types.builtin_to_string(compressed_var.dtype)}"
+                    )
+                return mb.constexpr_blockwise_shift_scale(
+                    data=compressed_var,
+                    scale=scale,
+                    offset=zero_point,
+                    name=name,
+                )
             else:
                 raise ValueError(
                     "Unsupported joint compression combination. The quantization can only be joint "
-                    f"with pruning, but got {compressed_var.op.op_type}. Please check the value of "
+                    f"with pruning or palettization, but got {compressed_var.op.op_type}. Please check the value of "
                     "'compression_type' in your registered buffers."
                 )
 
-    @staticmethod
     def _construct_palettization_op(
+        self,
         weight: np.ndarray,
         compression_info: CompressionInfo,
         name: str,
@@ -889,22 +960,15 @@ class TorchConverter:
             raise ValueError("Missing lut in compression info. Please register a buffer for lut.")
 
         lut = compression_info.lut.detach().numpy()
-        if len(lut.shape) == len(weight.shape) + 2:
-            if lut.shape[-1] > 1:
-                raise NotImplementedError(
-                    "Doesn't support Vector Palettization (last dim in lut > 1). "
-                    "Implementation is tracked in rdar://124474258"
-                )
-        elif len(lut.shape) == len(weight.shape) + 1:
+        if len(lut.shape) == len(weight.shape) + 1:
             # The last dim to indicate vector size is by default 1 for scalar palettization.
             lut = np.expand_dims(lut, axis=-1)
-        else:
+        if len(lut.shape) != len(weight.shape) + 2:
             raise ValueError(
-                "The rank of lut is invalid. It should match the weight dimension. "
-                f"Got {len(lut.shape)} vs {len(weight.shape)}"
+                f"In {name}, The rank of lut is invalid. It should match weight's rank where"
+                f"lut.rank == weight.rank + 2). Got lut.rank {len(lut.shape)} and weight.rank {len(weight.shape)}"
             )
 
-        assert len(lut.shape) == len(weight.shape) + 2
         num_palettes = lut.shape[-2]
         nbits = int(math.ceil(math.log2(num_palettes)))
         if 2**nbits != num_palettes:
@@ -928,15 +992,39 @@ class TorchConverter:
                 )
             weight = weight / scale
 
-        indices = optimize_utils.find_indices_for_lut(weight, lut)
+        vector_axis = compression_info.vector_axis
+        if lut.shape[-1] > 1:
+            if vector_axis is None:
+                # The cto.torch uses 0 for vector axis.
+                logger.warning(
+                    "It's recommended to provide vector_axis for vector palettization. "
+                    "Defaulting to axis zero."
+                )
+                vector_axis = 0
+        indices = optimize_utils.find_indices_for_lut(weight, lut, vector_axis)
+
+        if CompressionType.QUANTIZATION.value in compression_info.compression_type:
+            # In joint palettization + quantization, the `lut` in the palettization op should be
+            # quantized, so we calculate the quantized lut on-the-fly.
+            tmp_quant_var = self._construct_quantization_op(
+                lut, compression_info, name + "_tmp_quant"
+            )
+            lut = tmp_quant_var.op.data.val
 
         if compressed_var is None:
             if is_current_opset_version_compatible_with(_target.iOS18):
-                result = mb.constexpr_lut_to_dense(indices=indices, lut=lut, name=name)
+                result = mb.constexpr_lut_to_dense(
+                    indices=indices, lut=lut, vector_axis=vector_axis, name=name
+                )
             else:
                 if np.prod(lut.shape[:-2]) > 1:
                     raise ValueError(
                         "More than one look-up-table (lut) per tensor is only supported in iOS18+. "
+                        "Please set the minimum_deployment_target to iOS18 or later."
+                    )
+                if lut.shape[-1] > 1:
+                    raise ValueError(
+                        "Vector palettization (lut last dim > 1) is only supported in iOS18+. "
                         "Please set the minimum_deployment_target to iOS18 or later."
                     )
                 # Convert iOS18 lut params to pre-iOS18 compatible format.
@@ -954,6 +1042,7 @@ class TorchConverter:
                     indices_mask=compressed_var.op.mask,
                     indices_nonzero_data=indices[compressed_var.op.mask.val != 0].flatten(),
                     lut=lut,
+                    vector_axis=vector_axis,
                     before_op=compressed_var.op,
                     name=compressed_var.op.name + "_palettized",
                 )
@@ -1035,13 +1124,13 @@ class TorchConverter:
                 )
 
         result: Optional[Var] = None
-        for idx, type_val in enumerate(compression_info.compression_type):
-            if CompressionType(type_val) == CompressionType.QUANTIZATION:
+        for type_val in compression_info.compression_type:
+            if type_val == CompressionType.QUANTIZATION.value:
                 result = self._construct_quantization_op(val, compression_info, param_name, result)
-            elif CompressionType(type_val) == CompressionType.PALETTIZATION:
+            elif type_val == CompressionType.PALETTIZATION.value:
                 result = self._construct_palettization_op(val, compression_info, param_name, result)
             else:
-                assert CompressionType(type_val) == CompressionType.PRUNING
+                assert type_val == CompressionType.PRUNING.value
                 result = self._construct_sparsification_op(
                     val, compression_info, param_name, result
                 )
@@ -1176,12 +1265,51 @@ class TorchConverter:
                     raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
                 self.context.add(input_var, torch_name=torch_name)
 
+            # EXIR lifts buffer references as inputs, so we need to create them by reading states
+            if self.context.frontend == TorchFrontend.EXIR:
+                for (
+                    input_name,
+                    buffer_name,
+                ) in self.context.torch_graph.input_name_to_source_buffer_name.items():
+                    buffer_var = self.context[buffer_name]
+                    with mb.scope(
+                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"read_{buffer_name}"),
+                        ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
+                    ):
+                        input_var = mb.read_state(input=buffer_var)
+                        # As of iOS 18, Core ML state can only be fp16
+                        # In torch converter, we convert everything under fp32
+                        # (then cast everything to fp16 if specified fp16 compute precision)
+                        # so we need to (temporarily) cast read result to fp32
+                        input_var_fp32 = mb.cast(x=input_var, dtype="fp32", name=input_name)
+                    self.context.add(input_var_fp32)
+                    self.context.name_to_source_state[input_name] = buffer_var
+
             # Convert constants
             self.convert_const()
 
             # Add the rest of the operations
             has_states = len(getattr(self, "states", [])) > 0
             convert_nodes(self.context, self.graph, early_exit=not has_states)
+
+            # EXIR represents stateful execution as buffer mutation at output,
+            # i.e. buffer.copy_(...) at the end of EXIR program,
+            # so analogously we update state at the end of pymil function
+            if self.context.frontend == TorchFrontend.EXIR:
+                for (
+                    output_name,
+                    buffer_name,
+                ) in self.context.torch_graph.output_name_to_target_buffer_name.items():
+                    output_var = self.context[output_name]
+                    buffer_var = self.context[buffer_name]
+                    with mb.scope(
+                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"write_{buffer_name}"),
+                        ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
+                    ):
+                        cast_value = mb.cast(
+                            x=output_var, dtype=builtin_to_string(buffer_var.dtype)
+                        )
+                        mb.coreml_update_state(state=buffer_var, value=cast_value)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
 

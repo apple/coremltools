@@ -182,7 +182,7 @@ def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
         if rank is None:
             continue
 
-        if not _np.issubclass_(type(rank), (int, _np.integer)):
+        if not issubclass(type(rank), (int, _np.integer)):
             rank = -1  # Variable rank set to -1
 
         field = tensor_field.add()
@@ -207,7 +207,7 @@ def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
             # Add the shape to the proto
             is_symbolic = False
             for s in shape:
-                if not _np.issubclass_(type(s), (int, _np.integer)):
+                if not issubclass(type(s), (int, _np.integer)):
                     s = -1  # Symbolic shape set to -1
                 tensor_field[i].dimValue.append(s)
 
@@ -1209,7 +1209,8 @@ class NeuralNetworkBuilder:
     ):
         generic_layer = self.nn_spec.layers.add()
         generic_layer.name = name
-        generic_layer.input.extend(input_names)
+        if input_names is not None:
+            generic_layer.input.extend(input_names)
         generic_layer.output.extend(output_names)
         self.layers.append(name)
         if name in self.layer_specs:

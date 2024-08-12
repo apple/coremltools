@@ -11,6 +11,15 @@ import torch.nn as _nn
 import torch.nn.intrinsic as _nni
 
 
+class _ConvBn(_torch.nn.Sequential):
+    def __init__(self, conv: _nn.Module, bn: _nn.Module):
+        super().__init__(_OrderedDict([("conv", conv), ("bn", bn)]))
+
+    @property
+    def weight(self):
+        return self.conv.weight
+
+
 class _ConvAct(_torch.nn.Sequential):
     def __init__(self, conv: _nn.Module, act: _nn.Module):
         super().__init__(_OrderedDict([("conv", conv), ("act", act)]))
@@ -20,8 +29,27 @@ class _ConvAct(_torch.nn.Sequential):
         return self.conv.weight
 
 
+class ConvTransposeBn1d(_ConvBn):
+    pass
+
+
+class ConvTransposeBn2d(_ConvBn):
+    pass
+
+
+class ConvTransposeBn3d(_ConvBn):
+    pass
+
+
 class _ConvBnAct(_torch.nn.Sequential):
-    intr_mod: _Union[_nni.ConvBn1d, _nni.ConvBn2d, _nni.ConvBn3d]
+    intr_mod: _Union[
+        _nni.ConvBn1d,
+        _nni.ConvBn2d,
+        _nni.ConvBn3d,
+        ConvTransposeBn1d,
+        ConvTransposeBn2d,
+        ConvTransposeBn3d,
+    ]
 
     def __init__(self, conv: _nn.Module, bn: _nn.Module, act: _nn.Module):
         super().__init__(_OrderedDict([("conv", self.intr_mod(conv, bn)), ("act", act)]))
@@ -42,6 +70,18 @@ class ConvAct3d(_ConvAct):
     pass
 
 
+class ConvTransposeAct1d(_ConvAct):
+    pass
+
+
+class ConvTransposeAct2d(_ConvAct):
+    pass
+
+
+class ConvTransposeAct3d(_ConvAct):
+    pass
+
+
 class ConvBnAct1d(_ConvBnAct):
     intr_mod = _nni.ConvBn1d
     pass
@@ -54,6 +94,21 @@ class ConvBnAct2d(_ConvBnAct):
 
 class ConvBnAct3d(_ConvBnAct):
     intr_mod = _nni.ConvBn3d
+    pass
+
+
+class ConvTransposeBnAct1d(_ConvBnAct):
+    intr_mod = ConvTransposeBn1d
+    pass
+
+
+class ConvTransposeBnAct2d(_ConvBnAct):
+    intr_mod = ConvTransposeBn2d
+    pass
+
+
+class ConvTransposeBnAct3d(_ConvBnAct):
+    intr_mod = ConvTransposeBn3d
     pass
 
 

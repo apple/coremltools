@@ -11,7 +11,6 @@ import torch
 ct = pytest.importorskip("coremltools")
 pytest.importorskip("coremltools.optimize.coreml._utils")
 
-
 from coremltools.optimize.torch.optimization_config import QuantizationGranularity
 from coremltools.optimize.torch.quantization import (
     PostTrainingQuantizer,
@@ -59,6 +58,8 @@ def test_ptq_default_config():
     [
         torch.nn.Linear(10, 10),
         torch.nn.Conv2d(10, 10, 3, 3),
+        torch.nn.ConvTranspose2d(10, 20, 3, 3),
+        torch.nn.Conv2d(20, 10, 3, 3),
         torch.nn.MultiheadAttention(
             bias=True,
             embed_dim=6,
@@ -124,7 +125,18 @@ def test_ptq_compress_all_combinations(
     ],
 )
 @pytest.mark.parametrize("weight_dtype", ["int4", "int8"])
-@pytest.mark.parametrize("module", [torch.nn.Conv2d(10, 10, 3, 3), torch.nn.Linear(10, 10)])
+@pytest.mark.parametrize(
+    "module",
+    [
+        torch.nn.Conv1d(10, 10, 3, 3),
+        torch.nn.Conv2d(10, 10, 3, 3),
+        torch.nn.Conv3d(10, 10, 3, 3),
+        torch.nn.Linear(10, 10),
+        torch.nn.ConvTranspose1d(10, 20, 3, 3),
+        torch.nn.ConvTranspose2d(10, 20, 3, 3),
+        torch.nn.ConvTranspose3d(10, 20, 3, 3),
+    ],
+)
 def test_ptq_post_compress_conv_linear(
     quantization_scheme, granularity_block_size, weight_dtype, module
 ):
@@ -142,10 +154,55 @@ def test_ptq_post_compress_conv_linear(
     )
     ptq = PostTrainingQuantizer(module, config)
     module = ptq.compress()
+    if isinstance(
+        module,
+        (
+            torch.nn.ConvTranspose1d,
+            torch.nn.ConvTranspose2d,
+            torch.nn.ConvTranspose3d,
+        ),
+    ):
+        ch_axis = 1
+        block_axis = 0
+    elif isinstance(
+        module,
+        (
+            torch.nn.Linear,
+            torch.nn.Conv1d,
+            torch.nn.Conv2d,
+            torch.nn.Conv3d,
+        ),
+    ):
+        ch_axis = 0
+        block_axis = 1
+    else:
+        raise NotImplementedError
 
     assert hasattr(module, "_COREML_/weight/quantization_scale")
     if quantization_scheme == "affine":
         assert hasattr(module, "_COREML_/weight/zero_point")
+
+    if granularity in ["per_channel", "per_block"]:
+        assert (
+            getattr(module, "_COREML_/weight/quantization_scale").shape[ch_axis]
+            == module.weight.shape[ch_axis]
+        )
+        if quantization_scheme == "affine":
+            assert (
+                getattr(module, "_COREML_/weight/zero_point").shape[ch_axis]
+                == module.weight.shape[ch_axis]
+            )
+        if granularity == "per_block":
+            assert (
+                getattr(module, "_COREML_/weight/quantization_scale").shape[block_axis]
+                == module.weight.shape[block_axis] / block_size
+            )
+            if quantization_scheme == "affine":
+                assert (
+                    getattr(module, "_COREML_/weight/zero_point").shape[block_axis]
+                    == module.weight.shape[block_axis] / block_size
+                )
+
     assert not torch.equal(orig_weight, module.weight)
     atol, rtol = get_atol_rtol(block_size, config.global_config.weight_n_bits)
     np.testing.assert_allclose(

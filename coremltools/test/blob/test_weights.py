@@ -215,15 +215,15 @@ class TestWeightIDSharing:
             mil_txt = mil_file.read()
 
             assert (
-                'tensor<fp32, [500]> const_1 = const()[name = string("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
+                'tensor<fp32, [500]> const_1 = const()[name = tensor<string, []>("const_1"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(64)))];'
                 in mil_txt
             )
             assert (
-                'tensor<fp32, [500]> const_2 = const()[name = string("const_2"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
+                'tensor<fp32, [500]> const_2 = const()[name = tensor<string, []>("const_2"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(64)))];'
                 in mil_txt
             )
             assert (
-                'tensor<fp32, [500]> const_3 = const()[name = string("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(2176)))];'
+                'tensor<fp32, [500]> const_3 = const()[name = tensor<string, []>("const_3"), val = tensor<fp32, [500]>(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(2176)))];'
                 in mil_txt
             )
             assert "add(x = x, y = const_1)" in mil_txt

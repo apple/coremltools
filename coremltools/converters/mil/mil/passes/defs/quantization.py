@@ -517,7 +517,11 @@ class add_int16_cast(CastTypeQuantization):
     Notice that the cast will not be inserted if the const value is out of int16/uint16 range.
     """
     # Ops that prefer int16 params.
-    _PREFER_INT16_OPS: Set[str] = {"gather", "gather_along_axis", "gather_nd"}
+    # If an op supports 16-bit only in later iOS (e.g. gather started to support 16-bit from iOS16)
+    # then int16 cast will be inserted only if the iOS version is high enough
+    # (e.g. nothing will happen for iOS15 gather)
+    # This is achieved by type domain confirmation in `CastTypeQuantization.should_cast_parameter`
+    _PREFER_INT16_OPS: Set[str] = {"gather", "gather_along_axis", "gather_nd", "squeeze"}
 
     def __init__(self, op_selector=None):
         super().__init__(op_selector=op_selector)

@@ -115,7 +115,7 @@ def var_constraints(pattern):
     if not is_scalar:
         conv_weight = pattern.conv.weight.val
         passed = passed and (
-            np.product(scale.shape) == Cout
+            np.prod(scale.shape) == Cout
             or (len(scale.shape) == len(conv_weight.shape) and scale.shape[1] == Cout)
             or (len(scale.shape) == len(conv_weight.shape) - 1 and scale.shape[0] == Cout)
         )

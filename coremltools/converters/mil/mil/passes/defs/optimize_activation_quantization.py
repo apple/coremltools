@@ -122,19 +122,21 @@ class insert_suffix_quantize_dequantize_pair(AbstractGraphPass):
         - conv, activation
         - add
         - add, activation
+        - pool (max_pool, avg_pool)
 
         E.g. Identify valid patterns:
         - (`quantize` ->) dequantize` -> `conv`
         - (`quantize` ->) dequantize` -> `conv` -> `relu`
+        - (`quantize` ->) dequantize` -> `avg_pool`
+        - (`quantize` ->) dequantize` -> `max_pool`
         E.g. Reject if trailing `quantize` -> `dequantize` exist:
         - (`quantize` ->) dequantize` -> `conv` -> `quantize` -> `dequantize`
         - (`quantize` ->) dequantize` -> `conv` -> `relu` -> `quantize` -> `dequantize`
         """
 
-        # Reject if 1st operation is not `conv` or `add`.
-        if _check_child_op_type(dequantize_op, "conv") or _check_child_op_type(
-            dequantize_op, "add"
-        ):
+        # Reject if 1st operation is not `conv`/`add`/`pool`.
+        SUPPORTED_OP_TYPES = ["conv", "add", "avg_pool", "max_pool"]
+        if any([_check_child_op_type(dequantize_op, val) for val in SUPPORTED_OP_TYPES]):
             pass
         else:
             return False

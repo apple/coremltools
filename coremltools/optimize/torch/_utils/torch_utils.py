@@ -98,6 +98,8 @@ def maybe_convert_str_to_dtype(dtype: _Union[str, _torch.dtype]) -> _torch.dtype
         "quint4": _torch.quint8,
         "uint3": _torch.uint8,
         "int3": _torch.int8,
+        "fp8_e4m3": _torch.float8_e4m3fn,
+        "fp8_e5m2": _torch.float8_e5m2,
     }
     if isinstance(dtype, str):
         dtype = dtype.lower()
@@ -160,7 +162,9 @@ def get_fully_qualified_name(model: _torch.nn.Module, module: _torch.nn.Module) 
 
 
 def get_atomic_layers(
-    module: _nn.Module, layer_types: _List[_Type], name_prefix: str = ""
+    module: _nn.Module,
+    layer_types: _Union[_List[str], _List[_Type]],
+    name_prefix: str = "",
 ) -> _Dict[str, _nn.Module]:
     """
     Returns a dictionary of layer_name: layer for every layer in the module which

@@ -134,7 +134,10 @@ class const_deduplication(AbstractGraphPass):
             for op in list(block.operations):
                 if "constexpr" not in op.op_type:
                     continue
-                hash_key = [op.op_type]
+                if hasattr(op, "weight_key"):
+                    hash_key = [op.op_type, op.weight_key]
+                else:
+                    hash_key = [op.op_type]
                 for v in op.inputs.values():
                     hash_key.append(v.dtype)
                     if np.prod(v.shape) < const_deduplication.NUMEL_THRESH:
@@ -181,7 +184,10 @@ class const_deduplication(AbstractGraphPass):
                 hash = hashlib.sha1(
                     np.ascontiguousarray(value.reshape(-1)[: const_deduplication.NUMEL_THRESH])
                 ).hexdigest()
-                key = (dtype, shape, hash)
+                if hasattr(op, "weight_key"):
+                    key = (op.weight_key, dtype, shape, hash)
+                else:
+                    key = (dtype, shape, hash)
 
                 if key not in constant_dict:
                     constant_dict[key] = [constant_var]

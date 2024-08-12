@@ -31,7 +31,7 @@ from coremltools.optimize.torch.quantization import ModulePostTrainingQuantizerC
             False,
         ),
         (
-            ModulePostTrainingPalettizerConfig(n_bits=4, granularity="per_tensor", cluster_dim=5),
+            ModulePostTrainingPalettizerConfig(n_bits=4, granularity="per_tensor", cluster_dim=4),
             True,
         ),
     ],
@@ -41,6 +41,7 @@ def test_validate_param_config(config, expectation):
     result = validate_param_config(
         "weight",
         module.weight,
+        module,
         config,
         ["palettization_group_size", "palettization_cluster_dim"],
     )
@@ -53,7 +54,7 @@ def test_validate_param_config(config, expectation):
 def test_validate_no_check():
     module = torch.nn.Conv2d(3, 16, 5)
     config = ModuleSKMPalettizerConfig()
-    validator = ConfigValidator("weight", module.weight, config)
+    validator = ConfigValidator("weight", module.weight, module, config)
     with pytest.raises(AssertionError):
         validator.validate(["invalid_check"])
 
@@ -83,7 +84,7 @@ def test_validate_palettization_group_size(group_size, channel_axis, expectation
             granularity="per_grouped_channel",
             group_size=group_size,
         )
-    validator = ConfigValidator("weight", module.weight, config)
+    validator = ConfigValidator("weight", module.weight, module, config)
     assert validator.validate(["palettization_group_size"]) == expectation
 
 
@@ -108,7 +109,7 @@ def test_validate_quantization_block_size(block_size, sanitized_block_size, expe
     config = ModulePostTrainingQuantizerConfig(
         weight_dtype="int4", granularity="per_block", block_size=block_size
     )
-    validator = ConfigValidator("weight", module.weight, config)
+    validator = ConfigValidator("weight", module.weight, module, config)
     assert validator.validate(["quantization_block_size"]) == expectation
 
     if expectation is True:
@@ -120,9 +121,10 @@ def test_validate_quantization_block_size(block_size, sanitized_block_size, expe
     [
         pytest.param(None, True, id="cluster_dim_unspecified"),
         pytest.param(1, True, id="cluster_dim_scalar"),
-        pytest.param(3, True, id="cluster_dim_valid_1"),
-        pytest.param(5, True, id="cluster_dim_valid_2"),
-        pytest.param(4, False, id="cluster_dim_invalid"),
+        pytest.param(4, True, id="cluster_dim_valid_1"),
+        pytest.param(8, True, id="cluster_dim_valid_2"),
+        pytest.param(3, False, id="cluster_dim_invalid_1"),
+        pytest.param(5, False, id="cluster_dim_invalid_1"),
     ],
 )
 def test_validate_palettization_cluster_dim(cluster_dim, expectation):
@@ -130,5 +132,5 @@ def test_validate_palettization_cluster_dim(cluster_dim, expectation):
     config = ModulePostTrainingPalettizerConfig(
         n_bits=4, granularity="per_tensor", cluster_dim=cluster_dim
     )
-    validator = ConfigValidator("weight", module.weight, config)
+    validator = ConfigValidator("weight", module.weight, module, config)
     assert validator.validate(["palettization_cluster_dim"]) == expectation

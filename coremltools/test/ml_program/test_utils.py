@@ -3,10 +3,13 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import copy
+import itertools
 import os
 import platform
 import shutil
 import tempfile
+from typing import Dict, Tuple
 
 import numpy as np
 import pytest
@@ -16,10 +19,47 @@ import coremltools as ct
 from coremltools import _SPECIFICATION_VERSION_IOS_18, proto
 from coremltools.converters.mil import mil
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
+from coremltools.converters.mil.mil import Program
 from coremltools.converters.mil.mil.builder import Builder as mb
-from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP
+from coremltools.converters.mil.mil.passes.pass_pipeline import (
+    PASS_REGISTRY,
+    PassPipeline,
+    PassPipelineManager,
+)
+from coremltools.converters.mil.testing_utils import assert_spec_input_type, assert_spec_output_type, DTYPE_TO_FEATURE_TYPE_MAP, get_op_types_in_program
 from coremltools.models.utils import bisect_model, MultiFunctionDescriptor, load_spec, save_multifunction, load_spec
 import coremltools.optimize as cto
+
+class TestMILConvertCall:
+    @staticmethod
+    def test_pass_pipeline():
+        X_SHAPE = (2, 3, 16, 16)
+        WEIGHT_SHAPE = (5, X_SHAPE[1], 3, 3)
+        BIAS_SHAPE = (WEIGHT_SHAPE[0], 1, 1)
+        WEIGHT = np.random.rand(*WEIGHT_SHAPE)
+        BIAS = np.random.rand(*BIAS_SHAPE)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=X_SHAPE)])
+        def prog(x):
+            y = mb.conv(x=x, weight=WEIGHT)
+            z = mb.add(x=y, y=BIAS)
+            return z
+
+        prog1 = copy.deepcopy(prog)
+        prog2 = copy.deepcopy(prog)
+
+        common_kwargs = {
+            "convert_to": "mlprogram",
+            "convert_from": "milinternal",
+            "compute_units": ct.ComputeUnit.CPU_ONLY,
+            "skip_model_load": True,
+        }
+        mlmodel1 = _mil_convert(prog1, **common_kwargs)
+        mlmodel2 = _mil_convert(prog2, pass_pipeline=PassPipeline.EMPTY, **common_kwargs)
+
+        assert get_op_types_in_program(mlmodel1._mil_program) == ["conv"]
+        assert get_op_types_in_program(mlmodel2._mil_program) == ["conv", "add"]
+
 
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0),
                     reason="Multi-function only supported on macOS 15+")
@@ -763,7 +803,7 @@ class TestMultiFunctionModelEnd2End:
             mil_txt = mil_file.read()
             assert (
                 mil_txt.count(
-                    'const()[name = string("x_weight_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
+                    'const()[name = string("const_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
                 )
                 == 2
             )
@@ -882,7 +922,7 @@ class TestMultiFunctionModelEnd2End:
             mil_txt = mil_file.read()
             assert (
                 mil_txt.count(
-                    'const()[name = string("x_weight_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
+                    'const()[name = string("const_0_to_fp16"), val = tensor<fp16, [8, 1, 5, 5]>(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))];'
                 )
                 == 10
             )
@@ -893,6 +933,566 @@ class TestMultiFunctionModelEnd2End:
                 == 10
             )
         shutil.rmtree(saved_package_path)
+
+
+class TestMaterializeSymbolicShapeMLModel:
+    FEATURE_DIM = 1024
+    NUM_HEADS = 4
+    MULTI_HEAD_OUT_FEATURE_DIM = 128
+
+    MULTI_HEAD_IN_FEATURE_DIM = int(FEATURE_DIM / NUM_HEADS)
+    OUT_FEATURE_DIM = int(NUM_HEADS * MULTI_HEAD_OUT_FEATURE_DIM)
+
+    @staticmethod
+    def initialte_weight_and_bias(in_features, out_features) -> Tuple[torch.Tensor]:
+        stdv = 1.0 / np.sqrt(in_features)
+        weight = torch.empty((out_features, in_features), dtype=torch.float16).uniform_(-stdv, stdv)
+        bias = torch.empty(out_features, dtype=torch.float16).uniform_(-stdv, stdv)
+        return weight, bias
+
+    @staticmethod
+    def create_multihead_torch_model() -> torch.nn.Module:
+        class Model(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.fc = torch.nn.Linear(
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_IN_FEATURE_DIM,
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_OUT_FEATURE_DIM,
+                )
+                self.relu = torch.nn.ReLU()
+
+            def forward(self, x) -> torch.Tensor:
+                multi_head_x_shape = (
+                    x.shape[0],
+                    x.shape[1],
+                    TestMaterializeSymbolicShapeMLModel.NUM_HEADS,
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_IN_FEATURE_DIM,
+                )
+                x_multi_head = torch.reshape(x, multi_head_x_shape)
+                x_batched_multi_head = torch.permute(x_multi_head, (0, 2, 1, 3))
+
+                y_linear = self.fc(x_batched_multi_head)
+                y_activated = self.relu(y_linear)
+                y_multi_head = torch.permute(y_activated, (0, 2, 1, 3))
+                y_shape = (
+                    x.shape[0],
+                    x.shape[1],
+                    TestMaterializeSymbolicShapeMLModel.OUT_FEATURE_DIM,
+                )
+                y = torch.reshape(y_multi_head, y_shape)
+
+                return y
+
+        torch_model = Model()
+        torch_model.eval()
+        return torch_model
+
+    @staticmethod
+    def create_stateful_multihead_torch_model() -> torch.nn.Module:
+        class Model(torch.nn.Module):
+            def __init__(self) -> None:
+                super().__init__()
+                self.fc = torch.nn.Linear(
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_IN_FEATURE_DIM,
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_OUT_FEATURE_DIM,
+                )
+                self.relu = torch.nn.ReLU()
+                self.register_buffer(
+                    "cache",
+                    torch.zeros(
+                        TestMaterializeSymbolicShapeMLModel.OUT_FEATURE_DIM, dtype=torch.float32
+                    ),
+                )
+
+            def forward(self, x) -> torch.Tensor:
+                multi_head_x_shape = (
+                    x.shape[0],
+                    x.shape[1],
+                    TestMaterializeSymbolicShapeMLModel.NUM_HEADS,
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_IN_FEATURE_DIM,
+                )
+                x_multi_head = torch.reshape(x, multi_head_x_shape)
+                x_batched_multi_head = torch.permute(x_multi_head, (0, 2, 1, 3))
+
+                y_linear = self.fc(x_batched_multi_head)
+                y_activated = self.relu(y_linear)
+                y_multi_head = torch.permute(y_activated, (0, 2, 1, 3))
+                y_shape = (
+                    x.shape[0],
+                    x.shape[1],
+                    TestMaterializeSymbolicShapeMLModel.OUT_FEATURE_DIM,
+                )
+                y = torch.reshape(y_multi_head, y_shape)
+
+                z = y + self.cache
+                z_mean = torch.mean(z, dim=(0, 1))
+                self.cache *= 0.8
+                self.cache += 0.2 * z_mean
+
+                return z
+
+        torch_model = Model()
+        torch_model.eval()
+        return torch_model
+
+    @staticmethod
+    def create_intermediate_state_torch_model(leading_sizes, weight, bias) -> torch.nn.Module:
+        class Model(torch.nn.Module):
+            def __init__(self, leading_sizes, weight, bias) -> None:
+                super().__init__()
+                self.fc = torch.nn.Linear(
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_IN_FEATURE_DIM,
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_OUT_FEATURE_DIM,
+                )
+                with torch.no_grad():
+                    self.fc.weight.copy_(weight)
+                    self.fc.bias.copy_(bias)
+                self.relu = torch.nn.ReLU()
+                self.register_buffer(
+                    "cache",
+                    torch.zeros(
+                        (*leading_sizes, TestMaterializeSymbolicShapeMLModel.FEATURE_DIM),
+                        dtype=torch.float32,
+                    ),
+                )
+
+            def forward(self, x) -> torch.Tensor:
+                self.cache *= 0.2
+                self.cache += 0.8 * x
+                x = self.cache
+
+                multi_head_x_shape = (
+                    x.shape[0],
+                    x.shape[1],
+                    TestMaterializeSymbolicShapeMLModel.NUM_HEADS,
+                    TestMaterializeSymbolicShapeMLModel.MULTI_HEAD_IN_FEATURE_DIM,
+                )
+                x_multi_head = torch.reshape(x, multi_head_x_shape)
+                x_batched_multi_head = torch.permute(x_multi_head, (0, 2, 1, 3))
+
+                y_linear = self.fc(x_batched_multi_head)
+                y_activated = self.relu(y_linear)
+                y_multi_head = torch.permute(y_activated, (0, 2, 1, 3))
+                y_shape = (
+                    x.shape[0],
+                    x.shape[1],
+                    TestMaterializeSymbolicShapeMLModel.OUT_FEATURE_DIM,
+                )
+                y = torch.reshape(y_multi_head, y_shape)
+
+                return y
+
+        torch_model = Model(leading_sizes, weight, bias)
+        torch_model.eval()
+        return torch_model
+
+    @staticmethod
+    def read_mil_text(mlpackage_path: str) -> str:
+        with tempfile.TemporaryDirectory() as serialize_dir:
+            os.system(f"coremlcompiler compile {mlpackage_path} {serialize_dir}")
+            model_name_with_extension = os.path.basename(mlpackage_path)
+            model_name_wo_extension, _ = os.path.splitext(model_name_with_extension)
+            mil_file = open(
+                os.path.join(serialize_dir, f"{model_name_wo_extension}.mlmodelc", "model.mil")
+            )
+            mil_text = mil_file.read()
+        return mil_text
+
+    @pytest.mark.parametrize(
+        "symbolic_shape, override_main_function, reload_mlmodel",
+        itertools.product(
+            (
+                ct.EnumeratedShapes(
+                    shapes=[[1, 3, FEATURE_DIM], [2, 5, FEATURE_DIM], [4, 7, FEATURE_DIM]],
+                    default=[1, 3, FEATURE_DIM],
+                ),
+                (ct.RangeDim(1, 4, 1), ct.RangeDim(3, 7, 3), FEATURE_DIM),
+            ),
+            (True, False),
+            (True, False),
+        ),
+    )
+    def test_multihead(self, symbolic_shape, override_main_function, reload_mlmodel):
+        new_function_name = "main" if override_main_function else "materialization_2_5"
+
+        def export_symbolic_shape_mlmodel(torch_model: torch.nn.Module) -> ct.models.MLModel:
+            example_input = torch.rand((1, 3, self.FEATURE_DIM))
+            traced_model = torch.jit.trace(torch_model, (example_input,))
+
+            ct_inputs = [ct.TensorType(name="x", shape=symbolic_shape, dtype=np.float16)]
+            ct_outputs = [ct.TensorType(name="y")]
+
+            symbolic_shape_mlmodel = ct.convert(
+                traced_model,
+                inputs=ct_inputs,
+                outputs=ct_outputs,
+                minimum_deployment_target=ct.target.iOS17,
+                skip_model_load=True,
+            )
+            return symbolic_shape_mlmodel
+
+        def validate_mil_text(multifunction_mlpackage_path: str) -> None:
+            mil_text = self.read_mil_text(multifunction_mlpackage_path)
+            if override_main_function:
+                assert 1 == mil_text.count(
+                    '(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(64)))'
+                )
+                assert 1 == mil_text.count(
+                    '(BLOBFILE(path = tensor<string, []>("@model_path/weights/weight.bin"), offset = tensor<uint64, []>(65664)))'
+                )
+            else:
+                assert 2 == mil_text.count(
+                    '(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))'
+                )
+                assert 2 == mil_text.count(
+                    '(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(65664)))'
+                )
+
+        def validate_inference(
+            torch_model: torch.nn.Module,
+            symbolic_shape_mlmodel: ct.models.MLModel,
+            multifunction_mlpackage_path: str,
+        ) -> None:
+            size_to_function_name = {(2, 5): new_function_name}
+            for size, function_name in size_to_function_name.items():
+                mlmodel_materialized = ct.models.MLModel(
+                    multifunction_mlpackage_path,
+                    function_name=None if override_main_function else function_name,
+                )
+                x = torch.rand(*size, self.FEATURE_DIM)
+                output_torch = torch_model(x).detach().numpy()
+                output_symbolic = symbolic_shape_mlmodel.predict({"x": x.numpy()})["y"]
+                output_materialized = mlmodel_materialized.predict({"x": x.numpy()})["y"]
+                np.testing.assert_allclose(output_symbolic, output_torch, atol=5e-3, rtol=5e-3)
+                np.testing.assert_allclose(output_materialized, output_torch, atol=5e-3, rtol=5e-3)
+
+        torch_model = self.create_multihead_torch_model()
+
+        symbolic_shape_mlmodel = export_symbolic_shape_mlmodel(torch_model)
+        symbolic_mlpackage_path = tempfile.mkdtemp(suffix=".mlpackage")
+        symbolic_shape_mlmodel.save(symbolic_mlpackage_path)
+        if reload_mlmodel:
+            symbolic_shape_mlmodel = ct.models.MLModel(
+                symbolic_mlpackage_path, skip_model_load=True
+            )
+
+        multifunction_mlpackage_path = tempfile.mkdtemp(suffix=".mlpackage")
+        ct.utils.materialize_dynamic_shape_mlmodel(
+            symbolic_shape_mlmodel,
+            {new_function_name: {"x": (2, 5, self.FEATURE_DIM)}},
+            multifunction_mlpackage_path,
+        )
+        if override_main_function:
+            assert (
+                ct.models.MLModel(multifunction_mlpackage_path)._spec.specificationVersion
+                == ct.target.iOS17
+            )
+        else:
+            assert (
+                ct.models.MLModel(multifunction_mlpackage_path)._spec.specificationVersion
+                == ct.target.iOS18
+            )
+
+        # coremlcompiler had bug compiling the model < macOS 14
+        if ct.utils._macos_version() >= (15, 0):
+            validate_mil_text(multifunction_mlpackage_path)
+
+        if platform.machine() == "arm64" and (
+            override_main_function or ct.utils._macos_version() >= (15, 0)
+        ):
+            # Intel machines fails to run the model.
+            # rdar://132919101 ([Bug] Intel machines fails on running several multifunction unittest)
+            symbolic_shape_mlmodel = ct.models.MLModel(symbolic_mlpackage_path)
+            validate_inference(torch_model, symbolic_shape_mlmodel, multifunction_mlpackage_path)
+
+        shutil.rmtree(symbolic_mlpackage_path)
+        shutil.rmtree(multifunction_mlpackage_path)
+
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="State only supported on macOS 15+"
+    )
+    @pytest.mark.parametrize(
+        "symbolic_shape, override_main_function, reload_mlmodel",
+        itertools.product(
+            (
+                ct.EnumeratedShapes(
+                    shapes=[[3, 1, FEATURE_DIM], [5, 2, FEATURE_DIM], [7, 4, FEATURE_DIM]],
+                    default=[3, 1, FEATURE_DIM],
+                ),
+                (ct.RangeDim(3, 7, 3), ct.RangeDim(1, 4, 1), FEATURE_DIM),
+            ),
+            (True, False),
+            (True, False),
+        ),
+    )
+    def test_stateful_multihead(self, symbolic_shape, override_main_function, reload_mlmodel):
+        new_function_name_1 = "main" if override_main_function else "materialization_5_2"
+        new_function_name_2 = "materialization_7_4"
+
+        def export_symbolic_shape_mlmodel(torch_model: torch.nn.Module) -> ct.models.MLModel:
+            example_input = torch.rand((3, 1, self.FEATURE_DIM))
+            traced_model = torch.jit.trace(torch_model, (example_input,))
+
+            ct_inputs = [ct.TensorType(name="x", shape=symbolic_shape, dtype=np.float16)]
+            ct_states = [
+                ct.StateType(
+                    wrapped_type=ct.TensorType(shape=(self.OUT_FEATURE_DIM,), dtype=np.float16),
+                    name="cache",
+                )
+            ]
+            ct_outputs = [ct.TensorType(name="y")]
+
+            symbolic_shape_mlmodel = ct.convert(
+                traced_model,
+                inputs=ct_inputs,
+                states=ct_states,
+                outputs=ct_outputs,
+                minimum_deployment_target=ct.target.iOS18,
+                skip_model_load=True,
+            )
+            return symbolic_shape_mlmodel
+
+        def validate_mil_text(multifunction_mlpackage_path: str) -> None:
+            mil_text = self.read_mil_text(multifunction_mlpackage_path)
+            expected_counts = 2 if override_main_function else 3
+            assert expected_counts == mil_text.count(
+                '(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))'
+            )
+            assert expected_counts == mil_text.count(
+                '(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(65664)))'
+            )
+
+        def validate_inference(
+            torch_model: torch.nn.Module,
+            symbolic_shape_mlmodel: ct.models.MLModel,
+            multifunction_mlpackage_path: str,
+        ) -> None:
+            size_to_function_name = {(5, 2): new_function_name_1, (7, 4): new_function_name_2}
+            for size, function_name in size_to_function_name.items():
+                mlmodel_materialized = ct.models.MLModel(
+                    multifunction_mlpackage_path, function_name=function_name
+                )
+                torch_model.cache.fill_(0.0)
+                cache_main = symbolic_shape_mlmodel.make_state()
+                cache_materialized = mlmodel_materialized.make_state()
+                for _ in range(10):
+                    x = torch.rand(*size, self.FEATURE_DIM)
+                    output_torch = torch_model(x).detach().numpy()
+                    output_symbolic = symbolic_shape_mlmodel.predict(
+                        {"x": x.numpy()}, state=cache_main
+                    )["y"]
+                    output_materialized = mlmodel_materialized.predict(
+                        {"x": x.numpy()}, state=cache_materialized
+                    )["y"]
+                    np.testing.assert_allclose(output_symbolic, output_torch, atol=5e-3, rtol=5e-3)
+                    np.testing.assert_allclose(
+                        output_materialized, output_torch, atol=5e-3, rtol=5e-3
+                    )
+
+        torch_model = self.create_stateful_multihead_torch_model()
+
+        symbolic_shape_mlmodel = export_symbolic_shape_mlmodel(torch_model)
+        symbolic_mlpackage_path = tempfile.mkdtemp(suffix=".mlpackage")
+        symbolic_shape_mlmodel.save(symbolic_mlpackage_path)
+        if reload_mlmodel:
+            symbolic_shape_mlmodel = ct.models.MLModel(
+                symbolic_mlpackage_path, skip_model_load=True
+            )
+
+        multifunction_mlpackage_path = tempfile.mkdtemp(suffix=".mlpackage")
+        ct.utils.materialize_dynamic_shape_mlmodel(
+            symbolic_shape_mlmodel,
+            {
+                new_function_name_1: {"x": (5, 2, self.FEATURE_DIM)},
+                new_function_name_2: {"x": (7, 4, self.FEATURE_DIM)},
+            },
+            multifunction_mlpackage_path,
+        )
+
+        validate_mil_text(multifunction_mlpackage_path)
+
+        if platform.machine() == "arm64" and (
+            override_main_function or ct.utils._macos_version() >= (15, 0)
+        ):
+            # Intel machines fails to run the model.
+            # rdar://132919101 ([Bug] Intel machines fails on running several multifunction unittest)
+            symbolic_shape_mlmodel = ct.models.MLModel(symbolic_mlpackage_path)
+            validate_inference(torch_model, symbolic_shape_mlmodel, multifunction_mlpackage_path)
+
+        shutil.rmtree(symbolic_mlpackage_path)
+        shutil.rmtree(multifunction_mlpackage_path)
+
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="State only supported on macOS 15+"
+    )
+    def test_advanced_intermediate_state(self):
+        WEIGHT, BIAS = self.initialte_weight_and_bias(
+            self.MULTI_HEAD_IN_FEATURE_DIM, self.MULTI_HEAD_OUT_FEATURE_DIM
+        )
+
+        def export_symbolic_shape_program() -> Program:
+            leading_sizes = (1, 3)
+
+            torch_model = self.create_intermediate_state_torch_model(leading_sizes, WEIGHT, BIAS)
+
+            x_shape = (*leading_sizes, self.FEATURE_DIM)
+            x = torch.rand(x_shape)
+            traced_model = torch.jit.trace(torch_model, x)
+
+            x_dynamic_shape = (ct.RangeDim(1, 1024), ct.RangeDim(1, 1024), self.FEATURE_DIM)
+            ct_inputs = [ct.TensorType(name="x", shape=x_dynamic_shape, dtype=np.float16)]
+            ct_states = [
+                ct.StateType(
+                    wrapped_type=ct.TensorType(shape=x_dynamic_shape, dtype=np.float16),
+                    name="cache",
+                )
+            ]
+            symbolic_shape_prog = ct.convert(
+                traced_model,
+                inputs=ct_inputs,
+                states=ct_states,
+                minimum_deployment_target=ct.target.iOS18,
+                convert_to="milinternal",
+            )
+            return symbolic_shape_prog
+
+        def export_fixed_shape_mlmodel(leading_sizes) -> ct.models.MLModel:
+            torch_model = self.create_intermediate_state_torch_model(leading_sizes, WEIGHT, BIAS)
+
+            x_shape = (*leading_sizes, self.FEATURE_DIM)
+            x = torch.rand(x_shape)
+            traced_model = torch.jit.trace(torch_model, x)
+
+            ct_inputs = [ct.TensorType(name="x", shape=x_shape, dtype=np.float16)]
+            ct_states = [
+                ct.StateType(
+                    wrapped_type=ct.TensorType(shape=x_shape, dtype=np.float16), name="cache"
+                )
+            ]
+            fixed_shape_mlmodel = ct.convert(
+                traced_model,
+                inputs=ct_inputs,
+                states=ct_states,
+                minimum_deployment_target=ct.target.iOS18,
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+            )
+            return fixed_shape_mlmodel
+
+        def materialize_dynamic_shape_program(
+            dynamic_shape_prog: Program,
+            function_name_to_materialization_map: Dict[str, Dict[str, Tuple[int]]],
+            destination_path: str,
+        ) -> None:
+            # Materialize symbolic shapes, then run all optimization passes
+            pass_pipeline = ct.PassPipeline.DEFAULT
+            # If dynamic shape prog is obtained from `ct.convert(convert_to="milinternal")`,
+            # then names are not sanitized. What is worse, mil_backend::sanitize_name_strings
+            # does not work for multifunction pymil program. As a result,
+            # we explicitly add mil_backend::sanitize_name_strings before materialization
+            # TODO (rdar://131726375) Have mil_backend::sanitize_name_strings work on multifunction
+            pass_pipeline.insert_pass(0, "mil_backend::sanitize_name_strings")
+            pass_pipeline.insert_pass(1, "common::materialize_symbolic_shape_program")
+            pass_pipeline.set_options(
+                "common::materialize_symbolic_shape_program",
+                {
+                    "function_name_to_materialization_map": function_name_to_materialization_map,
+                },
+            )
+            PassPipelineManager.apply_pipeline(dynamic_shape_prog, pass_pipeline)
+
+            # Weights are duplicated in each materialized new function
+            # By default, graph pass const_deduplication will not deduplicate across functions,
+            # so we need to call it explicitly here
+            const_deduplication_pass = PASS_REGISTRY["common::const_deduplication"]
+            const_deduplication_pass._deduplicate_const_across_functions(dynamic_shape_prog)
+
+            # Source function may no longer be needed,
+            # e.g. if it has intermediate symbolic-shape state
+            dynamic_shape_prog.functions.pop("main")
+            dynamic_shape_prog.default_function_name = list(
+                function_name_to_materialization_map.keys()
+            )[0]
+
+            dynamic_shape_prog.skip_all_passes = True
+            materialized_mlmodel = _mil_convert(
+                dynamic_shape_prog,
+                convert_from="milinternal",
+                convert_to="mlprogram",
+                specification_version=ct.target.iOS18,
+                compute_units=ct.ComputeUnit.CPU_ONLY,
+                export_multi_functions=True,
+                skip_model_load=True,
+            )
+            materialized_mlmodel.save(destination_path)
+
+        def validate_mil_text(multifunction_mlpackage_path: str) -> None:
+            mil_text = self.read_mil_text(multifunction_mlpackage_path)
+            assert 2 == mil_text.count(
+                '(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(64)))'
+            )
+            assert 2 == mil_text.count(
+                '(BLOBFILE(path = string("@model_path/weights/weight.bin"), offset = uint64(65664)))'
+            )
+
+        def validate_inference(multifunction_mlpackage_path: str) -> None:
+            size_to_function_name = {(2, 5): "materialization_2_5", (4, 7): "materialization_4_7"}
+            for leading_sizes, function_name in size_to_function_name.items():
+                torch_model = self.create_intermediate_state_torch_model(
+                    leading_sizes, WEIGHT, BIAS
+                )
+                mlmodel_unifunction = export_fixed_shape_mlmodel(leading_sizes)
+                mlmodel_multifunction = ct.models.MLModel(
+                    multifunction_mlpackage_path,
+                    function_name=function_name,
+                    compute_units=ct.ComputeUnit.CPU_ONLY,
+                )
+
+                torch_model.cache.fill_(0.0)
+                cache_unifunction = mlmodel_unifunction.make_state()
+                cache_multifunction = mlmodel_multifunction.make_state()
+
+                for _ in range(3):
+                    x = torch.rand(size=(*leading_sizes, self.FEATURE_DIM), dtype=torch.float16)
+                    output_torch = torch_model(x).detach().numpy()
+                    output_unifunction = list(
+                        mlmodel_unifunction.predict(
+                            {"x": x.numpy()}, state=cache_unifunction
+                        ).values()
+                    )[0]
+                    output_multifunction = list(
+                        mlmodel_multifunction.predict(
+                            {"x": x.numpy()}, state=cache_multifunction
+                        ).values()
+                    )[0]
+                    np.testing.assert_allclose(
+                        output_unifunction, output_torch, atol=5e-3, rtol=5e-3
+                    )
+                    np.testing.assert_allclose(
+                        output_multifunction, output_torch, atol=5e-3, rtol=5e-3
+                    )
+
+        symbolic_shape_prog = export_symbolic_shape_program()
+
+        multifunction_mlpackage_path = tempfile.mkdtemp(suffix=".mlpackage")
+        materialize_dynamic_shape_program(
+            symbolic_shape_prog,
+            {
+                "materialization_2_5": {
+                    "x": (2, 5, self.FEATURE_DIM),
+                    "cache": (2, 5, self.FEATURE_DIM),
+                },
+                "materialization_4_7": {
+                    "x": (4, 7, self.FEATURE_DIM),
+                    "cache": (4, 7, self.FEATURE_DIM),
+                },
+            },
+            multifunction_mlpackage_path,
+        )
+
+        validate_mil_text(multifunction_mlpackage_path)
+        validate_inference(multifunction_mlpackage_path)
+
+        shutil.rmtree(multifunction_mlpackage_path)
 
 
 class TestBisectModel:
@@ -1047,10 +1647,10 @@ class TestBisectModel:
         self.check_spec_op_type(
             chunk1_path,
             [
-                "constexpr_lut_to_dense", 
-                "const", 
-                "linear", 
-                "const", 
+                "constexpr_lut_to_dense",
+                "const",
+                "linear",
+                "const",
                 "cast",
             ]
         )
@@ -1070,7 +1670,7 @@ class TestBisectModel:
         # cleanup
         shutil.rmtree(output_dir)
 
-           
+
     @pytest.mark.parametrize(
         "mlmodel_as_input",
         [True, False],
@@ -1149,7 +1749,7 @@ class TestBisectModel:
         # 2. fp32 -> fp16
         check_input_dtype(chunk1_path, "fp16")
         check_output_dtype(chunk1_path, "fp32")
-        
+
         check_input_dtype(chunk2_path, "fp32")
         check_output_dtype(chunk2_path, "fp16")
 

@@ -15,6 +15,9 @@ def vectorize(current_tensor, cluster_dim) -> _Tuple[_torch.Tensor, _torch.Tenso
     """
     num_misalignment = _torch.numel(current_tensor) % cluster_dim
 
+    if cluster_dim > 1:
+        current_tensor = current_tensor.transpose(0, -1)
+
     pad = None
     if num_misalignment:
         current_tensor = current_tensor.flatten()
@@ -24,12 +27,17 @@ def vectorize(current_tensor, cluster_dim) -> _Tuple[_torch.Tensor, _torch.Tenso
     return current_tensor.reshape(-1, cluster_dim), pad
 
 
-def devectorize(current_tensor, pad, target_size) -> _torch.Tensor:
+def devectorize(current_tensor, pad, target_size, cluster_dim) -> _torch.Tensor:
     """
     Function to devectorize by tracing back the vectorize operation in the method above.
     """
     if pad is not None:
         current_tensor = _torch.cat([current_tensor.flatten(), pad])
+
+    if cluster_dim > 1:
+        current_tensor = current_tensor.reshape(_torch.Size(tuple(target_size)[::-1]))
+        current_tensor = current_tensor.transpose(0, -1)
+        return current_tensor
 
     return current_tensor.reshape(target_size)
 

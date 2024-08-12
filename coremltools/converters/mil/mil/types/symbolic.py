@@ -3,11 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
 import numpy as np
 import sympy as sm
 
 k_used_symbols = {}
 k_num_internal_syms = 0
+
+_OBJECT_DTYPE = np.empty(0, dtype=object).dtype
 
 
 def is_compatible_symbolic_vector(val_a, val_b):
@@ -44,7 +47,7 @@ def num_symbolic(val):
     """
     if is_symbolic(val):
         return 1
-    elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
+    elif isinstance(val, np.ndarray) and val.dtype.type != _OBJECT_DTYPE:
         return 0
     elif hasattr(val, "__iter__"):
         return sum(any_symbolic(i) for i in val)
@@ -56,7 +59,7 @@ def any_symbolic(val):
         return True
     if isinstance(val, np.ndarray) and val.ndim == 0:
         return is_symbolic(val[()])
-    elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
+    elif isinstance(val, np.ndarray) and val.dtype.type != _OBJECT_DTYPE:
         return False
     elif isinstance(val, str):  # string is iterable
         return False
@@ -68,7 +71,7 @@ def any_symbolic(val):
 def any_variadic(val):
     if is_variadic(val):
         return True
-    elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
+    elif isinstance(val, np.ndarray) and val.dtype.type != _OBJECT_DTYPE:
         return False
     elif isinstance(val, str):  # string is iterable
         return False

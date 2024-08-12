@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 import coremltools as ct
+from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.testing_reqs import compute_units
@@ -23,6 +24,16 @@ from coremltools.converters.mil.testing_utils import (
 from coremltools.proto import FeatureTypes_pb2 as ft
 
 torch = pytest.importorskip("torch")
+
+from .testing_utils import TorchFrontend, export_torch_model_to_frontend
+
+frontends = [TorchFrontend.TORCHSCRIPT]
+if _HAS_TORCH_EXPORT_API or _HAS_EXECUTORCH:
+    frontends.append(TorchFrontend.EXIR)
+
+ALTER_FRONTEND = [False]
+if _HAS_EXECUTORCH:
+    ALTER_FRONTEND.append(True)
 
 
 @pytest.fixture
@@ -228,13 +239,15 @@ def rank4_grayscale_input_model_with_buffer():
 )
 class TestStateConversionAPI:
     @pytest.mark.parametrize(
-        "compute_unit",
-        compute_units,
+        "compute_unit, frontend, alter_frontend",
+        itertools.product(compute_units, frontends, ALTER_FRONTEND),
     )
-    def test_state_model_api_example(self, compute_unit):
+    def test_state_model_api_example(self, compute_unit, frontend, alter_frontend):
         """
         Test the public API example.
         """
+        if frontend == TorchFrontend.TORCHSCRIPT and alter_frontend:
+            pytest.skip("Stateful conversion from torch.jit.script is not supported")
 
         class UpdateBufferModel(torch.nn.Module):
             def __init__(self):
@@ -243,32 +256,37 @@ class TestStateConversionAPI:
 
             def forward(self, x):
                 # In place update of the model state
-                self.state_1.add_(x)
-                return self.state_1
+                self.state_1.mul_(x)
+                return self.state_1 + 1.0
 
-        model = UpdateBufferModel()
-        traced_model = torch.jit.trace(model, torch.tensor([1, 2, 3], dtype=torch.float32))
+        source_model = UpdateBufferModel()
+        source_model.eval()
+        torch_model = export_torch_model_to_frontend(
+            source_model,
+            (torch.tensor([1, 2, 3], dtype=torch.float16),),
+            frontend,
+            use_scripting=alter_frontend,
+            use_edge_dialect=alter_frontend,
+        )
 
-        inputs = [
-            ct.TensorType(shape=(3,)),
-        ]
-        states = [
-            ct.StateType(
-                wrapped_type=ct.TensorType(
-                    shape=(3,),
-                ),
-                name="state_1",
-            ),
-        ]
         mlmodel = ct.convert(
-            traced_model,
-            inputs=inputs,
-            states=states,
+            torch_model,
+            inputs=(None if frontend == TorchFrontend.EXIR else [ct.TensorType(shape=(3,))]),
+            states=(
+                None
+                if frontend == TorchFrontend.EXIR
+                else [ct.StateType(wrapped_type=ct.TensorType(shape=(3,)), name="state_1")]
+            ),
             minimum_deployment_target=ct.target.iOS18,
             convert_to="mlprogram",
             compute_units=compute_unit,
         )
-
+        assert get_op_types_in_program(mlmodel._mil_program) == [
+            "read_state",
+            "mul",
+            "coreml_update_state",
+            "add",
+        ]
         verify_prediction(mlmodel)
 
     @pytest.mark.parametrize(
@@ -469,10 +487,7 @@ class TestStateConversionAPI:
         )
         assert prog.find_ops("cast")[0].x.op is None
         assert block.outputs[0].dtype == types.fp16
-        # This model is failing due to a bug in Espresso:
-        # rdar://128478924 ([Bug][Stateful model][E5] Stateful model triggers a State Operation dependencies error in E5)
-        # After the above radar is fixed, we should be able to run the mlmodel
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
         """
         fp32 state and fp16 input. This is a rare corner case that shouldn't
@@ -553,9 +568,7 @@ class TestStateConversionAPI:
             "coreml_update_state",
             "mul",
         ]
-        if compute_unit in (ct.ComputeUnit.CPU_ONLY, ct.ComputeUnit.CPU_AND_GPU):
-            # rdar://128446982 ([Bug][Stateful model][ANE] Stateful model fails to run on ANE)
-            verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
         # force state / input to be fp32 (intented stress test)
         prog = ct.convert(
@@ -631,9 +644,7 @@ class TestStateConversionAPI:
             "coreml_update_state",
             "add",
         ]
-        if compute_unit in (ct.ComputeUnit.CPU_ONLY, ct.ComputeUnit.CPU_AND_GPU):
-            # rdar://128446982 ([Bug][Stateful model][ANE] Stateful model fails to run on ANE)
-            verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
     def test_convert_buffer_model_without_state_type(self, float32_buffer_model):
         """
@@ -796,7 +807,7 @@ class TestStateConversionAPI:
         """
         with pytest.raises(
             ValueError,
-            match="StateType shape \(2,\) must matched the torch buffer shape \(3,\)",
+            match="StateType shape \(2,\) must match the torch buffer shape \(3,\)",
         ):
             prog = ct.convert(
                 float32_buffer_model,
@@ -939,9 +950,9 @@ class TestStateConversionAPI:
             "add",
             "write_state",
         ]
-        # The model is failing besides CPU, we should set the run_prediction = True after the following radar is fixed:
-        # rdar://128481009 ([Bug][Stateful model][E5] Stateful mdel triggers a No OperationBuilder in this Block produces output x error)
-        run_prediction = compute_units == ct.ComputeUnit.CPU_ONLY
+        # This model is failing on CPU_AND_NE, which is tracked by
+        # rdar://130912134 ([Bug][Stateful model][CPU_AND_NE] Stateful model fails to run with compute_units=CPU_AND_NE)
+        run_prediction = compute_unit != ct.ComputeUnit.CPU_AND_NE
         self.check_state_model(mlmodel, expected_ops, run_prediction)
 
         # Test case 2
@@ -972,9 +983,9 @@ class TestStateConversionAPI:
             "add",
             "write_state",
         ]
-        # The model is failing besides CPU, we should set the run_prediction = True after the following radar is fixed:
-        # rdar://128481009 ([Bug][Stateful model][E5] Stateful mdel triggers a No OperationBuilder in this Block produces output x error)
-        run_prediction = compute_units == ct.ComputeUnit.CPU_ONLY
+        # This model is failing on CPU_AND_NE, which is tracked by
+        # rdar://130912134 ([Bug][Stateful model][CPU_AND_NE] Stateful model fails to run with compute_units=CPU_AND_NE)
+        run_prediction = compute_unit != ct.ComputeUnit.CPU_AND_NE
         self.check_state_model(mlmodel, expected_ops, run_prediction)
 
     @pytest.mark.parametrize(
@@ -1029,9 +1040,7 @@ class TestStateConversionAPI:
         ]
 
         if mlmodel is not None:
-            # rdar://128446982 ([Bug][Stateful model][ANE] Stateful model fails to run on ANE)
-            if compute_unit in (ct.ComputeUnit.CPU_ONLY, ct.ComputeUnit.CPU_AND_GPU):
-                verify_prediction(mlmodel)
+            verify_prediction(mlmodel)
 
     @pytest.mark.parametrize(
         "compute_unit",
@@ -1093,9 +1102,7 @@ class TestStateConversionAPI:
             assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp32")
             if is_dynamic:
                 assert any_symbolic(mlmodel._mil_program.functions["main"].outputs[0].shape)
-            if not is_dynamic or compute_unit != ct.ComputeUnit.CPU_ONLY:
-                # rdar://128491187 ([Bug][Stateful model][Classic CPU] Stateful model is throwing a Failed to reshape error)
-                verify_prediction(mlmodel)
+            verify_prediction(mlmodel)
 
     @pytest.mark.parametrize(
         "compute_unit",

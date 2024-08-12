@@ -5,8 +5,9 @@
 
 import unittest
 
-import numpy as _np
+import numpy as np
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_transformer)
@@ -28,7 +29,7 @@ class StandardScalerTestCase(unittest.TestCase):
 
     def test_random(self):
         # Generate some random data
-        X = _np.random.random(size=(50, 3))
+        X = np.random.random(size=(50, 3))
 
         cur_model = StandardScaler()
 
@@ -45,20 +46,18 @@ class StandardScalerTestCase(unittest.TestCase):
         assert metrics["num_errors"] == 0
 
     def test_boston(self):
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
-        scikit_model = StandardScaler().fit(scikit_data.data)
+        scikit_model = StandardScaler().fit(scikit_data["data"])
 
         spec = converter.convert(
-            scikit_model, scikit_data.feature_names, "out"
+            scikit_model, scikit_data["feature_names"], "out"
         ).get_spec()
 
         input_data = [
-            dict(zip(scikit_data.feature_names, row)) for row in scikit_data.data
+            dict(zip(scikit_data["feature_names"], row)) for row in scikit_data["data"]
         ]
 
-        output_data = [{"out": row} for row in scikit_model.transform(scikit_data.data)]
+        output_data = [{"out": row} for row in scikit_model.transform(scikit_data["data"])]
 
         metrics = evaluate_transformer(spec, input_data, output_data)
 
