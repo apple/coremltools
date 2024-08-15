@@ -3922,7 +3922,7 @@ def index_put(context, node):
         indices = indices[0]
         assert (
             indices.shape == x.shape
-        ), "indices shape must equal to input shape for index put operation."
+        ), f"indices shape {indices.shape} must equal to input shape {x.shape} for index put operation."
         indices = mb.cast(x=indices, dtype="int32")
         indices = mb.non_zero(x=indices)
         # values
