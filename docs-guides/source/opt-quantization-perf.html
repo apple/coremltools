@@ -7,7 +7,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Performance &#8212; Guide to Core ML Tools</title>
   
@@ -434,7 +434,7 @@ quantization. However, with activation quantization, you may observe a considera
 compute units (CPU and sometimes GPU) that employ load-time weight decompression, since activations are not known at
 load time, and they need to be decompressed at runtime, slowing down the inference. Therefore it is recommended to use
 activation quantization only when your model is fully or mostly running on the Neural Engine (NE).</p>
-<p>In newer hardware, e.g. iPhone 15 pro (A17 pro) , M4 iPads etc, there is increased throughput possible for int8-int8
+<p>In newer hardware with A17 Pro or M4 chips (e.g. iPhone 15 Pro), there is increased throughput possible for int8-int8
 compute on Neural Engine, compared to previous versions. Hence, activation and weight quantization for networks running on
 Neural Engine can give even more latency gains. This can be seen in the <a class="reference internal" href="#results">table below</a> (e.g.
 The ResNet50 model with <code class="docutils literal notranslate"><span class="pre">W8A8</span></code> mode runs considerably faster than its <code class="docutils literal notranslate"><span class="pre">W16A16</span></code> equivalent).</p>
@@ -451,7 +451,7 @@ selection is <code class="docutils literal notranslate"><span class="pre">all</s
 on the device state and build versions.</p>
 <ul class="simple">
 <li><p>Device: iPhone 14 Pro (A16), unless otherwise mentioned</p></li>
-<li><p>iOS build: iOS17</p></li>
+<li><p>iOS build: iOS 17</p></li>
 <li><p>Xcode : Xcode 15</p></li>
 </ul>
 <p>For more details on base models and compression methodology, please refer to docs <a class="reference internal" href="opt-palettization-perf.html"><span class="std std-doc">here</span></a>.</p>

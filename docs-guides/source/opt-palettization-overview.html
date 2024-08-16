@@ -7,7 +7,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Palettization Overview &#8212; Guide to Core ML Tools</title>
   
@@ -429,7 +429,8 @@ document.write(`
 <p>Weights with similar values are grouped together and represented using the value of the cluster centroid they belong to, as shown in the following figure. The original weight matrix is converted to an index table in which each element points to the corresponding cluster center.</p>
 <p><code class="docutils literal notranslate"><span class="pre">N={1,2,3,4,6,8}</span></code> are supported, where <code class="docutils literal notranslate"><span class="pre">N</span></code> is the number of bits used for palettization.</p>
 <figure class="align-center" id="id1">
-<a class="imgnoborder reference internal image-reference" href="../_images/palettization-overview.png"><img alt="Non-uniform lowering of precision using clustering" class="imgnoborder" src="../_images/palettization-overview.png" style="height: 300px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/palettization-overview.png"><img alt="Non-uniform lowering of precision using clustering" class="imgnoborder" src="../_images/palettization-overview.png" style="height: 300px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Non-uniform lowering of precision using clustering</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </figcaption>
@@ -439,7 +440,8 @@ document.write(`
 <p>Figure above shows what is referred to as <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> granularity, where the entire tensor shares a single LUT. This can lead to high approximation error for large matrices.
 Starting <code class="docutils literal notranslate"><span class="pre">iOS18/macOS15</span></code>, a mode called <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code> is available , which allows a group of channels (specified by the parameter <code class="docutils literal notranslate"><span class="pre">group_size</span></code>) to share a single LUT, thereby having multiple LUTs for the whole weight matrix. For example, a weight of shape <code class="docutils literal notranslate"><span class="pre">(1024,</span> <span class="pre">1024)</span></code>, with <code class="docutils literal notranslate"><span class="pre">group_size=16</span></code>, will have <code class="docutils literal notranslate"><span class="pre">64</span></code> LUTs.</p>
 <figure class="align-center" id="id2">
-<a class="imgnoborder reference internal image-reference" href="../_images/palettization-granularity.png"><img alt="Palettization granularity" class="imgnoborder" src="../_images/palettization-granularity.png" style="height: 300px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/palettization-granularity.png"><img alt="Palettization granularity" class="imgnoborder" src="../_images/palettization-granularity.png" style="height: 300px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Palettization granularity</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>

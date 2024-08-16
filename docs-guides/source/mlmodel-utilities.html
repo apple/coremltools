@@ -7,7 +7,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>MLModel Utilities &#8212; Guide to Core ML Tools</title>
   
@@ -416,6 +416,7 @@ document.write(`
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
 </ul>
             </nav>
         </div>
@@ -570,6 +571,41 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 </div>
 </section>
 </section>
+<section id="bisect-model">
+<h2>Bisect Model<a class="headerlink" href="#bisect-model" title="Permalink to this heading">#</a></h2>
+<p>In certain scenarios, you may want to break a large Core ML model into two smaller models. For instance, if you are deploying a model to run on neural engine on an iPhone, it cannot be larger than 1 GB. If you are working with, say, <a class="reference external" href="https://github.com/apple/ml-stable-diffusion">Stable Diffusion</a> 1.5 model which is 1.72 GB large (Float 16 precision), then it needs to be broken up into two chunks, each less than 1 GB. The utility <code class="docutils literal notranslate"><span class="pre">ct.models.utils.bisect_model</span></code> will allow you to do exactly that. When using this API, you can also opt-in to package the two chunks of the model into a pipeline model, so that its still a single mlpackage file, with the two models arranged in a sequential manner.</p>
+<p>The example below shows how to bisect a model, test the accuracy, and save them on disk.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>
+<span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">model_path</span> <span class="o">=</span> <span class="s2">&quot;my_model.mlpackage&quot;</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;./output/&quot;</span>
+
+<span class="c1"># The following code will produce two smaller models:</span>
+<span class="c1"># `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`</span>
+<span class="c1"># It also compares the output numerical of the original Core ML model with the chunked models.</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bisect_model</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bisect_model</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+    <span class="n">merge_chunks_to_pipeline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># You can also pass the MLModel object directly</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bisect_model</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+    <span class="n">merge_chunks_to_pipeline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -624,6 +660,7 @@ optimization of the model via the <code class="docutils literal notranslate"><sp
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#example">Example</a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bisect-model">Bisect Model</a></li>
 </ul>
   </nav></div>
 

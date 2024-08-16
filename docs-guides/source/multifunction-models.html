@@ -7,7 +7,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Multifunction Models &#8212; Guide to Core ML Tools</title>
   
@@ -461,10 +461,12 @@ figures below), and only the parameters in these adapters
 are fine-tuned for a specific task. This is much more efficient than fine-tuning
 the whole base model which has many more parameters.</p>
 <figure class="align-left">
-<a class="reference internal image-reference" href="../_images/multifunction-adapter-1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction-adapter-1.png" style="width: 350px;" /></a>
+<a class="reference internal image-reference" href="../_images/multifunction-adapter-1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction-adapter-1.png" style="width: 350px;" />
+</a>
 </figure>
 <figure class="align-default">
-<a class="reference internal image-reference" href="../_images/multifunction-adapter-2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction-adapter-2.png" style="width: 350px;" /></a>
+<a class="reference internal image-reference" href="../_images/multifunction-adapter-2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction-adapter-2.png" style="width: 350px;" />
+</a>
 </figure>
 <p>In this case, you can use a multifunction model to
 capture the multiple variations in a single model.
@@ -586,15 +588,18 @@ The combined model will share the 72M parameters of
 the based model and only have the additonal adapter parameters.
 We can see this in the model sizes:</p>
 <figure class="align-center">
-<a class="reference internal image-reference" href="../_images/multifunction_model_sizes_lora_example.png"><img alt="Model sizes LoRA toy example" src="../_images/multifunction_model_sizes_lora_example.png" style="width: 440px;" /></a>
+<a class="reference internal image-reference" href="../_images/multifunction_model_sizes_lora_example.png"><img alt="Model sizes LoRA toy example" src="../_images/multifunction_model_sizes_lora_example.png" style="width: 440px;" />
+</a>
 </figure>
 <p>This is how the model interface for a multifunction model
 would show up in the Xcode predictions tab:</p>
 <figure class="align-left">
-<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction_input_output_xcode_adapted_model_1.png" style="width: 360px; height: 360px;" /></a>
+<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_1.png"><img alt="Multifunction adapter 1" src="../_images/multifunction_input_output_xcode_adapted_model_1.png" style="width: 360px; height: 360px;" />
+</a>
 </figure>
 <figure class="align-default">
-<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction_input_output_xcode_adapted_model_2.png" style="width: 360px; height: 360px;" /></a>
+<a class="reference internal image-reference" href="../_images/multifunction_input_output_xcode_adapted_model_2.png"><img alt="Multifunction adapter 2" src="../_images/multifunction_input_output_xcode_adapted_model_2.png" style="width: 360px; height: 360px;" />
+</a>
 </figure>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
