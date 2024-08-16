@@ -7,7 +7,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>API Overview &#8212; Guide to Core ML Tools</title>
   
@@ -518,7 +518,7 @@ The <code class="docutils literal notranslate"><span class="pre">group_size</spa
 <span class="c1"># load model</span>
 <span class="n">torch_model</span> <span class="o">=</span> <span class="n">get_torch_model</span><span class="p">()</span>
 <span class="n">palettization_config_dict</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_bits&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;granulatity&quot;</span><span class="p">:</span> <span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span> <span class="s2">&quot;group_size&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
+  <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;n_bits&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;granularity&quot;</span><span class="p">:</span> <span class="s2">&quot;per_grouped_channel&quot;</span><span class="p">,</span> <span class="s2">&quot;group_size&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">},</span>
 <span class="p">}</span>
 <span class="n">palettization_config</span> <span class="o">=</span> <span class="n">PostTrainingPalettizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">palettization_config_dict</span><span class="p">)</span>
 <span class="n">palettizer</span> <span class="o">=</span> <span class="n">PostTrainingPalettizer</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span> <span class="n">palettization_config</span><span class="p">)</span>

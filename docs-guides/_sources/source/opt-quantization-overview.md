@@ -56,5 +56,5 @@ of the network can also be quantized with their own scale factors.
 
 Activations are quantized using `per-tensor` mode. During the process of training or passing calibration data through the model, the values of intermediate activations are observed and their max and min values are used to compute the quantization scales, which are stored during inference. Quantizing the intermediate tensors may help in inference of networks that are bottlenecked by memory bandwidth due to large activations.
 
-On newer hardware, e.g. iPhone 15 pro (A17 pro), quantizing both activations and weight to `int8` can leverage optimized compute on the Neural Engine. This can help improve runtime latency in compute-bound models.
+On newer hardware with A17 Pro or M4 chips, e.g. iPhone 15 Pro, quantizing both activations and weight to `int8` can leverage optimized compute on the Neural Engine. This can help improve runtime latency in compute-bound models.
 

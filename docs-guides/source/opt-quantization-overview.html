@@ -7,7 +7,7 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Overview &#8212; Guide to Core ML Tools</title>
   
@@ -442,7 +442,8 @@ document.write(`
 </div>
 <p>In the above equations, <code class="docutils literal notranslate"><span class="pre">w_unquantized</span></code> and <code class="docutils literal notranslate"><span class="pre">scale</span></code> are of type float, and <code class="docutils literal notranslate"><span class="pre">w_quantized</span></code> and <code class="docutils literal notranslate"><span class="pre">zero_point</span></code> (also called quantization bias, or offset) are of the quantized data type.</p>
 <figure class="align-center" id="id1">
-<a class="imgnoborder reference internal image-reference" href="../_images/quantization-technique.png"><img alt="Uniform lowering of precision" class="imgnoborder" src="../_images/quantization-technique.png" style="width: 500px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/quantization-technique.png"><img alt="Uniform lowering of precision" class="imgnoborder" src="../_images/quantization-technique.png" style="width: 500px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Process of quantizing to int8.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
 </figcaption>
@@ -458,7 +459,8 @@ document.write(`
 <section id="quantization-granularity">
 <h3>Quantization Granularity<a class="headerlink" href="#quantization-granularity" title="Permalink to this heading">#</a></h3>
 <figure class="align-center" id="id2">
-<a class="imgnoborder reference internal image-reference" href="../_images/quantization-granularities.png"><img alt="Different granularities for quantization" class="imgnoborder" src="../_images/quantization-granularities.png" style="width: 500px;" /></a>
+<a class="imgnoborder reference internal image-reference" href="../_images/quantization-granularities.png"><img alt="Different granularities for quantization" class="imgnoborder" src="../_images/quantization-granularities.png" style="width: 500px;" />
+</a>
 <figcaption>
 <p><span class="caption-text">Different granularities supported for quantization.</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
 </figcaption>
@@ -471,7 +473,7 @@ document.write(`
 that compress only weights, for 8-bit quantization, activations
 of the network can also be quantized with their own scale factors.</p>
 <p>Activations are quantized using <code class="docutils literal notranslate"><span class="pre">per-tensor</span></code> mode. During the process of training or passing calibration data through the model, the values of intermediate activations are observed and their max and min values are used to compute the quantization scales, which are stored during inference. Quantizing the intermediate tensors may help in inference of networks that are bottlenecked by memory bandwidth due to large activations.</p>
-<p>On newer hardware, e.g. iPhone 15 pro (A17 pro), quantizing both activations and weight to <code class="docutils literal notranslate"><span class="pre">int8</span></code> can leverage optimized compute on the Neural Engine. This can help improve runtime latency in compute-bound models.</p>
+<p>On newer hardware with A17 Pro or M4 chips, e.g. iPhone 15 Pro, quantizing both activations and weight to <code class="docutils literal notranslate"><span class="pre">int8</span></code> can leverage optimized compute on the Neural Engine. This can help improve runtime latency in compute-bound models.</p>
 </section>
 </section>
 </section>

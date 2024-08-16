@@ -83,7 +83,7 @@ from coremltools.optimize.torch.palettization import PostTrainingPalettizer, \
 # load model
 torch_model = get_torch_model()
 palettization_config_dict = {
-  "global_config": {"n_bits": 4, "granulatity": "per_grouped_channel", "group_size": 4},
+  "global_config": {"n_bits": 4, "granularity": "per_grouped_channel", "group_size": 4},
 }
 palettization_config = PostTrainingPalettizerConfig.from_dict(palettization_config_dict)
 palettizer = PostTrainingPalettizer(torch_model, palettization_config)
