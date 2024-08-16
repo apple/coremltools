@@ -1,13 +1,12 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Converting a Natural Language Processing Model &#8212; Guide to Core ML Tools</title>
   
@@ -15,36 +14,36 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/convert-nlp-model';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -59,28 +58,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +96,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -122,6 +124,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
@@ -130,10 +135,22 @@
   
   
   
+  
     <p class="title logo__title">Guide to Core ML Tools</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -153,7 +170,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
@@ -162,16 +179,16 @@
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -179,8 +196,8 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -191,40 +208,40 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
 </ul>
@@ -241,12 +258,12 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 
     </div>
@@ -262,7 +279,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -271,14 +288,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -368,26 +385,28 @@
 </button>
 
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -425,10 +444,10 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="converting-a-natural-language-processing-model">
-<h1>Converting a Natural Language Processing Model<a class="headerlink" href="#converting-a-natural-language-processing-model" title="Permalink to this heading">#</a></h1>
+<h1>Converting a Natural Language Processing Model<a class="headerlink" href="#converting-a-natural-language-processing-model" title="Link to this heading">#</a></h1>
 <p id="index-0">The following example demonstrates how you can combine <a class="reference internal" href="model-tracing.html"><span class="doc std std-doc">model tracing</span></a> and <a class="reference internal" href="model-scripting.html"><span class="doc std std-doc">model scripting</span></a> in order to properly convert a model that includes a data-dependent control flow, such as a loop or conditional.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -445,7 +464,7 @@ document.write(`
 <li><p><a class="reference internal" href="#run-the-converted-core-ml-model">Run the converted Core ML model</a></p></li>
 </ol>
 <section id="requirements">
-<h2>Requirements<a class="headerlink" href="#requirements" title="Permalink to this heading">#</a></h2>
+<h2>Requirements<a class="headerlink" href="#requirements" title="Link to this heading">#</a></h2>
 <p>This example requires macOS Monterey or newer versions, <a class="reference external" href="https://pytorch.org/">PyTorch</a>, and <a class="reference external" href="https://huggingface.co/transformers/index.html">Transformers</a>. Use the following commands:</p>
 <div class="highlight-shell notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>torch
 pip<span class="w"> </span>install<span class="w"> </span>transformers
@@ -454,12 +473,12 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 </div>
 </section>
 <section id="the-gpt-2-nlp-model">
-<h2>The GPT-2 NLP Model<a class="headerlink" href="#the-gpt-2-nlp-model" title="Permalink to this heading">#</a></h2>
+<h2>The GPT-2 NLP Model<a class="headerlink" href="#the-gpt-2-nlp-model" title="Link to this heading">#</a></h2>
 <p>This example converts the PyTorch <a class="reference external" href="https://huggingface.co/transformers/model_doc/gpt2.html">GPT-2</a> transformer-based natural language processing (NLP) model to Core ML.</p>
 <p>GPT-2 was trained on a dataset of over eight million web pages, with a simple objective: predict the next word, given all of the previous words within some text. For example, if you input “The Manhattan bridge is”, the model produces the rest of the sentence: “The Manhattan bridge is a major artery for the city’s subway system, and the bridge is one of the busiest in the country.”</p>
 </section>
 <section id="import-libraries-and-set-up-the-model">
-<h2>Import Libraries and Set Up the Model<a class="headerlink" href="#import-libraries-and-set-up-the-model" title="Permalink to this heading">#</a></h2>
+<h2>Import Libraries and Set Up the Model<a class="headerlink" href="#import-libraries-and-set-up-the-model" title="Link to this heading">#</a></h2>
 <p>Import the <code class="docutils literal notranslate"><span class="pre">torch</span></code>, <code class="docutils literal notranslate"><span class="pre">numpy</span></code>, and <code class="docutils literal notranslate"><span class="pre">coremltools</span></code> libraries, and <code class="docutils literal notranslate"><span class="pre">GPT2LMHeadModel</span></code>) and <code class="docutils literal notranslate"><span class="pre">GPT2Tokenizer</span></code> from <code class="docutils literal notranslate"><span class="pre">transformers</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -489,7 +508,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 </div>
 </section>
 <section id="trace-and-script-the-model">
-<h2>Trace and Script the Model<a class="headerlink" href="#trace-and-script-the-model" title="Permalink to this heading">#</a></h2>
+<h2>Trace and Script the Model<a class="headerlink" href="#trace-and-script-the-model" title="Link to this heading">#</a></h2>
 <p>Initialize the <code class="docutils literal notranslate"><span class="pre">token_predictor</span></code> from <code class="docutils literal notranslate"><span class="pre">GPT2LMHeadModel</span></code>, a GPT2 model transformer:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">token_predictor</span> <span class="o">=</span> <span class="n">GPT2LMHeadModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gpt2&quot;</span><span class="p">,</span> <span class="n">torchscript</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 </pre></div>
@@ -508,7 +527,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 <p>For more about tracing and scripting, see <a class="reference internal" href="model-tracing.html"><span class="doc std std-doc">Model Tracing</span></a> and <a class="reference internal" href="model-scripting.html"><span class="doc std std-doc">Model Scripting</span></a>.</p>
 </section>
 <section id="convert-the-model-to-core-ml">
-<h2>Convert the Model to Core ML<a class="headerlink" href="#convert-the-model-to-core-ml" title="Permalink to this heading">#</a></h2>
+<h2>Convert the Model to Core ML<a class="headerlink" href="#convert-the-model-to-core-ml" title="Link to this heading">#</a></h2>
 <p>Convert the model <code class="docutils literal notranslate"><span class="pre">scripted_model</span></code> to Core ML using the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry"><code class="docutils literal notranslate"><span class="pre">convert()</span></code></a> method. Specify the <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> as the required input, using as <code class="docutils literal notranslate"><span class="pre">shape</span></code> the range of <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">64]</span></code> for the sequence dimension, and <code class="docutils literal notranslate"><span class="pre">numpy.int32</span></code> for the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> of the <code class="docutils literal notranslate"><span class="pre">TensorType</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
     <span class="n">scripted_model</span><span class="p">,</span>
@@ -519,7 +538,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 </div>
 </section>
 <section id="encode-the-sentence-fragment-as-input">
-<h2>Encode the Sentence Fragment as Input<a class="headerlink" href="#encode-the-sentence-fragment-as-input" title="Permalink to this heading">#</a></h2>
+<h2>Encode the Sentence Fragment as Input<a class="headerlink" href="#encode-the-sentence-fragment-as-input" title="Link to this heading">#</a></h2>
 <p>To test the performance of the converted model, encode the sentence fragment (<code class="docutils literal notranslate"><span class="pre">&quot;The</span> <span class="pre">Manhattan</span> <span class="pre">bridge</span> <span class="pre">is&quot;</span></code>) using the <code class="docutils literal notranslate"><span class="pre">GPT2Tokenizer</span></code>, and  convert that list of tokens into a Torch tensor.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">sentence_fragment</span> <span class="o">=</span> <span class="s2">&quot;The Manhattan bridge is&quot;</span>
 
@@ -529,7 +548,7 @@ pip<span class="w"> </span>install<span class="w"> </span>-U<span class="w"> </s
 </div>
 </section>
 <section id="run-the-pytorch-model">
-<h2>Run the PyTorch Model<a class="headerlink" href="#run-the-pytorch-model" title="Permalink to this heading">#</a></h2>
+<h2>Run the PyTorch Model<a class="headerlink" href="#run-the-pytorch-model" title="Link to this heading">#</a></h2>
 <p>Run the original PyTorch model with the tokenized sentence fragment as input, to establish the benchmark for the model’s performance. The output appears below the code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">torch_out</span> <span class="o">=</span> <span class="n">scripted_model</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
 <span class="n">generated_text_torch</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="n">torch_out</span><span class="p">)</span>
@@ -543,7 +562,7 @@ Completed: The Manhattan bridge is a major artery for the city&#39;s subway syst
 </div>
 </section>
 <section id="run-the-converted-core-ml-model">
-<h2>Run the Converted Core ML Model<a class="headerlink" href="#run-the-converted-core-ml-model" title="Permalink to this heading">#</a></h2>
+<h2>Run the Converted Core ML Model<a class="headerlink" href="#run-the-converted-core-ml-model" title="Link to this heading">#</a></h2>
 <p>Now run the converted Core ML version of the model with the same input:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">coreml_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="n">context</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span><span class="o">.</span><span class="n">numpy</span><span class="p">()}</span>
 <span class="n">prediction_dict</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">coreml_inputs</span><span class="p">)</span>
@@ -569,8 +588,8 @@ Completed: The Manhattan bridge is a major artery for the city&#39;s subway syst
               
               
               
-                <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                <footer class="prev-next-footer d-print-none">
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="model-scripting.html"
@@ -598,6 +617,7 @@ Completed: The Manhattan bridge is a major artery for the city&#39;s subway syst
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -634,6 +654,7 @@ By Apple
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2023, Apple Inc.
@@ -660,8 +681,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>
