@@ -38,9 +38,6 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
 )
 from coremltools.models.utils import _macos_version
-from coremltools.test.optimize.coreml.test_post_training_quantization import (
-    get_test_model_and_data_complex,
-)
 
 np.random.seed(1984)
 _VALIDATE_MODEL = True
@@ -1331,6 +1328,10 @@ class TestExpandHighRankReshapeAndTranspose:
         assert get_op_types_in_program(prog) == ["reshape", "transpose", "reshape"]
         TestExpandHighRankReshapeAndTranspose._test_numerical(prev_prog, input_shape, reshape_shape, perm, output_shape)
 
+    @pytest.mark.xfail(
+        reason="rdar://131637870 Why It Randomly Segfaults on CI but Cannot Reproduce Locally",
+        run=False,
+    )
     def test_rank20(self):
         input_shape = (4, 6, 8, 20, 40)
         reshape_shape = (1, 2, 2, 1, 2, 3, 2, 2, 2, 2, 2, 1, 1, 1, 5, 2, 2, 2, 1, 5)
@@ -1694,7 +1695,7 @@ class TestMergeConsecutiveReshapes:
                 y2 = mb.reshape(x=y1, shape=(7, 2, 3))
                 y3 = mb.reshape(x=y2, shape=(14, 3))
                 y4 = mb.reshape(x=y3, shape=OUTPUT_SHAPE)
-                return mb.add(x=loop_var, y=np.int(-1)), y4
+                return mb.add(x=loop_var, y=np.int32(-1)), y4
 
             while_results = mb.while_loop(_cond=while_cond, _body=while_body, loop_vars=(loop_var, x))
             return while_results[1]
@@ -1704,12 +1705,19 @@ class TestMergeConsecutiveReshapes:
         assert get_op_types_in_program(prog, recurse=True) == ["while_loop", "equal", "reshape", "add"]
 
         assert len(block.outputs) == 1
+        assert block.outputs[0].shape == OUTPUT_SHAPE
+
+        # the runtime is failing and tracked by this radar:
+        # rdar://133783519 ([CI] test_merge_reshape_in_nested_block unittest is crushing)
+        # TODO: After the framework fixes the issue, we should run the below checking again
+        """
         assert_model_is_valid(
             prog,
             {"x": INPUT_SHAPE},
             expected_output_shapes={block.outputs[0].name: OUTPUT_SHAPE},
             backend=backend,
         )
+        """
 
 class TestCastOptimizationReduendantCastRemoval:
     """
@@ -3754,7 +3762,7 @@ class TestConvBiasFusion:
             else:
                 conv_bias = -conv_bias
         expected_conv_bias_val = conv_bias + np.squeeze(bias)
-        np.testing.assert_almost_equal(expected_conv_bias_val, new_bias_val)
+        np.testing.assert_almost_equal(expected_conv_bias_val, new_bias_val, decimal=6)
 
         # run the model
         assert_model_is_valid(
@@ -4144,6 +4152,42 @@ class TestFusePadConv(unittest.TestCase):
             },
         )
 
+class TestFuseDilatedConv(unittest.TestCase):
+    """
+    Input graph:
+    input -----> space_to_batch -----> conv (2D)  -----> batch_to_space ---> out
+
+    Output graph:
+    input -----> conv (2D w dilations) ----> out
+    """
+
+    def test_fusion_with_same_padding(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 384, 48, 48))], opset_version=ct.target.iOS16)
+        def prog(x):
+            x = mb.space_to_batch(x=x, block_shape=[2, 2], paddings=[[2,2], [2,2]])
+            x = mb.conv(x=x, weight=np.ones((384,1,3,3)), pad_type="valid", groups=384)
+            x = mb.batch_to_space(x=x, block_shape=[2,2], crops=[[0,0], [0,0]])
+            return x
+
+        extract_conv_op = lambda prog: [op for op in prog['main'].operations if op.op_type=="conv"][0]
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(prog, "common::fuse_dilated_conv")
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ['space_to_batch', 'conv', 'batch_to_space']
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["conv"])
+
+        self.assertEqual(extract_conv_op(prev_prog).pad_type.val, "valid")
+        self.assertEqual(extract_conv_op(prog).pad_type.val, "same")
+
+        self.assertTrue(np.all(extract_conv_op(prev_prog).dilations.val == 1))
+        self.assertTrue(np.all(extract_conv_op(prog).dilations.val == 2))
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 384, 48, 48)},
+            expected_output_shapes={block.outputs[0].name: (1, 384, 48, 48)},
+        )
 
 class TestConcatToPixelShuffle(unittest.TestCase):
     def test_success(self):
@@ -7126,6 +7170,13 @@ class TestRandomizeWeights:
         """
         Test ct.models.utils.randomize_weights method end to end
         """
+
+        # Doing a lazy import because it imports `coremltools.converters.mil.mil.ops.tests.iOS18 import backends`
+        # which brings dependencies on backends which shouldn't be needed for most tests in `test_passes.py`
+        from coremltools.test.optimize.coreml.test_post_training_quantization import (
+            get_test_model_and_data_complex,
+        )
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(

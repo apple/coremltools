@@ -58,6 +58,7 @@ DEFAULT_PALETTIZATION_ADVANCED_OPTIONS = {
     "kmeans_n_init": 100,
     "zero_threshold": 1e-7,
     "kmeans_error_bnd": 0.0,
+    "channel_axis": 0,
 }
 
 
@@ -65,7 +66,7 @@ DEFAULT_PALETTIZATION_OPTIONS = {
     "quant_min": -128,
     "quant_max": 127,
     "dtype": _torch.qint8,
-    "cluster_dtype": "f32",
+    "lut_dtype": "f32",
     "weight_threshold": 2048,
     "milestone": 0,
     "quantize_activations": False,
@@ -131,6 +132,9 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
             One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.
         group_size (:obj:`int`): Specify the number of channels in a group.
             Only effective when granularity is ``per_grouped_channel``.
+        channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.
+            Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis. For now, only
+            output channel axis is supported by DKM.
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, per channel scaling is used along the channel
             dimension.
         milestone (:obj:`int`): Step or epoch at which palettization begins. Defaults to ``0``.
@@ -141,7 +145,7 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
             quantized. Defaults to ``127``
         dtype (:py:class:`torch.dtype`, ``optional``): The ``dtype`` to use for quantizing the activations. Only applies
             when ``quantize_activations`` is ``True``. Defaults to :py:class:`torch.qint8`.
-        cluster_dtype (:obj:`str`, ``optional``): ``dtype`` to use for quantizing the clusters. Allowed options are
+        lut_dtype (:obj:`str`, ``optional``): ``dtype`` to use for quantizing the clusters. Allowed options are
             ``'i8'``, ``'u8'``, ``'f16'``, ``'bf16'``, ``'f32'``.  Defaults to ``'f32'``, i.e.,
             by default, the clusters aren't quantized.
         quantize_activations (:obj:`bool`, ``optional``): When ``True``, the activation are quantized.
@@ -228,6 +232,10 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         default=DEFAULT_PALETTIZATION_OPTIONS["group_size"],
         validator=_validators.optional(_validators.instance_of(int)),
     )
+    channel_axis: int = _field(
+        default=0,
+        validator=_validators.optional([_validators.instance_of(int), _validators.in_([0])]),
+    )
     enable_per_channel_scale: bool = _field(
         default=DEFAULT_PALETTIZATION_OPTIONS["enable_per_channel_scale"],
         validator=_validators.instance_of(bool),
@@ -255,8 +263,8 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
             _validators.in_([_torch.qint8, _torch.quint8, _torch.float32]),
         ],
     )
-    cluster_dtype: str = _field(
-        default=DEFAULT_PALETTIZATION_OPTIONS["cluster_dtype"],
+    lut_dtype: str = _field(
+        default=DEFAULT_PALETTIZATION_OPTIONS["lut_dtype"],
         validator=_validators.instance_of(str),
     )
     quantize_activations: bool = _field(
@@ -365,6 +373,12 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         message=(
             "partition_size is being deprecated and will be removed in "
             "future versions. Please use group_size parameter instead."
+        )
+    )
+    cluster_dtype: str = _deprecated_field(
+        message=(
+            "cluster_dtype is being deprecated and will be removed in "
+            "future versions. Please use lut_dtype parameter instead."
         )
     )
 
@@ -488,7 +502,7 @@ class DKMPalettizerConfig(_OptimizationConfig):
         for ctype, config in self.module_type_configs.items():
             self.set_module_type(ctype, self._sort_configs_by_weight_threshold(config))
         for name, config in self.module_name_configs.items():
-            self.set_module_type(name, self._sort_configs_by_weight_threshold(config))
+            self.set_module_name(name, self._sort_configs_by_weight_threshold(config))
 
     @classmethod
     def from_dict(cls, config_dict: _Dict[str, _Any]) -> "DKMPalettizerConfig":

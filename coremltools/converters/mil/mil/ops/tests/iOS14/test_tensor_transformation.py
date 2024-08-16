@@ -413,6 +413,11 @@ class TestReshape:
         ),
     )
     def test_builder_to_backend_symbolic(self, compute_unit, backend):
+        if backend.backend == "mlprogram":
+            pytest.xfail(
+                "rdar://131637870 Why It Randomly Segfaults on CI but Cannot Reproduce Locally "
+            )
+
         s0 = get_new_symbol()
         s_len = get_new_symbol()
 

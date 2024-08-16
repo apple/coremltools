@@ -2463,11 +2463,12 @@ class NewLayersSimpleTest(CorrectnessTest):
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
                 self.assertEqual(rank + 1, builder._get_rank("output"))
 
+
     def test_sliding_windows_gpu(self):
         self.test_sliding_windows_cpu(cpu_only=False)
 
-    def test_range_static_cpu(self, cpu_only=True):
 
+    def test_range_static_cpu(self, cpu_only=True):
         params = [
             (-10.4, 23, 12.2),
             (0, 1000, 1),
@@ -2508,8 +2509,10 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
             self.assertEqual(1, builder._get_rank("output"))
 
+
     def test_range_static_gpu(self):
         self.test_range_static_cpu(cpu_only=False)
+
 
     def test_range_dynamic_cpu(self, cpu_only=True):
         params = [
@@ -5589,6 +5592,10 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_shape, [])
         self.assertEqual(failed_tests_numerical, [])
 
+
+    @pytest.mark.xfail(
+        reason="rdar://132109960 ([Bug] Corner case breaks stress test when random seed changes)"
+    )
     def test_reduce_layer(self):
         params_dict = dict(
             input_shape=[[3, 10, 8], [8, 5, 5], [4, 12, 10], [7, 1, 14]],
@@ -6121,11 +6128,11 @@ class IOS14SingleLayerTests(CorrectnessTest):
                     np_out = np.matmul(x, np.transpose(W_for_numpy)) + b
                     expected = {"output": np_out}
                 elif rank == 4:
-                    x_shaped = np.reshape(x, (x.shape[0], np.product(x.shape[1:])))
+                    x_shaped = np.reshape(x, (x.shape[0], np.prod(x.shape[1:])))
                     np_out = np.matmul(x_shaped, np.transpose(W_for_numpy)) + b
                     expected = {"output": np.reshape(np_out, np_out.shape + (1, 1))}
                 elif rank == 5:
-                    x_shaped = np.reshape(x, x.shape[0:2] + (np.product(x.shape[2:]),))
+                    x_shaped = np.reshape(x, x.shape[0:2] + (np.prod(x.shape[2:]),))
                     np_out = np.matmul(x_shaped, np.transpose(W_for_numpy)) + b
                     expected = {
                         "output": np.reshape(

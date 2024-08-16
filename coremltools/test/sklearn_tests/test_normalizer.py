@@ -7,6 +7,7 @@ import unittest
 
 import numpy as _np
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_transformer)
@@ -44,17 +45,15 @@ class NormalizerScikitTest(unittest.TestCase):
             )
 
     def test_boston(self):
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
-        scikit_model = Normalizer(norm="l2").fit(scikit_data.data)
+        scikit_model = Normalizer(norm="l2").fit(scikit_data["data"])
 
-        spec = converter.convert(scikit_model, scikit_data.feature_names, "out")
+        spec = converter.convert(scikit_model, scikit_data["feature_names"], "out")
 
         input_data = [
-            dict(zip(scikit_data.feature_names, row)) for row in scikit_data.data
+            dict(zip(scikit_data["feature_names"], row)) for row in scikit_data["data"]
         ]
 
-        output_data = [{"out": row} for row in scikit_model.transform(scikit_data.data)]
+        output_data = [{"out": row} for row in scikit_model.transform(scikit_data["data"])]
 
         evaluate_transformer(spec, input_data, output_data)

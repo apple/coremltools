@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import defaultdict
-from typing import List
+from typing import Dict, List, Union
 
 import numpy as np
 
@@ -80,7 +80,6 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
 
     ### Apply four major graph passes in order.
 
-    # Graph pass I
     # Insert prefix quantize/dequantize pairs to valid patterns.
     logger.info("Running compression pass linear_quantize_activations phase 1/4 ...")
     linear_activation_quantizer = PASS_REGISTRY[
@@ -100,7 +99,6 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
         return_pymil_prog=True,
     )
 
-    # Graph pass II
     # Insert suffix quantize/dequantize pairs to valid patterns.
     logger.info("Running compression pass linear_quantize_activations phase 2/4 ...")
     graph_pass = PASS_REGISTRY["compression::insert_suffix_quantize_dequantize_pair"]
@@ -108,19 +106,17 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
     graph_pass(prog)
     prog.validate()
 
-    # Graph pass III
-    # Re-use exsiting path to dedup quantize/dequantize operations.
-    logger.info("Running compression pass linear_quantize_activations phase 3/4 ...")
-    graph_pass = PASS_REGISTRY["common::dequantize_quantize_pair_elimination"]
-    graph_pass(prog)
-    prog.validate()
-
-    # Graph pass IV
     # Updating scale/zero_point in all quantize/dequantize ops calculated by calibration data.
-    logger.info("Running compression pass linear_quantize_activations phase 4/4 ...")
+    logger.info("Running compression pass linear_quantize_activations phase 3/4 ...")
     activation_stats = _get_activation_calibration_stats(mlmodel, sample_data)
     graph_pass = PASS_REGISTRY["compression::update_quantize_dequantize"]
     graph_pass.set_options([PassOption("activation_stats", activation_stats)])
+    graph_pass(prog)
+    prog.validate()
+
+    # Re-use exsiting path to dedup quantize/dequantize operations.
+    logger.info("Running compression pass linear_quantize_activations phase 4/4 ...")
+    graph_pass = PASS_REGISTRY["common::dequantize_quantize_pair_elimination"]
     graph_pass(prog)
     prog.validate()
 
@@ -139,7 +135,11 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
     return mlmodel_activation_quantized
 
 
-def _get_tensor_range(tensor_name, tensor_value, activation_stats_dict):
+def _update_tensor_range(
+    tensor_name: str,
+    tensor_value: Union[int, float],
+    activation_stats_dict: Dict[str, Dict[str, float]],
+) -> None:
     tensor_min = np.min(np.array(tensor_value).flatten())
     tensor_max = np.max(np.array(tensor_value).flatten())
     activation_stats_dict[tensor_name]["rmin"] = tensor_min
@@ -156,7 +156,82 @@ def _get_tensor_range(tensor_name, tensor_value, activation_stats_dict):
         activation_stats_dict[tensor_name]["rmax"] = tensor_max
 
 
-def _get_activation_calibration_stats(fpmodel: _MLModel, sample_data: List):
+def _combine_lists_with_common_elements(data: List[List[str]]) -> List[List[str]]:
+    """
+    Parameters
+    ----------
+    data: list[list[]]
+        data is a list of lists with strings.
+
+    Returns
+    -------
+    merged: combined lists with common elements.
+
+    Example
+    -------
+    input: [["conv0", "conv1", "conv2"], ["conv0", "conv3"], ["relu0"]]
+    output: [["conv0", "conv1", "conv2", "conv3"], ["relu0"]]
+    """
+
+    merged = []
+    for item in data:
+        item_set = set(item)
+        not_exsit = True
+        for result in merged:
+            if result & item_set:
+                result.update(item_set)
+                not_exsit = False
+                break
+        if not_exsit:
+            merged.append(item_set)
+    return merged
+
+
+def _adjust_concat_surrounding_activation_stats(
+    concat_op_info_list: List, activation_stats_dict: Dict[str, Dict[str, float]]
+) -> None:
+    """
+    Adjust the activation calibration stats of inputs/outputs to the same concat ops to maximize hardware efficiency.
+    Tensor values of inputs/outputs to the same concat op should share same range (same min/max), so the quantized
+    concat could be surrounded by quantize/dequantize pairs with same scale and zero point values.
+
+    Example
+    -------
+    - concat 1 -
+    inputs:  "input_1", "input_2", "input_3"
+    output:  "output_1"
+
+    - concat 2 -
+    inputs:  "input_1", "input_4"
+    output:  "output_2"
+
+    Input/output tensors range of concat 1 should be identical.
+    Input/output tensors range of concat 2 should be identical.
+    "input_1" is in both, which means activation calibration stats of all 6 tensors above should be identical.
+    """
+
+    if concat_op_info_list is None:
+        return
+
+    # Merge tensor names which should have identical values, to the same list.
+    concat_list_adjusted = _combine_lists_with_common_elements(concat_op_info_list)
+
+    for concat_group in concat_list_adjusted:
+        group_rmin_list, group_rmax_list = [], []
+
+        for tensor_name in concat_group:
+            group_rmin_list.append(activation_stats_dict[tensor_name]["rmin"])
+            group_rmax_list.append(activation_stats_dict[tensor_name]["rmax"])
+        group_rmin, group_rmax = min(group_rmin_list), max(group_rmax_list)
+
+        for tensor_name in concat_group:
+            activation_stats_dict[tensor_name]["rmin"] = group_rmin
+            activation_stats_dict[tensor_name]["rmax"] = group_rmax
+
+
+def _get_activation_calibration_stats(
+    fpmodel: _MLModel, sample_data: List
+) -> Dict[str, Dict[str, float]]:
     """
     Calibration and store a dict of intermediate tensor stats.
     E.g. activation_stats_dict = {tensor_0: {rmin: 0.2, rmax: 3.8}, tensor_1: {rmin: 4.5, rmax: 12.6}}}
@@ -192,7 +267,7 @@ def _get_activation_calibration_stats(fpmodel: _MLModel, sample_data: List):
     # Get data ranges for all inputs.
     for data in sample_data:
         for input_name in data:
-            _get_tensor_range(input_name, data[input_name], activation_stats_dict)
+            _update_tensor_range(input_name, data[input_name], activation_stats_dict)
 
     # The last few elements in intermediate_output_names might be output.
     # We don't maintain min/max value for an output tensor.
@@ -233,5 +308,10 @@ def _get_activation_calibration_stats(fpmodel: _MLModel, sample_data: List):
                 )
             )
             continue
+
+    # Handle a special case - concat ops.
+    _adjust_concat_surrounding_activation_stats(
+        debugger._get_concat_op_info(), activation_stats_dict
+    )
 
     return activation_stats_dict

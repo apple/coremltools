@@ -58,23 +58,63 @@ def mnist_model():
 
 
 @pytest.fixture
+def mnist_model_conv_transpose():
+    # this method will be removed once conv_transpose is integrated for pruning and palettization
+    return nn.Sequential(
+        OrderedDict(
+            [
+                ("conv1", nn.Conv2d(1, 32, (5, 5), padding=2)),
+                ("relu1", nn.ReLU()),
+                ("pool1", nn.MaxPool2d(2, stride=2, padding=0)),
+                ("bn1", nn.BatchNorm2d(32, eps=0.001, momentum=0.01)),
+                ("conv2", nn.Conv2d(32, 64, (5, 5), padding=2)),
+                ("relu2", nn.ReLU()),
+                ("pool2", nn.MaxPool2d(2, stride=2, padding=0)),
+                (
+                    "conv_transpose1",
+                    nn.ConvTranspose2d(64, 32, stride=1, kernel_size=3, padding=1),
+                ),
+                ("conv4", nn.Conv2d(32, 64, stride=1, kernel_size=1, padding=0)),
+                ("flatten", nn.Flatten()),
+                ("dense1", nn.Linear(3136, 1024)),
+                ("relu3", nn.ReLU()),
+                ("dropout", nn.Dropout(p=0.4)),
+                ("dense2", nn.Linear(1024, 10)),
+                ("softmax", nn.LogSoftmax()),
+            ]
+        )
+    )
+
+
+@pytest.fixture
 def mnist_model_quantization():
     # String padding mode like "same" or "valid" is not supported
     # for quantized models: https://github.com/pytorch/pytorch/issues/76304
-    return nn.Sequential(OrderedDict([
-        ('conv1', nn.Conv2d(1, 32, (5, 5), padding=2)),
-        ('bn1', nn.BatchNorm2d(32, eps=0.001, momentum=0.01)),
-        ('relu1', nn.ReLU6()),
-        ('pool1', nn.MaxPool2d(2, stride=2, padding=0)),
-        ('conv2', nn.Conv2d(32, 64, (5, 5), padding=2)),
-        ('relu2', nn.ReLU6()),
-        ('pool2', nn.MaxPool2d(2, stride=2, padding=0)),
-        ('flatten', nn.Flatten()),
-        ('dense1', nn.Linear(3136, 1024)),
-        ('relu3', nn.ReLU6()),
-        ('dropout', nn.Dropout(p=0.4)),
-        ('dense2', nn.Linear(1024, num_classes)),
-        ('softmax', nn.LogSoftmax())]))
+    return nn.Sequential(
+        OrderedDict(
+            [
+                ("conv1", nn.Conv2d(1, 32, (5, 5), padding=2)),
+                ("bn1", nn.BatchNorm2d(32, eps=0.001, momentum=0.01)),
+                ("relu1", nn.ReLU6()),
+                ("pool1", nn.MaxPool2d(2, stride=2, padding=0)),
+                ("conv2", nn.Conv2d(32, 64, (5, 5), padding=2)),
+                ("relu2", nn.ReLU6()),
+                ("pool2", nn.MaxPool2d(2, stride=2, padding=0)),
+                ("conv_transpose1", nn.ConvTranspose2d(64, 128, 3, padding=1)),
+                ("bn3", nn.BatchNorm2d(128, eps=0.001, momentum=0.01)),
+                ("relu3", nn.ReLU6()),
+                ("pool3", nn.MaxPool2d(1, stride=1, padding=0)),
+                ("conv_transpose2", nn.ConvTranspose2d(128, 64, 3, padding=1)),
+                ("relu4", nn.GELU()),
+                ("flatten", nn.Flatten()),
+                ("dense1", nn.Linear(3136, 1024)),
+                ("relu5", nn.ReLU6()),
+                ("dropout", nn.Dropout(p=0.4)),
+                ("dense2", nn.Linear(1024, num_classes)),
+                ("softmax", nn.LogSoftmax()),
+            ]
+        )
+    )
 
 
 class Residual(nn.Module):

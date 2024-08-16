@@ -43,10 +43,12 @@ _logger = _logging.getLogger(__name__)
 @_unique
 class ObserverType(_Enum):
     """
-    An enum indicating the type of observer. Allowed options are moving_average_min_max and mix_max.
+    An enum indicating the type of observer.
+    Allowed options are moving_average_min_max, min_max, ema_min_max, ema_percentile, mse, ema_mse, lsq and lsq_plus.
     """
+
     moving_average_min_max = "moving_average_min_max"
-    mix_max = "min_max"
+    min_max = "min_max"
 
     @staticmethod
     def get_observer(observer_type: "ObserverType", is_per_channel: bool) -> _Any:
@@ -91,6 +93,7 @@ class QuantizationScheme(_Enum):
 _default_quantization_options = {
     "weight_dtype": _torch.qint8,
     "weight_per_channel": True,
+    "weight_ch_axis": 0,
     "activation_dtype": _torch.quint8,
     "observer": ObserverType.moving_average_min_max,
     "quantization_scheme": QuantizationScheme.symmetric,
@@ -170,14 +173,14 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
             for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights
             corresponding to that layer are not quantized.  Defaults to :py:class:`torch.int8` which corresponds to
             8-bit quantization.
-        weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights. Defaults
-            to ``moving_average_min_max``.
+        weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights.
+            Defaults to ``moving_average_min_max``.
         weight_per_channel (:obj:`bool`): When ``True``, weights are quantized per channel; otherwise, per tensor.
         activation_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the activations. When dtype
             is set to :py:class:`torch.float32`, the activations corresponding to that layer are not quantized.
             Defaults to :py:class:`torch.quint8`.
-        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations. Allowed
-            values are ``min_max`` and ``moving_average_min_max``. Defaults to ``moving_average_min_max``.
+        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations.
+            Defaults to ``moving_average_min_max``.
         quantization_scheme: (:py:class:`QuantizationScheme`): Type of quantization configuration to use. When
             this parameter is set to :py:class:`QuantizationScheme.symmetric`, all weights are
             quantized with zero point as zero, and activations are quantized with zero point as zero for
@@ -189,7 +192,7 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
             quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.
             Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and
             all observers and quantization simulation will be turned on from the first step, batch norm layers always
-            operate in training mode, and mean and varaince statistics collection is not frozen.
+            operate in training mode, and mean and variance statistics collection is not frozen.
     """
 
     weight_dtype: _Union[str, _torch.dtype] = _field(
@@ -238,13 +241,6 @@ class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
         if self.weight_dtype not in [_torch.qint8, _torch.quint8, _torch.float32]:
             raise ValueError(
                 f"weight_dtype must be one of (_torch.qint8, _torch.quint8, _torch.float32) not {self.weight_dtype}"
-            )
-
-        if self.weight_dtype == _torch.float32 and self.activation_dtype != _torch.float32:
-            raise ValueError(
-                f"Unsupported configuration: weight_dtype = {self.weight_dtype}, "
-                f"activation_dtype = {self.activation_dtype}. When weights are not quantized,"
-                f"activations cannot be quantized."
             )
 
     @milestones.validator

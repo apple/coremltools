@@ -1,14 +1,15 @@
 # Copyright (c) 2017, Apple Inc. All rights reserved.
-# # Use of this source code is governed by a BSD-3-clause license that can be # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models import MLModel
 from coremltools.models.utils import _is_macos, _macos_version, rename_feature
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
 
     from coremltools.converters import sklearn as converter
@@ -19,7 +20,7 @@ class PipeLineRenameTests(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         scikit_data = load_boston()
-        feature_names = scikit_data.feature_names
+        feature_names = scikit_data["feature_names"]
 
         scikit_model = LinearRegression()
         scikit_model.fit(scikit_data["data"], scikit_data["target"])

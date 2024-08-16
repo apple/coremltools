@@ -216,8 +216,50 @@ def validate_allowed_granularity_values(instance, attribute, value):
         )
 
 
-def register_compression_metadata(submodule, config):
+def is_quantized_module(module):
+    """
+    Check if a module has been quantized by inserting torch.ao.quantization.FakeQuantize layers
+    """
+    return hasattr(module, "weight_fake_quant") and not hasattr(
+        module.weight_fake_quant, "fake_palett_enabled"
+    )
+
+
+def is_palettized_module(module):
+    """
+    Check if a module has been palettized by inserting coremltools.optimize.torch.palettization.FakePalettize layers
+    """
+    return hasattr(module, "weight_fake_quant") and hasattr(
+        module.weight_fake_quant, "fake_palett_enabled"
+    )
+
+
+def get_joint_pruned_quantized_submodule(module, supported_modules):
+    """
+    Given a quantized module, find the submodule that supports pruning
+    """
+    if isinstance(module, supported_modules):
+        return module
+
+    for submodule in module.children():
+        if isinstance(submodule, supported_modules):
+            return submodule
+
+    return None
+
+
+def register_compression_metadata(submodule, pruner_info, supported_modules):
+    config = pruner_info.config
+    compression_type = ["pruning"]
+
+    # Identify joint compression cases
+    if is_quantized_module(pruner_info.module):
+        compression_type += ["quantization"]
+        submodule = get_joint_pruned_quantized_submodule(submodule, supported_modules)
+    elif is_palettized_module(pruner_info.module):
+        compression_type += ["palettization"]
+
     param_name = config.param_name
     metadata = _CompressionMetadata(param_name)
-    metadata.compression_type = ["pruning"]
-    metadata.register(submodule)
+    metadata.compression_type = compression_type
+    metadata.register(submodule, override_compression_type=(len(compression_type) > 1))

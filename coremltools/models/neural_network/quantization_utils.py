@@ -9,17 +9,13 @@ Only available in coremltools 2.0b1 and onwards
 """
 from os import listdir as _listdir
 from sys import stdout as _stdout
+from typing import Optional as _Optional
 
 import numpy as _np
 
-from coremltools import (
-    ComputeUnit as _ComputeUnit,
-    _logger
-)
-from coremltools._deps import (
-    _HAS_KMEANS1D,
-    _kmeans1d
-)
+from coremltools import ComputeUnit as _ComputeUnit
+from coremltools import _logger
+from coremltools._deps import _HAS_KMEANS1D, _kmeans1d
 from coremltools.models import (
     _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
     _QUANTIZATION_MODE_DEQUANTIZE,
@@ -28,12 +24,13 @@ from coremltools.models import (
     _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
     _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
     _SUPPORTED_QUANTIZATION_MODES,
-    MLModel as _MLModel
 )
+from coremltools.models import MLModel as _MLModel
+
 from ... import (
     _MINIMUM_FP16_SPEC_VERSION,
     _MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
-    _SPECIFICATION_VERSION_IOS_14
+    _SPECIFICATION_VERSION_IOS_14,
 )
 from ..utils import _get_model, _macos_version, _wp_to_fp16wp
 from .optimization_utils import _optimize_nn
@@ -372,14 +369,16 @@ def _get_linear_lookup_table_and_weight(nbits, wp):
     return lookup_table, qw
 
 
-def _get_kmeans_lookup_table_and_weight(nbits, w, force_kmeans1d=False):
+def _get_kmeans_lookup_table_and_weight(
+    nbits, weight, force_kmeans1d=False, cluster_dim: int = 1, vector_axis: _Optional[int] = None
+):
     """
     Generate K-Means lookup table given weights
 
     nbits:
         Number of bits for quantization
 
-    w:
+    weight:
         Weights as numpy array
 
     force_kmeans1d:
@@ -390,21 +389,35 @@ def _get_kmeans_lookup_table_and_weight(nbits, w, force_kmeans1d=False):
     lut: numpy.array
         Lookup table, numpy array of shape (1 << nbits, )
     wq: numpy.array
-        Quantized weight of type numpy.uint8
+        Quantized weight
     """
-    num_weights = _np.prod(w.shape)
-    lut_len = 1 << nbits
-    wf = w.reshape(-1, 1)
-    lut = _np.zeros(lut_len)
+    if force_kmeans1d and cluster_dim > 1:
+        raise ValueError("Cannot force kmeans1d for vector palettization (cluster_dim > 1).")
 
-    is_better_to_use_kmeans1d = (num_weights >= 10_000 and w.dtype == _np.float16)
+    num_weights = _np.prod(weight.shape)
+    lut_len = 1 << nbits
+
+    if cluster_dim > 1:
+        # Import here to avoid circular import.
+        from coremltools.optimize.coreml import _utils as optimize_utils
+
+        weight = optimize_utils.reshape_weight_for_vector_lut(weight, cluster_dim, vector_axis)
+
+    weight = weight.reshape(-1, cluster_dim)
+    lut = _np.zeros((lut_len, cluster_dim))
+
+    is_better_to_use_kmeans1d = (
+        weight.shape[1] == 1 and num_weights >= 10_000 and weight.dtype == _np.float16
+    )
 
     if (is_better_to_use_kmeans1d and _HAS_KMEANS1D) or force_kmeans1d:
         # Cluster with kmeans1d
-        assert(_HAS_KMEANS1D)
-        values, indices, counts = _np.unique(wf, return_inverse=True, return_counts=True)
+        assert _HAS_KMEANS1D, "Unable to import kmeans1d, please make sure it's installed."
+        values, indices, counts = _np.unique(weight, return_inverse=True, return_counts=True)
+        indices = indices.flatten()
         n_clusters = min(len(values), lut_len)
         kmeans_results = _kmeans1d.cluster(values, n_clusters, weights=counts)
+        lut = lut.squeeze(-1)
         lut[:n_clusters] = kmeans_results.centroids
         wq = _np.array(kmeans_results.clusters)[indices]
     else:
@@ -422,11 +435,11 @@ def _get_kmeans_lookup_table_and_weight(nbits, w, force_kmeans1d=False):
                          " Using scikit-learn for K-means.")
 
         n_clusters = min(num_weights, lut_len)
-        kmeans = KMeans(
-            n_clusters, init="k-means++", tol=1e-2, n_init=1, random_state=0
-        ).fit(wf)
+        kmeans = KMeans(n_clusters, init="k-means++", tol=1e-2, n_init=1, random_state=0).fit(
+            weight
+        )
         wq = kmeans.labels_[:num_weights]
-        lut[:n_clusters] = kmeans.cluster_centers_.flatten()
+        lut[:n_clusters] = kmeans.cluster_centers_
 
     return lut, wq
 

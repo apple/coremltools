@@ -15,7 +15,7 @@ import coremltools as ct
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil import mil
-from coremltools.converters.mil.mil import Function, get_new_symbol
+from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
 if _HAS_TORCH:
@@ -131,6 +131,33 @@ class TestInputs:
 ###############################################################################
 
 class TestMLProgramConverterExamples:
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    def test_build_stateful_model():
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec((1,), dtype=types.fp16),
+                mb.StateTensorSpec((1,), dtype=types.fp16),
+            ],
+        )
+        def prog(x, accumulator_state):
+            # Read state
+            accumulator_value = mb.read_state(input=accumulator_state)
+            # Update value
+            y = mb.add(x=x, y=accumulator_value, name="y")
+            # Write state
+            mb.coreml_update_state(state=accumulator_state, value=y)
+
+            return y
+
+        mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS18)
+
+        # try to run prediction on the stateful model
+        state = mlmodel.make_state()
+        assert mlmodel.predict({"x": np.array([1.0])}, state=state)["y"] == 1
+        assert mlmodel.predict({"x": np.array([1.0])}, state=state)["y"] == 2
 
     @staticmethod
     def test_model_save(tmpdir):
@@ -420,6 +447,8 @@ class TestGraphPassManagement:
             inputs=[ct.TensorType(shape=example_input.shape)],
             convert_to="mlprogram",
             pass_pipeline=pipeline,
+            # TODO (rdar://131396853) Re-enable model load
+            skip_model_load=True,
         )
         assert get_op_types_in_program(model_converted._get_mil_internal()) == [
             "conv",
@@ -447,6 +476,8 @@ class TestGraphPassManagement:
             inputs=[ct.TensorType(shape=example_input.shape)],
             convert_to="mlprogram",
             pass_pipeline=pipeline,
+            # TODO (rdar://131396853) Re-enable model load
+            skip_model_load=True,
         )
         # The fp16 cast is skipped for conv and linear as we specified them in the pass options.
         assert get_op_types_in_program(model_converted._get_mil_internal()) == [

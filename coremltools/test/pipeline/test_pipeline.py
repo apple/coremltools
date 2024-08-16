@@ -10,6 +10,7 @@ import unittest
 import numpy as np
 import pytest
 
+from ..utils import load_boston
 import coremltools as ct
 from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
 from coremltools.converters.mil import mil
@@ -19,7 +20,6 @@ from coremltools.models.pipeline import PipelineClassifier, PipelineRegressor
 from coremltools.models.utils import _is_macos
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import OneHotEncoder
@@ -44,12 +44,8 @@ class LinearRegressionPipelineCreationTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-
-        if not (_HAS_SKLEARN):
-            return
-
         scikit_data = load_boston()
-        feature_names = scikit_data.feature_names
+        feature_names = scikit_data["feature_names"]
 
         scikit_model = LinearRegression()
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
@@ -64,7 +60,7 @@ class LinearRegressionPipelineCreationTest(unittest.TestCase):
 
     def test_pipeline_regression_creation(self):
 
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         p_regressor = PipelineRegressor(input_names, "target")
         p_regressor.add_model(self.scikit_spec)
@@ -121,7 +117,7 @@ class LibSVMPipelineCreationTest(unittest.TestCase):
 
         libsvm_model = svmutil.svm_train(prob, param)
         libsvm_spec = libsvm_converter.convert(
-            libsvm_model, scikit_data.feature_names, "target"
+            libsvm_model, scikit_data["feature_names"], "target"
         ).get_spec()
 
         # Save the data and the model
@@ -130,7 +126,7 @@ class LibSVMPipelineCreationTest(unittest.TestCase):
 
     def test_pipeline_classifier_creation(self):
 
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         p_classifier = PipelineClassifier(input_names, [1, 0])
         p_classifier.add_model(self.libsvm_spec)
 
@@ -169,10 +165,7 @@ class LinearRegressionPipeline(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        if not _HAS_SKLEARN:
-            return
         scikit_data = load_boston()
-        feature_names = scikit_data.feature_names
 
         scikit_model = Pipeline(steps=[("linear", LinearRegression())])
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
@@ -182,7 +175,7 @@ class LinearRegressionPipeline(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_pipeline_regression_creation(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
 
         p_regressor_model = converter.convert(self.scikit_model, input_names, "target")

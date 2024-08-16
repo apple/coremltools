@@ -5,8 +5,6 @@
 
 """
 The primary file for converting Scikit-learn models.
-
-
 """
 
 from ..._deps import _HAS_SKLEARN

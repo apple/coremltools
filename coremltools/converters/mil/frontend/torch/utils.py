@@ -13,7 +13,7 @@ from coremltools.converters.mil.mil import types
 # NOTE [represent torch dtype by integer]
 # In TorchScript, some ops will receive a dtype input as an integer which maps to a torch dtype.
 # The below mapping was found by converting test models with different dtypes passed to ones.
-# There is one modification to original torch mapping, though, due to CoreML lacks 64-bit dtype
+# There is one modification to original torch mapping, though, due to Core ML lacks 64-bit dtype
 # When mapping from torch dtype to integer number, we map
 #     * int64 to int32's number
 #     * float64 to float32's number
@@ -43,7 +43,7 @@ def dtype_to_32bit(dtype):
         return torch.float32
     else:
         return dtype
-    
+
 TORCH_DTYPE_TO_NUM = {
     dtype: val for val, dtype in NUM_TO_TORCH_DTYPE.items()
 }
@@ -59,7 +59,7 @@ NUM_TO_NUMPY_DTYPE = {
     5: np.float16,
     6: np.float32,
     7: np.float32,
-    11: bool, 
+    11: bool,
 }
 
 NUMPY_DTYPE_TO_TORCH_NUM = {
@@ -103,6 +103,18 @@ TORCH_QTYPE_TO_STR = {
     torch.quint8: "uint8",
 }
 
+MIL_DTYPE_TO_TORCH_DTYPE = {
+    types.bool: torch.bool,
+    types.fp16: torch.float16,
+    types.fp32: torch.float32,
+    types.int16: torch.int16,
+    types.int32: torch.int32,
+}
+
+TORCH_DTYPE_TO_MIL_DTYPE = {v: k for k, v in MIL_DTYPE_TO_TORCH_DTYPE.items()}
+TORCH_DTYPE_TO_MIL_DTYPE[torch.int64] = types.int32
+TORCH_DTYPE_TO_MIL_DTYPE[torch.float64] = types.fp32
+
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1
@@ -114,10 +126,10 @@ def sanitize_op_kind(op_kind: str) -> str:
     In our torch converter, we register torch ops only by its "canonical" name:
     1. Lower-case characters only, e.g. ``div.Tensor`` -> ``div.tensor``
     2. No double underscore prefix and suffix, e.g. ``__add__`` -> ``add``
-    3. No namespace prefix if it is the common aten/prim, e.g. 
+    3. No namespace prefix if it is the common aten/prim, e.g.
            ``aten::softmax`` -> ``softmax``
-            ``aten.pow`` -> ``pow``
-       and no type trait suffix if it is not distinguished in CoreML, e.g.
+           ``aten.pow`` -> ``pow``
+       and no type trait suffix if it is not distinguished in Core ML, e.g.
            ``bmm.default`` -> ``bmm``
            ``slice_copy.tensor`` -> ``slice_copy``
            ``mul.scalar`` -> ``mul``
@@ -155,7 +167,7 @@ def sanitize_op_kind(op_kind: str) -> str:
 
 def unify_inplace_and_functional(op_kind: str) -> str:
     """
-    In many cases, CoreML uses only functional ops,
+    In many cases, Core ML uses only functional ops,
     so we do not have to distinguish in-place from functional,
     so we will want to remove the conventional in-place suffix ``_`` of PyTorch.
     For instance, ``sub_`` -> ``sub``

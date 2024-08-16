@@ -117,7 +117,7 @@ def test_post_training_palettization_dict_config(simple_model, config_dict, expe
                     "conv2": {
                         "n_bits": 4,
                         "granularity": "per_tensor",
-                        "cluster_dim": 4,
+                        "cluster_dim": 3,
                     },
                     "fc3": {
                         "n_bits": 2,
@@ -139,7 +139,7 @@ def test_post_training_vector_palettization_dict_config(simple_model, config_dic
         # Only validate the layers that get palettized.
         if name in config_dict["module_name_configs"] and hasattr(mod, "weight"):
             _cluster_dim = config_dict["module_name_configs"][name]["cluster_dim"]
-            weight_reshaped = mod.weight.flatten(1).reshape(-1, _cluster_dim)
+            weight_reshaped = mod.weight.flatten(1).transpose(0, 1).reshape(-1, _cluster_dim)
             unique_vector = torch.unique(weight_reshaped, dim=0)
             assert eval(f"len(unique_vector) {expected_output[i]}")
             i += 1
@@ -159,7 +159,7 @@ def test_post_training_vector_palettization_dict_config(simple_model, config_dic
         },
         {
             "n_bits": 4,
-            "cluster_dim": 3,
+            "cluster_dim": 4,
         },
         {
             "n_bits": 4,

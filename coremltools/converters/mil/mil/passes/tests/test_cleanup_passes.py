@@ -150,7 +150,14 @@ class TestConstDeduplication:
             assert const_ops[1].weight_id == 1
             assert const_ops[2].weight_id == 2
 
-    def test_const_deduplication(self):
+    @pytest.mark.parametrize(
+        "q_weight_key, k_weight_key",
+        itertools.product(
+            (None, "weight", "q_weight"),
+            (None, "weight", "k_weight"),
+        ),
+    )
+    def test_const_deduplication(self, q_weight_key, k_weight_key):
         BATCH_DIM = 5
         SEQUENCE_LENGTH = 4
         ENCODING_DIM = 256
@@ -166,19 +173,27 @@ class TestConstDeduplication:
         )
         def prog(q, k):
             q_e = mb.linear(x=q, weight=weight, bias=bias)
+            q_e.op.weight.op.weight_key = q_weight_key
             k_e = mb.linear(x=k, weight=weight, bias=bias)
+            k_e.op.weight.op.weight_key = k_weight_key
             attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
             return attention
 
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
         assert_op_count_match(prev_prog, expect=6, op="const")
-        assert_op_count_match(prog, expect=4, op="const")
+        # bias will always be deduplicated
+        # weight will be deduplicated only when q and k have same weight key
+        assert_op_count_match(prog, expect=4 if q_weight_key == k_weight_key else 5, op="const")
 
     @pytest.mark.parametrize(
-        "constexpr_op",
-        CONSTEXPR_OPS,
+        "constexpr_op, q_bias_key, k_bias_key",
+        itertools.product(
+            CONSTEXPR_OPS,
+            (None, "weight", "q_weight"),
+            (None, "weight", "k_weight"),
+        ),
     )
-    def test_constexpr_deduplication(self, constexpr_op):
+    def test_constexpr_deduplication(self, constexpr_op, q_bias_key, k_bias_key):
         BATCH_DIM = 5
         SEQUENCE_LENGTH = 4
         ENCODING_DIM = 256
@@ -196,13 +211,17 @@ class TestConstDeduplication:
             bias_q = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM,), seed=29)
             bias_k = CONSTEXPR_FUNCS[constexpr_op]((EMBEDDING_DIM,), seed=29)
             q_e = mb.linear(x=q, weight=weight_q, bias=bias_q)
+            q_e.op.bias.op.weight_key = q_bias_key
             k_e = mb.linear(x=k, weight=weight_k, bias=bias_k)
+            k_e.op.bias.op.weight_key = k_bias_key
             attention = mb.matmul(x=q_e, y=k_e, transpose_y=True)
             return attention
 
         prev_prog, _, _ = apply_pass_and_basic_check(prog, "common::const_deduplication")
         assert_op_count_match(prev_prog, expect=4, op=constexpr_op)
-        assert_op_count_match(prog, expect=2, op=constexpr_op)
+        # weight will always be deduplicated
+        # bias will be deduplicated only when q and k have same weight key
+        assert_op_count_match(prog, expect=2 if q_bias_key == k_bias_key else 3, op=constexpr_op)
 
     def test_const_deduplication_as_outputs(self):
         """

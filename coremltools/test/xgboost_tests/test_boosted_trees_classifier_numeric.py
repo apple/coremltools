@@ -10,13 +10,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_classifier,
                                       evaluate_classifier_with_probabilities)
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingClassifier
 
     from coremltools.converters import sklearn as skl_converter
@@ -41,11 +41,11 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         # Load data and train model
         scikit_data = load_boston()
         self.scikit_data = scikit_data
-        self.X = scikit_data.data.astype("f").astype(
+        self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data
         self.target = 1 * (scikit_data["target"] > scikit_data["target"].mean())
-        self.feature_names = scikit_data.feature_names
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def _check_metrics(self, metrics, params={}):
@@ -118,16 +118,16 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
         # Load data and train model
         scikit_data = load_boston()
         num_classes = 3
-        self.X = scikit_data.data.astype("f").astype(
+        self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data
-        t = scikit_data.target
+        t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t, bins=num_classes - 1)[1]) - 1
 
         # Save the data and the model
         self.scikit_data = scikit_data
         self.target = target
-        self.feature_names = scikit_data.feature_names
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def test_simple_multiclass(self):
@@ -219,11 +219,11 @@ class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
         # Load data and train model
         scikit_data = load_boston()
         self.scikit_data = scikit_data
-        self.X = scikit_data.data.astype("f").astype(
+        self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data
         self.target = 1 * (scikit_data["target"] > scikit_data["target"].mean())
-        self.feature_names = scikit_data.feature_names
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def test_simple_binary_classifier(self):
@@ -244,16 +244,16 @@ class BoostedTreeMultiClassClassificationBostonHousingXGboostNumericTest(
     def setUpClass(self):
         scikit_data = load_boston()
         num_classes = 3
-        self.X = scikit_data.data.astype("f").astype(
+        self.X = scikit_data["data"].astype("f").astype(
             "d"
         )  ## scikit-learn downcasts data
-        t = scikit_data.target
+        t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t, bins=num_classes - 1)[1]) - 1
 
         # Save the data and the model
         self.scikit_data = scikit_data
         self.target = target
-        self.feature_names = scikit_data.feature_names
+        self.feature_names = scikit_data["feature_names"]
         self.output_name = "target"
 
     def test_simple_multiclass(self):

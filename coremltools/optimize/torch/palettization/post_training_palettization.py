@@ -132,13 +132,6 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
             assert value is None, "group_size can't be specified along with per_tensor granularity."
 
     @cluster_dim.validator
-    def per_tensor_granularity(self, attribute, value):
-        if value and value > 1:
-            assert (
-                self.granularity == PalettizationGranularity.per_tensor
-            ), "cluster_dim larger than 1 is only supported with per tensor palettization"
-
-    @cluster_dim.validator
     def no_per_channel_scale(self, attribute, value):
         if value and value > 1:
             assert (
@@ -294,6 +287,7 @@ class PostTrainingPalettizer(_BasePostTrainingModelOptimizer):
                 updated_config = _validate_param_config(
                     name + "." + param_name,
                     param,
+                    submodule,
                     submod_config,
                     ["palettization_group_size", "palettization_cluster_dim"],
                 )

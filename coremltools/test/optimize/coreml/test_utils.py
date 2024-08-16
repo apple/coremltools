@@ -128,6 +128,57 @@ class TestFindIndicesForLut:
             == f"uint{nbits}"
         )
 
+    def test_vector_basic(self):
+        """
+        data: [[3.01, -7.99, 2.02, -7.05], [3.02, -8.01, 1.89, -6.88]]
+        lut: [[2, -7], [3, -8]]
+        expected indices: [[1, 0], [0, 1]]
+        """
+        data = np.array([[3.01, -7.99, 2.02, -7.05], [1.89, -6.88, 3.02, -8.01]], dtype=np.float16)
+        lut = np.array([[2, -7], [3, -8]], dtype=np.int8).reshape((1, 1, 2, 2))
+        expected_indices = np.array([[1, 0], [0, 1]], dtype=np.uint8)
+        indices = optimize_utils.find_indices_for_lut(data, lut, vector_axis=-1)
+        np.testing.assert_array_equal(indices, expected_indices)
+        assert types.builtin_to_string(types.numpy_type_to_builtin_type(indices.dtype)) == "uint1"
+
+    @pytest.mark.parametrize(
+        "nbits, vector_size, vector_axis, group_size",
+        itertools.product(
+            (2, 3, 4, 8),
+            (1, 2, 4),
+            (0, 1, -1),
+            (0, 4),
+        ),
+    )
+    def test_vector_stress(self, nbits, vector_size, vector_axis, group_size):
+        data_shape = [8, 16, 32]
+        lut_shape = [1] * len(data_shape)
+        if group_size > 0:
+            lut_shape[vector_axis] = data_shape[vector_axis] // group_size
+        lut_shape += [2**nbits, vector_size]
+
+        nbits_range = types.type_mapping.builtin_to_range(types.string_to_builtin(f"uint{nbits}"))
+        lut = np.arange(np.prod(lut_shape)).reshape(lut_shape).astype(np.float16)
+
+        indices_shape = list(data_shape)
+        indices_shape[vector_axis] //= vector_size
+        expected_indices = np.random.randint(
+            low=nbits_range.low, high=nbits_range.high + 1, size=indices_shape, dtype=np.uint8
+        )
+
+        data = constexpr_lut_to_dense.decompress(expected_indices, lut, vector_axis=vector_axis)
+        # Salting the data to manually introduce numerical instability.
+        data += np.random.randint(low=0, high=2, size=data.shape) * 0.01
+        data -= np.random.randint(low=0, high=2, size=data.shape) * 0.01
+
+        indices = optimize_utils.find_indices_for_lut(data, lut, vector_axis=vector_axis)
+
+        np.testing.assert_array_equal(indices, expected_indices)
+        assert (
+            types.builtin_to_string(types.numpy_type_to_builtin_type(indices.dtype))
+            == f"uint{nbits}"
+        )
+
 
 class TestPackUnpackBits:
     def test_pack_basic(self):

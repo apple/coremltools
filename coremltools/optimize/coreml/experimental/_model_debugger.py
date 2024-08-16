@@ -3,6 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List
+
 import numpy as np
 
 import coremltools as ct
@@ -160,12 +162,19 @@ class ModelDebugger:
     def get_output_feature_type(cls, output_name, operations):
         operation = operations[output_name]
         data_type = operation.outputs[output_name].type.tensorType.dataType
+
+        # Valid data type as model outputs.
         data_type_to_feature_type = {
             ct.proto.MIL_pb2.DataType.FLOAT16: ct.proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT16,
             ct.proto.MIL_pb2.DataType.FLOAT64: ct.proto.FeatureTypes_pb2.ArrayFeatureType.DOUBLE,
             ct.proto.MIL_pb2.DataType.FLOAT32: ct.proto.FeatureTypes_pb2.ArrayFeatureType.FLOAT32,
             ct.proto.MIL_pb2.DataType.INT32: ct.proto.FeatureTypes_pb2.ArrayFeatureType.INT32,
         }
+
+        # Return None for invalid data type as model outputs (e.g. bool).
+        if data_type not in data_type_to_feature_type:
+            return None
+
         return data_type_to_feature_type[data_type]
 
     def __init__(self, model):
@@ -203,6 +212,29 @@ class ModelDebugger:
 
         return self.__class__.unique(intermediate_output_names)
 
+    def _get_concat_op_info(self) -> List[List[str]]:
+        """
+        Return a list of lists of input/output names of concat ops.
+        """
+        intermediate_output_names_list = self.get_intermediate_output_names(
+            lambda op: (op.spec.type == "concat")
+        )
+        all_operations = self.block_info.operations
+        concat_op_info_list = []
+
+        for concat_output_name in intermediate_output_names_list:
+            # Get a list of input names (to "values") of current concat op.
+            arguments = all_operations[concat_output_name].spec.inputs["values"].arguments
+            argument_list = [val.name for val in arguments if val.name is not None]
+
+            # Append the output name of current concat op.
+            argument_list.append(concat_output_name)
+
+            # Append a list of input/output names of current concat op.
+            concat_op_info_list.append(argument_list)
+
+        return concat_op_info_list
+
     def get_model_with_intermediate_outputs(
         self, intermediate_output_names, compute_units=ct.ComputeUnit.ALL
     ):
@@ -218,13 +250,21 @@ class ModelDebugger:
         )
         cloned_spec.specificationVersion = max(self.model_info.spec.specificationVersion, 7)
         cloned_block_info = self.__class__.get_any_block(cloned_model_info)
+
         for output_name in intermediate_output_names:
+            cloned_output_type = self.__class__.get_output_feature_type(
+                output_name, self.block_info.operations
+            )
+
+            # Some intermediate tensors cannot be appended to outputs since their data type is not valid as an output data type.
+            # For example, an intermediate tensor with bool type cannot be appended to outputs (which will cause compilation error).
+            if cloned_output_type is None:
+                continue
+
             cloned_block_info.spec.outputs.append(output_name)
             cloned_output = ct.proto.Model_pb2.FeatureDescription()
             cloned_output.name = output_name
-            cloned_output.type.multiArrayType.dataType = self.__class__.get_output_feature_type(
-                output_name, self.block_info.operations
-            )
+            cloned_output.type.multiArrayType.dataType = cloned_output_type
             cloned_model_info.spec.description.output.append(cloned_output)
 
         model = ct.models.MLModel(

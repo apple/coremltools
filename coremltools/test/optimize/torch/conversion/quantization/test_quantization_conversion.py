@@ -6,8 +6,6 @@
 import pytest
 
 ct = pytest.importorskip("coremltools")
-import torch.nn as nn
-
 import coremltools.test.optimize.torch.conversion.conversion_utils as util
 from coremltools.optimize.torch.layerwise_compression import (
     LayerwiseCompressor,
@@ -46,9 +44,10 @@ from coremltools.optimize.torch.quantization import LinearQuantizer, LinearQuant
     ],
 )
 @pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
-def test_linear_quantizer(config, mnist_model, mnist_example_input):
+@pytest.mark.parametrize("model", ["mnist_model", "mnist_model_conv_transpose"])
+def test_linear_quantizer(config, model, mnist_example_input, request):
     quantizer_config = LinearQuantizerConfig.from_dict(config)
-    quantizer = LinearQuantizer(mnist_model, quantizer_config)
+    quantizer = LinearQuantizer(request.getfixturevalue(model), quantizer_config)
     quantized_model = get_quantized_model(quantizer, mnist_example_input)
 
     util.convert_and_verify(
@@ -71,26 +70,22 @@ def test_linear_quantizer(config, mnist_model, mnist_example_input):
         ),
         pytest.param(
             {
-                "module_type_configs": {
-                    nn.Linear: {
-                        "algorithm": "gptq",
-                        "weight_dtype": "uint8",
-                        "block_size": 32,
-                        "granularity": "per_block",
-                    }
+                "global_config": {
+                    "algorithm": "gptq",
+                    "weight_dtype": "uint8",
+                    "block_size": 32,
+                    "granularity": "per_block",
                 }
             },
             id="blockwise",
         ),
         pytest.param(
             {
-                "module_type_configs": {
-                    nn.Linear: {
-                        "algorithm": "gptq",
-                        "weight_dtype": "uint4",
-                        "block_size": 32,
-                        "granularity": "per_block",
-                    }
+                "global_config": {
+                    "algorithm": "gptq",
+                    "weight_dtype": "uint4",
+                    "block_size": 32,
+                    "granularity": "per_block",
                 }
             },
             id="4bit_blockwise",

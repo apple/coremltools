@@ -38,7 +38,9 @@ class PalettizationCustomConversionBase(_nn.Module):
 
     @classmethod
     def get_finalized_weights(cls, observed_module: _nn.Module):
-        return observed_module.weight_fake_quant.forward(observed_module.weight.detach())
+        if observed_module.weight_fake_quant.partitions:
+            return observed_module.weight_fake_quant.forward(observed_module.weight.detach())
+        return observed_module.weight
 
     @classmethod
     def add_metadata(cls, observed_module: _nn.Module, return_module: _nn.Module):

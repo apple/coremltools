@@ -7,12 +7,12 @@ import unittest
 
 import pandas as pd
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_regressor)
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import LinearSVR
@@ -40,7 +40,7 @@ class LinearRegressionScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         spec = convert(self.scikit_model, input_names, "target").get_spec()
         self.assertIsNotNone(spec)
 
@@ -93,18 +93,18 @@ class LinearRegressionScikitTest(unittest.TestCase):
         """
         Check that the evaluation results are the same in scikit learn and coremltools
         """
-        input_names = self.scikit_data.feature_names
-        df = pd.DataFrame(self.scikit_data.data, columns=input_names)
+        input_names = self.scikit_data["feature_names"]
+        df = pd.DataFrame(self.scikit_data["data"], columns=input_names)
 
-        for normalize_value in (True, False):
-            cur_model = LinearRegression(normalize=normalize_value)
-            cur_model.fit(self.scikit_data["data"], self.scikit_data["target"])
-            spec = convert(cur_model, input_names, "target")
+        cur_model = LinearRegression()
+        cur_model.fit(self.scikit_data["data"], self.scikit_data["target"])
+        spec = convert(cur_model, input_names, "target")
 
-            df["target"] = cur_model.predict(self.scikit_data.data)
+        df["target"] = cur_model.predict(self.scikit_data["data"])
 
-            metrics = evaluate_regressor(spec, df)
-            self.assertAlmostEqual(metrics["max_error"], 0)
+        metrics = evaluate_regressor(spec, df)
+        self.assertAlmostEqual(metrics["max_error"], 0)
+
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
@@ -122,15 +122,15 @@ class LinearRegressionScikitTest(unittest.TestCase):
             {"intercept_scaling": 1.5},
         ]
 
-        input_names = self.scikit_data.feature_names
-        df = pd.DataFrame(self.scikit_data.data, columns=input_names)
+        input_names = self.scikit_data["feature_names"]
+        df = pd.DataFrame(self.scikit_data["data"], columns=input_names)
 
         for cur_args in ARGS:
             cur_model = LinearSVR(**cur_args)
             cur_model.fit(self.scikit_data["data"], self.scikit_data["target"])
             spec = convert(cur_model, input_names, "target")
 
-            df["target"] = cur_model.predict(self.scikit_data.data)
+            df["target"] = cur_model.predict(self.scikit_data["data"])
 
             metrics = evaluate_regressor(spec, df)
             self.assertAlmostEqual(metrics["max_error"], 0)

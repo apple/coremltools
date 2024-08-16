@@ -94,7 +94,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             different look up tables.
         quant_min (:obj:`int`): The minimum allowable quantized value.
         quant_max (:obj:`int`): The maximum allowable quantized value.
-        cluster_dtype (:obj:`str`): String that decides whether to quantize the ``LUT`` or not. The following are the ``str``
+        lut_dtype (:obj:`str`): String that decides whether to quantize the ``LUT`` or not. The following are the ``str``
             LUT quantization combinations: (``u8``, ``uint8``), (``i8``, ``int8``), and (``f16``, ``float16``).
         advanced_options (:obj:`dict`): Advanced options to configure the palettization algorithm.
         observer_kwargs (optional): Arguments for the observer module.
@@ -115,7 +115,7 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         group_size: _Optional[int] = None,
         quant_min: int = -128,
         quant_max: int = 127,
-        cluster_dtype: str = "f32",
+        lut_dtype: str = "f32",
         advanced_options: dict = {},
         **observer_kwargs,
     ):
@@ -236,9 +236,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
         self.per_channel_scaling_factor = None
         self.partitions = []
         self.group_size = group_size
-        self.cluster_dtype = cluster_dtype
+        self.lut_dtype = lut_dtype
         self.add_extra_centroid = add_extra_centroid
-        self.need_to_quantize = self.cluster_dtype in ["i8", "u8", "f16"]
+        self.need_to_quantize = self.lut_dtype in ["i8", "u8", "f16"]
         self.autograd_graph = hasattr(_torch.autograd, "graph") and palett_max_mem < 1.0
         self.palett_max_mem = palett_max_mem
         self.palett_min_tsize = palett_min_tsize
@@ -421,7 +421,10 @@ class FakePalettize(_FakeQuantize, _Partitioner):
                 last_inertia = cur_inertia[-1]
 
             X[partition] = _devectorize(
-                _torch.matmul(attention, centroids), pad[p], X[partition].size()
+                _torch.matmul(attention, centroids),
+                pad[p],
+                X[partition].size(),
+                self.cluster_dim,
             ).to(X.dtype)
 
             self.labels[p] = None
@@ -480,7 +483,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
 
         for i, p in enumerate(partitions):
             partition = self.partitions[p]
-            X[partition] = _devectorize(tX[i], pad[p], X[partition].size()).to(X.dtype)
+            X[partition] = _devectorize(tX[i], pad[p], X[partition].size(), self.cluster_dim).to(
+                X.dtype
+            )
             self.labels[p] = None
             self.centroids[p] = centroids[i].detach().to(X.dtype)
             self.cum_inertia[p] += float(cur_inertia[i].detach())
@@ -532,7 +537,10 @@ class FakePalettize(_FakeQuantize, _Partitioner):
 
             if X is not None:
                 X[partition] = _devectorize(
-                    centroids[self.labels[p]], pad[p], X[partition].size()
+                    centroids[self.labels[p]],
+                    pad[p],
+                    X[partition].size(),
+                    self.cluster_dim,
                 ).to(X.dtype)
 
         return X
@@ -553,9 +561,9 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             centroids = self.centroids[p]
             self.labels[p] = labels[i].to(_torch.int).cpu()
 
-            X[partition] = _devectorize(centroids[self.labels[p]], pad[p], X[partition].size()).to(
-                X.dtype
-            )
+            X[partition] = _devectorize(
+                centroids[self.labels[p]], pad[p], X[partition].size(), self.cluster_dim
+            ).to(X.dtype)
 
         return X
 
@@ -621,18 +629,24 @@ class FakePalettize(_FakeQuantize, _Partitioner):
                 _torch.argsort(_torch.Tensor(self.cluster_permute)).tolist()
             )
 
-        if self.cluster_dtype == "f16":
+        if self.lut_dtype == "f16":
             palettized_weights = palettized_weights.to(_torch.float16).to(weights.dtype)
-        elif self.cluster_dtype == "b16":
+        elif self.lut_dtype == "b16":
             palettized_weights = palettized_weights.to(_torch.bfloat16).to(weights.dtype)
 
         return palettized_weights
 
     def _load_from_state_dict(
-        self, state_dict, prefix, local_metadata, strict, missing_keys, unexpected_keys, error_msgs
+        self,
+        state_dict,
+        prefix,
+        local_metadata,
+        strict,
+        missing_keys,
+        unexpected_keys,
+        error_msgs,
     ):
-
-        self.cluster_dtype = local_metadata["cluster_dtype"]
+        self.lut_dtype = local_metadata["lut_dtype"]
         self.fake_palett_enabled = _torch.empty(
             state_dict[prefix + "fake_palett_enabled"].size(),
             device=self.centroids.device,
@@ -682,13 +696,13 @@ class FakePalettize(_FakeQuantize, _Partitioner):
             super(_FakeQuantize, self)._save_to_state_dict(destination, prefix, keep_vars)
 
         # State dicts can only contain tensors (for DDP), so store infos in the metatadata dict (in particular str)
-        destination._metadata[prefix[:-1]]["cluster_dtype"] = self.cluster_dtype
+        destination._metadata[prefix[:-1]]["lut_dtype"] = self.lut_dtype
         destination[prefix + "per_channel_scaling_factor"] = self.per_channel_scaling_factor
         _Partitioner._save_to_state_dict_(self, destination, prefix + "palett.", keep_vars)
 
     def __repr__(self):
         rep = super().__repr__()
-        rep += f"cluster_dtype: {self.cluster_dtype}, "
+        rep += f"lut_dtype: {self.lut_dtype}, "
         rep += f"n_bits: {self.n_bits}, "
         rep += f"cluster_dim: {self.cluster_dim}, "
         rep += f"palett_tau: {self.palett_tau}, "

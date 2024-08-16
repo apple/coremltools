@@ -1389,6 +1389,32 @@ class TestGroupNorm(TorchBaseTest):
 
 class TestLinear(TorchBaseTest):
     @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_linear_fp16(self, compute_unit, backend):
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.fc = nn.Linear(4, 4, dtype=torch.float16)
+
+            def forward(self, x):
+                return self.fc(x)
+
+        model = Model()
+        self.run_compare_torch(
+            torch.randn(4, 4, dtype=torch.float16),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, in_features, out_features, bias",
         itertools.product(
             compute_units,
@@ -5199,20 +5225,27 @@ class TestFlatten(TorchBaseTest):
 
 class TestUnflatten(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, dim",
+        "compute_unit, backend, dim, auto_infer_idx, dynamic",
         itertools.product(
             compute_units,
             backends,
             (0, 1, -1, -2),
+            (0, 1, None),
+            (True, False),
         ),
     )
-    def test_unflatten(self, compute_unit, backend, dim):
+    def test_unflatten(self, compute_unit, backend, dim, auto_infer_idx, dynamic):
+        if dynamic and auto_infer_idx is not None:
+            pytest.skip("Auto-inferring shape (-1) not supported for dynamic input.")
+
         class Head(nn.Module):
             def __init__(self, nhead, batch_size, input_size, output_size):
                 super(Head, self).__init__()
                 self.linear = nn.Linear(nhead * input_size, nhead * output_size)
-                unflatten_size = batch_size if dim == 0 or dim == -2 else output_size
-                self.unflatten = nn.Unflatten(dim, (nhead, unflatten_size))
+                unflattened_size = [nhead, batch_size if dim == 0 or dim == -2 else output_size]
+                if auto_infer_idx is not None:
+                    unflattened_size[auto_infer_idx] = -1
+                self.unflatten = nn.Unflatten(dim, unflattened_size)
 
             def forward(self, x):
                 y = self.linear(x)
@@ -5224,12 +5257,22 @@ class TestUnflatten(TorchBaseTest):
         INPUT_SIZE = 5
         OUTPUT_SIZE = 7
 
-        model = Head(NHEAD, BATCH_SIZE, INPUT_SIZE, OUTPUT_SIZE)
-        model.eval()
+        if dynamic:
+            inputs = [
+                ct.TensorType(
+                    shape=(
+                        ct.RangeDim(lower_bound=1, upper_bound=NHEAD * BATCH_SIZE),
+                        ct.RangeDim(lower_bound=1, upper_bound=NHEAD * INPUT_SIZE),
+                    )
+                ),
+            ]
+        else:
+            inputs = [ct.TensorType(shape=(NHEAD * BATCH_SIZE, NHEAD * INPUT_SIZE))]
 
         self.run_compare_torch(
             (NHEAD * BATCH_SIZE, NHEAD * INPUT_SIZE),
-            model,
+            Head(NHEAD, BATCH_SIZE, INPUT_SIZE, OUTPUT_SIZE),
+            converter_input_type=inputs,
             backend=backend,
             compute_unit=compute_unit,
         )
@@ -6975,7 +7018,7 @@ class TestZeros(TorchBaseTest):
         with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
             # Mock that the size parameter to torch.zeros is non-replaceable.
             mocked_is_nonreplaceable_var.side_effect = (
-                lambda var: var.op and var.rank == 1 and np.all(var.val == [2, 3, 5])
+                lambda var: var.op and var.rank == 1 and var.val.shape == (3, ) and np.all(var.val == [2, 3, 5])
             )
             mlmodel = self.run_compare_torch(
                 [(1, 2, 3)],
@@ -7005,6 +7048,16 @@ class TestTopk(TorchBaseTest):
             pytest.xfail("iOS16 version topk needed for sort = False")
         if not sort and _macos_version() < (13, 0):
             pytest.skip("New functionality in macOS13/iOS16")
+        if (
+            backend[0] == "mlprogram"
+            and largest
+            and sort
+            and not dynamic
+            and shape_dim_k == ((4, 6, 7, 3), -1, 2)
+        ):
+            pytest.xfail(
+                "rdar://132358055 Why It Randomly Numerically Fails on CI but Cannot Reproduce Locally "
+            )
 
         input_shape = shape_dim_k[0]
         dim = shape_dim_k[1]
@@ -7766,8 +7819,17 @@ class TestTensorAssign(TorchBaseTest):
         # broadcast assignment for two n-D tensors
         if compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail(
-                "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY)"
+                "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY + Classic CPU)"
             )
+        else:
+            if (
+                backend == "mlprogram"
+                and shape == (5, 4, 3)
+                and minimum_deployment_target == ct.target.iOS18
+            ):
+                pytest.xfail(
+                    "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY + Classic CPU)"
+                )
 
         class TensorAssignModel(torch.nn.Module):
             def __init__(self):
@@ -7946,8 +8008,18 @@ class TestTensorAssign(TorchBaseTest):
     ):
         if compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail(
-                "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY)"
+                "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY + Classic CPU)"
             )
+        else:
+            # On BNNS, some cases are passing, only static cases are failing
+            if (
+                backend[0] == "mlprogram"
+                and not dynamic
+                and minimum_deployment_target == ct.target.iOS18
+            ):
+                pytest.xfail(
+                    "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY + Classic CPU)"
+                )
 
         # general case with dynamic begin and end
         class TensorAssignModel(torch.nn.Module):
@@ -8065,10 +8137,9 @@ class TestSelectScatter(TorchBaseTest):
         if (
             input_shape == (1, 2, 4)
             and minimum_deployment_target == ct.target.iOS18
-            and compute_unit != ct.ComputeUnit.CPU_ONLY
         ):
             pytest.xfail(
-                "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY)"
+                "rdar://128024502 ([Bug][iOS18] slice_update failing test on backends beside CPU_ONLY + Classic CPU)"
             )
 
         def test_model(src_shape, dim, index):
@@ -8225,6 +8296,8 @@ class TestIndexPut(TorchBaseTest):
         class IndexPutModel(torch.nn.Module):
             def forward(self, x):
                 mask = torch.tensor([True, False, False, False, True, True]).view(3, 2)
+                if frontend == TorchFrontend.EXIR:
+                    x = x.clone()
                 if rank == 0:
                     x[mask] = 0.0
                 if rank == 1:
@@ -8261,6 +8334,8 @@ class TestIndexPut(TorchBaseTest):
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, y):
                 mask = y > 1
+                if frontend == TorchFrontend.EXIR:
+                    x = x.clone()
                 x[y > 1] = 0.0
                 return x
 
@@ -8300,6 +8375,8 @@ class TestIndexPut(TorchBaseTest):
 
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, indices, values):
+                if frontend == TorchFrontend.EXIR:
+                    x = x.clone()
                 x.index_put_(tuple(indices.t()), values, accumulate=accumulate)
                 return x
 
@@ -8481,6 +8558,8 @@ class TestIndexPut(TorchBaseTest):
 
         class IndexPutModel(torch.nn.Module):
             def forward(self, x):
+                if frontend == TorchFrontend.EXIR:
+                    x = x.clone()
                 x.index_put_(
                     indices=(torch.LongTensor([0, -1]), torch.LongTensor([-2, 1])),
                     values=torch.Tensor([1.0, 5.0]),
@@ -8517,8 +8596,18 @@ class TestIndexPut(TorchBaseTest):
                 "EXIR IndexPut Fails on NeuralNetwork Backend"
             )
 
+        if (
+            backend[0] == "mlprogram"
+            and frontend == TorchFrontend.TORCHSCRIPT
+            and minimum_deployment_target == ct.target.iOS17
+        ):
+            if (rank == 2 and accumulate) or rank == 3:
+                pytest.xfail("rdar://133476254 Toy iOS17.scatter_nd Model Failing")
+
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, indices, values):
+                if frontend == TorchFrontend.EXIR:
+                    x = x.clone()
                 x.index_put_(tuple(indices.t()), values, accumulate=accumulate)
                 return x
 
@@ -11521,6 +11610,43 @@ class TestTransformer(TorchBaseTest):
         model.eval()
 
         self.run_compare_torch((3, 32), model, backend=backend, compute_unit=compute_unit)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dynamic",
+        itertools.product(compute_units, backends, (True, False)),
+    )
+    def test_transformer(self, compute_unit, backend, dynamic):
+        if dynamic:
+            inputs = [
+                ct.TensorType(
+                    shape=(
+                        ct.RangeDim(lower_bound=1, upper_bound=16),
+                        ct.RangeDim(lower_bound=1, upper_bound=4),
+                        3,
+                    )
+                ),
+                ct.TensorType(
+                    shape=(
+                        ct.RangeDim(lower_bound=1, upper_bound=16),
+                        ct.RangeDim(lower_bound=1, upper_bound=4),
+                        3,
+                    )
+                ),
+            ]
+        else:
+            inputs = [ct.TensorType(shape=(1, 4, 3)), ct.TensorType(shape=(1, 4, 3))]
+
+        self.run_compare_torch(
+            [(1, 4, 3), (1, 4, 3)],
+            nn.Transformer(
+                d_model=3,
+                nhead=1,
+                batch_first=True,
+            ),
+            converter_input_type=inputs,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
 
 
 class TestFliplr(TorchBaseTest):

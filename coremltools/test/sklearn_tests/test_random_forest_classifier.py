@@ -5,6 +5,9 @@
 
 import unittest
 
+import numpy as np
+
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
@@ -24,9 +27,6 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-        from sklearn.ensemble import RandomForestClassifier
-
         scikit_data = load_boston()
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
         scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
@@ -41,7 +41,7 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, input_names, "target"
@@ -99,16 +99,12 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        import numpy as np
-        from sklearn.datasets import load_boston
-        from sklearn.ensemble import RandomForestClassifier
-
-        scikit_data = load_boston()
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
         scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
-        t = scikit_data.target
+        scikit_data = load_boston()
+        t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
-        scikit_model.fit(scikit_data.data, target)
+        scikit_model.fit(scikit_data["data"], target)
 
         self.scikit_model_node_count = sum(map(lambda e: e.tree_.node_count,
                                                 scikit_model.estimators_))
@@ -119,7 +115,7 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, input_names, "target"

@@ -17,8 +17,7 @@ from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API, _IS_MACOS
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.testing_utils import ct_convert, validate_minimum_deployment_target
 
-from ..torchscript_utils import torch_to_mil_types
-from ..utils import TorchFrontend
+from ..utils import TORCH_DTYPE_TO_MIL_DTYPE, TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
@@ -99,7 +98,7 @@ def convert_to_mlmodel(
         elif isinstance(inputs, TensorType):
             return inputs
         elif isinstance(inputs, torch.Tensor):
-            return TensorType(shape=inputs.shape, dtype=torch_to_mil_types[inputs.dtype])
+            return TensorType(shape=inputs.shape, dtype=TORCH_DTYPE_TO_MIL_DTYPE[inputs.dtype])
         else:
             raise ValueError(
                 "Unable to parse type {} into InputType.".format(type(inputs))
@@ -110,7 +109,7 @@ def convert_to_mlmodel(
     else:
         inputs = converter_input_type
 
-    if _HAS_EXECUTORCH and isinstance(model_spec, ExportedProgram):
+    if _HAS_TORCH_EXPORT_API and isinstance(model_spec, ExportedProgram):
         inputs = None
         outputs = None
 
@@ -153,17 +152,54 @@ def generate_input_data(
         return random_data(input_size, dtype)
 
 
-def trace_model(model, input_data):
-    model.eval()
-    if isinstance(input_data, list):
-        input_data = tuple(input_data)
-    torch_model = torch.jit.trace(model, input_data)
-    return torch_model
+def export_torch_model_to_frontend(
+    model,
+    input_data,
+    frontend,
+    use_scripting=False,
+    use_edge_dialect=True,
+    torch_export_dynamic_shapes=None,
+):
+    input_data_clone = _copy_input_data(input_data)
+    if isinstance(input_data_clone, list):
+        input_data_clone = tuple(input_data_clone)
+    elif isinstance(input_data_clone, torch.Tensor):
+        input_data_clone = (input_data_clone,)
+
+    if frontend == TorchFrontend.TORCHSCRIPT:
+        model.eval()
+        if use_scripting:
+            model_spec = torch.jit.script(model)
+        else:
+            model_spec = torch.jit.trace(model, input_data_clone)
+
+    elif frontend == TorchFrontend.EXIR:
+        try:
+            model.eval()
+        except NotImplementedError:
+            # Some torch.export stuff, e.g. quantization, has not implemented eval() yet
+            logger.warning("PyTorch EXIR converter received a model without .eval method")
+        model_spec = torch.export.export(
+            model, input_data_clone, dynamic_shapes=torch_export_dynamic_shapes
+        )
+        if use_edge_dialect:
+            model_spec = executorch.exir.to_edge(model_spec).exported_program()
+
+    else:
+        raise ValueError(
+            "Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT "
+            f"or TorchFrontend.EXIR. Provided: {frontend}"
+        )
+
+    return model_spec
 
 
 def flatten_and_detach_torch_results(torch_results):
     if isinstance(torch_results, (list, tuple)):
-        return [x.detach().numpy() for x in _flatten(torch_results) if x is not None]
+        if len(torch_results) == 1 and isinstance(torch_results[0], dict):
+            return [value.detach().numpy() for value in torch_results[0].values()]
+        else:
+            return [x.detach().numpy() for x in _flatten(torch_results) if x is not None]
     elif isinstance(torch_results, dict):
         return [value.detach().numpy() for value in torch_results.values()]
     # Do not need to flatten
@@ -194,8 +230,7 @@ def convert_and_compare(
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec
-    if _HAS_TORCH_EXPORT_API:
-        if isinstance(torch_model, ExportedProgram):
+    if _HAS_TORCH_EXPORT_API and isinstance(torch_model, ExportedProgram):
             torch_model = torch_model.module()
 
     if not isinstance(input_data, (list, tuple)):
@@ -267,6 +302,7 @@ class TorchBaseTest:
         minimum_deployment_target=None,
         torch_device=torch.device("cpu"),
         frontend=TorchFrontend.TORCHSCRIPT,
+        torch_export_dynamic_shapes=None,
         converter=ct.convert,
     ):
         """
@@ -284,30 +320,14 @@ class TorchBaseTest:
         if input_as_shape:
             input_data = generate_input_data(input_data, rand_range, input_dtype, torch_device)
 
-        if frontend == TorchFrontend.TORCHSCRIPT:
-            model.eval()
-            if use_scripting:
-                model_spec = torch.jit.script(model)
-            else:
-                model_spec = trace_model(model, _copy_input_data(input_data))
-        elif frontend == TorchFrontend.EXIR:
-            try:
-                model.eval()
-            except NotImplementedError:
-                # Some torch.export stuff, e.g. quantization, has not implemented eval() yet
-                logger.warning("PyTorch EXIR converter received a model without .eval method")
-            input_data_clone = _copy_input_data(input_data)
-            if isinstance(input_data_clone, list):
-                input_data_clone = tuple(input_data_clone)
-            elif isinstance(input_data_clone, torch.Tensor):
-                input_data_clone = (input_data_clone,)
-            model_spec = torch.export.export(model, input_data_clone)
-            if use_edge_dialect:
-                model_spec = executorch.exir.to_edge(model_spec).exported_program()
-        else:
-            raise ValueError(
-                f"Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT or TorchFrontend.EXIR. Provided: {frontend}"
-            )
+        model_spec = export_torch_model_to_frontend(
+            model,
+            input_data,
+            frontend,
+            use_scripting=use_scripting,
+            use_edge_dialect=use_edge_dialect,
+            torch_export_dynamic_shapes=torch_export_dynamic_shapes,
+        )
 
         model_spec, mlmodel, coreml_inputs, coreml_results = convert_and_compare(
             input_data,

@@ -9,6 +9,7 @@ import numpy as np
 import numpy.random as rn
 from packaging.version import Version
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import (_is_macos, _macos_version,
                                       evaluate_transformer)
@@ -40,12 +41,9 @@ class NumericalImputerTestCase(unittest.TestCase):
     """
 
     def test_conversion_boston(self):
-
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
 
-        sh = scikit_data.data.shape
+        sh = scikit_data["data"].shape
 
         rn.seed(0)
         missing_value_indices = [
@@ -59,7 +57,7 @@ class NumericalImputerTestCase(unittest.TestCase):
                     if missing_value == "NaN":
                         continue
 
-                X = np.array(scikit_data.data).copy()
+                X = np.array(scikit_data["data"]).copy()
 
                 for i, j in missing_value_indices:
                     X[i, j] = missing_value
@@ -69,9 +67,9 @@ class NumericalImputerTestCase(unittest.TestCase):
 
                 tr_X = model.transform(X.copy())
 
-                spec = converter.convert(model, scikit_data.feature_names, "out")
+                spec = converter.convert(model, scikit_data["feature_names"], "out")
 
-                input_data = [dict(zip(scikit_data.feature_names, row)) for row in X]
+                input_data = [dict(zip(scikit_data["feature_names"], row)) for row in X]
 
                 output_data = [{"out": row} for row in tr_X]
 

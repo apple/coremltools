@@ -644,12 +644,18 @@ class palettize_weights(AbstractCompressionPass):
             palettize_weights._compress_pool.close()
 
     def _validate_child_constexpr_for_compress(self, op: Operation) -> bool:
-        """Determines which pattern supports joint compression."""
+        """
+        Determines which pattern supports joint compression.
+
+        In iOS18 joint compression, the quantized/sparsified data could be further palettized.
+        For each specific op, we only palettize the specific input:
+        - constexpr_sparse_to_dense's nonzero_data
+        - constexpr_blockwise_shift_scale's data
+        """
         if (
             is_current_opset_version_compatible_with(AvailableTarget.iOS18)
             and self.joint_compression
         ):
-            # In iOS18 joint compression, the sparsified data could be further palettized.
             if len(op.outputs[0].child_ops) == 1:
                 child_op = op.outputs[0].child_ops[0]
                 if (
@@ -657,20 +663,42 @@ class palettize_weights(AbstractCompressionPass):
                     and child_op.nonzero_data == op.outputs[0]
                 ):
                     return True
+                elif (
+                    child_op.op_type == "constexpr_blockwise_shift_scale"
+                    and child_op.data == op.outputs[0]
+                ):
+                    return True
 
         return super()._validate_child_constexpr_for_compress(op)
 
     @staticmethod
-    def _get_nbits_for_unique_mode(val: np.ndarray, allowed_nbits: Tuple[int, ...]) -> int:
+    def _get_nbits_for_unique_mode(
+        val: np.ndarray,
+        allowed_nbits: Tuple[int, ...],
+        cluster_dim: int = 1,
+        vector_axis: Optional[int] = None,
+    ) -> int:
         """
         Try each nbit in allowed_nbits to find one that can represent number of unique values in val.
 
+        If cluster_dim > 1, it's for vector palettization, where the unique means vector unique.
+        The vector_axis is only effective for vector palettization, which indicates on which axis
+        the vector is.
+
         Note that the values in `allowed_nbits` need to be in ascending order.
         """
-        val = val.flatten()
-        unique_vals = np.unique(val).tolist()
+        if cluster_dim == 1:
+            val = val.flatten()
+            unique_vals_num = len(np.unique(val))
+        else:
+            # Vector palettization where each cluster_dim elements form a vector on vector_axis.
+            if vector_axis is None:
+                raise ValueError("The `vector_axis` must be specified when cluster_dim > 1")
+            val = np.swapaxes(val, -1, vector_axis).reshape((-1, cluster_dim))
+            unique_vals_num = len(np.unique(val, axis=0))
+
         for nbits in allowed_nbits:
-            if len(unique_vals) <= 1 << nbits:
+            if unique_vals_num <= 1 << nbits:
                 return nbits
         raise ValueError(
             f"Unique values in weight cannot be represented by {allowed_nbits[-1]} "
@@ -679,11 +707,19 @@ class palettize_weights(AbstractCompressionPass):
 
     @staticmethod
     def _get_lut_and_indices(
-        val: np.ndarray, mode: str, nbits: Optional[int], lut_function: Optional[Callable]
+        val: np.ndarray,
+        mode: str,
+        nbits: Optional[int],
+        lut_function: Optional[Callable],
+        cluster_dim: int = 1,
+        vector_axis: Optional[int] = None,
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Calculate look-up-table (LUT) and indices."""
-        def compress_kmeans(val, nbits):
-            lut, indices = _get_kmeans_lookup_table_and_weight(nbits, val)
+
+        def compress_kmeans(val, nbits, cluster_dim, vector_axis):
+            lut, indices = _get_kmeans_lookup_table_and_weight(
+                nbits, val, force_kmeans1d=False, cluster_dim=cluster_dim, vector_axis=vector_axis
+            )
             lut = lut.astype(val.dtype)
             indices = indices.astype(np.uint8)
             return lut, indices
@@ -700,38 +736,41 @@ class palettize_weights(AbstractCompressionPass):
             lut = lut.astype(val.dtype)
             return lut, indices
 
-        def compress_unique(val, nbits):
-            val = val.flatten()
-            unique_vals = np.unique(val).tolist()
-            if len(unique_vals) > 1 << nbits:
-                msg = "Too many unique values {} in the weight. Couldn't represented in {} bits.".format(
-                    len(unique_vals), nbits
-                )
-                raise ValueError(msg)
-            lut = [0] * (1 << nbits)
-            lut[: len(unique_vals)] = unique_vals
-            indices = np.zeros((len(val),))
-            for i, k in enumerate(lut[:len(unique_vals)]):
-                indices += (i + 1) * (val == k).astype(np.int32)
-            indices = indices - 1
-            assert (
-                len(np.where(indices == -1)[0]) == 0
-            ), "weight must be corresponding to one existing indice"
-
-            lut = np.array(lut).astype(val.dtype)
-            indices = indices.astype(np.uint8)
-            return lut, indices
-
-        if mode == "KMEANS":
-            lut, indices = compress_kmeans(val, nbits)
-        elif mode == "UNIFORM":
-            lut, indices = compress_uniform(val, nbits)
-        elif mode == "UNIQUE":
+        def compress_unique(val, nbits, cluster_dim, vector_axis):
             if nbits is None:
                 nbits = palettize_weights._get_nbits_for_unique_mode(
-                    val, palettize_weights._SUPPORTED_NBITS
+                    val,
+                    palettize_weights._SUPPORTED_NBITS,
+                    cluster_dim,
+                    vector_axis,
                 )
-            lut, indices = compress_unique(val, nbits)
+
+            if cluster_dim > 1:
+                val = optimize_utils.reshape_weight_for_vector_lut(val, cluster_dim, vector_axis)
+
+            val = val.reshape((-1, cluster_dim))
+            unique_vals, unique_inverse = np.unique(val, axis=0, return_inverse=True)
+            lut = np.zeros((1 << nbits, cluster_dim))
+            lut[: len(unique_vals)] = unique_vals
+            indices = unique_inverse
+            indices = indices.flatten()
+
+            if cluster_dim == 1:
+                # Squeeze the last dim to make behaviors back compatible with scalar palettization.
+                lut = lut.squeeze(-1)
+
+            return lut.astype(val.dtype), indices.astype(np.uint8)
+
+        if mode == "KMEANS":
+            lut, indices = compress_kmeans(val, nbits, cluster_dim, vector_axis)
+        elif mode == "UNIFORM":
+            if cluster_dim > 1:
+                raise NotImplementedError(
+                    "Vector palettization (cluster_dim > 1) doesn't support UNIFORM mode."
+                )
+            lut, indices = compress_uniform(val, nbits)
+        elif mode == "UNIQUE":
+            lut, indices = compress_unique(val, nbits, cluster_dim, vector_axis)
         else:
             if mode != "CUSTOM":
                 raise AssertionError(f"Invalid mode {mode}")
@@ -795,6 +834,8 @@ class palettize_weights(AbstractCompressionPass):
         nbits: Optional[int],
         block_sizes: List[int],
         lut_function: Optional[Callable] = None,
+        cluster_dim: int = 1,
+        channel_axis: Optional[int] = None,
         num_kmeans_workers: int = 1,
     ) -> Optional[optimize_utils.LutParams]:
         """
@@ -805,17 +846,22 @@ class palettize_weights(AbstractCompressionPass):
 
         block_sizes: Each element is the block size on corresponding axis for original_data.
 
+        cluster_dim: Dimension of each cluster centroid, which is the length of each element in the
+            lookup table.
+
+        channel_axis: Only useful for vector palettization (cluster_dim > 1). If not provided, we
+            will try to infer it from `block_sizes`.
+
         Returns None if the weight cannot be compressed (for example, the dim size on an axis is not
         divisible by the corresponding block_size).
         """
         # TODO (rdar://127342739): Support more general blockwise palettization.
         # As general blockwise palettization hasn't been supported yet, we try to infer channel axis
         # and channel group size from block_sizes, and use grouped channelwise palettization instead.
-        channel_axis = None
         channel_group_size = 0
         for axis, block_size in enumerate(block_sizes):
             if block_size != 0 and block_size != original_data.shape[axis]:
-                if channel_axis is not None:
+                if channel_axis is not None and channel_axis != axis:
                     raise NotImplementedError(
                         "General block-wise palettization is not supported. Please use "
                         "'per_grouped_channel' or 'per_tensor' for the 'granularity' in config."
@@ -823,6 +869,10 @@ class palettize_weights(AbstractCompressionPass):
                 channel_axis = axis
                 channel_group_size = block_size
         if channel_axis is None:
+            if cluster_dim > 1:
+                raise ValueError(
+                    "Cannot infer channel axis, which is required for vector palettization."
+                )
             # Per-tensor compression, just need to pick a dummy axis.
             channel_axis = 0
 
@@ -833,6 +883,7 @@ class palettize_weights(AbstractCompressionPass):
             channel_axis,
             channel_group_size,
             lut_function,
+            cluster_dim,
             num_kmeans_workers,
         )
 
@@ -844,6 +895,7 @@ class palettize_weights(AbstractCompressionPass):
         channel_axis: int,
         channel_group_size: int,
         lut_function: Optional[Callable] = None,
+        cluster_dim: int = 1,
         num_kmeans_workers: int = 1,
     ) -> Optional[optimize_utils.LutParams]:
         """
@@ -853,6 +905,9 @@ class palettize_weights(AbstractCompressionPass):
         Supported mode: KMEANS, UNIFORM, UNIQUE, CUSTOM
 
         block_sizes: Each element is the block size on corresponding axis for original_data.
+
+        cluster_dim: Dimension of each cluster centroid, which is the length of each element in the
+            lookup table.
 
         Returns None if the weight cannot be compressed (for example, the dim size on an axis is not
         divisible by the corresponding channel_group_size).
@@ -884,16 +939,26 @@ class palettize_weights(AbstractCompressionPass):
             return None
         channel_group_num = channel_num // channel_group_size
 
+        if channel_group_size % cluster_dim != 0:
+            logger.warning(
+                f"Can't perform palettization: The channel_group_size at {channel_axis}th axis "
+                f"({channel_group_size}) is not divisible by cluster_dim ({cluster_dim})."
+            )
+            return None
+
         if channel_axis != 0:
             original_data = np.swapaxes(original_data, 0, channel_axis)
         grouped_channel_data = np.split(original_data, channel_group_num, axis=0)
+
+        # As the channel axis has been swapped to 0th axis, use 0 for vector_axis.
+        vector_axis = 0
 
         # If mode is UNIQUE, infer nbits from the number of unique values in each group.
         if mode.upper() == "UNIQUE":
             try:
                 for per_group_data in grouped_channel_data:
                     per_group_nbits = palettize_weights._get_nbits_for_unique_mode(
-                        per_group_data, palettize_weights._SUPPORTED_NBITS
+                        per_group_data, palettize_weights._SUPPORTED_NBITS, cluster_dim, vector_axis
                     )
                     # Pick the largest per-channel nbits to be used as the nbits for the whole op.
                     if nbits is None or per_group_nbits > nbits:
@@ -910,14 +975,21 @@ class palettize_weights(AbstractCompressionPass):
             lut, indices = zip(
                 *palettize_weights._compress_pool.starmap(
                     palettize_weights._get_lut_and_indices,
-                    zip(grouped_channel_data, repeat(mode), repeat(nbits), repeat(lut_function)),
+                    zip(
+                        grouped_channel_data,
+                        repeat(mode),
+                        repeat(nbits),
+                        repeat(lut_function),
+                        repeat(cluster_dim),
+                        repeat(vector_axis),
+                    ),
                 )
             )
         else:
             lut, indices = zip(
                 *[
                     palettize_weights._get_lut_and_indices(
-                        per_channel_group_data, mode, nbits, lut_function
+                        per_channel_group_data, mode, nbits, lut_function, cluster_dim, vector_axis
                     )
                     for per_channel_group_data in grouped_channel_data
                 ]
@@ -928,15 +1000,20 @@ class palettize_weights(AbstractCompressionPass):
 
         if mode.upper() == "CUSTOM":
             # The custom lut_function provided by users should have nbits info.
-            nbits = int(np.ceil(np.log2(lut.shape[-1])))
+            # The current `lut` has shape [group_num, lut_entry_num, Optional[cluster_dim]].
+            nbits = int(np.ceil(np.log2(lut.shape[1])))
 
         # The lut and indices from `_get_lut_and_indices` is flattened. The desired result should be
         # `lut` with shape [channel_group_num, palette_num], and `indices` with same shape as the
         # original_data.
         palette_num = 2**nbits
-        indices = indices.reshape(original_data.shape)
+        indices_target_shape = list(original_data.shape)
+        if cluster_dim > 1:
+            indices_target_shape[vector_axis] //= cluster_dim
+        indices = indices.reshape(indices_target_shape)
         lut_target_shape = [1] * (len(original_data.shape) + 2)
         lut_target_shape[0] = channel_group_num
+        lut_target_shape[-1] = cluster_dim
         lut_target_shape[-2] = palette_num
         lut = lut.reshape(lut_target_shape)
 
@@ -945,7 +1022,9 @@ class palettize_weights(AbstractCompressionPass):
             indices = np.swapaxes(indices, 0, channel_axis)
 
         indices_np_dtype = types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}"))
-        return optimize_utils.LutParams(indices.astype(indices_np_dtype), lut)
+        return optimize_utils.LutParams(
+            indices.astype(indices_np_dtype), lut, None if cluster_dim == 1 else channel_axis
+        )
 
     @staticmethod
     def decompress(params: Union[optimize_utils.LutParamsIos16, optimize_utils.LutParams]):
@@ -972,6 +1051,7 @@ class palettize_weights(AbstractCompressionPass):
         return mb.constexpr_lut_to_dense(
             indices=lut_params.indices,
             lut=lut_params.lut,
+            vector_axis=lut_params.vector_axis,
             before_op=op,
             name=op.name + "_palettized",
         )
@@ -984,6 +1064,7 @@ class palettize_weights(AbstractCompressionPass):
             return
 
         weight_to_compress = op.outputs[0].val
+        restore_original_dtype = None
         if self.joint_compression:
             child_op = op.outputs[0].child_ops[0]
             if child_op.op_type == "constexpr_sparse_to_dense":
@@ -993,18 +1074,48 @@ class palettize_weights(AbstractCompressionPass):
                     weight_to_compress, child_op.mask.val
                 )
 
-        block_sizes = optimize_utils.infer_block_sizes(op, op_config, weight_to_compress)
+            if types.is_int(op.outputs[0].dtype) and op.outputs[0].dtype.get_bitwidth() <= 8:
+                # For small range int weights (e.g. int8 weight produced by quantization), convert
+                # it to int32 first to avoid overflow during palettization.
+                restore_original_dtype = op.outputs[0].dtype
+                weight_to_compress = weight_to_compress.astype(np.int32)
+
+        block_sizes, channel_axis = optimize_utils.infer_block_sizes(
+            op, op_config, weight_to_compress, return_channel_axis=True
+        )
+        if block_sizes is None:
+            logger.warning(
+                f"Cannot perform palettization on {op.name} as block_sizes is None. Skipped this op."
+            )
+            return
+        if op_config.cluster_dim > 1:
+            if not optimize_utils.is_cluster_dim_valid(op, op_config.cluster_dim, channel_axis):
+                logger.warning(f"The `cluster_dim` is invalid for {op.name}. Skipped this op.")
+                return
+
+        if op_config.enable_per_channel_scale:
+            # Normalize by per channel scales before doing palettization.
+            per_channel_scale = np.max(np.abs(weight_to_compress), axis=channel_axis, keepdims=True)
+            per_channel_scale[per_channel_scale == 0] = 1
+            weight_to_compress /= per_channel_scale
+
         lut_params = self.blockwise_compress(
             weight_to_compress,
             op_config.mode,
             op_config.nbits,
             block_sizes,
             op_config.lut_function,
+            op_config.cluster_dim,
+            channel_axis=channel_axis,
             num_kmeans_workers=op_config.num_kmeans_workers,
         )
         if lut_params is None:
             logger.warning(f"Cannot perform palettization on {op.name}. Skipped this op.")
             return
+        if restore_original_dtype is not None:
+            lut_params = lut_params._replace(
+                lut=lut_params.lut.astype(types.nptype_from_builtin(restore_original_dtype))
+            )
 
         if not self.fake_compression:
             new_var: Optional[Var] = None
@@ -1017,17 +1128,34 @@ class palettize_weights(AbstractCompressionPass):
                         indices_mask=child_op.mask,
                         indices_nonzero_data=lut_params.indices[child_op.mask.val != 0].flatten(),
                         lut=lut_params.lut,
+                        vector_axis=lut_params.vector_axis,
                         before_op=child_op,
                         name=op.name + "_palettized",
                     )
                     # Feed the sparse lut's nonzero_data output to the child sparse op.
                     new_var = nonzero_data
 
-            # For other cases, the new quant var could be constructed directly from lut_params.
+            # For other cases, the new lut var could be constructed directly from lut_params.
             if new_var is None:
                 new_var = self._create_constexpr_var(op, lut_params)
+
+            if op_config.enable_per_channel_scale:
+                if not is_current_opset_version_compatible_with(AvailableTarget.iOS18):
+                    raise ValueError(
+                        "Palettization with per-channel-scale is only supported since "
+                        "iOS18. Please set minimum_deployment_target accordingly."
+                    )
+                new_var = mb.constexpr_blockwise_shift_scale(
+                    data=new_var,
+                    scale=per_channel_scale,
+                    offset=None,
+                    before_op=op,
+                    name=op.name + "_palettized_pcs",
+                )
         else:
             decompressed_val = self.decompress(lut_params)
+            if op_config.enable_per_channel_scale:
+                decompressed_val *= per_channel_scale
             new_var = mb.const(
                 val=decompressed_val,
                 before_op=op,
@@ -1266,6 +1394,12 @@ class linear_quantize_weights(AbstractCompressionPass):
                     )
 
         block_sizes = optimize_utils.infer_block_sizes(op, op_config, weight_to_compress)
+        if block_sizes is None:
+            logger.warning(
+                f"Cannot perform quantization on {op.name} as block_sizes is None. Skipped this op."
+            )
+            return
+
         quant_params = self.blockwise_compress(
             weight_to_compress,
             op_config.nbits,

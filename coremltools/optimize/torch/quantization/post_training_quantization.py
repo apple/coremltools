@@ -8,6 +8,7 @@ from collections import OrderedDict as _OrderedDict
 from typing import Any as _Any
 from typing import Callable as _Callable
 from typing import Dict as _Dict
+from typing import List as _List
 from typing import NewType as _NewType
 from typing import Optional as _Optional
 from typing import Tuple as _Tuple
@@ -15,6 +16,7 @@ from typing import Type as _Type
 from typing import Union as _Union
 
 import cattrs as _cattrs
+import numpy as _np
 import torch as _torch
 import torch.nn as _nn
 from attr import define as _define
@@ -22,7 +24,7 @@ from attr import field as _field
 from attrs import validators as _validators
 
 from coremltools.converters.mil.mil.ops.defs.iOS18 import constexpr_blockwise_shift_scale
-from coremltools.optimize.coreml._utils import compute_qparams as _cti_compute_qparams
+from coremltools.optimize.coreml._utils import compute_qparams as _ct_compute_qparams
 from coremltools.optimize.torch._utils.metadata_utils import (
     CompressionMetadata as _CompressionMetadata,
 )
@@ -116,9 +118,13 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
         data types. However, the quantization range is set according to 4-bit quantization and based on
         whether the ``weight_dtype`` is signed or unsigned.
     """
-
     weight_dtype: _Union[str, _torch.dtype] = _field(
         default=_default_ptq_options["weight_dtype"],
+        converter=_maybe_convert_str_to_dtype,
+        validator=[
+            _validators.instance_of(_torch.dtype),
+            _validators.in_([_torch.int8, _torch.uint8, _torch.float32]),
+        ],
     )
     granularity: QuantizationGranularity = _field(
         default=_default_ptq_options["granularity"],
@@ -143,11 +149,6 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
 
     def __attrs_post_init__(self):
         self.weight_n_bits = _get_n_bits_from_dtype(self.weight_dtype)
-        self.weight_dtype = _maybe_convert_str_to_dtype(self.weight_dtype)
-        if self.weight_dtype not in [_torch.int8, _torch.uint8, _torch.float32]:
-            raise ValueError(
-                f"weight_dtype must be one of (torch.uint8, torch.float32) not {self.weight_dtype}"
-            )
 
     @block_size.validator
     def per_block_granularity(self, attribute, value):
@@ -298,14 +299,79 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
     """
 
     _supported_modules: _Tuple[_Type[_torch.nn.Module]] = (
+        _nn.Conv1d,
         _nn.Conv2d,
+        _nn.Conv3d,
+        _nn.ConvTranspose1d,
+        _nn.ConvTranspose2d,
+        _nn.ConvTranspose3d,
         _nn.Linear,
         _nn.MultiheadAttention,
     )
 
+    def _get_quantization_mode(
+        self, weight_dtype: _torch.dtype, quantization_scheme: _QuantizationScheme
+    ):
+        """
+        Returns quantization mode as string
+        """
+        if quantization_scheme not in [
+            _QuantizationScheme.affine,
+            _QuantizationScheme.symmetric,
+        ]:
+            raise ValueError(
+                f" Linear quantization scheme must be one of (affine, "
+                f"symmetric) not {quantization_scheme}"
+            )
+        quantization_mode = (
+            "LINEAR_SYMMETRIC" if quantization_scheme == _QuantizationScheme.symmetric else "LINEAR"
+        )
+        return quantization_mode
+
     def __init__(self, model: _torch.nn.Module, config: PostTrainingQuantizerConfig = None):
         config = PostTrainingQuantizerConfig() if config is None else config
         super().__init__(model, config)
+
+    def _compute_quantization_params(
+        self,
+        weight: _np.ndarray,
+        nbits: int,
+        dtype: _np.dtype,
+        block_sizes: _List[int],
+        quantization_mode: _Optional[str] = None,
+        signed: bool = True,
+    ) -> _Optional[_Tuple[_np.ndarray, _np.ndarray, _Optional[_np.ndarray]]]:
+        """
+        Compute quantization parameters
+        """
+
+        ret = _ct_compute_qparams(
+            weight=weight,
+            nbits=nbits,
+            quantization_mode=quantization_mode,
+            dtype=dtype,
+            block_sizes=block_sizes,
+            signed=signed,  # Always used signed dtype range
+        )
+
+        return ret
+
+    def _dequantize_weight(
+        self,
+        quantized_weight: _np.ndarray,
+        scale: _np.ndarray,
+        zero_point: _Optional[_np.ndarray],
+        quantization_mode: _Optional[str] = None,
+    ):
+        """
+        De-quantize weights
+        """
+
+        dequantized_weight = constexpr_blockwise_shift_scale.decompress(
+            quantized_weight, scale, zero_point
+        )
+
+        return dequantized_weight
 
     @_torch.no_grad()
     def _quantize_weight(
@@ -336,12 +402,25 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
         assert len(block_sizes) >= 2, "Weight matrix has to be at least 2D or greater"
 
         if submod_config.granularity == QuantizationGranularity.per_channel:
-            block_sizes[0] = 1
+            blocking_axis = (
+                1
+                if isinstance(
+                    submodule,
+                    (
+                        _nn.ConvTranspose1d,
+                        _nn.ConvTranspose2d,
+                        _nn.ConvTranspose3d,
+                    ),
+                )
+                else 0
+            )
+            block_sizes[blocking_axis] = 1
 
         elif submod_config.granularity == QuantizationGranularity.per_block:
             updated_config = _validate_param_config(
                 submod_name + "." + param_name,
                 torch_weight,
+                submodule,
                 submod_config,
                 ["quantization_block_size"],
             )
@@ -349,22 +428,30 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
                 _logger.warning(f"Unable to quantize layer {submod_name} - skipping it.")
                 return
             block_size_config = list(updated_config.block_size)
-            block_sizes[: len(block_size_config)] = block_size_config
+            if isinstance(
+                submodule,
+                (
+                    _nn.ConvTranspose1d,
+                    _nn.ConvTranspose2d,
+                    _nn.ConvTranspose3d,
+                ),
+            ):
+                block_sizes[: len(block_size_config)] = block_size_config[::-1]
+            else:
+                block_sizes[: len(block_size_config)] = block_size_config
 
-        quantization_mode = (
-            "LINEAR_SYMMETRIC"
-            if submod_config.quantization_scheme == _QuantizationScheme.symmetric
-            else "LINEAR"
+        quantization_mode = self._get_quantization_mode(
+            submod_config.weight_dtype, submod_config.quantization_scheme
         )
 
-        ret = _cti_compute_qparams(
+        ret = self._compute_quantization_params(
             weight=weight,
             nbits=submod_config.weight_n_bits,
             quantization_mode=quantization_mode,
             dtype=weight.dtype,
             block_sizes=block_sizes,
-            signed=True,  # Always used signed dtype range
-        )
+            signed=True,
+        )  # Always used signed dtype range
 
         if ret is None:
             _logger.warning(f"Unable to quantize layer {submod_name} - skipping it.")
@@ -372,11 +459,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
 
         quant_weight, scale, zp = ret
 
-        dequant_weight = constexpr_blockwise_shift_scale.decompress(
-            quant_weight,
-            scale,
-            zp,
-        )
+        dequant_weight = self._dequantize_weight(quant_weight, scale, zp, quantization_mode)
 
         # Convert back to torch tensors
         dequant_weight = _torch.from_numpy(dequant_weight)
@@ -421,8 +504,10 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
                 continue
 
             # TODO: Replace this with supported modules abstraction
-            # --- Conv2D & Linear layers ---
-            if isinstance(submodule, (_nn.Conv2d, _nn.Linear)):
+            # --- Conv, ConvTranspose & Linear layers ---
+            if isinstance(submodule, self._supported_modules) and not isinstance(
+                submodule, _nn.MultiheadAttention
+            ):
                 assert hasattr(
                     submodule, "weight"
                 ), f"No parameter named weight in submodule {submod_name}"

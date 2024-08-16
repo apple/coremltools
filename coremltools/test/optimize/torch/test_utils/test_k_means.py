@@ -128,9 +128,11 @@ def test_k_means_vector_wise(mock_name_main, config, kmeans_cls):
     with torch.no_grad():
         weight = model.weight
         if config.axis == 0:
-            weight_reshaped = weight.flatten(1).reshape(-1, cluster_dim)
+            weight_reshaped = weight.flatten(1).transpose(0, 1).reshape(-1, cluster_dim)
         elif config.axis == 1:
-            weight_reshaped = weight.transpose(0, 1).flatten(1).reshape(-1, cluster_dim)
+            weight_reshaped = (
+                weight.transpose(0, 1).flatten(1).transpose(0, 1).reshape(-1, cluster_dim)
+            )
         else:
             raise ValueError("axis must be 0 or 1.")
 

@@ -19,6 +19,8 @@ from torch.ao.quantization.backend_config import BackendConfig as _BackendConfig
 from torch.ao.quantization.backend_config import BackendPatternConfig as _BackendPatternConfig
 from torch.ao.quantization.backend_config import DTypeWithConstraints as _DTypeWithConstraints
 
+import coremltools.optimize.torch.quantization.modules.conv_transpose as _qconv_transpose
+import coremltools.optimize.torch.quantization.modules.conv_transpose_fused as _qconv_transpose_fused
 import coremltools.optimize.torch.quantization.modules.fused_modules as _fused
 import coremltools.optimize.torch.quantization.modules.qat_modules as _qat
 import coremltools.optimize.torch.quantization.modules.quantized_modules as _quantized
@@ -103,6 +105,11 @@ _func_activations = (
     _F.hardswish,
 )
 
+# ReLU activations
+_relu_activations = (
+    _nn.ReLU,
+    _F.relu,
+)
 
 # layers which have a fixed output range and hence use fixed qparams
 _fixed_qparams_modules = {
@@ -225,6 +232,69 @@ def _conv3d_act() -> _List[_BackendPatternConfig]:
 
 
 @_BackendConfigRegistry.register()
+def _conv_transpose1d_act() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose1d -> Act
+    qat: FakeQuant -> qat.ConvTransposeAct1d -> FakeQuant
+    """
+    configs = []
+    for act in _mod_activations + _relu_activations:
+        configs.extend(
+            _weighted_act_configs(
+                mod=_nn.ConvTranspose1d,
+                func_mod=_F.conv_transpose1d,
+                act=act,
+                fused_mod=_fused.ConvTransposeAct1d,
+                qat_mod=_qat.ConvTransposeAct1d,
+                ref_quant_mod=_quantized.QuantizedConvTransposeAct1d,
+            )
+        )
+    return configs
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose2d_act() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose2d -> Act
+    qat: FakeQuant -> qat.ConvTransposeAct2d -> FakeQuant
+    """
+    configs = []
+    for act in _mod_activations + _relu_activations:
+        configs.extend(
+            _weighted_act_configs(
+                mod=_nn.ConvTranspose2d,
+                func_mod=_F.conv_transpose2d,
+                act=act,
+                fused_mod=_fused.ConvTransposeAct2d,
+                qat_mod=_qat.ConvTransposeAct2d,
+                ref_quant_mod=_quantized.QuantizedConvTransposeAct2d,
+            )
+        )
+    return configs
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose3d_act() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose3d -> Act
+    qat: FakeQuant -> qat.ConvTransposeAct3d -> FakeQuant
+    """
+    configs = []
+    for act in _mod_activations + _relu_activations:
+        configs.extend(
+            _weighted_act_configs(
+                mod=_nn.ConvTranspose3d,
+                func_mod=_F.conv_transpose3d,
+                act=act,
+                fused_mod=_fused.ConvTransposeAct3d,
+                qat_mod=_qat.ConvTransposeAct3d,
+                ref_quant_mod=_quantized.QuantizedConvTransposeAct3d,
+            )
+        )
+    return configs
+
+
+@_BackendConfigRegistry.register()
 def _linear_act() -> _List[_BackendPatternConfig]:
     """
     float: Linear -> Act
@@ -293,6 +363,51 @@ def _conv3d_bn() -> _List[_BackendPatternConfig]:
         fused_mod=_nni.ConvBn3d,
         qat_mod=_nniq.ConvBn3d,
         ref_quant_mod=_nnr.Conv3d,
+    )
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose1d_bn() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose1d -> BatchNorm1d
+    qat: FakeQuant -> qat.ConvTransposeBn1d -> FakeQuant
+    """
+    return _weighted_bn_configs(
+        mod=_nn.ConvTranspose1d,
+        bn_mod=_nn.BatchNorm1d,
+        fused_mod=_fused.ConvTransposeBn1d,
+        qat_mod=_qconv_transpose_fused.ConvTransposeBn1d,
+        ref_quant_mod=_nnr.ConvTranspose1d,
+    )
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose2d_bn() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose2d -> BatchNorm2d
+    qat: FakeQuant -> qat.ConvTransposeBn2d -> FakeQuant
+    """
+    return _weighted_bn_configs(
+        mod=_nn.ConvTranspose2d,
+        bn_mod=_nn.BatchNorm2d,
+        fused_mod=_fused.ConvTransposeBn2d,
+        qat_mod=_qconv_transpose_fused.ConvTransposeBn2d,
+        ref_quant_mod=_nnr.ConvTranspose2d,
+    )
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose3d_bn() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose3d -> BatchNorm3d
+    qat: FakeQuant -> qat.ConvTransposeBn3d -> FakeQuant
+    """
+    return _weighted_bn_configs(
+        mod=_nn.ConvTranspose3d,
+        bn_mod=_nn.BatchNorm3d,
+        fused_mod=_fused.ConvTransposeBn3d,
+        qat_mod=_qconv_transpose_fused.ConvTransposeBn3d,
+        ref_quant_mod=_nnr.ConvTranspose3d,
     )
 
 
@@ -396,6 +511,72 @@ def _conv3d_bn_act() -> _List[_BackendPatternConfig]:
 
 
 @_BackendConfigRegistry.register()
+def _conv_transpose1d_bn_act() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose1d -> BatchNorm1d -> Act
+    qat: FakeQuant -> qat.ConvTransposeBnAct1d -> FakeQuant
+    """
+    configs = []
+    for act in _mod_activations + _relu_activations:
+        configs.extend(
+            _weighted_bn_act_configs(
+                mod=_nn.ConvTranspose1d,
+                act=act,
+                bn_mod=_nn.BatchNorm1d,
+                root_mod=_fused.ConvTransposeBn1d,
+                fused_mod=_fused.ConvTransposeBnAct1d,
+                qat_mod=_qat.ConvTransposeBnAct1d,
+                ref_quant_mod=_quantized.QuantizedConvTransposeAct1d,
+            )
+        )
+    return configs
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose2d_bn_act() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose2d -> BatchNorm2d -> Act
+    qat: FakeQuant -> qat.ConvTransposeBnAct2d -> FakeQuant
+    """
+    configs = []
+    for act in _mod_activations + _relu_activations:
+        configs.extend(
+            _weighted_bn_act_configs(
+                mod=_nn.ConvTranspose2d,
+                act=act,
+                bn_mod=_nn.BatchNorm2d,
+                root_mod=_fused.ConvTransposeBn2d,
+                fused_mod=_fused.ConvTransposeBnAct2d,
+                qat_mod=_qat.ConvTransposeBnAct2d,
+                ref_quant_mod=_quantized.QuantizedConvTransposeAct2d,
+            )
+        )
+    return configs
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose3d_bn_act() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose3d -> BatchNorm3d -> Act
+    qat: FakeQuant -> qat.ConvTransposeBnAct3d -> FakeQuant
+    """
+    configs = []
+    for act in _mod_activations + _relu_activations:
+        configs.extend(
+            _weighted_bn_act_configs(
+                mod=_nn.ConvTranspose3d,
+                act=act,
+                bn_mod=_nn.BatchNorm3d,
+                root_mod=_fused.ConvTransposeBn3d,
+                fused_mod=_fused.ConvTransposeBnAct3d,
+                qat_mod=_qat.ConvTransposeBnAct3d,
+                ref_quant_mod=_quantized.QuantizedConvTransposeAct3d,
+            )
+        )
+    return configs
+
+
+@_BackendConfigRegistry.register()
 def _conv1d() -> _List[_BackendPatternConfig]:
     """
     float: Conv1d
@@ -434,6 +615,48 @@ def _conv3d() -> _List[_BackendPatternConfig]:
         func_mod=_F.conv3d,
         qat_mod=_nnq.Conv3d,
         ref_quant_mod=_nnr.Conv3d,
+    )
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose1d() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose1d
+    qat: FakeQuant -> qat.ConvTranspose1d -> FakeQuant
+    """
+    return _weighted_configs(
+        mod=_nn.ConvTranspose1d,
+        func_mod=_F.conv_transpose1d,
+        qat_mod=_qconv_transpose.ConvTranspose1d,
+        ref_quant_mod=_nnr.ConvTranspose1d,
+    )
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose2d() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose2d
+    qat: FakeQuant -> qat.ConvTranspose2d -> FakeQuant
+    """
+    return _weighted_configs(
+        mod=_nn.ConvTranspose2d,
+        func_mod=_F.conv_transpose2d,
+        qat_mod=_qconv_transpose.ConvTranspose2d,
+        ref_quant_mod=_nnr.ConvTranspose2d,
+    )
+
+
+@_BackendConfigRegistry.register()
+def _conv_transpose3d() -> _List[_BackendPatternConfig]:
+    """
+    float: ConvTranspose3d
+    qat: FakeQuant -> qat.ConvTranspose3d -> FakeQuant
+    """
+    return _weighted_configs(
+        mod=_nn.ConvTranspose3d,
+        func_mod=_F.conv_transpose3d,
+        qat_mod=_qconv_transpose.ConvTranspose3d,
+        ref_quant_mod=_nnr.ConvTranspose3d,
     )
 
 

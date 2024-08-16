@@ -11,7 +11,6 @@ import numpy as np
 
 from coremltools import _getLogger
 from coremltools.converters.mil.mil import Operation, types
-from coremltools.optimize.coreml import _utils as optimize_utils
 from coremltools.optimize.coreml._config import (
     CompressionGranularity,
     OpLinearQuantizerConfig,
@@ -25,7 +24,7 @@ LutParamsIos16 = namedtuple("LutParamsIos16", "lut indices shape")
 QuantParamsIos16 = namedtuple("QuantParamsIos16", "quantized_data zero_point scale axis")
 
 SparseParams = namedtuple("SparseParams", "nonzero_data mask")
-LutParams = namedtuple("LutParams", "indices lut")
+LutParams = namedtuple("LutParams", "indices lut vector_axis")
 QuantParams = namedtuple("QuantParams", "data scale offset nbits")
 
 
@@ -154,7 +153,37 @@ def compute_qparams(
     return quantized_data, scale, zero_point
 
 
-def find_indices_for_lut(data: np.ndarray, lut: np.ndarray) -> np.ndarray:
+def reshape_weight_for_vector_lut(
+    weight: np.ndarray, vector_size: int, vector_axis: int
+) -> np.ndarray:
+    """
+    For vector palettization, we need to extract vectors and move them to the last dim.
+    If the input weight has shape [s0, s1, s2, ... , sn], the output shape should have shape
+        [s0, ..., si // vector_size, ..., sn, vector_size] where i == vector_axis.
+
+    For example, starting from weight `a` which has shape `[4, 4]` and `vector_size=2` and
+    `vector_axis=0`, we want to reshape the matrix into `c` with shape `[2, 4, 2]`, where `c[0, 0]`
+    contains `a[0,0], a[1, 0]`, and `c[1, 0]` contains `a[2, 0], a[3, 0]`, etc.
+
+    To achieve this, we need to first swap the vector_axis to last dim, and split out the vector_size,
+    and finally swap it back. Here is a concrete exmaple:
+        a = np.array([[ 0,  1,  2,  3],
+                      [ 4,  5,  6,  7],
+                      [ 8,  9, 10, 11],
+                      [12, 13, 14, 15]])
+        b = np.swapaxes(a, 0, -1).reshape((4, 2, 2))
+        c = np.swapaxes(b, 0, 1)
+        # c[0, 0] is array([0, 4])
+        # c[1, 0] is array([8, 12])
+    """
+    weight = np.swapaxes(weight, -1, vector_axis)
+    weight = weight.reshape((*weight.shape[:-1], weight.shape[-1] // vector_size, vector_size))
+    return np.swapaxes(weight, -2, vector_axis)
+
+
+def find_indices_for_lut(
+    data: np.ndarray, lut: np.ndarray, vector_axis: Optional[int] = None
+) -> np.ndarray:
     """
     Given a data and a look-up-table (LUT), find the closest indices in LUT that each element in
     data correspond to. It's the reverse process of "Given a LUT and indices, produce data using
@@ -170,15 +199,27 @@ def find_indices_for_lut(data: np.ndarray, lut: np.ndarray) -> np.ndarray:
         e.g., when data's shape is [2, 3, 4], the first three elements in lut's shape is [1, 1, 2],
         it means that there are two lookup tables over the last axis, and each of them have their
         own LUT values. See details in the iOS18 `constexpr_lut_to_dense` op.
+    - vector_axis: Only effective when lut's last dim (vector_size) > 1. It denotes which axis the
+        vector is along.
     """
     if len(lut.shape) != len(data.shape) + 2:
-        raise ValueError("The lut's rank should be data's rank + 2. See constexpr_lut_to_dense.")
-
-    # TODO (rdar://124474258): Handle vector palettization.
-    if lut.shape[-1] > 1:
-        raise NotImplementedError(
-            "Not support vector palettization. Progress tracked in rdar://124474258."
+        raise ValueError(
+            "The lut's rank should be data's rank + 2. See constexpr_lut_to_dense op definition."
         )
+    if lut.shape[-1] > 1:
+        if vector_axis is None:
+            raise ValueError("The vector_axis must be provided for vector palettization.")
+        if not len(data.shape) > vector_axis >= -len(data.shape):
+            raise ValueError(f"Invalid vector_axis ({vector_axis})")
+        if vector_axis < 0:
+            vector_axis += len(data.shape)
+        vector_size = lut.shape[-1]
+        if data.shape[vector_axis] % vector_size != 0:
+            raise ValueError(
+                f"The data dim on {vector_axis}th axis ({data.shape[vector_axis]}) "
+                f"must be divisible by vector_size ({vector_size})"
+            )
+        data = reshape_weight_for_vector_lut(data, vector_size, vector_axis)
 
     # lut has shape [block_num0, block_num1, ..., 2**nbits, vector_size], so need to interleaved
     # repeat it to make each block match the weight.
@@ -196,10 +237,16 @@ def find_indices_for_lut(data: np.ndarray, lut: np.ndarray) -> np.ndarray:
         if block_size > 1:
             repeated_lut = np.repeat(repeated_lut, block_size, axis=axis)
 
-    # Find the closest value for each element.
-    indices = np.argmin(
-        np.abs(np.expand_dims(data, axis=-1) - np.squeeze(repeated_lut, axis=-1)), axis=-1
-    )
+    if lut.shape[-1] == 1:
+        # For scalar palettization, we can simply find the closest value for each element.
+        indices = np.argmin(
+            np.abs(np.expand_dims(data, axis=-1) - np.squeeze(repeated_lut, axis=-1)), axis=-1
+        )
+    else:
+        # For vector palettization, find the closest vector by Euclidean distance.
+        dist = np.linalg.norm(np.expand_dims(data, axis=-2) - repeated_lut, axis=-1)
+        indices = np.argmin(dist, axis=-1)
+
     nbits = int(math.log2(lut.shape[-2]))
     indices = indices.astype(types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}")))
     return indices
@@ -209,7 +256,8 @@ def infer_block_sizes(
     op: "Operation",
     op_config: Union[OpLinearQuantizerConfig, OpPalettizerConfig],
     weight_to_compress: np.ndarray,
-) -> List[int]:
+    return_channel_axis: bool = False,
+) -> Union[Optional[List[int]], Tuple[Optional[List[int]], Optional[int]]]:
     """
     Infer block size on each axis based on the op and compression config.
 
@@ -217,6 +265,8 @@ def infer_block_sizes(
     For per-block, the input/output axis is auto-picked if block_size is int.
     See the docstring of OpLinearQuantizerConfig for more details.
     """
+    input_channel_axis, output_channel_axis = select_input_output_channel_axis(op)
+
     if op_config.granularity == CompressionGranularity.PER_BLOCK and not isinstance(
         op_config.block_size, int
     ):
@@ -226,9 +276,26 @@ def infer_block_sizes(
                 f"{op.name}, there are {len(op_config.block_size)} elements in block_size, "
                 f"but there are {len(weight_to_compress.shape)} axes in the weight."
             )
+        channel_axis_candidates = []
+        for axis, (b_size, dim_size) in enumerate(
+            zip(op_config.block_size, weight_to_compress.shape)
+        ):
+            if b_size != 0 and b_size != dim_size:
+                channel_axis_candidates.append(axis)
+        if len(channel_axis_candidates) == 1:
+            # Set channel axis if we can infer it from block sizes; else just use the default one
+            # inferred by op type.
+            output_channel_axis = channel_axis_candidates[0]
+
+        if return_channel_axis:
+            return list(op_config.block_size), output_channel_axis
         return list(op_config.block_size)
 
-    input_channel_axis, output_channel_axis = optimize_utils.select_input_output_channel_axis(op)
+    if input_channel_axis is None or output_channel_axis is None:
+        if return_channel_axis:
+            return None, output_channel_axis
+        return None
+
     if (
         op_config.granularity == CompressionGranularity.PER_GROUPED_CHANNEL
         and op_config.channel_axis is not None
@@ -256,10 +323,13 @@ def infer_block_sizes(
         block_sizes[input_channel_axis] = input_channel_block_size
     if output_channel_axis < len(block_sizes):
         block_sizes[output_channel_axis] = output_channel_block_size
+
+    if return_channel_axis:
+        return block_sizes, output_channel_axis
     return block_sizes
 
 
-def select_input_output_channel_axis(op: "Operation") -> Tuple[int, int]:
+def select_input_output_channel_axis(op: "Operation") -> Tuple[Optional[int], Optional[int]]:
     """
     Here are some representative ops:
     - linear: [D_out, D_in]
@@ -276,15 +346,23 @@ def select_input_output_channel_axis(op: "Operation") -> Tuple[int, int]:
         - When transpose_x=False, output channel is -2 and input channel is -1
         - When transpose_y=True, output channel is -1 and input channel is -2
     - For all other ops, output channel is 0 and input channel is 1.
+
+    If cannot determine the input/output axis, return None to denote unknown.
     """
-    output_channel_axis, input_channel_axis = 0, 1
     var = op.outputs[0]
-    if len(var.child_ops) == 1:
-        child_op = var.child_ops[0]
+
+    # The op could be fed into multiple ops, so we traverse all children ops to see if they
+    # have consistent input/output axis, otherwise set the axis to None.
+    output_channel_axis_set = set()
+    input_channel_axis_set = set()
+    for child_op in var.child_ops:
+        # By default, output channel axis is 0 and input channel axis is 1.
+        output_channel_axis, input_channel_axis = 0, 1
+
         if child_op.op_type == "conv_transpose":
             output_channel_axis = 1
             input_channel_axis = 0
-        if child_op.op_type == "matmul":
+        elif child_op.op_type == "matmul":
             if child_op.y == var:
                 if child_op.transpose_y.val:
                     output_channel_axis = -2
@@ -299,9 +377,62 @@ def select_input_output_channel_axis(op: "Operation") -> Tuple[int, int]:
                 else:
                     output_channel_axis = -2
                     input_channel_axis = -1
-        if child_op.op_type.startswith("constexpr_"):
-            return select_input_output_channel_axis(child_op)
+        elif child_op.op_type.startswith("constexpr_"):
+            # In joint compression constexpr op could be chained together.
+            input_channel_axis, output_channel_axis = select_input_output_channel_axis(child_op)
+
+        if output_channel_axis < 0:
+            output_channel_axis += var.rank
+        if input_channel_axis < 0:
+            input_channel_axis += var.rank
+        output_channel_axis_set.add(output_channel_axis)
+        input_channel_axis_set.add(input_channel_axis)
+
+    output_channel_axis, input_channel_axis = 0, 1
+    if len(output_channel_axis_set) > 1:
+        _logger.warning(
+            f"Can't decide output axis for op {op.name}, because it's fed "
+            f"into multiple downstream ops which require different output axes."
+        )
+        output_channel_axis = None
+    elif len(output_channel_axis_set) == 1:
+        output_channel_axis = output_channel_axis_set.pop()
+
+    if len(input_channel_axis_set) > 1:
+        _logger.warning(
+            f"Can't decide input axis for op {op.name}, because it's fed "
+            f"into multiple downstream ops which require different input axes."
+        )
+        input_channel_axis = None
+    elif len(input_channel_axis_set) == 1:
+        input_channel_axis = input_channel_axis_set.pop()
+
     return input_channel_axis, output_channel_axis
+
+
+def is_cluster_dim_valid(op: "Operation", cluster_dim: int, channel_axis: int) -> bool:
+    """
+    Check op-dependent restrictions for cluster_dim.
+
+    For example, the conv's weight has shape [C_out, C_in/groups], but the effective shape in each
+    group is actually [C_out/groups, C_in/groups], so we need to make sure the effective dim on
+    channel_axis is divisible by `cluster_dim`. Similarly, for conv_transpose the weight has shape
+    [C_in, C_out/groups], but the effective shape in each group is [C_in/groups, C_out/groups].
+
+    Returns True if the cluster_dim is valid, False otherwise.
+    """
+    var = op.outputs[0]
+    if channel_axis < 0:
+        channel_axis += var.rank
+
+    for child_op in var.child_ops:
+        if child_op.op_type in {"conv", "conv_transpose"}:
+            effective_shape = list(var.shape)
+            if child_op.groups.val is not None and child_op.groups.val > 1:
+                effective_shape[0] //= child_op.groups.val
+            if effective_shape[channel_axis] % cluster_dim != 0:
+                return False
+    return True
 
 
 def ios16_sparse_params_to_ios18(sparse_params: SparseParamsIos16) -> SparseParams:
@@ -350,7 +481,7 @@ def ios16_lut_params_to_ios18(lut_params: LutParamsIos16) -> LutParams:
     )
     lut_shape = [1] * len(lut_params.shape) + [num_palettes, 1]
     lut = lut_params.lut.reshape(lut_shape)
-    return LutParams(indices=indices, lut=lut)
+    return LutParams(indices=indices, lut=lut, vector_axis=None)
 
 
 def ios18_lut_params_to_ios16(lut_params: LutParams) -> LutParamsIos16:

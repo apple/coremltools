@@ -342,6 +342,7 @@ def test_compress_cluster_weights_call(
                 n_bits=ModuleSKMPalettizerConfig().n_bits,
                 axis=0,
                 block_size=None,
+                cluster_dim=1,
                 importance=sensitivity_dict[sensitivity_key],
                 enable_per_channel_scale=ModuleSKMPalettizerConfig().enable_per_channel_scale,
             )

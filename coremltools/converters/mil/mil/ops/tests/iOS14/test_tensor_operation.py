@@ -1608,6 +1608,14 @@ class TestIdentity:
             backend=backend,
         )
 
+    @staticmethod
+    def test_identity_type_inference_for_const_input():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10,))])
+        def prog(x):
+            x = mb.identity(x=np.float32(1.0))
+            assert x.dtype == types.fp32
+            return x
+
 
 class TestArgSort:
     @pytest.mark.parametrize(

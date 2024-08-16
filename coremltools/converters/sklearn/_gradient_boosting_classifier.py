@@ -66,7 +66,13 @@ def convert(model, feature_names, target):
     # Alternatively we can enumerate known estimators/strategies combinations.
     # This covers more combinations with less hacks
     base_prediction = None
-    dummy_x = np.zeros((1, model.n_features_))
+
+    if hasattr(model, "n_features_in_"):
+        num_input_features = model.n_features_in_
+    else:
+         num_input_features = model.n_features_
+
+    dummy_x = np.zeros((1, num_input_features))
     for base_init_func in ('_init_decision_function', '_raw_predict_init'):
         if not hasattr(model, base_init_func):
             continue

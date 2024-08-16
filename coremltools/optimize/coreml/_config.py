@@ -678,6 +678,18 @@ class OpPalettizerConfig(OpCompressorConfig):
         * Specify the channel axis to form a group of channels. Only effective when granularity is per_grouped_channel.
         * Default to None, where the axis is automatically picked based on op type.
 
+    cluster_dim: int
+        * The dimension of centroids for each look up table. When cluster_dim == 1, it's scalar
+          palettization, where each entry in the lookup table is a scalar element. When cluster_dim > 1,
+          it's vector palettization, where each entry in the lookup table is a vector of length cluster_dim.
+        * More specifically, when ``cluster_dim > 1``, each ``cluster_dim`` length of weight vectors
+          along the channel axis are palettized using the same 2-D centroid. .
+        * Default to 1.
+
+    enable_per_channel_scale: bool
+        * When set to True, weights are normalized along the output channels using per channel
+          scales before being palettized.
+
     num_kmeans_workers: int
         * Number of worker processes to use for performing k-means. It is recommended to use more
           than one worker process to parallelize the clustering, especially when multiple CPUs are available.
@@ -702,6 +714,8 @@ class OpPalettizerConfig(OpCompressorConfig):
     )
     group_size: int = field(default=32)
     channel_axis: Optional[int] = field(default=None)
+    cluster_dim: int = field(default=1, validator=validators.instance_of(int))
+    enable_per_channel_scale: bool = field(default=False, validator=validators.instance_of(bool))
     num_kmeans_workers: int = field(default=1, validator=validators.instance_of(int))
     weight_threshold: Optional[int] = field(default=2048, validator=validators.optional([validators.instance_of(int), _check_weight_threshold]))
 

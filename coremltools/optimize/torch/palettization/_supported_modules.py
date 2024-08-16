@@ -306,11 +306,14 @@ def get_palettizable_parameters(module):
     if isinstance(module, _nn.MultiheadAttention):
         if not module._qkv_same_embed_dim:
             return [
-                module.out_proj.weight,
-                module.q_proj_weight,
-                module.k_proj_weight,
-                module.v_proj_weight,
+                (module.out_proj.weight, "out_proj.weight"),
+                (module.q_proj_weight, "q_proj_weight"),
+                (module.k_proj_weight, "k_proj_weight"),
+                (module.v_proj_weight, "v_proj_weight"),
             ]
         else:
-            return [module.in_proj_weight, module.out_proj.weight]
-    return [module.weight]
+            return [
+                (module.in_proj_weight, "in_proj_weight"),
+                (module.out_proj.weight, "out_proj.weight"),
+            ]
+    return [(module.weight, "weight")]

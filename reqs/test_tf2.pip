@@ -1,4 +1,9 @@
--r ./test.pip
+boto3==1.14.8
+numpy==1.23.5
+parameterized==0.8.1
+pillow
+pytest==7.1.2
+pytest-timeout
 
 # TODO(rdar://123269464): Support a recent version of TensorFlow
 
@@ -6,6 +11,7 @@
 tensorflow==2.12.0; platform_machine != "arm64"
 tensorflow-estimator==2.12.0; platform_machine != "arm64"
 keras==2.12.0; platform_machine != "arm64"
+jax==0.4.13; platform_machine != "arm64" and python_version < "3.10" and python_version > "3.8"
 
 # TensorFlow (arm64) related package. Currently no Python 3.11 support.
 tensorflow-macos==2.11.0; platform_machine == "arm64" and python_version < "3.11"

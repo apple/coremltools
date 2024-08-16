@@ -8,6 +8,7 @@ import unittest
 import numpy as np
 from packaging.version import Version
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 
 if _HAS_SKLEARN:
@@ -36,8 +37,6 @@ class ImputerTestCase(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
         # axis parameter deprecated in SimpleImputer >= 0.22. which now imputes
         # only along columns as desired here.
@@ -45,7 +44,7 @@ class ImputerTestCase(unittest.TestCase):
             scikit_model = Imputer(strategy="most_frequent")
         else:
             scikit_model = Imputer(strategy="most_frequent", axis=0)
-        scikit_data["data"][1, 8] = np.NaN
+        scikit_data["data"][1, 8] = np.nan
 
         input_data = scikit_data["data"][:, 8].reshape(-1, 1)
         scikit_model.fit(input_data, scikit_data["target"])

@@ -318,15 +318,19 @@ class ListInputType(_InputType):
         return 'list'
 
 
-class ListOrTensorInputType(_InputType):
+class ListOrTensorOrDictInputType(_InputType):
     """
-    ListOrTensorInputType allows inputs of
+    ListOrTensorOrDictInputType allows inputs of
     (1) MIL tensor
     (2) python list/tuple of MIL tensors
+    (3) MIL dictionary
     """
     def _is_compatible(self, v):
         return (
-            types.is_list(v.sym_type) or types.is_scalar(v.sym_type) or types.is_tensor(v.sym_type)
+            types.is_list(v.sym_type)
+            or types.is_scalar(v.sym_type)
+            or types.is_tensor(v.sym_type)
+            or types.is_dict(v.sym_type)
         )
 
     @property

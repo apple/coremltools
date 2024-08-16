@@ -5,6 +5,9 @@
 
 import itertools
 import os
+import platform
+import shutil
+import tempfile
 from unittest.mock import patch
 
 import numpy as np
@@ -14,6 +17,7 @@ from PIL import Image
 import coremltools as ct
 from coremltools._deps import (
     _HAS_EXECUTORCH,
+    _HAS_HF,
     _HAS_TORCH,
     MSG_EXECUTORCH_NOT_FOUND,
     MSG_TORCH_NOT_FOUND,
@@ -44,9 +48,13 @@ from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
 if _HAS_TORCH:
     import torch
+    import torch.nn as nn
     import torchvision
 
     torch.manual_seed(1818)
+
+if _HAS_HF:
+    from peft import LoraConfig, get_peft_model
 
 if _HAS_EXECUTORCH:
     import executorch.exir
@@ -669,6 +677,323 @@ class TestPyTorchConverterExamples:
             output_dict_feature_name = class_label_name + "_probs"
             assert output_dict_feature_name in out_dict
             assert isinstance(out_dict[output_dict_feature_name], dict)
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    @pytest.mark.xfail(
+        reason="rdar://131396853 Lora Adapted Model Dies as ct.models.MLModel but Passes coremltest",
+        run=False,
+    )
+    def test_multifunction_example():
+        # util to add adapters
+        def adapt_model_with_lora(model):
+            lora_config = LoraConfig(
+                target_modules=["linear1", "linear2"], r=32, lora_alpha=1
+            )  # rank 32
+            adapted_model = get_peft_model(model, lora_config)
+            return adapted_model
+
+        # define the base model
+        class Base(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear1 = nn.Linear(6000, 6000)
+                self.relu = nn.ReLU()
+                self.linear2 = nn.Linear(6000, 6000)
+
+            def forward(self, x):
+                x = self.linear1(x)
+                x = self.relu(x)
+                x = self.linear2(x)
+                return x
+
+        base_model = Base()
+
+        # create tmp paths for models
+        mlmodel_1_path = tempfile.mkdtemp(suffix=".mlpackage")
+        mlmodel_2_path = tempfile.mkdtemp(suffix=".mlpackage")
+        multifunction_model_path = tempfile.mkdtemp(suffix=".mlpackage")
+
+        try:
+            # first model with adapter
+            adapted_model_1 = adapt_model_with_lora(base_model)
+            mlmodel_1 = ct.convert(
+                torch.jit.trace(adapted_model_1.eval(), torch.rand(1, 6000)),
+                inputs=[ct.TensorType(name="input_adpated_model_1", shape=(1, 6000))],
+                outputs=[ct.TensorType(name="out_adpated_model_1")],
+                minimum_deployment_target=ct.target.iOS18,
+                skip_model_load=True,
+            )
+            mlmodel_1.save(mlmodel_1_path)
+
+            # second model
+            adapted_model_2 = adapt_model_with_lora(base_model)
+            mlmodel_2 = ct.convert(
+                torch.jit.trace(adapted_model_2.eval(), torch.rand(1, 6000)),
+                inputs=[ct.TensorType(name="input_adpated_model_2", shape=(1, 6000))],
+                outputs=[ct.TensorType(name="out_adpated_model_2")],
+                minimum_deployment_target=ct.target.iOS18,
+                skip_model_load=True,
+            )
+            mlmodel_2.save(mlmodel_2_path)
+
+            # combine two models into a multifunction model
+            desc = ct.utils.MultiFunctionDescriptor()
+            desc.add_function(
+                mlmodel_1_path, src_function_name="main", target_function_name="adapter_1"
+            )
+            desc.add_function(
+                mlmodel_2_path, src_function_name="main", target_function_name="adapter_2"
+            )
+            desc.default_function_name = "adapter_1"
+            ct.utils.save_multifunction(desc, multifunction_model_path)
+
+            if platform.machine() == "arm64":
+                # The following model fails to run on Intel machines,
+                # tracked by rdar://132919101 ([Bug] Intel machines fails on running several multifunction unittest)
+
+                # run the prediction
+                mlmodel_1 = ct.models.MLModel(multifunction_model_path)  # Uses default function
+                y_1 = mlmodel_1.predict({"input_adpated_model_1": np.random.rand(1, 6000)})
+
+                mlmodel_2 = ct.models.MLModel(multifunction_model_path, function_name="adapter_2")
+                y_2 = mlmodel_2.predict({"input_adpated_model_2": np.random.rand(1, 6000)})
+
+                # run the model using CompiledMLModel
+                compile_model = ct.models.CompiledMLModel(multifunction_model_path)
+                y_1 = mlmodel_1.predict({"input_adpated_model_1": np.random.rand(1, 6000)})
+
+        except:
+            raise ValueError("Test failing for test_multifunction_example.")
+
+        finally:
+            # cleanup
+            shutil.rmtree(mlmodel_1_path)
+            shutil.rmtree(mlmodel_2_path)
+            shutil.rmtree(multifunction_model_path)
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="Tests are for deployment target iOS18/macos15"
+    )
+    def test_stateful_accumulator():
+        # stateful model definition in torch
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.register_buffer("accumulator", torch.tensor(np.array([0], dtype=np.float16)))
+
+            def forward(self, x):
+                self.accumulator += x
+                return self.accumulator * self.accumulator
+
+        # convert the trace model into stateful mlmodel
+        traced_model = torch.jit.trace(Model().eval(), torch.tensor([1]))
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=(1,))],
+            outputs=[ct.TensorType(name="y")],
+            states=[
+                ct.StateType(
+                    wrapped_type=ct.TensorType(
+                        shape=(1,),
+                    ),
+                    name="accumulator",
+                ),
+            ],
+            minimum_deployment_target=ct.target.iOS18,
+        )
+
+        # check the numerical outputs
+        state1 = mlmodel.make_state()
+        assert mlmodel.predict({"x": np.array([2.0])}, state=state1)["y"] == 4  # (2)^2
+        assert mlmodel.predict({"x": np.array([5.0])}, state=state1)["y"] == 49  # (5+2)^2
+        assert mlmodel.predict({"x": np.array([-1.0])}, state=state1)["y"] == 36  # (-1+5+2)^2
+
+        state2 = mlmodel.make_state()
+        assert mlmodel.predict({"x": np.array([9.0])}, state=state2)["y"] == 81  # (9)^2
+        assert mlmodel.predict({"x": np.array([2.0])}, state=state2)["y"] == 121  # (2+9)^2
+
+        assert mlmodel.predict({"x": np.array([3.0])}, state=state1)["y"] == 81  # (3-1+5+2)^2
+        assert mlmodel.predict({"x": np.array([7.0])}, state=state1)["y"] == 256  # (7+3-1+5+2)^2
+
+    @staticmethod
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (15, 0), reason="States are supported since iOS18/macos15."
+    )
+    def test_attention_stateful_key_value_cache():
+        """
+        Use a toy attention model to showcase kv cache with states.
+
+        This toy example is only for showing how to convert in-place update kv-cache. It omits some
+        other details such as multi-head, multi-layer, positional encoding, final logits, etc.
+        """
+
+        class SimpleAttention(nn.Module):
+            def __init__(self, embed_size):
+                super().__init__()
+                self.query = nn.Linear(embed_size, embed_size)
+                self.key = nn.Linear(embed_size, embed_size)
+                self.value = nn.Linear(embed_size, embed_size)
+
+            def forward(self, x):
+                Q = self.query(x)  # (batch_size, seq_len, embed_size)
+                K = self.key(x)  # (batch_size, seq_len, embed_size)
+                V = self.value(x)  # (batch_size, seq_len, embed_size)
+                return torch.nn.functional.scaled_dot_product_attention(Q, K, V)
+
+        class ToyModel(nn.Module):
+            def __init__(self, vocab_size, embed_size):
+                super().__init__()
+                self.embedding = nn.Embedding(vocab_size, embed_size)
+                self.attention = SimpleAttention(embed_size)
+                self.fc = nn.Linear(embed_size, embed_size)
+
+            def forward(self, x):
+                embedded = self.embedding(x)
+                attention_output = self.attention(embedded)
+                return self.fc(attention_output)
+
+        class SimpleAttentionWithKeyValueCache(SimpleAttention):
+            """Add kv-cache into SimpleAttention."""
+
+            def forward(self, x, attention_mask, k_cache, v_cache):
+                Q = self.query(x)
+                newly_computed_k = self.key(x)
+                newly_computed_v = self.value(x)
+
+                # Update kv-cache in-place.
+                q_len = Q.shape[-2]
+                end_step = attention_mask.shape[-1]
+                past_kv_len = end_step - q_len
+                k_cache[:, past_kv_len:end_step, :] = newly_computed_k
+                v_cache[:, past_kv_len:end_step, :] = newly_computed_v
+
+                # The K and V we need is (batch_size, q_len + past_kv_len, embed_size).
+                K = k_cache[:, :end_step, :]
+                V = v_cache[:, :end_step, :]
+
+                return torch.nn.functional.scaled_dot_product_attention(
+                    Q, K, V, attn_mask=attention_mask
+                )
+
+        class ToyModelWithKeyValueCache(nn.Module):
+            def __init__(self, vocab_size, embed_size, batch_size, max_seq_len):
+                super().__init__()
+                self.embedding = nn.Embedding(vocab_size, embed_size)
+                self.attention = SimpleAttentionWithKeyValueCache(embed_size)
+                self.fc = nn.Linear(embed_size, embed_size)
+
+                self.kvcache_shape = (batch_size, max_seq_len, embed_size)
+                self.register_buffer("k_cache", torch.zeros(self.kvcache_shape))
+                self.register_buffer("v_cache", torch.zeros(self.kvcache_shape))
+
+            def forward(
+                self,
+                input_ids,  # [batch_size, seq_len]
+                causal_mask,  # [batch_size, seq_len, seq_len + past_kv_len]
+            ):
+                embedded = self.embedding(input_ids)
+                attention_output = self.attention(embedded, causal_mask, self.k_cache, self.v_cache)
+                return self.fc(attention_output)
+
+        # If you want to compare prediction speed, the benefits of stateful kv-cache will only be
+        # revealed with large models, such as `vocab_size=32000` and `embed_size = 1024`.
+        vocab_size = 100
+        embed_size = 32
+        batch_size = 1
+        seq_len = 5
+        max_seq_len = 1024
+        num_iterations = 100
+
+        # Stateless model without kv-cache.
+        torch_model = ToyModel(vocab_size, embed_size)
+        torch_model.eval()
+        input_ids = torch.randint(0, vocab_size, (batch_size, seq_len))
+        torch_output = torch_model(input_ids).detach().numpy()
+        traced_model = torch.jit.trace(torch_model, [input_ids])
+        query_length = ct.RangeDim(lower_bound=1, upper_bound=max_seq_len, default=1)
+        inputs = [ct.TensorType(shape=(batch_size, query_length), dtype=np.int32, name="input_ids")]
+        outputs = [ct.TensorType(dtype=np.float16, name="output")]
+
+        # The minimum_deployment_target and compute_units is not necessary, as non-stateful models
+        # are supported before iOS18. Here we set it just for fair comparison with the stateful
+        # kvcache model below.
+        converted_model = ct.convert(
+            traced_model,
+            inputs=inputs,
+            outputs=outputs,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_units=ct.ComputeUnit.CPU_AND_GPU,
+        )
+
+        # Makes sure prediction works well.
+        for token_id in range(0, num_iterations):
+            inputs = {"input_ids": np.array([list(range(token_id + 1))], dtype=np.int32)}
+            converted_model.predict(inputs)
+
+        # Stateful model with kv-cache.
+        past_kv_len = 0
+        torch_model_kvcache = ToyModelWithKeyValueCache(
+            vocab_size, embed_size, batch_size, max_seq_len
+        )
+        torch_model_kvcache.load_state_dict(torch_model.state_dict(), strict=False)
+        torch_model_kvcache.eval()
+        causal_mask = torch.zeros((batch_size, seq_len, seq_len + past_kv_len), dtype=torch.float32)
+
+        # Make sure the output matches the non-kv-cache version.
+        torch_kvcache_output = torch_model_kvcache(input_ids, causal_mask).detach().numpy()
+        np.testing.assert_allclose(torch_output, torch_kvcache_output)
+
+        traced_model_kvcache = torch.jit.trace(torch_model_kvcache, [input_ids, causal_mask])
+        query_length = ct.RangeDim(lower_bound=1, upper_bound=max_seq_len, default=1)
+        end_step_dim = ct.RangeDim(lower_bound=1, upper_bound=max_seq_len, default=1)
+        inputs = [
+            ct.TensorType(shape=(batch_size, query_length), dtype=np.int32, name="input_ids"),
+            ct.TensorType(
+                shape=(batch_size, query_length, end_step_dim), dtype=np.float16, name="causal_mask"
+            ),
+        ]
+        outputs = [ct.TensorType(dtype=np.float16, name="output")]
+
+        # In addition to `inputs` and `outputs`, we need `states` which uses the same name as the
+        # registered buffers in `ToyModelWithKeyValueCache`.
+        states = [
+            ct.StateType(
+                wrapped_type=ct.TensorType(
+                    shape=torch_model_kvcache.kvcache_shape, dtype=np.float16
+                ),
+                name="k_cache",
+            ),
+            ct.StateType(
+                wrapped_type=ct.TensorType(
+                    shape=torch_model_kvcache.kvcache_shape, dtype=np.float16
+                ),
+                name="v_cache",
+            ),
+        ]
+        converted_model_kvcache = ct.convert(
+            traced_model_kvcache,
+            inputs=inputs,
+            outputs=outputs,
+            states=states,
+            minimum_deployment_target=ct.target.iOS18,
+            compute_units=ct.ComputeUnit.CPU_AND_GPU,
+        )
+
+        # Makes sure prediction works well.
+        past_kv_len = 0
+        kv_cache_state = converted_model_kvcache.make_state()
+        for token_id in range(0, num_iterations):
+            inputs = {
+                "input_ids": np.array([[token_id]], dtype=np.int32),
+                "causal_mask": np.zeros((1, 1, past_kv_len + 1), dtype=np.float16),
+            }
+            converted_model_kvcache.predict(inputs, kv_cache_state)
+            past_kv_len += 1
+
 
 ###############################################################################
 # Note: Stress tests for PyTorch input / output types

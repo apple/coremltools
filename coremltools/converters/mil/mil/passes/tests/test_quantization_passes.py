@@ -1233,7 +1233,12 @@ class TestDequantizeQuantizePairElimination:
             input -> quantize0 -> dequantize1 -|
                                                |-> mul -> quantize -> dequantize -> output2
 
-        Nothing changes when dequantize1 has multiple children
+        Output graph:
+                        |-> dequantize2 -> add -> quantize2 -> dequantize3 -> output1
+            input -> quantize0 -> dequantize1 -|
+                                               |-> mul -> quantize -> dequantize -> output2
+
+        As `dequantize1` has multiple children, we don't eliminate it, but can remove the child `quantize1`.
         """
 
         SHAPE = (2, 3)
@@ -1287,11 +1292,10 @@ class TestDequantizeQuantizePairElimination:
             "quantize",
             "dequantize",
         ]
-        # nothing gets eliminated
+        # The `quantize` before `add` got eliminated.
         assert get_op_types_in_program(prog) == [
             "quantize",
             "dequantize",
-            "quantize",
             "dequantize",
             "add",
             "quantize",
@@ -2687,6 +2691,39 @@ class TestInt32CastToInt16:
             cast_op = block.find_ops(op_type="cast")[0]
             assert cast_op.dtype.val == "uint16"
             assert cast_op.outputs[0] == block.find_ops(op_type="gather")[0].indices
+
+    @pytest.mark.parametrize(
+        "dtype, opset_version",
+        itertools.product(
+            [types.int32, types.fp32],
+            [ct.target.iOS15, ct.target.iOS16, ct.target.iOS17, ct.target.iOS18],
+        ),
+    )
+    def test_squeeze(self, dtype, opset_version):
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=(1, 1), dtype=dtype)],
+            opset_version=opset_version,
+        )
+        def prog(x):
+            return mb.squeeze(x=x)
+
+        prev_prog, _, block = apply_pass_and_basic_check(prog, "common::add_int16_cast")
+
+        if opset_version < ct.target.iOS17:
+            # Prior to iOS 17, `squeeze` does not support int16, so this pass has no effect
+            assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
+        else:
+            if dtype == types.int32:
+                # When `x` is int32, it will be cast to int16 then feed into `squeeze`,
+                # then `squeeze(x)` will be cast back to int32 for output
+                assert get_op_types_in_program(prog) == ["cast", "squeeze", "cast"]
+                cast_int16, cast_int32 = block.find_ops(op_type="cast")
+                assert cast_int16.dtype.val == "int16"
+                assert cast_int32.dtype.val == "int32"
+                assert cast_int16.outputs[0].child_ops[0].op_type == "squeeze"
+            else:
+                # When `x` is float, this int pass has no effect
+                assert get_op_types_in_program(prog) == ["squeeze"]
 
     @patch(
         "coremltools.converters.mil.mil.passes.defs.quantization.add_int16_cast._PREFER_INT16_OPS",

@@ -549,6 +549,21 @@ class dequantize_quantize_pair_elimination(AbstractGraphPass):
         Output graph:
             input -> output
 
+    When the pattern has branches (dequantize has multiple children), we cannot
+    eliminate the whole pair, but can still shorten the path. More specifically:
+
+    .. code-block::
+
+        Input graph:
+            op1 -> dequantize -> quantize -> op2
+                         |
+                         |-> some_other_op
+
+        Output graph:
+            op1 -> dequantize -> some_other_op
+             |
+             |-> op2
+
     PS: On the other hand, the reversed pattern, i.e., ``quantize -> dequantize``,
     is not redundant, since that is the pattern which naturally occurs when a
     quantized op is converted.
@@ -595,44 +610,49 @@ class dequantize_quantize_pair_elimination(AbstractGraphPass):
 
     @staticmethod
     def try_dequantize_quantize_pair_elimination(op: Operation) -> bool:
+        def _check_quantize_removable(quantize_op: Operation) -> bool:
+            if np.any(op.scale.val != quantize_op.scale.val):
+                return False
+
+            is_dequantize_zp_present = op.zero_point is not None
+            is_quantize_zp_present = quantize_op.zero_point is not None
+            if is_dequantize_zp_present != is_quantize_zp_present:
+                return False
+            if is_dequantize_zp_present and is_quantize_zp_present:
+                if np.any(op.zero_point.val != quantize_op.zero_point.val):
+                    return False
+
+            is_dequantize_axis_present = op.axis is not None
+            is_quantize_axis_present = quantize_op.axis is not None
+            if is_dequantize_axis_present != is_quantize_axis_present:
+                return False
+            if is_dequantize_axis_present and is_quantize_axis_present:
+                if op.axis.val != quantize_op.axis.val:
+                    return False
+
+            return True
+
         if op.op_type != "dequantize":
             return False
 
         if op.outputs[0] in op.enclosing_block.outputs:
             return False
 
-        if not _check_child_op_type(op, "quantize"):
-            return False
-        quantize_op = op.outputs[0].child_ops[0]
-
-        if np.any(op.scale.val != quantize_op.scale.val):
-            return False
-
-        is_dequantize_zp_present = op.zero_point is not None
-        is_quantize_zp_present = quantize_op.zero_point is not None
-        if is_dequantize_zp_present != is_quantize_zp_present:
-            return False
-        if is_dequantize_zp_present and is_quantize_zp_present:
-            if np.any(op.zero_point.val != quantize_op.zero_point.val):
-                return False
-
-        is_dequantize_axis_present = op.axis is not None
-        is_quantize_axis_present = quantize_op.axis is not None
-        if is_dequantize_axis_present != is_quantize_axis_present:
-            return False
-        if is_dequantize_axis_present and is_quantize_axis_present:
-            if op.axis.val != quantize_op.axis.val:
-                return False
-
-        block: Block = op.enclosing_block
-        if not block.try_replace_uses_of_var_after_op(
-            anchor_op=quantize_op,
-            old_var=quantize_op.outputs[0],
-            new_var=op.input,
-        ):
-            return False
-        block.remove_ops([op, quantize_op])
-        return True
+        any_quantize_removed: bool = False
+        for child_op in op.outputs[0].child_ops:
+            if child_op.op_type == "quantize" and _check_quantize_removable(child_op):
+                block: Block = op.enclosing_block
+                if block.try_replace_uses_of_var_after_op(
+                    anchor_op=child_op,
+                    old_var=child_op.outputs[0],
+                    new_var=op.input,
+                ):
+                    block.remove_ops([child_op])
+                    any_quantize_removed = True
+        if any_quantize_removed and len(op.outputs[0].child_ops) == 0:
+            # Remove the dequant op if all its children quantize ops got removed.
+            block.remove_ops([op])
+        return any_quantize_removed
 
 
 @register_pass(namespace="common")
@@ -1033,6 +1053,8 @@ class reorder_lut_per_channel_scale(AbstractGraphPass):
             # Only the scale on output axis could be moved to get mathematically equivalent results.
             scale_val: np.ndarray = scale_op.scale.val
             output_axis = optimize_utils.select_input_output_channel_axis(scale_op)[1]
+            if output_axis is None:
+                return
             if output_axis < 0:
                 output_axis += len(scale_val.shape)
             for axis, dim_size in enumerate(scale_val.shape):

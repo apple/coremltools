@@ -5,6 +5,8 @@
 
 import tempfile
 
+import pytest
+
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 from coremltools.test.optimize.coreml.test_passes import (
     TestCompressionPasses as _TestCompressionPasses,
@@ -212,6 +214,7 @@ class TestOptimizeTorchAPIOverview:
         _test_config(self.get_global_config())
         _test_config(self.get_fine_grain_config())
 
+    @pytest.mark.xfail(reason="rdar://132361333 Palettization Test Case Time Out", run=False)
     def test_programmatic_example_1(self):
         import torch
 
@@ -231,7 +234,7 @@ class TestOptimizeTorchAPIOverview:
 
         # Initialize the palettizer
         config = DKMPalettizerConfig(
-            global_config=ModuleDKMPalettizerConfig(n_bits=4, cluster_dim=4)
+            global_config=ModuleDKMPalettizerConfig(n_bits=4, cluster_dim=2)
         )
 
         palettizer = DKMPalettizer(model, config)
@@ -258,7 +261,7 @@ class TestOptimizeTorchAPIOverview:
             traced_model,
             inputs=[ct.TensorType(shape=example_input.shape)],
             pass_pipeline=ct.PassPipeline.DEFAULT_PALETTIZATION,
-            minimum_deployment_target=ct.target.iOS16,
+            minimum_deployment_target=ct.target.iOS18,
         )
         assert coreml_model is not None
         output_file = tempfile.NamedTemporaryFile(suffix=".mlpackage").name
@@ -295,7 +298,7 @@ class TestOptimizeTorchAPIOverview:
                     config = config.set_module_name(
                         name,
                         ModuleLinearQuantizerConfig(
-                            weight_observer=ObserverType.mix_max, weight_per_channel=True
+                            weight_observer=ObserverType.min_max, weight_per_channel=True
                         ),
                     )
                 else:

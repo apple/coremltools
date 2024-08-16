@@ -6823,7 +6823,7 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [(3, 1), (3, 2), (4, 1)],
+            [(3, 1), (3, 2), (4, 1), (4, 2)],
             [True, False],
             [True, False],
         ),
@@ -6833,7 +6833,7 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
     ):
         if (
             backend == ("mlprogram", "fp16")
-            and input_block_rank == (3, 1)
+            and input_block_rank == (3, 1) or (3,2)
             and dynamic_input
             and not dynamic_crops
         ):
@@ -6938,6 +6938,16 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
     ):
         input_shape, block_shape, crops = shape_block_crops
         crops = np.array(crops, dtype=np.int32)
+
+        if (
+            backend == ("mlprogram", "fp16")
+            and shape_block_crops == [(4, 4, 6, 1), [1, 2], [[2, 1], [3, 3]]]
+            and dynamic_input
+            and not dynamic_crops
+        ):
+            pytest.xfail(
+                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
+            )
 
         # The neuralnetwork backend doesn't support these tests
         if backend[0] == "neuralnetwork":

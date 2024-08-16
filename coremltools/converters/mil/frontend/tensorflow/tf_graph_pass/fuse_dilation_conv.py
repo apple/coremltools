@@ -7,44 +7,9 @@ import numpy as np
 
 from ..basic_graph_ops import delete_node, replace_source
 
+from coremltools.converters.mil.mil.passes.defs.optimize_conv import fuse_dilated_conv
 
-def _try_same(input_h, input_w, W_h, W_w, dilation_factor, padding, crop):
-    base_paddings = [0] * 4
-
-    dilated_W_h = dilation_factor[0] * (W_h - 1) + 1
-    dilated_W_w = dilation_factor[1] * (W_w - 1) + 1
-
-    base_paddings[0] = (dilated_W_h - 1) // 2
-    base_paddings[1] = dilated_W_h - 1 - (dilated_W_h - 1) // 2
-    base_paddings[2] = (dilated_W_w - 1) // 2
-    base_paddings[3] = dilated_W_w - 1 - (dilated_W_w - 1) // 2
-
-    pad_start_h = base_paddings[0]
-    pad_start_w = base_paddings[2]
-    orig_pad_end_h = base_paddings[1]
-    orig_pad_end_w = base_paddings[3]
-    full_input_h = input_h + pad_start_h + orig_pad_end_h
-    full_input_w = input_w + pad_start_w + orig_pad_end_w
-    pad_end_extra_h = (
-        dilation_factor[0] - full_input_h % dilation_factor[0]
-    ) % dilation_factor[0]
-    pad_end_extra_w = (
-        dilation_factor[1] - full_input_w % dilation_factor[1]
-    ) % dilation_factor[1]
-    pad_end_h = orig_pad_end_h + pad_end_extra_h
-    pad_end_w = orig_pad_end_w + pad_end_extra_w
-
-    return (
-        padding[0] == pad_start_h
-        and padding[1] == pad_end_h
-        and padding[2] == pad_start_w
-        and padding[3] == pad_end_w
-        and crop[0] == 0
-        and crop[1] == pad_end_extra_h
-        and crop[2] == 0
-        and crop[3] == pad_end_extra_w
-    )
-
+_try_same = fuse_dilated_conv._uses_same_padding
 
 def _pattern_match_and_rewrite(gddict, conv_op):
     node = gddict[conv_op]

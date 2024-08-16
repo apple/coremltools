@@ -8,6 +8,7 @@ from typing import Tuple
 
 import numpy as np
 
+import coremltools.converters.mil.frontend.milproto.load
 from coremltools import _logger as logger
 from coremltools import proto
 from coremltools.converters.mil import mil
@@ -85,7 +86,7 @@ def _load_tensorvalue(tensorvalue_spec):
         raise ValueError("Invalid dtype for TensorValue type")
 
 
-def _load_immediate_value(immediatevalue_spec):
+def _load_immediate_value(context: TranscriptionContext, immediatevalue_spec):
     if not isinstance(immediatevalue_spec, proto.MIL_pb2.Value.ImmediateValue):
         raise TypeError("Invalid ImmedidateValue spec object")
 
@@ -93,6 +94,11 @@ def _load_immediate_value(immediatevalue_spec):
         return _load_tensorvalue(immediatevalue_spec.tensor)
     elif immediatevalue_spec.WhichOneof("value") == "list":
         return immediatevalue_spec.list.values
+    elif immediatevalue_spec.WhichOneof("value") == "dictionary":
+        result = {}
+        for value in immediatevalue_spec.dictionary.values:
+            result[_load_value(context, value.key)] = _load_value(context, value.value)
+        return result
     else:
         raise NotImplementedError(
             "Immediate value type not supported yet."
@@ -174,7 +180,7 @@ def _load_value(context, value_spec):
         raise ValueError("Docstring would get lost in the process.")
 
     value_spec_type = value_spec.type.WhichOneof("type")
-    if value_spec.type.WhichOneof("type") == "tensorType":
+    if value_spec_type == "tensorType":
         valuetype = proto_to_types(value_spec.type)
 
         is_tensor = types.is_tensor(valuetype)
@@ -183,7 +189,7 @@ def _load_value(context, value_spec):
         shape = () if not is_tensor else valuetype.get_shape()
 
         if value_spec.WhichOneof("value") == "immediateValue":
-            value = _load_immediate_value(value_spec.immediateValue)
+            value = _load_immediate_value(context, value_spec.immediateValue)
         else:
             value = _load_file_value(context, value_spec.blobFileValue, dtype)
 
@@ -204,8 +210,15 @@ def _load_value(context, value_spec):
             value = np.array(value).astype(target_np_dtype).reshape(shape)
         else:
             raise ValueError("Invalid dtype for tensor value")
+
+    elif value_spec_type == "dictionaryType":
+        assert value_spec.WhichOneof("value") == "immediateValue", "dict must be immediate value"
+        return _load_immediate_value(context, value_spec.immediateValue)
+
     else:
-        raise NotImplementedError("Only value of tensorType implemented yet")
+        raise NotImplementedError(
+            f"Deserialization from milproto {value_spec_type} to pymil is not implemented yet"
+        )
 
     if not is_tensor and not isinstance(value, str):
         value = types.nptype_from_builtin(dtype)(value.item())
@@ -312,6 +325,13 @@ def _load_const_op(context, op_spec):
                 inputs[param_name] = vars
 
     output_var = getattr(mb, op_spec.type)(**inputs)
+    if "val" in op_spec.attributes:
+        if hasattr(op_spec.attributes["val"], "blobFileValue"):
+            filevalue_spec = op_spec.attributes["val"].blobFileValue
+            filename = filevalue_spec.fileName.split("/")[-1]
+            if filename != "weight.bin":
+                output_var.op.weight_key = filename.split(".")[0]
+
 
     if not isinstance(output_var, (tuple, list)):
         output_var = [output_var]
@@ -381,7 +401,7 @@ def _load_operation(context: TranscriptionContext, op_spec: proto.MIL_pb2.Operat
                     value_spec = binding.value
                     assert value_spec.WhichOneof("value") == "immediateValue"
                     assert value_spec.immediateValue.WhichOneof("value") == "list"
-                    list_value = _load_immediate_value(value_spec.immediateValue)
+                    list_value = _load_immediate_value(context, value_spec.immediateValue)
                     values = []
                     for value_spec in list_value:
                         values.append(_load_value(context, value_spec))
@@ -525,6 +545,19 @@ def _load_function(context, func_spec, spec_version):
     return pymil_func
 
 
+def _load_program_spec_attributes(
+    context: TranscriptionContext,
+    program_spec: proto.MIL_pb2.Program,
+    pymil_program: mil.Program,
+) -> None:
+    for attr_name, attr_spec in program_spec.attributes.items():
+        # No need to load these attributes
+        if attr_name in ("buildInfo",):
+            pass
+        else:
+            raise ValueError(f"Invalid attribute {attr_name} for program")
+
+
 def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
     """
     Load in-memory Proto specification of MILSpec.Program(.Proto) object to PyMIL
@@ -545,9 +578,7 @@ def load_mil_proto(program_spec, specification_version, file_weights_dir=""):
             func_name, _load_function(context, func_spec, specification_version)
         )
 
-    for attr_name, attr_spec in program_spec.attributes.items():
-        if attr_name not in ("buildInfo",):
-            raise ValueError(f"Invalid attribute {attr_name} for program")
+    coremltools.converters.mil.frontend.milproto.load._load_program_spec_attributes(context, program_spec, pymil_program)
 
     return pymil_program
 

@@ -32,6 +32,11 @@ def _quantize_general(
     torch_dtype_var: Var,
     axis: int = None,
 ):
+    if input.op is not None and input.op.op_type.startswith("constexpr_"):
+        # Skip already quantized weight, which was done by using compression metadata.
+        context.add(input, node.name)
+        return
+
     scale = scale_var.val
     if scale is None:
         raise ValueError("quantization scale must be const at compile time")
@@ -95,7 +100,11 @@ def quantize_per_tensor(context, node):
     if context.frontend == TorchFrontend.TORCHSCRIPT:
         input, scale, zero_point, torch_dtype = inputs
     elif context.frontend == TorchFrontend.EXIR:
-        input, scale, zero_point, _, _, torch_dtype = inputs
+        input, scale, zero_point, qmin, qmax, torch_dtype = inputs
+        if qmax.val - qmin.val <= 16:
+            logger.warning(
+                f"Core ML does not support 4-bit activation, so {torch_dtype.val} is used instead"
+            )
 
     _quantize_general(context, node, input, scale, zero_point, torch_dtype)
 
@@ -116,7 +125,9 @@ def _dequantize_general(
     input: Var,
     scale: Var,
     zero_point: Var,
-    axis: Var = None,
+    axis: Var,
+    qmin: Var,
+    qmax: Var,
 ) -> None:
     # torch may use different dtype for input and zero_point,
     # but Core ML requires input and zero_point to have a same dtype,
@@ -129,9 +140,9 @@ def _dequantize_general(
         # For const input, translate to the const floating point scalar output
         if input.val is not None:
             output_value = scale.val * (input.val - zero_point.val)
-            output = mb.const(val=output_value)
+            output = mb.const(val=output_value, name=node.name)
         # For variable input, we have no choice but to expand and squeeze,
-        # since CoreML dequantize op requires tensor input
+        # since Core ML dequantize op requires tensor input
         else:
             expanded_input = mb.expand_dims(x=input, axes=(0,))
             dequantize_output = mb.dequantize(
@@ -140,14 +151,35 @@ def _dequantize_general(
                 scale=scale,
                 axis=axis,
             )
-            output = mb.squeeze(x=dequantize_output)
+            output = mb.squeeze(x=dequantize_output, name=node.name)
     else:
-        output = mb.dequantize(
-            input=input,
-            zero_point=zero_point,
-            scale=scale,
-            axis=axis,
-        )
+        # activation quantization
+        if input.val is None:
+            if qmax.val - qmin.val <= 16:
+                logger.warning(
+                    f"Core ML does not support 4-bit activation, so {input.dtype} is used instead"
+                )
+            output = mb.dequantize(
+                input=input,
+                zero_point=zero_point,
+                scale=scale,
+                axis=axis,
+                name=node.name,
+            )
+        # weight compression
+        else:
+            if qmax.val - qmin.val <= 8:
+                logger.warning(
+                    "Core ML does not support less than 4-bit compression, so 4 bit is used instead"
+                )
+            input_val = input.val
+            zero_point_val = zero_point.val
+            if zero_point_val.dtype != input_val.dtype:
+                zero_point_val = zero_point_val.astype(input_val.dtype)
+            axis_val = None if axis is None else axis.val
+            output = _utils._construct_constexpr_dequant_op(
+                input_val, zero_point_val, scale.val, axis=axis_val, name=node.name
+            )
     context.add(output, node.name)
 
 
@@ -163,23 +195,16 @@ def dequantize(context, node):
     if context.frontend == TorchFrontend.TORCHSCRIPT:
         context.quant_context.get_dequantized_var(node.inputs[0], node.name)
     elif context.frontend == TorchFrontend.EXIR:
-        # ExecuTorch intends to use `min` and `max` to indicate quantization dtype, e.g.
-        #     min = -64, max = 63, torch_dtype = torch.int8
-        # means int4 quantization (torch_dtype = torch.int8 due to there is no torch.int4 yet)
-        # For now (2024-02-27), 2 issues preventing us from translating `min` and `max`
-        #     1. ExecuTorch has not fully added 4-bit quantization support yet, so no way to test
-        #     2. CoreML supports only 8-bit quantization yet, so no way to translate
-        # TODO(rdar://123421506): Translate `min` and `max` once the above 2 issues get resolved
         inputs = _get_inputs(context, node, min_expected={TorchFrontend.EXIR: 6})
         num_inputs = len(inputs)
         if num_inputs == 6:
-            input, scale, zero_point, min, max, torch_dtype_number = inputs
+            input, scale, zero_point, qmin, qmax, _ = inputs
             axis = None
         elif num_inputs == 7:
-            input, scale, zero_point, axis, min, max, torch_dtype_number = inputs
+            input, scale, zero_point, axis, qmin, qmax, _ = inputs
         else:
             raise ValueError(f"dequantize should have 6 or 7 inputs, but got {num_inputs}")
-        _dequantize_general(context, node, input, scale, zero_point, axis)
+        _dequantize_general(context, node, input, scale, zero_point, axis, qmin, qmax)
     else:
         raise ValueError(
             "dequantize is supported only in TorchScript and EXIR frontends, "

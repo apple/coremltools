@@ -67,6 +67,9 @@ def load(
     """
 
     if _HAS_TORCH_EXPORT_API and isinstance(spec, ExportedProgram):
+        # TODO: rdar://115845792 ([Executorch] Handle user provided inputs/outputs in the convert API)
+        if states:
+            raise AssertionError("'states' argument should be None for ExportedProgram")
         model = spec
     else:
         model = _torchscript_from_spec(spec)
@@ -104,6 +107,8 @@ def _torchscript_from_spec(model_spec: Union[str, RecursiveScriptModule]) -> Rec
             raise e
 
     elif isinstance(model_spec, _torch.jit.ScriptModule):
+        return model_spec
+    elif _HAS_TORCH_EXPORT_API and isinstance(model_spec, ExportedProgram):
         return model_spec
     else:
         raise TypeError(

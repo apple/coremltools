@@ -190,7 +190,7 @@ set(proto_files
     AudioFeaturePrint
     BayesianProbitRegressor
     CategoricalMapping
-	ClassConfidenceThresholding
+    ClassConfidenceThresholding
     CustomModel
     DataStructures
     DictVectorizer

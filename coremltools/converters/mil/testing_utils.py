@@ -624,6 +624,7 @@ def apply_pass_and_basic_check(
     pass_name: Union[str, AbstractGraphPass],
     skip_output_name_check: Optional[bool] = False,
     skip_output_type_check: Optional[bool] = False,
+    skip_output_shape_check: Optional[bool] = False,
     skip_input_name_check: Optional[bool] = False,
     skip_input_type_check: Optional[bool] = False,
     skip_function_name_check: Optional[bool] = False,
@@ -650,7 +651,8 @@ def apply_pass_and_basic_check(
             assert_same_output_names(prev_prog, prog, name)
         if not skip_output_type_check:
             assert_same_output_types(prev_prog, prog, name)
-        assert_same_output_shapes(prev_prog, prog, name)
+        if not skip_output_shape_check:
+            assert_same_output_shapes(prev_prog, prog, name)
 
         if not skip_input_name_check:
             assert_same_input_names(prev_prog, prog, name)

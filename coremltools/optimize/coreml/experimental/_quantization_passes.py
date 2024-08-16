@@ -138,8 +138,12 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
         (types.int8, "LINEAR_SYMMETRIC"): (-127, 127),
     }
 
+    SUPPORTED_UNARY_OP_TYPES = ["conv", "avg_pool", "max_pool"]
+    SUPPORTED_BINARY_OP_TYPES = ["add"]
+    SUPPORTED_OP_TYPES = SUPPORTED_UNARY_OP_TYPES + SUPPORTED_BINARY_OP_TYPES
+
     def transform_op(self, op: Operation):
-        if op.op_type not in ("conv", "add"):
+        if op.op_type not in self.SUPPORTED_OP_TYPES:
             return False
 
         # Checking op-level config. Skip if we disable compression on certain ops.
@@ -153,7 +157,12 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
         else:
             scale_dtype = np.float32
 
-        if op.op_type in ("conv"):
+        # Copy kargs from ``op`` to ``new_core_op``.
+        kargs = {}
+        for k, v in op.inputs.items():
+            kargs[k] = v
+
+        if op.op_type in self.SUPPORTED_UNARY_OP_TYPES:
             new_quantize_op = mb.quantize(
                 input=op.inputs["x"],
                 scale=np.array(1).astype(scale_dtype),
@@ -167,26 +176,10 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
                 zero_point=np.int8(0),
                 before_op=op,
             )
-
-            kargs = {}
-            for k, v in op.inputs.items():
-                kargs[k] = v
+            # Update kargs (input) of ``new_core_op``.
             kargs["x"] = new_dequantize_op
-            kargs["name"] = op.name
-            kargs["before_op"] = op
-            new_conv_op = mb.conv(**kargs)
-            new_conv_op.name = op.outputs[0].name
 
-            if new_conv_op.op.enclosing_block.try_replace_uses_of_var_after_op(
-                old_var=op.outputs[0],
-                new_var=new_conv_op,
-                anchor_op=new_conv_op.op,
-                end_op=new_conv_op,
-            ):
-                pass
-            new_conv_op.op.enclosing_block.remove_ops([op])
-
-        if op.op_type in ("add"):
+        elif op.op_type in self.SUPPORTED_BINARY_OP_TYPES:
             """
             For op with two live inputs (e.g. add):
             Input graph:
@@ -233,19 +226,21 @@ class insert_prefix_quantize_dequantize_pair(AbstractActCompressionPass):
                 zero_point=np.int8(0),
                 before_op=op,
             )
-            new_add_op = mb.add(
-                x=new_dequantize_op_x,
-                y=new_dequantize_op_y,
-                name=op.name,
-                before_op=op,
-            )
-            new_add_op.name = op.outputs[0].name
+            # Update kargs (inputs) of ``new_core_op``.
+            kargs["x"] = new_dequantize_op_x
+            kargs["y"] = new_dequantize_op_y
 
-            if new_add_op.op.enclosing_block.try_replace_uses_of_var_after_op(
-                old_var=op.outputs[0],
-                new_var=new_add_op,
-                anchor_op=new_add_op.op,
-                end_op=new_add_op,
-            ):
-                pass
-            new_add_op.op.enclosing_block.remove_ops([op])
+        # Update other kargs of ``new_core_op``.
+        # These are the same regardless of whether it's a unary or binary op.
+        kargs["name"] = op.name
+        kargs["before_op"] = op
+        new_core_op = getattr(mb, op.op_type)(**kargs)
+        new_core_op.name = op.outputs[0].name
+
+        if new_core_op.op.enclosing_block.try_replace_uses_of_var_after_op(
+            old_var=op.outputs[0],
+            new_var=new_core_op,
+            anchor_op=new_core_op.op,
+            end_op=new_core_op,
+        ):
+            new_core_op.op.enclosing_block.remove_ops([op])

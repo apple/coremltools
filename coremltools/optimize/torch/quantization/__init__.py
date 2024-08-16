@@ -48,6 +48,7 @@ from .quantization_config import (
     QuantizationScheme,
 )
 from .quantizer import LinearQuantizer
+
 from .post_training_quantization import (
     ModulePostTrainingQuantizerConfig,
     PostTrainingQuantizer,

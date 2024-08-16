@@ -7,6 +7,9 @@ import json
 import tempfile
 import unittest
 
+import numpy as np
+
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.converters import sklearn as skl_converter
 from coremltools.models.utils import _macos_version
@@ -31,8 +34,6 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
         scikit_model = GradientBoostingClassifier(random_state=1)
         target = scikit_data["target"] > scikit_data["target"].mean()
@@ -49,7 +50,7 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, input_names, "target"
@@ -105,14 +106,11 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        import numpy as np
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
         scikit_model = GradientBoostingClassifier(random_state=1)
-        t = scikit_data.target
+        t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
-        scikit_model.fit(scikit_data.data, target)
+        scikit_model.fit(scikit_data["data"], target)
         self.target = target
 
         s = 0
@@ -126,7 +124,7 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, input_names, "target"
@@ -183,8 +181,6 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
         self.xgb_model = xgboost.XGBClassifier()
         target = scikit_data["target"] > scikit_data["target"].mean()
@@ -194,7 +190,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
         self.scikit_data = scikit_data
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = xgb_converter.convert(
             self.xgb_model, input_names, output_name, mode="classifier"
@@ -248,14 +244,11 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        import numpy as np
-        from sklearn.datasets import load_boston
-
         scikit_data = load_boston()
-        t = scikit_data.target
+        t = scikit_data["target"]
         target = np.digitize(t, np.histogram(t)[1]) - 1
         dtrain = xgboost.DMatrix(
-            scikit_data.data, label=target, feature_names=scikit_data.feature_names
+            scikit_data["data"], label=target, feature_names=scikit_data["feature_names"]
         )
         self.xgb_model = xgboost.train({}, dtrain)
         self.target = target
@@ -281,7 +274,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
 
     def test_conversion(self):
 
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = xgb_converter.convert(
             self.xgb_model,
@@ -317,7 +310,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         import numpy as np
 
         output_name = "target"
-        feature_names = self.scikit_data.feature_names
+        feature_names = self.scikit_data["feature_names"]
 
         xgb_model_json = tempfile.mktemp("xgb_tree_model_classifier.json")
         xgb_json_out = self.xgb_model.get_dump(with_stats=True, dump_format="json")
@@ -348,7 +341,7 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         for input_type in spec.description.input:
             self.assertEqual(input_type.type.WhichOneof("Type"), "doubleType")
         self.assertEqual(
-            sorted(self.scikit_data.feature_names),
+            sorted(self.scikit_data["feature_names"]),
             sorted(map(lambda x: x.name, spec.description.input)),
         )
 

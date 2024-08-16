@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
 import os
 import shutil
 
@@ -13,6 +14,7 @@ from coremltools.test.optimize.torch.models.mnist import (
     mnist_example_input,
     mnist_example_output,
     mnist_model,
+    mnist_model_conv_transpose,
     mnist_model_large,
     mnist_model_quantization,
     residual_mnist_model,
@@ -31,6 +33,7 @@ def _dummy(
     mnist_model_large,
     mnist_model_quantization,
     get_model_and_pruner,
+    mnist_model_conv_transpose,
 ):
     return (
         mnist_dataset,
@@ -41,6 +44,7 @@ def _dummy(
         mnist_model_large,
         mnist_model_quantization,
         get_model_and_pruner,
+        mnist_model_conv_transpose,
     )
 
 

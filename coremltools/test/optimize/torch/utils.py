@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import contextlib
+import io
+import logging
 import pathlib
 import sys
 
@@ -112,6 +115,7 @@ def eval_model(model, test_loader):
     model.eval()
     test_loss = 0
     correct = 0
+    accuracy = 0.0
     with torch.no_grad():
         for data, target in test_loader:
             output = model(data)
@@ -124,6 +128,36 @@ def eval_model(model, test_loader):
 
         print("\nTest set: Average loss: {:.4f}, Accuracy: {:.0f}%\n".format(test_loss, accuracy))
     return accuracy
+
+
+def get_logging_capture_context_manager():
+    @contextlib.contextmanager
+    def capture_logs(logger_name):
+        # Create a StringIO object to capture the log output
+        log_capture = io.StringIO()
+
+        # Get the logger
+        logger = logging.getLogger(logger_name)
+
+        # Save the current handlers
+        original_handlers = logger.handlers
+
+        # Create a custom logging handler that writes to the StringIO object
+        string_io_handler = logging.StreamHandler(log_capture)
+        formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+        string_io_handler.setFormatter(formatter)
+
+        # Clear existing handlers and add the custom handler
+        logger.handlers = [string_io_handler]
+
+        # Capture the logs
+        try:
+            yield log_capture
+        finally:
+            # Restore original handlers
+            logger.handlers = original_handlers
+
+    return capture_logs
 
 
 # endregion

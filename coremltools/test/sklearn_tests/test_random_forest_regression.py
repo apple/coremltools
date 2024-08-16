@@ -3,8 +3,10 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
 import unittest
 
+from ..utils import load_boston
 from coremltools._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
@@ -24,9 +26,6 @@ class RandomForestRegressorScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-        from sklearn.ensemble import RandomForestRegressor
-
         scikit_data = load_boston()
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
         scikit_model = RandomForestRegressor(random_state=1, n_estimators=10)
@@ -40,7 +39,7 @@ class RandomForestRegressorScikitTest(unittest.TestCase):
         self.scikit_model = scikit_model
 
     def test_conversion(self):
-        input_names = self.scikit_data.feature_names
+        input_names = self.scikit_data["feature_names"]
         output_name = "target"
         spec = skl_converter.convert(
             self.scikit_model, input_names, "target"

@@ -116,7 +116,10 @@ def _recurse(
 
 
 def get_input_dimension(model):
-    if hasattr(model, "n_features_"):
+    if hasattr(model, "n_features_in_"):
+        return model.n_features_in_
+
+    elif hasattr(model, "n_features_"):
         return model.n_features_
 
     elif hasattr(model, "n_estimators"):
@@ -124,7 +127,13 @@ def get_input_dimension(model):
             raise ValueError("model not trained.")
 
         try:
-            return model.estimators_[0, 0].n_features_
+            estimator = model.estimators_[0]
+
+            if hasattr(estimator, "n_features_in_"):
+                return estimator.n_features_in_
+
+            return estimator.n_features_
+
         except IndexError:
             raise ValueError("Model not trained or invalid model.")
     else:

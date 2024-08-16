@@ -14,11 +14,9 @@ from typing import Tuple as _Tuple
 from typing import Type as _Type
 from typing import Union as _Union
 
-import numpy as _np
 import torch as _torch
 import torch.multiprocessing as _mp
 from attr import define as _define
-from sklearn.cluster import KMeans as _kmeans2d  # 2d kmeans
 
 from coremltools._deps import _kmeans1d
 from coremltools.converters.mil.mil.ops.defs.iOS18 import (
@@ -37,6 +35,7 @@ from coremltools.optimize.torch._utils.torch_utils import (
     get_n_bits_from_dtype,
     get_sign_from_dtype,
 )
+from coremltools.optimize.torch.palettization._efficient_kmeans import _EfficientKMeans
 
 _logger = _logging.getLogger(__name__)
 
@@ -191,16 +190,16 @@ class KMeansModule:
             # Vector palettization
             # Reshape param for 2D clustering
             if axis == 0:
-                param_reshaped = param.reshape(-1, cluster_dim)
-            else:
                 param_reshaped = param.transpose(0, 1).reshape(-1, cluster_dim)
+            else:
+                param_reshaped = param.reshape(-1, cluster_dim)
             lut, indices = _torch.unique(param_reshaped, dim=0, return_inverse=True)
 
             # Undo reshaping in indices done for 2D clustering
             if axis == 0:
-                indices = indices.reshape(param.shape[0], param.shape[1] // cluster_dim)
-            else:
                 indices = indices.reshape(param.shape[0] // cluster_dim, param.shape[1])
+            else:
+                indices = indices.reshape(param.shape[0], param.shape[1] // cluster_dim)
 
         # Incorporate param dimensions in lut shape
         for i in range(len(orig_param_shape) - lut.dim() + 2):
@@ -257,6 +256,10 @@ class KMeansModule:
                 for i in range(metadata.lut.dim() - zp.dim()):
                     zp = zp.unsqueeze(-1)
                 metadata.zero_point = zp
+        # vector axis for cluster_dim > 1
+        cluster_dim = self.config[param_name].cluster_dim
+        if cluster_dim is not None and cluster_dim > 1:
+            metadata.vector_axis = self.config[param_name].axis
         # Compression type
         metadata.compression_type = compression_type
         return metadata
@@ -460,9 +463,211 @@ class MultiheadAttention(KMeansModule):
 
 class KMeans:
     @classmethod
+    def _get_block_to_cluster(cls, weight: _torch.Tensor, config: KMeansConfig, block_idx: int):
+        """
+        Extract block weight to cluster.
+        """
+        if config.axis == 0:
+            block_importance = (
+                config.importance[block_idx : block_idx + config.block_size, :]
+                if config.importance is not None
+                else None
+            )
+            block_weight = weight[block_idx : block_idx + config.block_size, :]
+            block_mask = (
+                config.mask[block_idx : block_idx + config.block_size, :].flatten()
+                if config.mask is not None
+                else None
+            )
+        else:
+            block_importance = (
+                config.importance[:, block_idx : block_idx + config.block_size]
+                if config.importance is not None
+                else None
+            )
+            block_weight = weight[:, block_idx : block_idx + config.block_size]
+            block_mask = (
+                config.mask[:, block_idx : block_idx + config.block_size].flatten()
+                if config.mask is not None
+                else None
+            )
+        return block_weight, block_importance, block_mask
+
+    @classmethod
+    def _cluster_weights_with_masking(
+        cls,
+        block_weight: _torch.Tensor,
+        block_importance: _torch.Tensor,
+        block_mask: _torch.Tensor,
+        config: KMeansConfig,
+    ) -> _Tuple[_Optional[_torch.Tensor], _Optional[_torch.Tensor]]:
+        """
+        Cluster block weight with clustering only applied to masked weight elements.
+        """
+        num_clusters = 2**config.n_bits
+
+        block_weight_flatten = block_weight.flatten()
+        block_weight_flatten_masked = block_weight_flatten[block_mask]
+
+        if len(block_weight_flatten_masked) > 0:
+            if block_importance is not None:
+                block_importance_flatten = block_importance.flatten()
+                kmeans_results = _kmeans1d.cluster(
+                    block_weight_flatten_masked.numpy(),
+                    num_clusters,
+                    weights=block_importance_flatten[block_mask].numpy(),
+                )
+            else:
+                kmeans_results = _kmeans1d.cluster(
+                    block_weight_flatten_masked.numpy(), num_clusters
+                )
+            return _torch.tensor(kmeans_results.centroids), _torch.tensor(kmeans_results.clusters)
+
+        return None, None
+
+    @classmethod
+    def _cluster_weights_1d(
+        cls,
+        block_weight: _torch.Tensor,
+        block_importance: _torch.Tensor,
+        config: KMeansConfig,
+    ) -> _Tuple[_torch.Tensor, _torch.Tensor]:
+        """
+        Cluster weights such that each centroid is a 1d scalar, i.e., cluster_dim == 1.
+        """
+        num_clusters = 2**config.n_bits
+
+        block_weight_flatten = block_weight.flatten()
+        if block_importance is not None:
+            block_importance_flatten = block_importance.flatten()
+            kmeans_results = _kmeans1d.cluster(
+                block_weight_flatten.numpy(),
+                num_clusters,
+                weights=block_importance_flatten.numpy(),
+            )
+        else:
+            kmeans_results = _kmeans1d.cluster(block_weight_flatten.numpy(), num_clusters)
+        return _torch.tensor(kmeans_results.centroids), _torch.tensor(kmeans_results.clusters)
+
+    @classmethod
+    def _cluster_weights_2d(
+        cls,
+        block_weight: _torch.Tensor,
+        block_importance: _torch.Tensor,
+        config: KMeansConfig,
+        rank: int,
+    ) -> _Tuple[_torch.Tensor, _torch.Tensor]:
+        """
+        Cluster weights such that each centroid is a 2d vector, i.e., cluster_dim > 1.
+        If axis = 0: vectors are chosen with elements along the output channel dimension.
+        Example:
+            weight = [
+                       [1, 2, 3, 4],
+                       [5, 6, 7, 8],
+                    ]
+            axis = 0
+            ========
+            clustering is done for the 4 points below:
+                [
+                  [1, 5], ---> point 1
+                  [2, 6], ---> point 2
+                  [3, 7], ---> point 3
+                  [4, 8], ---> point 4
+                ]
+            axis = 1
+            ========
+            clustering is done for the 4 points below:
+                [
+                  [1, 2], ---> point 1
+                  [3, 4], ---> point 2
+                  [5, 6], ---> point 3
+                  [7, 8], ---> point 4
+                ]
+        """
+        num_clusters = 2**config.n_bits
+
+        # Convert weight from N-D to 2-D.
+        # Apply 2-D k-means clustering on 2-D weights.
+        if config.axis == 0:
+            # (C_out, C_in, H, W) -> (C_in, C_out, H, W)
+            # (C_in, C_out, H, W) -> (C_in * H * W * C_out // cluster_dim, cluster_dim)
+            weight_2d = block_weight.transpose(0, 1).reshape(-1, config.cluster_dim)
+            importance_2d = (
+                block_importance.transpose(0, 1)
+                .reshape(-1, config.cluster_dim)
+                .sum(dim=1, keepdim=True)
+                if block_importance is not None
+                else None
+            )
+        else:
+            # (C_out, C_in, H, W) -> (C_in, C_out * H * W) -> (C_out * H * W, C_in)
+            # (C_out * H * W, C_in) -> (C_out * H * W * C_in // cluster_dim, cluster_dim)
+            weight_2d = block_weight.reshape(-1, config.cluster_dim)
+            importance_2d = (
+                block_importance.reshape(-1, config.cluster_dim).sum(dim=1, keepdim=True)
+                if block_importance is not None
+                else None
+            )
+
+        # Optionally move tensors to GPU
+        if _torch.cuda.is_available():
+            device_id = rank % _torch.cuda.device_count()
+            weight_2d = weight_2d.to(f"cuda:{device_id}")
+            importance_2d = (
+                importance_2d.to(f"cuda:{device_id}") if importance_2d is not None else None
+            )
+
+        kmeans_results = _EfficientKMeans(
+            n_clusters=num_clusters,
+            init="kmeans++",
+            n_init=5,
+            max_iter=300,
+        ).fit(weight_2d, sample_weight=importance_2d)
+
+        weight_2d.cpu()
+        if importance_2d is not None:
+            importance_2d.cpu()
+
+        return kmeans_results.cluster_centers_.cpu(), kmeans_results.labels_.cpu()
+
+    @classmethod
+    def _update_clustered_block_weight(
+        cls,
+        block_weight: _torch.Tensor,
+        block_mask: _torch.Tensor,
+        depalett_block_weight: _torch.Tensor,
+        new_weight: _torch.Tensor,
+        config: KMeansConfig,
+        block_idx: int,
+    ):
+        """
+        Write back clustered weight in new weight.
+        """
+        block_weight_flatten = block_weight.flatten()
+
+        if block_mask is not None:
+            new_block_weight = block_weight_flatten.clone()
+            new_block_weight[block_mask] = depalett_block_weight
+            new_block_weight = new_block_weight.reshape(block_weight.shape)
+        else:
+            if config.axis == 1 or config.cluster_dim == 1:
+                new_block_weight = depalett_block_weight.reshape(block_weight.shape)
+            else:
+                # need to reshape back for cluster_dim > 1 and axis = 0
+                new_block_weight = depalett_block_weight.reshape(
+                    block_weight.shape[1], block_weight.shape[0]
+                ).transpose(0, 1)
+
+        if config.axis == 0:
+            new_weight[block_idx : block_idx + config.block_size, :] = new_block_weight
+        else:
+            new_weight[:, block_idx : block_idx + config.block_size] = new_block_weight
+
+    @classmethod
     @_torch.no_grad()
     def _cluster_weights_worker(
         cls,
+        rank: int,
         work_q: _Union[_mp.Queue, _queue.Queue],
         results_q: _Union[_mp.Queue, _queue.Queue],
     ):
@@ -479,172 +684,78 @@ class KMeans:
 
             _logger.info(f"Starting to process layer {layer_name}")
 
-            (
-                n_bits,
-                axis,
-                lut_dtype,
-                block_size,
-                cluster_dim,
-                mask,
-                importance,
-                enable_per_channel_scale,
-            ) = (
-                config.n_bits,
-                config.axis,
-                config.lut_dtype,
-                config.block_size,
-                config.cluster_dim,
-                config.mask,
-                config.importance,
-                config.enable_per_channel_scale,
-            )
-
             new_weight = _torch.zeros_like(weight, dtype=weight.dtype)
-            num_clusters = 2**n_bits
 
             _logger.info(
-                f"Number of blocks in {layer_name}.{weight_name}: {weight.shape[axis] // block_size}"
+                f"Number of blocks in {layer_name}.{weight_name}: {weight.shape[config.axis] // config.block_size}"
             )
 
             lut_quant_scale = []
             lut_quant_zp = []
-            # 1-D clustering (block_size is activated and cluster_dim = 1).
-            if cluster_dim == 1:
-                for block_idx in range(0, weight.shape[axis], block_size):
-                    if axis == 0:
-                        block_importance = (
-                            importance[block_idx : block_idx + block_size, :].flatten()
-                            if importance is not None
-                            else None
-                        )
-                        block_weight = weight[block_idx : block_idx + block_size, :]
-                        block_mask = (
-                            mask[block_idx : block_idx + block_size, :].flatten()
-                            if mask is not None
-                            else None
+
+            for block_idx in range(0, weight.shape[config.axis], config.block_size):
+                block_weight, block_importance, block_mask = cls._get_block_to_cluster(
+                    weight, config, block_idx
+                )
+
+                if block_mask is not None:
+                    if config.cluster_dim == 1:
+                        centroids, clusters = cls._cluster_weights_with_masking(
+                            block_weight, block_importance, block_mask, config
                         )
                     else:
-                        block_importance = (
-                            importance[:, block_idx : block_idx + block_size].flatten()
-                            if importance is not None
-                            else None
+                        # Masking not supported for cluster_dim > 1
+                        centroids, clusters = None, None
+                        _logger.info(
+                            f"Skipping palettizing layer: {layer_name} with "
+                            f"cluster_dim: {config.cluster_dim} and mask, because "
+                            f"vector palettization with masking is not supported."
                         )
-                        block_weight = weight[:, block_idx : block_idx + block_size]
-                        block_mask = (
-                            mask[:, block_idx : block_idx + block_size].flatten()
-                            if mask is not None
-                            else None
+                        new_weight = weight.clone()
+                else:
+                    if config.cluster_dim == 1:
+                        centroids, clusters = cls._cluster_weights_1d(
+                            block_weight, block_importance, config
                         )
-
-                    block_weight_flatten = block_weight.flatten()
-                    if block_mask is not None:
-                        block_weight_flatten_masked = block_weight_flatten[block_mask]
-                        if len(block_weight_flatten_masked) > 0:
-                            if block_importance is not None:
-                                kmeans_results = _kmeans1d.cluster(
-                                    block_weight_flatten_masked.numpy(),
-                                    num_clusters,
-                                    weights=block_importance[block_mask].numpy(),
-                                )
-                            else:
-                                kmeans_results = _kmeans1d.cluster(
-                                    block_weight_flatten_masked.numpy(), num_clusters
-                                )
-                        else:
-                            kmeans_results = None
                     else:
-                        if block_importance is not None:
-                            kmeans_results = _kmeans1d.cluster(
-                                block_weight_flatten.numpy(),
-                                num_clusters,
-                                weights=block_importance.numpy(),
-                            )
-                        else:
-                            kmeans_results = _kmeans1d.cluster(
-                                block_weight_flatten.numpy(), num_clusters
-                            )
-
-                    centroids = (
-                        _np.array(kmeans_results.centroids) if kmeans_results is not None else None
-                    )
-                    clusters = (
-                        _np.array(kmeans_results.clusters) if kmeans_results is not None else None
-                    )
-
+                        centroids, clusters = cls._cluster_weights_2d(
+                            block_weight, block_importance, config, rank
+                        )
+                if centroids is not None and clusters is not None:
                     # quantize LUT
-                    if lut_dtype is not None:
-                        centroids, scale, zp = cls._quantize_centroids(lut_dtype, centroids)
+                    if config.lut_dtype is not None:
+                        centroids, scale, zp = cls._quantize_centroids(config.lut_dtype, centroids)
                         lut_quant_scale.append(scale)
                         if zp:
                             lut_quant_zp.append(zp)
 
-                    if block_mask is not None:
-                        new_block_weight = block_weight_flatten.clone()
-                        if kmeans_results is not None:
-                            new_block_weight[block_mask] = _torch.tensor(
-                                centroids[clusters], dtype=weight.dtype
-                            )
-                        new_block_weight = new_block_weight.reshape(block_weight.shape)
-                    else:
-                        new_block_weight = _torch.tensor(
-                            centroids[clusters], dtype=weight.dtype
-                        ).reshape(block_weight.shape)
-                    if axis == 0:
-                        new_weight[block_idx : block_idx + block_size, :] = new_block_weight
-                    else:
-                        new_weight[:, block_idx : block_idx + block_size] = new_block_weight
+                    depalett_block_weight = centroids[clusters].to(weight.dtype)
 
-            # 2-D clustering. (cluster_dim is activated and block_size is ignored).
-            # Not yet support with block_mask/block_importance (ignoring both).
-            else:
-                # Convert weight from N-D to 2-D. E.g. (Cin, W, H, Cout) -> (cluster_dim, Cin/cluster_dim * W * H * Cout)
-                # Apply 2-D kmeans clustering on 2-D weights.
-                if axis == 0:
-                    weight_2d = weight.reshape(-1, cluster_dim)
-                else:
-                    weight_2d = weight.transpose(0, 1).reshape(-1, cluster_dim)
-
-                kmeans_results = _kmeans2d(n_clusters=num_clusters).fit(weight_2d.numpy())
-                centroids = (
-                    _np.array(kmeans_results.cluster_centers_)
-                    if kmeans_results is not None
-                    else None
-                )
-                clusters = _np.array(kmeans_results.labels_) if kmeans_results is not None else None
-
-                # quantize LUT
-                if lut_dtype is not None:
-                    centroids, scale, zp = cls._quantize_centroids(lut_dtype, centroids)
-                    lut_quant_scale.append(scale)
-                    if zp:
-                        lut_quant_zp.append(zp)
-
-                weight_palettized = _torch.tensor(centroids[clusters], dtype=weight.dtype)
-                if axis == 0:
-                    new_weight = weight_palettized.reshape(weight.shape)
-                else:
-                    new_weight = weight_palettized.reshape(
-                        weight.shape[1], weight.shape[0]
-                    ).transpose(0, 1)
-
-            if new_weight is not None:
-                _logger.info(
-                    f"Finished processing {weight_name} in layer {layer_name} successfully"
-                )
+                    cls._update_clustered_block_weight(
+                        block_weight,
+                        block_mask,
+                        depalett_block_weight,
+                        new_weight,
+                        config,
+                        block_idx,
+                    )
 
             # Combine quantization scales / zp for all LUTs into single tensor
             scale, zp = None, None
-            if lut_dtype is not None:
-                scale = _torch.stack(lut_quant_scale, dim=axis)
+            if config.lut_dtype is not None and len(lut_quant_scale) > 0:
+                scale = _torch.stack(lut_quant_scale, dim=config.axis)
                 if len(lut_quant_zp) > 0:
-                    zp = _torch.stack(lut_quant_zp, dim=axis)
+                    zp = _torch.stack(lut_quant_zp, dim=config.axis)
+
+            _logger.info(f"Finished processing {weight_name} in layer {layer_name} successfully")
 
             results_q.put((layer_name, weight_name, new_weight, scale, zp))
 
         _logger.info("Process done, work queue is empty")
 
     @classmethod
-    def _quantize_centroids(self, dtype: _torch.dtype, centroids: _torch.Tensor):
+    def _quantize_centroids(cls, dtype: _torch.dtype, centroids: _torch.Tensor):
+        centroids = centroids.numpy()
         ret = _compute_qparams(
             weight=centroids,
             nbits=get_n_bits_from_dtype(dtype),
@@ -868,7 +979,7 @@ class ParallelKMeans(KMeans):
         worker_processes = [
             ctx.Process(
                 target=cls._cluster_weights_worker,
-                args=(work_q, results_q),
+                args=(rank, work_q, results_q),
                 name=f"Process-{rank}",
                 daemon=True,
             )
@@ -914,7 +1025,7 @@ class SequentialKMeans(KMeans):
         results_q: _Union[_mp.Queue, _queue.Queue],
         worker_processes: _Optional[_List[_mp.Process]],
     ):
-        cls._cluster_weights_worker(work_q, results_q)
+        cls._cluster_weights_worker(0, work_q, results_q)
 
     @classmethod
     def _join_worker_processes(cls, worker_processes: _Optional[_List[_mp.Process]]):

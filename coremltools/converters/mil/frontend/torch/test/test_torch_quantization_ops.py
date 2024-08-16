@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+from contextlib import nullcontext
 from typing import Optional
 
 import numpy as np
@@ -633,18 +634,32 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, n_bits, group_size, channel_axis, minimum_deployment_target",
+        "compute_unit, n_bits, group_size, channel_axis, cluster_dim, minimum_deployment_target",
         itertools.product(
             compute_units,
             [4, 8],
             [0, 1, 2],
             [0, 1],
+            [1, 2],
             [ct.target.iOS16, ct.target.iOS18],
         ),
     )
     def test_palettization(
-        self, compute_unit, n_bits, group_size, channel_axis, minimum_deployment_target
+        self, compute_unit, n_bits, group_size, channel_axis, cluster_dim, minimum_deployment_target
     ):
+        if (
+            group_size in (0, 2)
+            and cluster_dim == 2
+            and minimum_deployment_target == ct.target.iOS18
+        ):
+            pytest.xfail("rdar://131964912 [Quantization] Test Should not Overflow FP16")
+
+        if cluster_dim > 1:
+            if minimum_deployment_target < ct.target.iOS18:
+                pytest.skip("Vector palettization is only supported in iOS18+")
+            if group_size != 0 and group_size < cluster_dim:
+                pytest.skip("Cluster dim must <= group size.")
+
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
             multi_layer=True
         )
@@ -653,8 +668,12 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
         scale_1 = np.array([2.0] * 32, dtype=np.float32).reshape(32, 1, 1, 1)
         scale_2 = np.array([3.0] * 64, dtype=np.float32).reshape(64, 1, 1, 1)
 
-        unique_weight_1 = create_unique_weight(model.conv_1.weight, nbits=n_bits)
-        unique_weight_2 = create_unique_weight(model.conv_2.weight, nbits=n_bits)
+        unique_weight_1 = create_unique_weight(
+            model.conv_1.weight, nbits=n_bits, vector_size=cluster_dim, vector_axis=channel_axis
+        )
+        unique_weight_2 = create_unique_weight(
+            model.conv_2.weight, nbits=n_bits, vector_size=cluster_dim, vector_axis=channel_axis
+        )
 
         # Use grouped-channel-wise lut for conv1 for iOS18+.
         block_sizes = [0] * len(unique_weight_1.shape)
@@ -665,11 +684,18 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
             "UNIQUE",
             nbits=n_bits,
             block_sizes=block_sizes,
+            cluster_dim=cluster_dim,
+            channel_axis=channel_axis,
         )
 
         # Use per-tensor lut for conv2.
         lut_2_params = _quantization_passes.palettize_weights.blockwise_compress(
-            unique_weight_2, "UNIQUE", nbits=n_bits, block_sizes=[0] * len(unique_weight_2.shape)
+            unique_weight_2,
+            "UNIQUE",
+            nbits=n_bits,
+            block_sizes=[0] * len(unique_weight_2.shape),
+            cluster_dim=cluster_dim,
+            channel_axis=channel_axis,
         )
 
         if minimum_deployment_target >= ct.target.iOS18:
@@ -703,15 +729,15 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
             minimum_deployment_target=minimum_deployment_target,
             compute_unit=compute_unit,
             converter=ct.convert,
+            rtol=0.2 if cluster_dim > 1 else 1e-5,  # Vector palettization has larger info loss.
         )
         main_func = res[1]._mil_program.functions["main"]
 
         if minimum_deployment_target >= ct.target.iOS18:
             expected_dtype = f"uint{n_bits}"
-            expected_quantize_ops_num = 0  # The scale is moved to post-conv.
+            expected_quantize_ops_num = 2
             expected_palettize_ops_num = 2
-            # The lut op is directly fed into conv because the quant scale is no longer there.
-            palettize_op_child_op_type = "conv"
+            palettize_op_child_op_type = "constexpr_blockwise_shift_scale"
         else:
             expected_dtype = "uint8"
             expected_quantize_ops_num = 0
@@ -726,6 +752,113 @@ class TestPytorchCarryCompressionInfo(TorchQuantizationBaseTest):
         for palettize_op in palettize_ops:
             assert types.builtin_to_string(palettize_op.indices.dtype) == expected_dtype
             assert palettize_op.outputs[0].child_ops[0].op_type == palettize_op_child_op_type
+            if minimum_deployment_target >= ct.target.iOS18:
+                assert palettize_op.lut.shape[-1] == cluster_dim
+
+    @pytest.mark.parametrize(
+        "compute_unit, minimum_deployment_target",
+        itertools.product(compute_units, [ct.target.iOS16, ct.target.iOS18]),
+    )
+    def test_palettization_8bit_lut(self, compute_unit, minimum_deployment_target):
+        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data(
+            multi_layer=True
+        )
+        unique_weight_1 = create_unique_weight(model.conv_1.weight, nbits=4)
+        unique_weight_2 = create_unique_weight(model.conv_2.weight, nbits=6)
+
+        lut_1_params = _quantization_passes.palettize_weights.grouped_channelwise_compress(
+            unique_weight_1,
+            "UNIQUE",
+            nbits=4,
+            channel_axis=0,
+            channel_group_size=0,
+        )
+        quant_1_params = _quantization_passes.linear_quantize_weights.blockwise_compress(
+            lut_1_params.lut,
+            nbits=8,
+            mode="LINEAR",
+            signed=True,
+            block_sizes=[0] * len(lut_1_params.lut.shape),
+        )
+        lut_2_params = _quantization_passes.palettize_weights.grouped_channelwise_compress(
+            unique_weight_2,
+            "UNIQUE",
+            nbits=6,
+            channel_axis=1,
+            channel_group_size=0,
+        )
+        quant_2_params = _quantization_passes.linear_quantize_weights.blockwise_compress(
+            lut_2_params.lut,
+            nbits=8,
+            mode="LINEAR_SYMMETRIC",
+            signed=False,
+            block_sizes=[0] * len(lut_2_params.lut.shape),
+        )
+
+        # Reconstruct the weight in torch model for numerical comparison.
+        dequantized_lut_1 = _quantization_passes.linear_quantize_weights.decompress(quant_1_params)
+        reconstruct_weight_1 = _quantization_passes.palettize_weights.decompress(
+            lut_1_params._replace(lut=dequantized_lut_1)
+        )
+        dequantized_lut_2 = _quantization_passes.linear_quantize_weights.decompress(quant_2_params)
+        reconstruct_weight_2 = _quantization_passes.palettize_weights.decompress(
+            lut_2_params._replace(lut=dequantized_lut_2)
+        )
+        with torch.no_grad():
+            model.conv_1.weight = torch.nn.Parameter(torch.Tensor(reconstruct_weight_1))
+            model.conv_2.weight = torch.nn.Parameter(torch.Tensor(reconstruct_weight_2))
+
+        # Register buffers for compression metadata.
+        model.register_buffer("_COREML_/metadata_version", torch.tensor(1))
+        model.conv_1.register_buffer("_COREML_/weight/compression_type", torch.tensor([2, 3]))
+        model.conv_1.register_buffer("_COREML_/weight/lut", torch.tensor(dequantized_lut_1))
+        model.conv_1.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(8))
+        model.conv_1.register_buffer(
+            "_COREML_/weight/quantization_scale", torch.from_numpy(quant_1_params.scale)
+        )
+        model.conv_1.register_buffer(
+            "_COREML_/weight/zero_point", torch.from_numpy(quant_1_params.offset)
+        )
+        model.conv_2.register_buffer("_COREML_/weight/compression_type", torch.tensor([2, 3]))
+        model.conv_2.register_buffer("_COREML_/weight/lut", torch.tensor(dequantized_lut_2))
+        model.conv_2.register_buffer("_COREML_/weight/quantization_n_bits", torch.tensor(8))
+        model.conv_2.register_buffer(
+            "_COREML_/weight/quantization_scale", torch.from_numpy(quant_2_params.scale)
+        )
+        model.conv_2.register_buffer(
+            "_COREML_/weight/zero_point", torch.from_numpy(quant_2_params.offset)
+        )
+
+        traced_model = torch.jit.trace(model, torch_input_values)
+        input_shape = [input.shape.to_list() for input in inputs]
+
+        pytest_context_manager = nullcontext()
+        if minimum_deployment_target < ct.target.iOS18:
+            pytest_context_manager = pytest.raises(
+                ValueError, match="Please set minimum_deployment_target to iOS18 or later"
+            )
+
+        with pytest_context_manager:
+            res = self.run_compare_torch(
+                input_shape,
+                traced_model,
+                minimum_deployment_target=minimum_deployment_target,
+                compute_unit=compute_unit,
+                converter=ct.convert,
+            )
+
+        if minimum_deployment_target < ct.target.iOS18:
+            return
+
+        main_func = res[1]._mil_program.functions["main"]
+        quantize_ops = main_func.find_ops(op_type="constexpr_blockwise_shift_scale")
+        assert len(quantize_ops) == 2
+        palettize_ops = main_func.find_ops(op_type="constexpr_lut_to_dense")
+        assert len(palettize_ops) == 2
+        assert types.builtin_to_string(palettize_ops[0].indices.dtype) == "uint4"
+        assert types.builtin_to_string(palettize_ops[1].indices.dtype) == "uint6"
+        for palettize_op in palettize_ops:
+            assert palettize_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
 
     @pytest.mark.parametrize(
         "compute_unit, sparse_ratio, minimum_deployment_target",

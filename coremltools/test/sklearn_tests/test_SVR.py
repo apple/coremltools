@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
+from ..utils import load_boston
 from coremltools._deps import (_HAS_LIBSVM, _HAS_SKLEARN, MSG_LIBSVM_NOT_FOUND,
                                MSG_SKLEARN_NOT_FOUND)
 from coremltools.models.utils import (_is_macos, _macos_version,
@@ -22,7 +23,6 @@ if _HAS_LIBSVM:
     from coremltools.converters import libsvm
 
 if _HAS_SKLEARN:
-    from sklearn.datasets import load_boston
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import SVR
 

@@ -8,7 +8,6 @@ import itertools
 import numpy as np
 import pytest
 
-import coremltools as ct
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.converters.mil.mil.ops.defs.iOS18 import _IOS18_TARGET
@@ -62,11 +61,6 @@ class TestCoreMLUpdateState:
         ),
     )
     def test_coreml_update_stress(self, compute_unit, backend, shape):
-        if not compute_unit in (ct.ComputeUnit.CPU_ONLY, ct.ComputeUnit.CPU_AND_GPU):
-            pytest.xfail(
-                "rdar://128446982 ([Bug][Stateful model] Stateful model fails to run on ANE)"
-            )
-
         def build(x_in, y_in, z_in):
             def increase_val_by_one(state, input):
                 v = mb.add(x=input, y=np.float16(1))

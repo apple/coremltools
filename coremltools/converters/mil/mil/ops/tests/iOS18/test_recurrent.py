@@ -13,7 +13,6 @@ import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.mil.ops.tests.iOS17.test_recurrent import TestGRU as _TestGRU_iOS17
 from coremltools.converters.mil.mil.ops.tests.iOS18 import backends
-from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
 from coremltools.converters.mil.testing_reqs import compute_units
 
 
