@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -110,7 +110,12 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
 
 <span class="kn">from</span> <span class="nn">.block</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">curr_block</span>
-<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="n">InternalInputType</span><span class="p">,</span> <span class="n">ListOrTensorInputType</span><span class="p">,</span> <span class="n">TensorInputType</span><span class="p">,</span> <span class="n">TupleInputType</span>
+<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">InternalInputType</span><span class="p">,</span>
+    <span class="n">ListOrTensorOrDictInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">TupleInputType</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.program</span> <span class="kn">import</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">StateTensorPlaceholder</span>
 <span class="kn">from</span> <span class="nn">.scope</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">SCOPE_STACK</span><span class="p">,</span>
@@ -179,15 +184,15 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_add_const</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add const </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="s2">&quot;Python native vals (list, tuple), np.array that are&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;operation inputs cannot have symbolic values. Consider feeding&quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;symbolic shape in through placeholder and use mb.shape() &quot;</span>
-                <span class="o">+</span> <span class="s2">&quot;operator. Input </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+            <span class="n">err_msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Cannot add const </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                <span class="n">err_msg</span> <span class="o">+=</span> <span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Python native vals (list, tuple), np.array that are&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;operation inputs cannot have symbolic values. Consider feeding&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot;symbolic shape in through placeholder and use mb.shape() &quot;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;operator. Input </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">val</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err_msg</span><span class="p">)</span>
         <span class="n">const_name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_free_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding const op &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">const_name</span><span class="p">))</span>
         <span class="n">output_var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">const</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">const_name</span><span class="p">,</span>
@@ -249,7 +254,7 @@
                 <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="p">(</span><span class="n">TensorInputType</span><span class="p">,</span> <span class="n">ListOrTensorInputType</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="p">(</span><span class="n">TensorInputType</span><span class="p">,</span> <span class="n">ListOrTensorOrDictInputType</span><span class="p">)):</span>
                 <span class="n">var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_add_const</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">new_var_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">)</span>
                 <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
 

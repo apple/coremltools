@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -101,6 +101,7 @@
 <span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="n">EnumeratedShapes</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">,</span> <span class="n">Shape</span>
@@ -219,7 +220,7 @@
     <span class="k">def</span> <span class="nf">_replace_invalid_char_with_underscore</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s2">&quot;[^a-zA-Z0-9_]&quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">sanitize_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">sanitize_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">allow_prefix_underscore</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Sanitize the input string and return it back.</span>
 <span class="sd">        Input string should be of the format: [a-zA-Z_][a-zA-Z0-9_]*</span>
@@ -273,6 +274,11 @@
         <span class="p">]</span>
         <span class="k">if</span> <span class="n">new_name</span> <span class="ow">in</span> <span class="n">reserved_names</span><span class="p">:</span>
             <span class="n">new_name</span> <span class="o">+=</span> <span class="s2">&quot;_workaround&quot;</span>
+
+        <span class="c1"># if the name start with _, we append &quot;var&quot; in front of it</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_prefix_underscore</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">new_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">):</span>
+                <span class="n">new_name</span> <span class="o">=</span> <span class="s2">&quot;var&quot;</span> <span class="o">+</span> <span class="n">new_name</span>
 
         <span class="k">if</span> <span class="n">new_name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
             <span class="c1"># return if nothing has changed</span>

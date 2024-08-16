@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -282,14 +282,14 @@
         <span class="k">assert</span> <span class="n">select_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;select&quot;</span>
         <span class="k">assert</span> <span class="n">cond_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 
-        <span class="c1"># check if a or b is inf const</span>
+        <span class="c1"># check if a or b is all infinity constants</span>
         <span class="c1"># if a is not but b is, then swap a and b</span>
         <span class="n">a</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="n">b</span><span class="p">:</span> <span class="n">Var</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">a_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a_val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e38</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">a_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">a_val</span><span class="p">))):</span>
             <span class="n">a</span> <span class="o">=</span> <span class="n">a_val</span>
             <span class="n">b</span> <span class="o">=</span> <span class="n">select_op</span><span class="o">.</span><span class="n">b</span>
-        <span class="k">elif</span> <span class="n">b_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">b_val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">1e38</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="n">b_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">b_val</span><span class="p">))):</span>
             <span class="n">a</span> <span class="o">=</span> <span class="n">b_val</span>
             <span class="n">b</span> <span class="o">=</span> <span class="n">select_op</span><span class="o">.</span><span class="n">a</span>
             <span class="n">cond_val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="n">cond_val</span><span class="p">)</span>

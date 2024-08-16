@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -615,7 +615,11 @@
 <span class="sd">    Notice that the cast will not be inserted if the const value is out of int16/uint16 range.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Ops that prefer int16 params.</span>
-    <span class="n">_PREFER_INT16_OPS</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;gather&quot;</span><span class="p">,</span> <span class="s2">&quot;gather_along_axis&quot;</span><span class="p">,</span> <span class="s2">&quot;gather_nd&quot;</span><span class="p">}</span>
+    <span class="c1"># If an op supports 16-bit only in later iOS (e.g. gather started to support 16-bit from iOS16)</span>
+    <span class="c1"># then int16 cast will be inserted only if the iOS version is high enough</span>
+    <span class="c1"># (e.g. nothing will happen for iOS15 gather)</span>
+    <span class="c1"># This is achieved by type domain confirmation in `CastTypeQuantization.should_cast_parameter`</span>
+    <span class="n">_PREFER_INT16_OPS</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;gather&quot;</span><span class="p">,</span> <span class="s2">&quot;gather_along_axis&quot;</span><span class="p">,</span> <span class="s2">&quot;gather_nd&quot;</span><span class="p">,</span> <span class="s2">&quot;squeeze&quot;</span><span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>

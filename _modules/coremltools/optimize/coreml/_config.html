@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -784,6 +784,18 @@
 <span class="sd">        * Specify the channel axis to form a group of channels. Only effective when granularity is per_grouped_channel.</span>
 <span class="sd">        * Default to None, where the axis is automatically picked based on op type.</span>
 
+<span class="sd">    cluster_dim: int</span>
+<span class="sd">        * The dimension of centroids for each look up table. When cluster_dim == 1, it&#39;s scalar</span>
+<span class="sd">          palettization, where each entry in the lookup table is a scalar element. When cluster_dim &gt; 1,</span>
+<span class="sd">          it&#39;s vector palettization, where each entry in the lookup table is a vector of length cluster_dim.</span>
+<span class="sd">        * More specifically, when ``cluster_dim &gt; 1``, each ``cluster_dim`` length of weight vectors</span>
+<span class="sd">          along the channel axis are palettized using the same 2-D centroid. .</span>
+<span class="sd">        * Default to 1.</span>
+
+<span class="sd">    enable_per_channel_scale: bool</span>
+<span class="sd">        * When set to True, weights are normalized along the output channels using per channel</span>
+<span class="sd">          scales before being palettized.</span>
+
 <span class="sd">    num_kmeans_workers: int</span>
 <span class="sd">        * Number of worker processes to use for performing k-means. It is recommended to use more</span>
 <span class="sd">          than one worker process to parallelize the clustering, especially when multiple CPUs are available.</span>
@@ -808,6 +820,8 @@
     <span class="p">)</span>
     <span class="n">group_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
     <span class="n">channel_axis</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">cluster_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="n">enable_per_channel_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">))</span>
     <span class="n">num_kmeans_workers</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
     <span class="n">weight_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">2048</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_check_weight_threshold</span><span class="p">]))</span>
 

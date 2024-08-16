@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -101,8 +101,9 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Utilities for the entire package.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span> <span class="k">as</span> <span class="n">_OrderedDict</span>
 <span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">_copy</span>
+<span class="kn">import</span> <span class="nn">gc</span> <span class="k">as</span> <span class="nn">_gc</span>
 <span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
 <span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
@@ -114,6 +115,7 @@
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span> <span class="k">as</span> <span class="n">_lru_cache</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
@@ -121,18 +123,25 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">_ct</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span> <span class="n">_SPECIFICATION_VERSION_IOS_18</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">proto</span> <span class="k">as</span> <span class="n">_proto</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">mil</span> <span class="k">as</span> <span class="n">_mil</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">_mb</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.preprocess</span> <span class="kn">import</span> <span class="n">NameSanitizer</span> <span class="k">as</span> <span class="n">_NameSanitizer</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.defs.randomize</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">WeightRandomizer</span> <span class="k">as</span> <span class="n">_WeightRandomizer</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span> <span class="k">as</span> <span class="n">_AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.helper</span> <span class="kn">import</span> <span class="n">block_context_manager</span> <span class="k">as</span> <span class="n">_block_context_manager</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_pipeline</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">PassPipelineManager</span> <span class="k">as</span> <span class="n">_PassPipelineManager</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">PASS_REGISTRY</span> <span class="k">as</span> <span class="n">_PASS_REGISTRY</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Placeholder</span> <span class="k">as</span> <span class="n">_Placeholder</span>
 
 <span class="kn">from</span> <span class="nn">.._deps</span> <span class="kn">import</span> <span class="n">_HAS_SCIPY</span>
 
@@ -887,7 +896,7 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    spec: list of str or list of MLModel</span>
+<span class="sd">    model: list of str or list of MLModel</span>
 <span class="sd">        File to load the Model from, or a loaded</span>
 <span class="sd">        version of the MLModel.</span>
 
@@ -1391,7 +1400,6 @@
     <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span>
     <span class="n">specification_version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">pymil_load_func</span><span class="p">:</span> <span class="n">_Callable</span><span class="p">,</span>
-    <span class="n">skip_model_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Program</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility that converts an ``mlprogram`` model into PyMIL program.</span>
@@ -1421,7 +1429,6 @@
         <span class="n">model_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
         <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">file_weights_dir</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
-        <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">prog</span>
 
@@ -1430,26 +1437,27 @@
     <span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span>
     <span class="n">graph_pass</span><span class="p">:</span> <span class="n">_AbstractGraphPass</span><span class="p">,</span>
     <span class="n">spec_version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span>
-    <span class="n">skip_model_load</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">skip_model_load</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">pymil_load_func</span><span class="p">:</span> <span class="n">_Callable</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">,</span>
     <span class="n">return_pymil_prog</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Union</span><span class="p">[</span><span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span> <span class="n">_Program</span><span class="p">]:</span>
     <span class="c1"># We do the lazy import to prevent circular import</span>
     <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
 
+    <span class="k">if</span> <span class="n">skip_model_load</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Determine if skip the model load by the original mlmodel.</span>
+        <span class="n">skip_model_load</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">__proxy__</span> <span class="ow">is</span> <span class="kc">None</span>
+
     <span class="c1"># Utility function which compresses a Core ML model</span>
     <span class="c1"># Converts the full precision mlmodel into a pymil program</span>
     <span class="n">model_spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
     <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">spec_version</span><span class="p">)</span>
-    <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span>
-        <span class="n">mlmodel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">,</span> <span class="n">pymil_load_func</span><span class="p">,</span> <span class="n">skip_model_load</span>
-    <span class="p">)</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_convert_model_spec_to_pymil_prog</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">,</span> <span class="n">pymil_load_func</span><span class="p">)</span>
 
     <span class="c1"># Apply graph pass.</span>
-    <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">))</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span>
         <span class="n">graph_pass</span><span class="p">,</span> <span class="n">_AbstractGraphPass</span>
-    <span class="p">),</span> <span class="s2">&quot;graph pass must be an AbstractGraphPass instance&quot;</span>
+    <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;graph pass must be an AbstractGraphPass instance, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
     <span class="n">graph_pass</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
 
     <span class="c1"># An early return can prevent running all other optimization paths triggered by _mil_convert.</span>
@@ -1637,6 +1645,15 @@
 
 
 
+<span class="k">def</span> <span class="nf">_multifunction_program_append_unifunction_program</span><span class="p">(</span>
+    <span class="n">multifunction_prog</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span>
+    <span class="n">unifunction_prog</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span>
+    <span class="n">src_func_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">target_func_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">multifunction_prog</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">target_func_name</span><span class="p">,</span> <span class="n">unifunction_prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">src_func_name</span><span class="p">])</span>
+
+
 <div class="viewcode-block" id="save_multifunction">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.save_multifunction">[docs]</a>
 <span class="k">def</span> <span class="nf">save_multifunction</span><span class="p">(</span>
@@ -1665,7 +1682,7 @@
 <span class="sd">        desc.add_function(&quot;my_model_2.mlpackage&quot;, &quot;main&quot;, &quot;main_2&quot;)</span>
 <span class="sd">        desc.default_function_name = &quot;main_2&quot;</span>
 
-<span class="sd">        save_multifunction(desc, &quot;multifunctino_model.mlpackage&quot;)</span>
+<span class="sd">        save_multifunction(desc, &quot;multifunction_model.mlpackage&quot;)</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -1737,7 +1754,9 @@
         <span class="n">model_path</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">src_func_name</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">prog</span> <span class="o">=</span> <span class="n">modelpath_to_pymil</span><span class="p">[</span><span class="n">model_path</span><span class="p">]</span>
-        <span class="n">multifunction_prog</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">target_func_name</span><span class="p">,</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="n">src_func_name</span><span class="p">])</span>
+        <span class="n">_ct</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_multifunction_program_append_unifunction_program</span><span class="p">(</span>
+            <span class="n">multifunction_prog</span><span class="p">,</span> <span class="n">prog</span><span class="p">,</span> <span class="n">src_func_name</span><span class="p">,</span> <span class="n">target_func_name</span>
+        <span class="p">)</span>
 
         <span class="c1"># get the corresponding function description from the spec</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">modelpath_to_spec_and_weightdir</span><span class="p">[</span><span class="n">model_path</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
@@ -1788,6 +1807,154 @@
 
 
 
+<div class="viewcode-block" id="materialize_dynamic_shape_mlmodel">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.materialize_dynamic_shape_mlmodel">[docs]</a>
+<span class="k">def</span> <span class="nf">materialize_dynamic_shape_mlmodel</span><span class="p">(</span>
+    <span class="n">dynamic_shape_mlmodel</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span>
+    <span class="n">function_name_to_materialization_map</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]],</span>
+    <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">source_function_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Given a dynamic-shape mlmodel, materialize symbols to create fixed-shape functions,</span>
+<span class="sd">    then save as an .mlpackage to destination path.</span>
+<span class="sd">    To save memory, the pymil program of input dynamic-shape mlmodel is re-used.</span>
+<span class="sd">    Constant deduplication across functions is performed to allow weight sharing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dynamic_shape_mlmodel : ct.models.MLModel</span>
+<span class="sd">        A dynamic-shape mlmodel to be materialized</span>
+
+<span class="sd">    function_name_to_materialization_map: Dict[str, Dict[str, Tuple[int]]]</span>
+<span class="sd">        A dictionary specifying the name of new functions to be created,</span>
+<span class="sd">        and for each new function what is the new fixed shapes for inputs.</span>
+<span class="sd">        If a new function has the same name as an old function,</span>
+<span class="sd">        then the old function will be overridden</span>
+
+<span class="sd">    destination_path : str</span>
+<span class="sd">        The saved .mlpackage model path</span>
+
+<span class="sd">    source_function_name: str</span>
+<span class="sd">        The name of the source symbolic-shape function to be materialized, default = main</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        from coremltools.utils import materialize_dynamic_shape_mlmodel</span>
+
+<span class="sd">        # A dynamic-shape mlmodel you have converted</span>
+<span class="sd">        dynamic_shape_mlmodel: ct.models.MLModel</span>
+
+<span class="sd">        # As an example, let us assume the inputs are</span>
+<span class="sd">        # 1. ``input_ids (1, query_length)``</span>
+<span class="sd">        # 2. ``mask (query_length, context_length)``</span>
+<span class="sd">        function_name_to_materialization_map = {</span>
+<span class="sd">            &quot;function_name_to_materialization_map&quot;: {</span>
+<span class="sd">                &quot;materialization_2_3&quot;: {&quot;input_ids&quot;: (1, 2), &quot;mask&quot;: (2, 3)},</span>
+<span class="sd">                &quot;materialization_4_5&quot;: {&quot;input_ids&quot;: (1, 4), &quot;mask&quot;: (4, 5)},</span>
+<span class="sd">            }</span>
+<span class="sd">        }</span>
+
+<span class="sd">        materialize_dynamic_shape_mlmodel(</span>
+<span class="sd">            dynamic_shape_mlmodel,</span>
+<span class="sd">            function_name_to_materialization_map,</span>
+<span class="sd">            &quot;materialized_model.mlpackage&quot;,</span>
+<span class="sd">        )</span>
+
+<span class="sd">    To make prediction from the materialized mlmodel, load the desired materialized function</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        materialization_2_3 = ct.models.MLModel(</span>
+<span class="sd">            &quot;materialized_model.mlpackage&quot;, function_name=&quot;materialization_2_3&quot;</span>
+<span class="sd">        )</span>
+<span class="sd">        materialization_4_5 = ct.models.MLModel(</span>
+<span class="sd">            &quot;materialized_model.mlpackage&quot;, function_name=&quot;materialization_4_5&quot;</span>
+<span class="sd">        )</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    coremltools.converters.mil.mil.passes.defs.experiment.materialize_symbolic_shape_program</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># We do the lazy import to prevent circular import</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dynamic_shape_mlmodel</span><span class="p">,</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Dynamic shape mlmodel must be type of ct.models.MLModel, &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">dynamic_shape_mlmodel</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+    <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;multiArrayType&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Only tensor input is handled yet&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="s2">&quot;multiArrayType&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Only tensor output is handled yet&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_mil_program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dynamic_shape_prog</span> <span class="o">=</span> <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_mil_program</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">dynamic_shape_prog</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+            <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span>
+            <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span>
+            <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Materialize symbolic shapes, then run all optimization passes</span>
+    <span class="n">pass_pipeline</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT</span>
+    <span class="n">pass_pipeline</span><span class="o">.</span><span class="n">insert_pass</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;common::materialize_symbolic_shape_program&quot;</span><span class="p">)</span>
+    <span class="n">pass_pipeline</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+        <span class="s2">&quot;common::materialize_symbolic_shape_program&quot;</span><span class="p">,</span>
+        <span class="p">{</span>
+            <span class="s2">&quot;function_name_to_materialization_map&quot;</span><span class="p">:</span> <span class="n">function_name_to_materialization_map</span><span class="p">,</span>
+            <span class="s2">&quot;source_function_name&quot;</span><span class="p">:</span> <span class="n">source_function_name</span><span class="p">,</span>
+        <span class="p">},</span>
+    <span class="p">)</span>
+    <span class="n">_PassPipelineManager</span><span class="o">.</span><span class="n">apply_pipeline</span><span class="p">(</span><span class="n">dynamic_shape_prog</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="p">)</span>
+
+    <span class="c1"># Weights are duplicated in each materialized new function</span>
+    <span class="c1"># By default, graph pass const_deduplication will not deduplicate across functions,</span>
+    <span class="c1"># so we need to call it explicitly here</span>
+    <span class="n">const_deduplication_pass</span> <span class="o">=</span> <span class="n">_PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::const_deduplication&quot;</span><span class="p">]</span>
+    <span class="n">const_deduplication_pass</span><span class="o">.</span><span class="n">_deduplicate_const_across_functions</span><span class="p">(</span><span class="n">dynamic_shape_prog</span><span class="p">)</span>
+
+    <span class="n">export_multi_functions</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># If source function is the only function in source model,</span>
+    <span class="c1"># and source function is replaced with materialization,</span>
+    <span class="c1"># and materialization does not create other functions,</span>
+    <span class="c1"># then we will end up with a unifunction model</span>
+    <span class="c1"># Core ML distinguishs &quot;unifunction model&quot; and &quot;multifunction model with only 1 function&quot;</span>
+    <span class="k">if</span> <span class="p">(</span>
+        <span class="nb">len</span><span class="p">(</span><span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">function_name_to_materialization_map</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="ow">and</span> <span class="n">source_function_name</span> <span class="ow">in</span> <span class="n">function_name_to_materialization_map</span>
+    <span class="p">):</span>
+        <span class="n">export_multi_functions</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="c1"># Multifunciton is added in iOS 18, so</span>
+    <span class="c1"># * if export multifunction, then specification version has to be iOS 18+</span>
+    <span class="c1"># * else, specification version can be the same as original version</span>
+    <span class="n">specification_version</span> <span class="o">=</span> <span class="n">dynamic_shape_mlmodel</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">specificationVersion</span>
+    <span class="k">if</span> <span class="n">export_multi_functions</span><span class="p">:</span>
+        <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS18</span><span class="p">,</span> <span class="n">specification_version</span><span class="p">)</span>
+
+    <span class="n">dynamic_shape_prog</span><span class="o">.</span><span class="n">skip_all_passes</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">materialized_mlmodel</span> <span class="o">=</span> <span class="n">_mil_convert</span><span class="p">(</span>
+        <span class="n">dynamic_shape_prog</span><span class="p">,</span>
+        <span class="n">convert_from</span><span class="o">=</span><span class="s2">&quot;milinternal&quot;</span><span class="p">,</span>
+        <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+        <span class="n">export_multi_functions</span><span class="o">=</span><span class="n">export_multi_functions</span><span class="p">,</span>
+        <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="n">materialized_mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">destination_path</span><span class="p">)</span></div>
+
+
+
 <div class="viewcode-block" id="randomize_weights">
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.randomize_weights">[docs]</a>
 <span class="k">def</span> <span class="nf">randomize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">):</span>
@@ -1820,6 +1987,422 @@
     <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">randomized_mlmodel</span></div>
+
+
+
+<div class="viewcode-block" id="bisect_model">
+<a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.bisect_model">[docs]</a>
+<span class="k">def</span> <span class="nf">bisect_model</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">],</span>
+    <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">merge_chunks_to_pipeline</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">check_output_correctness</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to split a mlpackage model into two mlpackages of approximately same file size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model: str or MLModel</span>
+<span class="sd">        Path to the mlpackage file, or a Core ML model, to be split into two mlpackages of approximately same file size.</span>
+
+<span class="sd">    output_dir: str</span>
+<span class="sd">        Path to output directory where the two model chunks / pipeline model would be saved.</span>
+
+<span class="sd">        If the `model` is `{path}/{model_name}.mlpackage`, the chunk models are going to be saved as:</span>
+<span class="sd">        1. first chunk model: `{output_dir}/{model_name}_chunk1.mlpackage`</span>
+<span class="sd">        2. second chunk model: `{output_dir}/{model_name}_chunk2.mlpackage`</span>
+<span class="sd">        3. chunked pipeline model: `{output_dir}/{model_name}_chunked_pipeline.mlpackage`</span>
+
+<span class="sd">        If the `model` is type of `MLModel`, the chunk models are saved as:</span>
+<span class="sd">        1. first chunk model: `{output_dir}/chunk1.mlpackage`</span>
+<span class="sd">        2. second chunk model: `{output_dir}/chunk2.mlpackage`</span>
+<span class="sd">        3. chunked pipeline model: `{output_dir}/chunked_pipeline.mlpackage`</span>
+
+<span class="sd">    merge_chunks_to_pipeline: bool</span>
+<span class="sd">        If True, model chunks are managed inside a single pipeline model for easier asset maintenance.</span>
+
+<span class="sd">    check_output_correctness: bool</span>
+<span class="sd">        - If True, compares the outputs of original Core ML model with that of pipelined CoreML model chunks and reports PSNR in dB.</span>
+<span class="sd">        - Enabling this feature uses more memory. Disable it if your machine runs out of memory.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        import coremltools as ct</span>
+
+<span class="sd">        model_path = &quot;my_model.mlpackage&quot;</span>
+<span class="sd">        output_dir = &quot;./output/&quot;</span>
+
+<span class="sd">        # The following code will produce two smaller models:</span>
+<span class="sd">        # `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`</span>
+<span class="sd">        # It also compares the output numerical of the original Core ML model with the chunked models.</span>
+<span class="sd">        ct.models.utils.bisect_model(</span>
+<span class="sd">            model_path,</span>
+<span class="sd">            output_dir,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`</span>
+<span class="sd">        ct.models.utils.bisect_model(</span>
+<span class="sd">            model_path,</span>
+<span class="sd">            output_dir,</span>
+<span class="sd">            merge_chunks_to_pipeline=True,</span>
+<span class="sd">        )</span>
+
+<span class="sd">        # You can also pass the MLModel object directly</span>
+<span class="sd">        mlmodel = ct.models.MLModel(model_path)</span>
+<span class="sd">        ct.models.utils.bisect_model(</span>
+<span class="sd">            mlmodel,</span>
+<span class="sd">            output_dir,</span>
+<span class="sd">            merge_chunks_to_pipeline=True,</span>
+<span class="sd">        )</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># We do the lazy import to prevent circular import</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">MLModel</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
+
+    <span class="k">def</span> <span class="nf">get_pymil_prog_and_spec_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+
+        <span class="c1"># get the model spec and weight directory</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">load_spec</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+            <span class="n">weights_dir</span> <span class="o">=</span> <span class="n">_try_get_weights_dir_path</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">_spec</span>
+            <span class="n">weights_dir</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">weights_dir</span>
+
+        <span class="c1"># convert the model spec into pymil program,</span>
+        <span class="c1"># we also convert operations into type of List</span>
+        <span class="n">prog</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="o">.</span><span class="n">load</span><span class="p">(</span>
+            <span class="n">spec</span><span class="p">,</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span>
+            <span class="n">weights_dir</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">or</span> <span class="s2">&quot;main&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;bisect_model&#39; only support model with a single &#39;main&#39; function.&quot;</span><span class="p">)</span>
+        
+        <span class="n">func</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+        <span class="n">func</span><span class="o">.</span><span class="n">operations</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">operations</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">prog</span><span class="p">,</span> <span class="n">spec</span>
+
+    <span class="c1"># check the input type of model</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">MLModel</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&#39;model&#39; must be type of [str, MLModel]. Got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># The below implementation assumes that the model is single function, with a &quot;main&quot; function.</span>
+    <span class="n">prog</span><span class="p">,</span> <span class="n">spec</span> <span class="o">=</span> <span class="n">get_pymil_prog_and_spec_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">spec_version</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span>
+
+    <span class="c1"># Compute the incision point by bisecting the program based on weights size</span>
+    <span class="n">op_idx</span><span class="p">,</span> <span class="n">first_chunk_weights_size</span><span class="p">,</span> <span class="n">total_weights_size</span> <span class="o">=</span> <span class="n">_get_op_idx_split_location</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
+    <span class="n">main_block</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+    <span class="n">incision_op</span> <span class="o">=</span> <span class="n">main_block</span><span class="o">.</span><span class="n">operations</span><span class="p">[</span><span class="n">op_idx</span><span class="p">]</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;The incision op: name=</span><span class="si">{</span><span class="n">incision_op</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, type=</span><span class="si">{</span><span class="n">incision_op</span><span class="o">.</span><span class="n">op_type</span><span class="si">}</span><span class="s2">, index=</span><span class="si">{</span><span class="n">op_idx</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">main_block</span><span class="o">.</span><span class="n">operations</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;First chunk size = </span><span class="si">{</span><span class="n">first_chunk_weights_size</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Second chunk size = </span><span class="si">{</span><span class="n">total_weights_size</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">first_chunk_weights_size</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> MB&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Build first chunk (in-place modifies prog by declaring early exits and removing unused subgraph)</span>
+    <span class="n">prog_chunk1</span> <span class="o">=</span> <span class="n">_make_first_chunk_prog</span><span class="p">(</span><span class="n">prog</span><span class="p">,</span> <span class="n">op_idx</span><span class="p">)</span>
+
+    <span class="c1"># Build the second chunk</span>
+    <span class="c1"># when the first chunk is created, the prog is modified in-place, so we need to re-convert a new pymil</span>
+    <span class="c1"># program for the second chunk.</span>
+    <span class="n">prog_chunk2</span> <span class="o">=</span> <span class="n">_make_second_chunk_prog</span><span class="p">(</span>
+        <span class="n">get_pymil_prog_and_spec_from_model</span><span class="p">(</span><span class="n">model</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="n">op_idx</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Convert the MIL Program objects into MLModels</span>
+    <span class="c1"># We skip_model_load if check_output_correctness=False</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting the two programs&quot;</span><span class="p">)</span>
+    <span class="n">model_chunk1</span> <span class="o">=</span> <span class="n">_mil_convert</span><span class="p">(</span>
+        <span class="n">prog_chunk1</span><span class="p">,</span>
+        <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+        <span class="n">convert_from</span><span class="o">=</span><span class="s2">&quot;milinternal&quot;</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">spec_version</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+        <span class="n">skip_model_load</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="n">check_output_correctness</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">del</span> <span class="n">prog_chunk1</span>
+    <span class="n">_gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Conversion of first chunk done.&quot;</span><span class="p">)</span>
+
+    <span class="n">model_chunk2</span> <span class="o">=</span> <span class="n">_mil_convert</span><span class="p">(</span>
+        <span class="n">prog_chunk2</span><span class="p">,</span>
+        <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
+        <span class="n">convert_from</span><span class="o">=</span><span class="s2">&quot;milinternal&quot;</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">spec_version</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">,</span>
+        <span class="n">skip_model_load</span><span class="o">=</span><span class="p">(</span><span class="ow">not</span> <span class="n">check_output_correctness</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="k">del</span> <span class="n">prog_chunk2</span>
+    <span class="n">_gc</span><span class="o">.</span><span class="n">collect</span><span class="p">()</span>
+    <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Conversion of second chunk done.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Verify output correctness</span>
+    <span class="k">if</span> <span class="n">check_output_correctness</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Verifying output correctness of chunks&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">model</span>
+
+        <span class="n">_verify_output_correctness_of_chunks</span><span class="p">(</span>
+            <span class="n">full_model</span><span class="o">=</span><span class="n">mlmodel</span><span class="p">,</span>
+            <span class="n">first_chunk_model</span><span class="o">=</span><span class="n">model_chunk1</span><span class="p">,</span>
+            <span class="n">second_chunk_model</span><span class="o">=</span><span class="n">model_chunk2</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="c1"># save model chunks</span>
+    <span class="n">_os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">mlpackage_name</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">mlpackage_name</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">+=</span> <span class="s2">&quot;_&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">merge_chunks_to_pipeline</span><span class="p">:</span>
+        <span class="c1"># Make a single pipeline model to manage the model chunks</span>
+        <span class="n">pipeline_model</span> <span class="o">=</span> <span class="n">make_pipeline</span><span class="p">(</span><span class="n">model_chunk1</span><span class="p">,</span> <span class="n">model_chunk2</span><span class="p">)</span>
+        <span class="n">out_path_pipeline</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;chunked_pipeline.mlpackage&quot;</span><span class="p">)</span>
+        <span class="n">pipeline_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">out_path_pipeline</span><span class="p">)</span>
+
+        <span class="c1"># reload to ensure CPU placement</span>
+        <span class="k">if</span> <span class="n">check_output_correctness</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Verifying output correctness of pipeline model&quot;</span><span class="p">)</span>
+            <span class="n">pipeline_model</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span>
+                <span class="n">out_path_pipeline</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ct</span><span class="o">.</span><span class="n">ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span>
+            <span class="p">)</span>
+            <span class="n">_verify_output_correctness_of_chunks</span><span class="p">(</span>
+                <span class="n">full_model</span><span class="o">=</span><span class="n">mlmodel</span><span class="p">,</span>
+                <span class="n">pipeline_model</span><span class="o">=</span><span class="n">pipeline_model</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Save the chunked models to disk</span>
+        <span class="n">out_path_chunk1</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;chunk1.mlpackage&quot;</span><span class="p">)</span>
+        <span class="n">out_path_chunk2</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_dir</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;chunk2.mlpackage&quot;</span><span class="p">)</span>
+        <span class="n">model_chunk1</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">out_path_chunk1</span><span class="p">)</span>
+        <span class="n">model_chunk2</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">out_path_chunk2</span><span class="p">)</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Saved chunks in </span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2"> with the suffix _chunk1.mlpackage and _chunk2.mlpackage&quot;</span>
+        <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_verify_output_correctness_of_chunks</span><span class="p">(</span>
+    <span class="n">full_model</span><span class="p">:</span> <span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">,</span>
+    <span class="n">first_chunk_model</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">second_chunk_model</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">pipeline_model</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="s2">&quot;_ct.models.MLModel&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Verifies the end-to-end output correctness of full (original) model versus chunked models&quot;&quot;&quot;</span>
+    <span class="c1"># lazy import avoids circular error</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.testing_utils</span> <span class="kn">import</span> <span class="n">random_gen_input_feature_type</span> <span class="k">as</span> <span class="n">random_gen_input_feature_type</span>
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.testing_utils</span> <span class="kn">import</span> <span class="n">compute_snr_and_psnr</span>
+
+    <span class="k">def</span> <span class="nf">report_correctness</span><span class="p">(</span><span class="n">original_outputs</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">final_outputs</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">log_prefix</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; Report PSNR values across two compatible tensors.</span>
+<span class="sd">        This util is from https://github.com/apple/ml-stable-diffusion/blob/main/python_coreml_stable_diffusion/torch2coreml.py#L80,</span>
+<span class="sd">        with a slightly modification.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ABSOLUTE_MIN_PSNR</span> <span class="o">=</span> <span class="mi">35</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">original_psnr</span> <span class="o">=</span> <span class="n">compute_snr_and_psnr</span><span class="p">(</span><span class="n">original_outputs</span><span class="p">,</span> <span class="n">original_outputs</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">final_psnr</span> <span class="o">=</span> <span class="n">compute_snr_and_psnr</span><span class="p">(</span><span class="n">original_outputs</span><span class="p">,</span> <span class="n">final_outputs</span><span class="p">)</span>
+
+        <span class="n">dB_change</span> <span class="o">=</span> <span class="n">final_psnr</span> <span class="o">-</span> <span class="n">original_psnr</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">log_prefix</span><span class="si">}</span><span class="s2">: PSNR changed by </span><span class="si">{</span><span class="n">dB_change</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> dB (</span><span class="si">{</span><span class="n">original_psnr</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> -&gt; </span><span class="si">{</span><span class="n">final_psnr</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">final_psnr</span> <span class="o">&lt;</span> <span class="n">ABSOLUTE_MIN_PSNR</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">final_psnr</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> dB is low!&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">final_psnr</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> dB &gt; </span><span class="si">{</span><span class="n">ABSOLUTE_MIN_PSNR</span><span class="si">}</span><span class="s2"> dB (minimum allowed) parity check passed&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">final_psnr</span>
+
+    
+    <span class="c1"># Generate inputs for first chunk and full model</span>
+    <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">input_desc</span> <span class="ow">in</span> <span class="n">full_model</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+        <span class="n">input_dict</span><span class="p">[</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">random_gen_input_feature_type</span><span class="p">(</span><span class="n">input_desc</span><span class="p">)</span>
+
+    <span class="c1"># Generate outputs for full model</span>
+    <span class="n">outputs_from_full_model</span> <span class="o">=</span> <span class="n">full_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">pipeline_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">outputs_from_pipeline_model</span> <span class="o">=</span> <span class="n">pipeline_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+        <span class="n">final_outputs</span> <span class="o">=</span> <span class="n">outputs_from_pipeline_model</span>
+
+    <span class="k">elif</span> <span class="n">first_chunk_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">second_chunk_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Generate outputs for first chunk</span>
+        <span class="n">outputs_from_first_chunk_model</span> <span class="o">=</span> <span class="n">first_chunk_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+        <span class="c1"># Prepare inputs for second chunk model from first chunk&#39;s outputs and regular inputs</span>
+        <span class="n">second_chunk_input_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">input_desc</span> <span class="ow">in</span> <span class="n">second_chunk_model</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_desc</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">outputs_from_first_chunk_model</span><span class="p">:</span>
+                <span class="n">second_chunk_input_dict</span><span class="p">[</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">outputs_from_first_chunk_model</span><span class="p">[</span>
+                    <span class="n">input_desc</span><span class="o">.</span><span class="n">name</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">second_chunk_input_dict</span><span class="p">[</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">input_dict</span><span class="p">[</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+
+        <span class="c1"># Generate output for second chunk model</span>
+        <span class="n">outputs_from_second_chunk_model</span> <span class="o">=</span> <span class="n">second_chunk_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">second_chunk_input_dict</span><span class="p">)</span>
+        <span class="n">final_outputs</span> <span class="o">=</span> <span class="n">outputs_from_second_chunk_model</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either a single Pipeline model or two model chunks should be provided.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Verify correctness across all outputs from second chunk and full model</span>
+    <span class="k">for</span> <span class="n">out_name</span> <span class="ow">in</span> <span class="n">outputs_from_full_model</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">report_correctness</span><span class="p">(</span>
+            <span class="n">original_outputs</span><span class="o">=</span><span class="n">outputs_from_full_model</span><span class="p">[</span><span class="n">out_name</span><span class="p">],</span>
+            <span class="n">final_outputs</span><span class="o">=</span><span class="n">final_outputs</span><span class="p">[</span><span class="n">out_name</span><span class="p">],</span>
+            <span class="n">log_prefix</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">out_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_op_idx_split_location</span><span class="p">(</span><span class="n">prog</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the op that approximately bisects the graph as measure by weights size on each side&quot;&quot;&quot;</span>
+    <span class="n">main_block</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+    <span class="n">total_size_in_mb</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">main_block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">size_in_mb</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span>
+            <span class="n">total_size_in_mb</span> <span class="o">+=</span> <span class="n">size_in_mb</span>
+    <span class="n">half_size</span> <span class="o">=</span> <span class="n">total_size_in_mb</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="c1"># Find the first non const op (single child), where the total cumulative size exceeds</span>
+    <span class="c1"># the half size for the first time</span>
+    <span class="n">cumulative_size_in_mb</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">main_block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">size_in_mb</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">*</span> <span class="n">op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">itemsize</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span> <span class="o">*</span> <span class="mi">1024</span><span class="p">)</span>
+            <span class="n">cumulative_size_in_mb</span> <span class="o">+=</span> <span class="n">size_in_mb</span>
+
+        <span class="c1"># Note: The condition &quot;not op.op_type.startswith(&quot;const&quot;)&quot; is to make sure that the</span>
+        <span class="c1"># incision op is neither of type &quot;const&quot; nor &quot;constexpr_*&quot; ops that</span>
+        <span class="c1"># are used to store compressed weights</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">cumulative_size_in_mb</span> <span class="o">&gt;=</span> <span class="n">half_size</span>
+            <span class="ow">and</span> <span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;const&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+            <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
+        <span class="p">):</span>
+            <span class="n">op_idx</span> <span class="o">=</span> <span class="n">main_block</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">op_idx</span><span class="p">,</span> <span class="n">cumulative_size_in_mb</span><span class="p">,</span> <span class="n">total_size_in_mb</span>
+
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Not able to find the bisect point in the model.&quot;</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_first_chunk_outputs</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span> <span class="n">op_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_List</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">Var</span><span class="p">]:</span>
+    <span class="c1"># Get the list of all vars that go across from first program (all ops from 0 to op_idx (inclusive))</span>
+    <span class="c1"># to the second program (all ops from op_idx+1 till the end). These all vars need to be made the output</span>
+    <span class="c1"># of the first program and the input of the second program</span>
+    <span class="n">boundary_vars</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">op_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">op</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;const&quot;</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># only consider non const vars</span>
+                    <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">var</span><span class="o">.</span><span class="n">child_ops</span><span class="p">:</span>
+                        <span class="n">child_op_idx</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">child_op</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">child_op_idx</span> <span class="o">&gt;</span> <span class="n">op_idx</span><span class="p">:</span>
+                            <span class="n">boundary_vars</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">boundary_vars</span><span class="p">)</span>
+
+
+<span class="nd">@_block_context_manager</span>
+<span class="k">def</span> <span class="nf">_add_fp32_casts</span><span class="p">(</span><span class="n">block</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Block</span><span class="p">,</span> <span class="n">boundary_vars</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="n">_mil</span><span class="o">.</span><span class="n">Var</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">new_boundary_vars</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">boundary_vars</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span>
+            <span class="n">new_boundary_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fp32_var</span> <span class="o">=</span> <span class="n">_mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">var</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="n">new_boundary_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">fp32_var</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">new_boundary_vars</span>
+
+
+<span class="k">def</span> <span class="nf">_make_first_chunk_prog</span><span class="p">(</span>
+    <span class="n">prog</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span>
+    <span class="n">op_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build first chunk by declaring early outputs and removing unused subgraph&quot;&quot;&quot;</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+    <span class="n">boundary_vars</span> <span class="o">=</span> <span class="n">_get_first_chunk_outputs</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">op_idx</span><span class="p">)</span>
+
+    <span class="c1"># Due to possible numerical issues, cast any fp16 var to fp32</span>
+    <span class="n">new_boundary_vars</span> <span class="o">=</span> <span class="n">_add_fp32_casts</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">boundary_vars</span><span class="p">)</span>
+
+    <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+    <span class="n">block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">new_boundary_vars</span><span class="p">)</span>
+    <span class="n">_PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dead_code_elimination&quot;</span><span class="p">](</span><span class="n">prog</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">prog</span>
+
+
+<span class="k">def</span> <span class="nf">_make_second_chunk_prog</span><span class="p">(</span><span class="n">prog</span><span class="p">:</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">,</span> <span class="n">op_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_mil</span><span class="o">.</span><span class="n">Program</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build second chunk by rebuilding a pristine MIL Program from MLModel&quot;&quot;&quot;</span>
+    <span class="n">block</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
+    <span class="n">block</span><span class="o">.</span><span class="n">opset_version</span> <span class="o">=</span> <span class="n">_ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS16</span>
+
+    <span class="c1"># First chunk outputs are second chunk inputs (e.g. skip connections)</span>
+    <span class="n">boundary_vars</span> <span class="o">=</span> <span class="n">_get_first_chunk_outputs</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">op_idx</span><span class="p">)</span>
+
+    <span class="c1"># This op will not be included in this program. Its output var will be made into an input</span>
+    <span class="n">boundary_op</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">[</span><span class="n">op_idx</span><span class="p">]</span>
+
+    <span class="c1"># Add all boundary ops as inputs</span>
+    <span class="k">with</span> <span class="n">block</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">boundary_vars</span><span class="p">:</span>
+            <span class="n">new_placeholder</span> <span class="o">=</span> <span class="n">_Placeholder</span><span class="p">(</span>
+                <span class="n">sym_shape</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">dtype</span> <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span> <span class="k">else</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">block</span><span class="o">.</span><span class="n">_input_dict</span><span class="p">[</span><span class="n">new_placeholder</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_placeholder</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">block</span><span class="o">.</span><span class="n">function_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">_input_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+            <span class="n">new_var</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">var</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">_mil</span><span class="o">.</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span>
+                <span class="n">new_var</span> <span class="o">=</span> <span class="n">_mb</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">new_placeholder</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">var</span><span class="o">.</span><span class="n">op</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_var</span> <span class="o">=</span> <span class="n">new_placeholder</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+            <span class="n">block</span><span class="o">.</span><span class="n">replace_uses_of_var_after_op</span><span class="p">(</span>
+                <span class="n">anchor_op</span><span class="o">=</span><span class="n">boundary_op</span><span class="p">,</span>
+                <span class="n">old_var</span><span class="o">=</span><span class="n">var</span><span class="p">,</span>
+                <span class="n">new_var</span><span class="o">=</span><span class="n">new_var</span><span class="p">,</span>
+                <span class="c1"># This is needed if the program contains &quot;constexpr_*&quot; ops. In normal cases, there are stricter</span>
+                <span class="c1"># rules for removing them, and their presence may prevent replacing this var.</span>
+                <span class="c1"># However in this case, since we want to remove all the ops in chunk 1, we can safely</span>
+                <span class="c1"># set this to True.</span>
+                <span class="n">force_replace</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">_PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dead_code_elimination&quot;</span><span class="p">](</span><span class="n">prog</span><span class="p">)</span>
+
+    <span class="c1"># Remove any unused inputs</span>
+    <span class="n">new_input_dict</span> <span class="o">=</span> <span class="n">_OrderedDict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">_input_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">new_input_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+    <span class="n">block</span><span class="o">.</span><span class="n">_input_dict</span> <span class="o">=</span> <span class="n">new_input_dict</span>
+    <span class="n">block</span><span class="o">.</span><span class="n">function_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">_input_dict</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">return</span> <span class="n">prog</span>
+
 
 </pre></div>
 

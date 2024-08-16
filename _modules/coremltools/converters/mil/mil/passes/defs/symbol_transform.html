@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.passes.defs.symbol_transform &mdash; coremltools API Reference 8.0b1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/norightmargin.css?v=eea1f72d" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../../../../../../_static/documentation_options.js?v=d50bc636"></script>
+        <script src="../../../../../../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../../../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../../../../index.html" class="icon icon-home">
+            coremltools API Reference
+          </a>
+              <div class="version">
+                8.0b1
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Model APIs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html">MIL Graph Passes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.optimize.html">Optimizers</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-guides/index.html">Guide and Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/api-versions.html">Previous Versions</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.passes.defs.symbol_transform</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.passes.defs.symbol_transform</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2024, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span> <span class="k">as</span> <span class="n">logger</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Function</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">Program</span><span class="p">,</span> <span class="n">Var</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.graph_pass</span> <span class="kn">import</span> <span class="n">AbstractGraphPass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.pass_registry</span> <span class="kn">import</span> <span class="n">register_pass</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span><span class="p">,</span> <span class="n">is_symbolic</span>
+
+
+<div class="viewcode-block" id="materialize_symbolic_shape_program">
+<a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.passes.defs.html#coremltools.converters.mil.mil.passes.defs.symbol_transform.materialize_symbolic_shape_program">[docs]</a>
+<span class="nd">@register_pass</span><span class="p">(</span><span class="n">namespace</span><span class="o">=</span><span class="s2">&quot;common&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">materialize_symbolic_shape_program</span><span class="p">(</span><span class="n">AbstractGraphPass</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If we realize that only a few fixed shapes are used in a symbolic-shape model,</span>
+<span class="sd">    we may prefer materialization into a fixed-shape (multifunction) model,</span>
+<span class="sd">    which has the potential to be further optimized</span>
+
+<span class="sd">    Supported options:</span>
+
+<span class="sd">    - ``function_name_to_materialization_map``: Dict[str, Dict[str, Tuple[int]]]</span>
+<span class="sd">        A dictionary specifying the name of new functions to be created,</span>
+<span class="sd">        and for each new function what is the new fixed shapes for inputs.</span>
+<span class="sd">        If a new function has the same name as an old function,</span>
+<span class="sd">        then the old function will be overridden</span>
+
+<span class="sd">    - ``source_function_name``: str</span>
+<span class="sd">        The name of the source symbolic-shape function to be materialized, default = main</span>
+
+<span class="sd">    Example:</span>
+
+<span class="sd">    Suppose we have a symbolic shape model with 2 symbols ``is0`` and ``is1``</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        symbolic_shape_mlmodel: ct.models.MLModel</span>
+<span class="sd">        symbolic_shape_prog = symbolic_shape_mlmodel._mil_program</span>
+
+<span class="sd">    We may invoke this graph pass to materialize some fixed shapes (e.g. ``is0 = 2, is1 = 5``</span>
+<span class="sd">    and ``is0 = 4, is1 = 7``), then run every other optimization passes</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        pass_pipeline: PassPipeline = ct.PassPipeline.DEFAULT</span>
+<span class="sd">        pass_pipeline.insert_pass(0, &quot;common::materialize_symbolic_shape_program&quot;)</span>
+<span class="sd">        pass_pipeline.set_options(</span>
+<span class="sd">            &quot;common::materialize_symbolic_shape_program&quot;,</span>
+<span class="sd">            {</span>
+<span class="sd">                &quot;function_name_to_materialization_map&quot;: {</span>
+<span class="sd">                    # As an example, let us assume the input is x (is0, is1, 1024)</span>
+<span class="sd">                    &quot;materialization_2_5&quot;: {&quot;x&quot;: (2, 5, 1024)},</span>
+<span class="sd">                    &quot;materialization_4_7&quot;: {&quot;x&quot;: (4, 7, 1024)},</span>
+<span class="sd">                }</span>
+<span class="sd">            },</span>
+<span class="sd">        )</span>
+<span class="sd">        PassPipelineManager.apply_pipeline(symbolic_shape_prog, pass_pipeline)</span>
+
+<span class="sd">    We will arrive at</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        main[CoreML8](%x: (is0, is1, 1024, fp16)(Tensor)) {</span>
+<span class="sd">          block0() {</span>
+<span class="sd">            ...</span>
+<span class="sd">          } -&gt; (%y)</span>
+<span class="sd">        }</span>
+
+<span class="sd">        materialization_2_5[CoreML8](%x: (2, 5, 1024, fp16)(Tensor)) {</span>
+<span class="sd">          block5() {</span>
+<span class="sd">            ...</span>
+<span class="sd">          } -&gt; (%y)</span>
+<span class="sd">        }</span>
+
+<span class="sd">        materialization_4_7[CoreML8](%x: (4, 7, 1024, fp16)(Tensor)) {</span>
+<span class="sd">          block6() {</span>
+<span class="sd">            ...</span>
+<span class="sd">          } -&gt; (%y)</span>
+<span class="sd">        }</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function_name_to_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_function_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;main&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">function_name_to_materialization_map</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_function_name_to_materialization_map</span>
+
+    <span class="nd">@function_name_to_materialization_map</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">function_name_to_materialization_map</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">function_name_to_materialization_map_</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_name_to_materialization_map_</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;function_name_to_materialization_map must be type of dict, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">function_name_to_materialization_map_</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">materialization_map</span> <span class="ow">in</span> <span class="n">function_name_to_materialization_map_</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">function_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Materialized new function name must be type of str, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">function_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">materialization_map</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Materialization map must be type of dict, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">materialization_map</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">for</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">materialization_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Materialization map key (input name) must be type of str, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">input_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Materialization map value (shape) must be type of tuple, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Shape element must be type of int, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">size</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_function_name_to_materialization_map</span> <span class="o">=</span> <span class="n">function_name_to_materialization_map_</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">source_function_name</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_source_function_name</span>
+
+    <span class="nd">@source_function_name</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">source_function_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_function_name_</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_function_name_</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Source function name must be type of str, but got </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">source_function_name_</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_source_function_name</span> <span class="o">=</span> <span class="n">source_function_name_</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_canonicalize_materialization_map</span><span class="p">(</span>
+        <span class="n">source_function</span><span class="p">:</span> <span class="n">Function</span><span class="p">,</span>
+        <span class="n">function_name_to_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">]]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        User input ``materialization_map`` maps input names to fixed shapes,</span>
+<span class="sd">        but what a rigorous graph pass really need is a map from symbols to integers,</span>
+<span class="sd">        so here we construct the canonical materialization map from user input</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">function_name_to_canonical_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">function_name</span><span class="p">,</span> <span class="n">materialization_map</span> <span class="ow">in</span> <span class="n">function_name_to_materialization_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">canonical_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">source_input_var</span> <span class="ow">in</span> <span class="n">source_function</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">input_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">source_input_var</span><span class="o">.</span><span class="n">name</span>
+                <span class="k">if</span> <span class="n">input_name</span> <span class="ow">in</span> <span class="n">materialization_map</span><span class="p">:</span>
+                    <span class="n">fixed_shape</span> <span class="o">=</span> <span class="n">materialization_map</span><span class="p">[</span><span class="n">input_name</span><span class="p">]</span>
+                    <span class="k">for</span> <span class="n">size</span><span class="p">,</span> <span class="n">integer</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">source_input_var</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">fixed_shape</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+                            <span class="k">if</span> <span class="n">size</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">canonical_materialization_map</span><span class="p">:</span>
+                                <span class="n">canonical_materialization_map</span><span class="p">[</span><span class="n">size</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">integer</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">existing_integer</span> <span class="o">=</span> <span class="n">canonical_materialization_map</span><span class="p">[</span><span class="n">size</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                                <span class="k">if</span> <span class="n">existing_integer</span> <span class="o">!=</span> <span class="n">integer</span><span class="p">:</span>
+                                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                                        <span class="sa">f</span><span class="s2">&quot;Inconsistent symbol materialization in new function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2">: &quot;</span>
+                                        <span class="sa">f</span><span class="s2">&quot;symbol </span><span class="si">{</span><span class="n">size</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is to be materialized into </span><span class="si">{</span><span class="n">existing_integer</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">integer</span><span class="si">}</span><span class="s2">. &quot;</span>
+                                        <span class="sa">f</span><span class="s2">&quot;Please make sure input </span><span class="si">{</span><span class="n">input_name</span><span class="si">}</span><span class="s2"> has compatible shape with others&quot;</span>
+                                    <span class="p">)</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">size</span> <span class="o">!=</span> <span class="n">integer</span><span class="p">:</span>
+                                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                                    <span class="sa">f</span><span class="s2">&quot;Already fixed size cannot be altered: new function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2">, &quot;</span>
+                                    <span class="sa">f</span><span class="s2">&quot;input </span><span class="si">{</span><span class="n">input_name</span><span class="si">}</span><span class="s2">, original size is </span><span class="si">{</span><span class="n">size</span><span class="si">}</span><span class="s2">, but user specified new size </span><span class="si">{</span><span class="n">integer</span><span class="si">}</span><span class="s2">&quot;</span>
+                                <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;In new function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2">, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;although materialization for input </span><span class="si">{</span><span class="n">input_name</span><span class="si">}</span><span class="s2"> is not specified, &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;it may still be materialized if it shares symbol with other inputs&quot;</span>
+                    <span class="p">)</span>
+            <span class="n">function_name_to_canonical_materialization_map</span><span class="p">[</span>
+                <span class="n">function_name</span>
+            <span class="p">]</span> <span class="o">=</span> <span class="n">canonical_materialization_map</span>
+        <span class="k">return</span> <span class="n">function_name_to_canonical_materialization_map</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span>
+        <span class="n">source_function</span><span class="p">:</span> <span class="n">Function</span><span class="p">,</span>
+        <span class="n">function_name_to_canonical_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Get existing symbols in program</span>
+        <span class="n">symbols</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">source_input_var</span> <span class="ow">in</span> <span class="n">source_function</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">source_input_var</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">size</span><span class="p">):</span>
+                    <span class="n">symbols</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">size</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="c1"># Compare existing symbols vs user specified materialization map</span>
+        <span class="k">for</span> <span class="p">(</span>
+            <span class="n">function_name</span><span class="p">,</span>
+            <span class="n">canonical_materialization_map</span><span class="p">,</span>
+        <span class="p">)</span> <span class="ow">in</span> <span class="n">function_name_to_canonical_materialization_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">symbols_to_be_materialized</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">canonical_materialization_map</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="c1"># Q: Why we only check symbols is subset of symbols_to_be_materialized,</span>
+            <span class="c1">#    but not symbols_to_be_materialized is subset of symbols?</span>
+            <span class="c1"># A: Since our API has user specify {input name: fixed shape tuple},</span>
+            <span class="c1">#    we will not receive any redundant symbol,</span>
+            <span class="c1">#    i.e. symbols_to_be_materialized will always be a subset of symbols</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">symbols</span><span class="o">.</span><span class="n">issubset</span><span class="p">(</span><span class="n">symbols_to_be_materialized</span><span class="p">):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;In new function </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2">, these symbols will not be materialized: &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">symbols</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">symbols_to_be_materialized</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_maybe_materialize_symbolic_shape</span><span class="p">(</span>
+        <span class="n">shape</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">canonical_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">shape</span><span class="p">):</span>
+            <span class="n">materialized_shape</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">shape</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">size</span><span class="p">)</span> <span class="ow">and</span> <span class="n">size</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">canonical_materialization_map</span><span class="p">:</span>
+                    <span class="n">materialized_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">canonical_materialization_map</span><span class="p">[</span><span class="n">size</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">materialized_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">size</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">materialized_shape</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">shape</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_create_placeholders</span><span class="p">(</span>
+        <span class="n">source_function</span><span class="p">:</span> <span class="n">Function</span><span class="p">,</span> <span class="n">canonical_materialization_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">]:</span>
+        <span class="n">placeholders</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">source_input_name</span><span class="p">,</span> <span class="n">source_input_var</span> <span class="ow">in</span> <span class="n">source_function</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">target_input_shape</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">materialize_symbolic_shape_program</span><span class="o">.</span><span class="n">_maybe_materialize_symbolic_shape</span><span class="p">(</span>
+                    <span class="n">source_input_var</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">canonical_materialization_map</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">types</span><span class="o">.</span><span class="n">is_state</span><span class="p">(</span><span class="n">source_input_var</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
+                <span class="n">placeholders</span><span class="p">[</span><span class="n">source_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">state_tensor_placeholder</span><span class="p">(</span>
+                    <span class="n">target_input_shape</span><span class="p">,</span> <span class="n">source_input_var</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">placeholders</span><span class="p">[</span><span class="n">source_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span>
+                    <span class="n">target_input_shape</span><span class="p">,</span> <span class="n">source_input_var</span><span class="o">.</span><span class="n">dtype</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">placeholders</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_copy_construct_const_var</span><span class="p">(</span><span class="n">source_const_var</span><span class="p">:</span> <span class="n">Var</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Var</span><span class="p">:</span>
+        <span class="n">target_const_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">const</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">source_const_var</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">source_const_var</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="nb">hasattr</span><span class="p">(</span><span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="p">,</span> <span class="s2">&quot;weight_key&quot;</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="n">target_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_key</span> <span class="o">=</span> <span class="n">source_const_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">weight_key</span>
+        <span class="k">return</span> <span class="n">target_const_var</span>
+
+    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prog</span><span class="p">:</span> <span class="n">Program</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Source function </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">source_function_name</span><span class="si">}</span><span class="s2"> not found, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;available functions are </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">source_function</span> <span class="o">=</span> <span class="n">prog</span><span class="o">.</span><span class="n">functions</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">source_function_name</span><span class="p">]</span>
+
+        <span class="n">function_name_to_canonical_materialization_map</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canonicalize_materialization_map</span><span class="p">(</span>
+            <span class="n">source_function</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">function_name_to_materialization_map</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_inputs</span><span class="p">(</span><span class="n">source_function</span><span class="p">,</span> <span class="n">function_name_to_canonical_materialization_map</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="p">(</span>
+            <span class="n">target_function_name</span><span class="p">,</span>
+            <span class="n">canonical_materialization_map</span><span class="p">,</span>
+        <span class="p">)</span> <span class="ow">in</span> <span class="n">function_name_to_canonical_materialization_map</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">context</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Var</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">with</span> <span class="n">Function</span><span class="p">(</span>
+                <span class="n">inputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_create_placeholders</span><span class="p">(</span><span class="n">source_function</span><span class="p">,</span> <span class="n">canonical_materialization_map</span><span class="p">),</span>
+                <span class="n">opset_version</span><span class="o">=</span><span class="n">source_function</span><span class="o">.</span><span class="n">opset_version</span><span class="p">,</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">target_function</span><span class="p">:</span>
+                <span class="c1"># Extract function input variables</span>
+                <span class="k">for</span> <span class="n">target_input_name</span><span class="p">,</span> <span class="n">target_input_var</span> <span class="ow">in</span> <span class="n">target_function</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">context</span><span class="p">[</span><span class="n">target_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_input_var</span>
+
+                <span class="c1"># Rebuild all operations with new variables</span>
+                <span class="k">for</span> <span class="n">source_operation</span> <span class="ow">in</span> <span class="n">source_function</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+                    <span class="c1"># Instead of building constants as we encounter,</span>
+                    <span class="c1"># we will build them when we find them in operation input,</span>
+                    <span class="c1"># otherwise we will mess up with block internal variable</span>
+                    <span class="k">if</span> <span class="n">source_operation</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># prepare operation inputs</span>
+                        <span class="n">target_name_to_input</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Var</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+                        <span class="k">for</span> <span class="n">source_input_name</span><span class="p">,</span> <span class="n">source_input_vars</span> <span class="ow">in</span> <span class="n">source_operation</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                            <span class="c1"># operation input may either be Var or Tuple[Var]</span>
+                            <span class="n">is_source_single_input</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source_input_vars</span><span class="p">,</span> <span class="n">Var</span><span class="p">)</span>
+                            <span class="k">if</span> <span class="n">is_source_single_input</span><span class="p">:</span>
+                                <span class="n">source_input_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">source_input_vars</span><span class="p">]</span>
+                            <span class="n">target_input_vars</span> <span class="o">=</span> <span class="p">[]</span>
+                            <span class="k">for</span> <span class="n">source_input_var</span> <span class="ow">in</span> <span class="n">source_input_vars</span><span class="p">:</span>
+                                <span class="c1"># build const input that is currently missing from context</span>
+                                <span class="k">if</span> <span class="n">source_input_var</span><span class="o">.</span><span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">context</span><span class="p">:</span>
+                                    <span class="k">assert</span> <span class="p">(</span>
+                                        <span class="n">source_input_var</span><span class="o">.</span><span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;const&quot;</span>
+                                    <span class="p">),</span> <span class="s2">&quot;Only const may be absent from context&quot;</span>
+                                    <span class="n">context</span><span class="p">[</span><span class="n">source_input_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_copy_construct_const_var</span><span class="p">(</span>
+                                        <span class="n">source_input_var</span>
+                                    <span class="p">)</span>
+                                <span class="n">target_input_vars</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">context</span><span class="p">[</span><span class="n">source_input_var</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+                            <span class="k">if</span> <span class="n">is_source_single_input</span><span class="p">:</span>
+                                <span class="n">target_name_to_input</span><span class="p">[</span><span class="n">source_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">target_input_vars</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">else</span><span class="p">:</span>
+                                <span class="n">target_name_to_input</span><span class="p">[</span><span class="n">source_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">target_input_vars</span><span class="p">)</span>
+                        <span class="c1"># build operation</span>
+                        <span class="n">outputs</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mb</span><span class="p">,</span> <span class="n">source_operation</span><span class="o">.</span><span class="n">op_type</span><span class="p">)(</span>
+                            <span class="o">**</span><span class="n">target_name_to_input</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">source_operation</span><span class="o">.</span><span class="n">name</span>
+                        <span class="p">)</span>
+                        <span class="c1"># operation output may either be Var or Tuple[Var]</span>
+                        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+                            <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">outputs</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">output</span><span class="p">,</span> <span class="n">source_output</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="n">source_operation</span><span class="o">.</span><span class="n">outputs</span><span class="p">):</span>
+                            <span class="n">output</span><span class="o">.</span><span class="n">set_name</span><span class="p">(</span><span class="n">source_output</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                            <span class="n">context</span><span class="p">[</span><span class="n">output</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">output</span>
+
+                <span class="c1"># Set function output variables</span>
+                <span class="n">target_function</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span>
+                    <span class="p">[</span>
+                        <span class="n">context</span><span class="p">[</span><span class="n">source_output_var</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
+                        <span class="k">for</span> <span class="n">source_output_var</span> <span class="ow">in</span> <span class="n">source_function</span><span class="o">.</span><span class="n">outputs</span>
+                    <span class="p">]</span>
+                <span class="p">)</span>
+
+                <span class="n">prog</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="n">target_function_name</span><span class="p">,</span> <span class="n">target_function</span><span class="p">)</span>
+
+        <span class="c1"># For some reason, if we run const_deduplication._deduplicate_const_across_functions here,</span>
+        <span class="c1"># the populated `const.weight_id` will get lost if we run pass pipeline afterwards,</span>
+        <span class="c1"># so we have no choice but to let user manually deduplicate after all passes are done</span>
+        <span class="c1"># TODO (rdar://131680531): Investigate why it happens &amp; whether we can change this behavior</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;(If you are using ct.utils.materialize_dynamic_shape_mlmodel, &quot;</span>
+            <span class="s2">&quot;you are safe to ignore this warning message) &quot;</span>
+            <span class="s2">&quot;Weights are duplicated in each materialized new function, &quot;</span>
+            <span class="s2">&quot;so you may want to run const_deduplication._deduplicate_const_across_functions &quot;</span>
+            <span class="s2">&quot;on your pymil program before serialization to milproto&quot;</span>
+        <span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

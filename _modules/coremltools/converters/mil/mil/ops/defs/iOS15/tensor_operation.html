@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -106,7 +106,7 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">InternalInputType</span><span class="p">,</span>
+    <span class="n">ListOrTensorOrDictInputType</span><span class="p">,</span>
     <span class="n">TensorInputType</span><span class="p">,</span>
     <span class="n">TupleInputType</span><span class="p">,</span>
 <span class="p">)</span>
@@ -1479,7 +1479,7 @@
 <span class="sd">    T: fp16, fp32, i32, bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">InternalInputType</span><span class="p">())</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">ListOrTensorOrDictInputType</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>

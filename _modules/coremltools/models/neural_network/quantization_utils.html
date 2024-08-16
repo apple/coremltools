@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -104,17 +104,13 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span> <span class="k">as</span> <span class="n">_listdir</span>
 <span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span> <span class="k">as</span> <span class="n">_stdout</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
-    <span class="n">_logger</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_HAS_KMEANS1D</span><span class="p">,</span>
-    <span class="n">_kmeans1d</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_logger</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_KMEANS1D</span><span class="p">,</span> <span class="n">_kmeans1d</span>
 <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
     <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
@@ -123,12 +119,13 @@
     <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
     <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
     <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">,</span>
-    <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
+
 <span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_MINIMUM_FP16_SPEC_VERSION</span><span class="p">,</span>
     <span class="n">_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION</span><span class="p">,</span>
-    <span class="n">_SPECIFICATION_VERSION_IOS_14</span>
+    <span class="n">_SPECIFICATION_VERSION_IOS_14</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_get_model</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">,</span> <span class="n">_wp_to_fp16wp</span>
 <span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
@@ -482,14 +479,16 @@
     <span class="k">return</span> <span class="n">lookup_table</span><span class="p">,</span> <span class="n">qw</span>
 
 
-<span class="k">def</span> <span class="nf">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">force_kmeans1d</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span>
+    <span class="n">nbits</span><span class="p">,</span> <span class="n">weight</span><span class="p">,</span> <span class="n">force_kmeans1d</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate K-Means lookup table given weights</span>
 
 <span class="sd">    nbits:</span>
 <span class="sd">        Number of bits for quantization</span>
 
-<span class="sd">    w:</span>
+<span class="sd">    weight:</span>
 <span class="sd">        Weights as numpy array</span>
 
 <span class="sd">    force_kmeans1d:</span>
@@ -500,21 +499,35 @@
 <span class="sd">    lut: numpy.array</span>
 <span class="sd">        Lookup table, numpy array of shape (1 &lt;&lt; nbits, )</span>
 <span class="sd">    wq: numpy.array</span>
-<span class="sd">        Quantized weight of type numpy.uint8</span>
+<span class="sd">        Quantized weight</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">num_weights</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-    <span class="n">lut_len</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span>
-    <span class="n">wf</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-    <span class="n">lut</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">lut_len</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">force_kmeans1d</span> <span class="ow">and</span> <span class="n">cluster_dim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot force kmeans1d for vector palettization (cluster_dim &gt; 1).&quot;</span><span class="p">)</span>
 
-    <span class="n">is_better_to_use_kmeans1d</span> <span class="o">=</span> <span class="p">(</span><span class="n">num_weights</span> <span class="o">&gt;=</span> <span class="mi">10_000</span> <span class="ow">and</span> <span class="n">w</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>
+    <span class="n">num_weights</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">lut_len</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span>
+
+    <span class="k">if</span> <span class="n">cluster_dim</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># Import here to avoid circular import.</span>
+        <span class="kn">from</span> <span class="nn">coremltools.optimize.coreml</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">optimize_utils</span>
+
+        <span class="n">weight</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">reshape_weight_for_vector_lut</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">,</span> <span class="n">vector_axis</span><span class="p">)</span>
+
+    <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">)</span>
+    <span class="n">lut</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">lut_len</span><span class="p">,</span> <span class="n">cluster_dim</span><span class="p">))</span>
+
+    <span class="n">is_better_to_use_kmeans1d</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">num_weights</span> <span class="o">&gt;=</span> <span class="mi">10_000</span> <span class="ow">and</span> <span class="n">weight</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span>
+    <span class="p">)</span>
 
     <span class="k">if</span> <span class="p">(</span><span class="n">is_better_to_use_kmeans1d</span> <span class="ow">and</span> <span class="n">_HAS_KMEANS1D</span><span class="p">)</span> <span class="ow">or</span> <span class="n">force_kmeans1d</span><span class="p">:</span>
         <span class="c1"># Cluster with kmeans1d</span>
-        <span class="k">assert</span><span class="p">(</span><span class="n">_HAS_KMEANS1D</span><span class="p">)</span>
-        <span class="n">values</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">wf</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">_HAS_KMEANS1D</span><span class="p">,</span> <span class="s2">&quot;Unable to import kmeans1d, please make sure it&#39;s installed.&quot;</span>
+        <span class="n">values</span><span class="p">,</span> <span class="n">indices</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
         <span class="n">n_clusters</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">),</span> <span class="n">lut_len</span><span class="p">)</span>
         <span class="n">kmeans_results</span> <span class="o">=</span> <span class="n">_kmeans1d</span><span class="o">.</span><span class="n">cluster</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">n_clusters</span><span class="p">,</span> <span class="n">weights</span><span class="o">=</span><span class="n">counts</span><span class="p">)</span>
+        <span class="n">lut</span> <span class="o">=</span> <span class="n">lut</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
         <span class="n">lut</span><span class="p">[:</span><span class="n">n_clusters</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmeans_results</span><span class="o">.</span><span class="n">centroids</span>
         <span class="n">wq</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">kmeans_results</span><span class="o">.</span><span class="n">clusters</span><span class="p">)[</span><span class="n">indices</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
@@ -532,11 +545,11 @@
                          <span class="s2">&quot; Using scikit-learn for K-means.&quot;</span><span class="p">)</span>
 
         <span class="n">n_clusters</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">num_weights</span><span class="p">,</span> <span class="n">lut_len</span><span class="p">)</span>
-        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span>
-            <span class="n">n_clusters</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s2">&quot;k-means++&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">n_init</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">wf</span><span class="p">)</span>
+        <span class="n">kmeans</span> <span class="o">=</span> <span class="n">KMeans</span><span class="p">(</span><span class="n">n_clusters</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s2">&quot;k-means++&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">n_init</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span>
+            <span class="n">weight</span>
+        <span class="p">)</span>
         <span class="n">wq</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">labels_</span><span class="p">[:</span><span class="n">num_weights</span><span class="p">]</span>
-        <span class="n">lut</span><span class="p">[:</span><span class="n">n_clusters</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">cluster_centers_</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+        <span class="n">lut</span><span class="p">[:</span><span class="n">n_clusters</span><span class="p">]</span> <span class="o">=</span> <span class="n">kmeans</span><span class="o">.</span><span class="n">cluster_centers_</span>
 
     <span class="k">return</span> <span class="n">lut</span><span class="p">,</span> <span class="n">wq</span>
 

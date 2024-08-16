@@ -317,6 +317,10 @@ footprint on disk as compared to the dense weights.
 
       :download:`Download Python source code: dkm_palettization.py <dkm_palettization.py>`
 
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+      :download:`Download zipped: dkm_palettization.zip <dkm_palettization.zip>`
+
 
 .. only:: html
 

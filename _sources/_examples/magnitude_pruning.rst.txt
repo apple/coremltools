@@ -364,6 +364,10 @@ sparse matrices, which have a smaller memory footprint than dense matrices.
 
       :download:`Download Python source code: magnitude_pruning.py <magnitude_pruning.py>`
 
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+      :download:`Download zipped: magnitude_pruning.zip <magnitude_pruning.zip>`
+
 
 .. only:: html
 
