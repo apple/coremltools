@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -140,10 +140,12 @@
 <span class="nd">@_unique</span>
 <span class="k">class</span> <span class="nc">ObserverType</span><span class="p">(</span><span class="n">_Enum</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    An enum indicating the type of observer. Allowed options are moving_average_min_max and mix_max.</span>
+<span class="sd">    An enum indicating the type of observer.</span>
+<span class="sd">    Allowed options are moving_average_min_max, min_max, ema_min_max, ema_percentile, mse, ema_mse, lsq and lsq_plus.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">moving_average_min_max</span> <span class="o">=</span> <span class="s2">&quot;moving_average_min_max&quot;</span>
-    <span class="n">mix_max</span> <span class="o">=</span> <span class="s2">&quot;min_max&quot;</span>
+    <span class="n">min_max</span> <span class="o">=</span> <span class="s2">&quot;min_max&quot;</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_observer</span><span class="p">(</span><span class="n">observer_type</span><span class="p">:</span> <span class="s2">&quot;ObserverType&quot;</span><span class="p">,</span> <span class="n">is_per_channel</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Any</span><span class="p">:</span>
@@ -192,6 +194,7 @@
 <span class="n">_default_quantization_options</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span>
     <span class="s2">&quot;weight_per_channel&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="s2">&quot;weight_ch_axis&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
     <span class="s2">&quot;activation_dtype&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span>
     <span class="s2">&quot;observer&quot;</span><span class="p">:</span> <span class="n">ObserverType</span><span class="o">.</span><span class="n">moving_average_min_max</span><span class="p">,</span>
     <span class="s2">&quot;quantization_scheme&quot;</span><span class="p">:</span> <span class="n">QuantizationScheme</span><span class="o">.</span><span class="n">symmetric</span><span class="p">,</span>
@@ -273,14 +276,14 @@
 <span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
 <span class="sd">            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.int8` which corresponds to</span>
 <span class="sd">            8-bit quantization.</span>
-<span class="sd">        weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights. Defaults</span>
-<span class="sd">            to ``moving_average_min_max``.</span>
+<span class="sd">        weight_observer (:py:class:`ObserverType`): Type of observer to use for quantizing weights.</span>
+<span class="sd">            Defaults to ``moving_average_min_max``.</span>
 <span class="sd">        weight_per_channel (:obj:`bool`): When ``True``, weights are quantized per channel; otherwise, per tensor.</span>
 <span class="sd">        activation_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the activations. When dtype</span>
 <span class="sd">            is set to :py:class:`torch.float32`, the activations corresponding to that layer are not quantized.</span>
 <span class="sd">            Defaults to :py:class:`torch.quint8`.</span>
-<span class="sd">        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations. Allowed</span>
-<span class="sd">            values are ``min_max`` and ``moving_average_min_max``. Defaults to ``moving_average_min_max``.</span>
+<span class="sd">        activation_observer (:py:class:`ObserverType`): Type of observer to use for quantizing activations.</span>
+<span class="sd">            Defaults to ``moving_average_min_max``.</span>
 <span class="sd">        quantization_scheme: (:py:class:`QuantizationScheme`): Type of quantization configuration to use. When</span>
 <span class="sd">            this parameter is set to :py:class:`QuantizationScheme.symmetric`, all weights are</span>
 <span class="sd">            quantized with zero point as zero, and activations are quantized with zero point as zero for</span>
@@ -292,7 +295,7 @@
 <span class="sd">            quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.</span>
 <span class="sd">            Defaults to ``None``, which means the ``step`` method of :py:class:`LinearQuantizer` will be a no-op and</span>
 <span class="sd">            all observers and quantization simulation will be turned on from the first step, batch norm layers always</span>
-<span class="sd">            operate in training mode, and mean and varaince statistics collection is not frozen.</span>
+<span class="sd">            operate in training mode, and mean and variance statistics collection is not frozen.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
@@ -341,13 +344,6 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of (_torch.qint8, _torch.quint8, _torch.float32) not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">==</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">activation_dtype</span> <span class="o">!=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unsupported configuration: weight_dtype = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;activation_dtype = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">activation_dtype</span><span class="si">}</span><span class="s2">. When weights are not quantized,&quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;activations cannot be quantized.&quot;</span>
             <span class="p">)</span>
 
     <span class="nd">@milestones</span><span class="o">.</span><span class="n">validator</span>

@@ -8,7 +8,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -188,14 +188,14 @@ usage in more detail:</p>
 for quantization is inferred from the dtype. When dtype is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the weights
 corresponding to that layer are not quantized.  Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> which corresponds to
 8-bit quantization.</p></li>
-<li><p><strong>weight_observer</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing weights. Defaults
-to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
+<li><p><strong>weight_observer</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing weights.
+Defaults to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
 <li><p><strong>weight_per_channel</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are quantized per channel; otherwise, per tensor.</p></li>
 <li><p><strong>activation_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the activations. When dtype
 is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the activations corresponding to that layer are not quantized.
 Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.quint8</span></code>.</p></li>
-<li><p><strong>activation_observer</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing activations. Allowed
-values are <code class="docutils literal notranslate"><span class="pre">min_max</span></code> and <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
+<li><p><strong>activation_observer</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.ObserverType" title="coremltools.optimize.torch.quantization.ObserverType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ObserverType</span></code></a>) – Type of observer to use for quantizing activations.
+Defaults to <code class="docutils literal notranslate"><span class="pre">moving_average_min_max</span></code>.</p></li>
 <li><p><strong>quantization_scheme</strong> – (<a class="reference internal" href="#coremltools.optimize.torch.quantization.QuantizationScheme" title="coremltools.optimize.torch.quantization.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>): Type of quantization configuration to use. When
 this parameter is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>, all weights are
 quantized with zero point as zero, and activations are quantized with zero point as zero for
@@ -207,7 +207,7 @@ quantization. The first milestone corresponds to enabling observers, the second 
 quantization simulation, the third to disabling observers, and the last to freezing batch norm statistics.
 Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>, which means the <code class="docutils literal notranslate"><span class="pre">step</span></code> method of <a class="reference internal" href="#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> will be a no-op and
 all observers and quantization simulation will be turned on from the first step, batch norm layers always
-operate in training mode, and mean and varaince statistics collection is not frozen.</p></li>
+operate in training mode, and mean and variance statistics collection is not frozen.</p></li>
 </ul>
 </dd>
 </dl>
@@ -424,7 +424,7 @@ Inference</a>.</p>
     <span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
     <span class="n">quantizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
 
-<span class="c1"># convert operations to their quanitzed counterparts using parameters learnt via QAT</span>
+<span class="c1"># convert operations to their quantized counterparts using parameters learned via QAT</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -490,6 +490,7 @@ to update your model first before using <a class="reference internal" href="#cor
 Each key in the dictionary corresponds to a module name, and the
 value is a dictionary containing the statistics such as scale, zero point,
 number of parameters, and so on.</p>
+<p>Note that error will be nan and #params will be -1 for activations.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -505,7 +506,7 @@ to disabling observers, and the last to freezing batch norm statistics.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>In order to not use a particular milestone, its value can be set as <code class="docutils literal notranslate"><span class="pre">float('inf')</span></code>.</p>
+<p>In order to not use a particular milestone, its value can be set as <code class="docutils literal notranslate"><span class="pre">-1</span></code>.</p>
 </div>
 </dd></dl>
 
@@ -514,7 +515,8 @@ to disabling observers, and the last to freezing batch norm statistics.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.quantization.ObserverType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.quantization.</span></span><span class="sig-name descname"><span class="pre">ObserverType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/quantization/quantization_config.html#ObserverType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.quantization.ObserverType" title="Link to this definition"></a></dt>
-<dd><p>An enum indicating the type of observer. Allowed options are moving_average_min_max and mix_max.</p>
+<dd><p>An enum indicating the type of observer.
+Allowed options are moving_average_min_max, min_max, ema_min_max, ema_percentile, mse, ema_mse, lsq and lsq_plus.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -837,7 +839,9 @@ Hessian used by GPTQ algorithm. Defaults to <code class="docutils literal notran
 in descending order of values of Hessian diagonal elements. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>processing_group_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The weights are updated in
 blocks of size processing_group_size. Defaults to <code class="docutils literal notranslate"><span class="pre">128</span></code>.</p></li>
-<li><p><strong>.. note</strong> – Currently blocking is limited to only the input-channel axis for GPTQ.</p></li>
+<li><p><strong>.. note</strong> – Currently blocking is limited to only the input-channel axis for GPTQ. For a linear layer of shape (C_o x C_i), and block_size B,
+the quantization scales will have shape (C_o x C_i/B). For a 2D conv layer of shape (C_o x C_i x H x W), the
+quantization scales will have shape (C_o x C_i/B x 1 x 1).</p></li>
 </ul>
 </dd>
 </dl>

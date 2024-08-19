@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -99,7 +99,7 @@
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
@@ -177,7 +177,6 @@
 
     <span class="c1">### Apply four major graph passes in order.</span>
 
-    <span class="c1"># Graph pass I</span>
     <span class="c1"># Insert prefix quantize/dequantize pairs to valid patterns.</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running compression pass linear_quantize_activations phase 1/4 ...&quot;</span><span class="p">)</span>
     <span class="n">linear_activation_quantizer</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span>
@@ -197,7 +196,6 @@
         <span class="n">return_pymil_prog</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="c1"># Graph pass II</span>
     <span class="c1"># Insert suffix quantize/dequantize pairs to valid patterns.</span>
     <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running compression pass linear_quantize_activations phase 2/4 ...&quot;</span><span class="p">)</span>
     <span class="n">graph_pass</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;compression::insert_suffix_quantize_dequantize_pair&quot;</span><span class="p">]</span>
@@ -205,19 +203,17 @@
     <span class="n">graph_pass</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
     <span class="n">prog</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
-    <span class="c1"># Graph pass III</span>
-    <span class="c1"># Re-use exsiting path to dedup quantize/dequantize operations.</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running compression pass linear_quantize_activations phase 3/4 ...&quot;</span><span class="p">)</span>
-    <span class="n">graph_pass</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dequantize_quantize_pair_elimination&quot;</span><span class="p">]</span>
-    <span class="n">graph_pass</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
-    <span class="n">prog</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
-
-    <span class="c1"># Graph pass IV</span>
     <span class="c1"># Updating scale/zero_point in all quantize/dequantize ops calculated by calibration data.</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running compression pass linear_quantize_activations phase 4/4 ...&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running compression pass linear_quantize_activations phase 3/4 ...&quot;</span><span class="p">)</span>
     <span class="n">activation_stats</span> <span class="o">=</span> <span class="n">_get_activation_calibration_stats</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">)</span>
     <span class="n">graph_pass</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;compression::update_quantize_dequantize&quot;</span><span class="p">]</span>
     <span class="n">graph_pass</span><span class="o">.</span><span class="n">set_options</span><span class="p">([</span><span class="n">PassOption</span><span class="p">(</span><span class="s2">&quot;activation_stats&quot;</span><span class="p">,</span> <span class="n">activation_stats</span><span class="p">)])</span>
+    <span class="n">graph_pass</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
+    <span class="n">prog</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
+
+    <span class="c1"># Re-use exsiting path to dedup quantize/dequantize operations.</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running compression pass linear_quantize_activations phase 4/4 ...&quot;</span><span class="p">)</span>
+    <span class="n">graph_pass</span> <span class="o">=</span> <span class="n">PASS_REGISTRY</span><span class="p">[</span><span class="s2">&quot;common::dequantize_quantize_pair_elimination&quot;</span><span class="p">]</span>
     <span class="n">graph_pass</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
     <span class="n">prog</span><span class="o">.</span><span class="n">validate</span><span class="p">()</span>
 
@@ -237,7 +233,11 @@
 
 
 
-<span class="k">def</span> <span class="nf">_get_tensor_range</span><span class="p">(</span><span class="n">tensor_name</span><span class="p">,</span> <span class="n">tensor_value</span><span class="p">,</span> <span class="n">activation_stats_dict</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_update_tensor_range</span><span class="p">(</span>
+    <span class="n">tensor_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">tensor_value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">],</span>
+    <span class="n">activation_stats_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="n">tensor_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tensor_value</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
     <span class="n">tensor_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">tensor_value</span><span class="p">)</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
     <span class="n">activation_stats_dict</span><span class="p">[</span><span class="n">tensor_name</span><span class="p">][</span><span class="s2">&quot;rmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor_min</span>
@@ -254,7 +254,82 @@
         <span class="n">activation_stats_dict</span><span class="p">[</span><span class="n">tensor_name</span><span class="p">][</span><span class="s2">&quot;rmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">tensor_max</span>
 
 
-<span class="k">def</span> <span class="nf">_get_activation_calibration_stats</span><span class="p">(</span><span class="n">fpmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">:</span> <span class="n">List</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_combine_lists_with_common_elements</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data: list[list[]]</span>
+<span class="sd">        data is a list of lists with strings.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    merged: combined lists with common elements.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    input: [[&quot;conv0&quot;, &quot;conv1&quot;, &quot;conv2&quot;], [&quot;conv0&quot;, &quot;conv3&quot;], [&quot;relu0&quot;]]</span>
+<span class="sd">    output: [[&quot;conv0&quot;, &quot;conv1&quot;, &quot;conv2&quot;, &quot;conv3&quot;], [&quot;relu0&quot;]]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">merged</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">item_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="n">not_exsit</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">merged</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="o">&amp;</span> <span class="n">item_set</span><span class="p">:</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">item_set</span><span class="p">)</span>
+                <span class="n">not_exsit</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">break</span>
+        <span class="k">if</span> <span class="n">not_exsit</span><span class="p">:</span>
+            <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item_set</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">merged</span>
+
+
+<span class="k">def</span> <span class="nf">_adjust_concat_surrounding_activation_stats</span><span class="p">(</span>
+    <span class="n">concat_op_info_list</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">activation_stats_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adjust the activation calibration stats of inputs/outputs to the same concat ops to maximize hardware efficiency.</span>
+<span class="sd">    Tensor values of inputs/outputs to the same concat op should share same range (same min/max), so the quantized</span>
+<span class="sd">    concat could be surrounded by quantize/dequantize pairs with same scale and zero point values.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    - concat 1 -</span>
+<span class="sd">    inputs:  &quot;input_1&quot;, &quot;input_2&quot;, &quot;input_3&quot;</span>
+<span class="sd">    output:  &quot;output_1&quot;</span>
+
+<span class="sd">    - concat 2 -</span>
+<span class="sd">    inputs:  &quot;input_1&quot;, &quot;input_4&quot;</span>
+<span class="sd">    output:  &quot;output_2&quot;</span>
+
+<span class="sd">    Input/output tensors range of concat 1 should be identical.</span>
+<span class="sd">    Input/output tensors range of concat 2 should be identical.</span>
+<span class="sd">    &quot;input_1&quot; is in both, which means activation calibration stats of all 6 tensors above should be identical.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">concat_op_info_list</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Merge tensor names which should have identical values, to the same list.</span>
+    <span class="n">concat_list_adjusted</span> <span class="o">=</span> <span class="n">_combine_lists_with_common_elements</span><span class="p">(</span><span class="n">concat_op_info_list</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">concat_group</span> <span class="ow">in</span> <span class="n">concat_list_adjusted</span><span class="p">:</span>
+        <span class="n">group_rmin_list</span><span class="p">,</span> <span class="n">group_rmax_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">tensor_name</span> <span class="ow">in</span> <span class="n">concat_group</span><span class="p">:</span>
+            <span class="n">group_rmin_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">activation_stats_dict</span><span class="p">[</span><span class="n">tensor_name</span><span class="p">][</span><span class="s2">&quot;rmin&quot;</span><span class="p">])</span>
+            <span class="n">group_rmax_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">activation_stats_dict</span><span class="p">[</span><span class="n">tensor_name</span><span class="p">][</span><span class="s2">&quot;rmax&quot;</span><span class="p">])</span>
+        <span class="n">group_rmin</span><span class="p">,</span> <span class="n">group_rmax</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">group_rmin_list</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">group_rmax_list</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">tensor_name</span> <span class="ow">in</span> <span class="n">concat_group</span><span class="p">:</span>
+            <span class="n">activation_stats_dict</span><span class="p">[</span><span class="n">tensor_name</span><span class="p">][</span><span class="s2">&quot;rmin&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_rmin</span>
+            <span class="n">activation_stats_dict</span><span class="p">[</span><span class="n">tensor_name</span><span class="p">][</span><span class="s2">&quot;rmax&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">group_rmax</span>
+
+
+<span class="k">def</span> <span class="nf">_get_activation_calibration_stats</span><span class="p">(</span>
+    <span class="n">fpmodel</span><span class="p">:</span> <span class="n">_MLModel</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">:</span> <span class="n">List</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">]]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calibration and store a dict of intermediate tensor stats.</span>
 <span class="sd">    E.g. activation_stats_dict = {tensor_0: {rmin: 0.2, rmax: 3.8}, tensor_1: {rmin: 4.5, rmax: 12.6}}}</span>
@@ -290,7 +365,7 @@
     <span class="c1"># Get data ranges for all inputs.</span>
     <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">sample_data</span><span class="p">:</span>
         <span class="k">for</span> <span class="n">input_name</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="n">_get_tensor_range</span><span class="p">(</span><span class="n">input_name</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">input_name</span><span class="p">],</span> <span class="n">activation_stats_dict</span><span class="p">)</span>
+            <span class="n">_update_tensor_range</span><span class="p">(</span><span class="n">input_name</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">input_name</span><span class="p">],</span> <span class="n">activation_stats_dict</span><span class="p">)</span>
 
     <span class="c1"># The last few elements in intermediate_output_names might be output.</span>
     <span class="c1"># We don&#39;t maintain min/max value for an output tensor.</span>
@@ -331,6 +406,11 @@
                 <span class="p">)</span>
             <span class="p">)</span>
             <span class="k">continue</span>
+
+    <span class="c1"># Handle a special case - concat ops.</span>
+    <span class="n">_adjust_concat_surrounding_activation_stats</span><span class="p">(</span>
+        <span class="n">debugger</span><span class="o">.</span><span class="n">_get_concat_op_info</span><span class="p">(),</span> <span class="n">activation_stats_dict</span>
+    <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">activation_stats_dict</span>
 </pre></div>

@@ -8,7 +8,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -127,6 +127,11 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_repeat_ops.reduce_transposes"><code class="docutils literal notranslate"><span class="pre">reduce_transposes</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_state">optimize_state</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_state.canonicalize_inplace_pattern"><code class="docutils literal notranslate"><span class="pre">canonicalize_inplace_pattern</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_state.prefer_state_in_downstream"><code class="docutils literal notranslate"><span class="pre">prefer_state_in_downstream</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation">optimize_tensor_operation</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.concat_to_pixel_shuffle"><code class="docutils literal notranslate"><span class="pre">concat_to_pixel_shuffle</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation.detect_concat_interleave"><code class="docutils literal notranslate"><span class="pre">detect_concat_interleave</span></code></a></li>
@@ -144,6 +149,10 @@
 </li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.quantization">quantization</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.quantization.add_fp16_cast"><code class="docutils literal notranslate"><span class="pre">add_fp16_cast</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.mil.passes.defs.symbol_transform">symbol_transform</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.mil.passes.defs.symbol_transform.materialize_symbolic_shape_program"><code class="docutils literal notranslate"><span class="pre">materialize_symbolic_shape_program</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -1123,6 +1132,19 @@ zero point, axis), they cancel out and can be eliminated</p>
     <span class="nb">input</span> <span class="o">-&gt;</span> <span class="n">output</span>
 </pre></div>
 </div>
+<p>When the pattern has branches (dequantize has multiple children), we cannot
+eliminate the whole pair, but can still shorten the path. More specifically:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Input</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">op1</span> <span class="o">-&gt;</span> <span class="n">dequantize</span> <span class="o">-&gt;</span> <span class="n">quantize</span> <span class="o">-&gt;</span> <span class="n">op2</span>
+                 <span class="o">|</span>
+                 <span class="o">|-&gt;</span> <span class="n">some_other_op</span>
+
+<span class="n">Output</span> <span class="n">graph</span><span class="p">:</span>
+    <span class="n">op1</span> <span class="o">-&gt;</span> <span class="n">dequantize</span> <span class="o">-&gt;</span> <span class="n">some_other_op</span>
+     <span class="o">|</span>
+     <span class="o">|-&gt;</span> <span class="n">op2</span>
+</pre></div>
+</div>
 <p>PS: On the other hand, the reversed pattern, i.e., <code class="docutils literal notranslate"><span class="pre">quantize</span> <span class="pre">-&gt;</span> <span class="pre">dequantize</span></code>,
 is not redundant, since that is the pattern which naturally occurs when a
 quantized op is converted.
@@ -1471,6 +1493,85 @@ with transpose nodes highlighted.</p>
 </dd></dl>
 
 </section>
+<section id="module-coremltools.converters.mil.mil.passes.defs.optimize_state">
+<span id="optimize-state"></span><h2>optimize_state<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_state" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_state.canonicalize_inplace_pattern">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_state.</span></span><span class="sig-name descname"><span class="pre">canonicalize_inplace_pattern</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_state.html#canonicalize_inplace_pattern"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_state.canonicalize_inplace_pattern" title="Link to this definition"></a></dt>
+<dd><p>As a functional-graph framework, Core ML represents in-place operation as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">read_state</span> <span class="o">-&gt;</span> <span class="n">functional</span> <span class="n">operation</span> <span class="o">-&gt;</span> <span class="n">write_state</span>
+</pre></div>
+</div>
+<p>Due to the non-uniqueness of topological order, in the list representation of ops,
+<code class="docutils literal notranslate"><span class="pre">write_state</span></code> can be anywhere after the functional op. We prefer the canonical order,
+i.e. have <code class="docutils literal notranslate"><span class="pre">write_state</span></code> immediately follow the functional op</p>
+<p>In practice</p>
+<p>1. In PyMIL, we do not use <code class="docutils literal notranslate"><span class="pre">write_state</span></code> op. Instead, we use <code class="docutils literal notranslate"><span class="pre">coreml_update_state</span></code>,
+which is the composition of <code class="docutils literal notranslate"><span class="pre">write_state</span> <span class="pre">-&gt;</span> <span class="pre">read_state</span></code></p>
+<ol class="arabic simple" start="2">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">read_state</span></code> op does not matter in the pattern match and transform</p></li>
+</ol>
+<p>So we will match</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">functional</span> <span class="n">operation</span> <span class="o">-&gt;</span> <span class="n">coreml_update_state</span>
+</pre></div>
+</div>
+<p>then reorder the <code class="docutils literal notranslate"><span class="pre">coreml_update_state</span></code>. For example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
+
+    <span class="n">mul</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">coreml_update_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">mul</span><span class="p">)</span>
+
+<span class="n">Return</span><span class="p">:</span>
+
+    <span class="n">mul</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">coreml_update_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">mul</span><span class="p">)</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.optimize_state.prefer_state_in_downstream">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.optimize_state.</span></span><span class="sig-name descname"><span class="pre">prefer_state_in_downstream</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/optimize_state.html#prefer_state_in_downstream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.optimize_state.prefer_state_in_downstream" title="Link to this definition"></a></dt>
+<dd><p>As a functional-graph framework, Core ML represents in-place operation as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">read_state</span> <span class="o">-&gt;</span> <span class="n">functional</span> <span class="n">operation</span> <span class="o">-&gt;</span> <span class="n">write_state</span>
+</pre></div>
+</div>
+<p>When the output of the in-place operation is used downstream,
+there are 2 possible patterns, one reuses state memory</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">read_state</span> <span class="o">-&gt;</span> <span class="n">functional</span> <span class="n">operation</span> <span class="o">-&gt;</span> <span class="n">write_state</span> <span class="o">-&gt;</span> <span class="n">read_state</span> <span class="o">-&gt;</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>the other wastes memory for keeping functional output</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>                                    <span class="o">|-&gt;</span> <span class="n">write_state</span>
+<span class="n">read_state</span> <span class="o">-&gt;</span> <span class="n">functional</span> <span class="n">operation</span> <span class="o">-|</span>
+                                    <span class="o">|-&gt;</span> <span class="o">...</span>
+</pre></div>
+</div>
+<p>We prefer the reuse-state one</p>
+<p>In practice</p>
+<p>1. In PyMIL, we do not use <code class="docutils literal notranslate"><span class="pre">write_state</span></code> op. Instead, we use <code class="docutils literal notranslate"><span class="pre">coreml_update_state</span></code>,
+which is the composition of <code class="docutils literal notranslate"><span class="pre">write_state</span> <span class="pre">-&gt;</span> <span class="pre">read_state</span></code></p>
+<p>2. With canonical inplace pattern (guaranteed by graph pass <code class="docutils literal notranslate"><span class="pre">canonicalize_inplace_pattern</span></code>),
+simply replace the usage of functional output with <code class="docutils literal notranslate"><span class="pre">coreml_update_state</span></code> output is enough</p>
+<p>For example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Given</span><span class="p">:</span>
+
+    <span class="n">mul</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">coreml_update_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">mul</span><span class="p">)</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+
+<span class="n">Return</span><span class="p">:</span>
+
+    <span class="n">mul</span> <span class="o">=</span> <span class="n">mul</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+    <span class="n">update</span> <span class="o">=</span> <span class="n">coreml_update_state</span><span class="p">(</span><span class="n">state</span><span class="p">,</span> <span class="n">mul</span><span class="p">)</span>
+    <span class="n">add</span> <span class="o">=</span> <span class="n">add</span><span class="p">(</span><span class="n">update</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
 <section id="module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation">
 <span id="optimize-tensor-operation"></span><h2>optimize_tensor_operation<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.optimize_tensor_operation" title="Link to this heading"></a></h2>
 <dl class="py class">
@@ -1673,6 +1774,76 @@ other passes’ interfaces.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">skip_ops_by_type</span></code>: Skip op types specified by comma-separated string; for example, <code class="docutils literal notranslate"><span class="pre">&quot;mul,const&quot;</span></code>.</p></li>
 </ul>
+</dd></dl>
+
+</section>
+<section id="module-coremltools.converters.mil.mil.passes.defs.symbol_transform">
+<span id="symbol-transform"></span><h2>symbol_transform<a class="headerlink" href="#module-coremltools.converters.mil.mil.passes.defs.symbol_transform" title="Link to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.passes.defs.symbol_transform.materialize_symbolic_shape_program">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.passes.defs.symbol_transform.</span></span><span class="sig-name descname"><span class="pre">materialize_symbolic_shape_program</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/passes/defs/symbol_transform.html#materialize_symbolic_shape_program"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.passes.defs.symbol_transform.materialize_symbolic_shape_program" title="Link to this definition"></a></dt>
+<dd><p>If we realize that only a few fixed shapes are used in a symbolic-shape model,
+we may prefer materialization into a fixed-shape (multifunction) model,
+which has the potential to be further optimized</p>
+<p>Supported options:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">function_name_to_materialization_map</span></code>: Dict[str, Dict[str, Tuple[int]]]</dt><dd><p>A dictionary specifying the name of new functions to be created,
+and for each new function what is the new fixed shapes for inputs.
+If a new function has the same name as an old function,
+then the old function will be overridden</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">source_function_name</span></code>: str</dt><dd><p>The name of the source symbolic-shape function to be materialized, default = main</p>
+</dd>
+</dl>
+</li>
+</ul>
+<p>Example:</p>
+<p>Suppose we have a symbolic shape model with 2 symbols <code class="docutils literal notranslate"><span class="pre">is0</span></code> and <code class="docutils literal notranslate"><span class="pre">is1</span></code></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">symbolic_shape_mlmodel</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span>
+<span class="n">symbolic_shape_prog</span> <span class="o">=</span> <span class="n">symbolic_shape_mlmodel</span><span class="o">.</span><span class="n">_mil_program</span>
+</pre></div>
+</div>
+<p>We may invoke this graph pass to materialize some fixed shapes (e.g. <code class="docutils literal notranslate"><span class="pre">is0</span> <span class="pre">=</span> <span class="pre">2,</span> <span class="pre">is1</span> <span class="pre">=</span> <span class="pre">5</span></code>
+and <code class="docutils literal notranslate"><span class="pre">is0</span> <span class="pre">=</span> <span class="pre">4,</span> <span class="pre">is1</span> <span class="pre">=</span> <span class="pre">7</span></code>), then run every other optimization passes</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pass_pipeline</span><span class="p">:</span> <span class="n">PassPipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">PassPipeline</span><span class="o">.</span><span class="n">DEFAULT</span>
+<span class="n">pass_pipeline</span><span class="o">.</span><span class="n">insert_pass</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;common::materialize_symbolic_shape_program&quot;</span><span class="p">)</span>
+<span class="n">pass_pipeline</span><span class="o">.</span><span class="n">set_options</span><span class="p">(</span>
+    <span class="s2">&quot;common::materialize_symbolic_shape_program&quot;</span><span class="p">,</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;function_name_to_materialization_map&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="c1"># As an example, let us assume the input is x (is0, is1, 1024)</span>
+            <span class="s2">&quot;materialization_2_5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)},</span>
+            <span class="s2">&quot;materialization_4_7&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)},</span>
+        <span class="p">}</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+<span class="n">PassPipelineManager</span><span class="o">.</span><span class="n">apply_pipeline</span><span class="p">(</span><span class="n">symbolic_shape_prog</span><span class="p">,</span> <span class="n">pass_pipeline</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We will arrive at</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">main</span><span class="p">[</span><span class="n">CoreML8</span><span class="p">](</span><span class="o">%</span><span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="n">is0</span><span class="p">,</span> <span class="n">is1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">fp16</span><span class="p">)(</span><span class="n">Tensor</span><span class="p">))</span> <span class="p">{</span>
+  <span class="n">block0</span><span class="p">()</span> <span class="p">{</span>
+    <span class="o">...</span>
+  <span class="p">}</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="o">%</span><span class="n">y</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">materialization_2_5</span><span class="p">[</span><span class="n">CoreML8</span><span class="p">](</span><span class="o">%</span><span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">fp16</span><span class="p">)(</span><span class="n">Tensor</span><span class="p">))</span> <span class="p">{</span>
+  <span class="n">block5</span><span class="p">()</span> <span class="p">{</span>
+    <span class="o">...</span>
+  <span class="p">}</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="o">%</span><span class="n">y</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">materialization_4_7</span><span class="p">[</span><span class="n">CoreML8</span><span class="p">](</span><span class="o">%</span><span class="n">x</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">fp16</span><span class="p">)(</span><span class="n">Tensor</span><span class="p">))</span> <span class="p">{</span>
+  <span class="n">block6</span><span class="p">()</span> <span class="p">{</span>
+    <span class="o">...</span>
+  <span class="p">}</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="o">%</span><span class="n">y</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </section>

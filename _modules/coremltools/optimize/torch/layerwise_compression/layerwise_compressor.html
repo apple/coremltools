@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -404,7 +404,10 @@
         <span class="n">layer_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_config</span><span class="o">.</span><span class="n">get_module_config</span><span class="p">(</span><span class="n">atomic_layer_name</span><span class="p">,</span> <span class="n">atomic_layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">layer_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">algo_class</span> <span class="o">=</span> <span class="n">_LayerwiseCompressionAlgorithm</span><span class="o">.</span><span class="n">get_class</span><span class="p">(</span><span class="n">layer_config</span><span class="o">.</span><span class="n">algorithm</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">algo_class</span><span class="p">(</span><span class="n">atomic_layer</span><span class="p">,</span> <span class="n">layer_config</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">algo_class</span><span class="p">(</span><span class="n">atomic_layer</span><span class="p">,</span> <span class="n">layer_config</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">error</span><span class="p">:</span>
+                <span class="n">_logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping compression for </span><span class="si">{</span><span class="n">atomic_layer_name</span><span class="si">}</span><span class="s2">. Reason=</span><span class="si">{</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="kc">None</span>
 
     <span class="k">def</span> <span class="nf">_register_activation_processing_hook</span><span class="p">(</span>

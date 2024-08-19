@@ -8,7 +8,7 @@
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -173,6 +173,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor.remove_function"><code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor.remove_function()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.bisect_model"><code class="docutils literal notranslate"><span class="pre">bisect_model()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.compile_model"><code class="docutils literal notranslate"><span class="pre">compile_model()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.convert_double_to_float_multiarray_type"><code class="docutils literal notranslate"><span class="pre">convert_double_to_float_multiarray_type()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier()</span></code></a></li>
@@ -181,6 +182,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_transformer"><code class="docutils literal notranslate"><span class="pre">evaluate_transformer()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.load_spec"><code class="docutils literal notranslate"><span class="pre">load_spec()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.make_pipeline"><code class="docutils literal notranslate"><span class="pre">make_pipeline()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.materialize_dynamic_shape_mlmodel"><code class="docutils literal notranslate"><span class="pre">materialize_dynamic_shape_mlmodel()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.randomize_weights"><code class="docutils literal notranslate"><span class="pre">randomize_weights()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.rename_feature"><code class="docutils literal notranslate"><span class="pre">rename_feature()</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.save_multifunction"><code class="docutils literal notranslate"><span class="pre">save_multifunction()</span></code></a></li>
@@ -1550,6 +1552,67 @@ Same function names in the original model will be applied.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="coremltools.models.utils.bisect_model">
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">bisect_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_chunks_to_pipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_output_correctness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#bisect_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.bisect_model" title="Link to this definition"></a></dt>
+<dd><p>Utility function to split a mlpackage model into two mlpackages of approximately same file size.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>model: str or MLModel</strong></dt><dd><p>Path to the mlpackage file, or a Core ML model, to be split into two mlpackages of approximately same file size.</p>
+</dd>
+<dt><strong>output_dir: str</strong></dt><dd><p>Path to output directory where the two model chunks / pipeline model would be saved.</p>
+<p>If the <cite>model</cite> is <cite>{path}/{model_name}.mlpackage</cite>, the chunk models are going to be saved as:
+1. first chunk model: <cite>{output_dir}/{model_name}_chunk1.mlpackage</cite>
+2. second chunk model: <cite>{output_dir}/{model_name}_chunk2.mlpackage</cite>
+3. chunked pipeline model: <cite>{output_dir}/{model_name}_chunked_pipeline.mlpackage</cite></p>
+<p>If the <cite>model</cite> is type of <cite>MLModel</cite>, the chunk models are saved as:
+1. first chunk model: <cite>{output_dir}/chunk1.mlpackage</cite>
+2. second chunk model: <cite>{output_dir}/chunk2.mlpackage</cite>
+3. chunked pipeline model: <cite>{output_dir}/chunked_pipeline.mlpackage</cite></p>
+</dd>
+<dt><strong>merge_chunks_to_pipeline: bool</strong></dt><dd><p>If True, model chunks are managed inside a single pipeline model for easier asset maintenance.</p>
+</dd>
+<dt><strong>check_output_correctness: bool</strong></dt><dd><ul class="simple">
+<li><p>If True, compares the outputs of original Core ML model with that of pipelined CoreML model chunks and reports PSNR in dB.</p></li>
+<li><p>Enabling this feature uses more memory. Disable it if your machine runs out of memory.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+
+<span class="n">model_path</span> <span class="o">=</span> <span class="s2">&quot;my_model.mlpackage&quot;</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;./output/&quot;</span>
+
+<span class="c1"># The following code will produce two smaller models:</span>
+<span class="c1"># `./output/my_model_chunk1.mlpackage` and `./output/my_model_chunk2.mlpackage`</span>
+<span class="c1"># It also compares the output numerical of the original Core ML model with the chunked models.</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bisect_model</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># The following code will produce a single pipeline model `./output/my_model_chunked_pipeline.mlpackage`</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bisect_model</span><span class="p">(</span>
+    <span class="n">model_path</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+    <span class="n">merge_chunks_to_pipeline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># You can also pass the MLModel object directly</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+<span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">bisect_model</span><span class="p">(</span>
+    <span class="n">mlmodel</span><span class="p">,</span>
+    <span class="n">output_dir</span><span class="p">,</span>
+    <span class="n">merge_chunks_to_pipeline</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.compile_model">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">compile_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#compile_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.compile_model" title="Link to this definition"></a></dt>
 <dd><p>Compiles a Core ML model spec.</p>
@@ -1729,7 +1792,7 @@ from the original framework (for testing correctness of conversion).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>spec: list of str or list of MLModel</strong></dt><dd><p>File to load the Model from, or a loaded
+<dt><strong>model: list of str or list of MLModel</strong></dt><dd><p>File to load the Model from, or a loaded
 version of the MLModel.</p>
 </dd>
 <dt><strong>input_data: list of dict</strong></dt><dd><p>Test data on which to evaluate the models.</p>
@@ -1759,7 +1822,7 @@ version of the MLModel.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.load_spec">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">load_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'coremltools.proto.Model_pb2'</span> <span class="pre">from</span> <span class="pre">'/Volumes/DevData/workspace/coremltools/coremltools/proto/Model_pb2.py'&gt;</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#load_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">load_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'coremltools.proto.Model_pb2'</span> <span class="pre">from</span> <span class="pre">'/Users/henry/Desktop/projects/coremltools/coremltools/proto/Model_pb2.py'&gt;</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#load_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Link to this definition"></a></dt>
 <dd><p>Load a protobuf model specification from file (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code>) or directory (<code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1834,6 +1897,70 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 
 <span class="n">my_pipeline_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;/tmp/my_pipeline.mlpackage&quot;</span><span class="p">)</span>
 <span class="n">new_my_pipeline</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;/tmp/my_pipeline.mlpackage&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="coremltools.models.utils.materialize_dynamic_shape_mlmodel">
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">materialize_dynamic_shape_mlmodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynamic_shape_mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name_to_materialization_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#materialize_dynamic_shape_mlmodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.materialize_dynamic_shape_mlmodel" title="Link to this definition"></a></dt>
+<dd><p>Given a dynamic-shape mlmodel, materialize symbols to create fixed-shape functions,
+then save as an .mlpackage to destination path.
+To save memory, the pymil program of input dynamic-shape mlmodel is re-used.
+Constant deduplication across functions is performed to allow weight sharing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>dynamic_shape_mlmodel</strong><span class="classifier">ct.models.MLModel</span></dt><dd><p>A dynamic-shape mlmodel to be materialized</p>
+</dd>
+<dt><strong>function_name_to_materialization_map: Dict[str, Dict[str, Tuple[int]]]</strong></dt><dd><p>A dictionary specifying the name of new functions to be created,
+and for each new function what is the new fixed shapes for inputs.
+If a new function has the same name as an old function,
+then the old function will be overridden</p>
+</dd>
+<dt><strong>destination_path</strong><span class="classifier">str</span></dt><dd><p>The saved .mlpackage model path</p>
+</dd>
+<dt><strong>source_function_name: str</strong></dt><dd><p>The name of the source symbolic-shape function to be materialized, default = main</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.passes.defs.experiment.materialize_symbolic_shape_program</span></code></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">materialize_dynamic_shape_mlmodel</span>
+
+<span class="c1"># A dynamic-shape mlmodel you have converted</span>
+<span class="n">dynamic_shape_mlmodel</span><span class="p">:</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span>
+
+<span class="c1"># As an example, let us assume the inputs are</span>
+<span class="c1"># 1. ``input_ids (1, query_length)``</span>
+<span class="c1"># 2. ``mask (query_length, context_length)``</span>
+<span class="n">function_name_to_materialization_map</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;function_name_to_materialization_map&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;materialization_2_3&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)},</span>
+        <span class="s2">&quot;materialization_4_5&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="s2">&quot;mask&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">)},</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="n">materialize_dynamic_shape_mlmodel</span><span class="p">(</span>
+    <span class="n">dynamic_shape_mlmodel</span><span class="p">,</span>
+    <span class="n">function_name_to_materialization_map</span><span class="p">,</span>
+    <span class="s2">&quot;materialized_model.mlpackage&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>To make prediction from the materialized mlmodel, load the desired materialized function</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">materialization_2_3</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span>
+    <span class="s2">&quot;materialized_model.mlpackage&quot;</span><span class="p">,</span> <span class="n">function_name</span><span class="o">=</span><span class="s2">&quot;materialization_2_3&quot;</span>
+<span class="p">)</span>
+<span class="n">materialization_4_5</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span>
+    <span class="s2">&quot;materialized_model.mlpackage&quot;</span><span class="p">,</span> <span class="n">function_name</span><span class="o">=</span><span class="s2">&quot;materialization_4_5&quot;</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -1938,7 +2065,7 @@ The utility also performs constant deduplication across functions to allow weigh
 <span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s2">&quot;my_model_2.mlpackage&quot;</span><span class="p">,</span> <span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="s2">&quot;main_2&quot;</span><span class="p">)</span>
 <span class="n">desc</span><span class="o">.</span><span class="n">default_function_name</span> <span class="o">=</span> <span class="s2">&quot;main_2&quot;</span>
 
-<span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;multifunctino_model.mlpackage&quot;</span><span class="p">)</span>
+<span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;multifunction_model.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </dd></dl>

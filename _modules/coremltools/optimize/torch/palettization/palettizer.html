@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -112,6 +112,9 @@
     <span class="n">register_metadata_version</span> <span class="k">as</span> <span class="n">_register_metadata_version</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.torch_utils</span> <span class="kn">import</span> <span class="n">get_eval_model</span> <span class="k">as</span> <span class="n">_get_eval_model</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.validation_utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">validate_param_config</span> <span class="k">as</span> <span class="n">_validate_param_config</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.base_model_optimizer</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BaseTrainingTimeModelOptimizer</span> <span class="k">as</span> <span class="n">_BaseTrainingTimeModelOptimizer</span><span class="p">,</span>
 <span class="p">)</span>
@@ -212,7 +215,7 @@
                     <span class="k">for</span> <span class="n">submod_config</span> <span class="ow">in</span> <span class="n">submod_configs</span><span class="p">:</span>
                         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span>
                             <span class="n">param</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">weight_threshold</span>
-                            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">_get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
+                            <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">_get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">)</span>
                         <span class="p">):</span>
                             <span class="n">module_level_advanced_options</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_module_level_advanced_options</span><span class="p">(</span>
                                 <span class="n">submodule</span><span class="p">,</span> <span class="n">submod_config</span>
@@ -234,20 +237,38 @@
                                     <span class="s2">&quot;enable_per_channel_scale&quot;</span>
                                 <span class="p">]</span>
                             <span class="p">)</span>
+                            <span class="n">updated_config</span> <span class="o">=</span> <span class="kc">None</span>
+                            <span class="k">for</span> <span class="n">param</span><span class="p">,</span> <span class="n">param_name</span> <span class="ow">in</span> <span class="n">_get_palettizable_parameters</span><span class="p">(</span><span class="n">submodule</span><span class="p">):</span>
+                                <span class="n">updated_config</span> <span class="o">=</span> <span class="n">_validate_param_config</span><span class="p">(</span>
+                                    <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">param_name</span><span class="p">,</span>
+                                    <span class="n">param</span><span class="p">,</span>
+                                    <span class="n">submodule</span><span class="p">,</span>
+                                    <span class="n">submod_config</span><span class="p">,</span>
+                                    <span class="p">[</span>
+                                        <span class="s2">&quot;palettization_cluster_dim&quot;</span><span class="p">,</span>
+                                        <span class="s2">&quot;palettization_group_size&quot;</span><span class="p">,</span>
+                                    <span class="p">],</span>
+                                    <span class="n">module_level_advanced_options</span><span class="p">,</span>
+                                <span class="p">)</span>
+                                <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_config</span><span class="p">:</span>
+                                    <span class="k">break</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_config</span><span class="p">:</span>
+                                <span class="k">continue</span>
+
                             <span class="bp">self</span><span class="o">.</span><span class="n">_palettize_module</span><span class="p">(</span>
                                 <span class="n">submodule</span><span class="p">,</span>
                                 <span class="n">n_bits</span><span class="p">,</span>
                                 <span class="n">cluster_dim</span><span class="p">,</span>
                                 <span class="n">enable_per_channel_scale</span><span class="p">,</span>
-                                <span class="n">submod_config</span><span class="o">.</span><span class="n">group_size</span><span class="p">,</span>
-                                <span class="n">submod_config</span><span class="o">.</span><span class="n">quant_min</span><span class="p">,</span>
-                                <span class="n">submod_config</span><span class="o">.</span><span class="n">quant_max</span><span class="p">,</span>
-                                <span class="n">submod_config</span><span class="o">.</span><span class="n">cluster_dtype</span><span class="p">,</span>
-                                <span class="n">submod_config</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
-                                <span class="n">submod_config</span><span class="o">.</span><span class="n">quantize_activations</span><span class="p">,</span>
+                                <span class="n">updated_config</span><span class="o">.</span><span class="n">group_size</span><span class="p">,</span>
+                                <span class="n">updated_config</span><span class="o">.</span><span class="n">quant_min</span><span class="p">,</span>
+                                <span class="n">updated_config</span><span class="o">.</span><span class="n">quant_max</span><span class="p">,</span>
+                                <span class="n">updated_config</span><span class="o">.</span><span class="n">lut_dtype</span><span class="p">,</span>
+                                <span class="n">updated_config</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+                                <span class="n">updated_config</span><span class="o">.</span><span class="n">quantize_activations</span><span class="p">,</span>
                                 <span class="n">module_level_advanced_options</span><span class="p">,</span>
                             <span class="p">)</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">milestone</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_milestones</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">updated_config</span><span class="o">.</span><span class="n">milestone</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">_palettize_module</span><span class="p">(</span>
@@ -258,7 +279,7 @@
         <span class="n">group_size</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
         <span class="n">quant_min</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
         <span class="n">quant_max</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-        <span class="n">cluster_dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">lut_dtype</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
         <span class="n">dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
         <span class="n">quantize_activations</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="n">advanced_options</span><span class="p">:</span> <span class="n">_Dict</span><span class="p">,</span>
@@ -277,7 +298,7 @@
             <span class="n">group_size</span><span class="o">=</span><span class="n">group_size</span><span class="p">,</span>
             <span class="n">quant_min</span><span class="o">=</span><span class="n">quant_min</span><span class="p">,</span>
             <span class="n">quant_max</span><span class="o">=</span><span class="n">quant_max</span><span class="p">,</span>
-            <span class="n">cluster_dtype</span><span class="o">=</span><span class="n">cluster_dtype</span><span class="p">,</span>
+            <span class="n">lut_dtype</span><span class="o">=</span><span class="n">lut_dtype</span><span class="p">,</span>
             <span class="n">advanced_options</span><span class="o">=</span><span class="n">advanced_options</span><span class="p">,</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">quantize_activations</span><span class="p">:</span>
@@ -302,7 +323,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">module_level_advanced_options</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_DEFAULT_PALETTIZATION_ADVANCED_OPTIONS</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;cluster_permute&quot;</span> <span class="ow">and</span> <span class="n">module_level_config</span><span class="o">.</span><span class="n">cluster_dtype</span> <span class="o">==</span> <span class="s2">&quot;oc_last&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s2">&quot;cluster_permute&quot;</span> <span class="ow">and</span> <span class="n">module_level_config</span><span class="o">.</span><span class="n">lut_dtype</span> <span class="o">==</span> <span class="s2">&quot;oc_last&quot;</span><span class="p">:</span>
                 <span class="n">cluster_permute</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">dim</span><span class="p">()))</span>
                 <span class="n">cluster_permute</span> <span class="o">=</span> <span class="n">cluster_permute</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">+</span> <span class="n">cluster_permute</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span>
                 <span class="n">module_level_advanced_options</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cluster_permute</span>
@@ -349,6 +370,7 @@
         <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span>
         <span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
         <span class="n">finalized_model</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quantization</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
             <span class="n">model</span><span class="p">,</span> <span class="n">convert_custom_config_dict</span><span class="o">=</span><span class="n">_PALETTIZATION_CONVERT_DICT</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="n">inplace</span>
         <span class="p">)</span>
@@ -440,7 +462,7 @@
                     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="s2">&quot;weight_fake_quant&quot;</span><span class="p">):</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;device&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">device</span>
                         <span class="n">qweight</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">forward</span><span class="p">(</span><span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">detach</span><span class="p">())</span>
-                        <span class="n">cluster_dtype</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">cluster_dtype</span>
+                        <span class="n">lut_dtype</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">lut_dtype</span>
                         <span class="n">cluster_permute</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">cluster_permute</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">_rmse_error</span><span class="p">(</span>
                             <span class="n">module</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span> <span class="n">qweight</span>
@@ -449,7 +471,7 @@
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;#params&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">numel</span><span class="p">(</span><span class="n">qweight</span><span class="p">))</span>
                         <span class="n">cluster_dim</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">weight_fake_quant</span><span class="o">.</span><span class="n">cluster_dim</span>
                         <span class="n">module_summary</span><span class="p">[</span><span class="s2">&quot;#dtype&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-                            <span class="sa">f</span><span class="s2">&quot;:num_clusters: </span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2"> &lt;</span><span class="si">{</span><span class="n">cluster_dtype</span><span class="p">,</span><span class="w"> </span><span class="n">cluster_permute</span><span class="si">}</span><span class="s2">&gt; &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;:num_clusters: </span><span class="si">{</span><span class="n">n_clusters</span><span class="si">}</span><span class="s2"> &lt;</span><span class="si">{</span><span class="n">lut_dtype</span><span class="p">,</span><span class="w"> </span><span class="n">cluster_permute</span><span class="si">}</span><span class="s2">&gt; &quot;</span>
                             <span class="sa">f</span><span class="s2">&quot;dim=</span><span class="si">{</span><span class="n">cluster_dim</span><span class="si">}</span><span class="s2">&quot;</span>
                         <span class="p">)</span>
                         <span class="n">report</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">module_summary</span>

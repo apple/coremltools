@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -655,6 +655,21 @@
 <span class="sd">        Output graph:</span>
 <span class="sd">            input -&gt; output</span>
 
+<span class="sd">    When the pattern has branches (dequantize has multiple children), we cannot</span>
+<span class="sd">    eliminate the whole pair, but can still shorten the path. More specifically:</span>
+
+<span class="sd">    .. code-block::</span>
+
+<span class="sd">        Input graph:</span>
+<span class="sd">            op1 -&gt; dequantize -&gt; quantize -&gt; op2</span>
+<span class="sd">                         |</span>
+<span class="sd">                         |-&gt; some_other_op</span>
+
+<span class="sd">        Output graph:</span>
+<span class="sd">            op1 -&gt; dequantize -&gt; some_other_op</span>
+<span class="sd">             |</span>
+<span class="sd">             |-&gt; op2</span>
+
 <span class="sd">    PS: On the other hand, the reversed pattern, i.e., ``quantize -&gt; dequantize``,</span>
 <span class="sd">    is not redundant, since that is the pattern which naturally occurs when a</span>
 <span class="sd">    quantized op is converted.</span>
@@ -701,44 +716,49 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">try_dequantize_quantize_pair_elimination</span><span class="p">(</span><span class="n">op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">_check_quantize_removable</span><span class="p">(</span><span class="n">quantize_op</span><span class="p">:</span> <span class="n">Operation</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">is_dequantize_zp_present</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">is_quantize_zp_present</span> <span class="o">=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">is_dequantize_zp_present</span> <span class="o">!=</span> <span class="n">is_quantize_zp_present</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">is_dequantize_zp_present</span> <span class="ow">and</span> <span class="n">is_quantize_zp_present</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="n">is_dequantize_axis_present</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="n">is_quantize_axis_present</span> <span class="o">=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">is_dequantize_axis_present</span> <span class="o">!=</span> <span class="n">is_quantize_axis_present</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="n">is_dequantize_axis_present</span> <span class="ow">and</span> <span class="n">is_quantize_axis_present</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+            <span class="k">return</span> <span class="kc">True</span>
+
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;dequantize&quot;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
         <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">_check_child_op_type</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="s2">&quot;quantize&quot;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="n">quantize_op</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">is_dequantize_zp_present</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="n">is_quantize_zp_present</span> <span class="o">=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">zero_point</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">is_dequantize_zp_present</span> <span class="o">!=</span> <span class="n">is_quantize_zp_present</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">is_dequantize_zp_present</span> <span class="ow">and</span> <span class="n">is_quantize_zp_present</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">zero_point</span><span class="o">.</span><span class="n">val</span><span class="p">):</span>
-                <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">is_dequantize_axis_present</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="n">is_quantize_axis_present</span> <span class="o">=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">axis</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">is_dequantize_axis_present</span> <span class="o">!=</span> <span class="n">is_quantize_axis_present</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">if</span> <span class="n">is_dequantize_axis_present</span> <span class="ow">and</span> <span class="n">is_quantize_axis_present</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="n">quantize_op</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
-                <span class="k">return</span> <span class="kc">False</span>
-
-        <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
-            <span class="n">anchor_op</span><span class="o">=</span><span class="n">quantize_op</span><span class="p">,</span>
-            <span class="n">old_var</span><span class="o">=</span><span class="n">quantize_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
-            <span class="n">new_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
-        <span class="p">):</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">,</span> <span class="n">quantize_op</span><span class="p">])</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
+        <span class="n">any_quantize_removed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">child_op</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">child_op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;quantize&quot;</span> <span class="ow">and</span> <span class="n">_check_quantize_removable</span><span class="p">(</span><span class="n">child_op</span><span class="p">):</span>
+                <span class="n">block</span><span class="p">:</span> <span class="n">Block</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">enclosing_block</span>
+                <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">try_replace_uses_of_var_after_op</span><span class="p">(</span>
+                    <span class="n">anchor_op</span><span class="o">=</span><span class="n">child_op</span><span class="p">,</span>
+                    <span class="n">old_var</span><span class="o">=</span><span class="n">child_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                    <span class="n">new_var</span><span class="o">=</span><span class="n">op</span><span class="o">.</span><span class="n">input</span><span class="p">,</span>
+                <span class="p">):</span>
+                    <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">child_op</span><span class="p">])</span>
+                    <span class="n">any_quantize_removed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">any_quantize_removed</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">child_ops</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Remove the dequant op if all its children quantize ops got removed.</span>
+            <span class="n">block</span><span class="o">.</span><span class="n">remove_ops</span><span class="p">([</span><span class="n">op</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">any_quantize_removed</span></div>
 
 
 
@@ -1146,6 +1166,8 @@
             <span class="c1"># Only the scale on output axis could be moved to get mathematically equivalent results.</span>
             <span class="n">scale_val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="n">scale_op</span><span class="o">.</span><span class="n">scale</span><span class="o">.</span><span class="n">val</span>
             <span class="n">output_axis</span> <span class="o">=</span> <span class="n">optimize_utils</span><span class="o">.</span><span class="n">select_input_output_channel_axis</span><span class="p">(</span><span class="n">scale_op</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">output_axis</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span>
             <span class="k">if</span> <span class="n">output_axis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
                 <span class="n">output_axis</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">axis</span><span class="p">,</span> <span class="n">dim_size</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">scale_val</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>

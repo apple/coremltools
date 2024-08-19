@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -103,6 +103,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span> <span class="k">as</span> <span class="n">_Any</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Callable</span> <span class="k">as</span> <span class="n">_Callable</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span> <span class="k">as</span> <span class="n">_Dict</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span> <span class="k">as</span> <span class="n">_List</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">NewType</span> <span class="k">as</span> <span class="n">_NewType</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span> <span class="k">as</span> <span class="n">_Tuple</span>
@@ -110,6 +111,7 @@
 <span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span> <span class="k">as</span> <span class="n">_Union</span>
 
 <span class="kn">import</span> <span class="nn">cattrs</span> <span class="k">as</span> <span class="nn">_cattrs</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">torch</span> <span class="k">as</span> <span class="nn">_torch</span>
 <span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">_nn</span>
 <span class="kn">from</span> <span class="nn">attr</span> <span class="kn">import</span> <span class="n">define</span> <span class="k">as</span> <span class="n">_define</span>
@@ -117,7 +119,7 @@
 <span class="kn">from</span> <span class="nn">attrs</span> <span class="kn">import</span> <span class="n">validators</span> <span class="k">as</span> <span class="n">_validators</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS18</span> <span class="kn">import</span> <span class="n">constexpr_blockwise_shift_scale</span>
-<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml._utils</span> <span class="kn">import</span> <span class="n">compute_qparams</span> <span class="k">as</span> <span class="n">_cti_compute_qparams</span>
+<span class="kn">from</span> <span class="nn">coremltools.optimize.coreml._utils</span> <span class="kn">import</span> <span class="n">compute_qparams</span> <span class="k">as</span> <span class="n">_ct_compute_qparams</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch._utils.metadata_utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">CompressionMetadata</span> <span class="k">as</span> <span class="n">_CompressionMetadata</span><span class="p">,</span>
 <span class="p">)</span>
@@ -213,9 +215,13 @@
 <span class="sd">        data types. However, the quantization range is set according to 4-bit quantization and based on</span>
 <span class="sd">        whether the ``weight_dtype`` is signed or unsigned.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">_default_ptq_options</span><span class="p">[</span><span class="s2">&quot;weight_dtype&quot;</span><span class="p">],</span>
+        <span class="n">converter</span><span class="o">=</span><span class="n">_maybe_convert_str_to_dtype</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+            <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]),</span>
+        <span class="p">],</span>
     <span class="p">)</span>
     <span class="n">granularity</span><span class="p">:</span> <span class="n">QuantizationGranularity</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">_default_ptq_options</span><span class="p">[</span><span class="s2">&quot;granularity&quot;</span><span class="p">],</span>
@@ -240,11 +246,6 @@
 
     <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">weight_n_bits</span> <span class="o">=</span> <span class="n">_get_n_bits_from_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="o">=</span> <span class="n">_maybe_convert_str_to_dtype</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;weight_dtype must be one of (torch.uint8, torch.float32) not </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_dtype</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="p">)</span>
 
     <span class="nd">@block_size</span><span class="o">.</span><span class="n">validator</span>
     <span class="k">def</span> <span class="nf">per_block_granularity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
@@ -401,14 +402,79 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_supported_modules</span><span class="p">:</span> <span class="n">_Tuple</span><span class="p">[</span><span class="n">_Type</span><span class="p">[</span><span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">]]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">_nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">,</span>
         <span class="n">_nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span>
+        <span class="n">_nn</span><span class="o">.</span><span class="n">Conv3d</span><span class="p">,</span>
+        <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose1d</span><span class="p">,</span>
+        <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">,</span>
+        <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose3d</span><span class="p">,</span>
         <span class="n">_nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">,</span>
         <span class="n">_nn</span><span class="o">.</span><span class="n">MultiheadAttention</span><span class="p">,</span>
     <span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_get_quantization_mode</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">quantization_scheme</span><span class="p">:</span> <span class="n">_QuantizationScheme</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns quantization mode as string</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">quantization_scheme</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span>
+            <span class="n">_QuantizationScheme</span><span class="o">.</span><span class="n">affine</span><span class="p">,</span>
+            <span class="n">_QuantizationScheme</span><span class="o">.</span><span class="n">symmetric</span><span class="p">,</span>
+        <span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot; Linear quantization scheme must be one of (affine, &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;symmetric) not </span><span class="si">{</span><span class="n">quantization_scheme</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="n">quantization_mode</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span> <span class="k">if</span> <span class="n">quantization_scheme</span> <span class="o">==</span> <span class="n">_QuantizationScheme</span><span class="o">.</span><span class="n">symmetric</span> <span class="k">else</span> <span class="s2">&quot;LINEAR&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">quantization_mode</span>
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">PostTrainingQuantizerConfig</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
         <span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingQuantizerConfig</span><span class="p">()</span> <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">config</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_compute_quantization_params</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">weight</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">nbits</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">dtype</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
+        <span class="n">block_sizes</span><span class="p">:</span> <span class="n">_List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+        <span class="n">quantization_mode</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">signed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_Tuple</span><span class="p">[</span><span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute quantization parameters</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">_ct_compute_qparams</span><span class="p">(</span>
+            <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
+            <span class="n">nbits</span><span class="o">=</span><span class="n">nbits</span><span class="p">,</span>
+            <span class="n">quantization_mode</span><span class="o">=</span><span class="n">quantization_mode</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span>
+            <span class="n">block_sizes</span><span class="o">=</span><span class="n">block_sizes</span><span class="p">,</span>
+            <span class="n">signed</span><span class="o">=</span><span class="n">signed</span><span class="p">,</span>  <span class="c1"># Always used signed dtype range</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span> <span class="nf">_dequantize_weight</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">quantized_weight</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">scale</span><span class="p">:</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span>
+        <span class="n">zero_point</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span>
+        <span class="n">quantization_mode</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        De-quantize weights</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">dequantized_weight</span> <span class="o">=</span> <span class="n">constexpr_blockwise_shift_scale</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
+            <span class="n">quantized_weight</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zero_point</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">dequantized_weight</span>
 
     <span class="nd">@_torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
     <span class="k">def</span> <span class="nf">_quantize_weight</span><span class="p">(</span>
@@ -439,12 +505,25 @@
         <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_sizes</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Weight matrix has to be at least 2D or greater&quot;</span>
 
         <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">granularity</span> <span class="o">==</span> <span class="n">QuantizationGranularity</span><span class="o">.</span><span class="n">per_channel</span><span class="p">:</span>
-            <span class="n">block_sizes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+            <span class="n">blocking_axis</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="mi">1</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                    <span class="n">submodule</span><span class="p">,</span>
+                    <span class="p">(</span>
+                        <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose1d</span><span class="p">,</span>
+                        <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">,</span>
+                        <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose3d</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">)</span>
+                <span class="k">else</span> <span class="mi">0</span>
+            <span class="p">)</span>
+            <span class="n">block_sizes</span><span class="p">[</span><span class="n">blocking_axis</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="k">elif</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">granularity</span> <span class="o">==</span> <span class="n">QuantizationGranularity</span><span class="o">.</span><span class="n">per_block</span><span class="p">:</span>
             <span class="n">updated_config</span> <span class="o">=</span> <span class="n">_validate_param_config</span><span class="p">(</span>
                 <span class="n">submod_name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">param_name</span><span class="p">,</span>
                 <span class="n">torch_weight</span><span class="p">,</span>
+                <span class="n">submodule</span><span class="p">,</span>
                 <span class="n">submod_config</span><span class="p">,</span>
                 <span class="p">[</span><span class="s2">&quot;quantization_block_size&quot;</span><span class="p">],</span>
             <span class="p">)</span>
@@ -452,22 +531,30 @@
                 <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to quantize layer </span><span class="si">{</span><span class="n">submod_name</span><span class="si">}</span><span class="s2"> - skipping it.&quot;</span><span class="p">)</span>
                 <span class="k">return</span>
             <span class="n">block_size_config</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">updated_config</span><span class="o">.</span><span class="n">block_size</span><span class="p">)</span>
-            <span class="n">block_sizes</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_size_config</span><span class="p">)]</span> <span class="o">=</span> <span class="n">block_size_config</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">submodule</span><span class="p">,</span>
+                <span class="p">(</span>
+                    <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose1d</span><span class="p">,</span>
+                    <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">,</span>
+                    <span class="n">_nn</span><span class="o">.</span><span class="n">ConvTranspose3d</span><span class="p">,</span>
+                <span class="p">),</span>
+            <span class="p">):</span>
+                <span class="n">block_sizes</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_size_config</span><span class="p">)]</span> <span class="o">=</span> <span class="n">block_size_config</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">block_sizes</span><span class="p">[:</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_size_config</span><span class="p">)]</span> <span class="o">=</span> <span class="n">block_size_config</span>
 
-        <span class="n">quantization_mode</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="s2">&quot;LINEAR_SYMMETRIC&quot;</span>
-            <span class="k">if</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">quantization_scheme</span> <span class="o">==</span> <span class="n">_QuantizationScheme</span><span class="o">.</span><span class="n">symmetric</span>
-            <span class="k">else</span> <span class="s2">&quot;LINEAR&quot;</span>
+        <span class="n">quantization_mode</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_quantization_mode</span><span class="p">(</span>
+            <span class="n">submod_config</span><span class="o">.</span><span class="n">weight_dtype</span><span class="p">,</span> <span class="n">submod_config</span><span class="o">.</span><span class="n">quantization_scheme</span>
         <span class="p">)</span>
 
-        <span class="n">ret</span> <span class="o">=</span> <span class="n">_cti_compute_qparams</span><span class="p">(</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_quantization_params</span><span class="p">(</span>
             <span class="n">weight</span><span class="o">=</span><span class="n">weight</span><span class="p">,</span>
             <span class="n">nbits</span><span class="o">=</span><span class="n">submod_config</span><span class="o">.</span><span class="n">weight_n_bits</span><span class="p">,</span>
             <span class="n">quantization_mode</span><span class="o">=</span><span class="n">quantization_mode</span><span class="p">,</span>
             <span class="n">dtype</span><span class="o">=</span><span class="n">weight</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
             <span class="n">block_sizes</span><span class="o">=</span><span class="n">block_sizes</span><span class="p">,</span>
-            <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>  <span class="c1"># Always used signed dtype range</span>
-        <span class="p">)</span>
+            <span class="n">signed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>  <span class="c1"># Always used signed dtype range</span>
 
         <span class="k">if</span> <span class="n">ret</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">_logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unable to quantize layer </span><span class="si">{</span><span class="n">submod_name</span><span class="si">}</span><span class="s2"> - skipping it.&quot;</span><span class="p">)</span>
@@ -475,11 +562,7 @@
 
         <span class="n">quant_weight</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zp</span> <span class="o">=</span> <span class="n">ret</span>
 
-        <span class="n">dequant_weight</span> <span class="o">=</span> <span class="n">constexpr_blockwise_shift_scale</span><span class="o">.</span><span class="n">decompress</span><span class="p">(</span>
-            <span class="n">quant_weight</span><span class="p">,</span>
-            <span class="n">scale</span><span class="p">,</span>
-            <span class="n">zp</span><span class="p">,</span>
-        <span class="p">)</span>
+        <span class="n">dequant_weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dequantize_weight</span><span class="p">(</span><span class="n">quant_weight</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">zp</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="p">)</span>
 
         <span class="c1"># Convert back to torch tensors</span>
         <span class="n">dequant_weight</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">dequant_weight</span><span class="p">)</span>
@@ -524,8 +607,10 @@
                 <span class="k">continue</span>
 
             <span class="c1"># TODO: Replace this with supported modules abstraction</span>
-            <span class="c1"># --- Conv2D &amp; Linear layers ---</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="p">(</span><span class="n">_nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">,</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">)):</span>
+            <span class="c1"># --- Conv, ConvTranspose &amp; Linear layers ---</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">submodule</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_modules</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span>
+                <span class="n">submodule</span><span class="p">,</span> <span class="n">_nn</span><span class="o">.</span><span class="n">MultiheadAttention</span>
+            <span class="p">):</span>
                 <span class="k">assert</span> <span class="nb">hasattr</span><span class="p">(</span>
                     <span class="n">submodule</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span>
                 <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;No parameter named weight in submodule </span><span class="si">{</span><span class="n">submod_name</span><span class="si">}</span><span class="s2">&quot;</span>

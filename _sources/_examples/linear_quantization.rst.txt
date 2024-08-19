@@ -344,6 +344,10 @@ ops are only supported on iOS versions >= 17.
 
       :download:`Download Python source code: linear_quantization.py <linear_quantization.py>`
 
+    .. container:: sphx-glr-download sphx-glr-download-zip
+
+      :download:`Download zipped: linear_quantization.zip <linear_quantization.zip>`
+
 
 .. only:: html
 

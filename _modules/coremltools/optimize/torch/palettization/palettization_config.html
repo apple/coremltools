@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -153,6 +153,7 @@
     <span class="s2">&quot;kmeans_n_init&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
     <span class="s2">&quot;zero_threshold&quot;</span><span class="p">:</span> <span class="mf">1e-7</span><span class="p">,</span>
     <span class="s2">&quot;kmeans_error_bnd&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">&quot;channel_axis&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
 <span class="p">}</span>
 
 
@@ -160,7 +161,7 @@
     <span class="s2">&quot;quant_min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mi">128</span><span class="p">,</span>
     <span class="s2">&quot;quant_max&quot;</span><span class="p">:</span> <span class="mi">127</span><span class="p">,</span>
     <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span>
-    <span class="s2">&quot;cluster_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;f32&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;lut_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;f32&quot;</span><span class="p">,</span>
     <span class="s2">&quot;weight_threshold&quot;</span><span class="p">:</span> <span class="mi">2048</span><span class="p">,</span>
     <span class="s2">&quot;milestone&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
     <span class="s2">&quot;quantize_activations&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
@@ -228,6 +229,9 @@
 <span class="sd">            One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.</span>
 <span class="sd">        group_size (:obj:`int`): Specify the number of channels in a group.</span>
 <span class="sd">            Only effective when granularity is ``per_grouped_channel``.</span>
+<span class="sd">        channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.</span>
+<span class="sd">            Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis. For now, only</span>
+<span class="sd">            output channel axis is supported by DKM.</span>
 <span class="sd">        enable_per_channel_scale (:obj:`bool`): When set to ``True``, per channel scaling is used along the channel</span>
 <span class="sd">            dimension.</span>
 <span class="sd">        milestone (:obj:`int`): Step or epoch at which palettization begins. Defaults to ``0``.</span>
@@ -238,7 +242,7 @@
 <span class="sd">            quantized. Defaults to ``127``</span>
 <span class="sd">        dtype (:py:class:`torch.dtype`, ``optional``): The ``dtype`` to use for quantizing the activations. Only applies</span>
 <span class="sd">            when ``quantize_activations`` is ``True``. Defaults to :py:class:`torch.qint8`.</span>
-<span class="sd">        cluster_dtype (:obj:`str`, ``optional``): ``dtype`` to use for quantizing the clusters. Allowed options are</span>
+<span class="sd">        lut_dtype (:obj:`str`, ``optional``): ``dtype`` to use for quantizing the clusters. Allowed options are</span>
 <span class="sd">            ``&#39;i8&#39;``, ``&#39;u8&#39;``, ``&#39;f16&#39;``, ``&#39;bf16&#39;``, ``&#39;f32&#39;``.  Defaults to ``&#39;f32&#39;``, i.e.,</span>
 <span class="sd">            by default, the clusters aren&#39;t quantized.</span>
 <span class="sd">        quantize_activations (:obj:`bool`, ``optional``): When ``True``, the activation are quantized.</span>
@@ -325,6 +329,10 @@
         <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_PALETTIZATION_OPTIONS</span><span class="p">[</span><span class="s2">&quot;group_size&quot;</span><span class="p">],</span>
         <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">)),</span>
     <span class="p">)</span>
+    <span class="n">channel_axis</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="mi">0</span><span class="p">])]),</span>
+    <span class="p">)</span>
     <span class="n">enable_per_channel_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_PALETTIZATION_OPTIONS</span><span class="p">[</span><span class="s2">&quot;enable_per_channel_scale&quot;</span><span class="p">],</span>
         <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">),</span>
@@ -352,8 +360,8 @@
             <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="n">_torch</span><span class="o">.</span><span class="n">qint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">quint8</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">float32</span><span class="p">]),</span>
         <span class="p">],</span>
     <span class="p">)</span>
-    <span class="n">cluster_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
-        <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_PALETTIZATION_OPTIONS</span><span class="p">[</span><span class="s2">&quot;cluster_dtype&quot;</span><span class="p">],</span>
+    <span class="n">lut_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_PALETTIZATION_OPTIONS</span><span class="p">[</span><span class="s2">&quot;lut_dtype&quot;</span><span class="p">],</span>
         <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">str</span><span class="p">),</span>
     <span class="p">)</span>
     <span class="n">quantize_activations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
@@ -462,6 +470,12 @@
         <span class="n">message</span><span class="o">=</span><span class="p">(</span>
             <span class="s2">&quot;partition_size is being deprecated and will be removed in &quot;</span>
             <span class="s2">&quot;future versions. Please use group_size parameter instead.&quot;</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+    <span class="n">cluster_dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">_deprecated_field</span><span class="p">(</span>
+        <span class="n">message</span><span class="o">=</span><span class="p">(</span>
+            <span class="s2">&quot;cluster_dtype is being deprecated and will be removed in &quot;</span>
+            <span class="s2">&quot;future versions. Please use lut_dtype parameter instead.&quot;</span>
         <span class="p">)</span>
     <span class="p">)</span>
 
@@ -588,7 +602,7 @@
         <span class="k">for</span> <span class="n">ctype</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_type_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_module_type</span><span class="p">(</span><span class="n">ctype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_configs_by_weight_threshold</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
         <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_name_configs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_module_type</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_configs_by_weight_threshold</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_module_name</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sort_configs_by_weight_threshold</span><span class="p">(</span><span class="n">config</span><span class="p">))</span>
 
 <div class="viewcode-block" id="DKMPalettizerConfig.from_dict">
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig.from_dict">[docs]</a>

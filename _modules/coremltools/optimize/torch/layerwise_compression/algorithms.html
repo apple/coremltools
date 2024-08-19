@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -101,6 +101,7 @@
 <span class="c1"># Original implementation from https://github.com/IST-DASLab/sparsegpt</span>
 <span class="c1"># Copyright 2023 IST Austria Distributed Algorithms and Systems Lab. All Rights Reserved.</span>
 
+<span class="kn">import</span> <span class="nn">copy</span> <span class="k">as</span> <span class="nn">_copy</span>
 <span class="kn">import</span> <span class="nn">logging</span> <span class="k">as</span> <span class="nn">_logging</span>
 <span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
 <span class="kn">import</span> <span class="nn">time</span> <span class="k">as</span> <span class="nn">_time</span>
@@ -184,7 +185,9 @@
 <span class="sd">            blocks of size processing_group_size. Defaults to ``128``.</span>
 
 <span class="sd">        .. note:</span>
-<span class="sd">            Currently blocking is limited to only the input-channel axis for GPTQ.</span>
+<span class="sd">            Currently blocking is limited to only the input-channel axis for GPTQ. For a linear layer of shape (C_o x C_i), and block_size B,</span>
+<span class="sd">            the quantization scales will have shape (C_o x C_i/B). For a 2D conv layer of shape (C_o x C_i x H x W), the</span>
+<span class="sd">            quantization scales will have shape (C_o x C_i/B x 1 x 1).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
@@ -429,13 +432,13 @@
     <span class="k">def</span> <span class="nf">_get_compression_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param_name</span><span class="p">,</span> <span class="n">param</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Method not implemented in base class.&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">scale</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">scale</span>
+    <span class="k">def</span> <span class="nf">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">quantizer</span><span class="p">:</span> <span class="n">_Quantizer</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">quantizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">scale</span>
             <span class="n">scale_store</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_scale</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">scale_store</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_normal_float</span><span class="p">:</span>
-                <span class="n">zero_point</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">zero_point</span>
+                <span class="n">zero_point</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">zero_point</span>
                 <span class="n">zero_point_store</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">empty_like</span><span class="p">(</span><span class="n">zero_point</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">_torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cpu&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">copy_</span><span class="p">(</span>
                     <span class="n">zero_point</span>
                 <span class="p">)</span>
@@ -473,6 +476,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_enable_normal_float</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">enable_normal_float</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_hessian_dampening</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">hessian_dampening</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_use_activation_order_heuristic</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">use_activation_order_heuristic</span>
+        <span class="c1"># static grouping leads to all quantization parameters being pre-computed,</span>
+        <span class="c1"># rather than dynamically during algorithm execution. This is necessary when</span>
+        <span class="c1"># activation_order_heuristic is turned on to make sure the model is still exportable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enable_static_blocking</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">use_activation_order_heuristic</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_weight_n_bits</span> <span class="o">&lt;</span> <span class="mi">16</span><span class="p">:</span>
             <span class="n">per_channel</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">granularity</span> <span class="ow">in</span> <span class="p">[</span>
@@ -491,21 +498,32 @@
     <span class="k">def</span> <span class="nf">_compress_impl</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">weight</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_layer</span><span class="p">,</span> <span class="n">_nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">*</span> <span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">weight</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
             <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
         <span class="n">weight</span> <span class="o">=</span> <span class="n">weight</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
 
         <span class="n">tick</span> <span class="o">=</span> <span class="n">_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">ready</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">find_params</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">==</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">()</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="p">)</span>
 
         <span class="n">hessian</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span>
         <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hessian</span>
         <span class="n">dead</span> <span class="o">=</span> <span class="n">_torch</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">hessian</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
         <span class="n">hessian</span><span class="p">[</span><span class="n">dead</span><span class="p">,</span> <span class="n">dead</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
         <span class="n">weight</span><span class="p">[:,</span> <span class="n">dead</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_static_blocking</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span><span class="p">):</span>
+                <span class="n">quantizer</span> <span class="o">=</span> <span class="n">_copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="p">)</span>
+                <span class="n">quantizer</span><span class="o">.</span><span class="n">find_params</span><span class="p">(</span><span class="n">weight</span><span class="p">[:,</span> <span class="n">i</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span><span class="p">)],</span> <span class="n">weight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">quantizer</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">(</span><span class="n">quantizer</span><span class="p">)</span>
 
         <span class="n">perm</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_use_activation_order_heuristic</span><span class="p">:</span>
@@ -539,12 +557,16 @@
                 <span class="n">d</span> <span class="o">=</span> <span class="n">hessian_inverse_block</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span>
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="k">if</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">find_params</span><span class="p">(</span>
-                            <span class="n">weight</span><span class="p">[:,</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span><span class="p">)],</span>
-                            <span class="n">weight</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="p">)</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enable_static_blocking</span><span class="p">:</span>
+                        <span class="n">idx</span> <span class="o">=</span> <span class="n">perm</span><span class="p">[</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">idx</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">find_params</span><span class="p">(</span>
+                                <span class="n">weight</span><span class="p">[:,</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span><span class="p">)</span> <span class="p">:</span> <span class="p">(</span><span class="n">i1</span> <span class="o">+</span> <span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_size</span><span class="p">)],</span>
+                                <span class="n">weight</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                            <span class="p">)</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="p">)</span>
 
                 <span class="n">q</span> <span class="o">=</span> <span class="n">_quantize</span><span class="p">(</span>
                     <span class="n">w</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>
@@ -660,7 +682,7 @@
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">ready</span><span class="p">():</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="o">.</span><span class="n">find_params</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_store_quantization_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_quantizer</span><span class="p">)</span>
 
         <span class="n">tick</span> <span class="o">=</span> <span class="n">_time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
 

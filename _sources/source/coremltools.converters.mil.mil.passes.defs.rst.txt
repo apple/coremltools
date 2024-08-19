@@ -101,6 +101,15 @@ optimize_repeat_ops
     .. autoclass:: reduce_transposes
 
 
+optimize_state
+---------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.passes.defs.optimize_state
+
+    .. autoclass:: canonicalize_inplace_pattern
+    .. autoclass:: prefer_state_in_downstream
+
+
 optimize_tensor_operation
 ---------------------------------------------------------
 
@@ -130,3 +139,11 @@ quantization
 .. automodule:: coremltools.converters.mil.mil.passes.defs.quantization
 
     .. autoclass:: add_fp16_cast
+
+
+symbol_transform
+---------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.passes.defs.symbol_transform
+
+    .. autoclass:: materialize_symbolic_shape_program

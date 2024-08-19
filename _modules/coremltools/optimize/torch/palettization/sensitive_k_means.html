@@ -7,7 +7,7 @@
       <link rel="stylesheet" type="text/css" href="../../../../../_static/pygments.css?v=80d5e7a1" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/css/theme.css?v=19f00094" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css?v=fd3f3429" />
-      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=61a4c737" />
+      <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery.css?v=d2d258e8" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-binder.css?v=f4aeca0c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-dataframe.css?v=2082cf3c" />
       <link rel="stylesheet" type="text/css" href="../../../../../_static/sg_gallery-rendered-html.css?v=1277b6f3" />
@@ -218,6 +218,9 @@
         <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
         <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">([</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="n">_validators</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">])]),</span>
     <span class="p">)</span>
+    <span class="n">cluster_dim</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
+        <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+    <span class="p">)</span>
     <span class="n">enable_per_channel_scale</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
         <span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">optional</span><span class="p">(</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">bool</span><span class="p">))</span>
     <span class="p">)</span>
@@ -230,7 +233,14 @@
             <span class="p">),</span> <span class="s2">&quot;group_size has to be specified along with per_grouped_channel granularity.&quot;</span>
             <span class="k">assert</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;group_size should be greater than zero&quot;</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;group_size can&#39;t be specified along with per_tensor granularity.&quot;</span></div>
+            <span class="k">assert</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">,</span> <span class="s2">&quot;group_size can&#39;t be specified along with per_tensor granularity.&quot;</span>
+
+    <span class="nd">@cluster_dim</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">no_per_channel_scale</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attribute</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">enable_per_channel_scale</span> <span class="o">==</span> <span class="kc">False</span>
+            <span class="p">),</span> <span class="sa">f</span><span class="s2">&quot;Enabling per_channel_scale is not supported for cluster_dim=</span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2"> larger than 1&quot;</span></div>
 
 
 
@@ -747,8 +757,9 @@
                 <span class="n">updated_config</span> <span class="o">=</span> <span class="n">_validate_param_config</span><span class="p">(</span>
                     <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">param_name</span><span class="p">,</span>
                     <span class="n">param</span><span class="p">,</span>
+                    <span class="n">submodule</span><span class="p">,</span>
                     <span class="n">submod_config</span><span class="p">,</span>
-                    <span class="p">[</span><span class="s2">&quot;palettization_group_size&quot;</span><span class="p">],</span>
+                    <span class="p">[</span><span class="s2">&quot;palettization_group_size&quot;</span><span class="p">,</span> <span class="s2">&quot;palettization_cluster_dim&quot;</span><span class="p">],</span>
                 <span class="p">)</span>
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">updated_config</span><span class="p">:</span>
                     <span class="k">continue</span>
@@ -765,6 +776,7 @@
                     <span class="n">lut_dtype</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">lut_dtype</span><span class="p">,</span>
                     <span class="n">block_size</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">group_size</span><span class="p">,</span>
                     <span class="n">importance</span><span class="o">=</span><span class="n">sensitivity</span><span class="p">,</span>
+                    <span class="n">cluster_dim</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">cluster_dim</span><span class="p">,</span>
                     <span class="n">enable_per_channel_scale</span><span class="o">=</span><span class="n">updated_config</span><span class="o">.</span><span class="n">enable_per_channel_scale</span><span class="p">,</span>
                 <span class="p">)</span>
 
