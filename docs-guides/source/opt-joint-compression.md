@@ -28,8 +28,9 @@ dtype INT8/UINT8 instead of Float16 which is the default.
 This could be beneficial when combined with INT8 activations in
 speeding up inference. e.g. you could take a A16W16 model, 
 quantize the activations to get A8W16 model, and then quantize the 
-weights to a 4 bit LUT, with INT16 dtype, this will yield an A8W4 model, 
-where “W4” refers to a palettized weights with 8 bit LUT. 
+weights to a 4 bit LUT, with INT8 dtype, this will yield an A8W4 model, 
+where “W4” refers to a palettized weights with a LUT that has 2^4 entries, and 
+each entry has a dtype of INT8. 
 When such a model is run on the NE (on newer SoCs >= A17pro, M4), 
 it will utilize the faster int8-int8 compute path. 
 
@@ -66,7 +67,7 @@ mlmodel_palettized_with_8bit_lut = linear_quantize_weights(mlmodel_palettized,
 ### Joint sparsity and quantization
 
 This means quantizing the non-zero values in the sparse weight tensor to INT8/UINT8 values. 
-This could have benefit on inference speed, in addition to disk savings.
+This could improve inference speed, in addition to disk savings.
 
 ```python
 from coremltools.optimize.coreml import (
@@ -164,7 +165,7 @@ mlmodel.save("model_4bit_palettized_with_8bit_quantized_lut.mlpackage")
 ### Joint sparsity and quantization
 
 One way to combining sparsity and quantization is to 
-first quantize a torch model using the Magnitude pruner class, 
+first prune a torch model using the Magnitude pruner class, 
 export it as an mlpackage and then apply weight quantization (A16W8) on 
 the mlpackage, as shown in the section above. 
 
@@ -173,7 +174,7 @@ on the torch model at training time, it can be done as follows.
  
 (Note that if `"activation_dtype"` argument in 
 `ModuleLinearQuantizerConfig` is set to `torch.qint8`, 
-its default value, then activations will be quantized to get an A8W8 model) 
+its default value, then activations will also be quantized to get an A8W8 model) 
 
 ```python
 import torchvision 
@@ -242,6 +243,7 @@ for i in range(2):
     
 
 # finalize the model for export
+# we first finalize the quantizer followed by the pruner 
 quant_finalized_model = quantizer.finalize(inplace=True)
 finalized_model = pruner.finalize(quant_finalized_model, inplace=True)
 finalized_model.eval()                                                                                                                                                                                          
@@ -259,7 +261,11 @@ mlmodel.save("model_torch_pruned_and_quantized.mlpackage")
 
 ### Joint sparsity and palettization 
 
-Here we apply magnitude pruning to the torch model, followed by data free palettization 
+Here we apply magnitude pruning to the torch model, followed by data free palettization
+
+(Note: to apply training time pruning and 
+palettization (e.g. [DKM](opt-palettization-algos.md#differentiable-k-means)), follow
+the same pattern as the section above replacing the LinearQuantizer with DKMPalettizer)
 
 ```python
 import torchvision 
@@ -309,7 +315,7 @@ for i in range(2):
     pruner.step()
 
 # finalize model 
-finalized_model = pruner.finalize(pruned_model, inplace=True)
+pruned_model = pruner.finalize(pruned_model, inplace=True)
 
 
 
@@ -320,7 +326,7 @@ palettization_config = PostTrainingPalettizerConfig(
     )
 )
 
-palettizer = PostTrainingPalettizer(finalized_model, palettization_config)
+palettizer = PostTrainingPalettizer(pruned_model, palettization_config)
 joint_compressed_model = palettizer.compress()
 
 # convert the compressed model
