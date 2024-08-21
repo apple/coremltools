@@ -76,7 +76,8 @@ of a model. These are:
 
 These techniques can be combined as well, for instance
 to give joint sparse and palettized, joint sparse and quantized weights etc
-for further compression and runtime performance gains. 
+for further compression and runtime performance gains. See [this page](opt-joint-compression) 
+to learn how to do that. 
   
 ## Effect on Runtime performance on Apple Silicon
 
