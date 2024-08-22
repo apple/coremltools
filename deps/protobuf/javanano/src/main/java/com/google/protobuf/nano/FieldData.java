@@ -79,7 +79,7 @@ class FieldData implements Cloneable {
         if (value != null){
             if (cachedExtension != extension) {  // Extension objects are singletons.
                 throw new IllegalStateException(
-                        "Tried to getExtension with a differernt Extension.");
+                        "Tried to getExtension with a different Extension.");
             }
         } else {
             cachedExtension = extension;

@@ -2591,7 +2591,7 @@ class SerializationTest(BaseTestCase):
         proto2.MergeFromString(serialized))
 
   def _CheckRaises(self, exc_class, callable_obj, exception):
-    """This method checks if the excpetion type and message are as expected."""
+    """This method checks if the exception type and message are as expected."""
     try:
       callable_obj()
     except exc_class as ex:

@@ -298,9 +298,9 @@ below.
 | Feature	                 | Required Fields	                                                                                       |
 |--------------------------|--------------------------------------------------------------------------------------------------------|
 |
- block-wise quantization	 | n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetic)<br>compression_type = [3]	 |
+ block-wise quantization	 | n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetric)<br>compression_type = [3]	 |
 |
- 4-bit quantization	      | n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetic)<br>compression_type = [3]	 |
+ 4-bit quantization	      | n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetric)<br>compression_type = [3]	 |
 
 **Palettization**
 
@@ -313,15 +313,15 @@ below.
 |
  grouped-channel palettization	 | group_size<br>group_axis<br>compression_type = [2]	                                                       |
 |
- LUT with 8-bit values	         | n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetic)<br>compression_type = [2, 3]	 |
+ LUT with 8-bit values	         | n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetric)<br>compression_type = [2, 3]	 |
 
 **Joint compression**
 
 | Feature	                                                                                                        | Required Fields	                                                                                          |
 |-----------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------|
 |
- pruning + quantization (sparse weight where nonzero values are 8 bit quantized)	                                | compression_type = [1, 3]<br>n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetic)	 |
+ pruning + quantization (sparse weight where nonzero values are 8 bit quantized)	                                | compression_type = [1, 3]<br>n_bits<br>quantization_scale<br>zero_point (for affine & unsigned symmetric)	 |
 |
  pruning + palettization (sparse weight where nonzero values are n-bit palettized)	                              | compression_type = [1, 2]<br>Same as required keys for palettization	                                     |
 |
- pruning + palettization + quantization (sparse weight where nonzero values are n-bit palettized with int8 LUT)	 | compresion_type = [1, 2, 3]<br>Same as required keys for LUT with 8-bit values	                           |
+ pruning + palettization + quantization (sparse weight where nonzero values are n-bit palettized with int8 LUT)	 | compression_type = [1, 2, 3]<br>Same as required keys for LUT with 8-bit values	                           |

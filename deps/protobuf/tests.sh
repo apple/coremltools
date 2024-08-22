@@ -175,7 +175,7 @@ use_java() {
   $MVN -version
 }
 
-# --batch-mode supresses download progress output that spams the logs.
+# --batch-mode suppresses download progress output that spams the logs.
 MVN="mvn --batch-mode"
 
 build_java() {
@@ -216,7 +216,7 @@ build_java_oracle7() {
 build_java_compatibility() {
   use_java jdk7
   internal_build_cpp
-  # Use the unit-tests extraced from 2.5.0 to test the compatibilty between
+  # Use the unit-tests extracted from 2.5.0 to test the compatibility between
   # 3.0.0-beta-4 and the current version.
   cd java/compatibility_tests/v2.5.0
   ./test.sh 3.0.0-beta-4
@@ -317,7 +317,7 @@ build_python_cpp() {
 
 build_python_compatibility() {
   internal_build_cpp
-  # Use the unit-tests extraced from 2.5.0 to test the compatibilty.
+  # Use the unit-tests extracted from 2.5.0 to test the compatibility.
   cd python/compatibility_tests/v2.5.0
   # Test between 2.5.0 and the current version.
   ./test.sh 2.5.0
@@ -342,7 +342,7 @@ build_jruby() {
 build_ruby_all() {
   build_ruby21
   build_ruby22
-  # TODO(teboring): Disable jruby test temperarily for it randomly fails.
+  # TODO(teboring): Disable jruby test temporarily for it randomly fails.
   # https://grpc-testing.appspot.com/job/protobuf_pull_request/735/consoleFull.
   # build_jruby
 }

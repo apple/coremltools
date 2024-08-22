@@ -11,27 +11,27 @@ Following are the various algorithms available in Core ML Tools to quantize a mo
 
 This algorithm uses the round-to-nearest (RTN) method to quantize the model weights. This is the fastest approach for quantizing the model weights.
 
-Suggetsed API(s):
+Suggested API(s):
 - [coremltools.optimize.torch.quantization.PostTrainingQuantizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer) (For Torch models)
 - [coremltools.optimize.coreml.linear_quantize_weights](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights) (For Core ML models)
 
 ## Post Training (data calibration) activation quantization
 This algorithm quantizes the activations using a calibration dataset. The data is passed through the model and the range of values that the activations take is estimated. This estimate is then used to compute the scale / zero-point using the RTN method for quantizing the activations.
-Suggetsed API(s):
+Suggested API(s):
 - [coremltools.optimize.torch.quantization.LinearQuantizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer) (For Torch models)
 - [coremltools.optimize.coreml.experimental.linear_quantize_activations](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.quantization.html#coremltools.optimize.coreml.experimental.linear_quantize_activations)(For Core ML models)
 
 ## GPTQ algorithm for weight quantization (post training data calibration)
-This algorithm is based on the paper [GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers](https://arxiv.org/abs/2210.17323). The layerwise compression paradigm helps to compress a sequential model layer-by-layer by minimizing the quantization error while quantizing the weights. Each layer is compressed by minimizing the [L2 norm](https://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the difference betwen the layer's original outputs and the outputs obtained by using the compressed weights. The outputs are computed using a few samples of training data (around 128 samples are usually sufficient). Once a layer is compressed, the layer's outputs are used as inputs for compressing the next layer.
+This algorithm is based on the paper [GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers](https://arxiv.org/abs/2210.17323). The layerwise compression paradigm helps to compress a sequential model layer-by-layer by minimizing the quantization error while quantizing the weights. Each layer is compressed by minimizing the [L2 norm](https://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the difference between the layer's original outputs and the outputs obtained by using the compressed weights. The outputs are computed using a few samples of training data (around 128 samples are usually sufficient). Once a layer is compressed, the layer's outputs are used as inputs for compressing the next layer.
 
-Suggetsed API(s):
+Suggested API(s):
 - [coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor)
 
 ## Fine tuning based algorithm for quantizing weight and/or activations
 
 This algorithm is also known as quantization-aware training (QAT) as described in the paper [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](https://arxiv.org/pdf/1712.05877.pdf). QAT allows for quantizing both weights and activations. The model is fine tuned upon simulating quantization on the weights and / or activations to recover the accuracy lost upon quantizing the model. 
 
-Suggetsed API(s):
+Suggested API(s):
 - [coremltools.optimize.torch.quantization.LinearQuantizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer)
 
 ```{admonition} PyTorch quantization APIs
