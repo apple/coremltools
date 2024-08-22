@@ -7,7 +7,7 @@
 # For example, say we would like to test crop_resize op, and we want to
 #     1. skip some test cases (e.g. because they have segfault)
 #     2. serialize .mlpackage for some other test cases (so we can debug)
-# Then we may prepare one file pytest-deselect-list.txt, specifying the to-be-deslected test cases
+# Then we may prepare one file pytest-deselect-list.txt, specifying the to-be-deselected test cases
 #     coremltools/converters/mil/mil/ops/tests/iOS14/test_image_resizing.py::TestCropResize::test_builder_to_backend_smoke\[compute_unit=ComputeUnit.CPU_ONLY-backend=BackendConfig"(backend='mlprogram', precision='fp16', opset_version=<AvailableTarget.iOS15: 6>)"-is_symbolic=True-mode=0\]
 #     coremltools/converters/mil/mil/ops/tests/iOS14/test_image_resizing.py::TestCropResize::test_builder_to_backend_smoke\[compute_unit=ComputeUnit.CPU_ONLY-backend=BackendConfig"(backend='mlprogram', precision='fp16', opset_version=<AvailableTarget.iOS15: 6>)"-is_symbolic=True-mode=1\]
 #     coremltools/converters/mil/mil/ops/tests/iOS14/test_image_resizing.py::TestCropResize::test_builder_to_backend_smoke\[compute_unit=ComputeUnit.CPU_ONLY-backend=BackendConfig"(backend='mlprogram', precision='fp16', opset_version=<AvailableTarget.iOS15: 6>)"-is_symbolic=True-mode=2\]

@@ -93,11 +93,11 @@ For instance,
 some compiler backends may choose to decompress the weights fully
 before runtime, thereby leading to a latency identical to that of
 the `float16` model. In other cases, decompression may happen "on the fly"
-utilizing hardware capabilites and fused kernels, needing
+utilizing hardware capabilities and fused kernels, needing
 less data movement of weights between DRAM and processor cache, 
 leading to lower inference times. 
 
-Hence it is highly recommeded to test on your specific model and Apple Silicon 
+Hence it is highly recommended to test on your specific model and Apple Silicon 
 combination. As of `iOS18`/`macOS15`, following are a few high level recommendations 
 that you may use to guide your experiments. For more detailed observations based on 
 specific modes of optimization used,
@@ -133,6 +133,6 @@ You may also find it useful to view the presentation in
 for an introduction to the optimizations and 
 in [WWDC 2024](https://developer.apple.com/videos/play/wwdc2024/10159/), for an overview 
 of new features available from `iOS18`/`macOS15` and optimizations for 
-large transfomer models. 
+large transformer models. 
 ```
 

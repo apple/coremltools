@@ -78,7 +78,7 @@ For this model 4-bit palettization with group_size=8 configuration is a good swe
 ### Palettization using fine tuning
 
 For this particular model, we do not see any benefits of using calibration data based compression w.r.to accuracy.
-So we move on to training time compression worflow, where we will fine tune the model as we compress it. We can do so by using the [DKM algorithm](opt-palettization-algos.md#differentiable-k-means), as follows:
+So we move on to training time compression workflow, where we will fine tune the model as we compress it. We can do so by using the [DKM algorithm](opt-palettization-algos.md#differentiable-k-means), as follows:
 
 ```python
 from coremltools.optimize.torch.palettization import (

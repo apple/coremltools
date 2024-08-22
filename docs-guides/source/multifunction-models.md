@@ -102,7 +102,7 @@ base_model = Base()
 ```
 
 Now lets update this model by attaching to it, 
-one of the most common type of adpater, i.e. [LoRA](https://huggingface.co/docs/peft/en/package_reference/lora) 
+one of the most common type of adapter, i.e. [LoRA](https://huggingface.co/docs/peft/en/package_reference/lora) 
 (low rank approximation), and 
 convert the model. 
 We will use the HuggingFace [peft](https://github.com/huggingface/peft) 
@@ -190,14 +190,14 @@ y_2 = mlmodel_2.predict({'input_adpated_model_2': np.random.rand(1, 6000)})
 ```
 
 The number of parameters in the base model are roughly 72M (6000x6000 = 36M 
-for each of the two linear layers) (ignorning the bias vectors). 
+for each of the two linear layers) (ignoring the bias vectors). 
 LoRA adapters that we have used here, of rank 32, will attach 
 two linear layers of shapes, (6000, 32) and (32, 6000), to each of 
 the linear modules in the base model. 
 This will result in 4x6000x32 = 0.768M parameters to be added, 
 which is a fraction of the base model. 
 The combined model will share the 72M parameters of 
-the based model and only have the additonal adapter parameters. 
+the based model and only have the additional adapter parameters. 
 We can see this in the model sizes:
 
 ```{figure} images/multifunction_model_sizes_lora_example.png
