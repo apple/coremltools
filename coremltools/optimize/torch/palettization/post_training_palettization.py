@@ -61,32 +61,32 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
 
     Args:
         n_bits (:obj:`int`): Number of bits to use for palettizing the weights. Defaults to ``4``.
-        lut_dtype (:py:class:`torch.dtype`): The dtype to use for representing each element in look up tables.
-            When value is None, no quantization is performed. Supported values are :py:class:`torch.int8` and
-            :py:class:`torch.uint8`. Defaults to None.
+        lut_dtype (:py:class:`torch.dtype`): The dtype to use for representing each element in lookup tables.
+            When value is ``None``, no quantization is performed. Supported values are :py:class:`torch.int8` and
+            :py:class:`torch.uint8`. Defaults to ``None``.
         granularity (:py:class:`PalettizationGranularity`) – Granularity for palettization.
             One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.
         group_size (:obj:`int`): Specify the number of channels in a group.
             Only effective when granularity is ``per_grouped_channel``.
         channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.
             Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.
-        cluster_dim (:obj:`int`): The dimension of centroids for each look up table. Defaults to ``1``.
+        cluster_dim (:obj:`int`): The dimension of centroids for each lookup table. Defaults to ``1``.
             The centroid is a scalar by default. When ``cluster_dim > 1``, it indicates 2-D clustering
             and each ``cluster_dim`` length of weight vectors along the output channel are palettized
-            using the same 2-D centroid. The length of each entry in the look-up tables is equal to ``cluster_dim``.
+            using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels
             using per channel scales before being palettized. This is not supported with ``cluster_dim > 1``.
 
-    This class supports few different configurations to structure the palettization:
+    This class supports two different configurations to structure the palettization:
 
-    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single look-up
-    table. The ``granularity`` is set to ``per_tensor`` and ``group_size`` is ``None``.
+    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single lookup
+    table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.
 
-    2. **Per-grouped-channel palettization**: In this configuration, ``group_size`` number of channels along
-    ``channel_axis`` share the same look-up table. For example, for a weight matrix of shape ``(16, 25)``, if we provide
-     ``group_size = 8``, the shape of the look-up table would be ``(2, 2^n_bits)``.
+    2. **Per-grouped-channel palettization**: In this configuration, the number of channels ``group_size`` along
+    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide 
+    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
-    NOTE: Currently grouping is only supported along either input or output channel axis.
+    NOTE: Currently, grouping is only supported along either the input or output channel axis.
     """
 
     n_bits: _Optional[int] = _field(
@@ -159,7 +159,7 @@ class PostTrainingPalettizerConfig(_OptimizationConfig):
             The keys can be either strings or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModulePostTrainingPalettizerConfig`):
             Module name configs applied to specific modules. This can be a dictionary with module names pointing to their
-            corresponding :py:class:`ModulePostTrainingPalettizerConfig`s
+            corresponding :py:class:`ModulePostTrainingPalettizerConfig`.
     """
 
     global_config: _Optional[ModulePostTrainingPalettizerConfig] = _field(
@@ -213,7 +213,7 @@ class PostTrainingPalettizerConfig(_OptimizationConfig):
 class PostTrainingPalettizer(_BasePostTrainingModelOptimizer):
     """
     Perform post-training palettization on a torch model. Post palettization, all the weights in supported
-    layers point to elements in a look-up table after performing a kmeans operation.
+    layers point to elements in a lookup table after performing a k-means operation.
 
     Example:
 
@@ -262,7 +262,7 @@ class PostTrainingPalettizer(_BasePostTrainingModelOptimizer):
 
     def compress(self, num_kmeans_workers: int = 1, inplace: bool = False) -> _torch.nn.Module:
         """
-        The compress method performs a `kmeans` operation on all supported modules.
+        The compress method performs a `k-means` operation on all supported modules.
         Args:
             num_kmeans_workers (:obj:`int`): Number of worker processes used for
                 performing post-training palettization. Defaults to ``1``.
