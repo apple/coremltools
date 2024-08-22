@@ -8069,7 +8069,7 @@ struct mgroup {
 typedef struct {
   /* Space optimization note: we store two pointers here that the JIT
    * doesn't need at all; the upb_handlers* inside the sink and
-   * the dispatch table pointer.  We can optimize so that the JIT uses
+   * the dispatch table pointer.  We can optimze so that the JIT uses
    * smaller stack frames than the interpreter.  The only thing we need
    * to guarantee is that the fallback routines can find end_ofs. */
   upb_sink sink;

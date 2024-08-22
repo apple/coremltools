@@ -312,7 +312,7 @@ class _Printer(object):
     for field, value in fields:
       if _IsMapEntry(field):
         for key in sorted(value):
-          # This is slow for maps with submessage entries because it copies the
+          # This is slow for maps with submessage entires because it copies the
           # entire tree.  Unfortunately this would take significant refactoring
           # of this file to work around.
           #

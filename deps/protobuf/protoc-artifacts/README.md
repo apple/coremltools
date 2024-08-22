@@ -104,7 +104,7 @@ repository has all the binaries, close and release this repository.
 
 ## Upload zip packages to github release page.
 After uploading protoc artifacts to Maven Central repository, run the
-build-zip.sh script to build zip packages for these protoc binaries
+build-zip.sh script to bulid zip packages for these protoc binaries
 and upload these zip packages to the download section of the github
 release. For example:
 ```

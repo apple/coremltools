@@ -1569,7 +1569,7 @@ jspb.Message.clone_ = function(obj) {
  */
 jspb.Message.registerMessageType = function(id, constructor) {
   jspb.Message.registry_[id] = constructor;
-  // This is needed so we can later access messageId directly on the constructor,
+  // This is needed so we can later access messageId directly on the contructor,
   // otherwise it is not available due to 'property collapsing' by the compiler.
   constructor.messageId = id;
 };

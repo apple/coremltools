@@ -92,7 +92,7 @@ class TextFormatBase(unittest.TestCase):
     text = text.replace('e+0','e+').replace('e+0','e+') \
                .replace('e-0','e-').replace('e-0','e-')
     # Floating point fields are printed with .0 suffix even if they are
-    # actually integer numbers.
+    # actualy integer numbers.
     text = re.compile(r'\.0$', re.MULTILINE).sub('', text)
     return text
 
@@ -878,7 +878,7 @@ class Proto2Tests(TextFormatBase):
                           message,
                           allow_unknown_extension=True)
 
-    # Parse known extension correctly.
+    # Parse known extension correcty.
     message = unittest_mset_pb2.TestMessageSetContainer()
     text = ('message_set {\n'
             '  [protobuf_unittest.TestMessageSetExtension1] {\n'

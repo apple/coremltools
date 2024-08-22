@@ -746,7 +746,7 @@ class MessageTest(BaseTestCase):
     self.assertIsInstance(m.optional_string, six.text_type)
 
   def testLongValuedSlice(self, message_module):
-    """It should be possible to use long-valued indices in slices
+    """It should be possible to use long-valued indicies in slices
 
     This didn't used to work in the v2 C++ implementation.
     """
@@ -1638,7 +1638,7 @@ class Proto3Test(BaseTestCase):
 
   def testMapItems(self):
     # Map items used to have strange behaviors when use c extension. Because
-    # [] may reorder the map and invalidate any existing iterators.
+    # [] may reorder the map and invalidate any exsting iterators.
     # TODO(jieluo): Check if [] reordering the map is a bug or intended
     # behavior.
     msg = map_unittest_pb2.TestMap()

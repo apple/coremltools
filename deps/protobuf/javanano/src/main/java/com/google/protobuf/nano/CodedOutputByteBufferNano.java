@@ -434,7 +434,7 @@ public final class CodedOutputByteBufferNano {
         byteBuffer.put((byte) ((0xF << 6) | (c >>> 6)));
         byteBuffer.put((byte) (0x80 | (0x3F & c)));
       } else if (c < Character.MIN_SURROGATE || Character.MAX_SURROGATE < c) {
-        // Maximum single-char code point is 0xFFFF, 16 bits, three UTF-8 bytes
+        // Maximium single-char code point is 0xFFFF, 16 bits, three UTF-8 bytes
         byteBuffer.put((byte) ((0xF << 5) | (c >>> 12)));
         byteBuffer.put((byte) (0x80 | (0x3F & (c >>> 6))));
         byteBuffer.put((byte) (0x80 | (0x3F & c)));

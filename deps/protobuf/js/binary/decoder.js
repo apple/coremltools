@@ -734,7 +734,7 @@ jspb.BinaryDecoder.prototype.readZigzagVarint64 = function() {
 
 /**
  * Reads a signed, zigzag-encoded 64-bit varint from the binary stream and
- * returns its value as a string.
+ * returns its valud as a string.
  *
  * Zigzag encoding is a modification of varint encoding that reduces the
  * storage overhead for small negative integers - for more details on the
@@ -868,7 +868,7 @@ jspb.BinaryDecoder.prototype.readInt32 = function() {
 /**
  * Reads a raw signed 64-bit integer from the binary stream. Note that since
  * Javascript represents all numbers as double-precision floats, there will be
- * precision lost if the absolute value of the integer is larger than 2^53.
+ * precision lost if the absolute vlaue of the integer is larger than 2^53.
  *
  * @return {number} The signed 64-bit integer read from the binary stream.
  *     Precision will be lost if the integer exceeds 2^53.
