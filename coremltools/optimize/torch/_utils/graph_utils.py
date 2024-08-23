@@ -11,7 +11,6 @@ from typing import List as _List
 from typing import Tuple as _Tuple
 
 import torch as _torch
-import torchvision as _torchvision
 
 from coremltools.optimize.torch._utils.registry import BaseRegistry as _BaseRegistry
 from coremltools.optimize.torch._utils.transforms import _LINEAR_CONV_DECONV_FUNCS
@@ -21,6 +20,11 @@ from coremltools.optimize.torch._utils.transforms import fetch_argument as _fetc
 from coremltools.optimize.torch._utils.transforms import fetch_attr as _fetch_attr
 from coremltools.optimize.torch._utils.transforms import fetch_func_params as _fetch_func_params
 from coremltools.optimize.torch._utils.transforms import load_arg as _load_arg
+
+from coremltools._deps import _HAS_TORCH_VISION, MSG_TORCH_VISION_NOT_FOUND
+
+if _HAS_TORCH_VISION:
+    import torchvision as _torchvision
 
 
 def count_model_params(model: _torch.nn.Module) -> int:
@@ -104,6 +108,9 @@ def parse_call_function_target(target: _Any) -> str:
     known functions to function-names. If the function is not found in the dictionary,
     then will use custom parsing code to get the function-name.
     """
+
+    if not _HAS_TORCH_VISION:
+        raise ImportError(MSG_TORCH_VISION_NOT_FOUND)
 
     func_map = {
         _torch.nn.functional.conv1d: "conv1d",
