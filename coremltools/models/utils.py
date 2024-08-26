@@ -1374,12 +1374,12 @@ def _try_get_weights_dir_path(mlpackage_path):
 
 class MultiFunctionDescriptor:
     """
-    The data class defines how to construct a multifunction model from different model sources.
-    The users can use the ``add_function`` method to specify the path to the source ``mlpackage``,
+    This data class defines how to construct a multifunction model from different model sources.
+    Use the ``add_function`` method to specify the path to the source ``mlpackage``,
     along with the source and target function names.
 
     After setting the ``default_function_name`` to the ``MultiFunctionDescriptor`` instance,
-    a multifunction model can be exported using the ``save_multifunction`` method.
+    you can export a multifunction model using the ``save_multifunction`` method.
 
     Examples
     --------
@@ -1388,12 +1388,12 @@ class MultiFunctionDescriptor:
         from coremltools.utils import MultiFunctionDescriptor, save_multifunction
 
         # Initialize a MultiFunctionDescriptor instance with functions in an existing mlpackage.
-        # desc will constain all functions in "my_model.mlpackage"
+        # desc will contain all functions in "my_model.mlpackage"
         desc = MultiFunctionDescriptor("my_model.mlpackage")
 
         # Construct a MultiFunctionDescriptor instance from scratch.
-        # The below code inserts "main" function from "my_model.mlpackage" as "main_1",
-        # and inserts "main" function from "my_model_2.mlpackage" as "main_2".
+        # The below code inserts the "main" function from "my_model.mlpackage" as "main_1",
+        # and inserts the "main" function from "my_model_2.mlpackage" as "main_2".
         desc = MultiFunctionDescriptor()
         desc.add_function(
             model_path="my_model.mlpackage",
@@ -1406,8 +1406,8 @@ class MultiFunctionDescriptor:
             target_function_name="main_2",
         )
 
-        # Each MultiFunctionDescriptor must has a default function name before saved
-        # as a multifunction mlpackage on disk.
+        # Each MultiFunctionDescriptor instance must have a default function name
+        # so it can be saved as a multifunction mlpackage on disk.
         desc.default_function_name = "main_1"
         save_multifunction(desc, "my_multifunction_model.mlpackage")
 
@@ -1419,9 +1419,9 @@ class MultiFunctionDescriptor:
 
     def __init__(self, model_path: _Optional[str] = None):
         """
-        If ``model_path`` is passed to the constructor, it must be a str pointing to a
-        mlpackage on disk. The MultiFunctionDescriptor instance will be initiated
-        with functions in ``model_path``.
+        If ``model_path`` is passed to the constructor, it must be a str pointing to an
+        existing ``mlpackage`` on disk. The MultiFunctionDescriptor instance will be initiated
+        with the functions in ``model_path``.
         """
         self._default_function_name = None
         self._name_to_source_function = {}
@@ -1439,7 +1439,7 @@ class MultiFunctionDescriptor:
 
     def _add_modelpath_to_cache(self, model_path: str) -> None:
         """
-        Given a mlpackage path ``model_path``, the utils caches related metadata.
+        Given an ``mlpackage`` path ``model_path``, this function caches related metadata.
         """
         if model_path in self._modelpath_to_functions:
             return
@@ -1451,8 +1451,8 @@ class MultiFunctionDescriptor:
 
         desc = spec.description
 
-        # for the iOS17 and below protobuf, there were no functions field,
-        # in which "main" is the only function associated with the model.
+        # For the protobuf in iOS17 and below, there was no `functions` field,
+        # so "main" is the only function associated with the model in those cases.
         if len(desc.functions) == 0:
             self._modelpath_to_functions[model_path] = ["main"]
         else:
@@ -1473,8 +1473,8 @@ class MultiFunctionDescriptor:
         self, model_path: str, src_function_name: str, target_function_name: str
     ) -> None:
         """
-        Insert ``src_function_name`` function from ``model_path`` as ``target_function_name``
-        function in the multifunction descriptor.
+        Insert a ``src_function_name`` function from ``model_path`` as the 
+        ``target_function_name`` function in the multifunction descriptor.
         """
         self._add_modelpath_to_cache(model_path)
 
@@ -1488,8 +1488,8 @@ class MultiFunctionDescriptor:
 
     def add_model(self, model_path: str) -> None:
         """
-        Insert all functions in ``model_path`` into the multifunction descriptor.
-        Same function names in the original model will be applied.
+        Insert all functions from the model in ``model_path`` into the multifunction descriptor.
+        The function names will remain the same as in the original model.
         """
         self._add_modelpath_to_cache(model_path)
 
@@ -1498,7 +1498,7 @@ class MultiFunctionDescriptor:
 
     def remove_function(self, function_name: str) -> None:
         """
-        Remove function ``function_name`` from the multifunction descriptor.
+        Remove a function ``function_name`` from the multifunction descriptor.
         """
         if function_name not in self._name_to_source_function:
             raise ValueError(f"function_name {function_name} not found.")
@@ -1520,7 +1520,7 @@ def save_multifunction(
 ):
     """
     Save a MultiFunctionDescriptor instance into a multifunction ``mlpackage``.
-    The utility also performs constant deduplication across functions to allow weight sharing.
+    This function also performs constant deduplication across functions to allow for weight sharing.
 
     Parameters
     ----------
@@ -1528,7 +1528,7 @@ def save_multifunction(
         Multifunction descriptor to save on the disk.
 
     destination_path : str
-        The saved ``mlpackage`` model path.
+        The path where the new ``mlpackage`` will be saved.
 
     Examples
     --------
