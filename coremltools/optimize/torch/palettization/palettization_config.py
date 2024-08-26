@@ -138,7 +138,7 @@ class ModuleDKMPalettizerConfig(_ModuleOptimizationConfig):
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, per channel scaling is used along the channel
             dimension.
         milestone (:obj:`int`): Step or epoch at which palettization begins. Defaults to ``0``.
-        cluster_dim (:obj:`int`, ``optional``): The dimension of each cluster. Defaults to ``1``.
+        cluster_dim (:obj:`int`, ``optional``): The dimension of each cluster.
         quant_min: (:obj:`int`, ``optional``): The minimum value for each element in the weight clusters if they are
             quantized. Defaults to ``-128``.
         quant_max: (:obj:`int`, ``optional``): The maximum value for each element in the weight clusters if they are

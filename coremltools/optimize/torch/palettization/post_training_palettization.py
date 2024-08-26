@@ -70,12 +70,12 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
             Only effective when granularity is ``per_grouped_channel``.
         channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.
             Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.
-        cluster_dim (:obj:`int`): The dimension of centroids for each lookup table. Defaults to ``1``.
+        cluster_dim (:obj:`int`): The dimension of centroids for each lookup table.
             The centroid is a scalar by default. When ``cluster_dim > 1``, it indicates 2-D clustering
             and each ``cluster_dim`` length of weight vectors along the output channel are palettized
             using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels
-            using per channel scales before being palettized. This is not supported with ``cluster_dim > 1``.
+            using per-channel scales before being palettized. This is not supported with ``cluster_dim > 1``.
 
     This class supports two different configurations to structure the palettization:
 
