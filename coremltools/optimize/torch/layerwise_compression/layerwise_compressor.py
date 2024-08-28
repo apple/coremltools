@@ -72,10 +72,10 @@ class LayerwiseCompressorConfig(_OptimizationConfig):
 
     Args:
         layers (:obj:`list` of :py:class:`torch.nn.Module` or :obj:`str`): List of layers
-            to be compressed. The layer names within the list can be specified as a string or regex.
-            The layers listed should be immediate child modules of the parent container
-            :py:class:`torch.nn.Sequential` model and they should be contiguous. That is,
-            the output of layer ``n`` should be the input to layer ``n+1``.
+            to be compressed. When items in the list are `str`, the string can be regex 
+            or the exact name of the module. The layers listed should be immediate child modules 
+            of the parent container :py:class:`torch.nn.Sequential` model and they should be contiguous. 
+            That is, the output of layer ``n`` should be the input to layer ``n+1``.
         global_config (:py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`): Config to be applied globally
             to all supported modules. Missing values are chosen from the default config.
         module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):
