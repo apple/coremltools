@@ -147,13 +147,13 @@ def linear_quantize_weights(
         An :py:class:`OptimizationConfig` object that specifies the parameters for weight quantization.
 
     joint_compression: bool
-        When it is set, the input mlmodel (should already be compressed) is further quantized to a
-        jointly compressed mlmodel. For what compression schema that could be futher jointly
-        quantized, see the `blockwise_quantize_weights` graph pass for details.
+        Specification of whether or not to further compress the already-compressed input MLModel to a
+        jointly compressed MLModel. See the `blockwise_palettize_weights` graph pass for information 
+        about which compression schemas could be further jointly palettized.
 
-        Using "palettize + quantize" as an example, where the input mlmodel is already palettized,
-        and the palettization's lut will be further quantized. The weight values are represented by
-        ``constexpr_blockwise_shift_scale`` + ``constexpr_lut_to_dense`` ops:
+        Take "palettize + quantize" as an example of joint compression, where the input MLModel is already 
+        palettized, and the palettization's lookup table will be further quantized. In such an example, 
+        the weight values are represented by ``constexpr_blockwise_shift_scale`` + ``constexpr_lut_to_dense`` ops:
         lut(int8) -> constexpr_blockwise_shift_scale -> lut(fp16) -> constexpr_lut_to_dense -> dense(fp16)
 
     Returns
@@ -189,7 +189,7 @@ def palettize_weights(
 ):
     """
     Utility function to convert a float precision MLModel of type ``mlprogram`` to a
-    compressed MLModel by reducing the overall number of weights using one or more look-up-table
+    compressed MLModel by reducing the overall number of weights using one or more lookup tables
     (LUT). A LUT contains a list of float values. An `nbit` LUT has 2\ :sup:`nbits` entries.
 
     For example, a float weight vector such as ``{0.3, 0.3, 0.5, 0.5}`` can be compressed
@@ -214,12 +214,12 @@ def palettize_weights(
     The weight can be converted to a palette with indices ``[0, 1, 2, 3]`` (2 bits). The
     indices are a byte array.
 
-    The data range ``[0.0, 0.3]`` is divided into 4 partitions linearly, which is
+    The data range ``[0.0, 0.3]`` is divided into four partitions linearly, which is
     ``[0.0, 0.1, 0.2, 0.3]``.
 
         * The LUT would be ``[0.0, 0.1, 0.2, 0.3]``.
 
-        * The weight is rounded to ``[0.1, 0.2, 0.3, 0.1, 0.0, 0.0]``, and represented in
+        * The weight is rounded to ``[0.1, 0.2, 0.3, 0.1, 0.0, 0.0]`` and represented in
           the palette as indices ``[01b, 10b, 11b, 01b, 00b, 00b]``.
 
     Parameters
@@ -231,13 +231,13 @@ def palettize_weights(
         An :py:class:`OptimizationConfig` object that specifies the parameters for weight palettization.
 
     joint_compression: bool
-        When it is set, the input mlmodel (should already be compressed) is further palettized to a
-        jointly compressed mlmodel. For what compression schema that could be futher jointly
-        palettized, see the `channelwise_palettize_weights` graph pass for details.
+        Specification of whether or not to further compress the already-compressed input MLModel to a
+        jointly compressed MLModel. See the `channelwise_palettize_weights` graph pass for information 
+        about which compression schemas could be further jointly palettized.
 
-        Using "prune + palettize" as an example, where the input mlmodel is already pruned,
-        and the non-zero entries will be further palettized. The weight values are represented by
-        ``constexpr_lut_to_sparse`` + ``constexpr_sparse_to_dense`` ops:
+        Take "prune + palettize" as an example of joint compression, where the input MLModel is already 
+        pruned, and the non-zero entries will be further palettized. In such an example, the weight values are
+        represented by ``constexpr_lut_to_sparse`` + ``constexpr_sparse_to_dense`` ops:
         lut(sparse) -> constexpr_lut_to_sparse -> weight(sparse) -> constexpr_sparse_to_dense -> weight(dense)
 
     Returns
@@ -303,13 +303,13 @@ def prune_weights(
         An :py:class:`OptimizationConfig` object that specifies the parameters for weight pruning.
 
     joint_compression: bool
-        When it is set, the input mlmodel (should already be compressed) is further pruned to a
-        jointly compressed mlmodel. For what compression schema that could be futher jointly
-        pruned, see the `prune_weights` graph pass for details.
+        Specification of whether or not to further prune the already-compressed input MLModel to a
+        jointly compressed MLModel. See the `prune_weights` graph pass for information 
+        about which compression schemas could be further pruned.
 
-        Using "quantize + prune" as an example, where the input mlmodel is already quantized,
-        and it will be further pruned. The weight values are represented by
-        ``constexpr_sparse_blockwise_shift_scale`` + ``constexpr_sparse_to_dense`` ops:
+        Take "quantize + prune" as an example of joint compression, where the input MLModel is already 
+        quantized, and it will be further pruned. In such an example, the weight values are
+        represented by ``constexpr_sparse_blockwise_shift_scale`` + ``constexpr_sparse_to_dense`` ops:
         quantized(sparse) -> constexpr_sparse_blockwise_shift_scale -> weight(sparse) -> constexpr_sparse_to_dense -> weight(dense)
 
     Returns

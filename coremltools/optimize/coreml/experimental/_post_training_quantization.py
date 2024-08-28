@@ -27,15 +27,15 @@ from ._quantization_passes import (
 def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, sample_data: List):
     """
     Utility function to convert a float precision MLModel of type ``mlprogram``, which uses
-    float-precision activations, into a compressed MLModel that uses n-bit activations (currently only
-    support n=8).
+    float-precision activations, into a compressed MLModel that uses n-bit activations. Currently, only n=8
+    is suppported.
 
-    This is achieved by calibrating the float activation values that observed by feeding real sample data into
-    the model, converting calibrated statistics into the ``quantize`` and ``dequantize`` op pairs, and inserted
-    into where activation get quantized.
+    This is achieved by feeding real sample data into the input MLModel, calibrating the resulting float activation values, 
+    converting the calibrated values into ``quantize`` and ``dequantize`` op pairs, and inserting those
+    op pairs into the new MLModel instance where activations get quantized.
 
-    It's recommended to use with linear_quantize_weights for 8-bit activation and 8-bit weight linear quantization.
-    It's also compatible to use with other weight compression methods.
+    Use this function with ``linear_quantize_weights`` for 8-bit activation and 8-bit weight linear quantization.
+    It's also compatible for use with other weight compression methods.
 
     Parameters
     ----------
@@ -47,7 +47,7 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
 
     sample_data: List
         Data used to characterize statistics of the activation values of the original float precision model.
-        Expecting a list of sample input dictionaries.
+        Expects a list of sample input dictionaries.
 
     Returns
     -------
@@ -130,7 +130,7 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
         specification_version=specification_version,
         compute_units=mlmodel.compute_unit,
         model_description=model_spec.description,
-        skip_model_load=False,  # Must be False to avoid manually re-load from disk before running prediction.
+        skip_model_load=False,  # Must be False to avoid manually re-loading from disk before running prediction.
     )
     return mlmodel_activation_quantized
 

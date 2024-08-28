@@ -90,7 +90,7 @@ class ModuleSKMPalettizerConfig(_ModuleOptimizationConfig):
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels
             using per-channel scales before being palettized. This is not supported with ``cluster_dim > 1``.
 
-    This class two different configurations to structure the palettization:
+    This class supports two different configurations to structure the palettization:
 
     1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single lookup
     table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.
