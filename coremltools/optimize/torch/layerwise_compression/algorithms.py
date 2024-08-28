@@ -59,17 +59,17 @@ class LayerwiseCompressionAlgorithmConfig(_ABC, _ClassRegistryMixin, _ModuleOpti
 @_define
 class ModuleGPTQConfig(LayerwiseCompressionAlgorithmConfig):
     """
-    Configuration class for specifying global and module level compression options for
-    `GPTQ <https://arxiv.org/pdf/2210.17323.pdf>`_ algorithm.
+    Configuration class for specifying global and module level compression options for the
+    `Generative Pre-Trained Transformer Quantization (GPTQ) <https://arxiv.org/pdf/2210.17323.pdf>`_ algorithm.
 
     Args:
         weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used
             for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights
-            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.uint8` which corresponds to
+            corresponding to that layer are not quantized. Defaults to :py:class:`torch.uint8` which corresponds to
             8-bit quantization.
         granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters
             will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,
-            ``block_size`` argument must be specified.  Defaults to ``per_channel``.
+            ``block_size`` argument must be specified. Defaults to ``per_channel``.
         quantization_scheme: (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of
             quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``, all
             weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point
@@ -77,20 +77,20 @@ class ModuleGPTQConfig(LayerwiseCompressionAlgorithmConfig):
             Defaults to ``QuantizationScheme.symmetric``.
          block_size (:obj:`int`): When ``block_size`` is specified, ``block_size``
             number of values will share the same quantization parameters of scale (and zero point if applicable) across
-            the input-channel axis.  Defaults to ``None``.
+            the input-channel axis. Defaults to ``None``.
         enable_normal_float (:obj:`bool`): When ``True``, normal float format is used for quantization. It's
             only supported when ``weight_dtype`` is equal to ``int3`` and ``int4``. Defaults to ``False``.
         hessian_dampening: (:obj:`float`): Dampening factor added to the diagonal of the
             Hessian used by GPTQ algorithm. Defaults to ``0.01``.
         use_activation_order_heuristic (:obj:`bool`): When ``True``, columns of weight are sorted
             in descending order of values of Hessian diagonal elements. Defaults to ``True``.
-        processing_group_size (:obj:`int`):  The weights are updated in
-            blocks of size processing_group_size. Defaults to ``128``.
+        processing_group_size (:obj:`int`): The weights are updated in
+            blocks of size ``processing_group_size``. Defaults to ``128``.
 
-        .. note:
-            Currently blocking is limited to only the input-channel axis for GPTQ. For a linear layer of shape (C_o x C_i), and block_size B,
-            the quantization scales will have shape (C_o x C_i/B). For a 2D conv layer of shape (C_o x C_i x H x W), the
-            quantization scales will have shape (C_o x C_i/B x 1 x 1).
+    .. note:
+        Blocking is currently limited to the input channel axis for GPTQ. For a linear layer of shape `(C_o x C_i)`, and ``block_size`` `B`,
+        the quantization scales will have shape `(C_o x C_i/B)`. For a 2D conv layer of shape `(C_o x C_i x H x W)`, the
+        quantization scales will have shape `(C_o x C_i/B x 1 x 1)`.
     """
 
     weight_dtype: _Union[str, _torch.dtype] = _field(
@@ -139,8 +139,8 @@ class ModuleGPTQConfig(LayerwiseCompressionAlgorithmConfig):
 @_define
 class ModuleSparseGPTConfig(LayerwiseCompressionAlgorithmConfig):
     """
-    Configuration class for specifying global and module level compression options for
-    `SparseGPT <https://arxiv.org/pdf/2301.00774.pdf>`_ algorithm.
+    Configuration class for specifying global and module level compression options for the
+    `Sparse Generative Pre-Trained Transformer (SparseGPT) <https://arxiv.org/pdf/2301.00774.pdf>`_ algorithm.
 
     Args:
         target_sparsity (:obj:`float`): Fraction of weight elements to set to ``0``. Defaults to
@@ -151,11 +151,11 @@ class ModuleSparseGPTConfig(LayerwiseCompressionAlgorithmConfig):
             target sparsity is determined by the ``n:m`` ratio.
         weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used
             for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights
-            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.float32` which corresponds to
+            corresponding to that layer are not quantized. Defaults to :py:class:`torch.float32` which corresponds to
             no quantization.
         quantization_granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters
             will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,
-            ``block_size`` argument must be specified.  Defaults to ``per_channel``.
+            ``block_size`` argument must be specified. Defaults to ``per_channel``.
         quantization_scheme: (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of
             quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``, all
             weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point
@@ -165,7 +165,7 @@ class ModuleSparseGPTConfig(LayerwiseCompressionAlgorithmConfig):
             only supported for ``weight_dtype`` is equal to ``int3`` and ``int4``.
         hessian_dampening (:obj:`float`): Dampening factor added to the diagonal of the
             Hessian used by GPTQ algorithm. Defaults to ``0.01``.
-        processing_group_size (:obj:`int`):  The weights are updated in
+        processing_group_size (:obj:`int`): The weights are updated in
             blocks of size processing_group_size. Defaults to ``128``.
     """
 

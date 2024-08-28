@@ -72,22 +72,21 @@ class LayerwiseCompressorConfig(_OptimizationConfig):
 
     Args:
         layers (:obj:`list` of :py:class:`torch.nn.Module` or :obj:`str`): List of layers
-            which should be compressed. The layer names can also be specified as a regex.
+            to be compressed. The layer names within the list can be specified as a string or regex.
             The layers listed should be immediate child modules of the parent container
-            :py:class:`torch.nn.Sequential` model and they should be contiguous, i.e.,
-            output of layer ``n`` should be input of layer ``n+1``.
+            :py:class:`torch.nn.Sequential` model and they should be contiguous. That is,
+            the output of layer ``n`` should be the input to layer ``n+1``.
         global_config (:py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`): Config to be applied globally
             to all supported modules. Missing values are chosen from the default config.
         module_type_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):
-            Module type configs applied to a specific
-            module class, such as :py:class:`torch.nn.Linear`. The keys can be either strings
-            or module classes.
+            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`. 
+            The keys can be either strings or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):
-            Module level configs applied to specific modules.
-            The name of the module must either be a regex or a fully qualified name that can be used
-            to fetch it from the top level module using the ``module.get_submodule(target)`` method.
-        input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object
-            which caches inputs which are fed to the first layer which is set up for compression
+            Module level configs applied to specific modules. The name of the module must either be a regex or 
+            a fully qualified name that can be used to fetch it from the top level module using the 
+            ``module.get_submodule(target)`` method.
+        input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object that caches inputs which are then
+        fed to the first layer set up for compression.
         calibration_nsamples (:obj:`int`): Number of samples to be used for calibration.
     """
 
@@ -191,20 +190,20 @@ class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     A post training compression algorithm which compresses a sequential model layer by layer.
     The implementation supports two variations of this algorithm:
 
-    1) `GPTQ <https://arxiv.org/pdf/2210.17323.pdf>`_
-    2) `SparseGPT <https://arxiv.org/pdf/2301.00774.pdf>`_
+    1) `Generative Pre-Trained Transformer Quantization (GPTQ) <https://arxiv.org/pdf/2210.17323.pdf>`_
+    2) `Sparse Generative Pre-Trained Transformer (SparseGPT) <https://arxiv.org/pdf/2301.00774.pdf>`_
 
     At a high level, it compresses weights of a model layer by layer,
     by minimizing the L2 norm of the difference between the original activations and
-    activations obtained on compressing the weights of a layer. The activations
+    activations obtained from compressing the weights of a layer. The activations
     are computed using a few samples of training data.
 
-    Only sequential models are supported, where output of one layer feeds into the
+    Only sequential models are supported, where the output of one layer feeds into the
     input of the next layer.
 
-    For HuggingFace models, disable use_cache config. This is used to speed up decoding but,
-    to generalize forward pass for LayerwiseCompressor algorithms across all
-    model types we need to disable this behavior.
+    For HuggingFace models, disable the `use_cache` config. This is used to speed up decoding, 
+    but to generalize forward pass for `LayerwiseCompressor` algorithms across all
+    model types, the behavior must be disabled.
 
     Example:
 

@@ -77,11 +77,11 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
     Args:
         weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used
             for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights
-            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.int8` which corresponds to
+            corresponding to that layer are not quantized. Defaults to :py:class:`torch.int8` which corresponds to
             8-bit quantization.
         granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters
             will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,
-            ``block_size`` argument must be specified.  Defaults to ``per_channel``.
+            ``block_size`` argument must be specified. Defaults to ``per_channel``.
         quantization_scheme (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of
             quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``,
             all weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``,
@@ -89,26 +89,26 @@ class ModulePostTrainingQuantizerConfig(_ModuleOptimizationConfig):
             Defaults to ``QuantizationScheme.symmetric``.
         block_size (:obj:`tuple` of :obj:`int` or :obj:`int`): When ``block_size`` is specified, ``block_size``
             number of values will share the same quantization parameters of scale (and zero point if applicable) across
-            the input-channel axis. A tuple of integers can be provided for arbitrary sized blockwise quantization.
+            the input channel axis. A tuple of integers can be provided for arbitrary sized blockwise quantization.
             See below for more details on different possible configurations. Defaults to ``None``.
 
-    This class supports few different configurations to structure the quantization:
+    This class supports three different configurations to structure the quantization:
 
     1. **Per-channel quantization**: This is the default configuration where ``granularity`` is ``per_channel`` and
     ``block_size`` is ``None``. In this configuration, quantization parameters are computed for each output channel.
 
-    2. **Per-tensor quantization**:  In this configuration, quantization paramaters are computed for the tensor as a whole. That is,
+    2. **Per-tensor quantization**: In this configuration, quantization parameters are computed for the tensor as a whole. That is,
     all values in the tensor will share a single scale (and a single zero point if applicable). The ``granularity`` argument is set
     to ``per_tensor``.
 
-    3. **Per-block quantization**: This is used to structure the tensor for block-wise quantization. For this configuration,
-    the ``granularity`` is set to ``per_block`` and the ``block_size`` argument has to be specified.
-    The ``block_size`` argument can either be:
+    3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity`` 
+    is set to ``per_block`` and the ``block_size`` argument has to be specified. The ``block_size`` argument can either be of type
+    ``int`` or ``tuple``:
         * int: In this case, each row along the output-channel axis will have its own quantization parameters (similar to ``per_channel``).
-               Additionally, ``block_size`` number of values will share the same quantization parameters, along the input-channel axis.
+               Additionally, ``block_size`` number of values will share the same quantization parameters, along the input channel axis.
                For example, for a weight matrix of shape ``(10, 10)``, if we provide ``block_size = 2``, the shape of the quantization
                parameters would be ``(10, 5)``.
-        * tuple: For more advanced configuration, users can provide an arbitrary N-D shaped block to share the quantization parameters.
+        * tuple: For more advanced configuration, users can provide an arbitrary n-dimensional block to share the quantization parameters.
                  This is specified in the form of a tuple where each value corresponds to the block size for the respective axis of the
                  weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.
 
@@ -191,7 +191,7 @@ class PostTrainingQuantizerConfig(_OptimizationConfig):
             The keys can be either strings or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModulePostTrainingQuantizerConfig`):
             Module name configs applied to specific modules. This can be a dictionary with module names pointing to their
-            corresponding :py:class:`ModulePostTrainingQuantizerConfig`s
+            corresponding :py:class:`ModulePostTrainingQuantizerConfig`.
     """
 
     global_config: _Optional[ModulePostTrainingQuantizerConfig] = _field(
@@ -256,8 +256,8 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
     .. note::
         After quantization, the weight values stored will still remain in full precision, therefore
         the PyTorch model size will not be reduced. To see the reduction in model size, please convert
-        the model using ``coremltools.convert(...)``, which will produce a MIL model containing the
-        compressed weights.
+        the model using ``coremltools.convert(...)``, which will produce a model intermediate language 
+        (MIL) model containing the compressed weights.
 
         Example:
 
@@ -281,7 +281,7 @@ class PostTrainingQuantizer(_BasePostTrainingModelOptimizer):
                 )
 
                 # initialize the quantizer
-                config = PostTrainingquantizerConfig.from_dict(
+                config = PostTrainingQuantizerConfig.from_dict(
                     {
                         "global_config": {
                             "weight_dtype": "int8",
