@@ -164,7 +164,7 @@ output channel axis is supported by DKM.</p></li>
 <li><p><strong>enable_per_channel_scale</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, per channel scaling is used along the channel
 dimension.</p></li>
 <li><p><strong>milestone</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Step or epoch at which palettization begins. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – The dimension of each cluster. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>) – The dimension of each cluster.</p></li>
 <li><p><strong>quant_min</strong> – (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>): The minimum value for each element in the weight clusters if they are
 quantized. Defaults to <code class="docutils literal notranslate"><span class="pre">-128</span></code>.</p></li>
 <li><p><strong>quant_max</strong> – (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>, <code class="docutils literal notranslate"><span class="pre">optional</span></code>): The maximum value for each element in the weight clusters if they are
@@ -468,39 +468,37 @@ is called is equal to <code class="docutils literal notranslate"><span class="pr
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_bits</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of bits to use for palettizing the weights. Defaults to <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-<li><p><strong>lut_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for representing each element in look up tables.
-When value is None, no quantization is performed. Supported values are <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> and
-<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code>. Defaults to None.</p></li>
+<li><p><strong>lut_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for representing each element in lookup tables.
+When value is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no quantization is performed. Supported values are <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>granularity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">PalettizationGranularity</span></code>) – One of <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code>.</p></li>
 <li><p><strong>group_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Specify the number of channels in a group.
 Only effective when granularity is <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>.</p></li>
 <li><p><strong>channel_axis</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Specify the channel axis to form a group of channels.
 Only effective when granularity is <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>. Defaults to output channel axis.</p></li>
-<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The dimension of centroids for each look up table. Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.
+<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The dimension of centroids for each lookup table.
 The centroid is a scalar by default. When <code class="docutils literal notranslate"><span class="pre">cluster_dim</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>, it indicates 2-D clustering
 and each <code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code> length of weight vectors along the output channel are palettized
-using the same 2-D centroid. The length of each entry in the look-up tables is equal to <code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>.</p></li>
+using the same 2-D centroid. The length of each entry in the lookup tables is equal to <code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>.</p></li>
 <li><p><strong>enable_per_channel_scale</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are normalized along the output channels
-using per channel scales before being palettized. This is not supported with <code class="docutils literal notranslate"><span class="pre">cluster_dim</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
+using per-channel scales before being palettized. This is not supported with <code class="docutils literal notranslate"><span class="pre">cluster_dim</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
-<p>This class supports few different configurations to structure the palettization:</p>
-<p>1. <strong>Per-tensor palettization</strong>:  This is the default configuration where the whole tensor shares a single look-up
-table. The <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is set to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> and <code class="docutils literal notranslate"><span class="pre">group_size</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-<p>2. <strong>Per-grouped-channel palettization</strong>: In this configuration, <code class="docutils literal notranslate"><span class="pre">group_size</span></code> number of channels along
-<code class="docutils literal notranslate"><span class="pre">channel_axis</span></code> share the same look-up table. For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">25)</span></code>, if we provide</p>
-<blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">8</span></code>, the shape of the look-up table would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2^n_bits)</span></code>.</p>
-</div></blockquote>
-<p>NOTE: Currently grouping is only supported along either input or output channel axis.</p>
+<p>This class supports two different configurations to structure the palettization:</p>
+<p>1. <strong>Per-tensor palettization</strong>:  This is the default configuration where the whole tensor shares a single lookup
+table. The <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is set to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code>, and <code class="docutils literal notranslate"><span class="pre">group_size</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>2. <strong>Per-grouped-channel palettization</strong>: In this configuration, the number of channels <code class="docutils literal notranslate"><span class="pre">group_size</span></code> along
+<code class="docutils literal notranslate"><span class="pre">channel_axis</span></code> share the same lookup table. For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">25)</span></code>, if we provide
+<code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">8</span></code>, the shape of the lookup table would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2^n_bits)</span></code>.</p>
+<p>NOTE: Currently, grouping is only supported along either the input or output channel axis.</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.PostTrainingPalettizer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">PostTrainingPalettizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.optimize.torch.palettization.PostTrainingPalettizerConfig" title="coremltools.optimize.torch.palettization.post_training_palettization.PostTrainingPalettizerConfig"><span class="pre">PostTrainingPalettizerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/post_training_palettization.html#PostTrainingPalettizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.PostTrainingPalettizer" title="Link to this definition"></a></dt>
 <dd><p>Perform post-training palettization on a torch model. Post palettization, all the weights in supported
-layers point to elements in a look-up table after performing a kmeans operation.</p>
+layers point to elements in a lookup table after performing a k-means operation.</p>
 <p class="rubric">Example</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="p">(</span>
@@ -556,7 +554,7 @@ to all supported modules.</p></li>
 <li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig" title="coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModulePostTrainingPalettizerConfig</span></code></a>) – Module type configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
 The keys can be either strings or module classes.</p></li>
 <li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig" title="coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModulePostTrainingPalettizerConfig</span></code></a>) – Module name configs applied to specific modules. This can be a dictionary with module names pointing to their
-corresponding :py:class:<a href="#id4"><span class="problematic" id="id5">`</span></a>ModulePostTrainingPalettizerConfig`s</p></li>
+corresponding <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig" title="coremltools.optimize.torch.palettization.ModulePostTrainingPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModulePostTrainingPalettizerConfig</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -565,34 +563,36 @@ corresponding :py:class:<a href="#id4"><span class="problematic" id="id5">`</spa
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">ModuleSKMPalettizerConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n_bits</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lut_dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'per_tensor'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_axis</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_dim</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_per_channel_scale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/sensitive_k_means.html#ModuleSKMPalettizerConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig" title="Link to this definition"></a></dt>
-<dd><p>Configuration class for specifying global and module level compression options for
+<dd><p>Configuration class for specifying global and module level palettization options for
 <a class="reference internal" href="#coremltools.optimize.torch.palettization.SKMPalettizer" title="coremltools.optimize.torch.palettization.SKMPalettizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">SKMPalettizer</span></code></a> algorithm.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>n_bits</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of bits to use for palettizing the weights. Defaults to <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-<li><p><strong>lut_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for representing each element in look up tables.
-When value is None, no quantization is performed. Supported values are <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> and
-<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code>. Defaults to None.</p></li>
+<li><p><strong>lut_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for representing each element in lookup tables.
+When value is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no quantization is performed. Supported values are <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> and
+<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><strong>granularity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">PalettizationGranularity</span></code>) – One of <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code>.</p></li>
 <li><p><strong>group_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Specify the number of channels in a group.
 Only effective when granularity is <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>.</p></li>
 <li><p><strong>channel_axis</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Specify the channel axis to form a group of channels.
 Only effective when granularity is <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>. Defaults to output channel axis.</p></li>
+<li><p><strong>cluster_dim</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The dimension of centroids for each lookup table.
+The centroid is a scalar by default. When <code class="docutils literal notranslate"><span class="pre">cluster_dim</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>, it indicates 2-D clustering
+and each <code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code> length of weight vectors along the output channel are palettized
+using the same 2-D centroid. The length of each entry in the lookup tables is equal to <code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>.</p></li>
 <li><p><strong>enable_per_channel_scale</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are normalized along the output channels
-using per channel scales before being palettized. This is not supported with <code class="docutils literal notranslate"><span class="pre">cluster_dim</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
+using per-channel scales before being palettized. This is not supported with <code class="docutils literal notranslate"><span class="pre">cluster_dim</span> <span class="pre">&gt;</span> <span class="pre">1</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
-<p>This class supports few different configurations to structure the palettization:</p>
-<p>1. <strong>Per-tensor palettization</strong>:  This is the default configuration where the whole tensor shares a single look-up
-table. The <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is set to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code>.</p>
-<p>2. <strong>Per-grouped-channel palettization</strong>: In this configuration, <code class="docutils literal notranslate"><span class="pre">group_size</span></code> number of channels along
-<code class="docutils literal notranslate"><span class="pre">channel_axis</span></code> share the same look-up table. For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">25)</span></code>, if we provide</p>
-<blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">8</span></code>, the shape of the look-up table would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2^n_bits)</span></code>.</p>
-</div></blockquote>
-<p>NOTE: Currently grouping is only supported along either input or output channel axis.</p>
+<p>This class supports two different configurations to structure the palettization:</p>
+<p>1. <strong>Per-tensor palettization</strong>:  This is the default configuration where the whole tensor shares a single lookup
+table. The <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is set to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code>, and <code class="docutils literal notranslate"><span class="pre">group_size</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+<p>2. <strong>Per-grouped-channel palettization</strong>: In this configuration, the number of channels <code class="docutils literal notranslate"><span class="pre">group_size</span></code> along
+<code class="docutils literal notranslate"><span class="pre">channel_axis</span></code> share the same lookup table. For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">25)</span></code>, if we provide
+<code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">8</span></code>, the shape of the lookup table would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2^n_bits)</span></code>.</p>
+<p>NOTE: Currently grouping is only supported along either the input or output channel axis.</p>
 </dd></dl>
 
 <dl class="py class">
@@ -606,7 +606,7 @@ a given weight element is; the more sensitive an element, the larger impact pert
 it (or palettizing it) has on the model’s loss function. Thus, weighted k-means
 moves the clusters closer to the sensitive weight values, allowing them to be
 represented more exactly and thus leading to a lower degradation in model performance
-after palettization.  The Fisher information matrix is computed using a few
+after palettization. The Fisher information matrix is computed using a few
 samples of calibration data.</p>
 <p>This algorithm implements <a class="reference external" href="https://arxiv.org/pdf/2306.07629.pdf">SqueezeLLM: Dense-and-Sparse Quantization</a>.</p>
 <p class="rubric">Example</p>
@@ -627,7 +627,7 @@ samples of calibration data.</p>
     <span class="p">)</span>
 <span class="p">)</span>
 
-<span class="n">dataloder</span> <span class="o">=</span> <span class="n">load_calibration_data</span><span class="p">()</span>
+<span class="n">dataloader</span> <span class="o">=</span> <span class="n">load_calibration_data</span><span class="p">()</span>
 
 <span class="c1"># define callable for loss function</span>
 <span class="k">def</span> <span class="nf">loss_fn</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>

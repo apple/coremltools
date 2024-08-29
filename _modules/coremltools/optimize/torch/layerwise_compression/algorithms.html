@@ -156,17 +156,17 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleGPTQConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level compression options for</span>
-<span class="sd">    `GPTQ &lt;https://arxiv.org/pdf/2210.17323.pdf&gt;`_ algorithm.</span>
+<span class="sd">    Configuration class for specifying global and module level compression options for the</span>
+<span class="sd">    `Generative Pre-Trained Transformer Quantization (GPTQ) &lt;https://arxiv.org/pdf/2210.17323.pdf&gt;`_ algorithm.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
 <span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
-<span class="sd">            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.uint8` which corresponds to</span>
+<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.uint8` which corresponds to</span>
 <span class="sd">            8-bit quantization.</span>
 <span class="sd">        granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters</span>
 <span class="sd">            will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,</span>
-<span class="sd">            ``block_size`` argument must be specified.  Defaults to ``per_channel``.</span>
+<span class="sd">            ``block_size`` argument must be specified. Defaults to ``per_channel``.</span>
 <span class="sd">        quantization_scheme: (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of</span>
 <span class="sd">            quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``, all</span>
 <span class="sd">            weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point</span>
@@ -174,20 +174,20 @@
 <span class="sd">            Defaults to ``QuantizationScheme.symmetric``.</span>
 <span class="sd">         block_size (:obj:`int`): When ``block_size`` is specified, ``block_size``</span>
 <span class="sd">            number of values will share the same quantization parameters of scale (and zero point if applicable) across</span>
-<span class="sd">            the input-channel axis.  Defaults to ``None``.</span>
+<span class="sd">            the input-channel axis. Defaults to ``None``.</span>
 <span class="sd">        enable_normal_float (:obj:`bool`): When ``True``, normal float format is used for quantization. It&#39;s</span>
 <span class="sd">            only supported when ``weight_dtype`` is equal to ``int3`` and ``int4``. Defaults to ``False``.</span>
 <span class="sd">        hessian_dampening: (:obj:`float`): Dampening factor added to the diagonal of the</span>
 <span class="sd">            Hessian used by GPTQ algorithm. Defaults to ``0.01``.</span>
 <span class="sd">        use_activation_order_heuristic (:obj:`bool`): When ``True``, columns of weight are sorted</span>
 <span class="sd">            in descending order of values of Hessian diagonal elements. Defaults to ``True``.</span>
-<span class="sd">        processing_group_size (:obj:`int`):  The weights are updated in</span>
-<span class="sd">            blocks of size processing_group_size. Defaults to ``128``.</span>
+<span class="sd">        processing_group_size (:obj:`int`): The weights are updated in</span>
+<span class="sd">            blocks of size ``processing_group_size``. Defaults to ``128``.</span>
 
-<span class="sd">        .. note:</span>
-<span class="sd">            Currently blocking is limited to only the input-channel axis for GPTQ. For a linear layer of shape (C_o x C_i), and block_size B,</span>
-<span class="sd">            the quantization scales will have shape (C_o x C_i/B). For a 2D conv layer of shape (C_o x C_i x H x W), the</span>
-<span class="sd">            quantization scales will have shape (C_o x C_i/B x 1 x 1).</span>
+<span class="sd">    .. note:</span>
+<span class="sd">        Blocking is currently limited to the input channel axis for GPTQ. For a linear layer of shape `(C_o x C_i)`, and ``block_size`` `B`,</span>
+<span class="sd">        the quantization scales will have shape `(C_o x C_i/B)`. For a 2D conv layer of shape `(C_o x C_i x H x W)`, the</span>
+<span class="sd">        quantization scales will have shape `(C_o x C_i/B x 1 x 1)`.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">weight_dtype</span><span class="p">:</span> <span class="n">_Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">_torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>
@@ -239,8 +239,8 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleSparseGPTConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level compression options for</span>
-<span class="sd">    `SparseGPT &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_ algorithm.</span>
+<span class="sd">    Configuration class for specifying global and module level compression options for the</span>
+<span class="sd">    `Sparse Generative Pre-Trained Transformer (SparseGPT) &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_ algorithm.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        target_sparsity (:obj:`float`): Fraction of weight elements to set to ``0``. Defaults to</span>
@@ -251,11 +251,11 @@
 <span class="sd">            target sparsity is determined by the ``n:m`` ratio.</span>
 <span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
 <span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
-<span class="sd">            corresponding to that layer are not quantized.  Defaults to :py:class:`torch.float32` which corresponds to</span>
+<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.float32` which corresponds to</span>
 <span class="sd">            no quantization.</span>
 <span class="sd">        quantization_granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters</span>
 <span class="sd">            will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,</span>
-<span class="sd">            ``block_size`` argument must be specified.  Defaults to ``per_channel``.</span>
+<span class="sd">            ``block_size`` argument must be specified. Defaults to ``per_channel``.</span>
 <span class="sd">        quantization_scheme: (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of</span>
 <span class="sd">            quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``, all</span>
 <span class="sd">            weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point</span>
@@ -265,7 +265,7 @@
 <span class="sd">            only supported for ``weight_dtype`` is equal to ``int3`` and ``int4``.</span>
 <span class="sd">        hessian_dampening (:obj:`float`): Dampening factor added to the diagonal of the</span>
 <span class="sd">            Hessian used by GPTQ algorithm. Defaults to ``0.01``.</span>
-<span class="sd">        processing_group_size (:obj:`int`):  The weights are updated in</span>
+<span class="sd">        processing_group_size (:obj:`int`): The weights are updated in</span>
 <span class="sd">            blocks of size processing_group_size. Defaults to ``128``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 

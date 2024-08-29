@@ -186,12 +186,12 @@ point <code class="docutils literal notranslate"><span class="pre">0</span></cod
 </dd>
 <dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight quantization.</p>
 </dd>
-<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further quantized to a
-jointly compressed mlmodel. For what compression schema that could be futher jointly
-quantized, see the <cite>blockwise_quantize_weights</cite> graph pass for details.</p>
-<p>Using “palettize + quantize” as an example, where the input mlmodel is already palettized,
-and the palettization’s lut will be further quantized. The weight values are represented by
-<code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further compress the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>blockwise_palettize_weights</cite> graph pass for information
+about which compression schemas could be further jointly palettized.</p>
+<p>Take “palettize + quantize” as an example of joint compression, where the input MLModel is already
+palettized, and the palettization’s lookup table will be further quantized. In such an example,
+the weight values are represented by <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
 lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</p>
 </dd>
 </dl>
@@ -250,12 +250,12 @@ non-zero data, which is a size-1 vector of value <code class="docutils literal n
 </dd>
 <dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight pruning.</p>
 </dd>
-<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further pruned to a
-jointly compressed mlmodel. For what compression schema that could be futher jointly
-pruned, see the <cite>prune_weights</cite> graph pass for details.</p>
-<p>Using “quantize + prune” as an example, where the input mlmodel is already quantized,
-and it will be further pruned. The weight values are represented by
-<code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further prune the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>prune_weights</cite> graph pass for information
+about which compression schemas could be further pruned.</p>
+<p>Take “quantize + prune” as an example of joint compression, where the input MLModel is already
+quantized, and it will be further pruned. In such an example, the weight values are
+represented by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
 quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
 </dd>
 </dl>
@@ -284,7 +284,7 @@ quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(spar
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.palettize_weights">
 <span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">palettize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#palettize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.palettize_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
-compressed MLModel by reducing the overall number of weights using one or more look-up-table
+compressed MLModel by reducing the overall number of weights using one or more lookup tables
 (LUT). A LUT contains a list of float values. An <cite>nbit</cite> LUT has 2<sup>nbits</sup> entries.</p>
 <p>For example, a float weight vector such as <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.3,</span> <span class="pre">0.5,</span> <span class="pre">0.5}</span></code> can be compressed
 using a 1-bit LUT: <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.5}</span></code>. In this case the float vector can be replaced
@@ -306,12 +306,12 @@ values, which are then used to perform the float operation the weight is feeding
 </div></blockquote>
 <p>The weight can be converted to a palette with indices <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3]</span></code> (2 bits). The
 indices are a byte array.</p>
-<p>The data range <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.3]</span></code> is divided into 4 partitions linearly, which is
+<p>The data range <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.3]</span></code> is divided into four partitions linearly, which is
 <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3]</span></code>.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p>The LUT would be <code class="docutils literal notranslate"><span class="pre">[0.0,</span> <span class="pre">0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3]</span></code>.</p></li>
-<li><p>The weight is rounded to <code class="docutils literal notranslate"><span class="pre">[0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.1,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></code>, and represented in
+<li><p>The weight is rounded to <code class="docutils literal notranslate"><span class="pre">[0.1,</span> <span class="pre">0.2,</span> <span class="pre">0.3,</span> <span class="pre">0.1,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></code> and represented in
 the palette as indices <code class="docutils literal notranslate"><span class="pre">[01b,</span> <span class="pre">10b,</span> <span class="pre">11b,</span> <span class="pre">01b,</span> <span class="pre">00b,</span> <span class="pre">00b]</span></code>.</p></li>
 </ul>
 </div></blockquote>
@@ -322,12 +322,12 @@ the palette as indices <code class="docutils literal notranslate"><span class="p
 </dd>
 <dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight palettization.</p>
 </dd>
-<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further palettized to a
-jointly compressed mlmodel. For what compression schema that could be futher jointly
-palettized, see the <cite>channelwise_palettize_weights</cite> graph pass for details.</p>
-<p>Using “prune + palettize” as an example, where the input mlmodel is already pruned,
-and the non-zero entries will be further palettized. The weight values are represented by
-<code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further compress the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>channelwise_palettize_weights</cite> graph pass for information
+about which compression schemas could be further jointly palettized.</p>
+<p>Take “prune + palettize” as an example of joint compression, where the input MLModel is already
+pruned, and the non-zero entries will be further palettized. In such an example, the weight values are
+represented by <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
 lut(sparse) -&gt; constexpr_lut_to_sparse -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
 </dd>
 </dl>
