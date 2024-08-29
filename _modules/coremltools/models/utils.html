@@ -1501,12 +1501,12 @@
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.MultiFunctionDescriptor">[docs]</a>
 <span class="k">class</span> <span class="nc">MultiFunctionDescriptor</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The data class defines how to construct a multifunction model from different model sources.</span>
-<span class="sd">    The users can use the ``add_function`` method to specify the path to the source ``mlpackage``,</span>
+<span class="sd">    This data class defines how to construct a multifunction model from different model sources.</span>
+<span class="sd">    Use the ``add_function`` method to specify the path to the source ``mlpackage``,</span>
 <span class="sd">    along with the source and target function names.</span>
 
 <span class="sd">    After setting the ``default_function_name`` to the ``MultiFunctionDescriptor`` instance,</span>
-<span class="sd">    a multifunction model can be exported using the ``save_multifunction`` method.</span>
+<span class="sd">    you can export a multifunction model using the ``save_multifunction`` method.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
@@ -1515,12 +1515,12 @@
 <span class="sd">        from coremltools.utils import MultiFunctionDescriptor, save_multifunction</span>
 
 <span class="sd">        # Initialize a MultiFunctionDescriptor instance with functions in an existing mlpackage.</span>
-<span class="sd">        # desc will constain all functions in &quot;my_model.mlpackage&quot;</span>
+<span class="sd">        # desc will contain all functions in &quot;my_model.mlpackage&quot;</span>
 <span class="sd">        desc = MultiFunctionDescriptor(&quot;my_model.mlpackage&quot;)</span>
 
 <span class="sd">        # Construct a MultiFunctionDescriptor instance from scratch.</span>
-<span class="sd">        # The below code inserts &quot;main&quot; function from &quot;my_model.mlpackage&quot; as &quot;main_1&quot;,</span>
-<span class="sd">        # and inserts &quot;main&quot; function from &quot;my_model_2.mlpackage&quot; as &quot;main_2&quot;.</span>
+<span class="sd">        # The below code inserts the &quot;main&quot; function from &quot;my_model.mlpackage&quot; as &quot;main_1&quot;,</span>
+<span class="sd">        # and inserts the &quot;main&quot; function from &quot;my_model_2.mlpackage&quot; as &quot;main_2&quot;.</span>
 <span class="sd">        desc = MultiFunctionDescriptor()</span>
 <span class="sd">        desc.add_function(</span>
 <span class="sd">            model_path=&quot;my_model.mlpackage&quot;,</span>
@@ -1533,8 +1533,8 @@
 <span class="sd">            target_function_name=&quot;main_2&quot;,</span>
 <span class="sd">        )</span>
 
-<span class="sd">        # Each MultiFunctionDescriptor must has a default function name before saved</span>
-<span class="sd">        # as a multifunction mlpackage on disk.</span>
+<span class="sd">        # Each MultiFunctionDescriptor instance must have a default function name</span>
+<span class="sd">        # so it can be saved as a multifunction mlpackage on disk.</span>
 <span class="sd">        desc.default_function_name = &quot;main_1&quot;</span>
 <span class="sd">        save_multifunction(desc, &quot;my_multifunction_model.mlpackage&quot;)</span>
 
@@ -1548,9 +1548,9 @@
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.MultiFunctionDescriptor.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        If ``model_path`` is passed to the constructor, it must be a str pointing to a</span>
-<span class="sd">        mlpackage on disk. The MultiFunctionDescriptor instance will be initiated</span>
-<span class="sd">        with functions in ``model_path``.</span>
+<span class="sd">        If ``model_path`` is passed to the constructor, it must be a str pointing to an</span>
+<span class="sd">        existing ``mlpackage`` on disk. The MultiFunctionDescriptor instance will be initiated</span>
+<span class="sd">        with the functions in ``model_path``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_function_name</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_name_to_source_function</span> <span class="o">=</span> <span class="p">{}</span>
@@ -1569,7 +1569,7 @@
 
     <span class="k">def</span> <span class="nf">_add_modelpath_to_cache</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Given a mlpackage path ``model_path``, the utils caches related metadata.</span>
+<span class="sd">        Given an ``mlpackage`` path ``model_path``, this function caches related metadata.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">model_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_modelpath_to_functions</span><span class="p">:</span>
             <span class="k">return</span>
@@ -1581,8 +1581,8 @@
 
         <span class="n">desc</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span>
 
-        <span class="c1"># for the iOS17 and below protobuf, there were no functions field,</span>
-        <span class="c1"># in which &quot;main&quot; is the only function associated with the model.</span>
+        <span class="c1"># For the protobuf in iOS17 and below, there was no `functions` field,</span>
+        <span class="c1"># so &quot;main&quot; is the only function associated with the model in those cases.</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">desc</span><span class="o">.</span><span class="n">functions</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_modelpath_to_functions</span><span class="p">[</span><span class="n">model_path</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;main&quot;</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1605,8 +1605,8 @@
         <span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">src_function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">target_function_name</span><span class="p">:</span> <span class="nb">str</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Insert ``src_function_name`` function from ``model_path`` as ``target_function_name``</span>
-<span class="sd">        function in the multifunction descriptor.</span>
+<span class="sd">        Insert a ``src_function_name`` function from ``model_path`` as the </span>
+<span class="sd">        ``target_function_name`` function in the multifunction descriptor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_modelpath_to_cache</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
 
@@ -1623,8 +1623,8 @@
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.MultiFunctionDescriptor.add_model">[docs]</a>
     <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Insert all functions in ``model_path`` into the multifunction descriptor.</span>
-<span class="sd">        Same function names in the original model will be applied.</span>
+<span class="sd">        Insert all functions from the model in ``model_path`` into the multifunction descriptor.</span>
+<span class="sd">        The function names will remain the same as in the original model.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_add_modelpath_to_cache</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
 
@@ -1636,7 +1636,7 @@
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.MultiFunctionDescriptor.remove_function">[docs]</a>
     <span class="k">def</span> <span class="nf">remove_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">function_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Remove function ``function_name`` from the multifunction descriptor.</span>
+<span class="sd">        Remove a function ``function_name`` from the multifunction descriptor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">function_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name_to_source_function</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;function_name </span><span class="si">{</span><span class="n">function_name</span><span class="si">}</span><span class="s2"> not found.&quot;</span><span class="p">)</span>
@@ -1662,7 +1662,7 @@
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save a MultiFunctionDescriptor instance into a multifunction ``mlpackage``.</span>
-<span class="sd">    The utility also performs constant deduplication across functions to allow weight sharing.</span>
+<span class="sd">    This function also performs constant deduplication across functions to allow for weight sharing.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -1670,7 +1670,7 @@
 <span class="sd">        Multifunction descriptor to save on the disk.</span>
 
 <span class="sd">    destination_path : str</span>
-<span class="sd">        The saved ``mlpackage`` model path.</span>
+<span class="sd">        The path where the new ``mlpackage`` will be saved.</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>

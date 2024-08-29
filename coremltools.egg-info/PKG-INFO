@@ -1,0 +1,65 @@
+Metadata-Version: 2.1
+Name: coremltools
+Version: 8.0b2
+Summary: Community Tools for Core ML
+Home-page: https://github.com/apple/coremltools
+Author: Apple Inc.
+Author-email: coremltools@apple.com
+License: BSD
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: POSIX :: Linux
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Software Development
+License-File: LICENSE.txt
+License-File: NOTICE.txt
+Requires-Dist: numpy>=1.14.5
+Requires-Dist: protobuf>=3.1.0
+Requires-Dist: sympy
+Requires-Dist: tqdm
+Requires-Dist: packaging
+Requires-Dist: attrs>=21.3.0
+Requires-Dist: cattrs
+Requires-Dist: pyaml
+
+coremltools
+===========
+
+`Core ML <http://developer.apple.com/documentation/coreml>`_
+is an Apple framework that allows developers to easily integrate
+machine learning (ML) models into apps. Core ML is available on iOS, iPadOS,
+watchOS, macOS, and tvOS. Core ML introduces a public file format (.mlmodel)
+for a broad set of ML methods including deep neural networks (convolutional
+and recurrent), tree ensembles (boosted trees, random forest, decision trees),
+and generalized linear models. Core ML models can be directly integrated into
+apps within Xcode.
+
+:code:`coremltools` is a python package for creating, examining, and testing models in
+the .mlmodel format. In particular, it can be used to:
+
+- Convert trained models from popular machine learning tools into Core ML format
+  (.mlmodel).
+- Write models to Core ML format with a simple API.
+- Making predictions using the Core ML framework (on select platforms) to
+  verify conversion.
+
+More Information
+----------------
+
+- `coremltools user guide and examples <https://coremltools.readme.io/>`_
+- `Core ML framework documentation <http://developer.apple.com/documentation/coreml>`_
+- `Machine learning at Apple <https://developer.apple.com/machine-learning>`_
+
+License
+-------
+Copyright (c) 2020, Apple Inc. All rights reserved.
+
+Use of this source code is governed by the
+`3-Clause BSD License <https://opensource.org/licenses/BSD-3-Clause>`_
+that can be found in the LICENSE.txt file.

@@ -147,12 +147,12 @@ non-zero data, which is a size-1 vector of value <code class="docutils literal n
 </dd>
 <dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight pruning.</p>
 </dd>
-<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further pruned to a
-jointly compressed mlmodel. For what compression schema that could be futher jointly
-pruned, see the <cite>prune_weights</cite> graph pass for details.</p>
-<p>Using “quantize + prune” as an example, where the input mlmodel is already quantized,
-and it will be further pruned. The weight values are represented by
-<code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further prune the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>prune_weights</cite> graph pass for information
+about which compression schemas could be further pruned.</p>
+<p>Take “quantize + prune” as an example of joint compression, where the input MLModel is already
+quantized, and it will be further pruned. In such an example, the weight values are
+represented by <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
 quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
 </dd>
 </dl>

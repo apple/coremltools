@@ -89,10 +89,7 @@
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor"><code class="docutils literal notranslate"><span class="pre">create_array_feature_extractor()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.converters.mil.debugging_utils">extract_submodel</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.debugging_utils.extract_submodel"><code class="docutils literal notranslate"><span class="pre">extract_submodel()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#extract-submodel">extract_submodel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.feature_vectorizer">feature_vectorizer</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.models.feature_vectorizer.create_feature_vectorizer"><code class="docutils literal notranslate"><span class="pre">create_feature_vectorizer()</span></code></a></li>
 </ul>
@@ -395,7 +392,15 @@ the compiled model to persist, you need to make a copy.</p>
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.make_state">
 <span class="sig-name descname"><span class="pre">make_state</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">MLState</span></span></span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.make_state"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.make_state" title="Link to this definition"></a></dt>
 <dd><p>Returns a new state object, which can be passed to the <code class="docutils literal notranslate"><span class="pre">predict</span></code> method.</p>
-<p>State functionality is only supported on macOS 15+</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><strong>state</strong> (<em>MLState</em>) – Holds state for an MLModel.</p></li>
+<li><p><em>State functionality is only supported on macOS 15+.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
@@ -599,55 +604,8 @@ If a list, the output type is an array.</p>
 </dd></dl>
 
 </section>
-<section id="module-coremltools.converters.mil.debugging_utils">
-<span id="extract-submodel"></span><h2>extract_submodel<a class="headerlink" href="#module-coremltools.converters.mil.debugging_utils" title="Link to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="coremltools.converters.mil.debugging_utils.extract_submodel">
-<span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.debugging_utils.</span></span><span class="sig-name descname"><span class="pre">extract_submodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/debugging_utils.html#extract_submodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.debugging_utils.extract_submodel" title="Link to this definition"></a></dt>
-<dd><p>This utility function lets you extract a submodel from a Core ML model.</p>
-<p>For a neural network model, the function extracts only in-memory Core ML models.
-You should always call this function for a model directly from <a class="reference internal" href="coremltools.converters.convert.html#coremltools.converters._converters_entry.convert" title="coremltools.converters._converters_entry.convert"><code class="xref py py-class docutils literal notranslate"><span class="pre">convert</span></code></a>. It is not
-allowed to load the model from disk and then call this API.</p>
-<p>For an ML program model, both cases (in-memory and from disk) are supported.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>model: MLModel</strong></dt><dd><p>The Core ML model from which the submodel is extracted.</p>
-</dd>
-<dt><strong>outputs: list[str]</strong></dt><dd><p>A list of names of Vars, which are the outputs of the extracted submodel.</p>
-</dd>
-<dt><strong>inputs: list[str] (Optional)</strong></dt><dd><p>A list of names of Vars, which are the inputs of the extracted submodel.
-If not provided, the inputs from the original model are used.</p>
-</dd>
-<dt><strong>function_name: str (Optional)</strong></dt><dd><p>Name of the function where the subgraph is extracted. Default is <code class="docutils literal notranslate"><span class="pre">main</span></code>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<p>Neural network:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;neuralnetwork&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">submodel</span> <span class="o">=</span> <span class="n">extract_submodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>ML program:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.converters.mil.debugging_utils</span> <span class="kn">import</span> <span class="n">extract_submodel</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output_0&quot;</span><span class="p">,</span> <span class="s2">&quot;output_1&quot;</span><span class="p">]</span>
-<span class="gp">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Directly extract model in memory</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">submodel</span> <span class="o">=</span> <span class="n">extract_submodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt;</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Extract model loaded from disk</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;model.mlpackage&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="s2">&quot;model.mlpackage&quot;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">submodel</span> <span class="o">=</span> <span class="n">extract_submodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
+<section id="extract-submodel">
+<h2>extract_submodel<a class="headerlink" href="#extract-submodel" title="Link to this heading"></a></h2>
 </section>
 <section id="module-coremltools.models.feature_vectorizer">
 <span id="feature-vectorizer"></span><h2>feature_vectorizer<a class="headerlink" href="#module-coremltools.models.feature_vectorizer" title="Link to this heading"></a></h2>
@@ -1482,11 +1440,11 @@ the features.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">MultiFunctionDescriptor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor" title="Link to this definition"></a></dt>
-<dd><p>The data class defines how to construct a multifunction model from different model sources.
-The users can use the <code class="docutils literal notranslate"><span class="pre">add_function</span></code> method to specify the path to the source <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>,
+<dd><p>This data class defines how to construct a multifunction model from different model sources.
+Use the <code class="docutils literal notranslate"><span class="pre">add_function</span></code> method to specify the path to the source <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>,
 along with the source and target function names.</p>
 <p>After setting the <code class="docutils literal notranslate"><span class="pre">default_function_name</span></code> to the <code class="docutils literal notranslate"><span class="pre">MultiFunctionDescriptor</span></code> instance,
-a multifunction model can be exported using the <code class="docutils literal notranslate"><span class="pre">save_multifunction</span></code> method.</p>
+you can export a multifunction model using the <code class="docutils literal notranslate"><span class="pre">save_multifunction</span></code> method.</p>
 <div class="admonition seealso">
 <p class="admonition-title">See also</p>
 <dl class="simple">
@@ -1497,12 +1455,12 @@ a multifunction model can be exported using the <code class="docutils literal no
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.utils</span> <span class="kn">import</span> <span class="n">MultiFunctionDescriptor</span><span class="p">,</span> <span class="n">save_multifunction</span>
 
 <span class="c1"># Initialize a MultiFunctionDescriptor instance with functions in an existing mlpackage.</span>
-<span class="c1"># desc will constain all functions in &quot;my_model.mlpackage&quot;</span>
+<span class="c1"># desc will contain all functions in &quot;my_model.mlpackage&quot;</span>
 <span class="n">desc</span> <span class="o">=</span> <span class="n">MultiFunctionDescriptor</span><span class="p">(</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">)</span>
 
 <span class="c1"># Construct a MultiFunctionDescriptor instance from scratch.</span>
-<span class="c1"># The below code inserts &quot;main&quot; function from &quot;my_model.mlpackage&quot; as &quot;main_1&quot;,</span>
-<span class="c1"># and inserts &quot;main&quot; function from &quot;my_model_2.mlpackage&quot; as &quot;main_2&quot;.</span>
+<span class="c1"># The below code inserts the &quot;main&quot; function from &quot;my_model.mlpackage&quot; as &quot;main_1&quot;,</span>
+<span class="c1"># and inserts the &quot;main&quot; function from &quot;my_model_2.mlpackage&quot; as &quot;main_2&quot;.</span>
 <span class="n">desc</span> <span class="o">=</span> <span class="n">MultiFunctionDescriptor</span><span class="p">()</span>
 <span class="n">desc</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span>
     <span class="n">model_path</span><span class="o">=</span><span class="s2">&quot;my_model.mlpackage&quot;</span><span class="p">,</span>
@@ -1515,8 +1473,8 @@ a multifunction model can be exported using the <code class="docutils literal no
     <span class="n">target_function_name</span><span class="o">=</span><span class="s2">&quot;main_2&quot;</span><span class="p">,</span>
 <span class="p">)</span>
 
-<span class="c1"># Each MultiFunctionDescriptor must has a default function name before saved</span>
-<span class="c1"># as a multifunction mlpackage on disk.</span>
+<span class="c1"># Each MultiFunctionDescriptor instance must have a default function name</span>
+<span class="c1"># so it can be saved as a multifunction mlpackage on disk.</span>
 <span class="n">desc</span><span class="o">.</span><span class="n">default_function_name</span> <span class="o">=</span> <span class="s2">&quot;main_1&quot;</span>
 <span class="n">save_multifunction</span><span class="p">(</span><span class="n">desc</span><span class="p">,</span> <span class="s2">&quot;my_multifunction_model.mlpackage&quot;</span><span class="p">)</span>
 </pre></div>
@@ -1524,36 +1482,36 @@ a multifunction model can be exported using the <code class="docutils literal no
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.__init__" title="Link to this definition"></a></dt>
-<dd><p>If <code class="docutils literal notranslate"><span class="pre">model_path</span></code> is passed to the constructor, it must be a str pointing to a
-mlpackage on disk. The MultiFunctionDescriptor instance will be initiated
-with functions in <code class="docutils literal notranslate"><span class="pre">model_path</span></code>.</p>
+<dd><p>If <code class="docutils literal notranslate"><span class="pre">model_path</span></code> is passed to the constructor, it must be a str pointing to an
+existing <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> on disk. The MultiFunctionDescriptor instance will be initiated
+with the functions in <code class="docutils literal notranslate"><span class="pre">model_path</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.add_function">
 <span class="sig-name descname"><span class="pre">add_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.add_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.add_function" title="Link to this definition"></a></dt>
-<dd><p>Insert <code class="docutils literal notranslate"><span class="pre">src_function_name</span></code> function from <code class="docutils literal notranslate"><span class="pre">model_path</span></code> as <code class="docutils literal notranslate"><span class="pre">target_function_name</span></code>
-function in the multifunction descriptor.</p>
+<dd><p>Insert a <code class="docutils literal notranslate"><span class="pre">src_function_name</span></code> function from <code class="docutils literal notranslate"><span class="pre">model_path</span></code> as the
+<code class="docutils literal notranslate"><span class="pre">target_function_name</span></code> function in the multifunction descriptor.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.add_model">
 <span class="sig-name descname"><span class="pre">add_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.add_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.add_model" title="Link to this definition"></a></dt>
-<dd><p>Insert all functions in <code class="docutils literal notranslate"><span class="pre">model_path</span></code> into the multifunction descriptor.
-Same function names in the original model will be applied.</p>
+<dd><p>Insert all functions from the model in <code class="docutils literal notranslate"><span class="pre">model_path</span></code> into the multifunction descriptor.
+The function names will remain the same as in the original model.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.utils.MultiFunctionDescriptor.remove_function">
 <span class="sig-name descname"><span class="pre">remove_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#MultiFunctionDescriptor.remove_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.MultiFunctionDescriptor.remove_function" title="Link to this definition"></a></dt>
-<dd><p>Remove function <code class="docutils literal notranslate"><span class="pre">function_name</span></code> from the multifunction descriptor.</p>
+<dd><p>Remove a function <code class="docutils literal notranslate"><span class="pre">function_name</span></code> from the multifunction descriptor.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.bisect_model">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">bisect_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_chunks_to_pipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_output_correctness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#bisect_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.bisect_model" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">bisect_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">_ct.models.MLModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_chunks_to_pipeline</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_output_correctness</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#bisect_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.bisect_model" title="Link to this definition"></a></dt>
 <dd><p>Utility function to split a mlpackage model into two mlpackages of approximately same file size.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1822,7 +1780,7 @@ version of the MLModel.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.load_spec">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">load_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'coremltools.proto.Model_pb2'</span> <span class="pre">from</span> <span class="pre">'/Users/henry/Desktop/projects/coremltools/coremltools/proto/Model_pb2.py'&gt;</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#load_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">load_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">&lt;module</span> <span class="pre">'coremltools.proto.Model_pb2'</span> <span class="pre">from</span> <span class="pre">'/Users/cpompeo/ceci-projects/coremltools/coremltools/proto/Model_pb2.py'&gt;</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#load_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Link to this definition"></a></dt>
 <dd><p>Load a protobuf model specification from file (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code>) or directory (<code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1852,7 +1810,7 @@ version of the MLModel.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.make_pipeline">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">make_pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">models</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_ct.models.MLModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">None</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">ComputeUnit</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">_ct.models.MLModel</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#make_pipeline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.make_pipeline" title="Link to this definition"></a></dt>
 <dd><p>Makes a pipeline with the given models.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1903,7 +1861,7 @@ not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.materialize_dynamic_shape_mlmodel">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">materialize_dynamic_shape_mlmodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynamic_shape_mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name_to_materialization_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#materialize_dynamic_shape_mlmodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.materialize_dynamic_shape_mlmodel" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">materialize_dynamic_shape_mlmodel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dynamic_shape_mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_ct.models.MLModel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">function_name_to_materialization_map</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_function_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'main'</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../_modules/coremltools/models/utils.html#materialize_dynamic_shape_mlmodel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.materialize_dynamic_shape_mlmodel" title="Link to this definition"></a></dt>
 <dd><p>Given a dynamic-shape mlmodel, materialize symbols to create fixed-shape functions,
 then save as an .mlpackage to destination path.
 To save memory, the pymil program of input dynamic-shape mlmodel is re-used.
@@ -1967,7 +1925,7 @@ then the old function will be overridden</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.randomize_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">randomize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#randomize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.randomize_weights" title="Link to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">randomize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">_ct.models.MLModel</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#randomize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.randomize_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to randomize weights</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -2041,13 +1999,13 @@ features).</p>
 <dt class="sig sig-object py" id="coremltools.models.utils.save_multifunction">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></span><span class="sig-name descname"><span class="pre">save_multifunction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">desc</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.models.utils.MultiFunctionDescriptor" title="coremltools.models.utils.MultiFunctionDescriptor"><span class="pre">MultiFunctionDescriptor</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination_path</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/utils.html#save_multifunction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.utils.save_multifunction" title="Link to this definition"></a></dt>
 <dd><p>Save a MultiFunctionDescriptor instance into a multifunction <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>.
-The utility also performs constant deduplication across functions to allow weight sharing.</p>
+This function also performs constant deduplication across functions to allow for weight sharing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>desc</strong><span class="classifier">MultiFunctionDescriptor</span></dt><dd><p>Multifunction descriptor to save on the disk.</p>
 </dd>
-<dt><strong>destination_path</strong><span class="classifier">str</span></dt><dd><p>The saved <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model path.</p>
+<dt><strong>destination_path</strong><span class="classifier">str</span></dt><dd><p>The path where the new <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> will be saved.</p>
 </dd>
 </dl>
 </dd>

@@ -120,7 +120,7 @@ to download the full example code.</p>
 <section class="sphx-glr-example-title" id="linear-quantization">
 <span id="linear-quantization-tutorial"></span><span id="sphx-glr-examples-linear-quantization-py"></span><h1>Linear Quantization<a class="headerlink" href="#linear-quantization" title="Link to this heading"></a></h1>
 <p>In this tutorial, you learn how to train a simple convolutional neural network on
-<a class="reference external" href="http://yann.lecun.com/exdb/mnist/">MNIST</a> using <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>.</p>
+<a class="reference external" href="http://yann.lecun.com/exdb/mnist/">MNIST</a> using <code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code>.</p>
 <p>Learn more about other quantization in the coremltools
 <a class="reference external" href="https://coremltools.readme.io/v7.0/docs/data-dependent-quantization">Training-Time Quantization Documentation</a>.</p>
 <section id="network-and-dataset-definition">
@@ -246,8 +246,8 @@ images to normalize them.</p>
 </section>
 <section id="insert-quantization-layers-in-the-model">
 <h2>Insert Quantization Layers in the Model<a class="headerlink" href="#insert-quantization-layers-in-the-model" title="Link to this heading"></a></h2>
-<p>Install <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer" title="coremltools.optimize.torch.quantization.LinearQuantizer"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a> in the trained model.</p>
-<p>Create an instance of the <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizerConfig" title="coremltools.optimize.torch.quantization.LinearQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizerConfig</span></code></a> class
+<p>Install <code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizer</span></code> in the trained model.</p>
+<p>Create an instance of the <code class="xref py py-class docutils literal notranslate"><span class="pre">LinearQuantizerConfig</span></code> class
 to specify quantization parameters. <code class="docutils literal notranslate"><span class="pre">milestones=[0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">1]</span></code> refers to the following:</p>
 <ul class="simple">
 <li><p><em>Index 0</em>: At 0th epoch, observers will start collecting statistics of values of tensors being quantized</p></li>
@@ -267,7 +267,7 @@ to specify quantization parameters. <code class="docutils literal notranslate"><
 <span class="n">quantizer</span> <span class="o">=</span> <span class="n">LinearQuantizer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Next, call <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.prepare" title="coremltools.optimize.torch.quantization.LinearQuantizer.prepare"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare()</span></code></a> to insert fake quantization
+<p>Next, call <code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare()</span></code> to insert fake quantization
 layers in the model.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">qmodel</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="n">example_inputs</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">))</span>
 </pre></div>
@@ -276,7 +276,7 @@ layers in the model.</p>
 <section id="fine-tuning-the-model">
 <h2>Fine-Tuning the Model<a class="headerlink" href="#fine-tuning-the-model" title="Link to this heading"></a></h2>
 <p>The next step is to fine tune the model with quantization applied.
-Call <a class="reference internal" href="../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer.step" title="coremltools.optimize.torch.quantization.LinearQuantizer.step"><code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code></a> to step through the
+Call <code class="xref py py-meth docutils literal notranslate"><span class="pre">step()</span></code> to step through the
 quantization milestones.</p>
 <div class="highlight-Python notranslate"><div class="highlight"><pre><span></span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">Adam</span><span class="p">(</span><span class="n">qmodel</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="n">eps</span><span class="o">=</span><span class="mf">1e-07</span><span class="p">)</span>
 <span class="n">accuracy_quantized</span> <span class="o">=</span> <span class="mf">0.0</span>

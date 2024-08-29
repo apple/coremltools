@@ -401,7 +401,7 @@ state type input that wraps a fp16 tensor with shape <code class="docutils liter
 <dd class="field-odd"><dl class="simple">
 <dt><strong>wrapped_type: coremltools.converters.mil.input_types.InputType</strong></dt><dd><ul class="simple">
 <li><p>The type wrapped in the state.</p></li>
-<li><p>Can be <code class="docutils literal notranslate"><span class="pre">TensorType</span></code>.
+<li><p>Must be <code class="docutils literal notranslate"><span class="pre">TensorType</span></code>.
 Note that the <code class="docutils literal notranslate"><span class="pre">name</span></code> and <code class="docutils literal notranslate"><span class="pre">default_value</span></code> of the wrapped <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> must not be provided.</p></li>
 </ul>
 </dd>
@@ -468,7 +468,7 @@ elements are required to have the same value.</p></li>
 </dl>
 <p class="rubric">Examples</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3))`</span> <span class="pre">implies</span> <span class="pre">`dtype</span> <span class="pre">==</span>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3))</span></code> implies <code class="docutils literal notranslate"><span class="pre">dtype</span> <span class="pre">==</span>
 <span class="pre">np.float32</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span> <span class="pre">dtype=np.int32)</span></code></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span>
