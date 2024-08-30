@@ -87,7 +87,7 @@ def convert_nodes(
             convert_single_node(context, node)
         except Exception as e:
             scope_names = node.get_scope_info()[0]
-            op_location = '/'.join(scope_names[:-1])
+            op_location = '/'.join(scope_names)
             logger.error(f"\n\nERROR - converting '{node.kind}' op (located at: '{op_location}'):\n")
             raise e     # re-raise exception
 
