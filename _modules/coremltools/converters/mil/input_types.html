@@ -314,7 +314,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3))` implies `dtype ==</span>
+<span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3))`` implies ``dtype ==</span>
 <span class="sd">          np.float32``</span>
 
 <span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3), dtype=np.int32)``</span>
@@ -420,7 +420,7 @@
 <span class="sd">        ----------</span>
 <span class="sd">        wrapped_type: coremltools.converters.mil.input_types.InputType</span>
 <span class="sd">            - The type wrapped in the state. </span>
-<span class="sd">            - Can be ``TensorType``.</span>
+<span class="sd">            - Must be ``TensorType``.</span>
 <span class="sd">              Note that the ``name`` and ``default_value`` of the wrapped ``TensorType`` must not be provided.</span>
 
 <span class="sd">        name: str</span>

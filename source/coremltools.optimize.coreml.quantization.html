@@ -204,12 +204,12 @@ point <code class="docutils literal notranslate"><span class="pre">0</span></cod
 </dd>
 <dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml.OptimizationConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code></a> object that specifies the parameters for weight quantization.</p>
 </dd>
-<dt><strong>joint_compression: bool</strong></dt><dd><p>When it is set, the input mlmodel (should already be compressed) is further quantized to a
-jointly compressed mlmodel. For what compression schema that could be futher jointly
-quantized, see the <cite>blockwise_quantize_weights</cite> graph pass for details.</p>
-<p>Using “palettize + quantize” as an example, where the input mlmodel is already palettized,
-and the palettization’s lut will be further quantized. The weight values are represented by
-<code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
+<dt><strong>joint_compression: bool</strong></dt><dd><p>Specification of whether or not to further compress the already-compressed input MLModel to a
+jointly compressed MLModel. See the <cite>blockwise_palettize_weights</cite> graph pass for information
+about which compression schemas could be further jointly palettized.</p>
+<p>Take “palettize + quantize” as an example of joint compression, where the input MLModel is already
+palettized, and the palettization’s lookup table will be further quantized. In such an example,
+the weight values are represented by <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops:
 lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_lut_to_dense -&gt; dense(fp16)</p>
 </dd>
 </dl>
@@ -238,13 +238,13 @@ lut(int8) -&gt; constexpr_blockwise_shift_scale -&gt; lut(fp16) -&gt; constexpr_
 <dt class="sig sig-object py" id="coremltools.optimize.coreml.experimental.linear_quantize_activations">
 <span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.experimental.</span></span><span class="sig-name descname"><span class="pre">linear_quantize_activations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.models.html#coremltools.models.model.MLModel" title="coremltools.models.model.MLModel"><span class="pre">MLModel</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="coremltools.optimize.coreml.utilities.html#coremltools.optimize.coreml.OptimizationConfig" title="coremltools.optimize.coreml._config.OptimizationConfig"><span class="pre">OptimizationConfig</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_data</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/experimental/_post_training_quantization.html#linear_quantize_activations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.experimental.linear_quantize_activations" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, which uses
-float-precision activations, into a compressed MLModel that uses n-bit activations (currently only
-support n=8).</p>
-<p>This is achieved by calibrating the float activation values that observed by feeding real sample data into
-the model, converting calibrated statistics into the <code class="docutils literal notranslate"><span class="pre">quantize</span></code> and <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> op pairs, and inserted
-into where activation get quantized.</p>
-<p>It’s recommended to use with linear_quantize_weights for 8-bit activation and 8-bit weight linear quantization.
-It’s also compatible to use with other weight compression methods.</p>
+float-precision activations, into a compressed MLModel that uses n-bit activations. Currently, only n=8
+is suppported.</p>
+<p>This is achieved by feeding real sample data into the input MLModel, calibrating the resulting float activation values,
+converting the calibrated values into <code class="docutils literal notranslate"><span class="pre">quantize</span></code> and <code class="docutils literal notranslate"><span class="pre">dequantize</span></code> op pairs, and inserting those
+op pairs into the new MLModel instance where activations get quantized.</p>
+<p>Use this function with <code class="docutils literal notranslate"><span class="pre">linear_quantize_weights</span></code> for 8-bit activation and 8-bit weight linear quantization.
+It’s also compatible for use with other weight compression methods.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -253,7 +253,7 @@ It’s also compatible to use with other weight compression methods.</p>
 <dt><strong>config: OptimizationConfig</strong></dt><dd><p>An <code class="xref py py-class docutils literal notranslate"><span class="pre">OptimizationConfig</span></code> object that specifies the parameters for activation quantization.</p>
 </dd>
 <dt><strong>sample_data: List</strong></dt><dd><p>Data used to characterize statistics of the activation values of the original float precision model.
-Expecting a list of sample input dictionaries.</p>
+Expects a list of sample input dictionaries.</p>
 </dd>
 </dl>
 </dd>

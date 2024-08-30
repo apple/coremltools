@@ -76,7 +76,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizerConfig</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressorConfig"><code class="docutils literal notranslate"><span class="pre">LayerwiseCompressorConfig</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor"><code class="docutils literal notranslate"><span class="pre">LayerwiseCompressor</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id4">GPTQ</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gptq">GPTQ</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.optimize.torch.examples.html">Examples</a></li>
@@ -536,11 +536,11 @@ and affine.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>weight_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the weights. The number of bits used
 for quantization is inferred from the dtype. When dtype is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the weights
-corresponding to that layer are not quantized.  Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> which corresponds to
+corresponding to that layer are not quantized. Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.int8</span></code> which corresponds to
 8-bit quantization.</p></li>
 <li><p><strong>granularity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationGranularity</span></code>) – Specifies the granularity at which quantization parameters
 will be computed. Can be one of <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_block</span></code>. When using <code class="docutils literal notranslate"><span class="pre">per_block</span></code>,
-<code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument must be specified.  Defaults to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument must be specified. Defaults to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>.</p></li>
 <li><p><strong>quantization_scheme</strong> (<a class="reference internal" href="#coremltools.optimize.torch.quantization.QuantizationScheme" title="coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>) – Type of
 quantization configuration to use. When this parameter is set to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>,
 all weights are quantized with zero point as zero. When it is set to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.affine</span></code>,
@@ -548,31 +548,31 @@ zero point can be set anywhere in the range of values allowed for the quantized 
 Defaults to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>.</p></li>
 <li><p><strong>block_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">tuple</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – When <code class="docutils literal notranslate"><span class="pre">block_size</span></code> is specified, <code class="docutils literal notranslate"><span class="pre">block_size</span></code>
 number of values will share the same quantization parameters of scale (and zero point if applicable) across
-the input-channel axis. A tuple of integers can be provided for arbitrary sized blockwise quantization.
+the input channel axis. A tuple of integers can be provided for arbitrary sized blockwise quantization.
 See below for more details on different possible configurations. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
-<p>This class supports few different configurations to structure the quantization:</p>
+<p>This class supports three different configurations to structure the quantization:</p>
 <p>1. <strong>Per-channel quantization</strong>: This is the default configuration where <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is <code class="docutils literal notranslate"><span class="pre">per_channel</span></code> and
 <code class="docutils literal notranslate"><span class="pre">block_size</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code>. In this configuration, quantization parameters are computed for each output channel.</p>
-<p>2. <strong>Per-tensor quantization</strong>:  In this configuration, quantization paramaters are computed for the tensor as a whole. That is,
+<p>2. <strong>Per-tensor quantization</strong>: In this configuration, quantization parameters are computed for the tensor as a whole. That is,
 all values in the tensor will share a single scale (and a single zero point if applicable). The <code class="docutils literal notranslate"><span class="pre">granularity</span></code> argument is set
 to <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code>.</p>
-<p>3. <strong>Per-block quantization</strong>: This is used to structure the tensor for block-wise quantization. For this configuration,
-the <code class="docutils literal notranslate"><span class="pre">granularity</span></code> is set to <code class="docutils literal notranslate"><span class="pre">per_block</span></code> and the <code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument has to be specified.
-The <code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument can either be:</p>
+<p>3. <strong>Per-block quantization</strong>: This configuration is used to structure the tensor for blockwise quantization. The <code class="docutils literal notranslate"><span class="pre">granularity</span></code>
+is set to <code class="docutils literal notranslate"><span class="pre">per_block</span></code> and the <code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument has to be specified. The <code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument can either be of type
+<code class="docutils literal notranslate"><span class="pre">int</span></code> or <code class="docutils literal notranslate"><span class="pre">tuple</span></code>:</p>
 <blockquote>
 <div><ul class="simple">
 <li><dl class="simple">
-<dt>int: In this case, each row along the output-channel axis will have its own quantization parameters (similar to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>).</dt><dd><p>Additionally, <code class="docutils literal notranslate"><span class="pre">block_size</span></code> number of values will share the same quantization parameters, along the input-channel axis.
+<dt>int: In this case, each row along the output-channel axis will have its own quantization parameters (similar to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>).</dt><dd><p>Additionally, <code class="docutils literal notranslate"><span class="pre">block_size</span></code> number of values will share the same quantization parameters, along the input channel axis.
 For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">10)</span></code>, if we provide <code class="docutils literal notranslate"><span class="pre">block_size</span> <span class="pre">=</span> <span class="pre">2</span></code>, the shape of the quantization
 parameters would be <code class="docutils literal notranslate"><span class="pre">(10,</span> <span class="pre">5)</span></code>.</p>
 </dd>
 </dl>
 </li>
 <li><dl class="simple">
-<dt>tuple: For more advanced configuration, users can provide an arbitrary N-D shaped block to share the quantization parameters.</dt><dd><p>This is specified in the form of a tuple where each value corresponds to the block size for the respective axis of the
+<dt>tuple: For more advanced configuration, users can provide an arbitrary n-dimensional block to share the quantization parameters.</dt><dd><p>This is specified in the form of a tuple where each value corresponds to the block size for the respective axis of the
 weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.</p>
 </dd>
 </dl>
@@ -591,8 +591,8 @@ and dequantizing the original weights which captures the error induced by quanti
 <p class="admonition-title">Note</p>
 <p>After quantization, the weight values stored will still remain in full precision, therefore
 the PyTorch model size will not be reduced. To see the reduction in model size, please convert
-the model using <code class="docutils literal notranslate"><span class="pre">coremltools.convert(...)</span></code>, which will produce a MIL model containing the
-compressed weights.</p>
+the model using <code class="docutils literal notranslate"><span class="pre">coremltools.convert(...)</span></code>, which will produce a model intermediate language
+(MIL) model containing the compressed weights.</p>
 <p>Example:</p>
 <blockquote>
 <div><div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
@@ -613,7 +613,7 @@ compressed weights.</p>
 <span class="p">)</span>
 
 <span class="c1"># initialize the quantizer</span>
-<span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingquantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
+<span class="n">config</span> <span class="o">=</span> <span class="n">PostTrainingQuantizerConfig</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span>
     <span class="p">{</span>
         <span class="s2">&quot;global_config&quot;</span><span class="p">:</span> <span class="p">{</span>
             <span class="s2">&quot;weight_dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
@@ -651,7 +651,7 @@ to all supported modules.</p></li>
 <li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig" title="coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModulePostTrainingQuantizerConfig</span></code></a>) – Module type configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
 The keys can be either strings or module classes.</p></li>
 <li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig" title="coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModulePostTrainingQuantizerConfig</span></code></a>) – Module name configs applied to specific modules. This can be a dictionary with module names pointing to their
-corresponding :py:class:<a href="#id2"><span class="problematic" id="id3">`</span></a>ModulePostTrainingQuantizerConfig`s</p></li>
+corresponding <a class="reference internal" href="#coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig" title="coremltools.optimize.torch.quantization.ModulePostTrainingQuantizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModulePostTrainingQuantizerConfig</span></code></a>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -667,20 +667,19 @@ compressed by <a class="reference internal" href="#coremltools.optimize.torch.la
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>layers</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">list</span></code> of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Module</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code>) – List of layers
-which should be compressed. The layer names can also be specified as a regex.
-The layers listed should be immediate child modules of the parent container
-<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Sequential</span></code> model and they should be contiguous, i.e.,
-output of layer <code class="docutils literal notranslate"><span class="pre">n</span></code> should be input of layer <code class="docutils literal notranslate"><span class="pre">n+1</span></code>.</p></li>
+to be compressed. When items in the list are <cite>str</cite>, the string can be regex
+or the exact name of the module. The layers listed should be immediate child modules
+of the parent container <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Sequential</span></code> model and they should be contiguous.
+That is, the output of layer <code class="docutils literal notranslate"><span class="pre">n</span></code> should be the input to layer <code class="docutils literal notranslate"><span class="pre">n+1</span></code>.</p></li>
 <li><p><strong>global_config</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Config to be applied globally
 to all supported modules. Missing values are chosen from the default config.</p></li>
-<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Module type configs applied to a specific
-module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>. The keys can be either strings
-or module classes.</p></li>
-<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Module level configs applied to specific modules.
-The name of the module must either be a regex or a fully qualified name that can be used
-to fetch it from the top level module using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method.</p></li>
-<li><p><strong>input_cacher</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">FirstLayerInputCacher</span></code>) – Cacher object
-which caches inputs which are fed to the first layer which is set up for compression</p></li>
+<li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Module type configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
+The keys can be either strings or module classes.</p></li>
+<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleGPTQConfig</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSparseGPTConfig</span></code>) – Module level configs applied to specific modules. The name of the module must either be a regex or
+a fully qualified name that can be used to fetch it from the top level module using the
+<code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method.</p></li>
+<li><p><strong>input_cacher</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">FirstLayerInputCacher</span></code>) – Cacher object that caches inputs which are then</p></li>
+<li><p><strong>fed to the first layer set up for compression.</strong></p></li>
 <li><p><strong>calibration_nsamples</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of samples to be used for calibration.</p></li>
 </ul>
 </dd>
@@ -723,18 +722,18 @@ path to the yaml file.</p>
 <dd><p>A post training compression algorithm which compresses a sequential model layer by layer.
 The implementation supports two variations of this algorithm:</p>
 <ol class="arabic simple">
-<li><p><a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">GPTQ</a></p></li>
-<li><p><a class="reference external" href="https://arxiv.org/pdf/2301.00774.pdf">SparseGPT</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">Generative Pre-Trained Transformer Quantization (GPTQ)</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/pdf/2301.00774.pdf">Sparse Generative Pre-Trained Transformer (SparseGPT)</a></p></li>
 </ol>
 <p>At a high level, it compresses weights of a model layer by layer,
 by minimizing the L2 norm of the difference between the original activations and
-activations obtained on compressing the weights of a layer. The activations
+activations obtained from compressing the weights of a layer. The activations
 are computed using a few samples of training data.</p>
-<p>Only sequential models are supported, where output of one layer feeds into the
+<p>Only sequential models are supported, where the output of one layer feeds into the
 input of the next layer.</p>
-<p>For HuggingFace models, disable use_cache config. This is used to speed up decoding but,
-to generalize forward pass for LayerwiseCompressor algorithms across all
-model types we need to disable this behavior.</p>
+<p>For HuggingFace models, disable the <cite>use_cache</cite> config. This is used to speed up decoding,
+but to generalize forward pass for <cite>LayerwiseCompressor</cite> algorithms across all
+model types, the behavior must be disabled.</p>
 <p class="rubric">Example</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.layerwise_compression</span> <span class="kn">import</span> <span class="p">(</span>
@@ -801,24 +800,24 @@ Defaults to <code class="docutils literal notranslate"><span class="pre">False</
 
 </dd></dl>
 
-<section id="id4">
-<h2>GPTQ<a class="headerlink" href="#id4" title="Link to this heading"></a></h2>
+<section id="gptq">
+<h2>GPTQ<a class="headerlink" href="#gptq" title="Link to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.layerwise_compression.algorithms.</span></span><span class="sig-name descname"><span class="pre">ModuleGPTQConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">weight_dtype</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dtype</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'uint8'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">granularity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'per_channel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization_scheme</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'symmetric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_normal_float</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hessian_dampening</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_activation_order_heuristic</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_group_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">algorithm</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'gptq'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/layerwise_compression/algorithms.html#ModuleGPTQConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.layerwise_compression.algorithms.ModuleGPTQConfig" title="Link to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">LayerwiseCompressionAlgorithmConfig</span></code></p>
-<p>Configuration class for specifying global and module level compression options for
-<a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">GPTQ</a> algorithm.</p>
+<p>Configuration class for specifying global and module level compression options for the
+<a class="reference external" href="https://arxiv.org/pdf/2210.17323.pdf">Generative Pre-Trained Transformer Quantization (GPTQ)</a> algorithm.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul>
 <li><p><strong>weight_dtype</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">torch.dtype</span></code>) – The dtype to use for quantizing the weights. The number of bits used
 for quantization is inferred from the dtype. When dtype is set to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.float32</span></code>, the weights
-corresponding to that layer are not quantized.  Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code> which corresponds to
+corresponding to that layer are not quantized. Defaults to <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.uint8</span></code> which corresponds to
 8-bit quantization.</p></li>
 <li><p><strong>granularity</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationGranularity</span></code>) – Specifies the granularity at which quantization parameters
 will be computed. Can be one of <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_block</span></code>. When using <code class="docutils literal notranslate"><span class="pre">per_block</span></code>,
-<code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument must be specified.  Defaults to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">block_size</span></code> argument must be specified. Defaults to <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>.</p></li>
 <li><p><strong>quantization_scheme</strong> –</p>
 <dl class="simple">
 <dt>(<a class="reference internal" href="#coremltools.optimize.torch.quantization.QuantizationScheme" title="coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme"><code class="xref py py-class docutils literal notranslate"><span class="pre">QuantizationScheme</span></code></a>): Type of</dt><dd><p>quantization configuration to use. When this parameter is set to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>, all
@@ -827,7 +826,7 @@ can be set anywhere in the range of values allowed for the quantized weight.
 Defaults to <code class="docutils literal notranslate"><span class="pre">QuantizationScheme.symmetric</span></code>.</p>
 </dd>
 <dt>block_size (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>): When <code class="docutils literal notranslate"><span class="pre">block_size</span></code> is specified, <code class="docutils literal notranslate"><span class="pre">block_size</span></code></dt><dd><p>number of values will share the same quantization parameters of scale (and zero point if applicable) across
-the input-channel axis.  Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+the input-channel axis. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
 </dd>
 </dl>
 </li>
@@ -838,10 +837,7 @@ Hessian used by GPTQ algorithm. Defaults to <code class="docutils literal notran
 <li><p><strong>use_activation_order_heuristic</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code>) – When <code class="docutils literal notranslate"><span class="pre">True</span></code>, columns of weight are sorted
 in descending order of values of Hessian diagonal elements. Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p><strong>processing_group_size</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – The weights are updated in
-blocks of size processing_group_size. Defaults to <code class="docutils literal notranslate"><span class="pre">128</span></code>.</p></li>
-<li><p><strong>.. note</strong> – Currently blocking is limited to only the input-channel axis for GPTQ. For a linear layer of shape (C_o x C_i), and block_size B,
-the quantization scales will have shape (C_o x C_i/B). For a 2D conv layer of shape (C_o x C_i x H x W), the
-quantization scales will have shape (C_o x C_i/B x 1 x 1).</p></li>
+blocks of size <code class="docutils literal notranslate"><span class="pre">processing_group_size</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">128</span></code>.</p></li>
 </ul>
 </dd>
 </dl>

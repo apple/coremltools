@@ -166,33 +166,37 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleSKMPalettizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level compression options for</span>
+<span class="sd">    Configuration class for specifying global and module level palettization options for</span>
 <span class="sd">    :py:class:`SKMPalettizer` algorithm.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        n_bits (:obj:`int`): Number of bits to use for palettizing the weights. Defaults to ``4``.</span>
-<span class="sd">        lut_dtype (:py:class:`torch.dtype`): The dtype to use for representing each element in look up tables.</span>
-<span class="sd">            When value is None, no quantization is performed. Supported values are :py:class:`torch.int8` and</span>
-<span class="sd">            :py:class:`torch.uint8`. Defaults to None.</span>
+<span class="sd">        lut_dtype (:py:class:`torch.dtype`): The dtype to use for representing each element in lookup tables.</span>
+<span class="sd">            When value is ``None``, no quantization is performed. Supported values are :py:class:`torch.int8` and</span>
+<span class="sd">            :py:class:`torch.uint8`. Defaults to ``None``.</span>
 <span class="sd">        granularity (:py:class:`PalettizationGranularity`) – Granularity for palettization.</span>
 <span class="sd">            One of ``per_tensor`` or ``per_grouped_channel``. Defaults to ``per_tensor``.</span>
 <span class="sd">        group_size (:obj:`int`): Specify the number of channels in a group.</span>
 <span class="sd">            Only effective when granularity is ``per_grouped_channel``.</span>
 <span class="sd">        channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.</span>
 <span class="sd">            Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.</span>
+<span class="sd">        cluster_dim (:obj:`int`): The dimension of centroids for each lookup table.</span>
+<span class="sd">            The centroid is a scalar by default. When ``cluster_dim &gt; 1``, it indicates 2-D clustering</span>
+<span class="sd">            and each ``cluster_dim`` length of weight vectors along the output channel are palettized</span>
+<span class="sd">            using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.</span>
 <span class="sd">        enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels</span>
-<span class="sd">            using per channel scales before being palettized. This is not supported with ``cluster_dim &gt; 1``.</span>
+<span class="sd">            using per-channel scales before being palettized. This is not supported with ``cluster_dim &gt; 1``.</span>
 
-<span class="sd">    This class supports few different configurations to structure the palettization:</span>
+<span class="sd">    This class supports two different configurations to structure the palettization:</span>
 
-<span class="sd">    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single look-up</span>
-<span class="sd">    table. The ``granularity`` is set to ``per_tensor``.</span>
+<span class="sd">    1. **Per-tensor palettization**:  This is the default configuration where the whole tensor shares a single lookup</span>
+<span class="sd">    table. The ``granularity`` is set to ``per_tensor``, and ``group_size`` is ``None``.</span>
 
-<span class="sd">    2. **Per-grouped-channel palettization**: In this configuration, ``group_size`` number of channels along</span>
-<span class="sd">    ``channel_axis`` share the same look-up table. For example, for a weight matrix of shape ``(16, 25)``, if we provide</span>
-<span class="sd">     ``group_size = 8``, the shape of the look-up table would be ``(2, 2^n_bits)``.</span>
+<span class="sd">    2. **Per-grouped-channel palettization**: In this configuration, the number of channels ``group_size`` along</span>
+<span class="sd">    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide </span>
+<span class="sd">    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
 
-<span class="sd">    NOTE: Currently grouping is only supported along either input or output channel axis.</span>
+<span class="sd">    NOTE: Currently grouping is only supported along either the input or output channel axis.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">n_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
@@ -333,7 +337,7 @@
 <span class="sd">    it (or palettizing it) has on the model&#39;s loss function. Thus, weighted k-means</span>
 <span class="sd">    moves the clusters closer to the sensitive weight values, allowing them to be</span>
 <span class="sd">    represented more exactly and thus leading to a lower degradation in model performance</span>
-<span class="sd">    after palettization.  The Fisher information matrix is computed using a few</span>
+<span class="sd">    after palettization. The Fisher information matrix is computed using a few</span>
 <span class="sd">    samples of calibration data.</span>
 
 <span class="sd">    This algorithm implements `SqueezeLLM: Dense-and-Sparse Quantization &lt;https://arxiv.org/pdf/2306.07629.pdf&gt;`_.</span>
@@ -359,7 +363,7 @@
 <span class="sd">                    )</span>
 <span class="sd">                )</span>
 
-<span class="sd">                dataloder = load_calibration_data()</span>
+<span class="sd">                dataloader = load_calibration_data()</span>
 
 <span class="sd">                # define callable for loss function</span>
 <span class="sd">                def loss_fn(model, data):</span>
