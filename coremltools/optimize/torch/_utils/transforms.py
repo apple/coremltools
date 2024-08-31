@@ -13,9 +13,12 @@ from typing import List as _List
 from typing import Tuple as _Tuple
 
 import torch as _torch
-import torchvision as _torchvision
 
 from coremltools.optimize.torch._utils.registry import BaseRegistry as _BaseRegistry
+from coremltools._deps import _HAS_TORCH_VISION, MSG_TORCH_VISION_NOT_FOUND
+
+if _HAS_TORCH_VISION:
+    import torchvision as _torchvision
 
 _CONV_FUNCS = (
     _torch.nn.functional.conv1d,
@@ -949,6 +952,10 @@ class MethodToFuncPermute(Transform, TransformRegistry):
         if node.op == "call_method":
             self_obj, *args = load_arg(node.args, env)
             tensor_check = isinstance(self_obj, _torch.Tensor)
+
+            if not _HAS_TORCH_VISION:
+                raise ImportError(MSG_TORCH_VISION_NOT_FOUND)
+
             torchvision_check = self_obj == _torchvision.ops.misc.Permute
             return (tensor_check or torchvision_check) and node.target == "permute"
         else:
