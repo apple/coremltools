@@ -1419,8 +1419,8 @@ class MultiFunctionDescriptor:
 
     def __init__(self, model_path: _Optional[str] = None):
         """
-        If ``model_path`` is passed to the constructor, it must be a str pointing to an
-        existing ``mlpackage`` on disk. The MultiFunctionDescriptor instance will be initiated
+        If ``model_path`` is passed to the constructor, it must be a :obj:`str` pointing to an
+        existing ``mlpackage`` on disk. The :py:class:`MultiFunctionDescriptor` instance will be initiated
         with the functions in ``model_path``.
         """
         self._default_function_name = None
@@ -1519,15 +1519,15 @@ def save_multifunction(
     destination_path: str,
 ):
     """
-    Save a MultiFunctionDescriptor instance into a multifunction ``mlpackage``.
+    Save a :py:class:`MultiFunctionDescriptor` instance into a multifunction ``mlpackage``.
     This function also performs constant deduplication across functions to allow for weight sharing.
 
     Parameters
     ----------
-    desc : MultiFunctionDescriptor
+    desc: MultiFunctionDescriptor
         Multifunction descriptor to save on the disk.
 
-    destination_path : str
+    destination_path: str
         The path where the new ``mlpackage`` will be saved.
 
     Examples

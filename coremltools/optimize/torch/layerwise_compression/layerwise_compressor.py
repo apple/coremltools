@@ -66,15 +66,13 @@ _SUPPORTED_MODULES = [_torch.nn.Conv2d, _torch.nn.Linear]
 class LayerwiseCompressorConfig(_OptimizationConfig):
     """
     Configuration class for specifying how different submodules of a model are
-    compressed by :py:class:`LayerwiseCompressor`.
-
-    Only sequential models are supported.
+    compressed by :py:class:`LayerwiseCompressor`. Note that only sequential models are supported.
 
     Args:
         layers (:obj:`list` of :py:class:`torch.nn.Module` or :obj:`str`): List of layers
-            to be compressed. When items in the list are `str`, the string can be regex 
+            to be compressed. When items in the list are :obj:`str`, the string can be a regex 
             or the exact name of the module. The layers listed should be immediate child modules 
-            of the parent container :py:class:`torch.nn.Sequential` model and they should be contiguous. 
+            of the parent container :py:class:`torch.nn.Sequential` model, and they should be contiguous. 
             That is, the output of layer ``n`` should be the input to layer ``n+1``.
         global_config (:py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`): Config to be applied globally
             to all supported modules. Missing values are chosen from the default config.
@@ -86,7 +84,7 @@ class LayerwiseCompressorConfig(_OptimizationConfig):
             a fully qualified name that can be used to fetch it from the top level module using the 
             ``module.get_submodule(target)`` method.
         input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object that caches inputs which are then
-        fed to the first layer set up for compression.
+            fed to the first layer set up for compression.
         calibration_nsamples (:obj:`int`): Number of samples to be used for calibration.
     """
 
@@ -187,13 +185,14 @@ def _set_torch_flags():
 
 class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     """
-    A post training compression algorithm which compresses a sequential model layer by layer.
-    The implementation supports two variations of this algorithm:
+    A post training compression algorithm which compresses a sequential model layer by layer
+    by minimizing the quantization error while quantizing the weights. The implementation 
+    supports two variations of this algorithm:
 
     1) `Generative Pre-Trained Transformer Quantization (GPTQ) <https://arxiv.org/pdf/2210.17323.pdf>`_
     2) `Sparse Generative Pre-Trained Transformer (SparseGPT) <https://arxiv.org/pdf/2301.00774.pdf>`_
 
-    At a high level, it compresses weights of a model layer by layer,
+    At a high level, it compresses weights of a model layer by layer
     by minimizing the L2 norm of the difference between the original activations and
     activations obtained from compressing the weights of a layer. The activations
     are computed using a few samples of training data.
@@ -201,8 +200,8 @@ class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     Only sequential models are supported, where the output of one layer feeds into the
     input of the next layer.
 
-    For HuggingFace models, disable the `use_cache` config. This is used to speed up decoding, 
-    but to generalize forward pass for `LayerwiseCompressor` algorithms across all
+    For HuggingFace models, disable the ``use_cache`` config. This is used to speed up decoding, 
+    but to generalize forward pass for :py:class:`LayerwiseCompressor` algorithms across all
     model types, the behavior must be disabled.
 
     Example:

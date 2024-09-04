@@ -190,7 +190,7 @@ def palettize_weights(
     """
     Utility function to convert a float precision MLModel of type ``mlprogram`` to a
     compressed MLModel by reducing the overall number of weights using one or more lookup tables
-    (LUT). A LUT contains a list of float values. An `nbit` LUT has 2\ :sup:`nbits` entries.
+    (LUT). A LUT contains a list of float values. An ``n-bit`` LUT has :math:`2^{n\-bits}` entries.
 
     For example, a float weight vector such as ``{0.3, 0.3, 0.5, 0.5}`` can be compressed
     using a 1-bit LUT: ``{0.3, 0.5}``. In this case the float vector can be replaced
@@ -198,11 +198,11 @@ def palettize_weights(
 
     This function iterates over all the weights in the ``mlprogram``, discretizes its values,
     and constructs the LUT according to the algorithm specified in ``mode``. The float
-    values are then converted to the `nbit` values, and the LUT is saved alongside each
+    values are then converted to the ``n-bit`` values, and the LUT is saved alongside each
     weight. The ``const`` ops storing weight values are replaced by
     ``constexpr_lut_to_dense`` ops.
 
-    At runtime, the LUT and the `nbit` values are used to reconstruct the float weight
+    At runtime, the LUT and the ``n-bit`` values are used to reconstruct the float weight
     values, which are then used to perform the float operation the weight is feeding into.
 
     Consider the following example of ``"uniform"`` mode (a linear histogram):
@@ -238,7 +238,7 @@ def palettize_weights(
         Take "prune + palettize" as an example of joint compression, where the input MLModel is already 
         pruned, and the non-zero entries will be further palettized. In such an example, the weight values are
         represented by ``constexpr_lut_to_sparse`` + ``constexpr_sparse_to_dense`` ops:
-        lut(sparse) -> constexpr_lut_to_sparse -> weight(sparse) -> constexpr_sparse_to_dense -> weight(dense)
+        ``lut(sparse)`` -> ``constexpr_lut_to_sparse`` -> ``weight(sparse)`` -> ``constexpr_sparse_to_dense`` -> ``weight(dense)``
 
     Returns
     -------
