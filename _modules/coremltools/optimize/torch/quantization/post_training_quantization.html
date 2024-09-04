@@ -168,13 +168,13 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModulePostTrainingQuantizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level quantizer options for</span>
+<span class="sd">    Configuration class for specifying global and module-level quantizer options for</span>
 <span class="sd">    :py:class:`PostTrainingQuantizer` algorithm.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
 <span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
-<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.int8` which corresponds to</span>
+<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.int8`, which corresponds to</span>
 <span class="sd">            8-bit quantization.</span>
 <span class="sd">        granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters</span>
 <span class="sd">            will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,</span>
@@ -185,9 +185,9 @@
 <span class="sd">            zero point can be set anywhere in the range of values allowed for the quantized weight.</span>
 <span class="sd">            Defaults to ``QuantizationScheme.symmetric``.</span>
 <span class="sd">        block_size (:obj:`tuple` of :obj:`int` or :obj:`int`): When ``block_size`` is specified, ``block_size``</span>
-<span class="sd">            number of values will share the same quantization parameters of scale (and zero point if applicable) across</span>
-<span class="sd">            the input channel axis. A tuple of integers can be provided for arbitrary sized blockwise quantization.</span>
-<span class="sd">            See below for more details on different possible configurations. Defaults to ``None``.</span>
+<span class="sd">            number of values will share the same quantization parameters of scale, as well as the same zero point when applicable, across</span>
+<span class="sd">            the input channel axis. A tuple of integers can be provided for arbitrarily sized blockwise quantization.</span>
+<span class="sd">            See more details on different possible configurations below. Defaults to ``None``.</span>
 
 <span class="sd">    This class supports three different configurations to structure the quantization:</span>
 
@@ -195,21 +195,21 @@
 <span class="sd">    ``block_size`` is ``None``. In this configuration, quantization parameters are computed for each output channel.</span>
 
 <span class="sd">    2. **Per-tensor quantization**: In this configuration, quantization parameters are computed for the tensor as a whole. That is,</span>
-<span class="sd">    all values in the tensor will share a single scale (and a single zero point if applicable). The ``granularity`` argument is set</span>
+<span class="sd">    all values in the tensor will share a single scale and, if applicable, a single zero point. The ``granularity`` argument is set</span>
 <span class="sd">    to ``per_tensor``.</span>
 
 <span class="sd">    3. **Per-block quantization**: This configuration is used to structure the tensor for blockwise quantization. The ``granularity`` </span>
-<span class="sd">    is set to ``per_block`` and the ``block_size`` argument has to be specified. The ``block_size`` argument can either be of type</span>
+<span class="sd">    is set to ``per_block``, and the ``block_size`` argument has to be specified. The ``block_size`` argument can either be of type</span>
 <span class="sd">    ``int`` or ``tuple``:</span>
-<span class="sd">        * int: In this case, each row along the output-channel axis will have its own quantization parameters (similar to ``per_channel``).</span>
-<span class="sd">               Additionally, ``block_size`` number of values will share the same quantization parameters, along the input channel axis.</span>
+<span class="sd">        * int: In this configuration, each row along the output channel axis will have its own quantization parameters, similar to the ``per_channel`` configuration.</span>
+<span class="sd">               Additionally, ``block_size`` number of values will share the same quantization parameters along the input channel axis.</span>
 <span class="sd">               For example, for a weight matrix of shape ``(10, 10)``, if we provide ``block_size = 2``, the shape of the quantization</span>
 <span class="sd">               parameters would be ``(10, 5)``.</span>
-<span class="sd">        * tuple: For more advanced configuration, users can provide an arbitrary n-dimensional block to share the quantization parameters.</span>
-<span class="sd">                 This is specified in the form of a tuple where each value corresponds to the block size for the respective axis of the</span>
+<span class="sd">        * tuple: For a more advanced configuration, users can provide an arbitrary n-dimensional block to share the quantization parameters.</span>
+<span class="sd">                 This is specified in the form of a tuple, where each value corresponds to the block size for the respective axis of the</span>
 <span class="sd">                 weight matrix. The length of the provided tuple should be at most the number of dimensions of the weight matrix.</span>
 
-<span class="sd">    .. note:</span>
+<span class="sd">    .. note::</span>
 <span class="sd">        When performing 4-bit quantization, ``weight_dtype`` is set to :py:class:`torch.int8` for ``int4`` or</span>
 <span class="sd">        :py:class:`torch.uint8` for ``uint4``. This is because PyTorch currently doesn&#39;t provide support for 4-bit</span>
 <span class="sd">        data types. However, the quantization range is set according to 4-bit quantization and based on</span>
@@ -354,10 +354,10 @@
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform post-training quantization on a torch model. After quantization, weights of all</span>
 <span class="sd">    submodules selected for quantization contain full precision values obtained by quantizing</span>
-<span class="sd">    and dequantizing the original weights which captures the error induced by quantization.</span>
+<span class="sd">    and dequantizing the original weights, which captures the error induced by quantization.</span>
 
 <span class="sd">    .. note::</span>
-<span class="sd">        After quantization, the weight values stored will still remain in full precision, therefore</span>
+<span class="sd">        After quantization, the weight values stored will still remain in full precision, so</span>
 <span class="sd">        the PyTorch model size will not be reduced. To see the reduction in model size, please convert</span>
 <span class="sd">        the model using ``coremltools.convert(...)``, which will produce a model intermediate language </span>
 <span class="sd">        (MIL) model containing the compressed weights.</span>

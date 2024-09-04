@@ -1548,8 +1548,8 @@
 <a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.MultiFunctionDescriptor.__init__">[docs]</a>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        If ``model_path`` is passed to the constructor, it must be a str pointing to an</span>
-<span class="sd">        existing ``mlpackage`` on disk. The MultiFunctionDescriptor instance will be initiated</span>
+<span class="sd">        If ``model_path`` is passed to the constructor, it must be a :obj:`str` pointing to an</span>
+<span class="sd">        existing ``mlpackage`` on disk. The :py:class:`MultiFunctionDescriptor` instance will be initiated</span>
 <span class="sd">        with the functions in ``model_path``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_default_function_name</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1661,15 +1661,15 @@
     <span class="n">destination_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Save a MultiFunctionDescriptor instance into a multifunction ``mlpackage``.</span>
+<span class="sd">    Save a :py:class:`MultiFunctionDescriptor` instance into a multifunction ``mlpackage``.</span>
 <span class="sd">    This function also performs constant deduplication across functions to allow for weight sharing.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    desc : MultiFunctionDescriptor</span>
+<span class="sd">    desc: MultiFunctionDescriptor</span>
 <span class="sd">        Multifunction descriptor to save on the disk.</span>
 
-<span class="sd">    destination_path : str</span>
+<span class="sd">    destination_path: str</span>
 <span class="sd">        The path where the new ``mlpackage`` will be saved.</span>
 
 <span class="sd">    Examples</span>

@@ -163,15 +163,13 @@
 <span class="k">class</span> <span class="nc">LayerwiseCompressorConfig</span><span class="p">(</span><span class="n">_OptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Configuration class for specifying how different submodules of a model are</span>
-<span class="sd">    compressed by :py:class:`LayerwiseCompressor`.</span>
-
-<span class="sd">    Only sequential models are supported.</span>
+<span class="sd">    compressed by :py:class:`LayerwiseCompressor`. Note that only sequential models are supported.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        layers (:obj:`list` of :py:class:`torch.nn.Module` or :obj:`str`): List of layers</span>
-<span class="sd">            to be compressed. When items in the list are `str`, the string can be regex </span>
+<span class="sd">            to be compressed. When items in the list are :obj:`str`, the string can be a regex </span>
 <span class="sd">            or the exact name of the module. The layers listed should be immediate child modules </span>
-<span class="sd">            of the parent container :py:class:`torch.nn.Sequential` model and they should be contiguous. </span>
+<span class="sd">            of the parent container :py:class:`torch.nn.Sequential` model, and they should be contiguous. </span>
 <span class="sd">            That is, the output of layer ``n`` should be the input to layer ``n+1``.</span>
 <span class="sd">        global_config (:py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`): Config to be applied globally</span>
 <span class="sd">            to all supported modules. Missing values are chosen from the default config.</span>
@@ -183,7 +181,7 @@
 <span class="sd">            a fully qualified name that can be used to fetch it from the top level module using the </span>
 <span class="sd">            ``module.get_submodule(target)`` method.</span>
 <span class="sd">        input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object that caches inputs which are then</span>
-<span class="sd">        fed to the first layer set up for compression.</span>
+<span class="sd">            fed to the first layer set up for compression.</span>
 <span class="sd">        calibration_nsamples (:obj:`int`): Number of samples to be used for calibration.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -290,13 +288,14 @@
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor">[docs]</a>
 <span class="k">class</span> <span class="nc">LayerwiseCompressor</span><span class="p">(</span><span class="n">_BaseDataCalibratedModelOptimizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A post training compression algorithm which compresses a sequential model layer by layer.</span>
-<span class="sd">    The implementation supports two variations of this algorithm:</span>
+<span class="sd">    A post training compression algorithm which compresses a sequential model layer by layer</span>
+<span class="sd">    by minimizing the quantization error while quantizing the weights. The implementation </span>
+<span class="sd">    supports two variations of this algorithm:</span>
 
 <span class="sd">    1) `Generative Pre-Trained Transformer Quantization (GPTQ) &lt;https://arxiv.org/pdf/2210.17323.pdf&gt;`_</span>
 <span class="sd">    2) `Sparse Generative Pre-Trained Transformer (SparseGPT) &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_</span>
 
-<span class="sd">    At a high level, it compresses weights of a model layer by layer,</span>
+<span class="sd">    At a high level, it compresses weights of a model layer by layer</span>
 <span class="sd">    by minimizing the L2 norm of the difference between the original activations and</span>
 <span class="sd">    activations obtained from compressing the weights of a layer. The activations</span>
 <span class="sd">    are computed using a few samples of training data.</span>
@@ -304,8 +303,8 @@
 <span class="sd">    Only sequential models are supported, where the output of one layer feeds into the</span>
 <span class="sd">    input of the next layer.</span>
 
-<span class="sd">    For HuggingFace models, disable the `use_cache` config. This is used to speed up decoding, </span>
-<span class="sd">    but to generalize forward pass for `LayerwiseCompressor` algorithms across all</span>
+<span class="sd">    For HuggingFace models, disable the ``use_cache`` config. This is used to speed up decoding, </span>
+<span class="sd">    but to generalize forward pass for :py:class:`LayerwiseCompressor` algorithms across all</span>
 <span class="sd">    model types, the behavior must be disabled.</span>
 
 <span class="sd">    Example:</span>
