@@ -87,7 +87,7 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
     .. note::
-    Grouping is currently only supported along either the input or output channel axis.
+        Grouping is currently only supported along either the input or output channel axis.
     """
 
     n_bits: _Optional[int] = _field(

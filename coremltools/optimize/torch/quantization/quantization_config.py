@@ -107,7 +107,7 @@ _SUPPORTED_N_BITS = [4, 8, 32]
 @_define
 class ModuleLinearQuantizerConfig(_ModuleOptimizationConfig):
     """
-    Configuration class for specifying global and module level quantization options for linear quantization
+    Configuration class for specifying global and module-level quantization options for linear quantization
     algorithm implemented in :py:class:`LinearQuantizer`.
 
     Linear quantization algorithm simulates the effects of quantization during training, by quantizing
@@ -332,7 +332,7 @@ class LinearQuantizerConfig(_OptimizationConfig):
             module class, such as :py:class:`torch.nn.Linear`. The keys can be either strings
             or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleLinearQuantizerConfig`):
-            Module level configs applied to specific modules.
+            Module-level configs applied to specific modules.
             The name of the module must be a fully qualified name that can be used to fetch it
             from the top level module using the ``module.get_submodule(target)`` method.
         non_traceable_module_names (:obj:`list` of :obj:`str`):

@@ -346,13 +346,13 @@ class OBSCompressionAlgorithm(LayerwiseCompressionAlgorithm):
 @LayerwiseCompressionAlgorithm.register("gptq")
 class GPTQ(OBSCompressionAlgorithm):
     """
-    A post training compression algorithm based on the paper
+    A post-training compression algorithm based on the paper
     `GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers
     <https://arxiv.org/pdf/2210.17323.pdf>`_.
 
     Args:
         layer (:obj:`torch.nn.Module`): Module to be compressed.
-        config (:py:class:`ModuleGPTQConfig`): Config specifying hyper-parameters
+        config (:py:class:`ModuleGPTQConfig`): Config specifying hyperparameters
             for the GPTQ algorithm.
     """
 
@@ -527,7 +527,7 @@ class GPTQ(OBSCompressionAlgorithm):
 @LayerwiseCompressionAlgorithm.register("sparse_gpt")
 class SparseGPT(OBSCompressionAlgorithm):
     """
-    A post training compression algorithm based on the paper
+    A post-training compression algorithm based on the paper
     `SparseGPT: Massive Language Models Can be Accurately Pruned in One-Shot
     <https://arxiv.org/pdf/2301.00774.pdf>`_
 
