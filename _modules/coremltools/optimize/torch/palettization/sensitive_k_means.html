@@ -197,7 +197,7 @@
 <span class="sd">    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
 
 <span class="sd">    .. note::</span>
-<span class="sd">    Grouping is currently only supported along either the input or output channel axis.</span>
+<span class="sd">        Grouping is currently only supported along either the input or output channel axis.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">n_bits</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">validator</span><span class="o">=</span><span class="n">_validators</span><span class="o">.</span><span class="n">instance_of</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
@@ -270,7 +270,7 @@
 <span class="sd">            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.</span>
 <span class="sd">            The keys can be either strings or module classes.</span>
 <span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleSKMPalettizerConfig`):</span>
-<span class="sd">            Module level configs applied to specific modules. The name of the module must either be</span>
+<span class="sd">            Module-level configs applied to specific modules. The name of the module must either be</span>
 <span class="sd">            a regex or a fully qualified name that can be used to fetch it from the top level module</span>
 <span class="sd">            using the ``module.get_submodule(target)`` method.</span>
 <span class="sd">        calibration_nsamples (:obj:`int`): Number of samples to be used for calibration.</span>

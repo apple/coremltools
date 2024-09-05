@@ -449,13 +449,13 @@
 <span class="nd">@LayerwiseCompressionAlgorithm</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;gptq&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">GPTQ</span><span class="p">(</span><span class="n">OBSCompressionAlgorithm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A post training compression algorithm based on the paper</span>
+<span class="sd">    A post-training compression algorithm based on the paper</span>
 <span class="sd">    `GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers</span>
 <span class="sd">    &lt;https://arxiv.org/pdf/2210.17323.pdf&gt;`_.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        layer (:obj:`torch.nn.Module`): Module to be compressed.</span>
-<span class="sd">        config (:py:class:`ModuleGPTQConfig`): Config specifying hyper-parameters</span>
+<span class="sd">        config (:py:class:`ModuleGPTQConfig`): Config specifying hyperparameters</span>
 <span class="sd">            for the GPTQ algorithm.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -633,7 +633,7 @@
 <span class="nd">@LayerwiseCompressionAlgorithm</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;sparse_gpt&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">SparseGPT</span><span class="p">(</span><span class="n">OBSCompressionAlgorithm</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A post training compression algorithm based on the paper</span>
+<span class="sd">    A post-training compression algorithm based on the paper</span>
 <span class="sd">    `SparseGPT: Massive Language Models Can be Accurately Pruned in One-Shot</span>
 <span class="sd">    &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_</span>
 

@@ -121,7 +121,7 @@
   <section id="palettization">
 <h1>Palettization<a class="headerlink" href="#palettization" title="Link to this heading"></a></h1>
 <p>Palettization is a mechanism for compressing a model by clustering the model’s float
-weights into a look-up table (LUT) of centroids and indices.</p>
+weights into a lookup table (LUT) of centroids and indices.</p>
 <p>Palettization is implemented as an extension of <a class="reference external" href="https://pytorch.org/docs/stable/quantization.html">PyTorch’s QAT</a>
 APIs. It works by inserting palettization layers in appropriate places inside a model.
 The model can then be fine-tuned to learn the new palettized layers’ weights in the form
@@ -369,7 +369,7 @@ for an existing module type was already set, the new config will override the ol
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.optimize.torch.palettization.</span></span><span class="sig-name descname"><span class="pre">DKMPalettizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#coremltools.optimize.torch.palettization.DKMPalettizerConfig" title="coremltools.optimize.torch.palettization.palettization_config.DKMPalettizerConfig"><span class="pre">DKMPalettizerConfig</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/torch/palettization/palettizer.html#DKMPalettizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.torch.palettization.DKMPalettizer" title="Link to this definition"></a></dt>
 <dd><p>A palettization algorithm based on <a class="reference external" href="https://arxiv.org/pdf/2108.12659.pdf">“DKM: Differentiable K-Means Clustering Layer for Neural Network
 Compression”</a>. It clusters the weights
-using a differentiable version of <code class="docutils literal notranslate"><span class="pre">k-means</span></code>, allowing the look-up-table (LUT)
+using a differentiable version of <code class="docutils literal notranslate"><span class="pre">k-means</span></code>, allowing the lookup table (LUT)
 and indices of palettized weights to be learnt using a gradient-based optimization algorithm such as SGD.</p>
 <p class="rubric">Example</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
@@ -493,7 +493,10 @@ table. The <code class="docutils literal notranslate"><span class="pre">granular
 <p>2. <strong>Per-grouped-channel palettization</strong>: In this configuration, the number of channels <code class="docutils literal notranslate"><span class="pre">group_size</span></code> along
 <code class="docutils literal notranslate"><span class="pre">channel_axis</span></code> share the same lookup table. For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">25)</span></code>, if we provide
 <code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">8</span></code>, the shape of the lookup table would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2^n_bits)</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>Grouping is currently only supported along either the input or output channel axis.</p>
+</div>
 </dd></dl>
 
 <dl class="py class">
@@ -594,7 +597,10 @@ table. The <code class="docutils literal notranslate"><span class="pre">granular
 <p>2. <strong>Per-grouped-channel palettization</strong>: In this configuration, the number of channels <code class="docutils literal notranslate"><span class="pre">group_size</span></code> along
 <code class="docutils literal notranslate"><span class="pre">channel_axis</span></code> share the same lookup table. For example, for a weight matrix of shape <code class="docutils literal notranslate"><span class="pre">(16,</span> <span class="pre">25)</span></code>, if we provide
 <code class="docutils literal notranslate"><span class="pre">group_size</span> <span class="pre">=</span> <span class="pre">8</span></code>, the shape of the lookup table would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">2^n_bits)</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
 <p>Grouping is currently only supported along either the input or output channel axis.</p>
+</div>
 </dd></dl>
 
 <dl class="py class">
@@ -674,7 +680,7 @@ palettized by <a class="reference internal" href="#coremltools.optimize.torch.pa
 to all supported modules. Missing values are chosen from the default config.</p></li>
 <li><p><strong>module_type_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSKMPalettizerConfig</span></code></a>) – Module type configs applied to a specific module class, such as <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.Linear</span></code>.
 The keys can be either strings or module classes.</p></li>
-<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSKMPalettizerConfig</span></code></a>) – Module level configs applied to specific modules. The name of the module must either be
+<li><p><strong>module_name_configs</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">dict</span></code> of <code class="xref py py-obj docutils literal notranslate"><span class="pre">str</span></code> to <a class="reference internal" href="#coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig" title="coremltools.optimize.torch.palettization.ModuleSKMPalettizerConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">ModuleSKMPalettizerConfig</span></code></a>) – Module-level configs applied to specific modules. The name of the module must either be
 a regex or a fully qualified name that can be used to fetch it from the top level module
 using the <code class="docutils literal notranslate"><span class="pre">module.get_submodule(target)</span></code> method.</p></li>
 <li><p><strong>calibration_nsamples</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code>) – Number of samples to be used for calibration.</p></li>

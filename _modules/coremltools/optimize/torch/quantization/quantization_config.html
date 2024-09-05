@@ -210,7 +210,7 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleLinearQuantizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level quantization options for linear quantization</span>
+<span class="sd">    Configuration class for specifying global and module-level quantization options for linear quantization</span>
 <span class="sd">    algorithm implemented in :py:class:`LinearQuantizer`.</span>
 
 <span class="sd">    Linear quantization algorithm simulates the effects of quantization during training, by quantizing</span>
@@ -441,7 +441,7 @@
 <span class="sd">            module class, such as :py:class:`torch.nn.Linear`. The keys can be either strings</span>
 <span class="sd">            or module classes.</span>
 <span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleLinearQuantizerConfig`):</span>
-<span class="sd">            Module level configs applied to specific modules.</span>
+<span class="sd">            Module-level configs applied to specific modules.</span>
 <span class="sd">            The name of the module must be a fully qualified name that can be used to fetch it</span>
 <span class="sd">            from the top level module using the ``module.get_submodule(target)`` method.</span>
 <span class="sd">        non_traceable_module_names (:obj:`list` of :obj:`str`):</span>
