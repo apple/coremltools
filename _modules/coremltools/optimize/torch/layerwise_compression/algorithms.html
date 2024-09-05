@@ -156,28 +156,27 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleGPTQConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level compression options for the</span>
+<span class="sd">    Configuration class for specifying global and module-level compression options for the</span>
 <span class="sd">    `Generative Pre-Trained Transformer Quantization (GPTQ) &lt;https://arxiv.org/pdf/2210.17323.pdf&gt;`_ algorithm.</span>
 
 <span class="sd">    Args:</span>
 <span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
 <span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
-<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.uint8` which corresponds to</span>
+<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.uint8`, which corresponds to</span>
 <span class="sd">            8-bit quantization.</span>
 <span class="sd">        granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters</span>
 <span class="sd">            will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,</span>
 <span class="sd">            ``block_size`` argument must be specified. Defaults to ``per_channel``.</span>
-<span class="sd">        quantization_scheme: (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of</span>
+<span class="sd">        quantization_scheme (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of</span>
 <span class="sd">            quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``, all</span>
 <span class="sd">            weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point</span>
 <span class="sd">            can be set anywhere in the range of values allowed for the quantized weight.</span>
 <span class="sd">            Defaults to ``QuantizationScheme.symmetric``.</span>
-<span class="sd">         block_size (:obj:`int`): When ``block_size`` is specified, ``block_size``</span>
-<span class="sd">            number of values will share the same quantization parameters of scale (and zero point if applicable) across</span>
-<span class="sd">            the input-channel axis. Defaults to ``None``.</span>
+<span class="sd">        block_size (:obj:`int`): When ``block_size`` is specified, ``block_size`` number of values will share the same quantization </span>
+<span class="sd">            parameters of scale, as well as the same zero point when applicable, across the input channel axis. Defaults to ``None``.</span>
 <span class="sd">        enable_normal_float (:obj:`bool`): When ``True``, normal float format is used for quantization. It&#39;s</span>
 <span class="sd">            only supported when ``weight_dtype`` is equal to ``int3`` and ``int4``. Defaults to ``False``.</span>
-<span class="sd">        hessian_dampening: (:obj:`float`): Dampening factor added to the diagonal of the</span>
+<span class="sd">        hessian_dampening (:obj:`float`): Dampening factor added to the diagonal of the</span>
 <span class="sd">            Hessian used by GPTQ algorithm. Defaults to ``0.01``.</span>
 <span class="sd">        use_activation_order_heuristic (:obj:`bool`): When ``True``, columns of weight are sorted</span>
 <span class="sd">            in descending order of values of Hessian diagonal elements. Defaults to ``True``.</span>
@@ -239,7 +238,7 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModuleSparseGPTConfig</span><span class="p">(</span><span class="n">LayerwiseCompressionAlgorithmConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level compression options for the</span>
+<span class="sd">    Configuration class for specifying global and module-level compression options for the</span>
 <span class="sd">    `Sparse Generative Pre-Trained Transformer (SparseGPT) &lt;https://arxiv.org/pdf/2301.00774.pdf&gt;`_ algorithm.</span>
 
 <span class="sd">    Args:</span>
@@ -251,12 +250,12 @@
 <span class="sd">            target sparsity is determined by the ``n:m`` ratio.</span>
 <span class="sd">        weight_dtype (:py:class:`torch.dtype`): The dtype to use for quantizing the weights. The number of bits used</span>
 <span class="sd">            for quantization is inferred from the dtype. When dtype is set to :py:class:`torch.float32`, the weights</span>
-<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.float32` which corresponds to</span>
+<span class="sd">            corresponding to that layer are not quantized. Defaults to :py:class:`torch.float32`, which corresponds to</span>
 <span class="sd">            no quantization.</span>
 <span class="sd">        quantization_granularity (:py:class:`QuantizationGranularity`): Specifies the granularity at which quantization parameters</span>
 <span class="sd">            will be computed. Can be one of ``per_channel``, ``per_tensor`` or ``per_block``. When using ``per_block``,</span>
 <span class="sd">            ``block_size`` argument must be specified. Defaults to ``per_channel``.</span>
-<span class="sd">        quantization_scheme: (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of</span>
+<span class="sd">        quantization_scheme (:py:class:`~.coremltools.optimize.torch.quantization.quantization_config.QuantizationScheme`): Type of</span>
 <span class="sd">            quantization configuration to use. When this parameter is set to ``QuantizationScheme.symmetric``, all</span>
 <span class="sd">            weights are quantized with zero point as zero. When it is set to ``QuantizationScheme.affine``, zero point</span>
 <span class="sd">            can be set anywhere in the range of values allowed for the quantized weight.</span>

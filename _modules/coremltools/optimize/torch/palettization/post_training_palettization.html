@@ -153,7 +153,7 @@
 <span class="nd">@_define</span>
 <span class="k">class</span> <span class="nc">ModulePostTrainingPalettizerConfig</span><span class="p">(</span><span class="n">_ModuleOptimizationConfig</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Configuration class for specifying global and module level palettization options for</span>
+<span class="sd">    Configuration class for specifying global and module-level palettization options for</span>
 <span class="sd">    :py:class:`PostTrainingPalettizerConfig` algorithm.</span>
 
 <span class="sd">    Args:</span>
@@ -168,7 +168,7 @@
 <span class="sd">        channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.</span>
 <span class="sd">            Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.</span>
 <span class="sd">        cluster_dim (:obj:`int`): The dimension of centroids for each lookup table.</span>
-<span class="sd">            The centroid is a scalar by default. When ``cluster_dim &gt; 1``, it indicates 2-D clustering</span>
+<span class="sd">            The centroid is a scalar by default. When ``cluster_dim &gt; 1``, it indicates 2-D clustering,</span>
 <span class="sd">            and each ``cluster_dim`` length of weight vectors along the output channel are palettized</span>
 <span class="sd">            using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.</span>
 <span class="sd">        enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels</span>
@@ -183,7 +183,8 @@
 <span class="sd">    ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide </span>
 <span class="sd">    ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.</span>
 
-<span class="sd">    NOTE: Currently, grouping is only supported along either the input or output channel axis.</span>
+<span class="sd">    .. note::</span>
+<span class="sd">    Grouping is currently only supported along either the input or output channel axis.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">n_bits</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">_field</span><span class="p">(</span>

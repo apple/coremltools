@@ -285,16 +285,16 @@ quantized(sparse) -&gt; constexpr_sparse_blockwise_shift_scale -&gt; weight(spar
 <span class="sig-prename descclassname"><span class="pre">coremltools.optimize.coreml.</span></span><span class="sig-name descname"><span class="pre">palettize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/optimize/coreml/_post_training_quantization.html#palettize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.optimize.coreml.palettize_weights" title="Link to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> to a
 compressed MLModel by reducing the overall number of weights using one or more lookup tables
-(LUT). A LUT contains a list of float values. An <cite>nbit</cite> LUT has 2<sup>nbits</sup> entries.</p>
+(LUT). A LUT contains a list of float values. An <code class="docutils literal notranslate"><span class="pre">n-bit</span></code> LUT has <span class="math notranslate nohighlight">\(2^{n\-bits}\)</span> entries.</p>
 <p>For example, a float weight vector such as <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.3,</span> <span class="pre">0.5,</span> <span class="pre">0.5}</span></code> can be compressed
 using a 1-bit LUT: <code class="docutils literal notranslate"><span class="pre">{0.3,</span> <span class="pre">0.5}</span></code>. In this case the float vector can be replaced
 with a 1-bit vector <code class="docutils literal notranslate"><span class="pre">{0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">1}</span></code>.</p>
 <p>This function iterates over all the weights in the <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code>, discretizes its values,
 and constructs the LUT according to the algorithm specified in <code class="docutils literal notranslate"><span class="pre">mode</span></code>. The float
-values are then converted to the <cite>nbit</cite> values, and the LUT is saved alongside each
+values are then converted to the <code class="docutils literal notranslate"><span class="pre">n-bit</span></code> values, and the LUT is saved alongside each
 weight. The <code class="docutils literal notranslate"><span class="pre">const</span></code> ops storing weight values are replaced by
 <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> ops.</p>
-<p>At runtime, the LUT and the <cite>nbit</cite> values are used to reconstruct the float weight
+<p>At runtime, the LUT and the <code class="docutils literal notranslate"><span class="pre">n-bit</span></code> values are used to reconstruct the float weight
 values, which are then used to perform the float operation the weight is feeding into.</p>
 <p>Consider the following example of <code class="docutils literal notranslate"><span class="pre">&quot;uniform&quot;</span></code> mode (a linear histogram):</p>
 <blockquote>
@@ -328,7 +328,7 @@ about which compression schemas could be further jointly palettized.</p>
 <p>Take “prune + palettize” as an example of joint compression, where the input MLModel is already
 pruned, and the non-zero entries will be further palettized. In such an example, the weight values are
 represented by <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> + <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> ops:
-lut(sparse) -&gt; constexpr_lut_to_sparse -&gt; weight(sparse) -&gt; constexpr_sparse_to_dense -&gt; weight(dense)</p>
+<code class="docutils literal notranslate"><span class="pre">lut(sparse)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_sparse</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">weight(sparse)</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">constexpr_sparse_to_dense</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">weight(dense)</span></code></p>
 </dd>
 </dl>
 </dd>
