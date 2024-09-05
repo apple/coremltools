@@ -80,7 +80,7 @@ class LayerwiseCompressorConfig(_OptimizationConfig):
             Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`. 
             The keys can be either strings or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):
-            Module level configs applied to specific modules. The name of the module must either be a regex or 
+            Module-level configs applied to specific modules. The name of the module must either be a regex or 
             a fully qualified name that can be used to fetch it from the top level module using the 
             ``module.get_submodule(target)`` method.
         input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object that caches inputs which are then
@@ -185,7 +185,7 @@ def _set_torch_flags():
 
 class LayerwiseCompressor(_BaseDataCalibratedModelOptimizer):
     """
-    A post training compression algorithm which compresses a sequential model layer by layer
+    A post-training compression algorithm which compresses a sequential model layer by layer
     by minimizing the quantization error while quantizing the weights. The implementation 
     supports two variations of this algorithm:
 

@@ -100,7 +100,7 @@ class ModuleSKMPalettizerConfig(_ModuleOptimizationConfig):
     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
     .. note::
-    Grouping is currently only supported along either the input or output channel axis.
+        Grouping is currently only supported along either the input or output channel axis.
     """
 
     n_bits: int = _field(default=4, validator=_validators.instance_of(int))
@@ -170,7 +170,7 @@ class SKMPalettizerConfig(_OptimizationConfig):
             Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`.
             The keys can be either strings or module classes.
         module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleSKMPalettizerConfig`):
-            Module level configs applied to specific modules. The name of the module must either be
+            Module-level configs applied to specific modules. The name of the module must either be
             a regex or a fully qualified name that can be used to fetch it from the top level module
             using the ``module.get_submodule(target)`` method.
         calibration_nsamples (:obj:`int`): Number of samples to be used for calibration.

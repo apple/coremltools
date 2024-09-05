@@ -190,7 +190,7 @@ def palettize_weights(
     """
     Utility function to convert a float precision MLModel of type ``mlprogram`` to a
     compressed MLModel by reducing the overall number of weights using one or more lookup tables
-    (LUT). A LUT contains a list of float values. An ``n-bit`` LUT has :math:`2^{n\-bits}` entries.
+    (LUT). A LUT contains a list of float values. An ``n-bit`` LUT has :math:`2^{n-bits}` entries.
 
     For example, a float weight vector such as ``{0.3, 0.3, 0.5, 0.5}`` can be compressed
     using a 1-bit LUT: ``{0.3, 0.5}``. In this case the float vector can be replaced

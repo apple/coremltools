@@ -58,7 +58,7 @@ class DKMPalettizer(Palettizer):
     """
     A palettization algorithm based on `"DKM: Differentiable K-Means Clustering Layer for Neural Network
     Compression" <https://arxiv.org/pdf/2108.12659.pdf>`_. It clusters the weights
-    using a differentiable version of ``k-means``, allowing the look-up-table (LUT)
+    using a differentiable version of ``k-means``, allowing the lookup table (LUT)
     and indices of palettized weights to be learnt using a gradient-based optimization algorithm such as SGD.
 
     Example:
