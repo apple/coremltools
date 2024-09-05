@@ -56,7 +56,7 @@ _logger = _logging.getLogger(__name__)
 @_define
 class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
     """
-    Configuration class for specifying global and module level palettization options for
+    Configuration class for specifying global and module-level palettization options for
     :py:class:`PostTrainingPalettizerConfig` algorithm.
 
     Args:
@@ -71,7 +71,7 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
         channel_axis (:obj:`int`): Specify the channel axis to form a group of channels.
             Only effective when granularity is ``per_grouped_channel``. Defaults to output channel axis.
         cluster_dim (:obj:`int`): The dimension of centroids for each lookup table.
-            The centroid is a scalar by default. When ``cluster_dim > 1``, it indicates 2-D clustering
+            The centroid is a scalar by default. When ``cluster_dim > 1``, it indicates 2-D clustering,
             and each ``cluster_dim`` length of weight vectors along the output channel are palettized
             using the same 2-D centroid. The length of each entry in the lookup tables is equal to ``cluster_dim``.
         enable_per_channel_scale (:obj:`bool`): When set to ``True``, weights are normalized along the output channels
@@ -86,7 +86,8 @@ class ModulePostTrainingPalettizerConfig(_ModuleOptimizationConfig):
     ``channel_axis`` share the same lookup table. For example, for a weight matrix of shape ``(16, 25)``, if we provide 
     ``group_size = 8``, the shape of the lookup table would be ``(2, 2^n_bits)``.
 
-    NOTE: Currently, grouping is only supported along either the input or output channel axis.
+    .. note::
+    Grouping is currently only supported along either the input or output channel axis.
     """
 
     n_bits: _Optional[int] = _field(
