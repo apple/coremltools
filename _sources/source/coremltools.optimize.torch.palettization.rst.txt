@@ -2,7 +2,7 @@ Palettization
 =============
 
 Palettization is a mechanism for compressing a model by clustering the model's float
-weights into a look-up table (LUT) of centroids and indices.
+weights into a lookup table (LUT) of centroids and indices.
 
 Palettization is implemented as an extension of `PyTorch's QAT <https://pytorch.org/docs/stable/quantization.html>`_
 APIs. It works by inserting palettization layers in appropriate places inside a model.

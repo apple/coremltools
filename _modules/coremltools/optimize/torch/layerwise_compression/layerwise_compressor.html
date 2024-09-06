@@ -177,7 +177,7 @@
 <span class="sd">            Module type configs applied to a specific module class, such as :py:class:`torch.nn.Linear`. </span>
 <span class="sd">            The keys can be either strings or module classes.</span>
 <span class="sd">        module_name_configs (:obj:`dict` of :obj:`str` to :py:class:`ModuleGPTQConfig` or :py:class:`ModuleSparseGPTConfig`):</span>
-<span class="sd">            Module level configs applied to specific modules. The name of the module must either be a regex or </span>
+<span class="sd">            Module-level configs applied to specific modules. The name of the module must either be a regex or </span>
 <span class="sd">            a fully qualified name that can be used to fetch it from the top level module using the </span>
 <span class="sd">            ``module.get_submodule(target)`` method.</span>
 <span class="sd">        input_cacher (:obj:`str` or :py:class:`FirstLayerInputCacher`): Cacher object that caches inputs which are then</span>
@@ -288,7 +288,7 @@
 <a class="viewcode-back" href="../../../../../source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor">[docs]</a>
 <span class="k">class</span> <span class="nc">LayerwiseCompressor</span><span class="p">(</span><span class="n">_BaseDataCalibratedModelOptimizer</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A post training compression algorithm which compresses a sequential model layer by layer</span>
+<span class="sd">    A post-training compression algorithm which compresses a sequential model layer by layer</span>
 <span class="sd">    by minimizing the quantization error while quantizing the weights. The implementation </span>
 <span class="sd">    supports two variations of this algorithm:</span>
 
