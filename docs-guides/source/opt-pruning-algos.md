@@ -1,21 +1,21 @@
-Algorithms
-===========
+Pruning Algorithms
+==================
 
 Core ML Tools offers a variety of algorithms for pruning model weights. 
 
 ## Post-Training Pruning
 
 In this algorithm, a subset of the elements in a weight matrix are zeroed out, in a data free or **zero-shot** manner.
-This can be done either by setting all elements less than a threshold to zero or by sorting
+This can be done either by setting all elements less than a given threshold to zero or by sorting
 the elements and setting the lowest values, up to a certain percentile (known as *target sparsity*), to zero.
 
 Unless the weights in your Core ML model are known to have a lot of zeros, 
 using data-free pruning is typically going to lead to a large accuracy loss for 
 any meaningful level of sparsity. Therefore, this algorithm is typically used
 to experiment with different patterns (like ``n:m`` sparsity, block structured sparsity, etc.) 
-and levels of sparsity to see the impact on size reduction and latency, 
+and levels of sparsity. This experimentation lets you see the impact on size reduction and latency, 
 and then use the results as a guiding factor to find a config that you can then use to 
-prune either using calibration data or with fine-tuning. 
+prune either using calibration data or fine-tuning. 
 
 Supported API(s):
 
@@ -36,7 +36,7 @@ can be solved exactly using the Hessian of the L2 reconstruction loss.
 It also supports jointly pruning and quantizing the model weights. 
 
 Typically, 128 samples are sufficient for applying this algorithm.
-In practice, it works well, much better than data free pruning, for large transformer based architectures.
+In practice, it works well, much better than data-free pruning, for large transformer-based architectures.
 
 Supported API:
 
