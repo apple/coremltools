@@ -1325,14 +1325,37 @@ def rrelu(context, node):
 @register_torch_op
 def softplus(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    x = inputs[0]
-    beta_ = inputs[1].val
-    C = x.shape[1]
-    alpha_br = _np.repeat(1.0 / beta_, C).astype('float32')
-    beta_br = _np.repeat(beta_, C).astype('float32')
+    x, beta, threshold = inputs[0], inputs[1].val, inputs[2].val
+    
+    np_type = nptype_from_builtin(x.dtype)
+    b = mb.const(val=np_type(beta))
+    t = mb.const(val=np_type(threshold))
 
-    res = mb.softplus_parametric(x=x, alpha=alpha_br, beta=beta_br, name=node.name)
-    context.add(res)
+    # Most softplus operations in the model use default values.
+    # Using fewer operations can improve performance.
+    if beta == 1 and threshold == 20:
+        res = mb.softplus(x=x, name=node.name)
+    elif threshold == 20:
+        x0 = mb.mul(x=x, y=b)
+        x1 = mb.softplus(x=x0)
+        res = mb.real_div(x=x1, y=b)
+    else:
+        xb = mb.mul(x=x, y=b)
+        m = mb.less_equal(x=xb, y=t)
+        
+        x_dtype = TYPE_TO_DTYPE_STRING[x.dtype]
+        m0 = mb.cast(x=m, dtype=x_dtype)
+        xb0 = mb.mul(x=xb, y=m0)
+        exp = mb.exp(x=xb0)
+        exp0 = mb.add(x=exp, y=m0)
+        log = mb.log(x=exp0)
+        log0 = mb.real_div(x=log, y=b)
+        
+        m1 = mb.logical_not(x=m)
+        x0 = mb.mul(x=x, y=mb.cast(x=m1, dtype=x_dtype))
+        
+        res = mb.add(x=log0, y=x0)
+    context.add(res, torch_name=node.name)
 
 
 @register_torch_op
