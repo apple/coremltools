@@ -11743,7 +11743,6 @@ class TestSoftplus(TorchBaseTest):
     )
     def test_softplus_rank(self, compute_unit, backend, rank, beta, threshold):
         input_shape = torch.randint(1, 10, (rank,))
-        print("input_shape:", len(input_shape.tolist()), input_shape.tolist())
         model = nn.Softplus(beta, threshold).eval()
         self.run_compare_torch(
             input_shape,
