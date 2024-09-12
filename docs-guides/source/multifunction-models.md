@@ -6,7 +6,7 @@
 # Multifunction Models
 
 An `mlprogram` Core ML model typically contains a single function, called `main`. 
-This is the default form in which a model is constructed, such as when it's produced via 
+This is the default form in which a model is constructed, such as when it’s produced via 
 the conversion process. Starting with `iOS18`/`macOS15`, you can produce an `mlprogram` 
 with multiple functions in it. 
 Each function, indexed by its unique name, can then be independently loaded and invoked for inference.
@@ -75,7 +75,7 @@ model with multiple adapters is used to generate images with different styles.
 
 ## Combining models: toy example with LoRA adapters
 
-In this example, learn how to combine a base model and adapter model to create a merged multifunction Core ML model, load it, and call it to make predictions.
+In this example, learn how to combine a base model and adapter model to create a merged multifunction Core ML model, load it, and get predictions.
 
 First, define a base model with two linear layers.
 

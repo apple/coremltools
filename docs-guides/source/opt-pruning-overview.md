@@ -7,9 +7,9 @@ Overview
 ```
 
 Pruning a model is the process of sparsifying the weight 
-matrices of the model's layers, thereby reducing its storage size by 
+matrices of the model’s layers, thereby reducing its storage size by 
 packing weights more efficiently. 
-Pruning sets a fraction of the values in the model's weight matrices to zero.
+Pruning sets a fraction of the values in the model’s weight matrices to zero.
 
 Pruned weights can be represented more efficiently 
 using a _sparse_ representation rather than the typical _dense_ 
@@ -30,18 +30,18 @@ following example is a size-2 vector of value `{7, 56.3}`.
 Creating a sparse representation.
 ```
 
-"Unstructured sparsity" is when weight values of lowest magnitude are set to 
+“Unstructured sparsity” is when weight values of lowest magnitude are set to 
 zero from within the weight tensor as a whole, without adhering to 
 any structure. On the other hand, certain constraints can 
 be enforced while pruning, resulting in what is referred to as 
-"structured sparsity". A few of the common types include: 
+“structured sparsity”. A few of the common types include: 
 
 - `block sparsity`: When weights are pruned in a grouped manner, 
   such as in blocks of size 2, 4, and so on.  
 - `n:m sparsity`: When weights are divided into blocks of size `m` 
   and within each such block, `n` smallest values are chosen to be zero. 
   For example, `3:4` sparsity would imply a 75% sparse level in 
-  which three values in each block of size 4 are set to ``0``. 
+  which three values in each block of size 4 are set to `0`. 
 
 While imposing more constraints, structured sparsity 
 techniques could be advantageous for certain hardware in 

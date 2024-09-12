@@ -88,7 +88,7 @@ approach, and then try to regain accuracy by performing parameter-efficient fine
 :height: 280px
 :class: imgnoborder
 
-A hypothetical "accuracy-compression amount" trade-off curve to illustrate what you may see
+A hypothetical “accuracy-compression amount” trade-off curve to illustrate what you may see
 on average for different compression workflows.
 ```
 
@@ -105,7 +105,7 @@ Compression workflows for different input model formats
 
 ## APIs for each workflow
 
-To find a list of APIs, see [What's New](opt-whats-new.md#core-ml-tools-optimization-apis).
+To find a list of APIs, see [What’s New](opt-whats-new.md#core-ml-tools-optimization-apis).
 Find a brief overview of a few of the APIs below. 
 Check out the API description page in each of the 
 [palettization](opt-palettization-api.md), [quantization](opt-quantization-api.md), and 

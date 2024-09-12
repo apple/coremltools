@@ -6,7 +6,7 @@ API Overview
 ### Quantizing weights
 
 You can linearly quantize the weights of your Core ML model by using the 
-[``linear_quantize_weights``](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights) method as follows:
+[`linear_quantize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights) method as follows:
 
 ```python
 import coremltools.optimize as cto
@@ -19,20 +19,20 @@ config = cto.coreml.OptimizationConfig(global_config=op_config)
 compressed_8_bit_model = cto.coreml.linear_quantize_weights(model, config=config)
 ```
 
-The method defaults to ``linear_symmetric``, which uses only per-channel scales and no zero-points.  
-You can also choose a ``linear`` mode, which uses a zero-point, which may help to get 
+The method defaults to `linear_symmetric`, which uses only per-channel scales and no zero-points.  
+You can also choose a `linear` mode, which uses a zero-point, which may help to get 
 slightly better accuracy.
 
 For more details on the parameters available in the config, see the following in the API Reference:
 
-- [``OpLinearQuantizerConfig``](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpLinearQuantizerConfig)
-- [``OptimizationConfig``](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig)
-- [``linear_quantize_weights``](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights)
+- [`OpLinearQuantizerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OpLinearQuantizerConfig)
+- [`OptimizationConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.config.html#coremltools.optimize.coreml.OptimizationConfig)
+- [`linear_quantize_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights)
 
 ### Quantizing weights and activations
 
 You can also quantize the activations of the model, in addition to the weights, to benefit from
-the ``int8``-``int8`` compute available on the Neural Engine (NE), from iPhone 15 Pro onwards.
+the `int8`-`int8` compute available on the Neural Engine (NE), from iPhone 15 Pro onwards.
 
 ```python
 activation_config = cto.coreml.OptimizationConfig(
@@ -46,8 +46,8 @@ compressed_model_a8 = cto.coreml.experimental.linear_quantize_activations(
 )
 ```
 
-After quantizing the activation to 8 bits, you can apply the ``linear_quantize_weights`` API 
-specified above, to quantize the weights as well, to get an ``W8A8`` model.
+After quantizing the activation to 8 bits, you can apply the `linear_quantize_weights` API 
+specified above, to quantize the weights as well, to get an `W8A8` model.
 
 ## Working with PyTorch Models
 
@@ -56,7 +56,7 @@ specified above, to quantize the weights as well, to get an ``W8A8`` model.
 #### Data-free quantization
 
 To quantize the weights in a data-free manner, use 
-[PostTrainingQuantizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer), 
+[`PostTrainingQuantizer`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer), 
 as follows:
 
 ```python
@@ -80,16 +80,16 @@ quantizer = PostTrainingQuantizer(model, config)
 quantized_model = quantizer.compress()
 ```
 
-- ``module_type_configs`` lets you specify different configs for different layer types. Here, we are setting the config for linear layers to be ``None`` to de-select linear layers for quantization. 
-- The ``granularity`` option lets you quantize the weights at different levels of granularity, like ``per_block``,
-where blocks of weights along a channel use the same quantization parameters, or ``per_channel``, where 
+- `module_type_configs` lets you specify different configs for different layer types. Here, we are setting the config for linear layers to be `None` to de-select linear layers for quantization. 
+- The `granularity` option lets you quantize the weights at different levels of granularity, like `per_block`,
+where blocks of weights along a channel use the same quantization parameters, or `per_channel`, where 
 all elements in a channel share the same quantization parameters. Learn more about the various config
 options available in
-[PostTrainingQuantizerConfig](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig).
+[`PostTrainingQuantizerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig).
 
 #### Calibration data based quantization
 
-Use ``LayerwiseCompressor`` with the ``GPTQ`` algorithm, as follows:
+Use `LayerwiseCompressor` with the `GPTQ` algorithm, as follows:
 
 ```python
 from coremltools.optimize.torch.quantization import LayerwiseCompressor, \
@@ -119,13 +119,13 @@ compressed_model = quantizer.compress(dataloader)
 
 #### Calibration data based quantization
 
-[``LinearQuantizer``](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer),
+[`LinearQuantizer`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer),
 as described in the next section, is an API to do quantization aware training (QAT) 
 for quantizing activations and weights. We can also use the same API for data calibration 
-based post-training quantization to get a ``W8A8`` model.
+based post-training quantization to get a `W8A8` model.
 
 We use the calibration data to measure the statistics of activations and weights without actually 
-simulating quantization during the model's forward pass, and without needing to perform a backward pass.
+simulating quantization during the model’s forward pass, and without needing to perform a backward pass.
 Since the weights are constant and do not change, this amounts to using 
 the round-to-nearest (RTN) approach to quantize them. 
 
@@ -162,7 +162,7 @@ model.eval()
 quantized_model = quantizer.finalize()
 ```
 
-Note that here we set the first and last values of the ``milestones`` parameter to ``0``. 
+Note that here we set the first and last values of the `milestones` parameter to `0`. 
 The first milestone turns on observers, and setting it to zero ensures that we start measuring 
 quantization statistics from step 0. The last milestone applies batch norm in inference mode,
 which means we do not use the calibration data to update the batch norm statistics. We do this because
@@ -173,10 +173,10 @@ We can set them to values larger than zero so that they are never turned on.
 
 #### Quantization Aware Training (QAT)
 
-We use [``LinearQuantizer``](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer)
+We use [`LinearQuantizer`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer)
 here as well, with a few extra steps, as demonstrated below. 
 
-Specify config in a ``yaml`` file:
+Specify config in a YAML file:
 ```yaml
 global_config:
   quantization_scheme: symmetric
@@ -212,23 +212,23 @@ for inputs, labels in data:
 model = quantizer.finalize(inplace=True)
 ```
 
-- Here, we have written the configuration as a ``yaml`` file, and used ``module_name_configs`` 
+- Here, we have written the configuration as a YAML file, and used `module_name_configs` 
 to specify that we do not want the first and last layer to be quantized. In the actual config, you would 
 specify the exact names of the first and last layers to deselect them for quantization. This 
 is typically useful, but not required.  
 - A detailed explanation of various stages  of quantization can be found in the API Reference for 
-[``ModuleLinearQuantizerConfig``](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig).
+[`ModuleLinearQuantizerConfig`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig).
 
 In QAT, in addition to observing the values of weights and activation tensors
 to compute quantization parameters, we also simulate the effects of fake quantization
 during training. And instead of just performing forward pass on the model,
 we perform full training with an optimizer. The forward and backward pass computations 
-are conducted in ``float32`` dtype. However, these ``float32`` values follow the 
-constraints imposed by ``int8`` and ``quint8`` dtypes, for weights and activations respectively. 
+are conducted in `float32` dtype. However, these `float32` values follow the 
+constraints imposed by `int8` and `quint8` dtypes, for weights and activations respectively. 
 This allows the model weights to adjust and reduce the error introduced by quantization. [Straight-Through Estimation](https://arxiv.org/pdf/1308.3432.pdf) 
 is used for computing gradients of non-differentiable operations introduced by simulated quantization.
 
-The ``LinearQuantizer`` algorithm is implemented as an extension of 
+The `LinearQuantizer` algorithm is implemented as an extension of 
 [FX Graph Mode Quantization](https://pytorch.org/tutorials/prototype/fx_graph_mode_quant_guide.html) in PyTorch. 
 It first traces the PyTorch model symbolically to obtain a [`torch.fx`](https://pytorch.org/docs/stable/fx.html) 
 graph capturing all the operations in the model. It then analyzes this graph, 
@@ -262,4 +262,4 @@ coreml_model = ct.convert(
 coreml_model.save("~/quantized_model.mlpackage")
 ```
 
-Note that you need to use ``minimum_deployment_target >= iOS17`` when activations are also quantized. 
+Note that you need to use `minimum_deployment_target >= iOS17` when activations are also quantized. 

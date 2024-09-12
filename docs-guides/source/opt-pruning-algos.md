@@ -12,15 +12,15 @@ the elements and setting the lowest values, up to a certain percentile (known as
 Unless the weights in your Core ML model are known to have a lot of zeros, 
 using data-free pruning is typically going to lead to a large accuracy loss for 
 any meaningful level of sparsity. Therefore, this algorithm is typically used
-to experiment with different patterns (like ``n:m`` sparsity, block structured sparsity, etc.) 
+to experiment with different patterns (like `n:m` sparsity, block structured sparsity, etc.) 
 and levels of sparsity. This experimentation lets you see the impact on size reduction and latency, 
 and then use the results as a guiding factor to find a config that you can then use to 
 prune either using calibration data or fine-tuning. 
 
 Supported API(s):
 
-- [``coremltools.optimize.coreml.prune_weights``](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.prune_weights)
-- [``coreltools.optimize.torch.pruning.MagnitudePruner``](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner) with [``ConstantSparsityScheduler``](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler) where ``begin_step`` is set to ``0``
+- [`coremltools.optimize.coreml.prune_weights`](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.prune_weights)
+- [`coreltools.optimize.torch.pruning.MagnitudePruner`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.MagnitudePruner) with [`ConstantSparsityScheduler`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#coremltools.optimize.torch.pruning.pruning_scheduler.ConstantSparsityScheduler) where `begin_step` is set to `0`
 
 
 ## SparseGPT
@@ -47,9 +47,9 @@ Supported API:
 This algorithm is based on [To prune, or not to prune: exploring the efficacy of pruning for model compression](https://arxiv.org/pdf/1710.01878). 
 It extends the idea to different kinds of structured sparsity modes, in addition to unstructured sparsity. In order to achieve the 
 desired sparsity, it sorts a module’s weight matrix by the magnitude of its elements, and sets all elements less than 
-a threshold to zero. It maintains the full weight matrix and a mask of ``0``s and ``1``s. The mask multiplied with the
+a threshold to zero. It maintains the full weight matrix and a mask of `0`s and `1`s. The mask multiplied with the
 full weight matrix gets used during forward pass. Since this multiplication is a differentiable operation, weights
-still get trained during gradient descent, which allows the model to adapt to presence of ``0``s. 
+still get trained during gradient descent, which allows the model to adapt to presence of `0`s. 
 
 This algorithm typically works best for higher levels of sparsity and structured sparsity modes. 
 Depending on the model and the sparsity chosen, more fine-tuning may be required.
@@ -62,9 +62,9 @@ Supported API:
 
 Use data free post-training pruning to quickly generate models with different levles of sparsity and 
 different modes of structured sparsity and study the impact on model size and latency. Once a 
-config meets the requirements, use ``SparseGPT`` and a few samples of training data to prune the model with
+config meets the requirements, use `SparseGPT` and a few samples of training data to prune the model with
 the chosen config. If the pruned model achieves the required accuracy, you are done. Otherwise, use
-``MagnitudePruner`` to prune the model in a compression aware manner. 
+`MagnitudePruner` to prune the model in a compression aware manner. 
 
 ## Accuracy Benchmarks
 

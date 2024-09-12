@@ -78,7 +78,7 @@ compressor = LayerwiseCompressor(model, config)
 model = compressor.compress(dataloader=dataloader, device=torch.device("cuda"))
 ```
 - `algorithm` is set to `"sparsegpt"` in the [`LayerwiseCompressor`](https://apple.github.io/coremltools/source/coremltools.optimize.torch.pruning.html#sparsegpt) algorithm.
-- `target_sparsity`: Refers to the amount of sparsity to apply for each layer's weight tensor.
+- `target_sparsity`: Refers to the amount of sparsity to apply for each layer’s weight tensor.
 - `layers`: Layers to be pruned. This is a list of either fully-qualified layer (module) name(s) or a regex for the layer name(s).
 - `weight_dtype`, `quantization_granularity` and `quantization_scheme` can be configured to quantize the non-zero weights for further compression.
 -  `n:m` structured sparsity can be set through the `n_m_ratio` option.

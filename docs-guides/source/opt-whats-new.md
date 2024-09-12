@@ -1,4 +1,4 @@
-What's New
+What’s New
 ============
 
 ## Software Availability of Optimizations

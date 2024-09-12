@@ -28,7 +28,7 @@ Core ML runtime and Apple Silicon, which kind of hardware is best suited for
 different kinds of schemes, and how various algorithms implemented in `coremltools`
 can help you achieve memory and latency savings on your model.
 
-Visit [What's New](opt-whats-new) to see what is available on different 
+Visit [What’s New](opt-whats-new) to see what is available on different 
 OS versions. Go over the [example overview section](opt-overview-examples) 
 to get a quick idea of typical workflows and to get a tour of compression APIs applied 
 on a standard convnet and a generative model.
@@ -78,8 +78,8 @@ to learn how to do that.
 
 Typically gains from model compression could be observed in the form of 
 runtime memory, latency, power consumption, or some combination of them.
-However, these gains would depend not only on the specific model 
-(for example, whether it's compute-bound or memory-bound) and compression type,
+However, these gains depend not only on the specific model 
+(for example, whether it’s compute-bound or memory-bound) and compression type,
 but also on the hardware and compute unit that the model is running on. 
 This is because implementations for compressed kernels in the NE/GPU/CPU compilers vary. 
 
@@ -115,7 +115,7 @@ all your models that are currently shipping in `float16` precision.
 
 ## Availability of features 
 
-To find which optimization options are available in which OS versions see [What's New](opt-whats-new.md). 
+To find which optimization options are available in which OS versions see [What’s New](opt-whats-new.md). 
 
 
 ```{tip}

@@ -68,7 +68,7 @@ representation using lookup tables (LUTs) to store them.
 
 The previous method with pass pipeline has the following limitations:
 
-- With more compression granularity supported in Core ML Tools 8, it's hard to infer the
+- With more compression granularity supported in Core ML Tools 8, it’s hard to infer the
   compression info accurately. For example, if the model is compressed by grouped channel-wise
   palettization, we need group size and channel axis to correctly divide weights into groups. In addition,
   the fp16 numerical instability could lead to incorrect inferred n-bit values.
@@ -86,7 +86,7 @@ palettization, per-block 4-bit quantization, etc., which are not natively expres
 
 Here is the protocol of the compression information embedded into torch models:
 
-- The compression information is stored by torch's registered buffers.
+- The compression information is stored by torch’s registered buffers.
 - The registered buffer names should be in the format of `_COREML_/<parameter_name>/<field_name>`.
   For example, `'dense1._COREML_/weight/n_bits'`, `'dense1._COREML_/weight/quantization_scale'`, etc.
 - Available `field_name` options are `compression_type`, `quantization_n_bits`, `quantization_scale`,
@@ -159,7 +159,7 @@ model_with_lut_weights = ct.convert(
 
 ### Convert PyTorch models with quantized weights and activations
 
-If you use PyTorch's built-in quantization tool, the produced compressed models store quantized
+If you use PyTorch’s built-in quantization tool, the produced compressed models store quantized
 weights or activations using `qint` or `quint` data types, and additional quantization ops are used.
 This is picked up automatically by the conversion process, which then automatically uses linear
 quantized storage format to store weights.
@@ -234,7 +234,7 @@ joint_compressed_mlmodel = ct.convert(
 )
 ```
 
-For joint pruning + palettization, it's similar:
+For joint pruning + palettization, it’s similar:
 
 ```python
 # Assume the model has two convs layers and both got jointly compressed by pruning + palettization.
@@ -270,7 +270,7 @@ at the model level.
 | Key	                 | Original Type	 | Optional	 | Sample Value / Shape	    | Additional Notes	                                                                                         |
 |----------------------|----------------|-----------|--------------------------|-----------------------------------------------------------------------------------------------------------|
 | quantization_n_bits	 | int	           | No	       | `torch.tensor(4)`	       | 	                                                                                                         |
-| quantization_scale	  | tensor	        | No	       | `torch.Size([3072, 1])`	 | Rank of the scale need to match weight's rank. The block_size on each dim will be inferred by the shape.	 |
+| quantization_scale	  | tensor	        | No	       | `torch.Size([3072, 1])`	 | Rank of the scale need to match weight’s rank. The block_size on each dim will be inferred by the shape.	 |
 | zero_point	          | tensor	        | Yes	      | `torch.Size([3072, 1])`	 | 	 Same shape as `quantization_scale`.                                                                     |
 
 Details about the shape of the scale and zero-point can be found in the `iOS18` `constexpr_blockwise_shift_scale` op.
@@ -279,8 +279,8 @@ Details about the shape of the scale and zero-point can be found in the `iOS18` 
 
 | Key	                 | Original Type	 | Optional	 | Sample Value / Shape	        | Additional Notes	                                                                                                                                       |
 |----------------------|----------------|-----------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
-| lut	                 | tensor	        | No	       | `torch.Size([2, 2, 16, 1])`	 | Rank of the lut should be weight's rank + 2. The shape can be used to infer palettization configurations like group size, axis, cluster dim and n-bit.	 |
-| palettization_scale	 | tensor	        | Yes	      | `torch.Size([3072, 1])`	     | 	 Rank of the scale need to match weight's rank.                                                                                                        |
+| lut	                 | tensor	        | No	       | `torch.Size([2, 2, 16, 1])`	 | Rank of the lut should be weight’s rank + 2. The shape can be used to infer palettization configurations like group size, axis, cluster dim and n-bit.	 |
+| palettization_scale	 | tensor	        | Yes	      | `torch.Size([3072, 1])`	     | 	 Rank of the scale need to match weight’s rank.                                                                                                        |
 
 Details about the shape of the lookup table can be found in the `iOS18` `constexpr_lut_to_dense` op.
 

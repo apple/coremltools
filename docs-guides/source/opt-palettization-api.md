@@ -154,7 +154,7 @@ For more details, please follow the detailed API page for [coremltools.optimize.
 
 ### Differentiable K-Means Palettization API Example
 Differentiable K-Means is a training-time palettization algorithm that performs attention based 
-differentiable K-Means on the weight matrices. This plugs in directly into a user's training pipeline and typically has 
+differentiable K-Means on the weight matrices. This plugs in directly into a user’s training pipeline and typically has 
 higher data requirements.
 
 To perform training-time palettization, these are the key steps:
@@ -165,7 +165,7 @@ To perform training-time palettization, these are the key steps:
 4. Run the usual training loop, with the addition of the [palettizer.step](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.step) call.
 5. Once the model has converged, use the [finalize](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.finalize) API to prepare the model for conversion to Core ML.
 
-The following example shows `2-bit` DKM palettization applied to all ops. However, here let's assume our specific use 
+The following example shows `2-bit` DKM palettization applied to all ops. However, here let’s assume our specific use 
 case demands that we kick off palettization at the tenth training step. That can be achieved by specifying the 
 `milestone` parameter as `10`.
 
@@ -218,7 +218,7 @@ epoch. Defaults to `0`, in which case palettization is enabled from the start of
 - `dtype`: The dtype to use for quantizing the activations. Only applies when `quantize_activations` is `True`.
 - `cluster_dtype`: The dtype to use for representing each element in lookup tables.
 
-The DKM API has several other options, to control some of the specific knobs of the algorithms's implementation. 
+The DKM API has several other options, to control some of the specific knobs of the algorithm’s implementation. 
 In most cases, you do not need to use values other than the default ones. To find out about these though, checkout the 
 API Reference page [coremltools.optimize.torch.palettization.DKMPalettizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer).
 

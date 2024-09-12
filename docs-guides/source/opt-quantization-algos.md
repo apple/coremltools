@@ -22,20 +22,20 @@ Suggested API(s):
 - [coremltools.optimize.coreml.experimental.linear_quantize_activations](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.quantization.html#coremltools.optimize.coreml.experimental.linear_quantize_activations)(For Core ML models)
 
 ## GPTQ algorithm for weight quantization (post-training data calibration)
-This algorithm is based on the paper [GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers](https://arxiv.org/abs/2210.17323). The layerwise compression paradigm helps to compress a sequential model layer-by-layer by minimizing the quantization error while quantizing the weights. Each layer is compressed by minimizing the [L2 norm](https://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the difference between the layer's original outputs and the outputs obtained by using the compressed weights. The outputs are computed using a few samples of training data (around 128 samples are usually sufficient). Once a layer is compressed, the layer's outputs are used as inputs for compressing the next layer.
+This algorithm is based on the paper [GPTQ: Accurate Post-Training Quantization for Generative Pre-trained Transformers](https://arxiv.org/abs/2210.17323). The layerwise compression paradigm helps to compress a sequential model layer-by-layer by minimizing the quantization error while quantizing the weights. Each layer is compressed by minimizing the [L2 norm](https://en.wikipedia.org/wiki/Norm_(mathematics)#Euclidean_norm) of the difference between the layer’s original outputs and the outputs obtained by using the compressed weights. The outputs are computed using a few samples of training data (around 128 samples are usually sufficient). Once a layer is compressed, the layer’s outputs are used as inputs for compressing the next layer.
 
 Suggested API(s):
 - [coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.layerwise_compression.LayerwiseCompressor)
 
 ## Fine-tuning based algorithm for quantizing weight and/or activations
 
-This algorithm is also known as quantization-aware training (QAT) as described in the paper [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](https://arxiv.org/pdf/1712.05877.pdf). QAT allows for quantizing both weights and activations. The model is fine-tuned upon simulating quantization on the weights and / or activations to recover the accuracy lost upon quantizing the model. 
+This algorithm is also known as quantization-aware training (QAT) as described in the paper [Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference](https://arxiv.org/pdf/1712.05877.pdf). QAT allows for quantizing both weights and activations. The model is fine-tuned upon simulating quantization on the weights and/or activations to recover the accuracy lost upon quantizing the model. 
 
 Suggested API(s):
 - [coremltools.optimize.torch.quantization.LinearQuantizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer)
 
 ```{admonition} PyTorch quantization APIs
-You can use PyTorch's quantization APIs directly, and then convert the model to Core ML. However, the converted model performance may not be optimal. The PyTorch API default settings (symmetric asymmetric quantization modes and which ops are quantized) are not optimal for the Core ML stack and Apple hardware. If you use the Core ML Tools `coremltools.optimize.torch` APIs, as described in this section, the correct default settings are applied automatically.
+You can use PyTorch’s quantization APIs directly, and then convert the model to Core ML. However, the converted model performance may not be optimal. The PyTorch API default settings (symmetric asymmetric quantization modes and which ops are quantized) are not optimal for the Core ML stack and Apple hardware. If you use the Core ML Tools `coremltools.optimize.torch` APIs, as described in this section, the correct default settings are applied automatically.
 ```
 
 ### Impact on accuracy with different modes
@@ -44,7 +44,7 @@ Weight-only post-training quantization (PTQ) using 8-bit precision with per-chan
 
 If the former method (weight-only PTQ 8-bit per-channel) does not work well, then calibration data-based techniques such as GPTQ or fine-tuning based methods such as QAT can be explored. 
 
-For activation quantization, the calibration data based approach should work well in most cases. However, if accuracy is lost, quantizing activation using QAT can be used to recover the lost accuracy.
+For activation quantization, the calibration data based approach should work well in most cases. However, if accuracy decreases, quantizing activation using QAT can be used to recover the lost accuracy.
 
 
 ### Accuracy data

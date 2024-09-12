@@ -1,7 +1,7 @@
 Palettization Algorithms
 ========================
 
-There are a few different ways in which a model's weights can be palettized. 
+There are a few different ways in which a model’s weights can be palettized. 
 For the same compression factor, each of these approaches can have a different impact on model accuracy.
 Below we talk about different palettization algorithms that are supported, and some of the considerations to keep in mind when choosing the approach that works well for your use case. 
 
@@ -21,7 +21,7 @@ using an objective function that depends on the Hessian of the model parameters.
 it is approximated by using the Fisher information matrix, which is computed from the square of gradients easily available given a few calibration input data points 
 and a loss function.
 
-The more sensitive an element, the larger impact perturbing it or palettizing it has on the model’s loss function. 
+The more sensitive an element, the larger impact perturbing it (in this case, palettizing it) has on the model’s loss function. 
 Thus, weighted k-means moves the clusters closer to the sensitive weight values, allowing them to be represented more precisely. This generally leads to lower degradation in model accuracy but depends on model type and how accurate the Fisher Information approximation is for that specific model. 
 Typically, 128 samples are sufficient for applying this algorithm. In practice, this algorithm works well, better than data-free K-Means, for large transformer-based architectures.
 

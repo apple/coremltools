@@ -161,7 +161,7 @@ Back to first state
 ```
 
 ```{warning}
-Comparing the torch model's numerical outputs with the converted Core ML stateful 
+Comparing the torch model’s numerical outputs with the converted Core ML stateful 
 model outputs to verify numerical match has to be done carefully, as 
 running it more than once changes the value of the state and the outputs accordingly. 
 ```
@@ -321,7 +321,7 @@ class ToyModelWithKeyValueCache(nn.Module):
          return self.fc(attention_output)
 ```
 
-Now let's compare the speed between the original model and the stateful kv-cache model.
+Now let’s compare the speed between the original model and the stateful kv-cache model.
 
 First we set up some hyperparameters:
 ```python
@@ -370,7 +370,7 @@ for token_id in range(num_iterations):
 print(f"Time without kv-cache: {(perf_counter() - t_start) * 1.0e3} ms")
 ```
 
-Now let's initialize and convert the stateful kv-cache model in a similar way:
+Now let’s initialize and convert the stateful kv-cache model in a similar way:
 ```python
 past_kv_len = 0
 torch_model_kvcache = ToyModelWithKeyValueCache(
@@ -441,5 +441,5 @@ After running the prediction, we can get the following output (on a MacBook Pro 
 Time (ms) without kv-cache: 4245.6
 Time (ms) with kv-cache: 238.0
 ```
-It's clear that when we modify the attention module to get a stateful model with kv-cache, a given prediction runs much faster than
+It’s clear that when we modify the attention module to get a stateful model with kv-cache, a given prediction runs much faster than
 with the original stateless model.
