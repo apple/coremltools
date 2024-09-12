@@ -1340,6 +1340,12 @@ def softplus(context, node):
         x1 = mb.softplus(x=x0)
         res = mb.real_div(x=x1, y=b)
     else:
+        # Create mask for x*beta <= threshold, then convert mask to 01 tensor (m0).
+        # Use log(m0 + exp(beta*x*m0)) replacing log(1 + exp(beta*x*m0)) * m0.
+        # The log(1)=0 equals mul mask with result.
+        # If you want to implementation torch.softplus with MetalPerformanceShadersGraph, refer to this implementation.
+        # MPSGraph doesn't have softplus currently.
+        # And this implementation is slightly faster than mb.softplus * mask for inference on the GPU.
         xb = mb.mul(x=x, y=b)
         m = mb.less_equal(x=xb, y=t)
         
