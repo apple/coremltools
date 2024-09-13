@@ -12,6 +12,7 @@ from unittest.mock import patch
 
 import numpy as np
 import pytest
+from packaging.version import Version
 from PIL import Image
 
 import coremltools as ct
@@ -19,8 +20,10 @@ from coremltools._deps import (
     _HAS_EXECUTORCH,
     _HAS_HF,
     _HAS_TORCH,
+    _HAS_TORCHAO,
     MSG_EXECUTORCH_NOT_FOUND,
     MSG_TORCH_NOT_FOUND,
+    MSG_TORCHAO_NOT_FOUND,
 )
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
 from coremltools.converters.mil.frontend.torch.torch_op_registry import (
@@ -59,6 +62,9 @@ if _HAS_HF:
 if _HAS_EXECUTORCH:
     import executorch.exir
 
+if _HAS_TORCHAO:
+    from torchao.quantization import quant_api
+    from torchao.utils import unwrap_tensor_subclass
 
 @pytest.fixture
 def torch_model():
@@ -2842,3 +2848,111 @@ class TestiOS16DefaultIODtype:
             output_dtype="fp32",
             expected_op_list=["add"],
         )
+
+
+@pytest.mark.skipif(
+    Version(torch.__version__) < Version("2.4.0"),
+    reason="Most torchao functionalities only work with PyTorch 2.4.0+",
+)
+@pytest.mark.skipif(
+    ct.utils._macos_version() < (15, 0),
+    reason="Torchao block-wise quantization requires MacOS 15+.",
+)
+@pytest.mark.skipif(not _HAS_TORCHAO, reason=MSG_TORCHAO_NOT_FOUND)
+class TestTorchao:
+    """
+    This class tests the torchao quantized model conversion.
+    """
+
+    @staticmethod
+    def _construct_test_model():
+        # The old Quantizer method in torchao doesn't work with a single-layer model such as model=nn.Linear(...),
+        # so we have to create a Module which contains linear layers.
+        class TestModel(nn.Module):
+            def __init__(self):
+                super(TestModel, self).__init__()
+                # Currently torchao only supports Linear module without bias.
+                self.linear1 = nn.Linear(32, 64, bias=False)
+                self.linear2 = nn.Linear(64, 32, bias=False)
+                self.relu = nn.ReLU()
+
+            def forward(self, x):
+                x = self.relu(self.linear1(x))
+                return self.relu(self.linear2(x))
+
+        return TestModel().to(torch.device("cpu")).eval()
+
+    @pytest.mark.parametrize("use_export", (False, True))
+    def test_weight_only_quantization(self, use_export):
+        model = self._construct_test_model()
+        quantizer = quant_api.Int4WeightOnlyQuantizer(
+            precision=torch.float32, groupsize=32, inner_k_tiles=2, device=torch.device("cpu")
+        )
+        model = quantizer.quantize(model)
+        input_data = torch.randn((2, 32), dtype=torch.float16)
+
+        if use_export:
+            exported_model = torch.export.export(model, (input_data,))
+            inputs = None
+        else:
+            exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            inputs = [ct.TensorType(shape=input_data.shape, name="input")]
+
+        converted_model = ct.convert(
+            exported_model, inputs=inputs, minimum_deployment_target=ct.target.iOS18
+        )
+        main_func = converted_model._mil_program.functions["main"]
+        quantize_ops = main_func.find_ops(op_type="constexpr_blockwise_shift_scale")
+        assert len(quantize_ops) > 0
+
+        if ct.utils._is_macos():
+            result = converted_model.predict(
+                {
+                    list(converted_model.input_description)[0]: input_data.detach()
+                    .numpy()
+                    .astype(np.float32)
+                }
+            )
+            expected = model(input_data)
+            output_name = list(result.keys())[0]
+            np.testing.assert_allclose(result[output_name], expected.detach().numpy(), atol=1e-3)
+
+    def test_weight_only_quantization_bfloat16_not_support(self):
+        """
+        Torchao quant_api.int4_weight_only only supports bfloat16.
+        """
+        model = self._construct_test_model().bfloat16()
+        quant_api.quantize_(model, quant_api.int4_weight_only(group_size=32, inner_k_tiles=2))
+        model = unwrap_tensor_subclass(model)
+        input_data = torch.randn((2, 32), dtype=torch.float16)
+        exported_model = torch.export.export(model, (input_data,))
+        # The conversion of bfloat16 hasn't been supported yet.
+        with pytest.raises(KeyError, match="torch.bfloat16"):
+            ct.convert(exported_model, minimum_deployment_target=ct.target.iOS17)
+
+    @pytest.mark.parametrize("use_export", (True, False))
+    def test_dynamic_activation_quantization_not_support(self, use_export):
+        """
+        Although Int8DynActInt4WeightQuantizer will be deprecated, we still want
+        to test it because it's used in ExecuTorch to quantize llama models.
+        """
+        model = self._construct_test_model()
+        quantizer = quant_api.Int8DynActInt4WeightQuantizer(
+            precision=torch.float16, groupsize=32, device=torch.device("cpu")
+        )
+        model = quantizer.quantize(model)
+        input_data = torch.randn((2, 32), dtype=torch.float16)
+
+        if use_export:
+            exported_model = torch.export.export(model, (input_data,))
+            inputs = None
+            err_msg = "Unsupported fx node quantize_per_token"
+            err_type = ValueError
+        else:
+            exported_model = torch.jit.trace(model, example_inputs=(input_data,))
+            inputs = [ct.TensorType(shape=input_data.shape)]
+            err_msg = "Dynamic activation quantization is not supported in Core ML"
+            err_type = NotImplementedError
+
+        with pytest.raises(err_type, match=err_msg):
+            ct.convert(exported_model, inputs=inputs, minimum_deployment_target=ct.target.iOS17)

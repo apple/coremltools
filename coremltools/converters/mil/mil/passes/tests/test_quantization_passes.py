@@ -2017,6 +2017,118 @@ class TestReorderLutPerChannelScale:
         assert get_op_types_in_program(prog) == get_op_types_in_program(prev_prog)
 
 
+@pytest.mark.skipif(ct.utils._macos_version() < (15, 0), reason="Only supported on macOS 15+")
+class TestReorderQuantizedLut:
+    @staticmethod
+    def _verify_numerical(prev_prog, prog, block, input_shape, rtol=1e-7, atol=0.0):
+        # Verify the numerical output matches between `prev_prog` and `prog`.
+        prev_model = ct.convert(
+            prev_prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+        model = ct.convert(
+            prog,
+            pass_pipeline=ct.PassPipeline.EMPTY,
+            convert_to="mlprogram",
+            minimum_deployment_target=ct.target.iOS18,
+        )
+        output_name = block.outputs[0].name
+        x_val = np.random.rand(*input_shape).astype(np.float16)
+        input_dict = {"x": x_val}
+        prev_output = prev_model.predict(input_dict)[output_name]
+        output = model.predict(input_dict)[output_name]
+        np.testing.assert_allclose(prev_output, output, rtol=rtol, atol=atol)
+
+    @staticmethod
+    def _construct_weights_with_two_orders(weight_shape: Tuple[int, ...]):
+        """Construct two quantized lut weights, represented in different quant/lut orders."""
+        nbits = 4
+        num_palette = 2**nbits
+        indices_np_dtype = types.nptype_from_builtin(types.string_to_builtin(f"uint{nbits}"))
+        indices = np.random.randint(low=0, high=num_palette, size=weight_shape).astype(
+            indices_np_dtype
+        )
+        lut_shape = weight_shape + (num_palette, 1)
+        int8_lut = np.random.randint(low=0, high=6, size=lut_shape, dtype=np.int8)
+        scale = np.float16(2.0).reshape([1] * len(weight_shape))
+        offset = np.int8(1).reshape([1] * len(weight_shape))
+
+        lut_weight1 = mb.constexpr_lut_to_dense(indices=indices, lut=int8_lut)
+        quantized_lut_weight1 = mb.constexpr_blockwise_shift_scale(
+            data=lut_weight1, scale=scale, offset=offset
+        )
+        quantized_weight2 = mb.constexpr_blockwise_shift_scale(
+            data=int8_lut,
+            scale=scale.reshape([1] * len(int8_lut.shape)),
+            offset=offset.reshape([1] * len(int8_lut.shape)),
+        )
+        quantized_lut_weight2 = mb.constexpr_lut_to_dense(indices=indices, lut=quantized_weight2)
+
+        return quantized_lut_weight1, quantized_lut_weight2
+
+    @pytest.mark.parametrize(
+        "input_shape, dequant_first", itertools.product([(4, 3), (2, 3, 4)], [True, False])
+    )
+    def test_dequant_first(self, input_shape, dequant_first):
+        """
+        When dequant_first is True, the quantized lut ops representation will be reordered to follow
+            lut(int8) -> constexpr_blockwise_shift_scale -> lut(fp16) -> constexpr_lut_to_dense -> dense(fp16).
+        When dequant_first is False, the quantized lut ops representation will be reordered to follow
+            lut(int8) -> constexpr_lut_to_dense -> dense(int8) -> constexpr_blockwise_shift_scale -> dense(fp16)
+        """
+
+        @mb.program(
+            input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.fp16)],
+            opset_version=ct.target.iOS18,
+        )
+        def prog(x):
+            quantized_lut_weight1, quantized_lut_weight2 = self._construct_weights_with_two_orders(
+                weight_shape=(8, input_shape[-1])
+            )
+            output1 = mb.linear(x=x, weight=quantized_lut_weight1)
+            output2 = mb.linear(x=x, weight=quantized_lut_weight2)
+            return mb.add(x=output1, y=output2)
+
+        from unittest import mock
+
+        from coremltools.converters.mil.mil.passes.defs.optimize_quantization import (
+            canonicalize_quantized_lut_pattern,
+        )
+
+        with mock.patch.object(canonicalize_quantized_lut_pattern, "_DEQUANT_FIRST", dequant_first):
+            prev_prog, _, block = apply_pass_and_basic_check(
+                prog, "common::canonicalize_quantized_lut_pattern", skip_essential_scope_check=True
+            )
+
+        assert get_op_types_in_program(prev_prog) == [
+            "constexpr_lut_to_dense",
+            "constexpr_blockwise_shift_scale",
+            "constexpr_blockwise_shift_scale",
+            "constexpr_lut_to_dense",
+            "linear",
+            "linear",
+            "add",
+        ]
+        dequant_ops = prog.functions["main"].find_ops(op_type="constexpr_blockwise_shift_scale")
+        lut_ops = prog.functions["main"].find_ops(op_type="constexpr_lut_to_dense")
+        assert len(dequant_ops) == 2
+        assert len(lut_ops) == 2
+        if dequant_first:
+            for dequant_op in dequant_ops:
+                assert dequant_op.outputs[0].child_ops[0].op_type == "constexpr_lut_to_dense"
+            for lut_op in lut_ops:
+                assert lut_op.outputs[0].child_ops[0].op_type == "linear"
+        else:
+            for lut_op in lut_ops:
+                assert lut_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
+            for dequant_op in dequant_ops:
+                assert dequant_op.outputs[0].child_ops[0].op_type == "linear"
+
+        self._verify_numerical(prev_prog, prog, block, input_shape)
+
+
 class TestFP16CastTransform:
     def assertEqual(self, first, second):
         """A convenience method to migrate from unittest (self.assertEqual) to pytest."""

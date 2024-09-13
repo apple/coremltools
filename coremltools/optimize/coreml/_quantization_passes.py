@@ -1307,6 +1307,8 @@ class linear_quantize_weights(AbstractCompressionPass):
         """
         Compress original_data into n-bit representation by quantization.
 
+        mode: "LINEAR_SYMMETRIC" or "LINEAR".
+
         block_sizes: Each element is the block size on corresponding axis for original_data.
 
         Returns None if the weight cannot be compressed (for example, the dim size on an axis is not

@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import defaultdict
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 import numpy as np
 
@@ -24,13 +24,17 @@ from ._quantization_passes import (
 )
 
 
-def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, sample_data: List):
+def linear_quantize_activations(
+    mlmodel: _MLModel,
+    config: _OptimizationConfig,
+    sample_data: List[Dict[Optional[str], np.ndarray]],
+):
     """
     Utility function to convert a float precision MLModel of type ``mlprogram``, which uses
     float-precision activations, into a compressed MLModel that uses n-bit activations. Currently, only n=8
     is suppported.
 
-    This is achieved by feeding real sample data into the input MLModel, calibrating the resulting float activation values, 
+    This is achieved by feeding real sample data into the input MLModel, calibrating the resulting float activation values,
     converting the calibrated values into ``quantize`` and ``dequantize`` op pairs, and inserting those
     op pairs into the new MLModel instance where activations get quantized.
 
@@ -47,7 +51,9 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
 
     sample_data: List
         Data used to characterize statistics of the activation values of the original float precision model.
-        Expects a list of sample input dictionaries.
+        Expects a list of sample input dictionaries, which should have the same format as the data used in `.predict`
+        method for the mlmodel. More specifically, the input name need to be specified in the data, unless it's a single
+        input model where the name will be auto inferred.
 
     Returns
     -------
@@ -77,6 +83,17 @@ def linear_quantize_activations(mlmodel: _MLModel, config: _OptimizationConfig, 
         )
         compressed_model_w8a8 = cto.linear_quantize_weights(compressed_model_a8, weight_config)
     """
+    # Validate Sample data. If the sample data name is not provided, try to infer it.
+    for sample in sample_data:
+        if None in sample.keys():
+            input_spec = mlmodel.get_spec().description.input
+            if len(sample.keys()) > 1 or len(input_spec) > 1:
+                raise ValueError(
+                    "When the model has multiple inputs, please provide the name for each data in `sample_data`"
+                )
+            inferred_input_name = input_spec[0].name
+            sample[inferred_input_name] = sample[None]
+            del sample[None]
 
     ### Apply four major graph passes in order.
 
@@ -220,17 +237,25 @@ def _adjust_concat_surrounding_activation_stats(
         group_rmin_list, group_rmax_list = [], []
 
         for tensor_name in concat_group:
-            group_rmin_list.append(activation_stats_dict[tensor_name]["rmin"])
-            group_rmax_list.append(activation_stats_dict[tensor_name]["rmax"])
+            # Some tensor_name may not have rmin/rmax if the calibration failed before.
+            if tensor_name in activation_stats_dict:
+                group_rmin_list.append(activation_stats_dict[tensor_name]["rmin"])
+                group_rmax_list.append(activation_stats_dict[tensor_name]["rmax"])
+
+        if len(group_rmin_list) == 0:
+            raise ValueError(
+                "None of the calibration run succeeded. Please check logs about calibrating sample failures."
+            )
         group_rmin, group_rmax = min(group_rmin_list), max(group_rmax_list)
 
         for tensor_name in concat_group:
-            activation_stats_dict[tensor_name]["rmin"] = group_rmin
-            activation_stats_dict[tensor_name]["rmax"] = group_rmax
+            if tensor_name in activation_stats_dict:
+                activation_stats_dict[tensor_name]["rmin"] = group_rmin
+                activation_stats_dict[tensor_name]["rmax"] = group_rmax
 
 
 def _get_activation_calibration_stats(
-    fpmodel: _MLModel, sample_data: List
+    fpmodel: _MLModel, sample_data: List[Dict[str, np.ndarray]]
 ) -> Dict[str, Dict[str, float]]:
     """
     Calibration and store a dict of intermediate tensor stats.
@@ -246,7 +271,6 @@ def _get_activation_calibration_stats(
     -------
     activation_calibration_stats: dict
     """
-
     logger.warning(
         "Running compression pass linear_quantize_activations: start calibrating {} samples".format(
             len(sample_data)

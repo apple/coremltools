@@ -332,6 +332,46 @@ class TestOptimizeTorchAPIOverview:
         output_file = tempfile.NamedTemporaryFile(suffix=".mlpackage").name
         coreml_model.save(output_file)
 
+    def test_quantize_submodule(self):
+        import torch
+        from torchvision.models import mobilenet_v3_small
+
+        import coremltools as ct
+        from coremltools.optimize.torch.quantization import LinearQuantizer
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.model1 = mobilenet_v3_small()
+                self.model2 = mobilenet_v3_small()
+
+            def forward(self, x):
+                return self.model1(x), self.model2(x)
+
+        model = Model()
+        data = torch.randn(1, 3, 224, 224)
+        example_inputs = (data,)
+
+        quantizer = LinearQuantizer(model.model1)
+        model.model1 = quantizer.prepare(example_inputs=example_inputs)
+        model(data)
+        model.model1 = quantizer.finalize()
+
+        model = model.eval()
+        traced_model = torch.jit.trace(model, example_inputs=example_inputs)
+        coreml_model = ct.convert(
+            traced_model,
+            convert_to="mlprogram",
+            inputs=[ct.TensorType(shape=data.shape)],
+            minimum_deployment_target=ct.target.iOS18,
+            skip_model_load=True,
+        )
+        assert coreml_model is not None
+        quant_ops = coreml_model._mil_program.functions["main"].find_ops(
+            op_type="constexpr_blockwise_shift_scale"
+        )
+        assert len(quant_ops) > 0
+
 
 class TestConvertingCompressedSourceModels:
     """

@@ -42,7 +42,12 @@ Model::~Model() {
     }
 }
 
-Model::Model(const std::string& urlStr, const std::string& computeUnits, const std::string& functionName) {
+Model::Model(
+             const std::string& urlStr,
+             const std::string& computeUnits,
+             const std::string& functionName,
+             const py::dict& optimizationHints
+             ) {
     @autoreleasepool {
         NSError *error = nil;
 
@@ -79,6 +84,10 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits, const s
 
         MLModelConfiguration *configuration = [MLModelConfiguration new];
         setComputeUnit(configuration, computeUnits);
+
+#if BUILT_WITH_MACOS15_SDK
+        setOptimizationHints(configuration, optimizationHints);
+#endif
 
         if (!functionName.empty()) {
 #if BUILT_WITH_MACOS15_SDK
@@ -146,6 +155,37 @@ void Model::setComputeUnit(MLModelConfiguration *configuration, const std::strin
         configuration.computeUnits = MLComputeUnitsAll;
     }
 }
+
+
+#if BUILT_WITH_MACOS15_SDK
+void Model::setOptimizationHints(MLModelConfiguration *configuration, const py::dict& optimizationHints) {
+    // This function does minimal validation. It assumes Python layer has already validated.
+
+    // Reshape frequency optimization hint
+    if (optimizationHints.contains("reshapeFrequency")) {
+        const std::string val = optimizationHints["reshapeFrequency"].cast<std::string>();
+        if (val == "Frequent") {
+            configuration.optimizationHints.reshapeFrequency = MLReshapeFrequencyHintFrequent;
+        } else {
+            assert(val == "Infrequent");
+            configuration.optimizationHints.reshapeFrequency = MLReshapeFrequencyHintInfrequent;
+        }
+    }
+
+    // Specialization strategy optimization hint
+    if (optimizationHints.contains("specializationStrategy")) {
+        const std::string val = optimizationHints["specializationStrategy"].cast<std::string>();
+        if (val == "Default") {
+            configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyDefault;
+        } else {
+            assert(val == "FastPrediction");
+            configuration.optimizationHints.specializationStrategy = MLSpecializationStrategyFastPrediction;
+        }
+    }
+
+
+}
+#endif
 
 
 py::list Model::batchPredict(const py::list& batch) const {
@@ -237,7 +277,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
-        .def(py::init<const std::string&, const std::string&, const std::string&>())
+        .def(py::init<const std::string&, const std::string&, const std::string&, const py::dict&>())
         .def("predict", &Model::predict)
         .def("batchPredict", &Model::batchPredict)
         .def("get_compiled_model_path", &Model::getCompiledModelPath)

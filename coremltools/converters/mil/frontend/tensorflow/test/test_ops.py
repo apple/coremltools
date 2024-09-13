@@ -2622,15 +2622,6 @@ class TestImageResizing(TensorFlowBaseTest):
         target_shape,
         align_corners,
     ):
-        if (
-            backend == ("mlprogram", "fp16")
-            and input_shape == (2, 5, 2, 3)
-            and target_shape == (20, 60)
-        ):
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
-
         """
         Since iOS17, dynamic shape is supported by lowering to `resize` MIL op.
         """
@@ -2732,15 +2723,6 @@ class TestImageResizing(TensorFlowBaseTest):
         input_shape,
         target_shape,
     ):
-        if (
-            backend == ("mlprogram", "fp16")
-            and input_shape == (2, 5, 2, 3)
-            and target_shape == (20, 60)
-        ):
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
-
         """
         Since iOS17, dynamic shape is supported by lowering to `resize` MIL op.
         """
@@ -5706,10 +5688,8 @@ class TestTopK(TensorFlowBaseTest):
         """
         tf.sort dispatches to tf.math.top_k, and k = size of the axis to be sorted
         """
-        if backend[0] == "mlprogram" and dynamic:
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
+        if platform.machine() == "x86_64" and dynamic:
+            pytest.xfail("rdar://135843153 ([Bug] Models failed on x86_64 platform)")
 
         # Here we test the conversion of tf.sort(x, axis=0)
         # If dynamic, we prepend None to x shape as the dynamic shape axis
@@ -6720,7 +6700,6 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
     def test_programmatic(
         self, compute_unit, backend, input_block_rank, dynamic_input, dynamic_paddings
     ):
-
         input_rank, block_rank = input_block_rank
 
         # generate data
@@ -6732,6 +6711,9 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
                 pytest.skip("neuralnetwork backend doesn't support unequal block shape.")
             if block_shape[0] == 1:
                 pytest.skip("neuralnetwork backend doesn't support unity block shape.")
+
+        if input_block_rank == (4, 1) and dynamic_input and not dynamic_paddings:
+            pytest.xfail("rdar://133558007 shape deduction failure")
 
         paddings = []
         for i in range(block_rank):
@@ -6832,14 +6814,12 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
         self, compute_unit, backend, input_block_rank, dynamic_input, dynamic_crops
     ):
         if (
-            backend == ("mlprogram", "fp16")
-            and input_block_rank == (3, 1) or (3,2)
+            platform.machine() == "x86_64"
+            and input_block_rank == (3, 1)
             and dynamic_input
             and not dynamic_crops
         ):
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
+            pytest.xfail("rdar://135843153 ([Bug] Models failed on x86_64 platform)")
 
         input_rank, block_rank = input_block_rank
 
@@ -6938,16 +6918,6 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
     ):
         input_shape, block_shape, crops = shape_block_crops
         crops = np.array(crops, dtype=np.int32)
-
-        if (
-            backend == ("mlprogram", "fp16")
-            and shape_block_crops == [(4, 4, 6, 1), [1, 2], [[2, 1], [3, 3]]]
-            and dynamic_input
-            and not dynamic_crops
-        ):
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
 
         # The neuralnetwork backend doesn't support these tests
         if backend[0] == "neuralnetwork":

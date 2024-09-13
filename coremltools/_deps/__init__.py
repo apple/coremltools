@@ -153,18 +153,33 @@ MSG_TF2_NOT_FOUND = "TensorFlow 2.x not found."
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "2.3.0"
+_TORCH_MAX_VERSION = "2.4.0"
 _HAS_TORCH_EXPORT_API = False
+_CT_OPTIMIZE_TORCH_MIN_VERSION = "2.1.0"
+_IMPORT_CT_OPTIMIZE_TORCH = False
 try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)
 
-    if _get_version(torch.__version__) >= Version("2.1.0"):
+    torch_version = _get_version(torch.__version__)
+
+    if torch_version >= Version("2.1.0"):
         _HAS_TORCH_EXPORT_API = True
+
+    if torch_version >= Version(_CT_OPTIMIZE_TORCH_MIN_VERSION):
+        _IMPORT_CT_OPTIMIZE_TORCH = True
+    else:
+        logger.warning(
+            (
+                f"Minimum required torch version for importing coremltools.optimize.torch is {_CT_OPTIMIZE_TORCH_MIN_VERSION}. "
+                f"Got torch version {torch_version}."
+            )
+        )
 
 except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
+MSG_TORCH_EXPORT_API_NOT_FOUND = "Torch.Export API not found."
 
 
 _HAS_TORCH_VISION = True
@@ -188,6 +203,13 @@ try:
 except:
     _HAS_EXECUTORCH = False
 MSG_EXECUTORCH_NOT_FOUND = "Executorch not found."
+
+_HAS_TORCHAO = True
+try:
+    import torchao
+except:
+    _HAS_TORCHAO = False
+MSG_TORCHAO_NOT_FOUND = "Torchao not found."
 
 # ---------------------------------------------------------------------------------------
 try:

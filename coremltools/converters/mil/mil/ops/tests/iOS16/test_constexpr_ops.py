@@ -63,6 +63,37 @@ class TestConstexprAffineDequantize:
         prog = mlmodel._mil_program
         assert "constexpr_affine_dequantize" in get_op_types_in_program(prog)
 
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_builder_to_backend_linear(self, compute_unit, backend):
+        input_data = np.ones((4, 64), dtype=np.float32)
+        input_placeholders = {
+            "x": mb.placeholder(shape=input_data.shape),
+        }
+        input_values = {"x": input_data}
+
+        def build(x):
+            weight = mb.constexpr_affine_dequantize(
+                quantized_data=np.ones((32, 64), dtype=np.uint8),
+                zero_point=np.uint8(0),
+                scale=np.float32(2.0),
+                axis=0,
+            )
+            return mb.linear(x=x, weight=weight, bias=np.zeros((32,), dtype=np.float32))
+
+        expected_output_types = (4, 32, types.fp32)
+        expected_outputs = np.ones((4, 32), dtype=np.float32) * 128
+
+        mlmodel = run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            compute_unit=compute_unit,
+            backend=backend,
+        )
+        assert "constexpr_affine_dequantize" in get_op_types_in_program(mlmodel._mil_program)
+
     def test_is_all_zeros(self):
         @mb.program(opset_version=ct.target.iOS16)
         def prog_0_scalar():

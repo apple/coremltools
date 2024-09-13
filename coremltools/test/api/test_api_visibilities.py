@@ -45,6 +45,8 @@ EXPECTED_MODULES = [
     "libmilstoragepython",
     "optimize",
     "StateType",
+    "ReshapeFrequency",
+    "SpecializationStrategy",
 ]
 
 

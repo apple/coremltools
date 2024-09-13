@@ -67,6 +67,17 @@ In previous versions of coremltools, you would restrict execution to the CPU by 
 
 For more information and values for this parameter, see [Set the Compute Units](load-and-convert-model.md#set-the-compute-units).
 
+## Fast Predictions
+
+A Model can be loaded using the Fast Prediction Optimization Hint. This will prefer the prediction latency at the potential cost of specialization time, memory footprint, and the disk space usage.
+
+```python
+model = ct.model.MLModel(
+    'path/to/the/saved/model.mlmodel',
+    optimization_hints={ 'specializationStrategy': ct.SpecializationStrategy.FastPrediction }
+)
+```
+
 ## Multi-array Prediction
 
 A model that takes a `MultiArray` input requires a NumPy array as an input with the `predict()` call. For example:

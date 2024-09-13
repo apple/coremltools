@@ -8,7 +8,7 @@ import math as _math
 import numbers
 import re
 from collections.abc import Iterable
-from typing import Any, Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import numpy as _np
 import numpy as np
@@ -42,6 +42,7 @@ from .utils import (
     NUM_TO_TORCH_DTYPE,
     NUMPY_DTYPE_TO_TORCH_NUM,
     TORCH_DTYPE_TO_NUM,
+    TORCH_EXPORT_BASED_FRONTENDS,
     TYPE_TO_DTYPE_STRING,
     TorchFrontend,
     dtype_to_32bit,
@@ -55,6 +56,22 @@ from .utils import (
 PYTORCH_DEFAULT_VALUE = 2**63 - 1
 
 VALUE_CLOSE_TO_INFINITY = 1e+38
+
+TORCH_STRING_ARGS = {
+    # conv padding
+    "same",
+    "valid",
+
+    # meshgrid indexing
+    "ij",
+    "xy",
+
+    # pad mode
+    "circular",
+    "constant",
+    "reflect",
+    "replicate",
+}
 
 
 def _all_outputs_present(context, graph):
@@ -127,11 +144,16 @@ def convert_single_node(context: TranscriptionContext, node: InternalTorchIRNode
             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_TYPE, data=scope_type),
             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
         ]
-    elif context.frontend == TorchFrontend.EXIR:
+    elif context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
         scopes = [
-            ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[node.meta.get("stack_trace")]),
-            ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[node.meta.get("debug_handle")]),
+            ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[node.meta.get("stack_trace")])
         ]
+        if context.frontend == TorchFrontend.EXECUTORCH:
+            scopes.append(
+                ScopeInfo(
+                    source=ScopeSource.EXIR_DEBUG_HANDLE, data=[node.meta.get("debug_handle")]
+                )
+            )
     else:
         raise ValueError(f"Invalid PyTorch frontend {context.frontend}")
 
@@ -180,6 +202,40 @@ def _assert_torch_dtype_num_is_not_complex_number(num):
         "This op does not support complex number dtype."
 
 
+def _get_bindings(context, alist) -> List[Var]:
+    """
+    This utility is needed in order to handle following cases:
+        With EXIR,
+        - Some of the inputs can be literals (like axis, perms) and thus can be of types: list, int etc.
+        - An Input Parameter of an op could be a list/tuple similar to our concat layer
+    """
+    results = []
+
+    for i in alist:
+        if isinstance(i, str):
+            if i in context:
+                results.append(context[i])
+            elif i in TORCH_STRING_ARGS:
+                results.append(i)
+            else:
+                raise ValueError(
+                    f"Binding {i} is neither a name of exisitng var in context, "
+                    "nor a torch string argument"
+                )
+        elif isinstance(i, (list, tuple)) and all(isinstance(j, int) for j in i):
+            results.append(mb.const(val=i))
+        elif isinstance(i, (list, tuple)):
+            results.append(_get_bindings(context, i))
+        elif isinstance(i, (int, float)):
+            results.append(mb.const(val=i))
+        elif i is None:
+            results.append(None)
+        else:
+            raise NotImplementedError(f"Binding of inputs of type {type(i)} not handled yet")
+
+    return results
+
+
 def _get_inputs(
     context,
     node,
@@ -192,49 +248,21 @@ def _get_inputs(
     value of @expected.
     """
 
-    def get_bindings(alist) -> List[Any]:
-        """
-        This utility is needed in order to handle following cases:
-            With EXIR,
-            - Some of the inputs can be literals (like axis, perms) and thus can be of types: list, int etc.
-            - An Input Parameter of an op could be a list/tuple similar to our concat layer
-        """
-        results = []
-
-        for i in alist:
-            if isinstance(i, str):
-                results.append(context[i])
-            elif isinstance(i, (list, tuple)) and all(isinstance(j, int) for j in i):
-                results.append(mb.const(val=i))
-            elif isinstance(i, (list, tuple)):
-                results.append(get_bindings(i))
-            elif isinstance(i, (int, float)):
-                results.append(mb.const(val=i))
-            elif i is None:
-                results.append(None)
-            else:
-                raise NotImplementedError(f"Binding of inputs of type {type(i)} not handled yet")
-
-        return results
-
     def check_if_number_of_inputs_expected(num_inputs: int, expected: Union[int, List, Tuple]) -> None:
         expected = [expected] if isinstance(expected, int) else expected
         if num_inputs not in expected:
             raise ValueError(
-                "node {} ({}) got {} input(s), expected {}".format(
-                    node.name, node.kind, num_inputs, expected
-                )
+                f"node {node.name} ({node.kind}) got {num_inputs} input(s), expected {expected}"
             )
 
     def check_if_number_of_inputs_more_than_min_expected(num_inputs: int, min_expected: int) -> None:
         if num_inputs < min_expected:
             raise ValueError(
-                "node {} ({}) got {} input(s), expected minimum {} inputs".format(
-                    node.name, node.kind, num_inputs, min_expected
-                )
+                f"node {node.name} ({node.kind}) got {num_inputs} input(s), "
+                f"expected minimum {min_expected} inputs"
             )
 
-    inputs = get_bindings(node.inputs)
+    inputs = _get_bindings(context, node.inputs)
 
     if expected is not None:
         if isinstance(expected, dict):
@@ -251,6 +279,17 @@ def _get_inputs(
             check_if_number_of_inputs_more_than_min_expected(len(inputs), min_expected)
 
     return inputs
+
+
+def _get_kwinputs(context, node, keyword: str, default: Optional[List[Var]] = None) -> List[Var]:
+    if node.kwinputs is None:
+        return default
+    else:
+        bindings = node.kwinputs.get(keyword)
+        if bindings is None:
+            return default
+        else:
+            return _get_bindings(context, bindings)
 
 
 def _list_select(shape_var, index):
@@ -337,7 +376,7 @@ def _construct_constant(val, name):
 
 @register_torch_op
 def native_dropout(context, node):
-    if context.frontend == TorchFrontend.EXIR:
+    if context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
         inputs = _get_inputs(context, node, min_expected=2)
         context.add((inputs[0],), node.name)
     else:
@@ -825,7 +864,7 @@ def gt(context, node):
     context.add(greater)
 
 
-@register_torch_op(torch_alias=["t", "numpy_t", "transpose.int"])
+@register_torch_op(torch_alias=["t", "numpy_t"])
 def transpose(context, node):
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node)
@@ -976,76 +1015,203 @@ def linear(context, node):
     context.add(res, torch_name=node.name)
 
 
-@register_torch_op(torch_alias=["conv2d", "convolution"])
+@register_torch_op(
+    torch_alias=[
+        "convolution",
+        "conv1d",
+        "conv2d",
+        "conv3d",
+        "conv1d.padding",
+        "conv2d.padding",
+        "conv3d.padding",
+        "conv_transpose1d",
+        "conv_transpose2d.input",
+        "conv_transpose3d.input",
+    ]
+)
 def _convolution(context, node):
-    inputs = _get_inputs(context, node)
+    default_torch_padding = "valid" if node.kind.endswith(".padding") else 0
 
-    x = inputs[0]
-    # PyTorch and MIL has same weight layout
-    # Conv: [Cout, Cin, *D]
-    # ConvTranspose: [Cin, Cout, *D]
-    weight = inputs[1]
-    bias = inputs[2]
-    strides = inputs[3]
-
-    x, weight = promote_input_dtypes([x, weight])
-
-    # Expand padding. Torch accepts either an int (for all dimensions) or an n-tuple of ints (one per dimension), but
-    # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
-    pad = inputs[4].val
-
-    if len(weight.shape) in (3, 4):
-        # 1D and 2D: Need to explicitly state L-R, T-B pad
-        pad = _np.repeat(pad, 2)
-    elif len(weight.shape) == 5:
-        # 3D: Need to explicitly state F-Bk, L-R, T-B pad
-        if type(pad) == int:
-            pad = _np.repeat(pad, 6)
-        elif len(pad) == 3:
-            pad = _np.repeat(pad, 2)
-    else:
-        raise ValueError(
-            "Invalid weight dimension. Must be 3, 4, or 5 for 1D, 2D, or 3D convolution, respectively."
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            min_expected={
+                TorchFrontend.TORCHSCRIPT: 7,
+                TorchFrontend.TORCHEXPORT: 2,
+                TorchFrontend.EXECUTORCH: 2,
+            },
         )
+        nargs = len(inputs)
 
-    dilations = inputs[5]
-    out_pad = None
-    if len(inputs) >= 9:
-        transposed = inputs[6].val
-        out_pad = inputs[7].val
-        group = inputs[8]
-    elif len(inputs) == 7:
-        transposed = False
-        group = inputs[6]
-    else:
-        raise ValueError(
-            "unexpected number of inputs for node {} ({}): {}".format(
-                node.name, node.kind, len(inputs)
-            )
-        )
+        x = inputs[0]
+        # PyTorch and MIL has same weight layout
+        # Conv: [Cout, Cin, *D]
+        # ConvTranspose: [Cin, Cout, *D]
+        weight = inputs[1]
+        x, weight = promote_input_dtypes([x, weight])
+
+        bias = inputs[2] if nargs > 2 else None
+        stride = inputs[3] if nargs > 3 else 1
+        padding = inputs[4] if nargs > 4 else default_torch_padding
+
+        if node.kind in ("_convolution", "convolution"):
+            dilation = inputs[5] if nargs > 5 else 1
+            transposed = inputs[6].val if nargs > 6 else False
+            out_padding = inputs[7] if nargs > 7 else 0
+            groups = inputs[8] if nargs > 8 else 1
+        elif re.match(r"conv_transpose[123]d.*", node.kind):
+            out_padding = inputs[5] if nargs > 5 else 0
+            groups = inputs[6] if nargs > 6 else 1
+            dilation = inputs[7] if nargs > 7 else 1
+            transposed = True
+        else:
+            dilation = inputs[5] if nargs > 5 else 1
+            groups = inputs[6] if nargs > 6 else 1
+            transposed = False
+            out_padding = 0
+
+        return x, weight, bias, stride, padding, dilation, groups, transposed, out_padding
+
+    def _parse_keyword_args(
+        context, node, bias, stride, padding, dilation, groups, out_padding
+    ) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend != TorchFrontend.TORCHEXPORT:
+            return bias, stride, padding, dilation, groups, out_padding
+
+        bias = _get_kwinputs(context, node, "bias", default=[bias])[0]
+        stride = _get_kwinputs(context, node, "stride", default=[stride])[0]
+        padding = _get_kwinputs(context, node, "padding", default=[padding])[0]
+        dilation = _get_kwinputs(context, node, "dilation", default=[dilation])[0]
+        groups = _get_kwinputs(context, node, "groups", default=[groups])[0]
+        out_padding = _get_kwinputs(context, node, "out_padding", default=[out_padding])[0]
+
+        return bias, stride, padding, dilation, groups, out_padding
+
+    def _translate_torch_args(node, weight, stride, padding, dilation, groups, out_padding):
+        spatial_rank = weight.rank - 2
+
+        # Core ML strides comes from torch stride
+        if isinstance(stride, Var):
+            stride = stride.val
+            assert stride is not None, "torch conv stride must be constant"
+        # Torch stride is an int (for all spatial dims) or an n-tuple of ints (one per spatial dim)
+        # Core ML requires an n-tuple
+        if isinstance(stride, int) or len(stride) == 1:
+            strides = _np.array([np.squeeze(stride)] * spatial_rank)
+        else:
+            strides = stride
+        # 1 is Core ML default value, so using None is preferred
+        if _np.all(strides == 1):
+            strides = None
+
+        # Core ML pad_type and pad come from torch padding
+        # For torch conv op .padding variants, torch padding is a string,
+        # with possible values ("valid", "same")
+        if node.kind.endswith(".padding"):
+            pad_type = padding
+            if isinstance(pad_type, Var):
+                assert pad_type.val is not None
+                pad_type = pad_type.val
+            assert pad_type in ("valid", "same")
+            # Core ML pad is None for pad_type "valid" / "same"
+            pad = None
+        # For other torch conv op variants, torch padding is
+        # an int (for all spatial dims) or an n-tuple of ints (one per spatial dim)
+        else:
+            if isinstance(padding, Var):
+                padding = padding.val
+                assert padding is not None, "torch conv padding must be constant"
+            # Core ML requires a (2 * n)-tuple, start and end for each spatial dim
+            if isinstance(padding, int) or len(padding) == 1:
+                pad = _np.array([np.squeeze(padding)] * (2 * spatial_rank))
+            else:
+                assert len(padding) == spatial_rank
+                pad = _np.repeat(padding, 2)
+            # Create Core ML pad_type according to Core ML pad
+            if _np.all(pad == 0):
+                pad_type = "valid"
+                # 0 is Core ML default value, so using None is preferred
+                pad = None
+            else:
+                pad_type = "custom"
+
+        # Core ML dilations comes from torch dilation
+        if isinstance(dilation, Var):
+            dilation = dilation.val
+            assert dilation is not None, "torch conv dilation must be constant"
+        # Torch dilation is an int (for all spatial dims) or an n-tuple of ints (one per spatial dim)
+        # Core ML requires an n-tuple
+        if isinstance(dilation, int) or len(dilation) == 1:
+            dilations = _np.array([np.squeeze(dilation)] * spatial_rank)
+        else:
+            dilations = dilation
+        # 1 is Core ML default value, so using None is preferred
+        if _np.all(dilations == 1):
+            dilations = None
+
+        # Core ML groups is torch groups
+        if isinstance(groups, Var):
+            groups = groups.val
+            assert groups is not None, "torch conv groups must be constant"
+        # 1 is Core ML default value, so using None is preferred
+        if groups == 1:
+            groups = None
+
+        if isinstance(out_padding, Var):
+            out_padding = out_padding.val
+            assert out_padding is not None, "torch out_padding must be constant"
+        # 0 is Core ML default value, so using None is preferred
+        if _np.all(out_padding == 0):
+            out_padding = None
+
+        return strides, pad_type, pad, dilations, groups, out_padding
+
+    (
+        x,
+        weight,
+        bias,
+        stride,
+        padding,
+        dilation,
+        groups,
+        transposed,
+        out_padding,
+    ) = _parse_positional_args(context, node)
+    bias, stride, padding, dilation, groups, out_padding = _parse_keyword_args(
+        context, node, bias, stride, padding, dilation, groups, out_padding
+    )
+    strides, pad_type, pad, dilations, groups, out_padding = _translate_torch_args(
+        node, weight, stride, padding, dilation, groups, out_padding
+    )
 
     kwargs = {
         "x": x,
         "weight": weight,
-        "strides": strides,
-        "pad_type": "custom",
-        "pad": pad,
-        "dilations": dilations,
-        "groups": group,
+        "pad_type": pad_type,
         "name": node.name,
     }
-    # Bias is optional in PyTorch's convolution.
     if bias is not None:
         kwargs["bias"] = bias
+    if pad_type == "custom":
+        kwargs["pad"] = pad
+    if strides is not None:
+        kwargs["strides"] = strides
+    if dilations is not None:
+        kwargs["dilations"] = dilations
+    if groups is not None:
+        kwargs["groups"] = groups
 
     if transposed is True:
+        pad_len = 2 * (weight.rank - 2)
         # Transposed convolution
         # Handle output_padding using pre-pad or post-crop
-        pre_pad = [0] * len(pad)
-        post_crop = [0] * len(pad)
+        pre_pad = [0] * pad_len
+        post_crop = [0] * pad_len
 
-        if out_pad is not None and any(out_pad):
-            output_padding = [0] * len(pad)
+        if out_padding is not None and any(out_padding):
+            output_padding = [0] * pad_len
             # output padding adds additional padding on one of the side of dimension
             # i.e. bottom from top-bottom,
             #      right  from left-right
@@ -1054,16 +1220,14 @@ def _convolution(context, node):
             # mapping output_padding to simplify further processing!
             #
             # For ConvTranspose2d: [bottom, right] -> [0, b, 0, r]
-            output_padding = [
-                0 if i % 2 == 0 else out_pad[i // 2] for i in range(len(pad))
-            ]
+            output_padding = [0 if i % 2 == 0 else out_padding[i // 2] for i in range(pad_len)]
             if sum(pad) == 0 and any(output_padding):
                 raise ValueError(
                     "ConvTranspose configuration of padding=0 and output_padding > 0 not supported!"
                 )
             post_crop = pad.copy()
             pad *= 0
-            for i in range(0, len(pad)):
+            for i in range(0, pad_len):
                 if post_crop[i] >= output_padding[i]:
                     post_crop[i] -= output_padding[i]
                 else:
@@ -1273,9 +1437,20 @@ def relu6(context, node):
 
 @register_torch_op
 def einsum(context, node):
-    vars = context[node.inputs[1]]
-    vars = promote_input_dtypes(vars)
-    equation = context[node.inputs[0]].val
+    if context.frontend == TorchFrontend.TORCHSCRIPT:
+        vars = context[node.inputs[1]]
+        vars = promote_input_dtypes(vars)
+        equation = context[node.inputs[0]].val
+    else:
+        equation = node.inputs[0]
+        if isinstance(equation, str) and equation in context:
+            equation = context[equation].val
+        tensor_names = node.inputs[1]
+        if isinstance(tensor_names, str) and tensor_names in context:
+            vars = context[tensor_names]
+        else:
+            assert isinstance(tensor_names, tuple)
+            vars = [context[tensor_name] for tensor_name in tensor_names]
     x = build_einsum_mil(vars, equation, node.name)
     context.add(x)
 
@@ -1412,7 +1587,18 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_size, stride_sizes, pad_sizes)
     return new_pad
 
 
-def _max_pool(context, node, inputs):
+@register_torch_op(
+    torch_alias=[
+        "max_pool2d",
+        "max_pool3d",
+        "max_pool1d_with_indices",
+        "max_pool2d_with_indices",
+        "max_pool3d_with_indices",
+    ]
+)
+def max_pool1d(context, node):
+    inputs = _get_inputs(context, node, min_expected=3)
+
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
@@ -1447,29 +1633,11 @@ def _max_pool(context, node, inputs):
         ceil_mode=ceil_mode if spatial_rank <= 2 else False,
     )
 
-    if node.kind == "max_pool2d_with_indices":
+    if re.match(r"max_pool[123]d_with_indices", node.kind):
         # TODO(rdar://117038432) ([Executorch] Handle/Bind other outputs of `max_pool2d_with_indices` op during lowering)
         context.add((pool, None), torch_name=node.name)
     else:
         context.add(pool)
-
-
-@register_torch_op
-def max_pool1d(context, node):
-    inputs = _get_inputs(context, node, expected=6)
-    _max_pool(context, node, inputs)
-
-
-@register_torch_op(torch_alias=["max_pool2d_with_indices"])
-def max_pool2d(context, node):
-    inputs = _get_inputs(context, node, min_expected=3)
-    _max_pool(context, node, inputs)
-
-
-@register_torch_op
-def max_pool3d(context, node):
-    inputs = _get_inputs(context, node, expected=6)
-    _max_pool(context, node, inputs)
 
 
 @register_torch_op
@@ -1606,34 +1774,41 @@ def sub(context, node):
     ]
 )
 def mean(context, node):
-    inputs = _get_inputs(context, node, min_expected=1)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
 
-    x = inputs[0]
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else None
+        keepdim = inputs[2] if nargs > 2 else False
+        return x, dim, keepdim
+
+    x, dim, keepdim = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if keepdim == False:
+            keepdim = _get_kwinputs(context, node, "keepdim", default=[keepdim])[0]
+
     if types.is_bool(x.dtype):
         # TODO: In the future when MIL op supports bool, we need to use curr_opset_version to decide
         # if we want to cast or not.
         x = mb.cast(x=x, dtype="fp32")
     kwargs = {"x": x, "name": node.name}
 
-    # @axes is optional, so omit if None.
-    axes = None if len(inputs) < 2 else inputs[1]
-    if axes is not None:
-        # @axes needs to be a list, but if only one axis was specified in the
-        # model, it will be constructed as an int. Construct a new constant as a
-        # list.
-        if not isinstance(axes.val, _np.ndarray):
-            axes = mb.const(val=[axes.val], name=axes.name + "_list")
-            context.add(axes)
+    # torch dim means Core ML axes
+    if dim is not None:
+        # Core ML axes needs to be a list, but if only one dim was specified in torch,
+        # it will be constructed as an int, so we construct a new constant as a list
+        if not isinstance(dim.val, _np.ndarray):
+            axes = mb.const(val=[dim.val], name=dim.name + "_list")
+        else:
+            axes = dim.val
         kwargs["axes"] = axes
 
-    # @keep_dims is optional.
-    if len(inputs) >= 3:
-        keep_dims = inputs[2]
-        kwargs["keep_dims"] = keep_dims
+    # torch keepdim means Core ML keep_dims
+    if keepdim != False:
+        kwargs["keep_dims"] = keepdim
 
-    # Last input to mean is an optional output tensor. We always expect this to
-    # be None or absent.
-    assert len(inputs) <= 3 or inputs[3] is None
     if node.kind == "sum":
         res = mb.reduce_sum(**kwargs)
     elif node.kind == "logsumexp":
@@ -1665,7 +1840,7 @@ def unsqueeze(context, node):
     context.add(unsqueeze)
 
 
-@register_torch_op(torch_alias=["sym_size.int"])
+@register_torch_op(torch_alias=["sym_size"])
 def size(context, node):
     inputs = _get_inputs(context, node, expected=[1, 2])
     x = inputs[0]
@@ -1692,7 +1867,7 @@ def _shape_as_tensor(context, node):
     context.add(shape_node, node.name)
 
 
-@register_torch_op(torch_alias=["view_copy", "reshape"])
+@register_torch_op(torch_alias=["view_copy", "_unsafe_view", "reshape"])
 def view(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
@@ -1727,28 +1902,54 @@ def view(context, node):
     context.add(view)
 
 
-@register_torch_op(torch_alias=['constant_pad_nd'])
+@register_torch_op(torch_alias=["constant_pad_nd"])
 def pad(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: [3, 4]},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            assert (node.kind == "pad") == (nargs == 4)
+            assert (node.kind == "constant_pad_nd") == (nargs == 3)
 
-    pad = inputs[1]
-    if pad.val is not None:
-        pad = pad.val.reshape((-1, 2))[::-1].reshape(-1).tolist()
-        missing_dims = x.rank - (len(pad) // 2)
-        pad = [0, 0] * missing_dims + pad
+        x = inputs[0]
+        pad = inputs[1]
+        if pad.val is not None:
+            pad = pad.val.reshape((-1, 2))[::-1].reshape(-1).tolist()
+            missing_dims = x.rank - (len(pad) // 2)
+            pad = [0, 0] * missing_dims + pad
 
-    if len(inputs) == 4:
-        mode = inputs[2].val
-        assert mode in ('constant', 'reflect', 'replicate')
-        val_index = 3
-    else:
-        mode = 'constant'
-        val_index = 2
+        if node.kind == "pad":
+            mode = "constant"
+            if nargs > 2:
+                if isinstance(inputs[2], str):
+                    mode = inputs[2]
+                else:
+                    if isinstance(inputs[2], Var) and inputs[2].val is not None:
+                        mode = inputs[2].val
+                    else:
+                        raise ValueError(
+                            "if pad mode is specified, then it must either be a string, "
+                            "or a constant pymil variable"
+                        )
+            assert mode in ("circular", "constant", "reflect", "replicate")
+            scalar_val = inputs[3] if nargs > 3 else 0.0
+        else:
+            mode = "constant"
+            scalar_val = inputs[2] if nargs > 2 else 0.0
+        if scalar_val is None:
+            scalar_val = 0.0
+        elif isinstance(scalar_val, Var):
+            assert scalar_val.val is not None
+            scalar_val = float(scalar_val.val)
 
-    scalar_val = inputs[val_index] if inputs[val_index] else 0.0
-    if inputs[val_index] and inputs[val_index].op.op_type == "const":
-        scalar_val = float(scalar_val.val)
+        return x, pad, mode, scalar_val
+
+    x, pad, mode, scalar_val = _parse_positional_args(context, node)
 
     if types.is_complex(x.dtype):
         real, imag = (mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name) for x in (mb.complex_real(data=x), mb.complex_imag(data=x)))
@@ -2036,12 +2237,36 @@ def instance_norm(context, node):
 
 @register_torch_op
 def group_norm(context, node):
-    inputs = _get_inputs(context, node, expected=6)
-    x = inputs[0]
-    num_groups = inputs[1].val
-    weight = inputs[2]
-    bias = inputs[3]
-    eps = inputs[4]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 6},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        num_groups = inputs[1].val
+
+        weight = inputs[2] if nargs > 2 else None
+        bias = inputs[3] if nargs > 3 else None
+        eps = inputs[4].val if nargs > 4 else 1e-5
+
+        return x, num_groups, weight, bias, eps
+
+    def _parse_keyword_args(context, node, weight, bias) -> Tuple[Var]:
+        # Only torch.export may have kwargs
+        if context.frontend != TorchFrontend.TORCHEXPORT:
+            return weight, bias
+
+        weight = _get_kwinputs(context, node, "weight", default=[weight])[0]
+        bias = _get_kwinputs(context, node, "bias", default=[bias])[0]
+        return weight, bias
+
+    x, num_groups, weight, bias, eps = _parse_positional_args(context, node)
+    weight, bias = _parse_keyword_args(context, node, weight, bias)
+
     n,c = x.shape[0],x.shape[1] # at minimum (N, C) required
     num_groups = builtins.min(num_groups,c)
     new_shape = [n, num_groups, c//num_groups]
@@ -2062,9 +2287,9 @@ def group_norm(context, node):
 
     x = mb.reshape(x=x, shape=new_shape)
     mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
-    var = _std(x,axes_,True,False,eps.val)
-    x = mb.sub(x=x,y=mean)
-    x = mb.real_div(x=x,y=var)
+    var = _std(x, axes_, True, False, eps)
+    x = mb.sub(x=x, y=mean)
+    x = mb.real_div(x=x, y=var)
     x = mb.reshape(x=x, shape=input_shape)
     if weight is not None:
         weight = mb.reshape(x=weight, shape=weight_shape)
@@ -2121,37 +2346,59 @@ def cat(context, node):
     def is_tensor_empty(var: Var) -> bool:
         return np.any([size == 0 for size in var.shape])
 
-    inputs = _get_inputs(context, node, min_expected=1)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
 
-    xs = inputs[0]
-    # PyTorch can have empty tensor, which is then ignored
-    # However, CoreML does not allow such empty tensor, so remove them now
-    if np.any([is_tensor_empty(x) for x in xs]):
-        xs = [x for x in xs if not is_tensor_empty(x)]
+        xs = inputs[0]
+        # PyTorch can have empty tensor, which is then ignored
+        # However, CoreML does not allow such empty tensor, so remove them now
+        if np.any([is_tensor_empty(x) for x in xs]):
+            xs = [x for x in xs if not is_tensor_empty(x)]
 
-    axis = 0 if len(inputs) == 1 else inputs[1]
+        dim = inputs[1] if nargs > 1 else 0
 
-    concat = mb.concat(
-        values=promote_input_dtypes(xs), axis=axis, name=node.name
-    )
+        return xs, dim
+
+    def _parse_keyword_args(context, node, dim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend != TorchFrontend.TORCHEXPORT:
+            return dim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
+    xs, dim = _parse_positional_args(context, node)
+    dim = _parse_keyword_args(context, node, dim)
+
+    concat = mb.concat(values=promote_input_dtypes(xs), axis=dim, name=node.name)
     context.add(concat)
 
 
 @register_torch_op
 def stack(context, node):
-    inputs = _get_inputs(context, node)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
 
-    values = inputs[0]
+        tensors = inputs[0]
 
-    if len(inputs) < 2:
-        axis = 0
+        dim = inputs[1] if nargs > 1 else 0
+
+        return tensors, dim
+
+    tensors, dim = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if dim == 0:
+            dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+    if isinstance(dim, Var):
+        dim = dim.val
+
+    if len(tensors) == 1:
+        res = mb.expand_dims(x=tensors[0], axes=[dim], name=node.name)
     else:
-        axis = inputs[1]
-
-    if len(values) == 1:
-        res = mb.expand_dims(x=values[0], axes=[axis.val], name=node.name)
-    else:
-        res = mb.stack(values=values, axis=axis, name=node.name)
+        res = mb.stack(values=tensors, axis=dim, name=node.name)
     context.add(res)
 
 
@@ -2225,16 +2472,26 @@ def _int(context, node):
 
 @register_torch_op(torch_alias=["native_layer_norm"])
 def layer_norm(context, node):
-    inputs = _get_inputs(context, node, min_expected=5)
-    _input = inputs[0]
-    normalized_shape = inputs[1]
-    weight = inputs[2]
-    bias = inputs[3]
-    eps = inputs[4]
-    # cudnn_enable = inputs[5] unused
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: [5, 6]},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        x, normalized_shape = inputs[:2]
+
+        weight = inputs[2] if nargs > 2 else None
+        bias = inputs[3] if nargs > 3 else None
+        eps = inputs[4] if nargs > 4 else None
+        return x, normalized_shape, weight, bias, eps
+
+    x, normalized_shape, weight, bias, eps = _parse_positional_args(context, node)
 
     layer_norm = mb.layer_norm(
-        x=_input,
+        x=x,
         axes=list(range(-len(normalized_shape.val), 0)),
         gamma=weight,
         beta=bias,
@@ -3075,7 +3332,7 @@ def upsample_linear1d(context, node):
     context.add(x)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["upsample_bilinear2d.vec"])
 def upsample_bilinear2d(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
@@ -3200,7 +3457,7 @@ def upsample_nearest1d(context, node):
     context.add(x)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["upsample_nearest2d.vec"])
 def upsample_nearest2d(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
@@ -3211,12 +3468,17 @@ def upsample_nearest2d(context, node):
 
     if (
         scale_factors is not None
+        and isinstance(scale_factors, Var)
         and scale_factors.val is not None
         and scale_factors.rank == 1
         and scale_factors.shape[0] == 2
     ):
         # get scale factors from provided inputs
         scale_factors = scale_factors.val
+        scales_h = scale_factors[0]
+        scales_w = scale_factors[1]
+    elif scale_factors is not None and isinstance(scale_factors, list) and len(scale_factors) == 2:
+        # get scale factors from provided inputs
         scales_h = scale_factors[0]
         scales_w = scale_factors[1]
     elif (
@@ -3531,7 +3793,7 @@ def _if(context, node):
         context.add(output_var, torch_name=output_name)
 
 
-@register_torch_op(torch_alias=["select.int", "select_copy.int"])
+@register_torch_op(torch_alias=["select_copy"])
 def select(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
@@ -3706,29 +3968,27 @@ def _get_slice_params(context, data, inputs):
 
 
 def _translate_torch_tensor_assign(
-    x,
-    updates,
-    begin,
-    end,
-    stride,
-    begin_mask,
-    end_mask,
-    squeeze_mask,
-    name,
+    x: Var,
+    updates: Var,
+    begin: Var,
+    end: Var,
+    stride=None,
+    begin_mask=None,
+    end_mask=None,
+    squeeze_mask=None,
+    name=None,
 ):
-
-    def torch_tensor_assign_implementation() -> Var:
-        return mb.torch_tensor_assign(
-            x=x,
-            updates=updates,
-            begin=begin,
-            end=end,
-            stride=stride,
-            begin_mask=begin_mask,
-            end_mask=end_mask,
-            squeeze_mask=squeeze_mask,
-            name=name,
-        )
+    translation_kwargs = {}
+    if stride is not None:
+        translation_kwargs["stride"] = stride
+    if begin_mask is not None:
+        translation_kwargs["begin_mask"] = begin_mask
+    if end_mask is not None:
+        translation_kwargs["end_mask"] = end_mask
+    if squeeze_mask is not None:
+        translation_kwargs["squeeze_mask"] = squeeze_mask
+    if name is not None:
+        translation_kwargs["name"] = name
 
     if is_current_opset_version_compatible_with(target.iOS18):
         # slice_update is not supporting scalar update at runtime.
@@ -3742,7 +4002,13 @@ def _translate_torch_tensor_assign(
                 if isinstance(var, Var) and var.val is None:
                     is_begin_or_end_dynamic = True
             if is_begin_or_end_dynamic or any_symbolic(x.shape):
-                return torch_tensor_assign_implementation()
+                return mb.torch_tensor_assign(
+                    x=x,
+                    updates=updates,
+                    begin=begin,
+                    end=end,
+                    **translation_kwargs,
+                )
 
             # First pick up the ``dim`` in which ``squeeze_mask[dim] = True``,
             # and do the following transformation:
@@ -3775,14 +4041,16 @@ def _translate_torch_tensor_assign(
             update=updates,
             begin=begin,
             end=end,
-            stride=stride,
-            begin_mask=begin_mask,
-            end_mask=end_mask,
-            squeeze_mask=squeeze_mask,
-            name=name,
+            **translation_kwargs,
         )
 
-    return torch_tensor_assign_implementation()
+    return mb.torch_tensor_assign(
+        x=x,
+        updates=updates,
+        begin=begin,
+        end=end,
+        **translation_kwargs,
+    )
 
 
 @register_torch_op
@@ -3875,9 +4143,6 @@ def select_scatter(context, node):
         updates=updates,
         begin=begin,
         end=end,
-        stride=None,
-        begin_mask=None,
-        end_mask=None,
         squeeze_mask=squeeze_mask,
         name=node.name,
     )
@@ -4023,6 +4288,14 @@ def index_put(context, node):
         ), f"indices shape {indices.shape} must equal to input shape {x.shape} for index put operation."
         indices = mb.cast(x=indices, dtype="int32")
         indices = mb.non_zero(x=indices)
+
+        # if the indices is all False,
+        # we translate the op into identity
+        if 0 in indices.shape:
+            result = mb.identity(x=x, name=node.name)
+            context.add(result)
+            return
+
         # values
         if values.shape == ():
             values = mb.expand_dims(x=values, axes=[0])
@@ -4262,7 +4535,7 @@ def ones(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT: [5, 6]},
-        min_expected={TorchFrontend.EXIR: 1}
+        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
     )
     size = inputs[0]
     # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
@@ -4291,6 +4564,15 @@ def ones_like(context, node):
         # out = inputs[5] unused
         fill = mb.fill(shape=size, value=1.0, name=node.name)
     context.add(fill)
+
+
+@register_torch_op
+def fill(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    shape = inputs[0].shape
+    value = inputs[1].val
+    result = mb.fill(shape=shape, value=value, name=node.name)
+    context.add(result)
 
 
 def _make_fill_op(size, val, name):
@@ -4352,12 +4634,23 @@ def new_full(context, node):
     result = _make_fill_op(size, val, node.name)
     context.add(result)
 
-@register_torch_op
+
+@register_torch_op(torch_alias=["randint.low"])
 def randint(context, node):
-    inputs = _get_inputs(context, node, expected=(7, 8))
-    low = mb.cast(x=inputs[0], dtype="fp32")
-    high = mb.cast(x=inputs[1], dtype="fp32")
-    shape = inputs[2]
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=2)
+        if context.frontend == TorchFrontend.TORCHSCRIPT or node.kind == "randint.low":
+            low = mb.cast(x=inputs[0], dtype="fp32")
+            high = mb.cast(x=inputs[1], dtype="fp32")
+            shape = inputs[2].val
+        else:
+            assert node.kind == "randint"
+            low = 0.0
+            high = mb.cast(x=inputs[0], dtype="fp32")
+            shape = inputs[1].val
+        return low, high, shape
+
+    low, high, shape = _parse_positional_args(context, node)
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
     rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
     context.add(rand_int)
@@ -4485,7 +4778,7 @@ def avg_pool1d(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 6},
-        min_expected={TorchFrontend.EXIR : 2},
+        min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
     )
     _avg_pool(context, node, inputs)
 
@@ -4495,7 +4788,11 @@ def avg_pool2d(context, node):
     inputs = _get_inputs(
         context,
         node,
-        min_expected={TorchFrontend.TORCHSCRIPT : 6, TorchFrontend.EXIR : 2},
+        min_expected={
+            TorchFrontend.TORCHSCRIPT: 6,
+            TorchFrontend.TORCHEXPORT: 2,
+            TorchFrontend.EXECUTORCH: 2,
+        },
     )
     divisor_override = None if len(inputs) < 7 else inputs[6]
     if divisor_override is not None:
@@ -4509,7 +4806,7 @@ def avg_pool3d(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT : 7},
-        min_expected={TorchFrontend.EXIR : 2},
+        min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
     )
     divisor_override = inputs[6]
     if divisor_override is not None:
@@ -4519,14 +4816,17 @@ def avg_pool3d(context, node):
 
 @register_torch_op(torch_alias=["_log_softmax"])
 def log_softmax(context, node):
-    inputs = _get_inputs(context, node)
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=2)
+        nargs = len(inputs)
 
-    x = inputs[0]
-    axis = inputs[1]
+        x = inputs[0]
+        axis = inputs[1]
+        # input 2 is dtype, so we ignore
 
-    # input 2 is either out or half_to_float, so we ignore
-    ignored = inputs[2]
-    assert ignored is None or ignored.dtype == types.bool
+        return x, axis
+
+    x, axis = _parse_positional_args(context, node)
 
     res = mb.softmax(x=x, axis=axis, name=node.name + "_softmax")
     res = mb.log(x=res, name=node.name)
@@ -4613,26 +4913,47 @@ def gelu(context, node):
 
 @register_torch_op(torch_alias=["_slice", "slice_copy"])
 def slice(context, node):
-    inputs = _get_inputs(
-        context,
-        node,
-        expected={TorchFrontend.TORCHSCRIPT : 5},
-        min_expected={TorchFrontend.EXIR : 1},
-    )
-    x = inputs[0]
-    dim = 0 if len(inputs) < 2 else inputs[1].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected=(1, 2, 3, 4, 5),
+        )
+        nargs = len(inputs)
 
-    start = 0
-    if len(inputs) > 2 and inputs[2] is not None:
-        start = inputs[2].val if inputs[2].val is not None else inputs[2]
+        x = inputs[0]
+        dim = inputs[1].val if nargs > 1 else 0
+        start = None
+        if nargs > 2:
+            start = inputs[2]
+            if isinstance(start, Var) and start.val is not None:
+                start = start.val
+        end = None
+        if nargs > 3:
+            end = inputs[3]
+            if isinstance(end, Var) and end.val is not None:
+                end = end.val
+        step = inputs[4].val if nargs > 4 else 1
+        return x, dim, start, end, step
 
-    end = None
-    if len(inputs) > 3 and inputs[3] is not None:
-        end = inputs[3].val if inputs[3].val is not None else inputs[3]
-
-    step = 1
-    if len(inputs) > 4 and inputs[4] is not None:
-        step = inputs[4].val if inputs[4].val is not None else inputs[4]
+    x, dim, start, end, step = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if dim == 0:
+            dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        if start is None:
+            start = _get_kwinputs(context, node, "start", default=[start])[0]
+        if end is None:
+            end = _get_kwinputs(context, node, "end", default=[end])[0]
+        if step == 1:
+            step = _get_kwinputs(context, node, "step", default=[step])[0]
+    # torch start = None means Core ML start = 0
+    if start is None:
+        start = 0
+    # dim must be constant
+    if isinstance(dim, Var):
+        dim = dim.val
+        assert dim is not None
 
     if start == 0 and end is None and step == 1:
         # Handling x[:], just pass through the tensor.
@@ -4674,10 +4995,31 @@ def slice(context, node):
 
 @register_torch_op(torch_alias=["split_with_sizes", "split_with_sizes_copy"])
 def split(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    x = inputs[0]
-    split_sizes = inputs[1]
-    dim = inputs[2].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=2)
+        nargs = len(inputs)
+
+        x = inputs[0]
+        split_sizes = inputs[1]
+        dim = inputs[2] if nargs > 2 else 0
+        return x, split_sizes, dim
+
+    def _parse_keyword_args(context, node, dim) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend != TorchFrontend.TORCHEXPORT:
+            return dim
+
+        dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+        return dim
+
+    def _translate_torch_args(dim) -> Var:
+        if isinstance(dim, Var):
+            dim = dim.val
+        return dim
+
+    x, split_sizes, dim = _parse_positional_args(context, node)
+    dim = _parse_keyword_args(context, node, dim)
+    dim = _translate_torch_args(dim)
 
     if not isinstance(split_sizes.val, _np.ndarray):
         shape = mb.shape(x=x)
@@ -4703,21 +5045,25 @@ def split(context, node):
     context.add(res, torch_name=node.name)
 
 
-@register_torch_op(torch_alias=["unbind.int"])
+@register_torch_op
 def unbind(context, node):
-    inputs = _get_inputs(
-        context,
-        node,
-        expected={
-            TorchFrontend.TORCHSCRIPT: 2,
-            TorchFrontend.EXIR: [1, 2],
-        },
-    )
-    x = inputs[0]
-    if len(inputs) == 1:
-        dim = 0
-    else:
-        dim = inputs[1].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=(1, 2))
+        nargs = len(inputs)
+
+        x = inputs[0]
+        dim = inputs[1] if nargs > 1 else 0
+
+        return x, dim
+
+    x, dim = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if dim == 0:
+            dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
+    if isinstance(dim, Var):
+        dim = dim.val
+
     split_sizes = [1] * x.shape[dim]
     if len(split_sizes) == 1:
         res = [mb.squeeze(x=x, axes=[dim])]
@@ -4890,6 +5236,49 @@ def expand_as(context, node):
     context.add(res)
 
 
+@register_torch_op(
+    torch_alias=[
+        "atleast_2d",
+        "atleast_3d",
+        "atleast_1d.sequence",
+        "atleast_2d.sequence",
+        "atleast_3d.sequence",
+    ]
+)
+def atleast_1d(context, node):
+    def _maybe_expand_dims(x: Var, rank: int, name: Optional[str] = None) -> Var:
+        if x.rank < rank:
+            if rank == 3:
+                if x.rank == 2:
+                    axes = [2]
+                elif x.rank == 1:
+                    axes = [0, 2]
+                else:
+                    axes = [0, 1, 2]
+            else:
+                axes = [*range(rank - x.rank)]
+            kwargs = {"x": x, "axes": axes}
+            if name is not None:
+                kwargs["name"] = name
+            x = mb.expand_dims(**kwargs)
+        return x
+
+    inputs = _get_inputs(context, node, expected=1)[0]
+    rank = int(node.kind[8])
+    assert rank in (1, 2, 3)
+
+    if isinstance(inputs, (tuple, list)):
+        results = []
+        for x in inputs:
+            results.append(_maybe_expand_dims(x, rank))
+    else:
+        assert isinstance(inputs, Var)
+        x = inputs
+        results = _maybe_expand_dims(x, rank, node.name)
+
+    context.add(results, torch_name=node.name)
+
+
 def _arange(
     context,
     node_name: str,
@@ -4905,32 +5294,60 @@ def _arange(
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["arange.start"])
 def arange(context, node):
-    inputs = _get_inputs(context, node)
-    # dtype = inputs[-4]
-    # layout = inputs[-3]
-    # device = inputs[-2]
-    # pin_memory = inputs[-1]
-    if len(inputs) == 1 or len(inputs) == 5:
-        # inputs are [end] or [end, dtype, layout, device, pin_memory]
-        start = 0
-        end = inputs[0]
-        step = 1
-    elif len(inputs) == 6:
-        # inputs are [start, end, dtype, layout, device, pin_memory]
-        start = inputs[0]
-        end = inputs[1]
-        step = 1
-    elif len(inputs) == 7:
-        # inputs are [start, end, step, dtype, layout, device, pin_memory]
-        start = inputs[0]
-        end = inputs[1]
-        step = inputs[2]
-    else:
-        raise ValueError(
-            "arange must have exactly 5, 6, or 7 inputs, got {}".format(len(inputs))
-        )
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=1)
+        nargs = len(inputs)
+
+        if context.frontend == TorchFrontend.TORCHSCRIPT:
+            # dtype = inputs[-4]
+            # layout = inputs[-3]
+            # device = inputs[-2]
+            # pin_memory = inputs[-1]
+            if nargs == 1 or nargs == 5:
+                # inputs are [end] or [end, dtype, layout, device, pin_memory]
+                start = 0
+                end = inputs[0]
+                step = 1
+            elif nargs == 6:
+                # inputs are [start, end, dtype, layout, device, pin_memory]
+                start = inputs[0]
+                end = inputs[1]
+                step = 1
+            elif nargs == 7:
+                # inputs are [start, end, step, dtype, layout, device, pin_memory]
+                start = inputs[0]
+                end = inputs[1]
+                step = inputs[2]
+            else:
+                raise ValueError(f"arange must have exactly 5, 6, or 7 inputs, got {nargs}")
+        else:
+            if re.match(r"arange\.start.*", node.kind):
+                start = inputs[0]
+                assert nargs > 1, "arange.start has at least 2 positional args: start, end"
+                end = inputs[1]
+                if node.kind == "arange.start_step":
+                    step = inputs[2] if nargs > 2 else 1
+                else:
+                    step = 1
+            else:
+                start = 0
+                end = inputs[0]
+                step = 1
+
+        return start, end, step
+
+    def _parse_keyword_args(context, node, step) -> Var:
+        # Only torch.export may have kwargs
+        if context.frontend != TorchFrontend.TORCHEXPORT:
+            return step
+
+        step = _get_kwinputs(context, node, "step", default=[step])[0]
+        return step
+
+    start, end, step = _parse_positional_args(context, node)
+    step = _parse_keyword_args(context, node, step)
 
     _arange(context, node.name, start, end, step)
 
@@ -4964,7 +5381,7 @@ def masked_fill(context, node):
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["meshgrid.indexing"])
 def meshgrid(context, node):
     """
     For N input tensors, a meshgrid is constructed by viewing each tensor as an N-dimension tensor
@@ -4976,22 +5393,31 @@ def meshgrid(context, node):
     N, N-dimenional grids, where the ith grid is defined as expanding the ith input over
     dimensions defined by the other inputs.
     """
-    supported_indexing_modes = ("ij", "xy")
-    indexing = "ij"
-    inputs = _get_inputs(context, node, expected=[1, 2])
 
-    if len(inputs) == 2:
-        indexing = inputs[1].val
-        if indexing not in supported_indexing_modes:
-            raise ValueError("indexing mode {} not supported".format(indexing))
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, expected=[1, 2])
+        nargs = len(inputs)
 
-    tensor_inputs = inputs[0]
-    assert isinstance(tensor_inputs, (list, tuple))
-    if len(tensor_inputs) < 2:
-        raise ValueError("Requires >= 2 tensor inputs.")
+        tensor_inputs = inputs[0]
+        indexing = inputs[1].val if nargs > 1 else "ij"
+        return tensor_inputs, indexing
 
-    if any([len(tensor_var.shape) > 1 for tensor_var in tensor_inputs]):
-        raise ValueError("meshgrid received non-1d tensor.")
+    def _check_args(tensor_inputs, indexing) -> None:
+        assert isinstance(tensor_inputs, (list, tuple))
+        if len(tensor_inputs) < 2:
+            raise ValueError("Requires >= 2 tensor inputs.")
+        if any([len(tensor_var.shape) > 1 for tensor_var in tensor_inputs]):
+            raise ValueError("meshgrid received non-1d tensor.")
+
+        if indexing not in ("ij", "xy"):
+            raise ValueError(f"indexing mode {indexing} not supported")
+
+    tensor_inputs, indexing = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if indexing == "ij":
+            indexing = _get_kwinputs(context, node, "indexing", default=[indexing])[0]
+    _check_args(tensor_inputs, indexing)
 
     dim_tuple = tuple(tensor_var.shape[0] for tensor_var in tensor_inputs)
 
@@ -5025,6 +5451,9 @@ def meshgrid(context, node):
 # Defines all the nodes that are noOps
 @register_torch_op(
     torch_alias=[
+        "_assert_async.msg",
+        "_assert_scalar",
+        "_local_scalar_dense",
         "alias_copy",
         "clone",
         "contiguous",
@@ -5038,9 +5467,14 @@ def meshgrid(context, node):
 )
 def noop(context, node):
     logger.info(f"Setting pytorch op: {node.kind} to no-op.")
-    inputs = _get_inputs(context, node)
-    _input = inputs[0]
-    context.add(_input, torch_name=node.name)
+    # These noops do not produce output
+    if node.kind in ("_assert_scalar",):
+        return
+    # Other noops return input as output
+    else:
+        inputs = _get_inputs(context, node)
+        _input = inputs[0]
+        context.add(_input, torch_name=node.name)
 
 
 @register_torch_op
@@ -5062,7 +5496,7 @@ def zeros_like(context, node):
         context,
         node,
         expected={TorchFrontend.TORCHSCRIPT: 6},
-        min_expected={TorchFrontend.EXIR: 1},
+        min_expected={TorchFrontend.TORCHEXPORT: 1, TorchFrontend.EXECUTORCH: 1},
     )
     x = inputs[0]
     shape = mb.shape(x=x)
@@ -5295,11 +5729,25 @@ def repeat(context, node):
     context.add(mb.tile(x=x, reps=reps, name=node.name))
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["repeat_interleave.self_tensor", "repeat_interleave.self_int"])
 def repeat_interleave(context, node):
     """
     For now, we only support scalar repeats + None or 0 dim
     """
+
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(
+            context,
+            node,
+            expected={TorchFrontend.TORCHSCRIPT: 4},
+            min_expected={TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2},
+        )
+        nargs = len(inputs)
+
+        x = inputs[0]
+        repeats = inputs[1]
+        dim = inputs[2] if nargs > 2 else None
+        return x, repeats, dim
 
     def repeat_interleave_dim0(x: Var, repeats_val: int, name: str = None) -> Var:
         """
@@ -5321,27 +5769,35 @@ def repeat_interleave(context, node):
             result
         """
 
+        translation_kwargs = {}
+        if name is not None:
+            translation_kwargs["name"] = name
+
+        x_shape = mb.shape(x=x)
+
         reps = [1] * x.rank
         reps[0] = repeats_val
         x_tiled = mb.tile(x=x, reps=reps)
 
-        split_reps = [repeats_val] + list(x.shape)
-        x_reshaped = mb.reshape(x=x_tiled, shape=list(split_reps))
+        split_reps_shape = mb.concat(values=([repeats_val], x_shape), axis=0)
+        x_reshaped = mb.reshape(x=x_tiled, shape=split_reps_shape)
 
         perm = [*range(x.rank + 1)]
         perm[0] = 1
         perm[1] = 0
         x_transposed = mb.transpose(x=x_reshaped, perm=perm)
 
-        result_shape = list(x.shape)
-        result_shape[0] = -1
-        if name is None:
-            result = mb.reshape(x=x_transposed, shape=result_shape)
-        else:
-            result = mb.reshape(x=x_transposed, shape=result_shape, name=node.name)
+        x_unaffected_sizes = mb.slice_by_index(x=x_shape, begin=[1], end=[x.rank])
+        result_shape = mb.concat(values=([-1], x_unaffected_sizes), axis=0)
+        result = mb.reshape(x=x_transposed, shape=result_shape, **translation_kwargs)
+
         return result
 
-    x, repeats, dim, _ = _get_inputs(context, node, expected=4)
+    x, repeats, dim = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if dim is None:
+            dim = _get_kwinputs(context, node, "dim", default=[dim])[0]
 
     repeats_val = repeats.val
     if isinstance(repeats_val, np.ndarray):
@@ -5357,17 +5813,26 @@ def repeat_interleave(context, node):
     if dim is None:
         x = mb.reshape(x=x, shape=(-1,))
     else:
+        dim_val = dim.val
+        assert dim_val is not None, "torch.repeat_interleave uses static dim"
+        if dim_val < 0:
+            dim_val += x.rank
         # non-0 dim requires additional pre and post treatment
-        if dim.val != 0:
+        if dim_val != 0:
             is_dim_0 = False
+
+    # quick return: repeat 1 is noop
+    if repeats_val == 1:
+        context.add(x, torch_name=node.name)
+        return
 
     if is_dim_0:
         result = repeat_interleave_dim0(x, repeats_val, node.name)
     else:
         # pre treatment: permute to have dim 0
-        perm2dim0 = [dim.val]
+        perm2dim0 = [dim_val]
         for i in range(x.rank):
-            if i != dim.val:
+            if i != dim_val:
                 perm2dim0.append(i)
         x = mb.transpose(x=x, perm=perm2dim0)
 
@@ -5523,11 +5988,18 @@ def clamp(context, node):
 
 @register_torch_op
 def triu(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    assert context.frontend != TorchFrontend.EXECUTORCH, "triu is not a core aten op"
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={
+            TorchFrontend.TORCHSCRIPT: 2,
+            TorchFrontend.TORCHEXPORT: [1, 2],
+        },
+    )
     x = inputs[0]
-    diagonal = inputs[1]
-    if diagonal is not None and diagonal.val is not None:
-        diagonal = diagonal.val
+    if len(inputs) > 1 and inputs[1] is not None and inputs[1].val is not None:
+        diagonal = inputs[1].val
     else:
         diagonal = 0
     if diagonal <= 0:
@@ -5540,11 +6012,18 @@ def triu(context, node):
 
 @register_torch_op
 def tril(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    assert context.frontend != TorchFrontend.EXECUTORCH, "tril is not a core aten op"
+    inputs = _get_inputs(
+        context,
+        node,
+        expected={
+            TorchFrontend.TORCHSCRIPT: 2,
+            TorchFrontend.TORCHEXPORT: [1, 2],
+        },
+    )
     x = inputs[0]
-    diagonal = inputs[1]
-    if diagonal is not None and diagonal.val is not None:
-        diagonal = diagonal.val
+    if len(inputs) > 1 and inputs[1] is not None and inputs[1].val is not None:
+        diagonal = inputs[1].val
     else:
         diagonal = 0
     if diagonal >= 0:
@@ -5911,7 +6390,7 @@ def copy(context, node):
         "In torch script frontend, by graph pass `generate_tensor_assignment_ops`, "
         "`torch.copy_` should have been replaced with `_internal_op_tensor_inplace_copy`"
     )
-    if context.frontend == TorchFrontend.EXIR:
+    if context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
         src = inputs[1]
         if inputs[0].shape != src.shape:
             _, src = _broadcast_tensors(inputs[: 2])
@@ -6173,10 +6652,31 @@ def _solve_broadcast_shape(shapes: List[List[int]]) -> List[np.ndarray]:
         dims = [shapes[j][i] for j in range(len(shapes))]
         if any_symbolic(dims):
             # rdar://85559497 (Handle dynamic shapes inputs broadcast for pytorch)
-            raise NotImplementedError(
-                "Only static shaped inputs are supported for torch.broadcast_tensors conversion."
-            )
-        result_shape.append(_np.max(dims))
+            symbols = set()
+            integers = set()
+            for dim in dims:
+                if is_symbolic(dim):
+                    symbols.add(dim)
+                else:
+                    integers.add(dim)
+            # Integers can be safely ignored
+            if integers == {1} or integers == set():
+                result_dim = list(symbols)[0]
+                result_shape.append(result_dim)
+                # In principle, there must be only 1 symbol
+                # In practise, since our symbol propagation is imperfect,
+                # we may see multiple symbols, even if they must equal to each other / 1
+                if len(symbols) != 1:
+                    logger.warning(f"Recklessly broadcast {symbols} to {result_dim}")
+            # In principle, in such case the symbols must be 1 or equal to the integer
+            # In practise, since our symbol propagation is imperfect,
+            # we may still see symbols, even if they must equal to max integer / 1
+            else:
+                result_dim = _np.max(list(integers))
+                result_shape.append(result_dim)
+                logger.warning(f"Recklessly broadcast {symbols} and {integers} to {result_dim}")
+        else:
+            result_shape.append(_np.max(dims))
     return result_shape
 
 def _broadcast_tensors(tensors):
@@ -6859,7 +7359,13 @@ def _cast_bool_attn_mask(attn_mask: Var, query_var: Var) -> Var:
     )
     return mb.mul(x=-3e4, y=compliment_of_mask)
 
-@register_torch_op(torch_alias=["_scaled_dot_product_flash_attention_for_cpu"])
+@register_torch_op(
+    torch_alias=[
+        "_scaled_dot_product_flash_attention_for_cpu",
+        "coreml.sdpa",
+        "coreml::sdpa",
+    ]
+)
 def scaled_dot_product_attention(context, node):
     """
     Input shapes/types:
@@ -6888,47 +7394,70 @@ def scaled_dot_product_attention(context, node):
         broadcast_shape = batch_dims + list(x.shape[-2:])
         return _broadcast(x.name + "_broadcast_same_batch_dims", x, broadcast_shape)
 
-    inputs = _get_inputs(context, node, min_expected=3)
-    q, k, v = inputs[:3]
-    attn_mask = None if len(inputs) < 4 else inputs[3]
-    dropout = 0.0 if len(inputs) < 5 else inputs[4]
-    is_causal = False if len(inputs) < 6 else inputs[5].val
+    def _parse_positional_args(context, node) -> Tuple[Var]:
+        inputs = _get_inputs(context, node, min_expected=3)
+        nargs = len(inputs)
 
-    # When len(inputs) == 7, the inputs are (q, k, v, attn_mask, dropout, is_causal, scale)
-    if len(inputs) == 7 and inputs[6] is not None:
-        raise NotImplementedError(
-            "scaled_dot_product_attention op: scale parameter is not handled."
-        )
+        q, k, v = inputs[:3]
 
-    if attn_mask is not None and is_causal:
-        raise ValueError(
-            "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
-        )
+        if node.kind == "scaled_dot_product_attention":
+            attn_mask = inputs[3] if nargs > 3 else None
+            dropout = inputs[4] if nargs > 4 else 0.0
+            is_causal = inputs[5].val if nargs > 5 else False
+            scale = inputs[6] if nargs > 6 else None
+        elif node.kind == "_scaled_dot_product_flash_attention_for_cpu":
+            dropout = inputs[3] if nargs > 3 else 0.0
+            is_causal = inputs[4].val if nargs > 4 else False
+            attn_mask = inputs[5] if nargs > 5 else None
+            scale = inputs[6] if nargs > 6 else None
+        else:
+            assert node.kind in ("coreml.sdpa", "coreml::sdpa")
+            attn_mask = inputs[3] if nargs > 3 else None
+            dropout = 0.0
+            is_causal = False
+            scale = None
 
-    if dropout is not None:
-        if isinstance(dropout, Var):
-            if dropout.val is None:
-                raise NotImplementedError(
-                    "A variable dropout probability is specified. Since Core ML "
-                    "does not support dropout yet, we cowardly refuse to convert it"
-                )
-            else:
-                dropout = dropout.val
-        if dropout != 0.0:
+        return q, k, v, attn_mask, dropout, is_causal, scale
+
+    def _check_args(q, k, v, attn_mask, dropout, is_causal, scale) -> None:
+        if attn_mask is not None and is_causal:
             raise ValueError(
-                "A non-zero dropout probability is specified. Since Core ML "
-                "does not support dropout yet, we cannot convert it"
+                "scaled_dot_product_attention op: attn_mask cannot be provided when is_causal is set to True."
             )
 
-    # check that ranks of q, k, v and attn_mask match
-    if k.rank != q.rank:
-        raise ValueError(
-            "Rank of query and key do not match in scaled_dot_product_attention torch op"
-        )
-    if v.rank != q.rank:
-        raise ValueError(
-            "Rank of query and value do not match in scaled_dot_product_attention torch op"
-        )
+        if dropout is not None:
+            if isinstance(dropout, Var):
+                if dropout.val is None:
+                    raise NotImplementedError(
+                        "A variable dropout probability is specified. Since Core ML "
+                        "does not support dropout yet, we cowardly refuse to convert it"
+                    )
+                else:
+                    dropout = dropout.val
+            if dropout != 0.0:
+                raise ValueError(
+                    "A non-zero dropout probability is specified. Since Core ML "
+                    "does not support dropout yet, we cannot convert it"
+                )
+
+        # check that ranks of q, k, v and attn_mask match
+        if k.rank != q.rank:
+            raise ValueError(
+                "Rank of query and key do not match in scaled_dot_product_attention torch op"
+            )
+        if v.rank != q.rank:
+            raise ValueError(
+                "Rank of query and value do not match in scaled_dot_product_attention torch op"
+            )
+
+    q, k, v, attn_mask, dropout, is_causal, scale = _parse_positional_args(context, node)
+    # torch.export may have kwargs
+    if context.frontend == TorchFrontend.TORCHEXPORT:
+        if attn_mask is None:
+            attn_mask = _get_kwinputs(context, node, "attn_mask", default=[attn_mask])[0]
+        if scale is None:
+            scale = _get_kwinputs(context, node, "scale", default=[scale])[0]
+    _check_args(q, k, v, attn_mask, dropout, is_causal, scale)
 
     mask = None
     if is_causal:
@@ -6941,7 +7470,8 @@ def scaled_dot_product_attention(context, node):
             mask = attn_mask
 
     # Since ios18, Core ML supports scaled_dot_product_attention op
-    if is_current_opset_version_compatible_with(target.iOS18):
+    # It does not have scale, though
+    if is_current_opset_version_compatible_with(target.iOS18) and scale is None:
         # ios18 scaled_dot_product_attention only supports rank >= 3
         is_rank_2 = q.rank == 2
 
@@ -6972,7 +7502,7 @@ def scaled_dot_product_attention(context, node):
 
     # For ios18-, scaled_dot_product_attention has to be decomposed
     else:
-        res = _utils._decompose_scaled_dot_product_attention(q, k, v, mask, node.name)
+        res = _utils._decompose_scaled_dot_product_attention(q, k, v, mask, node.name, scale=scale)
 
     context.add(res)
 

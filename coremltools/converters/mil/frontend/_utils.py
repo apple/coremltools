@@ -513,7 +513,13 @@ def solve_binary_generic_einsum(parsed_vectors, a_var, b_var, name) -> Var:
 
 
 def _decompose_scaled_dot_product_attention(
-    q: Var, k: Var, v: Var, mask: Var, name: str, before_op: Optional[Operation] = None
+    q: Var,
+    k: Var,
+    v: Var,
+    mask: Var,
+    name: str,
+    scale: Optional[Var] = None,
+    before_op: Optional[Operation] = None,
 ) -> Var:
     # scale the query input
     embed_size = q.shape[-1]
@@ -524,9 +530,12 @@ def _decompose_scaled_dot_product_attention(
         )
 
     q, k, v = promote_input_dtypes([q, k, v])
-    multiplicative_scale_factor = 1 / math.sqrt(embed_size)
-    if types.builtin_to_string(q.dtype) == "fp16":
-        multiplicative_scale_factor = np.float16(multiplicative_scale_factor)
+    if scale is None:
+        multiplicative_scale_factor = 1 / math.sqrt(embed_size)
+        if types.builtin_to_string(q.dtype) == "fp16":
+            multiplicative_scale_factor = np.float16(multiplicative_scale_factor)
+    else:
+        multiplicative_scale_factor = scale
     q = mb.mul(x=q, y=multiplicative_scale_factor, before_op=before_op)
 
     # multiply query and key input tensors
@@ -583,6 +592,11 @@ def _construct_constexpr_dequant_op(
             scale = np.squeeze(scale)
         if isinstance(zero_point, (np.ndarray, np.generic)):
             zero_point = np.squeeze(zero_point)
+        if len(scale.shape) > 1 or len(zero_point.shape) > 1:
+            raise ValueError(
+                "The more fine-grained quantization (such as blockwise) is only supported since iOS18."
+                "Please set minimum_deployment_target to iOS18 for using it."
+            )
 
         kwargs = {
             "quantized_data": quantized_weights,
@@ -631,7 +645,10 @@ def _construct_constexpr_dequant_op(
     }
     if zero_point is not None and np.any(zero_point):
         # Only pass the offset parameter when not all elements in `zero_point` are zeroes.
-        zero_point = zero_point.reshape(scale.shape).astype(quantized_weights.dtype)
+        zero_point = zero_point.reshape(scale.shape)
+        # When zero_point is integer, it's required to have the same dtype as the quantized weight.
+        if np.issubdtype(zero_point.dtype, np.integer):
+            zero_point = zero_point.astype(quantized_weights.dtype)
         kwargs["offset"] = zero_point
     if name is not None:
         kwargs["name"] = name

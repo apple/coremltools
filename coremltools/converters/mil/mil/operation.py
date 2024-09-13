@@ -498,8 +498,8 @@ class Operation:
                 and not no_check_var_types
             ):
                 raise ValueError(
-                    f"New var type `{v_new.sym_type}` not a "
-                    f"subtype of existing var type `{v_old.sym_type}`."
+                    f"New var {v_new} doesn't have compatible "
+                    f"subtype of existing var `{v_old}`."
                 )
             v_old.remove_child_op(op, no_check_var_types)
 

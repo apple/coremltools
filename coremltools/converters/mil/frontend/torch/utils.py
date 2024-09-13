@@ -118,7 +118,11 @@ TORCH_DTYPE_TO_MIL_DTYPE[torch.float64] = types.fp32
 
 class TorchFrontend(Enum):
     TORCHSCRIPT = 1
-    EXIR = 2
+    TORCHEXPORT = 2
+    EXECUTORCH = 3
+
+
+TORCH_EXPORT_BASED_FRONTENDS = (TorchFrontend.TORCHEXPORT, TorchFrontend.EXECUTORCH)
 
 
 def sanitize_op_kind(op_kind: str) -> str:
@@ -141,14 +145,21 @@ def sanitize_op_kind(op_kind: str) -> str:
     ) -> str:
         split = op_kind.split(deliminator)
         start = 1 if split[0] in {"aten", "prim"} and len(split) > 1 else 0
-        stop = -1 if split[-1] in {
-            "default",
-            "tensor",
-            "tensor_mode",
-            "scalar",
-            "tensor_scalar",
-        } and len(split) - start > 1 else len(split)
-        op_kind = deliminator.join(split[start : stop])
+        stop = (
+            -1
+            if split[-1]
+            in {
+                "default",
+                "int",
+                "tensor",
+                "tensor_mode",
+                "scalar",
+                "tensor_scalar",
+            }
+            and len(split) - start > 1
+            else len(split)
+        )
+        op_kind = deliminator.join(split[start:stop])
         return op_kind
 
     # 1. Lower case

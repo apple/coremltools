@@ -3,6 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+
+import itertools
 import json
 import os
 import platform
@@ -41,7 +43,6 @@ def _remove_path(path):
 class TestMLModel:
 
     def setup_class(self):
-
         spec = Model_pb2.Model()
         spec.specificationVersion = coremltools.SPECIFICATION_VERSION
 
@@ -457,6 +458,47 @@ class TestMLModel:
         assert os.path.exists(package_path)
 
         shutil.rmtree(package_path)
+
+
+    @pytest.mark.skipif(utils._macos_version() < (15, 0),
+                        reason="optimization hints available only on macOS15+")
+    @pytest.mark.parametrize("reshapeFrequency, specializationStrategy",
+                             itertools.product(
+                                 (ct.ReshapeFrequency.Frequent, ct.ReshapeFrequency.Infrequent, None),
+                                 (ct.SpecializationStrategy.FastPrediction, ct.SpecializationStrategy.Default, None),
+                             ))
+    def test_optimization_hints(self, reshapeFrequency, specializationStrategy):
+        optimization_hints={}
+        if reshapeFrequency is not None:
+            optimization_hints['reshapeFrequency'] = reshapeFrequency
+        if specializationStrategy is not None:
+            optimization_hints['specializationStrategy'] = specializationStrategy
+        if len(optimization_hints) == 0:
+            optimization_hints = None
+
+        m = MLModel(self.spec, optimization_hints=optimization_hints)
+        assert isinstance(m, MLModel)
+        assert(m.optimization_hints == optimization_hints)
+
+
+    @pytest.mark.skipif(utils._macos_version() < (15, 0),
+                        reason="optimization hints available only on macOS15+")
+    def test_optimization_hint_error_cases(self):
+        with pytest.raises(TypeError, match='"optimization_hint_input" must be a dictionary'):
+            MLModel(self.spec, optimization_hints=12)
+
+        with pytest.raises(ValueError, match='Unrecognized key in optimization_hint dictionary: bad key'):
+            MLModel(self.spec, optimization_hints={'bad key': ct.ReshapeFrequency.Frequent})
+
+        with pytest.raises(TypeError, match='"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy'):
+            MLModel(self.spec, optimization_hints={"specializationStrategy": 12})
+
+        with pytest.raises(TypeError, match='"reshapeFrequency" value of "optimization_hint_input" dictionary must be of type coremltools.ReshapeFrequency'):
+            MLModel(self.spec, optimization_hints={"reshapeFrequency": 12})
+
+        with pytest.raises(TypeError, match='"reshapeFrequency" value of "optimization_hint_input" dictionary must be of type coremltools.ReshapeFrequency'):
+            # SpecializationStrategy value for ReshapeFrequency key
+            MLModel(self.spec, optimization_hints={"reshapeFrequency": ct.SpecializationStrategy.Default})
 
 
 class TestCompiledMLModel:

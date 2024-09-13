@@ -57,7 +57,7 @@ namespace CoreML {
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;
             ~Model();
-            explicit Model(const std::string& urlStr, const std::string& computeUnits, const std::string& functionName);
+            explicit Model(const std::string& urlStr, const std::string& computeUnits, const std::string& functionName, const py::dict& optimizationHints);
             explicit Model(MLModel* m_model, NSURL* compiledUrl, bool deleteCompiledModelOnExit);
 
             py::list batchPredict(const py::list& batch) const;
@@ -67,6 +67,7 @@ namespace CoreML {
             py::dict predict(const py::dict& input, State* state=NULL) const;
 
 #if BUILT_WITH_MACOS15_SDK
+            static void setOptimizationHints(MLModelConfiguration *configuration, const py::dict& optimizationHints);
             State newState() const;
 #endif
 

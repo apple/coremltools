@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import math
 import operator as _operator
 from collections import defaultdict
 from enum import Enum as _Enum
@@ -205,11 +206,23 @@ def get_quant_range(n_bits: int, dtype: _torch.dtype) -> _Tuple[int, int]:
         quant_max = max_q / 2 - 1
     return int(quant_min), int(quant_max)
 
+def get_n_bits_from_range(quant_min: int, quant_max: int) -> int:
+    """
+    Returns quantization n_bits for given quantization range
+    """
+    n_bits = int(math.log2(quant_max + 1))
+    if quant_min < 0:
+        n_bits += 1
 
-def register_compression_metadata(submodule, config):
+    return n_bits
+
+
+def register_compression_metadata(submodule):
     metadata = _CompressionMetadata("weight")
     metadata.compression_type = ["quantization"]
-    metadata.quantization_n_bits = config.weight_n_bits
+    metadata.quantization_n_bits = get_n_bits_from_range(
+        submodule.weight_quant_min, submodule.weight_quant_max
+    )
     metadata.quantization_scale = (
         submodule.weight_scale.detach().clone().unsqueeze(-1)
         if submodule.weight_axis == 0

@@ -97,8 +97,8 @@ class constexpr_blockwise_shift_scale(Operation):
             scale_dim = scale.shape[rank_idx]
             if data_dim % scale_dim != 0:
                 raise ValueError(
-                    f"Number of scales along each dimension should be a factor of "
-                    f"corresponding dimension size of 'data'. However, at dim "
+                    "Number of scales along each dimension should be a factor of "
+                    "corresponding dimension size of 'data'. However, at dim "
                     f"{rank_idx}, the 'data' has {data_dim} while 'scale' has {scale_dim}."
                 )
 

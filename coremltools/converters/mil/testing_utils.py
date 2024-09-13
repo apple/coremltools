@@ -115,20 +115,15 @@ def macos_compatible_with_deployment_target(minimum_deployment_target):
             return False
     return True
 
-def _serialize_current_pytest(mlmodel):
-    """
-    Usually pytest test name is of format file::class::test_function[param0-param1] (call)...
-    Assume each test produces only one Core ML model,
-    then file::class::test_function[param0-param1] is enough to determine unique name
-        {_COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY}/file/class/test_function/param0/param1/model.mlpackage
-    """
-    mlpackage_path = _COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY + "/"
+
+def _create_current_pytest_serialization_path() -> str:
+    serialization_path = _COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY + "/"
 
     PYTEST_CURRENT_TEST = os.environ.get("PYTEST_CURRENT_TEST").split("(call)")[0].strip()
     test_name_fragments = PYTEST_CURRENT_TEST.split("::")
 
     for test_name_fragment in test_name_fragments[:-1]:
-        mlpackage_path += f"{test_name_fragment.strip()}/"
+        serialization_path += f"{test_name_fragment.strip()}/"
 
     test_name = test_name_fragments[-1]
     # For a parameterized test, further decompose parameters into directories
@@ -138,16 +133,26 @@ def _serialize_current_pytest(mlmodel):
         test_function_name = test_name[:bra_index]
         parameters = test_name[bra_index + 1 : -1].split("-")
         # Append test function name and parameter to mlpackage path
-        mlpackage_path += f"{test_function_name}/"
+        serialization_path += f"{test_function_name}/"
         for parameter in parameters:
-            mlpackage_path += f"{parameter}/"
+            serialization_path += f"{parameter}/"
     else:
-        mlpackage_path += f"{test_name}/"
+        serialization_path += f"{test_name}/"
 
-    mlpackage_path += "model.mlpackage"
+    return serialization_path
 
+
+def _serialize_current_pytest_mlmodel(mlmodel) -> None:
+    """
+    Usually pytest test name is of format file::class::test_function[param0-param1] (call)...
+    Assume each test produces only one Core ML model,
+    then file::class::test_function[param0-param1] is enough to determine unique name
+        {_COREMLTOOLS_DEBUG_SAVE_MLMODEL_DIRECTORY}/file/class/test_function/param0/param1/model.mlpackage
+    """
+    mlpackage_path = _create_current_pytest_serialization_path() + "model.mlpackage"
     Path(mlpackage_path).mkdir(parents=True, exist_ok=True)
     mlmodel.save(mlpackage_path)
+
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
     """
@@ -531,20 +536,20 @@ def ct_convert(
         skip_model_load = True
 
     mlmodel = converter(
-                program,
-                source=source,
-                inputs=inputs,
-                outputs=outputs,
-                classifier_config=classifier_config,
-                minimum_deployment_target=minimum_deployment_target,
-                convert_to=target,
-                compute_precision=compute_precision,
-                skip_model_load=skip_model_load,
-                **kwargs
+        program,
+        source=source,
+        inputs=inputs,
+        outputs=outputs,
+        classifier_config=classifier_config,
+        minimum_deployment_target=minimum_deployment_target,
+        convert_to=target,
+        compute_precision=compute_precision,
+        skip_model_load=skip_model_load,
+        **kwargs,
     )
 
     if is_current_test_to_be_debugged:
-        _serialize_current_pytest(mlmodel)
+        _serialize_current_pytest_mlmodel(mlmodel)
         pytest.xfail("This test is to be debugged")
 
     return mlmodel
