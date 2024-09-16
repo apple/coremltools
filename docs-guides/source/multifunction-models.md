@@ -5,19 +5,15 @@
 
 # Multifunction Models
 
-An `mlprogram` Core ML model typically contains a single function, called "main". 
-This is the default form in which a model is constructed, say when its produced via 
-the conversion process. Starting with `iOS18`/`macOS15`, you can produce an mlprogram 
+An `mlprogram` Core ML model typically contains a single function, called `main`. 
+This is the default form in which a model is constructed, such as when it’s produced via 
+the conversion process. Starting with `iOS18`/`macOS15`, you can produce an `mlprogram` 
 with multiple functions in it. 
-Each function, indexed by its unique name, can then be independently 
-loaded and invoked for inference.
+Each function, indexed by its unique name, can then be independently loaded and invoked for inference.
 
-Consider a scenario, where you have separate models that 
-share weights and run in the same app. 
-For example, as illustrated in the following figure, one model
-may have a feature extractor, 
-followed by a classifier to produce a classification output. 
-Another model may use the same feature extractor, 
+Consider a scenario, where you have separate models that share weights and run in the same app. 
+For example, as illustrated in the following figure, one model may have a feature extractor, 
+followed by a classifier to produce a classification output. Another model may use the same feature extractor, 
 followed by a regressor to produce the regression output.
 
 
@@ -40,17 +36,17 @@ The merged multifunction model can do both tasks based on the function chosen to
 In the example above, the two models used a common backbone. 
 While utilizing multifunctions and producing a single model asset is definitely
 beneficial, there does exist a reasonable workaround in this case: 
-simply breaking up the models into 3 sub models: backbone, classifier head and 
-regressor head, and using two of them in sequence based on the use case. 
+simply breaking up the models into three submodels: backbone, classifier head, and 
+regressor head, and then using two of them in sequence based on the use case. 
 
 However, there are scenarios when such a workaround would not be available. 
-An example of this is the case of parameter efficient fine-tuning (PEFT),
+An example of this is the case of parameter-efficient fine-tuning (PEFT),
 which is a common approach for specializing large models to particular tasks. 
-In the case of PEFT, "adapters" are attached to the base model, typically 
-at multiple points within the network (as shown in the 
-figures below), and only the parameters in these adapters 
+In the case of PEFT, “adapters” are attached to the base model, typically 
+at multiple points within the network, as shown in the 
+figures below. Only the parameters in these adapters 
 are fine-tuned for a specific task. This is much more efficient than fine-tuning
-the whole base model which has many more parameters.
+the whole base model, which has many more parameters.
 
 ```{figure} images/multifunction-adapter-1.png
 :alt: Multifunction adapter 1
@@ -73,13 +69,15 @@ The weights for the base model will be shared.
 For an example, see the “Deploy machine learning and AI models on-device with Core ML” 
 [session video](https://developer.apple.com/videos/play/wwdc2024/10161/) in WWDC 2024
 to learn more about integrating multifunction models into your app. 
-It includes a text-to-image example in which a single 
+It includes a text-to-image example, in which a single 
 model with multiple adapters is used to generate images with different styles. 
 
 
 ## Combining models: toy example with LoRA adapters
 
-Lets define base model with two linear layers
+In this example, learn how to combine a base model and adapter model to create a merged multifunction Core ML model, load it, and get predictions.
+
+First, define a base model with two linear layers.
 
 ```python
 import torch # torch==2.3.0
@@ -101,12 +99,10 @@ class Base(nn.Module):
 base_model = Base()
 ```
 
-Now lets update this model by attaching to it, 
-one of the most common type of adapter, i.e. [LoRA](https://huggingface.co/docs/peft/en/package_reference/lora) 
-(low rank approximation), and 
-convert the model. 
-We will use the HuggingFace [peft](https://github.com/huggingface/peft) 
-package to do so. 
+Update the model by first attaching one of the most common type of adapters to it, 
+[LoRA](https://huggingface.co/docs/peft/en/package_reference/lora) (low rank approximation), and then  
+converting it using the HuggingFace [`peft`](https://github.com/huggingface/peft) 
+package.
 
 ```python
 from peft import get_peft_model, LoraConfig # peft==0.11.1
@@ -123,9 +119,8 @@ def adapt_model_with_lora(model):
 adapted_model_1 = adapt_model_with_lora(base_model)
 ```
 
-At this stage you would typically fine tune the model. We will skip that, 
-since this is an illustrative example, 
-and directly go the next stage of converting the model.
+At this stage, you would typically fine-tune the model. Since this is an illustrative example, 
+you can skip that step and go directly to the next stage of converting the model.
 
 ```python
 import coremltools as ct 
@@ -138,8 +133,7 @@ mlmodel_1 = ct.convert(torch.jit.trace(adapted_model_1.eval(), torch.rand(1, 600
 mlmodel_1.save("adapted_model_1.mlpackage")
 ```
 
-Now lets create a different adapter model, 
-which we would in practice fine tune to a different task. 
+Create a different adapter model, which you would fine-tune to a different task in practice. 
 
 ```python
 adapted_model_2 = adapt_model_with_lora(base_model)
@@ -151,11 +145,9 @@ mlmodel_2 = ct.convert(torch.jit.trace(adapted_model_2.eval(), torch.rand(1, 600
 mlmodel_2.save("adapted_model_2.mlpackage")
 ```
 
-If we want to deploy both these variants of models in a 
-single app, we can combine them into a single model.
-This can be done by creating a `MultiFunctionDescriptor` 
-to specify what models to merge and the new function name in the merged model. 
-You can then use the `save_multifunction` 
+To deploy both these variants of models in a single app, combine them into a single model.
+Create a `MultiFunctionDescriptor` to specify which models to merge and what the new function name 
+will be in the merged model. You can then use the `save_multifunction` 
 utility to produce a merged multifunction Core ML model.
 
 ```python
@@ -177,7 +169,7 @@ ct.utils.save_multifunction(desc, "combined_adpater_models.mlpackage")
 ```
 
 When loading the multifunction model, you can specify the 
-`function_name` to load the specific function and then do the prediction:
+`function_name` to load the specific function and then do the prediction.
 
 ```python
 import numpy as np 
@@ -189,16 +181,15 @@ mlmodel_2 = ct.models.MLModel("combined_adpater_models.mlpackage", function_name
 y_2 = mlmodel_2.predict({'input_adpated_model_2': np.random.rand(1, 6000)})
 ```
 
-The number of parameters in the base model are roughly 72M (6000x6000 = 36M 
-for each of the two linear layers) (ignoring the bias vectors). 
-LoRA adapters that we have used here, of rank 32, will attach 
-two linear layers of shapes, (6000, 32) and (32, 6000), to each of 
+The number of parameters in the base model are roughly 72M (6000x6000 = 36M for each 
+of the two linear layers), ignoring the bias vectors.
+The LoRA adapters used here, of rank 32, will attach two linear layers of shapes, (6000, 32) and (32, 6000), to each of 
 the linear modules in the base model. 
 This will result in 4x6000x32 = 0.768M parameters to be added, 
 which is a fraction of the base model. 
 The combined model will share the 72M parameters of 
-the based model and only have the additional adapter parameters. 
-We can see this in the model sizes:
+the base model and only have the additional adapter parameters. 
+You can see this in the model sizes:
 
 ```{figure} images/multifunction_model_sizes_lora_example.png
 :alt: Model sizes LoRA toy example
