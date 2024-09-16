@@ -165,11 +165,6 @@ class StressTest(CorrectnessTest):
         self.test_data_reorganize(cpu_only=True)
 
     def test_depthwise_conv(self, cpu_only=False):
-        if not cpu_only:
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
-
         def get_coreml_model_depthwise(X, params, w):
             eval = True
             mlmodel = None

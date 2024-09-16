@@ -9,6 +9,7 @@ from typing import Dict, Set, Text, Tuple
 
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.mil import Block
@@ -293,6 +294,11 @@ class CastTypeQuantization(AbstractQuantizationPass):
                     len(var._child_ops) > 1
                     and casted_var_name in self.current_cache_vars()
                 ):
+                    if self.current_cache_vars()[casted_var_name].op.x != var:
+                        logger.warning(
+                            "The cached cast Var doesn't match the original Var. It's due to duplicated Var "
+                            f"names in the graph for {casted_var_name}."
+                        )
                     casted_inputs[param][i] = self.current_cache_vars()[casted_var_name]
                 else:
                     x = mb.cast(

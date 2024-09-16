@@ -34,6 +34,7 @@ _COMMON_PASSES: List[Text] = [
     # after all quantization passes, since constexpr will not be further optimized
     # before const elimination, otherwise const dequantize would get bloated
     "common::dequantize_to_constexpr",
+    "common::canonicalize_quantized_lut_pattern",
     "common::const_elimination",
     "common::sanitize_input_output_names",
     "common::divide_to_multiply",
@@ -93,6 +94,7 @@ _COMMON_PASSES: List[Text] = [
     # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
     # which detects patterns that involve redundant ops ("sub") etc.
     "common::remove_redundant_ops",
+    "common::dedup_op_and_var_names",  # Must be applied before "add_fp16_cast" because "add_fp16_cast" use unique name cache.
     "common::add_fp16_cast",  # Will be removed if compute precision is not FP16.
     "common::add_int16_cast",  # Will be removed if compute precision is not FP16.
     "common::update_output_dtypes",  # Must run again after `add_fp16_cast` and `add_int16_cast`.

@@ -6,7 +6,7 @@
 import pytest
 import torch
 
-from coremltools.optimize.torch.quantization._utils import get_quant_range
+from coremltools.optimize.torch.quantization._utils import get_n_bits_from_range, get_quant_range
 
 
 @pytest.mark.parametrize("n_bits", list(range(2, 8)))
@@ -37,3 +37,11 @@ def test_quant_range(dtype, n_bits):
     else:
         assert quant_min == signed_expected_values[n_bits][0]
         assert quant_max == signed_expected_values[n_bits][1]
+
+
+@pytest.mark.parametrize("n_bits", list(range(2, 8)))
+@pytest.mark.parametrize("dtype", [torch.quint8, torch.uint8, torch.qint8, torch.int8])
+def test_n_bits_from_range(dtype, n_bits):
+    quant_min, quant_max = get_quant_range(n_bits, dtype)
+    output_n_bits = get_n_bits_from_range(quant_min, quant_max)
+    assert output_n_bits == n_bits

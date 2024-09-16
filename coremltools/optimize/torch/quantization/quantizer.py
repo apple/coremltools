@@ -283,8 +283,7 @@ class LinearQuantizer(Quantizer):
         _register_metadata_version(finalized_model)
         for name, submodule in finalized_model.named_modules(remove_duplicate=True):
             if hasattr(submodule, "weight_scale"):
-                submod_config = self._config.get_module_config(name, submodule)
-                _register_compression_metadata(submodule, submod_config)
+                _register_compression_metadata(submodule)
 
         if model is None:
             self._model = finalized_model

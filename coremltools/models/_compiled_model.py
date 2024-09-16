@@ -9,7 +9,10 @@ from typing import Optional as _Optional
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools.models.model import MLState as _MLState
 
-from .model import MLModel as _MLModel
+from .model import (
+    _verify_optimization_hint_input,
+    MLModel as _MLModel,
+)
 from .utils import _macos_version
 
 try:
@@ -21,7 +24,12 @@ except:
 class CompiledMLModel:
 
     @staticmethod
-    def _init_check(path: str, compute_units: _ComputeUnit, function_name: str):
+    def _init_check(
+        path: str,
+        compute_units: _ComputeUnit,
+        function_name: str,
+        optimization_hints: _Optional[dict] = None,
+    ):
         if _macos_version() < (10, 13):
             raise Exception("Loading compiled Core ML models is only support on macOS 10.13 or higher.")
         if _MLModelProxy is None:
@@ -35,11 +43,15 @@ class CompiledMLModel:
         if not isinstance(function_name, str):
             raise TypeError('The "function_name" parameter must be of type "str".')
 
+        _verify_optimization_hint_input(optimization_hints)
+
+
     def __init__(
         self,
         path: str,
         compute_units: _ComputeUnit = _ComputeUnit.ALL,
         function_name: _Optional[str] = None,
+        optimization_hints: _Optional[dict] = None,
     ):
         """
         Loads a compiled Core ML model.
@@ -59,6 +71,10 @@ class CompiledMLModel:
                 - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
                   not the GPU. Available only for macOS >= 13.0.
 
+        optimization_hints : dict or None
+            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
+            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
+
         Examples
         --------
         .. sourcecode:: python
@@ -73,10 +89,24 @@ class CompiledMLModel:
         if function_name is None:
             function_name = ""
 
-        self._init_check(path, compute_units, function_name)
+        self._init_check(path, compute_units, function_name, optimization_hints)
+
+        self.compute_unit = compute_units
+        self.function_name = function_name
+        if optimization_hints is not None:
+            self.optimization_hints = optimization_hints.copy()
+        else:
+            self.optimization_hints = None
 
         path = _expanduser(path)
-        self._proxy = _MLModelProxy(path, compute_units.name, function_name)
+
+        if self.optimization_hints is not None:
+            optimization_hints_str_vals = {k: v.name for k, v in self.optimization_hints.items()}
+        else:
+            optimization_hints_str_vals = {}
+
+        self._proxy = _MLModelProxy(path, compute_units.name, function_name, optimization_hints_str_vals)
+
 
     def predict(self, data, state: _Optional[_MLState] = None):
         """
@@ -118,6 +148,7 @@ class CompiledMLModel:
         return _MLModel._get_predictions(
             self._proxy, _MLModel._update_float16_multiarray_input_to_float32, data, state
         )
+
 
     def make_state(self) -> _MLState:
         """

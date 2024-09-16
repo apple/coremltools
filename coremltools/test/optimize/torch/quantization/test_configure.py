@@ -999,7 +999,10 @@ def test_embedding_layer_quantization(activation_dtype):
 
 @pytest.mark.parametrize("config", get_configs_for_qscheme())
 @pytest.mark.parametrize("activation_fn", list(_mod_activations) + [nn.ReLU])
-@pytest.mark.parametrize("elementwise_op", [operator.add, torch.add, operator.mul, torch.mul])
+@pytest.mark.parametrize(
+    "elementwise_op",
+    [operator.add, torch.add, operator.mul, torch.mul, torch.matmul, torch.einsum],
+)
 @pytest.mark.parametrize("conv_transpose", [False, True])
 def test_elementwise_op_act_fusion(config, activation_fn, elementwise_op, conv_transpose):
     class ElementWiseActModule(torch.nn.Module):
@@ -1012,6 +1015,11 @@ def test_elementwise_op_act_fusion(config, activation_fn, elementwise_op, conv_t
             self.act = activation_fn()
 
         def forward(self, x):
+            if elementwise_op == torch.einsum:
+                return self.act(
+                    elementwise_op("bkhq,bchk->bchq", x.transpose(1, 3), self.conv1(x))
+                )
+
             return self.act(elementwise_op(x, self.conv1(x)))
 
     model = ElementWiseActModule(conv_transpose)

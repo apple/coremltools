@@ -12,27 +12,155 @@ from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
 if not _HAS_TORCH_EXPORT_API:
     pytest.skip(allow_module_level=True, reason="torch.export is required")
 
-USE_EDGE_DIALECT = [False]
+from coremltools.converters.mil.frontend.torch.exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
+from coremltools.converters.mil.frontend.torch.utils import TorchFrontend
+
+frontends = [TorchFrontend.TORCHEXPORT]
+
 if _HAS_EXECUTORCH:
-    USE_EDGE_DIALECT.append(True)
+    import executorch.exir
+
+    frontends.append(TorchFrontend.EXECUTORCH)
 
 import torch
 
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil.scope import ScopeSource
 
-from .testing_utils import TorchBaseTest, TorchFrontend
+from .testing_utils import TorchBaseTest
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
 
+TORCH_EXPORT_DEFAULT_LOWER_BOUND = {TorchFrontend.TORCHEXPORT: 2, TorchFrontend.EXECUTORCH: 2}
+if torch.__version__ >= "2.4.0":
+    TORCH_EXPORT_DEFAULT_LOWER_BOUND[TorchFrontend.TORCHEXPORT] = 0
+
 
 class TestTorchExportConversionAPI(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, use_edge_dialect, dynamic",
-        itertools.product(compute_units, backends, USE_EDGE_DIALECT, (True, False)),
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
     )
-    def test_mul(self, compute_unit, backend, use_edge_dialect, dynamic):
+    def test_scalar_input(self, compute_unit, backend, frontend):
+        class Model(torch.nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        model = Model()
+        model.eval()
+
+        mlmodel = self.run_compare_torch(
+            (),
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+        )[1]
+        main_function = mlmodel._mil_program.functions["main"]
+
+        assert len(main_function.inputs) == 1
+        input_name = list(main_function.inputs.keys())[0]
+        input_var = main_function.inputs[input_name]
+        assert input_name.endswith(WRAPPED_SCALAR_INPUT_SUFFIX)
+        assert input_var.shape == (1,)
+
+        squeeze_op = main_function.find_ops(op_type="squeeze")[0]
+        if backend[1] == "fp32":
+            assert squeeze_op.x is input_var
+        elif backend[1] == "fp16":
+            cast_op = main_function.find_ops(op_type="cast")[0]
+            assert cast_op.x is input_var
+            assert cast_op.dtype.val == "fp16"
+            assert squeeze_op.x is cast_op.outputs[0]
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend",
+        itertools.product(compute_units, backends, frontends),
+    )
+    def test_dynamic_input(self, compute_unit, backend, frontend):
+        if ct.utils._macos_version() <= (14, 2):
+            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(3, 5)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = Model()
+        model.eval()
+
+        batch_dim = torch.export.Dim("batch_dim")
+        dynamic_shapes = {"x": {0: batch_dim}}
+
+        coreml_model = self.run_compare_torch(
+            (2, 3),
+            model,
+            compute_unit=compute_unit,
+            backend=backend,
+            frontend=frontend,
+            torch_export_dynamic_shapes=dynamic_shapes,
+        )[1]
+
+        input_proto = coreml_model.input_description._fd_spec[0]
+        size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
+        assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+        assert size_ranges[0].upperBound == 2147483647
+        assert size_ranges[1].lowerBound == 3
+        assert size_ranges[1].upperBound == 3
+
+    @pytest.mark.parametrize("frontend, dynamic", itertools.product(frontends, (True, False)))
+    def test_invalid_inputs(self, frontend, dynamic):
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = torch.nn.Linear(3, 5)
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = Model()
+        model.eval()
+
+        example_inputs = (torch.rand(2, 3),)
+
+        dynamic_shapes = None
+        if dynamic:
+            batch_dim = torch.export.Dim("batch_dim")
+            dynamic_shapes = {"x": {0: batch_dim}}
+
+        exported_program = torch.export.export(
+            model,
+            example_inputs,
+            dynamic_shapes=dynamic_shapes,
+        )
+        if frontend == TorchFrontend.EXECUTORCH:
+            exported_program = executorch.exir.to_edge(exported_program).exported_program()
+
+        with pytest.raises(
+            AssertionError, match=r"'inputs' argument should be None for ExportedProgram"
+        ):
+            inputs = [ct.TensorType(shape=(2, 3))]
+            if dynamic:
+                batch_dim = ct.RangeDim(lower_bound=1, upper_bound=128)
+                shape = (batch_dim, 3)
+                inputs = [ct.TensorType(shape=shape)]
+            ct.convert(exported_program, inputs=inputs)
+
+
+class TestExecuTorchExamples(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, frontend, dynamic",
+        itertools.product(compute_units, backends, frontends, (True, False)),
+    )
+    def test_mul(self, compute_unit, backend, frontend, dynamic):
+        if ct.utils._macos_version() <= (14, 2) and dynamic:
+            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+
         class MulModule(torch.nn.Module):
             def forward(self, input, other):
                 return input * other
@@ -46,15 +174,24 @@ class TestTorchExportConversionAPI(TorchBaseTest):
                 "other": {0: dim0, 1: dim1},
             }
 
-        _, coreml_model, _, _, _, _ = self.run_compare_torch(
+        coreml_model = self.run_compare_torch(
             [(3, 2), (3, 2)],
             MulModule(),
             compute_unit=compute_unit,
             backend=backend,
-            frontend=TorchFrontend.EXIR,
-            use_edge_dialect=use_edge_dialect,
+            frontend=frontend,
             torch_export_dynamic_shapes=dynamic_shapes,
-        )
+        )[1]
+
+        if dynamic:
+            for input_proto in coreml_model.input_description._fd_spec:
+                size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
+                assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                assert size_ranges[0].upperBound == 2147483647
+                assert size_ranges[1].lowerBound == max(
+                    1, TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                )
+                assert size_ranges[1].upperBound == 3
 
         mil_program = coreml_model._mil_program
         mul = mil_program.functions["main"].find_ops(op_type="mul")[0]
@@ -62,7 +199,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         stack_trace = mul.scopes[ScopeSource.EXIR_STACK_TRACE][0]
         assert stack_trace.split("\n")[-2].strip() == "return input * other"
 
-        if use_edge_dialect:
+        if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = mul.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0]
             assert isinstance(debug_handle, int)
 
@@ -101,10 +238,13 @@ class TestTorchExportConversionAPI(TorchBaseTest):
                 assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, use_edge_dialect, dynamic",
-        itertools.product(compute_units, backends, USE_EDGE_DIALECT, (True, False)),
+        "compute_unit, backend, frontend, dynamic",
+        itertools.product(compute_units, backends, frontends, (True, False)),
     )
-    def test_linear(self, compute_unit, backend, use_edge_dialect, dynamic):
+    def test_linear(self, compute_unit, backend, frontend, dynamic):
+        if ct.utils._macos_version() <= (14, 2) and dynamic:
+            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+
         class LinearModule(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -118,15 +258,22 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             batch_dim = torch.export.Dim("batch_dim")
             dynamic_shapes = {"arg": {0: batch_dim}}
 
-        _, coreml_model, _, _, _, _ = self.run_compare_torch(
+        coreml_model = self.run_compare_torch(
             [(3, 3)],
             LinearModule(),
             compute_unit=compute_unit,
             backend=backend,
-            frontend=TorchFrontend.EXIR,
-            use_edge_dialect=use_edge_dialect,
+            frontend=frontend,
             torch_export_dynamic_shapes=dynamic_shapes,
-        )
+        )[1]
+
+        if dynamic:
+            input_proto = coreml_model.input_description._fd_spec[0]
+            size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
+            assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+            assert size_ranges[0].upperBound == 2147483647
+            assert size_ranges[1].lowerBound == 3
+            assert size_ranges[1].upperBound == 3
 
         mil_program = coreml_model._mil_program
         linear = mil_program.functions["main"].find_ops(op_type="linear")[0]
@@ -134,7 +281,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         stack_trace = linear.scopes[ScopeSource.EXIR_STACK_TRACE][0]
         assert stack_trace.split("\n")[-2].strip() == "return self.linear(arg)"
 
-        if use_edge_dialect:
+        if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = linear.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0]
             assert isinstance(debug_handle, int)
 
@@ -174,10 +321,10 @@ class TestTorchExportConversionAPI(TorchBaseTest):
                 assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, use_edge_dialect, dynamic",
-        itertools.product(compute_units, backends, USE_EDGE_DIALECT, (True, False)),
+        "compute_unit, backend, frontend, dynamic",
+        itertools.product(compute_units, backends, frontends, (True, False)),
     )
-    def test_add(self, compute_unit, backend, use_edge_dialect, dynamic):
+    def test_add(self, compute_unit, backend, frontend, dynamic):
         if dynamic:
             pytest.skip(
                 "https://github.com/apple/coremltools/issues/2307 "
@@ -197,15 +344,20 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             dim0 = torch.export.Dim("dim0", min=1)
             dynamic_shapes = {"x": {0: dim0}, "y": {0: dim0}}
 
-        _, coreml_model, _, _, _, _ = self.run_compare_torch(
+        coreml_model = self.run_compare_torch(
             [(1,), (1,)],
             AddModule(),
             compute_unit=compute_unit,
             backend=backend,
-            frontend=TorchFrontend.EXIR,
-            use_edge_dialect=use_edge_dialect,
+            frontend=frontend,
             torch_export_dynamic_shapes=dynamic_shapes,
-        )
+        )[1]
+
+        if dynamic:
+            for input_proto in coreml_model.input_description._fd_spec:
+                size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
+                assert size_ranges[0].lowerBound == 1
+                assert size_ranges[0].upperBound == 2147483647
 
         mil_program = coreml_model._mil_program
         adds = mil_program.functions["main"].find_ops(op_type="add")
@@ -220,7 +372,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         for i, stack_trace in enumerate(stack_traces):
             assert stack_trace.split("\n")[-2].strip() == source_codes[i]
 
-        if use_edge_dialect:
+        if frontend == TorchFrontend.EXECUTORCH:
             debug_handles = [add.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0] for add in adds]
             for debug_handle in debug_handles:
                 assert isinstance(debug_handle, int)
@@ -268,10 +420,13 @@ class TestTorchExportConversionAPI(TorchBaseTest):
                     assert ops[index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, use_edge_dialect, dynamic",
-        itertools.product(compute_units, backends, USE_EDGE_DIALECT, (True, False)),
+        "compute_unit, backend, frontend, dynamic",
+        itertools.product(compute_units, backends, frontends, (True, False)),
     )
-    def test_add_mul(self, compute_unit, backend, use_edge_dialect, dynamic):
+    def test_add_mul(self, compute_unit, backend, frontend, dynamic):
+        if ct.utils._macos_version() <= (14, 2) and dynamic:
+            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+
         class AddMulModule(torch.nn.Module):
             def forward(self, a, x, b):
                 y = torch.mm(a, x)
@@ -287,15 +442,34 @@ class TestTorchExportConversionAPI(TorchBaseTest):
                 "b": {},
             }
 
-        _, coreml_model, _, _, _, _ = self.run_compare_torch(
+        coreml_model = self.run_compare_torch(
             [(2, 2), (2, 2), (2, 2)],
             AddMulModule(),
             compute_unit=compute_unit,
             backend=backend,
-            frontend=TorchFrontend.EXIR,
-            use_edge_dialect=use_edge_dialect,
+            frontend=frontend,
             torch_export_dynamic_shapes=dynamic_shapes,
-        )
+        )[1]
+
+        if dynamic:
+            for i, input_proto in enumerate(coreml_model.input_description._fd_spec):
+                multi_array_type = input_proto.type.multiArrayType
+                shape = multi_array_type.shape
+                size_ranges = multi_array_type.shapeRange.sizeRanges
+                if i == 0:
+                    assert size_ranges[0].lowerBound == 2
+                    assert size_ranges[0].upperBound == 2
+                    assert size_ranges[1].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                    assert size_ranges[1].upperBound == 2147483647
+                elif i == 1:
+                    assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+                    assert size_ranges[0].upperBound == 2147483647
+                    assert size_ranges[1].lowerBound == 2
+                    assert size_ranges[1].upperBound == 2
+                else:
+                    assert i == 2
+                    assert shape == [2, 2]
+                    assert len(size_ranges) == 0
 
         mil_program = coreml_model._mil_program
         matmul_or_add = {}
@@ -314,7 +488,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             source_code = source_codes[op_type]
             assert stack_trace.split("\n")[-2].strip() == source_code
 
-        if use_edge_dialect:
+        if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = {
                 k: v.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0] for k, v in matmul_or_add.items()
             }
@@ -364,10 +538,13 @@ class TestTorchExportConversionAPI(TorchBaseTest):
                     assert ops[op_type][index_cast][-1]["Operator"] == "cast"
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, use_edge_dialect, dynamic",
-        itertools.product(compute_units, backends, USE_EDGE_DIALECT, (True, False)),
+        "compute_unit, backend, frontend, dynamic",
+        itertools.product(compute_units, backends, frontends, (True, False)),
     )
-    def test_softmax(self, compute_unit, backend, use_edge_dialect, dynamic):
+    def test_softmax(self, compute_unit, backend, frontend, dynamic):
+        if ct.utils._macos_version() <= (14, 2) and dynamic:
+            pytest.xfail("rdar://135925921 ([CI] Upgrade External CI Machine OS)")
+
         class SoftmaxModule(torch.nn.Module):
             def __init__(self):
                 super().__init__()
@@ -381,15 +558,22 @@ class TestTorchExportConversionAPI(TorchBaseTest):
             vocab_dim = torch.export.Dim("vocab_dim")
             dynamic_shapes = {"x": {0: vocab_dim}}
 
-        _, coreml_model, _, _, _, _ = self.run_compare_torch(
+        coreml_model = self.run_compare_torch(
             [(2, 2)],
             SoftmaxModule(),
             compute_unit=compute_unit,
             backend=backend,
-            frontend=TorchFrontend.EXIR,
-            use_edge_dialect=use_edge_dialect,
+            frontend=frontend,
             torch_export_dynamic_shapes=dynamic_shapes,
-        )
+        )[1]
+
+        if dynamic:
+            input_proto = coreml_model.input_description._fd_spec[0]
+            size_ranges = input_proto.type.multiArrayType.shapeRange.sizeRanges
+            assert size_ranges[0].lowerBound == TORCH_EXPORT_DEFAULT_LOWER_BOUND[frontend]
+            assert size_ranges[0].upperBound == 2147483647
+            assert size_ranges[1].lowerBound == 2
+            assert size_ranges[1].upperBound == 2
 
         mil_program = coreml_model._mil_program
         softmax = mil_program.functions["main"].find_ops(op_type="softmax")[0]
@@ -397,7 +581,7 @@ class TestTorchExportConversionAPI(TorchBaseTest):
         stack_trace = softmax.scopes[ScopeSource.EXIR_STACK_TRACE][0]
         assert stack_trace.split("\n")[-2].strip() == "return self.softmax(x)"
 
-        if use_edge_dialect:
+        if frontend == TorchFrontend.EXECUTORCH:
             debug_handle = softmax.scopes[ScopeSource.EXIR_DEBUG_HANDLE][0]
             assert isinstance(debug_handle, int)
 

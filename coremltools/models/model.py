@@ -15,9 +15,13 @@ from typing import Optional as _Optional
 import numpy as _np
 import numpy as _numpy
 
-from coremltools import ComputeUnit as _ComputeUnit
-from coremltools import _logger as logger
-from coremltools import proto as _proto
+from coremltools import (
+    ComputeUnit as _ComputeUnit,
+    _logger as logger,
+    proto as _proto,
+    SpecializationStrategy as _SpecializationStrategy,
+    ReshapeFrequency as _ReshapeFrequency,
+)
 from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 from coremltools.converters.mil.mil.program import Program as _Program
 from coremltools.converters.mil.mil.scope import ScopeSource as _ScopeSource
@@ -102,6 +106,30 @@ _LUT_BASED_QUANTIZATION = [
 _METADATA_VERSION = "com.github.apple.coremltools.version"
 _METADATA_SOURCE = "com.github.apple.coremltools.source"
 _METADATA_SOURCE_DIALECT = "com.github.apple.coremltools.source_dialect"
+
+
+def _verify_optimization_hint_input(optimization_hint_input: _Optional[dict] = None) -> None:
+    """
+    Throws an exception if ``optimization_hint_input`` is not valid.
+    """
+    if optimization_hint_input is None:
+        return
+    if not isinstance(optimization_hint_input, dict):
+        raise TypeError('"optimization_hint_input" must be a dictionary or None')
+
+    if optimization_hint_input != {} and _macos_version() < (15, 0):
+        raise ValueError('Optimization hints are only available on macOS >= 15.0')
+
+    for k in optimization_hint_input.keys():
+        if k not in ('reshapeFrequency', 'specializationStrategy'):
+            raise ValueError(f"Unrecognized key in optimization_hint dictionary: {k}")
+
+    if "specializationStrategy" in optimization_hint_input and not isinstance(optimization_hint_input["specializationStrategy"], _SpecializationStrategy):
+        raise TypeError('"specializationStrategy" value of "optimization_hint_input" dictionary must be of type coremltools.SpecializationStrategy')
+
+    if "reshapeFrequency" in optimization_hint_input and not isinstance(optimization_hint_input["reshapeFrequency"], _ReshapeFrequency):
+        raise TypeError('"reshapeFrequency" value of "optimization_hint_input" dictionary must be of type coremltools.ReshapeFrequency')
+
 
 
 class _FeatureDescription:
@@ -222,6 +250,7 @@ class MLModel:
         compute_units=_ComputeUnit.ALL,
         weights_dir=None,
         function_name=None,
+        optimization_hints: _Optional[dict] = None,
     ):
         """
         Construct an MLModel from an ``.mlmodel``.
@@ -281,6 +310,10 @@ class MLModel:
         function_name : str
             The name of the function from ``model`` to load.
             If not provided, ``function_name`` will be set to the ``defaultFunctionName`` in the proto.
+
+        optimization_hints : dict or None
+            Keys are the names of the optimization hint, either 'reshapeFrequency' or 'specializationStrategy'.
+            Values are enumeration values of type ``coremltools.ReshapeFrequency`` or ``coremltools.SpecializationStrategy``.
 
         Notes
         -----
@@ -342,8 +375,15 @@ class MLModel:
             raise ValueError(
                 'coremltools.ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
             )
+
+        _verify_optimization_hint_input(optimization_hints)
+
         self.compute_unit = compute_units
         self.function_name = function_name
+        if optimization_hints is not None:
+            self.optimization_hints = optimization_hints.copy()
+        else:
+            self.optimization_hints = None
 
         self.is_package = False
         self.is_temp_package = False
@@ -361,7 +401,7 @@ class MLModel:
                 self.is_temp_package = is_temp_package
                 self._weights_dir = _try_get_weights_dir_path(model)
             self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
-                model, compute_units, skip_model_load=skip_model_load,
+                model, compute_units, skip_model_load=skip_model_load, optimization_hints=optimization_hints,
             )
         elif isinstance(model, _proto.Model_pb2.Model):
             if does_model_contain_mlprogram(model):
@@ -381,7 +421,7 @@ class MLModel:
                 _save_spec(model, filename)
 
             self.__proxy__, self._spec, self._framework_error = self._get_proxy_and_spec(
-                filename, compute_units, skip_model_load=skip_model_load,
+                filename, compute_units, skip_model_load=skip_model_load, optimization_hints=optimization_hints
             )
             try:
                 _os.remove(filename)
@@ -415,7 +455,11 @@ class MLModel:
             self._model_input_names_set = set([i.name for i in f.input])
 
     def _get_proxy_and_spec(
-        self, filename: str, compute_units: _ComputeUnit, skip_model_load: _Optional[bool] = False
+        self,
+        filename: str,
+        compute_units: _ComputeUnit,
+        skip_model_load: _Optional[bool] = False,
+        optimization_hints: _Optional[dict] = None,
     ):
         filename = _os.path.expanduser(filename)
         specification = _load_spec(filename)
@@ -430,10 +474,14 @@ class MLModel:
                 return None, specification, None
 
             function_name = "" if self.function_name is None else self.function_name
+            if optimization_hints is not None:
+                optimization_hints_str_vals = {k: v.name for k, v in optimization_hints.items()}
+            else:
+                optimization_hints_str_vals = {}
 
             try:
                 return (
-                    _MLModelProxy(filename, compute_units.name, function_name),
+                    _MLModelProxy(filename, compute_units.name, function_name, optimization_hints_str_vals),
                     specification,
                     None,
                 )

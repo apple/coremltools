@@ -13,21 +13,25 @@ from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import TensorType
 
 from .exir_utils import extract_io_from_exir_program
+from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchscript_utils import _expand_and_optimize_ir
 from .utils import TORCH_DTYPE_TO_NUM, sanitize_op_kind
 
 
-def _make_ssa_name(name: str) -> str:
+def _make_ssa_name(name: Optional[Union[str, int]]) -> str:
     """
     Converts a symbol name (string) into an SSA name, by prepending '%'.
+    If the name is a parameter value (int), directly printing it without prepending '%'.
     Only used for pretty printing the graph.
     """
     if name is None:
         return "None"
+    if type(name) is int:
+        return str(name)
     return "%" + name
 
 
-def _ssa_name_list(names: List[str]) -> List[str]:
+def _ssa_name_list(names: List[Optional[Union[str, int]]]) -> List[str]:
     """
     Take a list of symbol names (strings) and return them as SSA names. Only
     used for pretty printing the graph.
@@ -161,6 +165,7 @@ class InternalTorchIRNode:
         kind: str,
         inputs: List[str],
         outputs: List[str],
+        kwinputs: Optional[Dict[str, str]] = None,
         name: Optional[str] = None,
         parent: Optional[Union["InternalTorchIRGraph", "InternalTorchIRBlock"]] = None,
         attr: Optional[Dict[str, Any]] = None,
@@ -174,6 +179,7 @@ class InternalTorchIRNode:
             kind: the kind (op) of the node.
             inputs: list of input symbols.
             outputs: list of output symbols.
+            kwinputs: dict of keyword input symbols.
             parent: The InternalTorchIRGraph/Block this node belongs to.
             attr:  dict of named attributes.
             blocks: list of InternalTorchIRBlock.
@@ -188,6 +194,7 @@ class InternalTorchIRNode:
         self.kind = kind
         self.inputs = inputs
         self.outputs = outputs
+        self.kwinputs = kwinputs
         self.parent = parent
         self.attr = attr if attr is not None else {"value": None}
         self.blocks = blocks if blocks is not None else []
@@ -233,14 +240,14 @@ class InternalTorchIRNode:
 
     @classmethod
     def from_exir_node(cls, node):
-        def get_arguments(alist):
+        def get_arguments(alist: List) -> Tuple:
             args = []
             for i in alist:
                 if isinstance(i, torch.fx.Node):
                     args.append(i.name)
                 elif isinstance(i, torch.fx.immutable_collections.immutable_list):
                     args.append(get_arguments(i))
-                elif isinstance(i, (int, float)):
+                elif isinstance(i, (int, float, str)):
                     args.append(i)
                 # This is necessitated by backward compatibility:
                 # * TorchScript used to store dtype as integers/enums
@@ -251,16 +258,20 @@ class InternalTorchIRNode:
                 #   to leverage the existing TorchScript converter infra
                 elif isinstance(i, torch.dtype):
                     args.append(TORCH_DTYPE_TO_NUM[i])
+                elif (
+                    isinstance(i, torch.device)
+                    or isinstance(i, torch.layout)
+                    or isinstance(i, torch.memory_format)
+                ):
+                    # PyMIL graph does not care about these things
+                    pass
                 elif i is None:
                     args.append(None)
                 else:
-                    raise AssertionError(f"Unhandled type of the node: {type(i)}")
+                    raise AssertionError(
+                        f"Unhandled node type {type(i)}. Node content is: {str(i)}"
+                    )
             return tuple(args)
-
-        # TODO (rdar://128768037) handle kwargs
-        inputs = get_arguments(node.args)
-        # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
-        outputs = [node.name]
 
         try:
             kind = node.target.name()
@@ -270,6 +281,20 @@ class InternalTorchIRNode:
             else:
                 kind = str(node.target)
         kind = sanitize_op_kind(kind)
+        if not kind in _TORCH_OPS_REGISTRY:
+            raise ValueError(f"Unsupported fx node {str(node)}, kind {kind}")
+
+        # TODO (rdar://134015126) handle kwargs
+        inputs = get_arguments(node.args)
+        # TODO: rdar://115846125 ([Executorch] Handle Models/Layers with Multiple outputs)
+        outputs = [node.name]
+
+        kwinputs = {}
+        for keyword, arg in node.kwargs.items():
+            if arg is not None:
+                kwinputs[keyword] = get_arguments([arg])
+        if len(kwinputs) == 0:
+            kwinputs = None
 
         name = node.name
         return cls(
@@ -277,6 +302,7 @@ class InternalTorchIRNode:
             kind=kind,
             inputs=inputs,
             outputs=outputs,
+            kwinputs=kwinputs,
             parent=None,
             attr=None,
             blocks=None,

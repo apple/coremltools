@@ -427,7 +427,10 @@ class rank0_expand_dims_swap(AbstractGraphPass):
 
         # check the expand_dim op has axes = [0]
         expand_dims_op = expand_dims_ops[0]
-        if expand_dims_op.axes.val != [0]:
+        expand_dims_op_axes_val = expand_dims_op.axes.val
+        if isinstance(expand_dims_op_axes_val, np.ndarray):
+            expand_dims_op_axes_val = expand_dims_op_axes_val.tolist()
+        if expand_dims_op_axes_val != [0]:
             return False
         ops_to_remove.append(expand_dims_op)
         ops_to_remove += other_ops

@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import os
+import platform
+from pathlib import Path
 from typing import List, Union
 
 import numpy as np
@@ -12,18 +15,52 @@ import torch.nn as nn
 
 import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
-from coremltools import RangeDim, TensorType, _logger as logger
+from coremltools import RangeDim, TensorType
+from coremltools import _logger as logger
 from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API, _IS_MACOS
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
-from coremltools.converters.mil.testing_utils import ct_convert, validate_minimum_deployment_target
+from coremltools.converters.mil.testing_utils import (
+    _create_current_pytest_serialization_path,
+    ct_convert,
+    debug_save_mlmodels,
+    validate_minimum_deployment_target,
+)
 
-from ..utils import TORCH_DTYPE_TO_MIL_DTYPE, TorchFrontend
+from ..utils import TORCH_DTYPE_TO_MIL_DTYPE, TORCH_EXPORT_BASED_FRONTENDS, TorchFrontend
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
 
 if _HAS_EXECUTORCH:
     import executorch.exir
+
+if "TORCH_FRONTENDS" in os.environ:
+    frontends = []
+    for frontend_str in os.environ["TORCH_FRONTENDS"].split(","):
+        frontend = TorchFrontend[frontend_str]
+        if platform.machine() == "x86_64" and frontend in TORCH_EXPORT_BASED_FRONTENDS:
+            logger.warning(
+                f"{frontend_str} is not supported well on x86_64, skipped this frontend test"
+            )
+            continue
+        if frontend == TorchFrontend.TORCHEXPORT and not _HAS_TORCH_EXPORT_API:
+            logger.warning(
+                "Must have torch.export API to test TORCHEXPORT frontend. Skipped this frontend test."
+            )
+            continue
+        if frontend == TorchFrontend.EXECUTORCH and not _HAS_EXECUTORCH:
+            logger.warning(
+                "Must have executorch to test EXECUTORCH frontend. Skipped this frontend test."
+            )
+            continue
+        frontends.append(frontend)
+else:
+    frontends = [TorchFrontend.TORCHSCRIPT]
+    if platform.machine() != "x86_64":
+        if _HAS_TORCH_EXPORT_API:
+            frontends.append(TorchFrontend.TORCHEXPORT)
+        if _HAS_EXECUTORCH:
+            frontends.append(TorchFrontend.EXECUTORCH)
 
 
 class ModuleWrapper(nn.Module):
@@ -157,7 +194,6 @@ def export_torch_model_to_frontend(
     input_data,
     frontend,
     use_scripting=False,
-    use_edge_dialect=True,
     torch_export_dynamic_shapes=None,
 ):
     input_data_clone = _copy_input_data(input_data)
@@ -173,7 +209,7 @@ def export_torch_model_to_frontend(
         else:
             model_spec = torch.jit.trace(model, input_data_clone)
 
-    elif frontend == TorchFrontend.EXIR:
+    elif frontend in TORCH_EXPORT_BASED_FRONTENDS:
         try:
             model.eval()
         except NotImplementedError:
@@ -182,13 +218,13 @@ def export_torch_model_to_frontend(
         model_spec = torch.export.export(
             model, input_data_clone, dynamic_shapes=torch_export_dynamic_shapes
         )
-        if use_edge_dialect:
+        if frontend == TorchFrontend.EXECUTORCH:
             model_spec = executorch.exir.to_edge(model_spec).exported_program()
 
     else:
         raise ValueError(
             "Unknown value of frontend. Needs to be either TorchFrontend.TORCHSCRIPT "
-            f"or TorchFrontend.EXIR. Provided: {frontend}"
+            f"or TorchFrontend.TORCHEXPORT or TorchFrontend.EXECUTORCH. Provided: {frontend}"
         )
 
     return model_spec
@@ -240,6 +276,15 @@ def convert_and_compare(
         torch_input = _copy_input_data(input_data)
         expected_results = torch_model(*torch_input)
     expected_results = flatten_and_detach_torch_results(expected_results)
+
+    PYTEST_CURRENT_TEST = os.environ.get("PYTEST_CURRENT_TEST").split("(call)")[0].strip()
+    if PYTEST_CURRENT_TEST in debug_save_mlmodels:
+        serialization_path = _create_current_pytest_serialization_path()
+        Path(serialization_path).mkdir(parents=True, exist_ok=True)
+        flat_inputs = flatten_and_detach_torch_results(input_data)
+        np.savez(serialization_path + "ref_inputs.npz", *flat_inputs)
+        np.savez(serialization_path + "ref_outputs.npz", *expected_results)
+
     mlmodel = convert_to_mlmodel(
         model_spec,
         input_data,
@@ -294,9 +339,6 @@ class TorchBaseTest:
         backend=("neuralnetwork", "fp32"),
         rand_range=(-1.0, 1.0),
         use_scripting=False,
-        # TODO (rdar://128768037): Once we fully figure out torch.export converter,
-        # we may default the tests to ATen dialect
-        use_edge_dialect=True,
         converter_input_type=None,
         compute_unit=ct.ComputeUnit.CPU_ONLY,
         minimum_deployment_target=None,
@@ -312,7 +354,7 @@ class TorchBaseTest:
             expected_results <iterable, optional>: Expected result from running pytorch model.
             converter_input_type: If not None, then pass it to the "inputs" argument to the
                 ct.convert() call.
-            frontend: Either TorchFrontend.TORCHSCRIPT or TorchFrontend.EXIR
+            frontend: TorchFrontend enum
         """
         if minimum_deployment_target is not None:
             validate_minimum_deployment_target(minimum_deployment_target, backend)
@@ -325,7 +367,6 @@ class TorchBaseTest:
             input_data,
             frontend,
             use_scripting=use_scripting,
-            use_edge_dialect=use_edge_dialect,
             torch_export_dynamic_shapes=torch_export_dynamic_shapes,
         )
 

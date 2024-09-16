@@ -29,6 +29,7 @@ from coremltools.converters.mil.mil.var import Var
 from coremltools.optimize.coreml import _utils as optimize_utils
 from coremltools.optimize.coreml._quantization_passes import prune_weights
 
+from .exir_utils import WRAPPED_SCALAR_INPUT_SUFFIX
 from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 from .ops import convert_nodes
 from .quantization_ops import _dequantized_weight
@@ -41,7 +42,13 @@ from .torchir_passes import (
     remove_getattr_nodes,
     transform_inplace_ops,
 )
-from .utils import NUM_TO_NUMPY_DTYPE, TORCH_DTYPE_TO_MIL_DTYPE, TORCH_DTYPE_TO_NUM, TorchFrontend
+from .utils import (
+    NUM_TO_NUMPY_DTYPE,
+    TORCH_DTYPE_TO_MIL_DTYPE,
+    TORCH_DTYPE_TO_NUM,
+    TORCH_EXPORT_BASED_FRONTENDS,
+    TorchFrontend,
+)
 
 if _HAS_TORCH_EXPORT_API:
     from torch.export import ExportedProgram
@@ -329,8 +336,8 @@ class TranscriptionContext:
         state feeds into only one ``read_state`` op.
         """
 
-        # EXIR has nothing to prepare
-        if self.frontend == TorchFrontend.EXIR:
+        # Only torch script needs to prepare
+        if self.frontend != TorchFrontend.TORCHSCRIPT:
             return
 
         for val in node.inputs:
@@ -431,7 +438,7 @@ class TranscriptionContext:
             }
 
         """
-        assert self.frontend != TorchFrontend.EXIR, "EXIR has no in-place op"
+        assert self.frontend == TorchFrontend.TORCHSCRIPT, "Only torch script has no in-place op"
 
         if len(node.inputs) == 0:
             return
@@ -475,7 +482,11 @@ class TranscriptionContext:
 
     def __contains__(self, torch_name):
         """Returns whether or not the torch var exist in context."""
-        return torch_name in self._current_graph[-1]
+        for idx in reversed(range(len(self._current_graph))):
+            current_graph = self._current_graph[idx]
+            if torch_name in current_graph:
+                return True
+        return False
 
     def push(self, inputs=None):
         """
@@ -594,10 +605,19 @@ class TorchConverter:
                 p(self.graph)
 
         elif _HAS_TORCH_EXPORT_API and isinstance(loaded_model, ExportedProgram):
-            self.context = TranscriptionContext(frontend=TorchFrontend.EXIR)
+            if loaded_model.dialect == "ATEN":
+                frontend = TorchFrontend.TORCHEXPORT
+            elif loaded_model.dialect == "EDGE":
+                frontend = TorchFrontend.EXECUTORCH
+            else:
+                raise NotImplementedError(
+                    "Conversion for models with only ATEN or EDGE dialect is supported/tested. "
+                    f"Provided Dialect: {loaded_model.dialect}"
+                )
+            self.context = TranscriptionContext(frontend=frontend)
             self.graph = InternalTorchIRGraph.from_exir(exir=loaded_model)
             # For iOS 18+, create states for all mutable buffers
-            if self.opset_version >= _target.iOS18:
+            if self.opset_version is not None and self.opset_version >= _target.iOS18:
                 self.states = []
                 for name, tensor in self.graph.buffers.items():
                     dtype = NUM_TO_NUMPY_DTYPE[TORCH_DTYPE_TO_NUM[tensor.dtype]]
@@ -640,6 +660,18 @@ class TorchConverter:
             self.param_to_compression_info = self._construct_compression_info(
                 state_dict() if callable(state_dict) else state_dict
             )
+            if self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                # For EXIR, all param names are lifted as input names (in the format of `argx_x`), so we need to
+                # change names accordingly to make sure the compression info could be found later.
+                for (
+                    arg_name,
+                    param_name,
+                ) in loaded_model.graph_signature.inputs_to_parameters.items():
+                    if param_name in self.param_to_compression_info:
+                        self.param_to_compression_info[arg_name] = self.param_to_compression_info[
+                            param_name
+                        ]
+                        del self.param_to_compression_info[param_name]
 
     def _validate_states(self) -> None:
         """
@@ -780,7 +812,7 @@ class TorchConverter:
         """
         compression_info = dict()
         for torch_key_name in state_dict.keys():
-            if torch_key_name == f"{_COMPRESSION_INFO_PREFIX}/metadata_version":
+            if f"{_COMPRESSION_INFO_PREFIX}/metadata_version" in torch_key_name:
                 # TODO: rdar://124707382 ([Compression] Support versioning in CompressionInfo)
                 continue
 
@@ -1189,15 +1221,15 @@ class TorchConverter:
                     ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=scope_name),
                 ):
                     self._add_const(name, val)
-            elif self.context.frontend == TorchFrontend.EXIR:
-                # ExecuTorch has constants lifted as inputs, yet we have not sorted out
+            elif self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                # Torch.Export has constants lifted as inputs, yet we have not sorted out
                 # how to support IO metadata, so for now just put a dummy metadata
                 # since inputs/constants will not contribute to debugging/profiling
                 # TODO (rdar://125572392): Support torch.export IO metadata
-                with mb.scope(
-                    ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[None]),
-                    ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
-                ):
+                scopes = [ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=[None])]
+                if self.context.frontend == TorchFrontend.EXECUTORCH:
+                    scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
+                with mb.scope(*scopes):
                     self._add_const(name, val)
             else:
                 raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
@@ -1249,7 +1281,7 @@ class TorchConverter:
                             ScopeInfo(source=ScopeSource.TORCHSCRIPT_MODULE_NAME, data=torch_name),
                         ):
                             input_var = mb.cast(x=input_var, dtype="fp32")
-                elif self.context.frontend == TorchFrontend.EXIR:
+                elif self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
                     # EXIR has dtypes all determined, so for now we just stick to EXIR dtypes
                     # TODO (rdar://115845792): Handle fp16 IO dtypes
                     # When handle user provided IO dtypes, we will also need to handle IO metadata
@@ -1261,21 +1293,41 @@ class TorchConverter:
                         raise ValueError(
                             "To use fp16 input, please set minimum deployment target to iOS16+"
                         )
+                    # Torch.export may produce scalar input,
+                    # which then gets wrapped as rank-1 size-1 tensor for Core ML residency
+                    # during our internal graph construction.
+                    # Here we squeeze it back to scalar
+                    if torch_name.endswith(WRAPPED_SCALAR_INPUT_SUFFIX):
+                        torch_name = torch_name[: -len(WRAPPED_SCALAR_INPUT_SUFFIX)]
+                        scopes = [
+                            ScopeInfo(
+                                source=ScopeSource.EXIR_STACK_TRACE,
+                                data=f"unwrap_scalar_input_{torch_name}",
+                            )
+                        ]
+                        if self.context.frontend == TorchFrontend.EXECUTORCH:
+                            scopes.append(
+                                ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None])
+                            )
+                        with mb.scope(*scopes):
+                            input_var = mb.squeeze(x=input_var, name=torch_name)
                 else:
                     raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
                 self.context.add(input_var, torch_name=torch_name)
 
             # EXIR lifts buffer references as inputs, so we need to create them by reading states
-            if self.context.frontend == TorchFrontend.EXIR:
+            if self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
                 for (
                     input_name,
                     buffer_name,
                 ) in self.context.torch_graph.input_name_to_source_buffer_name.items():
                     buffer_var = self.context[buffer_name]
-                    with mb.scope(
-                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"read_{buffer_name}"),
-                        ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
-                    ):
+                    scopes = [
+                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"read_{buffer_name}")
+                    ]
+                    if self.context.frontend == TorchFrontend.EXECUTORCH:
+                        scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
+                    with mb.scope(*scopes):
                         input_var = mb.read_state(input=buffer_var)
                         # As of iOS 18, Core ML state can only be fp16
                         # In torch converter, we convert everything under fp32
@@ -1295,17 +1347,19 @@ class TorchConverter:
             # EXIR represents stateful execution as buffer mutation at output,
             # i.e. buffer.copy_(...) at the end of EXIR program,
             # so analogously we update state at the end of pymil function
-            if self.context.frontend == TorchFrontend.EXIR:
+            if self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
                 for (
                     output_name,
                     buffer_name,
                 ) in self.context.torch_graph.output_name_to_target_buffer_name.items():
                     output_var = self.context[output_name]
                     buffer_var = self.context[buffer_name]
-                    with mb.scope(
-                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"write_{buffer_name}"),
-                        ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]),
-                    ):
+                    scopes = [
+                        ScopeInfo(source=ScopeSource.EXIR_STACK_TRACE, data=f"write_{buffer_name}")
+                    ]
+                    if self.context.frontend == TorchFrontend.EXECUTORCH:
+                        scopes.append(ScopeInfo(source=ScopeSource.EXIR_DEBUG_HANDLE, data=[None]))
+                    with mb.scope(*scopes):
                         cast_value = mb.cast(
                             x=output_var, dtype=builtin_to_string(buffer_var.dtype)
                         )
@@ -1350,11 +1404,10 @@ class TorchConverter:
                     ScopeSource.TORCHSCRIPT_MODULE_NAME,
                     ScopeSource.TORCHSCRIPT_MODULE_TYPE,
                 ]
-            elif self.context.frontend == TorchFrontend.EXIR:
-                essential_scope_sources = [
-                    ScopeSource.EXIR_STACK_TRACE,
-                    ScopeSource.EXIR_DEBUG_HANDLE,
-                ]
+            elif self.context.frontend in TORCH_EXPORT_BASED_FRONTENDS:
+                essential_scope_sources = [ScopeSource.EXIR_STACK_TRACE]
+                if self.context.frontend == TorchFrontend.EXECUTORCH:
+                    essential_scope_sources.append(ScopeSource.EXIR_DEBUG_HANDLE)
             else:
                 raise ValueError(f"Invalid PyTorch frontend {self.context.frontend}")
             prog._add_essential_scope_source(essential_scope_sources)

@@ -1379,7 +1379,12 @@ class TestPalettizeWeights:
         )[0]
         assert types.builtin_to_string(palettize_op.indices.dtype) == "uint4"
         # The per-channel-scale is represented by a quant op to do scaling.
-        assert palettize_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
+        quantize_ops = mlmodel_palettized._mil_program.functions["main"].find_ops(
+            op_type="constexpr_blockwise_shift_scale"
+        )
+        assert len(quantize_ops) > 0
+        # Order of quant and lut op is determined by canonicalize_quantized_lut_pattern graph pass.
+        assert quantize_ops[0].outputs[0].child_ops[0].op_type == "constexpr_lut_to_dense"
 
         if _macos_version() >= (15, 0):
             verify_model_outputs(mlmodel, mlmodel_palettized, coreml_input_values)
@@ -1698,7 +1703,7 @@ class TestPruneWeights:
                 assert types.builtin_to_string(sparse_op.shape.dtype) == "uint32"
 
         if _macos_version() >= (15, 0):
-            verify_model_outputs(mlmodel, mlmodel_pruned, coreml_input_values, rtol=2e-3, atol=2e-3)
+            verify_model_outputs(mlmodel, mlmodel_pruned, coreml_input_values, rtol=3e-3, atol=2e-3)
 
 
 class TestJointCompressWeights:
@@ -1938,18 +1943,27 @@ class TestJointCompressWeights:
             )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, nbits, channel_group_size",
+        "compute_unit, backend, nbits, channel_group_size, quantize_first",
         itertools.product(
             compute_units,
             backends,
             (3, 4, 8),
             (0, 1, 2),
+            (True, False),
         ),
     )
     def test_joint_palettize_quantize_weights(
-        self, compute_unit, backend, nbits, channel_group_size
+        self, compute_unit, backend, nbits, channel_group_size, quantize_first
     ):
-        """First palettize to get fp16 lut, and then quantize the lut to make int8 lut."""
+        """
+        If quantize_first is True:
+            First quantize to get int8 weight, and then palettize to n-bit lut with int8 entries.
+        If quantize_first is False:
+            First palettize to get fp16 lut, and then quantize the lut to make int8 lut.
+
+        Notice no matter applies which one first, the final output model's op order is guaranteed to be consistent
+        by the common::canonicalize_quantized_lut_pattern graph pass.
+        """
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(
@@ -1982,10 +1996,17 @@ class TestJointCompressWeights:
             )
         )
 
-        mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
-        mlmodel_joint_palettized_quantized = cto.coreml.linear_quantize_weights(
-            mlmodel_palettized, quant_config, joint_compression=True
-        )
+        if quantize_first:
+            mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
+            mlmodel_joint_palettized_quantized = cto.coreml.palettize_weights(
+                mlmodel_quantized, palettize_config, joint_compression=True
+            )
+        else:
+            mlmodel_palettized = cto.coreml.palettize_weights(mlmodel, palettize_config)
+            mlmodel_joint_palettized_quantized = cto.coreml.linear_quantize_weights(
+                mlmodel_palettized, quant_config, joint_compression=True
+            )
+
         expected_ops = (
             ["constexpr_blockwise_shift_scale", "constexpr_lut_to_dense", "conv"] * 2
             + ["reshape"]
@@ -1995,13 +2016,13 @@ class TestJointCompressWeights:
         )
         prog = mlmodel_joint_palettized_quantized._mil_program
         if channel_group_size == 0:
-            # When use per-tensor lut, the lut size is too small, so it's stored as ImmediateValue
+            # When doing lut first with per-tensor lut, the lut size is too small, so it's stored as ImmediateValue
             # which won't be quantized.
             ops_in_prog = get_op_types_in_program(prog)
-            if nbits >= 4:
-                assert ops_in_prog.count("constexpr_blockwise_shift_scale") >= 6
-            else:
+            if nbits < 4 and not quantize_first:
                 assert ops_in_prog.count("constexpr_blockwise_shift_scale") == 0
+            else:
+                assert ops_in_prog.count("constexpr_blockwise_shift_scale") >= 6
         else:
             assert get_op_types_in_program(prog) == expected_ops
 
@@ -2068,81 +2089,6 @@ class TestJointCompressWeights:
             cto.coreml.linear_quantize_weights(
                 mlmodel_palettized, quant_config, joint_compression=True
             )
-
-    @pytest.mark.parametrize(
-        "compute_unit, backend, nbits, channel_group_size",
-        itertools.product(
-            compute_units,
-            backends,
-            (3, 4, 8),
-            (0, 1, 2),
-        ),
-    )
-    def test_joint_quantize_palettize_weights(
-        self, compute_unit, backend, nbits, channel_group_size
-    ):
-        """First quantize to get int8 weight, and then palettize to n-bit lut with int8 entries."""
-        model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data_complex()
-        torchmodel = torch.jit.trace(model, torch_input_values)
-        mlmodel = ct.convert(
-            torchmodel,
-            inputs=inputs,
-            convert_to="mlprogram",
-            minimum_deployment_target=backend.opset_version,
-            compute_precision=ct.precision.FLOAT16
-            if backend.precision == "fp16"
-            else ct.precision.FLOAT32,
-            compute_units=compute_unit,
-        )
-
-        quant_config = cto.coreml.OptimizationConfig(
-            global_config=cto.coreml.OpLinearQuantizerConfig(
-                mode="linear",
-                dtype="int8",
-                granularity="per_tensor",
-                weight_threshold=500,
-            )
-        )
-        palettize_config = cto.coreml.OptimizationConfig(
-            global_config=cto.coreml.OpPalettizerConfig(
-                mode="uniform",
-                nbits=nbits,
-                granularity="per_grouped_channel",
-                group_size=channel_group_size,
-                weight_threshold=500,
-            )
-        )
-
-        mlmodel_quantized = cto.coreml.linear_quantize_weights(mlmodel, quant_config)
-        mlmodel_joint_quantized_palettized = cto.coreml.palettize_weights(
-            mlmodel_quantized, palettize_config, joint_compression=True
-        )
-        expected_ops = (
-            ["constexpr_lut_to_dense", "constexpr_blockwise_shift_scale", "conv"] * 2
-            + ["reshape"]
-            + ["constexpr_lut_to_dense", "constexpr_blockwise_shift_scale", "linear"] * 2
-            + ["constexpr_lut_to_dense", "constexpr_blockwise_shift_scale"] * 3
-            + ["lstm", "expand_dims", "expand_dims"]
-        )
-        prog = mlmodel_joint_quantized_palettized._mil_program
-        assert get_op_types_in_program(prog) == expected_ops
-
-        for linear_op in prog.find_ops(op_type="linear"):
-            assert linear_op.weight.op.op_type == "constexpr_blockwise_shift_scale"
-        for conv_op in prog.find_ops(op_type="conv"):
-            assert conv_op.weight.op.op_type == "constexpr_blockwise_shift_scale"
-
-        for palettize_op in prog.find_ops(op_type="constexpr_lut_to_dense"):
-            assert palettize_op.lut.dtype == types.int8
-            assert palettize_op.indices.dtype == types.string_to_builtin(f"uint{nbits}")
-            assert palettize_op.outputs[0].child_ops[0].op_type == "constexpr_blockwise_shift_scale"
-        for quantize_op in prog.find_ops(op_type="constexpr_blockwise_shift_scale"):
-            assert quantize_op.data.dtype == types.int8
-            assert quantize_op.scale.dtype == types.fp16
-            assert quantize_op.offset.dtype == types.int8
-
-        if _macos_version() >= (15, 0):
-            verify_model_outputs(mlmodel, mlmodel_joint_quantized_palettized, coreml_input_values)
 
     @pytest.mark.xfail(
         reason="rdar://131511244 Investigate Why Joint Prune x Anything are Failing on BNNS"

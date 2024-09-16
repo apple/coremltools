@@ -1389,11 +1389,6 @@ class TestRecurrent(TensorFlowBaseTest):
         "compute_unit, backend", itertools.product(compute_units, backends)
     )
     def test_lstm_dynamic_batch(self, compute_unit, backend):
-        if backend == ("mlprogram", "fp16"):
-            pytest.xfail(
-                "rdar://116060011: re-activate coremltools tests blocked by Core ML regressions"
-            )
-
         input_shape = (1, 1280)
         inp = tf.keras.layers.Input(shape=input_shape)
         out, hn, cn = tf.keras.layers.LSTM(512,

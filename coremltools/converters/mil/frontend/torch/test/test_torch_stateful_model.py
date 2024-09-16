@@ -9,7 +9,7 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools._deps import _HAS_EXECUTORCH, _HAS_TORCH_EXPORT_API
+from coremltools.converters.mil.frontend.torch.utils import TorchFrontend
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.testing_reqs import compute_units
@@ -25,15 +25,7 @@ from coremltools.proto import FeatureTypes_pb2 as ft
 
 torch = pytest.importorskip("torch")
 
-from .testing_utils import TorchFrontend, export_torch_model_to_frontend
-
-frontends = [TorchFrontend.TORCHSCRIPT]
-if _HAS_TORCH_EXPORT_API or _HAS_EXECUTORCH:
-    frontends.append(TorchFrontend.EXIR)
-
-ALTER_FRONTEND = [False]
-if _HAS_EXECUTORCH:
-    ALTER_FRONTEND.append(True)
+from .testing_utils import export_torch_model_to_frontend, frontends
 
 
 @pytest.fixture
@@ -239,16 +231,13 @@ def rank4_grayscale_input_model_with_buffer():
 )
 class TestStateConversionAPI:
     @pytest.mark.parametrize(
-        "compute_unit, frontend, alter_frontend",
-        itertools.product(compute_units, frontends, ALTER_FRONTEND),
+        "compute_unit, frontend",
+        itertools.product(compute_units, frontends),
     )
-    def test_state_model_api_example(self, compute_unit, frontend, alter_frontend):
+    def test_state_model_api_example(self, compute_unit, frontend):
         """
         Test the public API example.
         """
-        if frontend == TorchFrontend.TORCHSCRIPT and alter_frontend:
-            pytest.skip("Stateful conversion from torch.jit.script is not supported")
-
         class UpdateBufferModel(torch.nn.Module):
             def __init__(self):
                 super(UpdateBufferModel, self).__init__()
@@ -265,18 +254,18 @@ class TestStateConversionAPI:
             source_model,
             (torch.tensor([1, 2, 3], dtype=torch.float16),),
             frontend,
-            use_scripting=alter_frontend,
-            use_edge_dialect=alter_frontend,
         )
 
+        inputs = [ct.TensorType(shape=(3,))] if frontend == TorchFrontend.TORCHSCRIPT else None
+        states = (
+            [ct.StateType(wrapped_type=ct.TensorType(shape=(3,)), name="state_1")]
+            if frontend == TorchFrontend.TORCHSCRIPT
+            else None
+        )
         mlmodel = ct.convert(
             torch_model,
-            inputs=(None if frontend == TorchFrontend.EXIR else [ct.TensorType(shape=(3,))]),
-            states=(
-                None
-                if frontend == TorchFrontend.EXIR
-                else [ct.StateType(wrapped_type=ct.TensorType(shape=(3,)), name="state_1")]
-            ),
+            inputs=inputs,
+            states=states,
             minimum_deployment_target=ct.target.iOS18,
             convert_to="mlprogram",
             compute_units=compute_unit,

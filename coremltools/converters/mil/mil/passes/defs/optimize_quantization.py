@@ -1120,3 +1120,115 @@ class reorder_lut_per_channel_scale(AbstractGraphPass):
             new_var=scaled_output,
             force_replace=True,  # Need to force replace because it involves replacing constexpr op.
         )
+
+
+@register_pass(namespace="common")
+class canonicalize_quantized_lut_pattern(AbstractGraphPass):
+    """
+    The quantized lut (e.g. each entry in the LUT is int8) could be represented by two patterns:
+        Pattern 1:
+            lut(int8) -> constexpr_blockwise_shift_scale -> lut(fp16) -> constexpr_lut_to_dense -> dense(fp16)
+        Pattern 2:
+            lut(int8) -> constexpr_lut_to_dense -> dense(int8) -> constexpr_blockwise_shift_scale -> dense(fp16)
+    Those two patterns are mathematically equivalent when the quantization is per-tensor or per-channel.
+
+    This graph pass makes sure we always use one specific pattern by re-ordering the ops.
+    """
+
+    _DEQUANT_FIRST = True  # First dequantize and then depalettize (use pattern 1).
+
+    def apply(self, prog):
+        wrong_order_op1 = (
+            "constexpr_lut_to_dense" if self._DEQUANT_FIRST else "constexpr_blockwise_shift_scale"
+        )
+        wrong_order_op2 = (
+            "constexpr_blockwise_shift_scale" if self._DEQUANT_FIRST else "constexpr_lut_to_dense"
+        )
+
+        @block_context_manager
+        def apply_block(block: Block):
+            for op in list(block.operations):
+                for b in op.blocks:
+                    apply_block(b)
+                if op.op_type == wrong_order_op1 and len(op.outputs[0].child_ops) == 1:
+                    if op.outputs[0].child_ops[0].op_type == wrong_order_op2:
+                        self._reorder_quant_lut(block, op)
+
+        for f in prog.functions.values():
+            apply_block(f)
+
+    def _reorder_quant_lut(self, block: Block, old_op1: Operation):
+        """
+        Original order is op1 -> op2 -> output_op, and after reorder it becomes op2 -> op1 -> output_op.
+        Here op1 and op2 corresponds to either lut op or quant op, depending on `_DEQUANT_FIRST`.
+        """
+        old_op2 = old_op1.outputs[0].child_ops[0]
+        # If the old op has some meaningful info in the name (such as "conv1.weight"), we need to keep it.
+        new_op1_name = None if old_op1.op_type in old_op1.name else old_op1.name
+        new_op2_name = None if old_op2.op_type in old_op2.name else old_op2.name
+
+        if old_op1.op_type == "constexpr_blockwise_shift_scale":
+            # The old_op1 is dequant op and old_op2 is a lut op.
+            # The scale and offset from old_op1 is for lut, so the rank need to be adjusted.
+            if old_op1.scale.shape[-2:] != (1, 1):
+                raise AssertionError(
+                    "The quantization on lut must be per-tensor, so last two dims in `scale` should "
+                    f"both be 1, but got scale with shape {old_op1.scale.shape}."
+                )
+            new_scale_shape = old_op1.scale.shape[-2:]
+            scale = old_op1.scale.val.reshape(new_scale_shape)
+            offset = old_op1.offset
+            if offset is not None and offset.val is not None:
+                offset = old_op1.offset.val.reshape(new_scale_shape)
+
+            new_op1_args = {"indices": old_op2.indices, "lut": old_op1.data, "before_op": old_op2}
+            if new_op1_name is not None:
+                new_op1_args["name"] = new_op1_name
+            new_op1 = mb.constexpr_lut_to_dense(**new_op1_args)
+
+            new_op2_args = {"data": new_op1, "scale": scale, "offset": offset, "before_op": old_op2}
+            if new_op2_name is not None:
+                new_op2_args["name"] = new_op2_name
+            new_op2 = mb.constexpr_blockwise_shift_scale(**new_op2_args)
+        else:
+            # The old_op1 is lut op and old_op2 is a dequant op.
+            # The scale and offset from old_op2 is for depalettized weight, so the rank need to be adjusted to match
+            # the lut's rank.
+            new_scale_shape = old_op2.scale.shape + (1, 1)
+            scale = old_op2.scale.val.reshape(new_scale_shape)
+            offset = old_op2.offset
+            if offset is not None and offset.val is not None:
+                offset = old_op2.offset.val.reshape(new_scale_shape)
+
+            lut = old_op1.lut
+            if any(shape != 1 for shape in new_scale_shape):
+                # The lut need to be repeated when necessary. For example, in per-channel-scale, the lut has shape
+                # [16, 1, 16, 1], indices has shape [32, 1], and scale has shape [32, 1]. It means every two rows in
+                # the weight share a lut, and it's impossible to apply 32 scales to 16 lut tables. So we need to repeat
+                # the lut to become [32, 1, 16, 1], and then apply those 32 scales to each row.
+                lut = old_op1.lut.val
+                if lut is None:
+                    return  # Cannot handle the reording when the lut is not const.
+                for axis, (scale_shape, lut_shape) in enumerate(zip(new_scale_shape, lut.shape)):
+                    if scale_shape > lut_shape:
+                        if scale_shape % lut_shape != 0:
+                            return  # Skip when lut's shape cannot be repeated to match scale's shape.
+                        lut = np.repeat(lut, scale_shape // lut_shape, axis=axis)
+
+            new_op1_args = {"data": lut, "scale": scale, "offset": offset, "before_op": old_op1}
+            if new_op1_name is not None:
+                new_op1_args["name"] = new_op1_name
+            new_op1 = mb.constexpr_blockwise_shift_scale(**new_op1_args)
+
+            new_op2_args = {"indices": old_op1.indices, "lut": new_op1, "before_op": old_op1}
+            if new_op2_name is not None:
+                new_op2_args["name"] = new_op2_name
+            new_op2 = mb.constexpr_lut_to_dense(**new_op2_args)
+
+        block.replace_uses_of_var_after_op(
+            anchor_op=old_op2,
+            old_var=old_op2.outputs[0],
+            new_var=new_op2,
+            force_replace=True,  # Need to force replace because it involves replacing constexpr op.
+        )
+        block.remove_ops([old_op1, old_op2])

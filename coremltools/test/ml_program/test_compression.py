@@ -20,7 +20,9 @@ from coremltools.optimize.coreml._config import OpCompressorConfig
 
 
 def get_test_model_and_data(
-    multi_layer: bool = False, quantize_config: Optional[OpCompressorConfig] = None
+    multi_layer: bool = False,
+    quantize_config: Optional[OpCompressorConfig] = None,
+    use_linear: bool = False,
 ):
     """
     Prepare test model and data.
@@ -29,19 +31,24 @@ def get_test_model_and_data(
     :param quantize_config: If set, the weights in the test model will be nbits quantization-friendly,
         which means it will be first quantized according to the config, and then dequantized, so the
         numerical error introduced during the quantization test will be minimum.
+    :param use_linear: If set, use linear instead of conv in the model.
     """
     if quantize_config is not None and multi_layer:
         raise AssertionError("Multi-layer model doesn't support pre_quantize_nbits.")
 
     inputs = [ct.TensorType(name="data", shape=(1, 64, 10, 10))]
+    if use_linear:
+        inputs = [ct.TensorType(name="data", shape=(1, 64))]
+
     torch_input_values = [torch.rand(*i.shape.to_list()) for i in inputs]
     coreml_input_values = {
         i.name: val.detach().numpy() for i, val in zip(inputs, torch_input_values)
     }
     if multi_layer:
-        class Model(torch.nn.Module):
+
+        class ConvModel(torch.nn.Module):
             def __init__(self):
-                super(Model, self).__init__()
+                super(ConvModel, self).__init__()
                 self.conv_1 = torch.nn.Conv2d(in_channels=64, out_channels=32, kernel_size=2)
                 self.conv_2 = torch.nn.Conv2d(in_channels=32, out_channels=64, kernel_size=2)
 
@@ -50,9 +57,22 @@ def get_test_model_and_data(
                 conv_2 = self.conv_2(conv_1)
                 return conv_2
 
-        model = Model().eval()
+        class LinearModel(torch.nn.Module):
+            def __init__(self):
+                super(LinearModel, self).__init__()
+                self.linear_1 = torch.nn.Linear(in_features=64, out_features=32, bias=False)
+                self.linear_2 = torch.nn.Linear(in_features=32, out_features=16, bias=False)
+
+            def forward(self, x):
+                linear_1 = self.linear_1(x)
+                return self.linear_2(linear_1)
+
+        model = LinearModel().eval() if use_linear else ConvModel().eval()
     else:
         model = torch.nn.Conv2d(in_channels=64, out_channels=32, kernel_size=2)
+        if use_linear:
+            model = torch.nn.Linear(in_features=64, out_features=32, bias=False)
+
         if quantize_config is not None:
             # Manually change weight to make it quantization friendly.
             nbits_range_max = 2 ** (quantize_config.nbits - 1) - 1
