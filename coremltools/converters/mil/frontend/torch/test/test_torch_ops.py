@@ -5814,26 +5814,6 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "compute_unit, backend, beta, threshold, minimum_deployment_target",
-        itertools.product(compute_units, backends, [1, 2, 5], [5, 10, 20], [None, ct.target.iOS17]),
-    )
-    @pytest.mark.skipif(
-        _macos_version() <= (10, 15),
-        reason="Parametric SoftPlus segfaults on macOS 10.15 and below.",
-    )
-    def test_softplus(self, compute_unit, backend, beta, threshold, minimum_deployment_target):
-        input_shape = (1, 10, 5, 15)
-        model = nn.Softplus(beta, threshold).eval()
-        self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit,
-            minimum_deployment_target=minimum_deployment_target,
-            target_op="softplus_parametric",
-        )
-
-    @pytest.mark.parametrize(
         "compute_unit, backend, shape",
         itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
@@ -12401,3 +12381,46 @@ class TestMultinomial(TorchBaseTest):
                 input_as_shape=False,
                 converter_input_type=converter_input_type,
             )
+
+class TestSoftplus(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, beta, threshold",
+        itertools.product(compute_units, backends, range(1, 4), [1, 2, 5], [5, 10, 20])
+    )
+    def test_softplus_rank(self, compute_unit, backend, rank, beta, threshold):
+        input_shape = torch.randint(1, 10, (rank,))
+        model = nn.Softplus(beta, threshold).eval()
+        self.run_compare_torch(
+            input_shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+    
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
+    )
+    def test_softplus_no_default(self, compute_unit, backend):
+        model = ModuleWrapper(function=torch.nn.functional.softplus, kwargs={"beta": 2, "threshold": 2}).eval()
+        self.run_compare_torch(
+            torch.arange(0, 3).float() + 0.5, 
+            model, 
+            backend=backend, 
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+    
+    @pytest.mark.parametrize(
+        "compute_unit, backend, value",
+        itertools.product(compute_units, backends, [1.0, 3.0, 1e5, 1e7, 1e9]),
+    )
+    def test_softplus_default(self, compute_unit, backend, value):
+        model = ModuleWrapper(function=torch.nn.functional.softplus).eval()
+        self.run_compare_torch(
+            torch.tensor([value, -value]),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
