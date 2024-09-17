@@ -1,9 +1,8 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
@@ -15,41 +14,41 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/opt-palettization-api';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Linear Quantization" href="opt-quantization.html" />
-    <link rel="prev" title="Algorithms" href="opt-palettization-algos.html" />
+    <link rel="prev" title="Palettization Algorithms" href="opt-palettization-algos.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -59,28 +58,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +96,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -122,6 +124,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
@@ -130,10 +135,22 @@
   
   
   
+  
     <p class="title logo__title">Guide to Core ML Tools</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -153,7 +170,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
@@ -162,16 +179,16 @@
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -179,8 +196,8 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -191,41 +208,41 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining compression types</a></li>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
 </ul>
@@ -242,12 +259,12 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 
     </div>
@@ -263,7 +280,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -272,14 +289,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -369,26 +386,28 @@
 </button>
 
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -429,32 +448,33 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="api-overview">
-<h1>API Overview<a class="headerlink" href="#api-overview" title="Permalink to this heading">#</a></h1>
+<h1>API Overview<a class="headerlink" href="#api-overview" title="Link to this heading">#</a></h1>
 <p>This page summarizes all the APIs that are available to palettize the weights of a model.
 While there are several APIs available, different due to the input model format (Core ML or PyTorch model) and/or the
 optimization workflow, they all follow a similar flow and have the following steps in common:</p>
-<ul class="simple">
+<ol class="arabic simple">
 <li><p>Defining a config object, which specifies the parameters of the algorithm. Most of these parameters are common
-to all APIs (e.g. number of bit to palettize, granularity etc)</p>
-<ul>
+to all APIs (e.g. number of bits to palettize, granularity, etc.).</p></li>
+</ol>
+<ul class="simple">
 <li><p>The config can be defined either at a global level, to be applied to all the ops/modules
 in the model, or can be customized based on op-type or op-names.</p></li>
-<li><p>The config object can be initialized either with a dictionary in code or in a yaml file that can be loaded from disk</p></li>
+<li><p>The config object can be initialized either with a dictionary in code or in a yaml file that can be loaded from disk.</p></li>
 </ul>
-</li>
-<li><p>Then, invoking a method to compress, that takes in the config and the model</p></li>
-</ul>
+<ol class="arabic simple" start="2">
+<li><p>Invoking a method to compress, that takes in the config and the model.</p></li>
+</ol>
 <section id="palettizing-a-core-ml-model">
-<h2>Palettizing a Core ML model<a class="headerlink" href="#palettizing-a-core-ml-model" title="Permalink to this heading">#</a></h2>
+<h2>Palettizing a Core ML model<a class="headerlink" href="#palettizing-a-core-ml-model" title="Link to this heading">#</a></h2>
 <section id="post-training-palettization-api-example">
-<h3>Post-Training Palettization API example<a class="headerlink" href="#post-training-palettization-api-example" title="Permalink to this heading">#</a></h3>
+<h3>Post-Training Palettization API example<a class="headerlink" href="#post-training-palettization-api-example" title="Link to this heading">#</a></h3>
 <p>Post-Training Palettization performs a K-Means operation on the supported weight matrices of a model that
 has already been converted to Core ML.</p>
-<p>The following example shows <code class="docutils literal notranslate"><span class="pre">6-bit</span></code> palettization applied to all the ops which have number of parameters greater than 512.
-This is controlled by setting the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter to 512.</p>
+<p>The following example shows <code class="docutils literal notranslate"><span class="pre">6-bit</span></code> palettization applied to all the ops that have more than 512 parameters.
+This is controlled by setting the <code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">512</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 <span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 
@@ -501,14 +521,14 @@ to <code class="docutils literal notranslate"><span class="pre">8-bits</span></c
 <span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>For more details, please follow the detailed API page for <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">coremltools.optimize.coreml.palettize_weights</a></p>
+<p>For more details, please follow the detailed API page for <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights">coremltools.optimize.coreml.palettize_weights</a>.</p>
 </section>
 </section>
 <section id="palettizing-a-torch-model">
-<h2>Palettizing a Torch model<a class="headerlink" href="#palettizing-a-torch-model" title="Permalink to this heading">#</a></h2>
+<h2>Palettizing a Torch model<a class="headerlink" href="#palettizing-a-torch-model" title="Link to this heading">#</a></h2>
 <section id="id1">
-<h3>Post-Training Palettization API example<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
-<p>This is same as the post-training palettization on a Core ML model, except this is done on a Torch model.
+<h3>Post-Training Palettization API example<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>This is the same as the post-training palettization on a Core ML model, except this is done on a Torch model.
 The following example shows <code class="docutils literal notranslate"><span class="pre">4-bit</span></code> palettization applied to all ops, with <code class="docutils literal notranslate"><span class="pre">granularity</span></code> set as <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>.
 The <code class="docutils literal notranslate"><span class="pre">group_size</span></code> specified for this example would be <code class="docutils literal notranslate"><span class="pre">4</span></code> which means that each group of <code class="docutils literal notranslate"><span class="pre">4</span></code> channels would have one LUT.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">model_utilities</span> <span class="kn">import</span> <span class="n">get_torch_model</span>
@@ -530,25 +550,25 @@ The <code class="docutils literal notranslate"><span class="pre">group_size</spa
 <p>Some key parameters that the config accepts are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n_bits</span></code> : This controls the number of clusters, which are <code class="docutils literal notranslate"><span class="pre">2^n_bits</span></code> .</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">lut_dtype</span></code>: The dtype to use for representing each element in look up tables. When value is None, no quantization is
-performed. Supported values are <code class="docutils literal notranslate"><span class="pre">torch.int8</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.uint8</span></code>. Defaults to None.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lut_dtype</span></code>: The dtype to use for representing each element in lookup tables. When value is <code class="docutils literal notranslate"><span class="pre">None</span></code>, no quantization is
+performed. Supported values are <code class="docutils literal notranslate"><span class="pre">torch.int8</span></code> and <code class="docutils literal notranslate"><span class="pre">torch.uint8</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">granularity</span></code> : Granularity for palettization. One of <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">group_size</span></code>: The number of channels in a group.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">channel_axis</span></code>: The channel axis to form a group of channels. Only effective when granularity is <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>: The dimension of centroids for each look up table.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enable_per_channel_scale</span></code>: When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are normalized along the output channels using per channel
+<li><p><code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>: The dimension of centroids for each lookup table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_per_channel_scale</span></code>: When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are normalized along the output channels using per-channel
 scales before being palettized.</p></li>
 </ul>
 <p>For more details, please follow the detailed API page for <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.PostTrainingPalettizer">coremltools.optimize.torch.palettization.PostTrainingPalettizer</a></p>
 </section>
 <section id="sensitive-k-means-palettization-api-example">
-<h3>Sensitive K-Means Palettization API Example<a class="headerlink" href="#sensitive-k-means-palettization-api-example" title="Permalink to this heading">#</a></h3>
+<h3>Sensitive K-Means Palettization API Example<a class="headerlink" href="#sensitive-k-means-palettization-api-example" title="Link to this heading">#</a></h3>
 <p>This API implements the <a class="reference internal" href="opt-palettization-algos.html#sensitive-k-means"><span class="std std-ref">Sensitive K-Means Algorithm</span></a>. This algorithm
 requires calibration data as well as a loss function to compute parameter sensitivity.</p>
 <p>The following example shows <code class="docutils literal notranslate"><span class="pre">4-bit</span></code> palettization applied to all ops, with the exception that all the <code class="docutils literal notranslate"><span class="pre">linear</span></code> ops are
 set to <code class="docutils literal notranslate"><span class="pre">6-bits</span></code>, and two of the conv ops (named <code class="docutils literal notranslate"><span class="pre">conv1</span></code> and <code class="docutils literal notranslate"><span class="pre">conv3</span></code>) are omitted from palettization.</p>
-<p>The config in any of the algorithms described on this page can be created using a <code class="docutils literal notranslate"><span class="pre">yaml</span></code> file too. To demonstrate that the palettization
-config would be described in the below <code class="docutils literal notranslate"><span class="pre">palettization_config.yaml</span></code> file like:</p>
+<p>The config in any of the algorithms described on this page can be created using a <code class="docutils literal notranslate"><span class="pre">yaml</span></code> file, too. The palettization
+config would be described in the below <code class="docutils literal notranslate"><span class="pre">palettization_config.yaml</span></code> file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">global_config</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">n_bits</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
 <span class="nt">module_type_configs</span><span class="p">:</span>
@@ -579,32 +599,32 @@ config would be described in the below <code class="docutils literal notranslate
 </pre></div>
 </div>
 <p>The parameters for the config in this algorithm are the same as
-<a class="reference internal" href="#post-training-palettization-api-example">post-training palettization</a>. The <code class="docutils literal notranslate"><span class="pre">compress()</span></code> API however requires two
-additional parameters</p>
+<a class="reference internal" href="#post-training-palettization-api-example">post-training palettization</a>. The <code class="docutils literal notranslate"><span class="pre">compress()</span></code> API, however, requires two
+additional parameters:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dataloader</span></code>: An iterable where each element is an input to the model to be compressed. Used for computing gradients
 of model weights.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">loss_fn</span></code>: A callable which takes the model and data as input and performs a forward pass on the model and computes
 the training loss.</p></li>
 </ul>
-<p>For more details, please follow the detailed API page for <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.SKMPalettizer">coremltools.optimize.torch.palettization.SKMPalettizer</a></p>
+<p>For more details, please follow the detailed API page for <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.SKMPalettizer">coremltools.optimize.torch.palettization.SKMPalettizer</a>.</p>
 </section>
 <section id="differentiable-k-means-palettization-api-example">
-<h3>Differentiable K-Means Palettization API Example<a class="headerlink" href="#differentiable-k-means-palettization-api-example" title="Permalink to this heading">#</a></h3>
+<h3>Differentiable K-Means Palettization API Example<a class="headerlink" href="#differentiable-k-means-palettization-api-example" title="Link to this heading">#</a></h3>
 <p>Differentiable K-Means is a training-time palettization algorithm that performs attention based
 differentiable K-Means on the weight matrices. This plugs in directly into a user’s training pipeline and typically has
 higher data requirements.</p>
 <p>To perform training-time palettization, these are the key steps:</p>
-<ul class="simple">
+<ol class="arabic simple">
 <li><p>Define a <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizerConfig">DKMPalettizerConfig</a> config to specify the palettization parameters.</p></li>
 <li><p>Initialize the palettizer object using <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">DKMPalettizer</a>.</p></li>
 <li><p>Call the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.prepare">prepare</a> API to update the PyTorch model with palettization-friendly modules.</p></li>
 <li><p>Run the usual training loop, with the addition of the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.step">palettizer.step</a> call.</p></li>
 <li><p>Once the model has converged, use the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.finalize">finalize</a> API to prepare the model for conversion to Core ML.</p></li>
-</ul>
-<p>The following example shows <code class="docutils literal notranslate"><span class="pre">2-bit</span></code> DKM palettization applied to all ops, however, here let’s assume our specific use
-case demands that we kick-off palettization at the 10th training step. That can be achieved by specifying the
-<code class="docutils literal notranslate"><span class="pre">milestone</span></code> parameter as 10.</p>
+</ol>
+<p>The following example shows <code class="docutils literal notranslate"><span class="pre">2-bit</span></code> DKM palettization applied to all ops. However, here let’s assume our specific use
+case demands that we kick off palettization at the tenth training step. That can be achieved by specifying the
+<code class="docutils literal notranslate"><span class="pre">milestone</span></code> parameter as <code class="docutils literal notranslate"><span class="pre">10</span></code>.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">model_utilities</span> <span class="kn">import</span> <span class="n">get_torch_model</span>
 <span class="kn">from</span> <span class="nn">training_utilities</span> <span class="kn">import</span> <span class="n">train_step</span>
 <span class="kn">from</span> <span class="nn">data_utils</span> <span class="kn">import</span> <span class="n">get_dataloader</span>
@@ -639,36 +659,34 @@ case demands that we kick-off palettization at the 10th training step. That can 
 <p>Some key parameters that the config accepts are:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">n_bits</span></code> : This controls the number of clusters, which are <code class="docutils literal notranslate"><span class="pre">2^n_bits</span></code> .</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>: Weight tensors that are smaller than this size are not palettized. Defaults to 2048.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">weight_threshold</span></code>: Weight tensors that are smaller than this size are not palettized. Defaults to <code class="docutils literal notranslate"><span class="pre">2048</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">granularity</span></code> : Granularity for palettization. One of <code class="docutils literal notranslate"><span class="pre">per_tensor</span></code> or <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">group_size</span></code>: The number of channels in a group.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">enable_per_channel_scale</span></code>: When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are normalized along the output channels using per channel</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">enable_per_channel_scale</span></code>: When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, weights are normalized along the output channels using per-channel.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">milestone</span></code> : The number of times the
 <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer.step"><code class="docutils literal notranslate"><span class="pre">palettizer.step</span></code></a>
 API has to be called before palettization is enabled. This number can be a training step number if the <code class="docutils literal notranslate"><span class="pre">palettizer.step</span></code>
 API is called once every training step, or it can be an epoch number if the <code class="docutils literal notranslate"><span class="pre">palettizer.step</span></code> API is called once every
-epoch. Defaults to zero, in which case palettization is enabled from the start of the training loop.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>: The dimension of centroids for each look up table.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">quantize_activations</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, the activation are quantized.</p></li>
+epoch. Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>, in which case palettization is enabled from the start of the training loop.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cluster_dim</span></code>: The dimension of centroids for each lookup table.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize_activations</span></code>: When <code class="docutils literal notranslate"><span class="pre">True</span></code>, the activations are quantized.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">quant_min</span></code>: The minimum value for each element in the weight clusters if they are quantized.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">quant_max</span></code>: The maximum value for each element in the weight clusters if they are quantized.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">dtype</span></code>: The <code class="docutils literal notranslate"><span class="pre">dtype</span></code> to use for quantizing the activations. Only applies when <code class="docutils literal notranslate"><span class="pre">quantize_activations</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">cluster_dtype</span></code>: The dtype to use for representing each element in look up tables.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dtype</span></code>: The dtype to use for quantizing the activations. Only applies when <code class="docutils literal notranslate"><span class="pre">quantize_activations</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cluster_dtype</span></code>: The dtype to use for representing each element in lookup tables.</p></li>
 </ul>
-<p>The DKM API has several other options, to control some of the specific knobs of the algorithms’s implementation.
+<p>The DKM API has several other options, to control some of the specific knobs of the algorithm’s implementation.
 In most cases, you do not need to use values other than the default ones. To find out about these though, checkout the
-API Reference page <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">coremltools.optimize.torch.palettization.DKMPalettizer</a></p>
-<p><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">Here</a>
-is a full example notebook applying DKM on an MNIST model.</p>
+API Reference page <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.DKMPalettizer">coremltools.optimize.torch.palettization.DKMPalettizer</a>.</p>
+<p><a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">This notebook</a> provides a full example of applying DKM on an MNIST model.</p>
 </section>
 </section>
 <section id="converting-the-palettized-pytorch-model">
-<h2>Converting the Palettized PyTorch Model<a class="headerlink" href="#converting-the-palettized-pytorch-model" title="Permalink to this heading">#</a></h2>
+<h2>Converting the Palettized PyTorch Model<a class="headerlink" href="#converting-the-palettized-pytorch-model" title="Link to this heading">#</a></h2>
 <p>For a PyTorch model that has been palettized using <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs, you can simply convert it using
-coremltools 8, without the need to specify any additional arguments. If you use any new feature,
+coremltools 8, without needing to specify any additional arguments. If you use any new feature,
 such as <code class="docutils literal notranslate"><span class="pre">per_grouped_channel</span></code> <code class="docutils literal notranslate"><span class="pre">granularity</span></code> that is available in newer OS <code class="docutils literal notranslate"><span class="pre">iOS18/macOS15</span></code>, then you need to
-specify the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> flag accordingly.
-That is:</p>
+specify the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> flag accordingly:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
@@ -683,7 +701,7 @@ That is:</p>
 </pre></div>
 </div>
 <p>If you palettized the Torch model using other non-coremltools APIs, or you are using coremltools version &lt; 8, then
-please check out the <a class="reference internal" href="opt-conversion.html"><span class="std std-doc">conversion</span></a> page to find out the process for getting the Core ML model with
+please check out the <a class="reference internal" href="opt-conversion.html"><span class="std std-doc">conversion page</span></a> to find out the process for getting the Core ML model with
 the correct palettized ops in it.</p>
 </section>
 </section>
@@ -696,8 +714,8 @@ the correct palettized ops in it.</p>
               
               
               
-                <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                <footer class="prev-next-footer d-print-none">
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="opt-palettization-algos.html"
@@ -705,7 +723,7 @@ the correct palettized ops in it.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Algorithms</p>
+        <p class="prev-next-title">Palettization Algorithms</p>
       </div>
     </a>
     <a class="right-next"
@@ -725,6 +743,7 @@ the correct palettized ops in it.</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -764,6 +783,7 @@ By Apple
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2023, Apple Inc.
@@ -790,8 +810,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

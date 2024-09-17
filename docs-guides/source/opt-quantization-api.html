@@ -1,9 +1,8 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
@@ -15,36 +14,36 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/opt-quantization-api';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -59,28 +58,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +96,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -122,6 +124,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
@@ -130,10 +135,22 @@
   
   
   
+  
     <p class="title logo__title">Guide to Core ML Tools</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -153,7 +170,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
@@ -162,16 +179,16 @@
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -179,8 +196,8 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -191,41 +208,41 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
 <li class="toctree-l2 current active"><a class="current reference internal" href="#">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining compression types</a></li>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
 </ul>
@@ -242,12 +259,12 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 
     </div>
@@ -263,7 +280,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -272,14 +289,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -369,26 +386,28 @@
 </button>
 
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -416,7 +435,7 @@ document.write(`
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-pytorch-models">Working with PyTorch Models</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Quantizing weights</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-quantization">Data free quantization</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-quantization">Data-free quantization</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-data-based-quantization">Calibration data based quantization</a></li>
 </ul>
 </li>
@@ -437,14 +456,14 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="api-overview">
-<h1>API Overview<a class="headerlink" href="#api-overview" title="Permalink to this heading">#</a></h1>
+<h1>API Overview<a class="headerlink" href="#api-overview" title="Link to this heading">#</a></h1>
 <section id="working-with-core-ml-models">
-<h2>Working with Core ML Models<a class="headerlink" href="#working-with-core-ml-models" title="Permalink to this heading">#</a></h2>
+<h2>Working with Core ML Models<a class="headerlink" href="#working-with-core-ml-models" title="Link to this heading">#</a></h2>
 <section id="quantizing-weights">
-<h3>Quantizing weights<a class="headerlink" href="#quantizing-weights" title="Permalink to this heading">#</a></h3>
+<h3>Quantizing weights<a class="headerlink" href="#quantizing-weights" title="Link to this heading">#</a></h3>
 <p>You can linearly quantize the weights of your Core ML model by using the
 <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.linear_quantize_weights"><code class="docutils literal notranslate"><span class="pre">linear_quantize_weights</span></code></a> method as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
@@ -458,7 +477,7 @@ document.write(`
 </pre></div>
 </div>
 <p>The method defaults to <code class="docutils literal notranslate"><span class="pre">linear_symmetric</span></code>, which uses only per-channel scales and no zero-points.<br />
-You can also choose a <code class="docutils literal notranslate"><span class="pre">linear</span></code> mode which uses a zero-point as well, which may help to get
+You can also choose a <code class="docutils literal notranslate"><span class="pre">linear</span></code> mode, which uses a zero-point, which may help to get
 slightly better accuracy.</p>
 <p>For more details on the parameters available in the config, see the following in the API Reference:</p>
 <ul class="simple">
@@ -468,7 +487,7 @@ slightly better accuracy.</p>
 </ul>
 </section>
 <section id="quantizing-weights-and-activations">
-<h3>Quantizing weights and activations<a class="headerlink" href="#quantizing-weights-and-activations" title="Permalink to this heading">#</a></h3>
+<h3>Quantizing weights and activations<a class="headerlink" href="#quantizing-weights-and-activations" title="Link to this heading">#</a></h3>
 <p>You can also quantize the activations of the model, in addition to the weights, to benefit from
 the <code class="docutils literal notranslate"><span class="pre">int8</span></code>-<code class="docutils literal notranslate"><span class="pre">int8</span></code> compute available on the Neural Engine (NE), from iPhone 15 Pro onwards.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">activation_config</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">OptimizationConfig</span><span class="p">(</span>
@@ -487,13 +506,13 @@ specified above, to quantize the weights as well, to get an <code class="docutil
 </section>
 </section>
 <section id="working-with-pytorch-models">
-<h2>Working with PyTorch Models<a class="headerlink" href="#working-with-pytorch-models" title="Permalink to this heading">#</a></h2>
+<h2>Working with PyTorch Models<a class="headerlink" href="#working-with-pytorch-models" title="Link to this heading">#</a></h2>
 <section id="id1">
-<h3>Quantizing weights<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
+<h3>Quantizing weights<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
 <section id="data-free-quantization">
-<h4>Data free quantization<a class="headerlink" href="#data-free-quantization" title="Permalink to this heading">#</a></h4>
-<p>To quantize the weights in a data free manner, use
-<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer">PostTrainingQuantizer</a>,
+<h4>Data-free quantization<a class="headerlink" href="#data-free-quantization" title="Link to this heading">#</a></h4>
+<p>To quantize the weights in a data-free manner, use
+<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizer"><code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizer</span></code></a>,
 as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="n">PostTrainingQuantizer</span><span class="p">,</span> \
@@ -516,17 +535,17 @@ as follows:</p>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>By specifying <code class="docutils literal notranslate"><span class="pre">module_type_configs</span></code>, one can specify different configs for different layer types. Here, we are setting config for linear layers to be <code class="docutils literal notranslate"><span class="pre">None</span></code> to de-select linear layers for quantization.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">granularity</span></code> option allows quantizing the weights at different levels of granularity, like <code class="docutils literal notranslate"><span class="pre">per_block</span></code>,
-where blocks of weights along a channel use same quantization parameters or <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, where
+<li><p><code class="docutils literal notranslate"><span class="pre">module_type_configs</span></code> lets you specify different configs for different layer types. Here, we are setting the config for linear layers to be <code class="docutils literal notranslate"><span class="pre">None</span></code> to de-select linear layers for quantization.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">granularity</span></code> option lets you quantize the weights at different levels of granularity, like <code class="docutils literal notranslate"><span class="pre">per_block</span></code>,
+where blocks of weights along a channel use the same quantization parameters, or <code class="docutils literal notranslate"><span class="pre">per_channel</span></code>, where
 all elements in a channel share the same quantization parameters. Learn more about the various config
 options available in
-<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig">PostTrainingQuantizerConfig</a>.</p></li>
+<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.PostTrainingQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">PostTrainingQuantizerConfig</span></code></a>.</p></li>
 </ul>
 </section>
 <section id="calibration-data-based-quantization">
-<h4>Calibration data based quantization<a class="headerlink" href="#calibration-data-based-quantization" title="Permalink to this heading">#</a></h4>
-<p>Use <code class="docutils literal notranslate"><span class="pre">LayerwiseComressor</span></code> with <code class="docutils literal notranslate"><span class="pre">GPTQ</span></code> algorithm, as follows:</p>
+<h4>Calibration data based quantization<a class="headerlink" href="#calibration-data-based-quantization" title="Link to this heading">#</a></h4>
+<p>Use <code class="docutils literal notranslate"><span class="pre">LayerwiseCompressor</span></code> with the <code class="docutils literal notranslate"><span class="pre">GPTQ</span></code> algorithm, as follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="n">LayerwiseCompressor</span><span class="p">,</span> \
     <span class="n">LayerwiseCompressorConfig</span>
 
@@ -553,17 +572,17 @@ options available in
 </section>
 </section>
 <section id="id2">
-<h3>Quantizing weights and activations<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
+<h3>Quantizing weights and activations<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
 <section id="id3">
-<h4>Calibration data based quantization<a class="headerlink" href="#id3" title="Permalink to this heading">#</a></h4>
+<h4>Calibration data based quantization<a class="headerlink" href="#id3" title="Link to this heading">#</a></h4>
 <p><a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer"><code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>,
 as described in the next section, is an API to do quantization aware training (QAT)
 for quantizing activations and weights. We can also use the same API for data calibration
-based post training quantization to get a <code class="docutils literal notranslate"><span class="pre">W8A8</span></code> model.</p>
-<p>We use the calibration data to measure statistics of activations and weights without actually
-simulating quantization during model’s forward pass, and without needing to perform a backward pass.
+based post-training quantization to get a <code class="docutils literal notranslate"><span class="pre">W8A8</span></code> model.</p>
+<p>We use the calibration data to measure the statistics of activations and weights without actually
+simulating quantization during the model’s forward pass, and without needing to perform a backward pass.
 Since the weights are constant and do not change, this amounts to using
-round to nearest (RTN) for quantizing them.</p>
+the round-to-nearest (RTN) approach to quantize them.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.quantization</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearQuantizer</span><span class="p">,</span>
@@ -595,19 +614,19 @@ round to nearest (RTN) for quantizing them.</p>
 <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">quantizer</span><span class="o">.</span><span class="n">finalize</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>Note that, here, we set the first and last values of the <code class="docutils literal notranslate"><span class="pre">milestones</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">0</span></code>.
-The first milestone turns on observes, and setting it to zero ensures that we start measuring
-quantization statistics from step 0. And the last milestone applies batch norm in inference mode,
+<p>Note that here we set the first and last values of the <code class="docutils literal notranslate"><span class="pre">milestones</span></code> parameter to <code class="docutils literal notranslate"><span class="pre">0</span></code>.
+The first milestone turns on observers, and setting it to zero ensures that we start measuring
+quantization statistics from step 0. The last milestone applies batch norm in inference mode,
 which means we do not use the calibration data to update the batch norm statistics. We do this because
 we do not want training data to influence the batch norm values. The other two milestones
 are used to control when fake quantization simulation is turned on and when observers are turned off.
-We can set them to values larger than 0 so that they are never turned on.</p>
+We can set them to values larger than zero so that they are never turned on.</p>
 </section>
 <section id="quantization-aware-training-qat">
-<h4>Quantization Aware Training (QAT)<a class="headerlink" href="#quantization-aware-training-qat" title="Permalink to this heading">#</a></h4>
+<h4>Quantization Aware Training (QAT)<a class="headerlink" href="#quantization-aware-training-qat" title="Link to this heading">#</a></h4>
 <p>We use <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.LinearQuantizer"><code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code></a>
 here as well, with a few extra steps, as demonstrated below.</p>
-<p>Specify config in a <code class="docutils literal notranslate"><span class="pre">YAML</span></code> file:</p>
+<p>Specify config in a YAML file:</p>
 <div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">global_config</span><span class="p">:</span>
 <span class="w">  </span><span class="nt">quantization_scheme</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">symmetric</span>
 <span class="w">  </span><span class="nt">milestones</span><span class="p">:</span>
@@ -642,9 +661,9 @@ here as well, with a few extra steps, as demonstrated below.</p>
 </pre></div>
 </div>
 <ul class="simple">
-<li><p>Here, we have written the configuration as a <code class="docutils literal notranslate"><span class="pre">yaml</span></code> file, and used <code class="docutils literal notranslate"><span class="pre">module_name_configs</span></code>
-to specify that we do not want first and last layer to be quantized. In actual config, you would
-specify the exact names of the first and last layers to de-select them for quantization. This
+<li><p>Here, we have written the configuration as a YAML file, and used <code class="docutils literal notranslate"><span class="pre">module_name_configs</span></code>
+to specify that we do not want the first and last layer to be quantized. In the actual config, you would
+specify the exact names of the first and last layers to deselect them for quantization. This
 is typically useful, but not required.</p></li>
 <li><p>A detailed explanation of various stages  of quantization can be found in the API Reference for
 <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.optimize.torch.quantization.html#coremltools.optimize.torch.quantization.ModuleLinearQuantizerConfig"><code class="docutils literal notranslate"><span class="pre">ModuleLinearQuantizerConfig</span></code></a>.</p></li>
@@ -652,31 +671,31 @@ is typically useful, but not required.</p></li>
 <p>In QAT, in addition to observing the values of weights and activation tensors
 to compute quantization parameters, we also simulate the effects of fake quantization
 during training. And instead of just performing forward pass on the model,
-we perform full training, with an optimizer. The forward and backward pass computations
+we perform full training with an optimizer. The forward and backward pass computations
 are conducted in <code class="docutils literal notranslate"><span class="pre">float32</span></code> dtype. However, these <code class="docutils literal notranslate"><span class="pre">float32</span></code> values follow the
 constraints imposed by <code class="docutils literal notranslate"><span class="pre">int8</span></code> and <code class="docutils literal notranslate"><span class="pre">quint8</span></code> dtypes, for weights and activations respectively.
 This allows the model weights to adjust and reduce the error introduced by quantization. <a class="reference external" href="https://arxiv.org/pdf/1308.3432.pdf">Straight-Through Estimation</a>
 is used for computing gradients of non-differentiable operations introduced by simulated quantization.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code> algorithm is implemented as an extension of
 <a class="reference external" href="https://pytorch.org/tutorials/prototype/fx_graph_mode_quant_guide.html">FX Graph Mode Quantization</a> in PyTorch.
-It first traces the PyTorch model symbolically to obtain a <a class="reference external" href="https://pytorch.org/docs/stable/fx.html">torch.fx</a>
+It first traces the PyTorch model symbolically to obtain a <a class="reference external" href="https://pytorch.org/docs/stable/fx.html"><code class="docutils literal notranslate"><span class="pre">torch.fx</span></code></a>
 graph capturing all the operations in the model. It then analyzes this graph,
-and inserts <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.ao.quantization.fake_quantize.FakeQuantize.html">FakeQuantize</a> layers in the graph.
+and inserts <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.ao.quantization.fake_quantize.FakeQuantize.html"><code class="docutils literal notranslate"><span class="pre">FakeQuantize</span></code></a> layers in the graph.
 FakeQuantize layer insertion locations are chosen such that model inference on hardware is
 optimized and only weights and activations which benefit from quantization are quantized.</p>
-<p>Since the prepare method uses <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.ao.quantization.quantize_fx.prepare_qat_fx.html">prepare_qat_fx</a>
+<p>Since the prepare method uses <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.ao.quantization.quantize_fx.prepare_qat_fx.html"><code class="docutils literal notranslate"><span class="pre">prepare_qat_fx</span></code></a>
 to insert quantization layers, the model returned from the method is a
-<a class="reference external" href="https://pytorch.org/docs/stable/fx.html#torch.fx.GraphModule">torch.fx.GraphModule</a>,
+<a class="reference external" href="https://pytorch.org/docs/stable/fx.html#torch.fx.GraphModule"><code class="docutils literal notranslate"><span class="pre">torch.fx.GraphModule</span></code></a>,
 and as a result custom methods defined on the original model class
 may not be available on the returned model. Some models, like those with dynamic control
 flow, may not be traceable into a torch.fx.GraphModule. We recommend following the
 instructions in <a class="reference external" href="https://pytorch.org/docs/stable/fx.html#limitations-of-symbolic-tracing">Limitations of Symbolic Tracing</a> and
 <a class="reference external" href="https://pytorch.org/tutorials/prototype/fx_graph_mode_quant_guide.html">FX Graph Mode Quantization User Guide</a> to
-update your model first, before using LinearQuantizer algorithm.</p>
+update your model first, before using the <code class="docutils literal notranslate"><span class="pre">LinearQuantizer</span></code> algorithm.</p>
 </section>
 </section>
 <section id="converting-quantized-pytorch-models-to-core-ml">
-<h3>Converting quantized PyTorch models to Core ML<a class="headerlink" href="#converting-quantized-pytorch-models-to-core-ml" title="Permalink to this heading">#</a></h3>
+<h3>Converting quantized PyTorch models to Core ML<a class="headerlink" href="#converting-quantized-pytorch-models-to-core-ml" title="Link to this heading">#</a></h3>
 <p>You can convert your PyTorch model, once it has been quantized, as you would a normal PyTorch model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert the PyTorch models to CoreML format</span>
 <span class="n">traced_model</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">trace</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">example_input</span><span class="p">)</span>
@@ -702,8 +721,8 @@ update your model first, before using LinearQuantizer algorithm.</p>
               
               
               
-                <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                <footer class="prev-next-footer d-print-none">
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="opt-quantization-algos.html"
@@ -732,6 +751,7 @@ update your model first, before using LinearQuantizer algorithm.</p>
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
@@ -745,7 +765,7 @@ update your model first, before using LinearQuantizer algorithm.</p>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#working-with-pytorch-models">Working with PyTorch Models</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Quantizing weights</a><ul class="nav section-nav flex-column">
-<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-quantization">Data free quantization</a></li>
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-quantization">Data-free quantization</a></li>
 <li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#calibration-data-based-quantization">Calibration data based quantization</a></li>
 </ul>
 </li>
@@ -778,6 +798,7 @@ By Apple
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2023, Apple Inc.
@@ -804,8 +825,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>
