@@ -3,12 +3,11 @@ Performance
  
 Since palettization reduces the size of each weight value, the amount of data to be moved is reduced during prediction. 
 This can lead to benefits in memory-bottlenecked models. Note that this latency advantage is available only when 
-palettized weights are loaded and are decompressed “just in time” of computation. Starting with `iOS17/macOS14`, this is
+palettized weights are loaded and are decompressed “just in time” for computation. Starting with `iOS17/macOS14`, this is
 more likely to happen for models running primarily on the Neural Engine backend.
 
 For the `per_grouped_channel` palettization mode added in `iOS18/macOS15`, you may see a drop in runtime performance as 
-the number of LUTs used to represent a weight tensor is increased. Typically, group size of 8 or 16 have been seen to give 
-good accuracy, while still giving a speed-up over uncompressed model.
+the number of LUTs used to represent a weight tensor increases. Typically, a group size of 8 or 16 gives good accuracy while still increasing speed over an uncompressed model.
 
 
 ## Performance Benchmarks 
@@ -17,9 +16,9 @@ In the table below, we provide runtime performance benchmarks on several models,
 
 ### Methodology
 
-The training time compressed models were obtained by fine-tuning the `float32` PyTorch models with weights initialized from the checkpoints linked in the [Model Info](#model-info) table, and using methods from `coremltools.optimize.torch` to perform compression. The datasets used for fine-tuning the models are also linked in the same table, along with the accuracy metric being reported. We used fine-tuning recipes which are commonly used in literature for the task at hand, and standard data augmentations. 
+The training time compressed models were obtained by fine-tuning the `float32` PyTorch models with weights initialized from the checkpoints linked in the [Model Info](#model-info) table, and using methods from `coremltools.optimize.torch` to perform compression. The datasets used for fine-tuning the models are also linked in the same table, along with the accuracy metric being reported. We used fine-tuning recipes which are commonly used in literature for the task at hand and for standard data augmentations. 
 
-Similarly, the post training compressed models were obtained by compressing the converted `float16` Core ML models, with pre-trained weights, using methods from `coremltools.optimize.coreml` module. 
+Similarly, the post training compressed models were obtained by compressing the converted `float16` Core ML models, with pre-trained weights, using methods from the `coremltools.optimize.coreml` module. 
 
 The trained and compressed models and the `coremltools.optimize.torch` config files used for compression can be downloaded by clicking the respective links embedded in the model and config names.
 

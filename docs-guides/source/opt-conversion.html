@@ -1,9 +1,8 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
@@ -15,41 +14,41 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/opt-conversion';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Compressing Neural Network Weights" href="quantization-neural-network.html" />
-    <link rel="prev" title="Combining compression types" href="opt-joint-compression.html" />
+    <link rel="prev" title="Combining Compression Types" href="opt-joint-compression.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -59,28 +58,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +96,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -122,6 +124,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
@@ -130,10 +135,22 @@
   
   
   
+  
     <p class="title logo__title">Guide to Core ML Tools</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -153,7 +170,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
@@ -162,16 +179,16 @@
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -179,8 +196,8 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -191,41 +208,41 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining compression types</a></li>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Conversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
 </ul>
@@ -242,12 +259,12 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 
     </div>
@@ -263,7 +280,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -272,14 +289,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -369,26 +386,28 @@
 </button>
 
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -434,33 +453,33 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="conversion">
-<h1>Conversion<a class="headerlink" href="#conversion" title="Permalink to this heading">#</a></h1>
-<p>Given a compressed torch model (whose weights are compressed but still
-represented in dense <code class="docutils literal notranslate"><span class="pre">float</span></code> format),
+<h1>Conversion<a class="headerlink" href="#conversion" title="Link to this heading">#</a></h1>
+<p>Given a compressed torch model whose weights are compressed but still
+represented in dense <code class="docutils literal notranslate"><span class="pre">float</span></code> format,
 we want the converted Core ML model to have the corresponding
 <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops">compressed MIL</a>
 ops. This will ensure that the compression benefits at runtime are realized.</p>
 <p>The converted model with the compressed MIL ops can be generated in two ways:</p>
 <ul class="simple">
 <li><p>By using the compression info stored explicitly in the torch model: if you are using
-coremltools 8 and <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs, there is no action required from the user. The APIs
+coremltools 8 and <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs, the APIs
 will automatically insert compression info in the torch model, which will be picked
 by <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code>. To learn more details on how this is implemented,
-see <a class="reference internal" href="#use-compression-info-embedded-in-torch-models">compression info section below</a></p></li>
+see the section <a class="reference internal" href="#use-compression-info-embedded-in-torch-models">Use compression info embedded in torch models</a>.</p></li>
 <li><p>By specifying a graph pass during conversion: this is required for some compression modes if
-you are using Core ML Tools 7. To learn more about this, see <a class="reference internal" href="#specify-pass-pipeline">next section</a>.
-Note that this does not cover all the available compression modes, hence the first option above
+you are using Core ML Tools 7. To learn more about this, see the section <a class="reference internal" href="#specify-pass-pipeline">Specify pass pipeline</a>.
+Note that this does not cover all the available compression modes. The first option above
 is the recommended workflow.</p></li>
 </ul>
 <section id="specify-pass-pipeline">
-<h2>Specify pass pipeline<a class="headerlink" href="#specify-pass-pipeline" title="Permalink to this heading">#</a></h2>
-<p>If you are using coremltools 7, you need to specify the graph pass for converting palettized or
+<h2>Specify pass pipeline<a class="headerlink" href="#specify-pass-pipeline" title="Link to this heading">#</a></h2>
+<p>If you are using Core ML Tools 7, you need to specify the graph pass for converting palettized or
 sparse torch models.</p>
 <section id="convert-models-with-sparse-weights">
-<h3>Convert models with sparse weights<a class="headerlink" href="#convert-models-with-sparse-weights" title="Permalink to this heading">#</a></h3>
+<h3>Convert models with sparse weights<a class="headerlink" href="#convert-models-with-sparse-weights" title="Link to this heading">#</a></h3>
 <p>If your source model weights have lots of zeros, then specify the <code class="docutils literal notranslate"><span class="pre">pass_pipeline</span></code> argument as
 follows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
@@ -477,7 +496,7 @@ will convert the weight values below a certain low threshold (<code class="docut
 then use a sparse representation to store the weights, thereby saving space.</p>
 </section>
 <section id="convert-models-with-palettized-weights">
-<h3>Convert models with palettized weights<a class="headerlink" href="#convert-models-with-palettized-weights" title="Permalink to this heading">#</a></h3>
+<h3>Convert models with palettized weights<a class="headerlink" href="#convert-models-with-palettized-weights" title="Link to this heading">#</a></h3>
 <p>If your source model weights are palettized; that is, clustered and can only take on a few discrete
 values, then you can save space by invoking the following pass during conversion:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
@@ -497,37 +516,37 @@ representation using lookup tables (LUTs) to store them.</p>
 </section>
 </section>
 <section id="use-compression-info-embedded-in-torch-models">
-<h2>Use compression info embedded in torch models<a class="headerlink" href="#use-compression-info-embedded-in-torch-models" title="Permalink to this heading">#</a></h2>
+<h2>Use compression info embedded in torch models<a class="headerlink" href="#use-compression-info-embedded-in-torch-models" title="Link to this heading">#</a></h2>
 <p>The previous method with pass pipeline has the following limitations:</p>
 <ul class="simple">
 <li><p>With more compression granularity supported in Core ML Tools 8, it’s hard to infer the
-compression info accurately. For example, if the model is compressed by grouped channel wise
-palettization, we need group size and channel axis to correctly divide weights into groups, and
-also the fp16 numerical instability could lead to incorrect inferred n-bit values.</p></li>
-<li><p>You always need to specify the <code class="docutils literal notranslate"><span class="pre">pass_pipeline</span></code> parameter. If you forgot to do it, the conversion
-would still succeed, but the converted Core ML model is a float model without compressed MIL ops.</p></li>
+compression info accurately. For example, if the model is compressed by grouped channel-wise
+palettization, we need group size and channel axis to correctly divide weights into groups. In addition,
+the fp16 numerical instability could lead to incorrect inferred n-bit values.</p></li>
+<li><p>You always need to specify the <code class="docutils literal notranslate"><span class="pre">pass_pipeline</span></code> parameter. If you forget, the conversion
+will still succeed, but the converted Core ML model will be a float model without compressed MIL ops.</p></li>
 </ul>
-<p>In Core ML tools 8, the <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs have been updated, so that they
+<p>In Core ML tools 8, the <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs have been updated so that they
 now embed the info about the compression that was performed on the torch model.
 The info is then read by the <code class="docutils literal notranslate"><span class="pre">ct.convert</span></code> API automatically, so as a user you do not have to do
-anything special: just use the APIs to compress your torch models and simply convert them without
-the need to specify any pass pipelines.</p>
+anything special: just use the APIs to compress your torch models and convert them. There is no need
+to specify any pass pipelines.</p>
 <p>This approach is more general and allows for handling compression modes, such as per-grouped-channel
 palettization, per-block 4-bit quantization, etc., which are not natively expressible in torch models.</p>
-<p>Here is the protocol of the compression info embedded into torch models:</p>
+<p>Here is the protocol of the compression information embedded into torch models:</p>
 <ul class="simple">
-<li><p>The compression info is stored by torch’s registered buffers.</p></li>
+<li><p>The compression information is stored by torch’s registered buffers.</p></li>
 <li><p>The registered buffer names should be in the format of <code class="docutils literal notranslate"><span class="pre">_COREML_/&lt;parameter_name&gt;/&lt;field_name&gt;</span></code>.
 For example, <code class="docutils literal notranslate"><span class="pre">'dense1._COREML_/weight/n_bits'</span></code>, <code class="docutils literal notranslate"><span class="pre">'dense1._COREML_/weight/quantization_scale'</span></code>, etc.</p></li>
-<li><p>Available <code class="docutils literal notranslate"><span class="pre">field_name</span></code> are <code class="docutils literal notranslate"><span class="pre">compression_type</span></code>, <code class="docutils literal notranslate"><span class="pre">quantization_n_bits</span></code>, <code class="docutils literal notranslate"><span class="pre">quantization_scale</span></code>,
-<code class="docutils literal notranslate"><span class="pre">zero_point</span></code>, <code class="docutils literal notranslate"><span class="pre">lut</span></code>, <code class="docutils literal notranslate"><span class="pre">palettization_scale</span></code>.
+<li><p>Available <code class="docutils literal notranslate"><span class="pre">field_name</span></code> options are <code class="docutils literal notranslate"><span class="pre">compression_type</span></code>, <code class="docutils literal notranslate"><span class="pre">quantization_n_bits</span></code>, <code class="docutils literal notranslate"><span class="pre">quantization_scale</span></code>,
+<code class="docutils literal notranslate"><span class="pre">zero_point</span></code>, <code class="docutils literal notranslate"><span class="pre">lut</span></code>, and <code class="docutils literal notranslate"><span class="pre">palettization_scale</span></code>.
 Details about the meaning of each field can be found
-in <a class="reference internal" href="#compression-info-protocol">Compression Info Protocol</a> section below. Following subsections
-go over a few examples as well.</p></li>
+in <a class="reference internal" href="#compression-info-protocol">Compression info protocol</a>. The following subsections
+also go over a few examples.</p></li>
 </ul>
 <section id="id1">
-<h3>Convert models with sparse weights<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h3>
-<p>If the model is produced by <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.pruning.*</span></code> APIs, you could directly convert it.</p>
+<h3>Convert models with sparse weights<a class="headerlink" href="#id1" title="Link to this heading">#</a></h3>
+<p>If the model is produced by <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.pruning.*</span></code> APIs, you can convert it directly.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
 <span class="n">model_with_sparse_weights</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
@@ -537,8 +556,8 @@ go over a few examples as well.</p></li>
 </pre></div>
 </div>
 <p>If the model is produced by other tools, you can update the torch model, prior to tracing and
-conversion, by embedding the compression info via <code class="docutils literal notranslate"><span class="pre">register_buffer</span></code> for each module that has been
-compressed, as follows</p>
+conversion, by embedding the compression information via <code class="docutils literal notranslate"><span class="pre">register_buffer</span></code> for each module that has been
+compressed, as shown below:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume the model has two conv layers and both of them got pruned.</span>
 <span class="n">pruned_torch_model</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/metadata_version&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">pruned_torch_model</span><span class="o">.</span><span class="n">conv_1</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/weight/compression_type&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">1</span><span class="p">]))</span>
@@ -552,8 +571,8 @@ compressed, as follows</p>
 </div>
 </section>
 <section id="id2">
-<h3>Convert models with palettized weights<a class="headerlink" href="#id2" title="Permalink to this heading">#</a></h3>
-<p>If the model is produced by <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch</span></code>, you could directly convert it.</p>
+<h3>Convert models with palettized weights<a class="headerlink" href="#id2" title="Link to this heading">#</a></h3>
+<p>If the model is produced by <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch</span></code>, you can convert it directly.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
 <span class="n">model_with_lut_weights</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span>
@@ -562,8 +581,8 @@ compressed, as follows</p>
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>If the model is produced by other tools, you could embed compression info by registering buffers
-for each layer as shown below.</p>
+<p>If the model is produced by other tools, you can embed compression information by registering buffers
+for each layer, as shown below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume the model has two conv layers, and both of them got palettized, while the first layer has per-channel-scale.</span>
 <span class="n">palettized_torch_model</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/metadata_version&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">palettized_torch_model</span><span class="o">.</span><span class="n">conv_1</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/weight/compression_type&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([</span><span class="mi">2</span><span class="p">]))</span>
@@ -582,17 +601,17 @@ for each layer as shown below.</p>
 </div>
 </section>
 <section id="convert-pytorch-models-with-quantized-weights-and-activations">
-<h3>Convert PyTorch models with quantized weights and activations<a class="headerlink" href="#convert-pytorch-models-with-quantized-weights-and-activations" title="Permalink to this heading">#</a></h3>
+<h3>Convert PyTorch models with quantized weights and activations<a class="headerlink" href="#convert-pytorch-models-with-quantized-weights-and-activations" title="Link to this heading">#</a></h3>
 <p>If you use PyTorch’s built-in quantization tool, the produced compressed models store quantized
 weights or activations using <code class="docutils literal notranslate"><span class="pre">qint</span></code> or <code class="docutils literal notranslate"><span class="pre">quint</span></code> data types, and additional quantization ops are used.
 This is picked up automatically by the conversion process, which then automatically uses linear
 quantized storage format to store weights.</p>
-<p>However, as of now, PyTorch built-in quantization tool only supports per-tensor and per-channel
+<p>However, for now, the PyTorch built-in quantization tool only supports per-tensor and per-channel
 quantization. For more compression schemas / granularity, you need to use <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs
 or other third-party tools.</p>
-<p>If you use <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs to quantize your torch model, the compression info will be
-automatically stored in the compressed torch model, which could be converted seamlessly.</p>
-<p>If you use other tools, you could inject compression info by registering buffers for each layer as
+<p>If you use <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs to quantize your torch model, the compression information will be
+automatically stored in the compressed torch model, which can be converted seamlessly.</p>
+<p>If you use other tools, you can inject compression information by registering buffers for each layer, as
 shown below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume the model has two linear layers and only the second linear layer&#39;s weight and bias got quantized.</span>
 <span class="n">quantized_torch_model</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/metadata_version&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
@@ -618,12 +637,12 @@ shown below.</p>
 </div>
 </section>
 <section id="convert-models-with-jointly-compressed-weights">
-<h3>Convert models with jointly compressed weights<a class="headerlink" href="#convert-models-with-jointly-compressed-weights" title="Permalink to this heading">#</a></h3>
+<h3>Convert models with jointly compressed weights<a class="headerlink" href="#convert-models-with-jointly-compressed-weights" title="Link to this heading">#</a></h3>
 <p>Starting from Core ML Tools 8, the <code class="docutils literal notranslate"><span class="pre">ct.optimize.torch.*</span></code> APIs allows for joint compression schemes,
 such as <code class="docutils literal notranslate"><span class="pre">pruning</span> <span class="pre">+</span> <span class="pre">quantization</span></code> and <code class="docutils literal notranslate"><span class="pre">pruning</span> <span class="pre">+</span> <span class="pre">palettization</span></code>.
-The produced models could also be converted seamlessly.</p>
-<p>Similarly, if you use other tools which quantized the non-zero entries of the sparse weight, you could
-inject compression info by registering buffers for each layer as shown below.</p>
+The produced models can also be converted seamlessly.</p>
+<p>Similarly, if you use other tools which quantized the non-zero entries of the sparse weight, you can
+inject compression information by registering buffers for each layer, as shown below.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Assume the model has two convs layers and both got jointly compressed by pruning + quantization.</span>
 <span class="n">joint_compressed_model</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/metadata_version&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 <span class="n">joint_compressed_model</span><span class="o">.</span><span class="n">conv_1</span><span class="o">.</span><span class="n">register_buffer</span><span class="p">(</span><span class="s2">&quot;_COREML_/weight/compression_type&quot;</span><span class="p">,</span>
@@ -669,18 +688,18 @@ inject compression info by registering buffers for each layer as shown below.</p
 </div>
 </section>
 <section id="compression-info-protocol">
-<h3>Compression info protocol<a class="headerlink" href="#compression-info-protocol" title="Permalink to this heading">#</a></h3>
+<h3>Compression info protocol<a class="headerlink" href="#compression-info-protocol" title="Link to this heading">#</a></h3>
 <p>As described in <a class="reference internal" href="#use-compression-info-embedded-in-torch-models">Use compression info embedded in torch models</a>,
-you could register buffers in the compressed torch model to specify compression related information.
+you can register buffers in the compressed torch model to specify compression related information.
 All the information stored in this newly introduced protocol will be fully honored by Core ML Tools
 when constructing the compressed MIL ops.</p>
 <p>This section records the detailed meaning of each field that you could specify, as well as the
-versioning change (the version is an integer which could be specified by <code class="docutils literal notranslate"><span class="pre">_COREML_/metadata_version</span></code>
-at model level).</p>
+versioning change. The version is an integer that can be specified by <code class="docutils literal notranslate"><span class="pre">_COREML_/metadata_version</span></code>
+at the model level.</p>
 <section id="version-1">
-<h4>Version 1<a class="headerlink" href="#version-1" title="Permalink to this heading">#</a></h4>
+<h4>Version 1<a class="headerlink" href="#version-1" title="Link to this heading">#</a></h4>
 <p><strong>Quantization Related Fields</strong></p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
 <th class="head"><p>Original Type</p></th>
@@ -710,9 +729,10 @@ at model level).</p>
 </tr>
 </tbody>
 </table>
-<p>Details about the shape of the scale and zero-point could be found in iOS18 <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> op.</p>
+</div>
+<p>Details about the shape of the scale and zero-point can be found in the <code class="docutils literal notranslate"><span class="pre">iOS18</span></code> <code class="docutils literal notranslate"><span class="pre">constexpr_blockwise_shift_scale</span></code> op.</p>
 <p><strong>Palettization Related Fields</strong></p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
 <th class="head"><p>Original Type</p></th>
@@ -736,9 +756,10 @@ at model level).</p>
 </tr>
 </tbody>
 </table>
-<p>Details about the shape of the lut could be found in iOS18 <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> op.</p>
+</div>
+<p>Details about the shape of the lookup table can be found in the <code class="docutils literal notranslate"><span class="pre">iOS18</span></code> <code class="docutils literal notranslate"><span class="pre">constexpr_lut_to_dense</span></code> op.</p>
 <p><strong>Compression Type Field</strong></p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Key</p></th>
 <th class="head"><p>Original Type</p></th>
@@ -756,10 +777,11 @@ at model level).</p>
 </tr>
 </tbody>
 </table>
-<p>All these fields could be combined to cover all Core ML Tools 8 new compression schemas as described
+</div>
+<p>All these fields can be combined to cover all Core ML Tools 8 new compression schemas, as described
 below.</p>
 <p><strong>Quantization</strong></p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Feature</p></th>
 <th class="head"><p>Required Fields</p></th>
@@ -769,19 +791,20 @@ below.</p>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>block-wise quantization</p></td>
-<td><p>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetic)<br>compression_type = [3]</p></td>
+<tr class="row-odd"><td><p>blockwise quantization</p></td>
+<td><p>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetric)<br>compression_type = [3]</p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p>4-bit quantization</p></td>
-<td><p>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetic)<br>compression_type = [3]</p></td>
+<td><p>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetric)<br>compression_type = [3]</p></td>
 </tr>
 </tbody>
 </table>
+</div>
 <p><strong>Palettization</strong></p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Feature</p></th>
 <th class="head"><p>Required Fields</p></th>
@@ -810,12 +833,13 @@ below.</p>
 <td><p></p></td>
 </tr>
 <tr class="row-odd"><td><p>LUT with 8-bit values</p></td>
-<td><p>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetic)<br>compression_type = [2, 3]</p></td>
+<td><p>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetric)<br>compression_type = [2, 3]</p></td>
 </tr>
 </tbody>
 </table>
+</div>
 <p><strong>Joint compression</strong></p>
-<table class="table">
+<div class="pst-scrollable-table-container"><table class="table">
 <thead>
 <tr class="row-odd"><th class="head"><p>Feature</p></th>
 <th class="head"><p>Required Fields</p></th>
@@ -825,23 +849,24 @@ below.</p>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>pruning + quantization (sparse weight where nonzero values are 8 bit quantized)</p></td>
-<td><p>compression_type = [1, 3]<br>n_bits<br>quantization_scale<br>zero_point (for affine &amp; unsigned symmetic)</p></td>
+<tr class="row-odd"><td><p>pruning + quantization (sparse weight where non-zero values are 8-bit quantized)</p></td>
+<td><p>compression_type = [1, 3]<br>n_bits<br>quantization_scale<br>zero_point (for affine and unsigned symmetric)</p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>pruning + palettization (sparse weight where nonzero values are n-bit palettized)</p></td>
+<tr class="row-odd"><td><p>pruning + palettization (sparse weight where non-zero values are n-bit palettized)</p></td>
 <td><p>compression_type = [1, 2]<br>Same as required keys for palettization</p></td>
 </tr>
 <tr class="row-even"><td><p></p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-odd"><td><p>pruning + palettization + quantization (sparse weight where nonzero values are n-bit palettized with int8 LUT)</p></td>
-<td><p>compresion_type = [1, 2, 3]<br>Same as required keys for LUT with 8-bit values</p></td>
+<tr class="row-odd"><td><p>pruning + palettization + quantization (sparse weight where non-zero values are n-bit palettized with int8 LUT)</p></td>
+<td><p>compression_type = [1, 2, 3]<br>Same as required keys for LUT with 8-bit values</p></td>
 </tr>
 </tbody>
 </table>
+</div>
 </section>
 </section>
 </section>
@@ -855,8 +880,8 @@ below.</p>
               
               
               
-                <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                <footer class="prev-next-footer d-print-none">
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="opt-joint-compression.html"
@@ -864,7 +889,7 @@ below.</p>
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Combining compression types</p>
+        <p class="prev-next-title">Combining Compression Types</p>
       </div>
     </a>
     <a class="right-next"
@@ -884,6 +909,7 @@ below.</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -928,6 +954,7 @@ By Apple
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2023, Apple Inc.
@@ -954,8 +981,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

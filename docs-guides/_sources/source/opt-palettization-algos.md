@@ -1,29 +1,29 @@
-Algorithms
-===========
+Palettization Algorithms
+========================
 
-There are a few different ways in which a model's weights can be palettized. 
+There are a few different ways in which a model’s weights can be palettized. 
 For the same compression factor, each of these approaches can have a different impact on model accuracy.
 Below we talk about different palettization algorithms that are supported, and some of the considerations to keep in mind when choosing the approach that works well for your use case. 
 
 ## K-Means
-This is a data free post training palettization algorithm where weights are clustered using [k-means_clustering](https://en.wikipedia.org/wiki/K-means_clustering) and the derived centroids form the lookup table (LUT).
+This is a data-free post-training palettization algorithm where weights are clustered using [k-means clustering](https://en.wikipedia.org/wiki/K-means_clustering) and where the derived centroids form the lookup table (LUT).
 Since this only requires model weights, it is the easiest algorithm to set up and experiment with. For higher bit palettization, post-training palettization provides a good compression-accuracy tradeoff.
-However, there is a significant loss in accuracy for lower bits. For lower bits, `per_grouped_channel` granularity can be used to recover loss in accuracy. 
+However, there is a significant loss in accuracy for lower bits. For lower bits, `per_grouped_channel` granularity can be used to recover the loss in accuracy. 
 
 Supported API(s): 
 - [coremltools.optimize.coreml.palettize_weights](https://apple.github.io/coremltools/source/coremltools.optimize.coreml.post_training_quantization.html#coremltools.optimize.coreml.palettize_weights)
 - [coremltools.optimize.torch.palettization.PostTrainingPalettizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.PostTrainingPalettizer)
 
 ## Sensitive K-Means
-Sensitive K-Means is a calibration data based post training palettization algorithm, based on [SqueezeLLM: Dense-and-Sparse Quantization](https://arxiv.org/pdf/2306.07629). 
+Sensitive K-Means is a calibration data based post-training palettization algorithm, based on [SqueezeLLM: Dense-and-Sparse Quantization](https://arxiv.org/pdf/2306.07629). 
 It palettizes weights by running a weighted k-means on model parameters. These weights, called sensitivity, are computed 
-using an objective function that depends on the Hessian of the model parameters. Since Hessian is a second order derivative and computationally expensive to compute, 
+using an objective function that depends on the Hessian of the model parameters. Since Hessian is a second-order derivative and computationally expensive to calculate, 
 it is approximated by using the Fisher information matrix, which is computed from the square of gradients easily available given a few calibration input data points 
 and a loss function.
 
-The more sensitive an element, the larger impact perturbing it (or palettizing it) has on the model’s loss function. 
-Thus, weighted k-means moves the clusters closer to the sensitive weight values, allowing them to be represented more precisely. This generally leads to lower degradation in model accuracy but depends on model type and how accurate the Fischer Information approximation is for that specific model. 
-Typically, 128 samples are sufficient for applying this algorithm. In practice, this algorithm works well, better than data free K-Means, for large transformer based architectures.
+The more sensitive an element, the larger impact perturbing it (in this case, palettizing it) has on the model’s loss function. 
+Thus, weighted k-means moves the clusters closer to the sensitive weight values, allowing them to be represented more precisely. This generally leads to lower degradation in model accuracy but depends on model type and how accurate the Fisher Information approximation is for that specific model. 
+Typically, 128 samples are sufficient for applying this algorithm. In practice, this algorithm works well, better than data-free K-Means, for large transformer-based architectures.
 
 Supported API(s): 
 - [coremltools.optimize.torch.palettization.SKMPalettizer](https://apple.github.io/coremltools/source/coremltools.optimize.torch.palettization.html#coremltools.optimize.torch.palettization.SKMPalettizer)

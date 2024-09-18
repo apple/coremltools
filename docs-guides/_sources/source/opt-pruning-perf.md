@@ -5,10 +5,10 @@ Performance
 
 - For a model that is primarily running on the Neural Engine, sparsity typically helps in improving latency. This is made possible by two factors:
   - It reduces the size of weights to be loaded at inference time, which can speed up inference of networks that are weight memory bound. 
-  - When a string of consecutive 0s are encountered, the Neural Engine may also be able to skip computations, thereby reducing the amount of computation. This can be achieved by choosing higher levels of unstructured sparsity (e.g. 75% or higher) or block structured sparsity, where zeros occur in blocks of 2 or its multiples. 
-  - Note that longer fine-tuning with more data is usually needed to preserve accuracy with larger block sizes and higher levels of sparsity 
+  - When a string of consecutive `0`s are encountered, the Neural Engine may also be able to skip computations, thereby reducing the amount of computation. This can be achieved by choosing higher levels of unstructured sparsity (e.g. 75% or higher) or block-structured sparsity, where zeros occur in blocks of 2 or its multiples. 
+  - Note that longer fine-tuning with more data is usually needed to preserve accuracy with larger block sizes and higher levels of sparsity.
 
-- Models with a lot of linear ops can benefit from inference speed-ups on CPU on newer hardware generations, when using ``n:m`` sparsity. Here, out of a block of ``m`` elements, ``n`` are 0s. ``m`` should be a factor of 16 (such as ``3:4``, ``7:8``, ``14:16``, and so on) and ``n/m >= 0.5``.
+- Models with a lot of linear ops can benefit from inference speed-ups on CPU on newer hardware generations, when using `n:m` sparsity. Here, out of a block of `m` elements, `n` are `0`s. `m` should be a factor of 16 (such as `3:4`, `7:8`, `14:16`, and so on) and `n/m >= 0.5`.
 
 - Pruning can be applied jointly with quantization and palettization to achieve additional latency and memory savings, over and above those achieved by applying those techniques individually.   
 

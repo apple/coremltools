@@ -7,13 +7,13 @@ This can lead to benefits with memory-bottlenecked models.
 Quantizing the activations may further ease this memory pressure and may lead to more gains when compared to weight-only 
 quantization. However, with activation quantization, you may observe a considerable slowdown in inference for the 
 compute units (CPU and sometimes GPU) that employ load-time weight decompression, since activations are not known at 
-load time, and they need to be decompressed at runtime, slowing down the inference. Therefore it is recommended to use
+load time, and they need to be decompressed at runtime, slowing down the inference. Therefore, it is recommended to use
 activation quantization only when your model is fully or mostly running on the Neural Engine (NE).
 
-In newer hardware with A17 Pro or M4 chips (e.g. iPhone 15 Pro), there is increased throughput possible for int8-int8 
-compute on Neural Engine, compared to previous versions. Hence, activation and weight quantization for networks running on
+In newer hardware with A17 Pro or M4 chips, such as iPhone 15 Pro, there is increased throughput possible for int8-int8 
+compute on Neural Engine, compared to previous versions. This means that activation and weight quantization for networks running on
 Neural Engine can give even more latency gains. This can be seen in the [table below](#results) (e.g. 
-The ResNet50 model with `W8A8` mode runs considerably faster than its `W16A16` equivalent).  
+The ResNet50 model with `W8A8` mode runs considerably faster than its `W16A16` equivalent). 
 
 For the `per-block` weight quantization option added in `iOS18/macOS15`, which is especially useful when employing 
 quantization to `4-bits`, one can expect to see great runtime memory gains, as well as latency gains depending on the model,

@@ -1,4 +1,4 @@
-# Overview
+# Quantization Overview
 
 Quantization refers to the process of reducing the number of bits that represent a number. This process casts values from `float` type to an `integer` type that uses fewer bits.
 
@@ -46,7 +46,7 @@ When quantization is performed, constraining the `zero_point` to be zero is refe
 Different granularities supported for quantization.
 ```
 
-There are three modes supported for `QuantizationGranularity`: `per_tensor`, `per_channel`, `per_block`. `per_tensor` granularity computes a single float scale value (and zero point, in the case of symmetric quantization) for the whole tensor. `per_channel` granularity uses a scale factor for each outer dimension (also referred to as the `output channel`) of the weight tensor. The `per_block` granularity shares scale factors across blocks of values in the weight tensor which helps provide more fine-grained control of quantizing the weight values which contributes to improving the accuracy of the model.
+There are three modes supported for `QuantizationGranularity`: `per_tensor`, `per_channel`, `per_block`. `per_tensor` granularity computes a single float scale value (and zero point, in the case of symmetric quantization) for the whole tensor. `per_channel` granularity uses a scale factor for each outer dimension (also referred to as the `output channel`) of the weight tensor. The `per_block` granularity shares scale factors across blocks of values in the weight tensor. This helps provide more fine-grained control when quantizing the weight values, which helps improve the accuracy of the model.
 
 ### Activation Quantization
 
@@ -54,7 +54,7 @@ Unlike the [Pruning](opt-pruning) or [Palettization](opt-palettization) compress
 that compress only weights, for 8-bit quantization, activations 
 of the network can also be quantized with their own scale factors.
 
-Activations are quantized using `per-tensor` mode. During the process of training or passing calibration data through the model, the values of intermediate activations are observed and their max and min values are used to compute the quantization scales, which are stored during inference. Quantizing the intermediate tensors may help in inference of networks that are bottlenecked by memory bandwidth due to large activations.
+Activations are quantized using `per-tensor` mode. During the process of training or passing calibration data through the model, the values of intermediate activations are observed, and their max and min values are used to compute the quantization scales, which are stored during inference. Quantizing the intermediate tensors may help in inference of networks that are bottlenecked by memory bandwidth due to large activations.
 
-On newer hardware with A17 Pro or M4 chips, e.g. iPhone 15 Pro, quantizing both activations and weight to `int8` can leverage optimized compute on the Neural Engine. This can help improve runtime latency in compute-bound models.
+On newer hardware with A17 Pro or M4 chips, such as the iPhone 15 Pro, quantizing both activations and weight to `int8` can leverage optimized compute on the Neural Engine. This can help improve runtime latency in compute-bound models.
 

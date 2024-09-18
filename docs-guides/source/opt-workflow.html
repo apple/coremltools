@@ -1,9 +1,8 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
@@ -15,36 +14,36 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/opt-workflow';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -59,28 +58,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +96,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -122,6 +124,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
@@ -130,10 +135,22 @@
   
   
   
+  
     <p class="title logo__title">Guide to Core ML Tools</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -153,7 +170,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
@@ -162,16 +179,16 @@
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -179,8 +196,8 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -191,41 +208,41 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">Optimization Workflow</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining compression types</a></li>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
 </ul>
@@ -242,12 +259,12 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 
     </div>
@@ -263,7 +280,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -272,14 +289,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -369,26 +386,28 @@
 </button>
 
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -409,13 +428,13 @@ document.write(`
             </div>
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-data-free-compression">Post training data free compression</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-calibration-data-based-compression">Post training calibration data based compression</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-fine-tuning-based-compression">Model fine tuning based compression</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-data-free-compression">Post-training data-free compression</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-calibration-data-based-compression">Post-training calibration data based compression</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-fine-tuning-based-compression">Model fine-tuning based compression</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apis-for-each-workflow">APIs for each workflow</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-compression">Data free compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-compression">Data-free compression</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-calibration-dataset">With calibration dataset</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-fine-tuning">With fine tuning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-fine-tuning">With fine-tuning</a></li>
 </ul>
 </li>
 </ul>
@@ -427,139 +446,127 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="optimization-workflow">
-<h1>Optimization Workflow<a class="headerlink" href="#optimization-workflow" title="Permalink to this heading">#</a></h1>
-<p>The workflow to compress a model can be divided into 3 categories.
+<h1>Optimization Workflow<a class="headerlink" href="#optimization-workflow" title="Link to this heading">#</a></h1>
+<p>The workflow to compress a model can be divided into three categories.
 They vary in terms of what is required, how
 time or data intensive the process is, and how much of the model accuracy can be preserved
 for a given compression factor.
-In this section we will go over the workflows, provide recommendations on when to
-use which ones, and finally an overview of which model formats and
+This section goes over the workflows, provides recommendations on when to
+use which ones, and gives an overview of which model formats and
 coremltools APIs to use for each of the approaches.</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#post-training-data-free-compression"><span class="std std-ref">Post training data free compression</span></a></p></li>
-<li><p><a class="reference internal" href="#post-training-calibration-data-based-compression"><span class="std std-ref">Post training calibration data based compression</span></a></p></li>
-<li><p><a class="reference internal" href="#model-fine-tuning-based-compression"><span class="std std-ref">Model fine tuning based compression</span></a></p></li>
+<li><p><a class="reference internal" href="#post-training-data-free-compression"><span class="std std-ref">Post-training data-free compression</span></a></p></li>
+<li><p><a class="reference internal" href="#post-training-calibration-data-based-compression"><span class="std std-ref">Post-training calibration data based compression</span></a></p></li>
+<li><p><a class="reference internal" href="#model-fine-tuning-based-compression"><span class="std std-ref">Model fine-tuning based compression</span></a></p></li>
 <li><p><a class="reference internal" href="#apis-for-each-workflow"><span class="std std-ref">APIs for each workflow</span></a></p></li>
 </ul>
 <section id="post-training-data-free-compression">
-<h2>Post training data free compression<a class="headerlink" href="#post-training-data-free-compression" title="Permalink to this heading">#</a></h2>
+<h2>Post-training data-free compression<a class="headerlink" href="#post-training-data-free-compression" title="Link to this heading">#</a></h2>
 <p>Characteristics of this workflow:</p>
 <ul class="simple">
 <li><p>You just need the model and nothing else (no data or access to training pipeline).</p></li>
 <li><p>Algorithms in this category work by simply minimizing the error between compressed and
 uncompressed weights.</p></li>
 <li><p>This is the fastest workflow and typically takes a few seconds
-or up to a few minutes for a large model. While accuracy is very model and task specific, typically,
-in this workflow accuracy will drop much faster when the amount of compression is increased.</p></li>
+or up to a few minutes for a large model. While accuracy is very model- and task-specific, accuracy will
+typically drop much faster in this workflow when the amount of compression increases.</p></li>
 </ul>
 <p>A few examples when you may want to use this workflow:</p>
 <ul class="simple">
 <li><p>The following two approaches can get a factor of 2x or more compression instantly
 with minimal loss of accuracy for most models, and decent latency gains depending on the specific model instance:</p>
 <ul>
-<li><p>Palettization to 8 or 6 bits.</p></li>
-<li><p>linear quantization of weights to 8 bits</p></li>
+<li><p>Palettization to 8 or 6 bits</p></li>
+<li><p>Linear quantization of weights to 8 bits</p></li>
 </ul>
 </li>
 <li><p>In many cases, you may be able to compress more without much degradation. If it works for your model,
-it is a very quick way to get them up to 4 times smaller compared to the <code class="docutils literal notranslate"><span class="pre">float16</span></code> precision version!</p>
+it is a very quick way to get them up to four times smaller compared to the <code class="docutils literal notranslate"><span class="pre">float16</span></code> precision version!</p>
 <ul>
-<li><p>4 bits palettization with grouped channel mode (typical group sizes to try: 32, 16, 8)</p></li>
-<li><p>4 bit weight only quantization with per block mode (typical block sizes to try: 64, 32, 16)</p></li>
+<li><p>4-bit palettization with grouped channel mode (typical group sizes to try: 32, 16, 8)</p></li>
+<li><p>4-bit weight-only quantization with per block mode (typical block sizes to try: 64, 32, 16)</p></li>
 </ul>
 </li>
 </ul>
-<p>Since on-device performance metrics (latency, memory footprint, model size)
-depend solely on
-the compression configuration used, and not on the workflow used
-for compression, it is always recommended to start with the
+<p>Since on-device performance metrics (latency, memory footprint, model size) depend solely on
+the compression configuration used, and not on the workflow used for compression, it is always recommended to start with the
 data free approach to get a quick estimate of latency and runtime performance.
-For instance, if you find out that, say, 70% sparsity gets you to your desired
-latency goal, on
-your target device, then you can look into data calibration /
-fine tuning to get a model with that config and
-good accuracy.</p>
+For instance, if you find out that, 70% sparsity gets you to your desired
+latency goal on your target device, then you can look into data calibration or
+fine-tuning to get a model with that config and good accuracy.</p>
 </section>
 <section id="post-training-calibration-data-based-compression">
-<h2>Post training calibration data based compression<a class="headerlink" href="#post-training-calibration-data-based-compression" title="Permalink to this heading">#</a></h2>
+<h2>Post-training calibration data based compression<a class="headerlink" href="#post-training-calibration-data-based-compression" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Small amount of data required (e.g. 128 training samples)</p></li>
+<li><p>Small amount of data required (e.g. 128 training samples).</p></li>
 <li><p>With data available, the algorithms in this category can compress weights while accounting for
 the quantization error in the predicted outputs (final or intermediates).</p></li>
-<li><p>Algorithms used in this class, may or may not be gradient based. Depending on that,
+<li><p>Algorithms used in this class may or may not be gradient based. Depending on that,
 you may need to provide a loss function in addition to the data.</p></li>
 </ul>
 <p>Typical examples for when this workflow may be appropriate:</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="opt-quantization-api.html"><span class="doc std std-doc">Quantizing activations to 8 bits</span></a> for latency gains on the NE.
-This requires data, as it is needed to compute the correct scales/offsets for intermediate activations</p></li>
+<li><p><a class="reference internal" href="opt-quantization-api.html"><span class="doc std std-doc">Quantizing activations to 8 bits</span></a> for latency gains on the Neural Engine.
+This requires data, as it is needed to compute the correct scales/offsets for intermediate activations.</p></li>
 <li><p>Palettization with 4 bits on large models. In many cases,
-the accuracy when compared to the data free method can be
-improved by using a data aware version of the K-means algorithm
-(available via the <code class="docutils literal notranslate"><span class="pre">cto.torch.palettization.SKMPalettizer</span></code> API)</p></li>
+the accuracy when compared to the data-free method can be
+improved by using a data-aware version of the k-means algorithm,
+available via the <code class="docutils literal notranslate"><span class="pre">cto.torch.palettization.SKMPalettizer</span></code> API.</p></li>
 <li><p>Similarly, both weight quantization to 4 bits or pruning may do better with
-calibration data based optimizations which are
-available via the <code class="docutils literal notranslate"><span class="pre">cto.torch.layerwise_compression</span></code> API</p></li>
+calibration data based optimizations, which are
+available via the <code class="docutils literal notranslate"><span class="pre">cto.torch.layerwise_compression</span></code> API.</p></li>
 </ul>
 </section>
 <section id="model-fine-tuning-based-compression">
-<h2>Model fine tuning based compression<a class="headerlink" href="#model-fine-tuning-based-compression" title="Permalink to this heading">#</a></h2>
+<h2>Model fine-tuning based compression<a class="headerlink" href="#model-fine-tuning-based-compression" title="Link to this heading">#</a></h2>
 <ul class="simple">
-<li><p>Performs the best in terms of getting better accuracy for higher compression amounts (e.g. 4 bits or lower). Accordingly, this is also the most time and data intensive of all the flows.</p></li>
-<li><p>Even though you will typically start off from a pre-trained model, access to the full training pipeline, along with the training data is required for fine-tuning.</p></li>
+<li><p>Performs the best in terms of getting better accuracy for higher compression amounts (4 bits or lower). Accordingly, this is also the most time and data intensive of all the flows.</p></li>
+<li><p>Even though you will typically start off from a pre-trained model, access to the full training pipeline and the training data is required for fine-tuning.</p></li>
 <li><p>A few examples when this approach is appropriate:</p>
 <ul>
-<li><p>palettization to 4 bit with single LUT or to lower than 4 bits</p></li>
-<li><p>If activation quantization with calibration data loses accuracy, then QAT (quantization aware training) is required to regain the loss</p></li>
-<li><p>For pruning this is the most effective workflow, and often required to achieve higher
+<li><p>Palettization to 4 bits with a single lookup table (LUT) or to lower than 4 bits</p></li>
+<li><p>If activation quantization with calibration data loses accuracy, then quantization-aware training (QAT) is required to regain the loss.</p></li>
+<li><p>For pruning, this is the most effective workflow, and it is often required to achieve higher
 levels of sparsity (75% or more) without significant loss of accuracy.</p></li>
 </ul>
 </li>
 </ul>
-<p>For large models, if the data free or calibration data based techniques lead to high degradation,
-then it is recommended to first compress the weights of the torch model, say using the data free
-approach, and
-then try to regain accuracy by performing
-parameter efficient fine-tuning, i.e. attaching adapters to the models and fine-tuning those.</p>
+<p>For large models, if the data-free or calibration data based techniques lead to high degradation,
+then it is recommended to first compress the weights of the torch model, using something like the data-free
+approach, and then try to regain accuracy by performing parameter-efficient fine-tuning (attaching adapters to the models and fine-tuning those).</p>
 <figure class="align-center" id="id1">
 <a class="imgnoborder reference internal image-reference" href="../_images/workflows_accuracy_vs_compression.png"><img alt="Accuracy trade-off with compression" class="imgnoborder" src="../_images/workflows_accuracy_vs_compression.png" style="width: 840px; height: 280px;" />
 </a>
 <figcaption>
 <p><span class="caption-text">A hypothetical “accuracy-compression amount” trade-off curve to illustrate what you may see
-on average for different compression workflows.</span><a class="headerlink" href="#id1" title="Permalink to this image">#</a></p>
+on average for different compression workflows.</span><a class="headerlink" href="#id1" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id2">
 <a class="imgnoborder reference internal image-reference" href="../_images/three_compression_workflows.png"><img alt="Compression workflows" class="imgnoborder" src="../_images/three_compression_workflows.png" style="width: 800px;" />
 </a>
 <figcaption>
-<p><span class="caption-text">Compression workflows for different input model formats</span><a class="headerlink" href="#id2" title="Permalink to this image">#</a></p>
+<p><span class="caption-text">Compression workflows for different input model formats</span><a class="headerlink" href="#id2" title="Link to this image">#</a></p>
 </figcaption>
 </figure>
 </section>
 <section id="apis-for-each-workflow">
-<h2>APIs for each workflow<a class="headerlink" href="#apis-for-each-workflow" title="Permalink to this heading">#</a></h2>
-<p>To find a list of APIs,
-take a look at the <a class="reference internal" href="opt-whats-new.html#core-ml-tools-optimization-apis"><span class="std std-ref">whats new</span></a> page.
-Below we provide a brief overview of a few of the APIs.
+<h2>APIs for each workflow<a class="headerlink" href="#apis-for-each-workflow" title="Link to this heading">#</a></h2>
+<p>To find a list of APIs, see <a class="reference internal" href="opt-whats-new.html#core-ml-tools-optimization-apis"><span class="std std-ref">What’s New</span></a>.
+Find a brief overview of a few of the APIs below.
 Check out the API description page in each of the
-<a class="reference internal" href="opt-palettization-api.html"><span class="std std-doc">palettization</span></a>
-, <a class="reference internal" href="opt-quantization-api.html"><span class="std std-doc">quantization</span></a>
-and
-<a class="reference internal" href="opt-pruning-api.html"><span class="std std-doc">pruning</span></a>
-sections for more comprehensive details.</p>
+<a class="reference internal" href="opt-palettization-api.html"><span class="std std-doc">palettization</span></a>, <a class="reference internal" href="opt-quantization-api.html"><span class="std std-doc">quantization</span></a>, and
+<a class="reference internal" href="opt-pruning-api.html"><span class="std std-doc">pruning</span></a> sections for details.</p>
 <section id="data-free-compression">
-<h3>Data free compression<a class="headerlink" href="#data-free-compression" title="Permalink to this heading">#</a></h3>
-<p>In this case since all that is needed is the model, you may find it convenient to use the APIs that take
+<h3>Data-free compression<a class="headerlink" href="#data-free-compression" title="Link to this heading">#</a></h3>
+<p>In this case, since all that is needed is the model, you may find it convenient to use the APIs that take
 in the <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> and return a compressed <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code>. Methods available under
 <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.coreml</span></code> will do that for you.
-PyTorch models are also supported in this flow, as in some cases you may find it more convenient to work with those.
-For instance, if you are experimenting with multiple rounds of compression, say, applying sparsity with data calibration,
-followed by data free palettization etc.</p>
-<p>Sample pseudocode of applying palettization to an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model:</p>
+PyTorch models are also supported in this flow. If you are experimenting with multiple rounds of compression, such as applying sparsity with data calibration followed by data free palettization, you may find it more convenient to work with those.</p>
+<p>Example of applying palettization to an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 <span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 
@@ -572,7 +579,7 @@ followed by data free palettization etc.</p>
 <span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">cto</span><span class="o">.</span><span class="n">coreml</span><span class="o">.</span><span class="n">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">model_config</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Sample pseudocode of applying palettization to a torch model:</p>
+<p>Example of applying palettization to a torch model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 <span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="n">PostTrainingPalettizerConfig</span><span class="p">,</span>\
                                                      <span class="n">PostTrainingPalettizer</span>
@@ -594,10 +601,10 @@ followed by data free palettization etc.</p>
 </div>
 </section>
 <section id="with-calibration-dataset">
-<h3>With calibration dataset<a class="headerlink" href="#with-calibration-dataset" title="Permalink to this heading">#</a></h3>
+<h3>With calibration dataset<a class="headerlink" href="#with-calibration-dataset" title="Link to this heading">#</a></h3>
 <p>This flow is mainly available via the <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> APIs, as it may require access to
 the loss function and gradient computation.</p>
-<p>Sample pseudocode of applying palettization using the sensitive k-means algorithm on a torch model:</p>
+<p>Example of applying palettization using the sensitive k-means algorithm on a torch model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.optimize.torch.palettization</span> <span class="kn">import</span> <span class="n">SKMPalettizerConfig</span><span class="p">,</span>\
                                                      <span class="n">SKMPalettizer</span> 
 
@@ -612,8 +619,7 @@ the loss function and gradient computation.</p>
 <span class="n">compressed_torch_model</span> <span class="o">=</span> <span class="n">palettizer</span><span class="o">.</span><span class="n">compress</span><span class="p">(</span><span class="n">data_loader</span><span class="o">=...</span><span class="p">,</span> <span class="n">loss_function</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Quantizing activations can be applied either to the torch model, or
-directly to an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model as well. Sample pseudocode snippet to do so:</p>
+<p>Quantizing activations can be applied either to the torch model or directly to an <code class="docutils literal notranslate"><span class="pre">mlpackage</span></code> model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span> 
 <span class="kn">import</span> <span class="nn">coremltools.optimize</span> <span class="k">as</span> <span class="nn">cto</span>
 <span class="c1"># The following API is for coremltools==8.0b1</span>
@@ -640,14 +646,14 @@ directly to an <code class="docutils literal notranslate"><span class="pre">mlpa
 </div>
 </section>
 <section id="with-fine-tuning">
-<h3>With fine tuning<a class="headerlink" href="#with-fine-tuning" title="Permalink to this heading">#</a></h3>
+<h3>With fine-tuning<a class="headerlink" href="#with-fine-tuning" title="Link to this heading">#</a></h3>
 <p>This workflow is available only for torch models, via the <code class="docutils literal notranslate"><span class="pre">coremltools.optimize.torch</span></code> APIs,
 as it involves integration into the torch training code.
-This integration can be very easily done by simply modifying the original training code with a few lines of code: mainly
-invocations to “prepare”, “step” and “finalize” methods.
+This integration can be very easily done by simply modifying the original training code with a few lines of code, primarily
+via invocations of the <code class="docutils literal notranslate"><span class="pre">prepare</span></code>, <code class="docutils literal notranslate"><span class="pre">step</span></code> and <code class="docutils literal notranslate"><span class="pre">finalize</span></code> methods.
 See examples of fine-tuning with
 <a class="reference external" href="https://apple.github.io/coremltools/_examples/dkm_palettization.html">palettization</a>,
-<a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">quantization</a>
+<a class="reference external" href="https://apple.github.io/coremltools/_examples/linear_quantization.html">quantization</a>,
 and
 <a class="reference external" href="https://apple.github.io/coremltools/_examples/magnitude_pruning.html">pruning</a>
 on an MNIST model to get an overview of the APIs.</p>
@@ -663,8 +669,8 @@ on an MNIST model to get an overview of the APIs.</p>
               
               
               
-                <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                <footer class="prev-next-footer d-print-none">
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="opt-opt1_3.html"
@@ -693,19 +699,20 @@ on an MNIST model to get an overview of the APIs.</p>
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
 
+
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
     <i class="fa-solid fa-list"></i> Contents
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-data-free-compression">Post training data free compression</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-calibration-data-based-compression">Post training calibration data based compression</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-fine-tuning-based-compression">Model fine tuning based compression</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-data-free-compression">Post-training data-free compression</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#post-training-calibration-data-based-compression">Post-training calibration data based compression</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#model-fine-tuning-based-compression">Model fine-tuning based compression</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#apis-for-each-workflow">APIs for each workflow</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-compression">Data free compression</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#data-free-compression">Data-free compression</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-calibration-dataset">With calibration dataset</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-fine-tuning">With fine tuning</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#with-fine-tuning">With fine-tuning</a></li>
 </ul>
 </li>
 </ul>
@@ -729,6 +736,7 @@ By Apple
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2023, Apple Inc.
@@ -755,8 +763,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

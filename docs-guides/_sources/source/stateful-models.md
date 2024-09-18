@@ -49,8 +49,8 @@ y_2 = model(x_2, acc)
 ![Stateful model](images/stateful-model-accum.png)
 
 Using stateful models in Core ML is convenient because it simplifies your code, 
-and it leaves the decision on how to update the state to the 
-model runtime, which maybe more efficient.
+and it leaves the decision of how to update the state to the 
+model runtime, which may be more efficient.
 
 State inputs show up alongside the usual model inputs in the Xcode UI as shown in 
 the snapshot below.
@@ -161,22 +161,22 @@ Back to first state
 ```
 
 ```{warning}
-Comparing torch model's numerical outputs with the converted Core ML stateful 
+Comparing the torch model’s numerical outputs with the converted Core ML stateful 
 model outputs to verify numerical match has to be done carefully, as 
-running it more than once changes the value of the state and hence the outputs accordingly. 
+running it more than once changes the value of the state and the outputs accordingly. 
 ```
 
 ```{note}
 In the Core ML Tools Python API, state values are opaque. 
 You can get a new state and pass a state to `predict`, 
 but you cannot inspect the state or change values of tensors in the state.
-However [APIs](https://developer.apple.com/documentation/coreml/mlstate) 
-in the Core ML Framework allow to inspect and modify the state.     
+However, [APIs](https://developer.apple.com/documentation/coreml/mlstate) 
+in the Core ML Framework let you inspect and modify the state.     
 ```
 
 ## Creating a Stateful Model in MIL
 
-You can use the [Model Intermediate Language](https://apple.github.io/coremltools/docs-guides/source/model-intermediate-language.html) (MIL) to create a stateful model directly from MIL ops. Construct a MIL program using the Python [`Builder`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters.mil.mil) class for MIL as shown in the following example, which creates a simple accumulator:
+You can use the [Model Intermediate Language](https://apple.github.io/coremltools/docs-guides/source/model-intermediate-language.html) (MIL) to create a stateful model directly from MIL ops. Construct a MIL program using the Python [`Builder`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters.mil.mil) class for MIL, as shown in the following example, which creates a simple accumulator:
 
 ```
 import coremltools as ct
@@ -216,17 +216,17 @@ token, and so on.
 
 In the case of a transformer, 
 which involves three large tensors 
-that the model processes : "Query", "Key", and "Value", a common 
+that the model processes: `Query`, `Key`, and `Value`, a common 
 optimization strategy is to avoid extra computations at token generation time
-by caching the "Key" and "Value" tensors and updating them incrementally to be reused in 
+by caching the `Key` and `Value` tensors and updating them incrementally to be reused in 
 each iteration of processing new tokens. 
-This optimization can be applied to Core ML models by making the Key-Values, 
-as explicit inputs/outputs of the model.
+This optimization can be applied to Core ML models by making the `Key-Value` pairs 
+explicit inputs and outputs of the model.
 Here is where State model types can also be utilized for more convenience and
 potential runtime performance improvements. 
-For instance, please check out the [2024 WWDC session](https://developer.apple.com/videos/play/wwdc2024/10159/) for an 
+For instance, the [2024 WWDC session](https://developer.apple.com/videos/play/wwdc2024/10159/) shows an  
 example that uses the [Mistral 7B model](https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2)
-and utilizes the stateful prediction feature for improved performance on a GPU on a macbook pro.  
+and utilizes the stateful prediction feature for improved performance on a GPU on a MacBook Pro.  
 The code for converting and deploying Mistral 7B model is released in [Hugging Face Mistral7B Example](
 https://github.com/huggingface/swift-transformers/blob/preview/Examples/Mistral7B/export.py) along with the
 [blog article](https://huggingface.co/blog/mistral-coreml).
@@ -237,7 +237,7 @@ To help you better understand how to make an attention model stateful with key c
 toy example.
 
 We start with a toy model with simple attention, where the `query`, `key`, and `value` are calculated by a linear layer
-and then fed into the `scaled_dot_product_attention`.
+and then fed into the `scaled_dot_product_attention` function.
 This toy example only focuses on stateful kv-cache, so it omits other details such as multi-head, multi-layer,
 positional encoding, final logits, etc.
 ```python
@@ -270,8 +270,8 @@ class ToyModel(nn.Module):
          return self.fc(attention_output)
 ```
 
-To use key cache and value cache for attention, we can write a new class `SimpleAttentionWithKeyValueCache` which
-inherits the `SimpleAttention`, and the in the `forward` function we re-use previously computed `k` and `v`, 
+To use key cache and value cache for attention, we can write a new class, `SimpleAttentionWithKeyValueCache` which
+inherits the `SimpleAttention` class. In the `forward` function, we re-use previously computed `k` and `v` 
 and fill the newly computed `k` and `v` back to the cache.
 ```python
 class SimpleAttentionWithKeyValueCache(SimpleAttention):
@@ -298,7 +298,7 @@ class SimpleAttentionWithKeyValueCache(SimpleAttention):
          )
 ```
 
-Then the toy model with kv-cache will look like:
+Then the toy model with kv-cache will look like this:
 ```python
 class ToyModelWithKeyValueCache(nn.Module):
      def __init__(self, vocab_size, embed_size, batch_size, max_seq_len):
@@ -321,9 +321,9 @@ class ToyModelWithKeyValueCache(nn.Module):
          return self.fc(attention_output)
 ```
 
-Now let's compare the speed between the original model and the stateful kv-cache model.
+Now let’s compare the speed between the original model and the stateful kv-cache model.
 
-First we set up some hyper-parameters:
+First we set up some hyperparameters:
 ```python
 vocab_size = 32000
 embed_size = 1024
@@ -333,7 +333,7 @@ max_seq_len = 1024
 num_iterations = 100
 ```
 
-The original model could be initialized and converted by the following code snippet.
+Initialize and convert the original stateless model:
 ```python
 import numpy as np
 import coremltools as ct
@@ -355,11 +355,11 @@ converted_model = ct.convert(
      compute_units=ct.ComputeUnit.CPU_AND_GPU,
 )
 ```
-Notice that the `minimum_deployment_target=ct.target.iOS18` is not necessary if you only
-want to use the stateless model, as stateless models are supported before iOS18.
-Here we set it just for fair comparison with the stateful kvcache model later.
+Note that the `minimum_deployment_target=ct.target.iOS18` is not necessary if you only
+want to use the stateless model, as stateless models are supported before `iOS18`.
+Here we set it just for fair comparison with the stateful kv-cache model later.
 
-We can time the prediction of the stateless model
+We can time the prediction of the stateless model:
 ```python
 from time import perf_counter
 
@@ -370,7 +370,7 @@ for token_id in range(num_iterations):
 print(f"Time without kv-cache: {(perf_counter() - t_start) * 1.0e3} ms")
 ```
 
-Now let's initialize and convert the stateful kv-cache model in a similar way
+Now let’s initialize and convert the stateful kv-cache model in a similar way:
 ```python
 past_kv_len = 0
 torch_model_kvcache = ToyModelWithKeyValueCache(
@@ -421,7 +421,7 @@ converted_model_kvcache = ct.convert(
 )
 ```
 
-We can also time the prediction of this stateful kv-cache model
+We can also time the prediction of this stateful kv-cache model:
 ```python
 past_kv_len = 0
 kv_cache_state = converted_model_kvcache.make_state()
@@ -436,10 +436,10 @@ for token_id in range(num_iterations):
 print(f"Time with kv-cache: {(perf_counter() - t_start) * 1.0e3} ms")
 ```
 
-After running the prediction, we can get the following output (on a MacBook Pro with M3 Max chip)
+After running the prediction, we can get the following output (on a MacBook Pro with M3 Max chip):
 ```text
 Time (ms) without kv-cache: 4245.6
 Time (ms) with kv-cache: 238.0
 ```
-It demonstrates how to modify the attention module to get a stateful model with kv-cache, which runs much faster than
-the original stateless model.
+It’s clear that when we modify the attention module to get a stateful model with kv-cache, a given prediction runs much faster than
+with the original stateless model.

@@ -1,9 +1,8 @@
 
-
 <!DOCTYPE html>
 
 
-<html lang="en" >
+<html lang="en" data-content_root="../" >
 
   <head>
     <meta charset="utf-8" />
@@ -15,36 +14,36 @@
   
   <script data-cfasync="false">
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
-    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="../_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="../_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="../_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
 
   
-  <link href="../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+  <link href="../_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" href="../_static/styles/sphinx-book-theme.css?digest=14f4ca6b54d191a8c7657f6c759bf11a5fb86285" type="text/css" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=a3416100" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/imgstyle.css?v=27a1495e" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="../_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="../_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
-    <script src="../_static/scripts/sphinx-book-theme.js?digest=5a5c038af52cf7bc1a1ec88eea08e6366ee68824"></script>
+    <script src="../_static/documentation_options.js?v=c1ce5b23"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=887ef09a"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'source/stateful-models';</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -59,28 +58,23 @@
 
   
   
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
   
   <div id="pst-scroll-pixel-helper"></div>
-
   
   <button type="button" class="btn rounded-pill" id="pst-back-to-top">
-    <i class="fa-solid fa-arrow-up"></i>
-    Back to top
-  </button>
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__primary"
-          id="__primary"/>
-  <label class="overlay overlay-primary" for="__primary"></label>
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
   
   <input type="checkbox"
           class="sidebar-toggle"
-          name="__secondary"
-          id="__secondary"/>
-  <label class="overlay overlay-secondary" for="__secondary"></label>
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
   
   <div class="search-button__wrapper">
     <div class="search-button__overlay"></div>
@@ -102,12 +96,20 @@
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
 </form></div>
   </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
   
-    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
-    </nav>
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+    </header>
   
+
   <div class="bd-container">
     <div class="bd-container__inner bd-page-width">
+      
+      
       
       <div class="bd-sidebar-primary bd-sidebar">
         
@@ -122,6 +124,9 @@
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
         <div class="sidebar-primary-item">
+
+  
+    
   
 
 <a class="navbar-brand logo" href="../index.html">
@@ -130,10 +135,22 @@
   
   
   
+  
     <p class="title logo__title">Guide to Core ML Tools</p>
   
 </a></div>
-        <div class="sidebar-primary-item"><nav class="bd-links" id="bd-docs-nav" aria-label="Main">
+        <div class="sidebar-primary-item">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
     <div class="bd-toc-item navbar-nav active">
         <p aria-level="2" class="caption" role="heading"><span class="caption-text">API Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -153,7 +170,7 @@
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Unified Conversion</span></p>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="unified-conversion-api.html">Core ML Tools API Overview</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-1"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-learning-models.html">Converting Deep Learning Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="target-conversion-formats.html">Source and Conversion Formats</a></li>
 <li class="toctree-l2"><a class="reference internal" href="load-and-convert-model.html">Load and Convert Model Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-to-ml-program.html">Convert Models to ML Programs</a></li>
@@ -162,16 +179,16 @@
 <li class="toctree-l2"><a class="reference internal" href="typed-execution.html">Typed Execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="typed-execution-example.html">Typed Execution Workflow Example</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-2"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-tensorflow.html">Converting from TensorFlow</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-1-workflow.html">TensorFlow 1 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-image-classifier.html">Converting a TensorFlow 1 Image Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-a-tensorflow-1-deepspeech-model.html">Converting a TensorFlow 1 DeepSpeech Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tensorflow-2.html">TensorFlow 2 Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="convert-tensorflow-2-bert-transformer-models.html">Converting TensorFlow 2 BERT Transformer Models</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-3"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="convert-pytorch.html">Converting from PyTorch</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="convert-pytorch-workflow.html">PyTorch Conversion Workflow</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-tracing.html">Model Tracing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-scripting.html">Model Scripting</a></li>
@@ -179,8 +196,8 @@
 <li class="toctree-l2"><a class="reference internal" href="convert-a-torchvision-model-from-pytorch.html">Converting a torchvision Model from PyTorch</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pytorch-conversion-examples.html">Converting a PyTorch Segmentation Model</a></li>
 </ul>
-</li>
-<li class="toctree-l1 current active has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-4"><i class="fa-solid fa-chevron-down"></i></label><ul class="current">
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="conversion-options.html">Conversion Options</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="new-conversion-options.html">New Conversion Options</a></li>
 <li class="toctree-l2"><a class="reference internal" href="model-input-and-output-types.html">Model Input and Output Types</a></li>
 <li class="toctree-l2"><a class="reference internal" href="image-inputs.html">Image Input and Output</a></li>
@@ -191,41 +208,41 @@
 <li class="toctree-l2"><a class="reference internal" href="custom-operators.html">Custom Operators</a></li>
 <li class="toctree-l2"><a class="reference internal" href="graph-passes-intro.html">Graph Passes</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="model-intermediate-language.html">Model Intermediate Language</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Optimization</span></p>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="opt-overview.html">Overview</a></li>
-<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">Whats new</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-5"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1"><a class="reference internal" href="opt-whats-new.html">What’s New</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-overview-examples.html">Examples</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-resnet.html">Optimizing ResNet50 Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-opt1_3.html">Optimizing OPT Model</a></li>
 </ul>
-</li>
+</details></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-workflow.html">Optimization Workflow</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-6"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-palettization.html">Palettization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-overview.html">Palettization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-palettization-algos.html">Palettization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-palettization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-7"><i class="fa-solid fa-chevron-down"></i></label><ul>
-<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Overview</a></li>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-quantization.html">Linear Quantization</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="opt-quantization-overview.html">Quantization Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-perf.html">Performance</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-algos.html">Quantization Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-quantization-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-8"><i class="fa-solid fa-chevron-down"></i></label><ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="opt-pruning.html">Pruning</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-overview.html">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-perf.html">Performance</a></li>
-<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Algorithms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="opt-pruning-algos.html">Pruning Algorithms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="opt-pruning-api.html">API Overview</a></li>
 </ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining compression types</a></li>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="opt-joint-compression.html">Combining Compression Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="opt-conversion.html">Conversion</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quantization-neural-network.html">Compressing Neural Network Weights</a></li>
 </ul>
@@ -242,12 +259,12 @@
 <li class="toctree-l1"><a class="reference internal" href="xcode-model-preview-types.html">Xcode Model Preview Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="mlmodel-utilities.html">MLModel Utilities</a></li>
 <li class="toctree-l1"><a class="reference internal" href="model-prediction.html">Model Prediction</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" type="checkbox"/><label class="toctree-toggle" for="toctree-checkbox-9"><i class="fa-solid fa-chevron-down"></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="updatable-model-examples.html">Updatable Models</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
 <li class="toctree-l2"><a class="reference internal" href="updatable-neural-network-classifier-on-mnist-dataset.html">Neural Network Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-tiny-drawing-classifier-pipeline-model.html">Pipeline Classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="updatable-nearest-neighbor-classifier.html">Nearest Neighbor Classifier</a></li>
 </ul>
-</li>
+</details></li>
 </ul>
 
     </div>
@@ -263,7 +280,7 @@
 
       </div>
       
-      <main id="main-content" class="bd-main">
+      <main id="main-content" class="bd-main" role="main">
         
         
 
@@ -272,14 +289,14 @@
           <div class="bd-content">
             <div class="bd-article-container">
               
-              <div class="bd-header-article">
+              <div class="bd-header-article d-print-none">
 <div class="header-article-items header-article__inner">
   
     <div class="header-article-items__start">
       
-        <div class="header-article-item"><label class="sidebar-toggle primary-toggle btn btn-sm" for="__primary" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
   <span class="fa-solid fa-bars"></span>
-</label></div>
+</button></div>
       
     </div>
   
@@ -369,26 +386,28 @@
 </button>
 
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
-    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
   </button>
 `);
 </script>
 
+
 <script>
 document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <button class="btn btn-sm pst-navbar-icon search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass fa-lg"></i>
   </button>
 `);
 </script>
-<label class="sidebar-toggle secondary-toggle btn btn-sm" for="__secondary"title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button class="sidebar-toggle secondary-toggle btn btn-sm" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <span class="fa-solid fa-list"></span>
-</label>
+</button>
 </div></div>
       
     </div>
@@ -425,17 +444,17 @@ document.write(`
               
                 
 <div id="searchbox"></div>
-                <article class="bd-article" role="main">
+                <article class="bd-article">
                   
   <section id="stateful-models">
-<span id="index-0"></span><h1>Stateful Models<a class="headerlink" href="#stateful-models" title="Permalink to this heading">#</a></h1>
+<span id="index-0"></span><h1>Stateful Models<a class="headerlink" href="#stateful-models" title="Link to this heading">#</a></h1>
 <p>This section introduces how Core ML models support stateful prediction.
 Starting from <code class="docutils literal notranslate"><span class="pre">iOS18</span></code> / <code class="docutils literal notranslate"><span class="pre">macOS15</span></code>, Core ML models can have a <em>state</em> input type.
 With a <em>stateful model</em>, you can keep track of specific  intermediate values
 (referred to as <em>states</em>), by persisting and updating them across
 inference runs. The model can implicitly read data from a state, and write back to a state.</p>
 <section id="example-a-simple-accumulator">
-<h2>Example: A Simple Accumulator<a class="headerlink" href="#example-a-simple-accumulator" title="Permalink to this heading">#</a></h2>
+<h2>Example: A Simple Accumulator<a class="headerlink" href="#example-a-simple-accumulator" title="Link to this heading">#</a></h2>
 <p>To illustrate how stateful models work, we can
 use a toy example of an accumulator that keeps track of the sum
 of its inputs, and the output is a square of the input + accumulator.
@@ -465,14 +484,14 @@ its value to the input for the next prediction.</p>
 </div>
 <p><img alt="Stateful model" src="../_images/stateful-model-accum.png" /></p>
 <p>Using stateful models in Core ML is convenient because it simplifies your code,
-and it leaves the decision on how to update the state to the
-model runtime, which maybe more efficient.</p>
+and it leaves the decision of how to update the state to the
+model runtime, which may be more efficient.</p>
 <p>State inputs show up alongside the usual model inputs in the Xcode UI as shown in
 the snapshot below.</p>
 <p><img alt="States in Xcode UI" src="../_images/Xcode_stateful_model_io.png" /></p>
 </section>
 <section id="registering-states-for-a-pytorch-model">
-<h2>Registering States for a PyTorch Model<a class="headerlink" href="#registering-states-for-a-pytorch-model" title="Permalink to this heading">#</a></h2>
+<h2>Registering States for a PyTorch Model<a class="headerlink" href="#registering-states-for-a-pytorch-model" title="Link to this heading">#</a></h2>
 <p>To set up a PyTorch model to be converted to a Core ML stateful model, the first step is to use the <a class="reference external" href="https://pytorch.org/docs/stable/generated/torch.nn.Module.html#torch.nn.Module.register_buffer"><code class="docutils literal notranslate"><span class="pre">register_buffer</span></code></a> API in PyTorch to register buffers in the model to use as state tensors.</p>
 <p>For example, the following code defines a model to demonstrate an accumulator, and registers the <code class="docutils literal notranslate"><span class="pre">accumulator</span></code> buffer as the state:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -493,7 +512,7 @@ the snapshot below.</p>
 </div>
 </section>
 <section id="converting-to-a-stateful-core-ml-model">
-<h2>Converting to a Stateful Core ML Model<a class="headerlink" href="#converting-to-a-stateful-core-ml-model" title="Permalink to this heading">#</a></h2>
+<h2>Converting to a Stateful Core ML Model<a class="headerlink" href="#converting-to-a-stateful-core-ml-model" title="Link to this heading">#</a></h2>
 <p>To convert the model to a stateful Core ML model,
 use the <code class="docutils literal notranslate"><span class="pre">states</span></code> parameter
 with <code class="docutils literal notranslate"><span class="pre">convert()</span></code>
@@ -524,7 +543,7 @@ Hence, during conversion, the minimum deployment target must be provided accordi
 </div>
 </section>
 <section id="using-states-with-predictions">
-<h2>Using States with Predictions<a class="headerlink" href="#using-states-with-predictions" title="Permalink to this heading">#</a></h2>
+<h2>Using States with Predictions<a class="headerlink" href="#using-states-with-predictions" title="Link to this heading">#</a></h2>
 <p>Use the <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.make_state"><code class="docutils literal notranslate"><span class="pre">make_state()</span></code></a>
 method of MLModel to initialize the state, which you can then pass to the
 <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">predict()</span></code></a>
@@ -567,22 +586,22 @@ Back to first state
 </div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Comparing torch model’s numerical outputs with the converted Core ML stateful
+<p>Comparing the torch model’s numerical outputs with the converted Core ML stateful
 model outputs to verify numerical match has to be done carefully, as
-running it more than once changes the value of the state and hence the outputs accordingly.</p>
+running it more than once changes the value of the state and the outputs accordingly.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>In the Core ML Tools Python API, state values are opaque.
 You can get a new state and pass a state to <code class="docutils literal notranslate"><span class="pre">predict</span></code>,
 but you cannot inspect the state or change values of tensors in the state.
-However <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlstate">APIs</a>
-in the Core ML Framework allow to inspect and modify the state.</p>
+However, <a class="reference external" href="https://developer.apple.com/documentation/coreml/mlstate">APIs</a>
+in the Core ML Framework let you inspect and modify the state.</p>
 </div>
 </section>
 <section id="creating-a-stateful-model-in-mil">
-<h2>Creating a Stateful Model in MIL<a class="headerlink" href="#creating-a-stateful-model-in-mil" title="Permalink to this heading">#</a></h2>
-<p>You can use the <a class="reference external" href="https://apple.github.io/coremltools/docs-guides/source/model-intermediate-language.html">Model Intermediate Language</a> (MIL) to create a stateful model directly from MIL ops. Construct a MIL program using the Python <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters.mil.mil"><code class="docutils literal notranslate"><span class="pre">Builder</span></code></a> class for MIL as shown in the following example, which creates a simple accumulator:</p>
+<h2>Creating a Stateful Model in MIL<a class="headerlink" href="#creating-a-stateful-model-in-mil" title="Link to this heading">#</a></h2>
+<p>You can use the <a class="reference external" href="https://apple.github.io/coremltools/docs-guides/source/model-intermediate-language.html">Model Intermediate Language</a> (MIL) to create a stateful model directly from MIL ops. Construct a MIL program using the Python <a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters.mil.mil"><code class="docutils literal notranslate"><span class="pre">Builder</span></code></a> class for MIL, as shown in the following example, which creates a simple accumulator:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Builder</span> <span class="k">as</span> <span class="n">mb</span><span class="p">,</span> <span class="n">types</span>
 
@@ -604,7 +623,7 @@ in the Core ML Framework allow to inspect and modify the state.</p>
 <p>The result is a stateful Core ML model (<code class="docutils literal notranslate"><span class="pre">mlmodel</span></code>), converted from the MIL representation.</p>
 </section>
 <section id="applications">
-<h2>Applications<a class="headerlink" href="#applications" title="Permalink to this heading">#</a></h2>
+<h2>Applications<a class="headerlink" href="#applications" title="Link to this heading">#</a></h2>
 <p>Using state input types can be convenient for working with models that
 require storing some intermediate values, updating them and then reusing them
 in subsequent predictions to avoid extra computations.
@@ -618,26 +637,26 @@ using that token and updated state to do the next prediction to produce the next
 token, and so on.</p>
 <p>In the case of a transformer,
 which involves three large tensors
-that the model processes : “Query”, “Key”, and “Value”, a common
+that the model processes: <code class="docutils literal notranslate"><span class="pre">Query</span></code>, <code class="docutils literal notranslate"><span class="pre">Key</span></code>, and <code class="docutils literal notranslate"><span class="pre">Value</span></code>, a common
 optimization strategy is to avoid extra computations at token generation time
-by caching the “Key” and “Value” tensors and updating them incrementally to be reused in
+by caching the <code class="docutils literal notranslate"><span class="pre">Key</span></code> and <code class="docutils literal notranslate"><span class="pre">Value</span></code> tensors and updating them incrementally to be reused in
 each iteration of processing new tokens.
-This optimization can be applied to Core ML models by making the Key-Values,
-as explicit inputs/outputs of the model.
+This optimization can be applied to Core ML models by making the <code class="docutils literal notranslate"><span class="pre">Key-Value</span></code> pairs
+explicit inputs and outputs of the model.
 Here is where State model types can also be utilized for more convenience and
 potential runtime performance improvements.
-For instance, please check out the <a class="reference external" href="https://developer.apple.com/videos/play/wwdc2024/10159/">2024 WWDC session</a> for an
+For instance, the <a class="reference external" href="https://developer.apple.com/videos/play/wwdc2024/10159/">2024 WWDC session</a> shows an<br />
 example that uses the <a class="reference external" href="https://huggingface.co/mistralai/Mistral-7B-Instruct-v0.2">Mistral 7B model</a>
-and utilizes the stateful prediction feature for improved performance on a GPU on a macbook pro.<br />
+and utilizes the stateful prediction feature for improved performance on a GPU on a MacBook Pro.<br />
 The code for converting and deploying Mistral 7B model is released in <a class="reference external" href="https://github.com/huggingface/swift-transformers/blob/preview/Examples/Mistral7B/export.py">Hugging Face Mistral7B Example</a> along with the
 <a class="reference external" href="https://huggingface.co/blog/mistral-coreml">blog article</a>.</p>
 </section>
 <section id="example-toy-attention-model-with-stateful-kv-cache">
-<h2>Example: Toy Attention Model with Stateful KV-Cache<a class="headerlink" href="#example-toy-attention-model-with-stateful-kv-cache" title="Permalink to this heading">#</a></h2>
+<h2>Example: Toy Attention Model with Stateful KV-Cache<a class="headerlink" href="#example-toy-attention-model-with-stateful-kv-cache" title="Link to this heading">#</a></h2>
 <p>To help you better understand how to make an attention model stateful with key cache and value cache, here is a
 toy example.</p>
 <p>We start with a toy model with simple attention, where the <code class="docutils literal notranslate"><span class="pre">query</span></code>, <code class="docutils literal notranslate"><span class="pre">key</span></code>, and <code class="docutils literal notranslate"><span class="pre">value</span></code> are calculated by a linear layer
-and then fed into the <code class="docutils literal notranslate"><span class="pre">scaled_dot_product_attention</span></code>.
+and then fed into the <code class="docutils literal notranslate"><span class="pre">scaled_dot_product_attention</span></code> function.
 This toy example only focuses on stateful kv-cache, so it omits other details such as multi-head, multi-layer,
 positional encoding, final logits, etc.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">torch</span>
@@ -669,8 +688,8 @@ positional encoding, final logits, etc.</p>
          <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fc</span><span class="p">(</span><span class="n">attention_output</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>To use key cache and value cache for attention, we can write a new class <code class="docutils literal notranslate"><span class="pre">SimpleAttentionWithKeyValueCache</span></code> which
-inherits the <code class="docutils literal notranslate"><span class="pre">SimpleAttention</span></code>, and the in the <code class="docutils literal notranslate"><span class="pre">forward</span></code> function we re-use previously computed <code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code>,
+<p>To use key cache and value cache for attention, we can write a new class, <code class="docutils literal notranslate"><span class="pre">SimpleAttentionWithKeyValueCache</span></code> which
+inherits the <code class="docutils literal notranslate"><span class="pre">SimpleAttention</span></code> class. In the <code class="docutils literal notranslate"><span class="pre">forward</span></code> function, we re-use previously computed <code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code>
 and fill the newly computed <code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> back to the cache.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">SimpleAttentionWithKeyValueCache</span><span class="p">(</span><span class="n">SimpleAttention</span><span class="p">):</span>
 <span class="w">     </span><span class="sd">&quot;&quot;&quot;Add kv-cache into SimpleAttention.&quot;&quot;&quot;</span>
@@ -696,7 +715,7 @@ and fill the newly computed <code class="docutils literal notranslate"><span cla
          <span class="p">)</span>
 </pre></div>
 </div>
-<p>Then the toy model with kv-cache will look like:</p>
+<p>Then the toy model with kv-cache will look like this:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">ToyModelWithKeyValueCache</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
      <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_seq_len</span><span class="p">):</span>
          <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
@@ -719,7 +738,7 @@ and fill the newly computed <code class="docutils literal notranslate"><span cla
 </pre></div>
 </div>
 <p>Now let’s compare the speed between the original model and the stateful kv-cache model.</p>
-<p>First we set up some hyper-parameters:</p>
+<p>First we set up some hyperparameters:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">vocab_size</span> <span class="o">=</span> <span class="mi">32000</span>
 <span class="n">embed_size</span> <span class="o">=</span> <span class="mi">1024</span>
 <span class="n">batch_size</span> <span class="o">=</span> <span class="mi">1</span>
@@ -728,7 +747,7 @@ and fill the newly computed <code class="docutils literal notranslate"><span cla
 <span class="n">num_iterations</span> <span class="o">=</span> <span class="mi">100</span>
 </pre></div>
 </div>
-<p>The original model could be initialized and converted by the following code snippet.</p>
+<p>Initialize and convert the original stateless model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
 
@@ -750,10 +769,10 @@ and fill the newly computed <code class="docutils literal notranslate"><span cla
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>Notice that the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target=ct.target.iOS18</span></code> is not necessary if you only
-want to use the stateless model, as stateless models are supported before iOS18.
-Here we set it just for fair comparison with the stateful kvcache model later.</p>
-<p>We can time the prediction of the stateless model</p>
+<p>Note that the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target=ct.target.iOS18</span></code> is not necessary if you only
+want to use the stateless model, as stateless models are supported before <code class="docutils literal notranslate"><span class="pre">iOS18</span></code>.
+Here we set it just for fair comparison with the stateful kv-cache model later.</p>
+<p>We can time the prediction of the stateless model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">perf_counter</span>
 
 <span class="n">t_start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
@@ -763,7 +782,7 @@ Here we set it just for fair comparison with the stateful kvcache model later.</
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time without kv-cache: </span><span class="si">{</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t_start</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.0e3</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Now let’s initialize and convert the stateful kv-cache model in a similar way</p>
+<p>Now let’s initialize and convert the stateful kv-cache model in a similar way:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">past_kv_len</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">torch_model_kvcache</span> <span class="o">=</span> <span class="n">ToyModelWithKeyValueCache</span><span class="p">(</span>
     <span class="n">vocab_size</span><span class="p">,</span> <span class="n">embed_size</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_seq_len</span>
@@ -813,7 +832,7 @@ Here we set it just for fair comparison with the stateful kvcache model later.</
 <span class="p">)</span>
 </pre></div>
 </div>
-<p>We can also time the prediction of this stateful kv-cache model</p>
+<p>We can also time the prediction of this stateful kv-cache model:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">past_kv_len</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">kv_cache_state</span> <span class="o">=</span> <span class="n">converted_model_kvcache</span><span class="o">.</span><span class="n">make_state</span><span class="p">()</span>
 <span class="n">t_start</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">perf_counter</span><span class="p">()</span>
@@ -827,13 +846,13 @@ Here we set it just for fair comparison with the stateful kvcache model later.</
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time with kv-cache: </span><span class="si">{</span><span class="p">(</span><span class="n">perf_counter</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">t_start</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1.0e3</span><span class="si">}</span><span class="s2"> ms&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>After running the prediction, we can get the following output (on a MacBook Pro with M3 Max chip)</p>
+<p>After running the prediction, we can get the following output (on a MacBook Pro with M3 Max chip):</p>
 <div class="highlight-text notranslate"><div class="highlight"><pre><span></span>Time (ms) without kv-cache: 4245.6
 Time (ms) with kv-cache: 238.0
 </pre></div>
 </div>
-<p>It demonstrates how to modify the attention module to get a stateful model with kv-cache, which runs much faster than
-the original stateless model.</p>
+<p>It’s clear that when we modify the attention module to get a stateful model with kv-cache, a given prediction runs much faster than
+with the original stateless model.</p>
 </section>
 </section>
 
@@ -845,8 +864,8 @@ the original stateless model.</p>
               
               
               
-                <footer class="prev-next-footer">
-                  <!-- Previous / next buttons -->
+                <footer class="prev-next-footer d-print-none">
+                  
 <div class="prev-next-area">
     <a class="left-prev"
        href="image-inputs.html"
@@ -874,6 +893,7 @@ the original stateless model.</p>
             
               
                 <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
 
   <div class="sidebar-secondary-item">
   <div class="page-toc tocsection onthispage">
@@ -909,6 +929,7 @@ By Apple
   
   <div class="footer-item">
     
+
   <p class="copyright">
     
       © Copyright 2023, Apple Inc.
@@ -935,8 +956,8 @@ By Apple
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="../_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="../_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="../_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="../_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
 
   <footer class="bd-footer">
   </footer>

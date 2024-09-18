@@ -307,7 +307,7 @@ with torch.no_grad():
 torch_predictions = output.argmax(0)
 
 def display_segmentation(input_image, output_predictions):
-    # Create a color pallette, selecting a color for each class
+    # Create a color palette, selecting a color for each class
     palette = torch.tensor([2 ** 25 - 1, 2 ** 15 - 1, 2 ** 21 - 1])
     colors = torch.as_tensor([i for i in range(21)])[:, None] * palette
     colors = (colors % 255).numpy().astype("uint8")
